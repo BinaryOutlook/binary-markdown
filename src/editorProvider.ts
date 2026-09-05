@@ -690,7 +690,9 @@ export class AnyMarkdownEditorProvider implements vscode.CustomTextEditorProvide
                     break;
 
                 case 'outlineStateChanged': {
-                    if (typeof message.open !== 'boolean') break;
+                    if (typeof message.open !== 'boolean') {
+                        break;
+                    }
                     const outlineConfig = vscode.workspace.getConfiguration('any-markdown');
                     const outlineScope = outlineConfig.get<OutlineStateScope>('outlineStateScope', 'file');
                     try {
