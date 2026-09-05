@@ -251,6 +251,7 @@
     "compile": "tsc -p ./ && node build-locales.js && node scripts/copy-webview.js && node scripts/copy-vendor.js",
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
+    "test": "npm run test:outline-state && npm run test:e2e",
     "lint": "eslint src --ext ts",
     "package": "vsce package",
     "test:build": "node test/build-standalone.js",
