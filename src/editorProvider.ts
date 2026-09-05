@@ -689,6 +689,22 @@ export class AnyMarkdownEditorProvider implements vscode.CustomTextEditorProvide
                     isActivelyEditing = false;
                     break;
 
+                case 'outlineStateChanged': {
+                    if (typeof message.open !== 'boolean') break;
+                    const outlineConfig = vscode.workspace.getConfiguration('any-markdown');
+                    const outlineScope = outlineConfig.get<OutlineStateScope>('outlineStateScope', 'file');
+                    try {
+                        await this.outlineStateStore.setOpen(
+                            outlineScope,
+                            document.uri.toString(),
+                            message.open
+                        );
+                    } catch (error) {
+                        console.error('[Any MD] Failed to persist outline state:', error);
+                    }
+                    break;
+                }
+
                 case 'insertImage':
                     await this.handleImageInsert(document, webviewPanel.webview);
                     break;
