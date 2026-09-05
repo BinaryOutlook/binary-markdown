@@ -5,6 +5,7 @@ const assert = require('node:assert/strict');
 
 const { OutlineStateStore } = require('../../src/shared/outline-state-store');
 const { generateEditorBodyHtml } = require('../../src/shared/editor-body-html');
+const extensionManifest = require('../../package.json');
 
 class FakeMemento {
     constructor(initial = {}) {
@@ -79,4 +80,20 @@ test('editor body starts open and hides the open button', () => {
 
     assert.match(html, /<aside class="sidebar" id="sidebar"/);
     assert.match(html, /class="menu-btn hidden" id="openSidebarBtn"/);
+});
+
+test('extension settings expose file and global outline persistence modes', () => {
+    const properties = extensionManifest.contributes.configuration.properties;
+    const scopeSetting = properties['any-markdown.outlineStateScope'];
+
+    assert.deepEqual(scopeSetting.enum, ['file', 'global']);
+    assert.equal(scopeSetting.default, 'file');
+});
+
+test('extension settings preserve the existing open default unless configured otherwise', () => {
+    const properties = extensionManifest.contributes.configuration.properties;
+    const defaultOpenSetting = properties['any-markdown.outlineDefaultOpen'];
+
+    assert.equal(defaultOpenSetting.type, 'boolean');
+    assert.equal(defaultOpenSetting.default, true);
 });
