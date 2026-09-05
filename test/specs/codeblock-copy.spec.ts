@@ -53,8 +53,6 @@ test.describe('Code block copy preserves source text', () => {
     for (const mode of ['display', 'edit']) {
         for (const { name, lang, text } of cases) {
             test(`copies ${name} from ${mode} mode`, async ({ page }) => {
-                test.fail(text.includes('\n'), 'Known bug: the Copy button discards code-block line breaks.');
-
                 const markdown = '```' + lang + '\n' + text + '\n```\n';
                 await page.evaluate(md => (window as unknown as CopyTestWindow).__testApi.setMarkdown(md), markdown);
 
@@ -83,8 +81,6 @@ test.describe('Code block copy preserves source text', () => {
     }
 
     test('copies the latest edit when leaving edit mode', async ({ page }) => {
-        test.fail(true, 'Known bug: the Copy button discards code-block line breaks.');
-
         await page.evaluate(() => (window as unknown as CopyTestWindow).__testApi.setMarkdown('```bash\necho one\necho two\n```\n'));
         const block = page.locator('#editor pre').first();
         await block.locator('code').click();
