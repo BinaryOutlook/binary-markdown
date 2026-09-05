@@ -236,6 +236,7 @@
     "lint": "eslint src --ext ts",
     "package": "vsce package",
     "test:build": "node test/build-standalone.js",
+    "test:outline-state": "node --test test/unit/outline-state.test.js",
     "test:e2e": "npm run test:build && playwright test",
     "test:e2e:ui": "npm run test:build && playwright test --ui",
     "test:serve": "npx serve test/html -p 3000",
