@@ -1,13 +1,12 @@
 {
-  "name": "any-markdown-desktop",
-  "version": "0.195.393",
-  "description": "Any Markdown — WYSIWYG Markdown editor for desktop",
+  "name": "binary-markdown-desktop",
+  "version": "0.1.0",
+  "description": "Binary Markdown: an open-source visual Markdown editor for desktop.",
   "main": "out/main.js",
   "author": {
-    "name": "imaken",
-    "email": "imaken@users.noreply.github.com"
+    "name": "BinaryOutlook"
   },
-  "homepage": "https://github.com/raggbal/any-markdown",
+  "homepage": "https://github.com/BinaryOutlook/any-markdown",
   "license": "MIT",
   "scripts": {
     "compile": "cd .. && npm run compile && cd electron && tsc -p . && node ../scripts/copy-vendor.js",
@@ -25,8 +24,8 @@
     "typescript": "^5.3.0"
   },
   "build": {
-    "appId": "com.imaken.any-markdown",
-    "productName": "Any Markdown",
+    "appId": "com.binaryoutlook.binary-markdown",
+    "productName": "Binary Markdown",
     "directories": {
       "output": "dist"
     },
@@ -49,12 +48,16 @@
       {
         "from": "../out/locales",
         "to": "locales",
-        "filter": ["*.js"]
+        "filter": [
+          "*.js"
+        ]
       },
       {
         "from": "../out/shared",
         "to": "out/shared",
-        "filter": ["editor-body-html.js"]
+        "filter": [
+          "editor-body-html.js"
+        ]
       }
     ],
     "mac": {
@@ -63,11 +66,17 @@
       "target": [
         {
           "target": "dmg",
-          "arch": ["x64", "arm64"]
+          "arch": [
+            "x64",
+            "arm64"
+          ]
         },
         {
           "target": "zip",
-          "arch": ["x64", "arm64"]
+          "arch": [
+            "x64",
+            "arm64"
+          ]
         }
       ],
       "fileAssociations": [

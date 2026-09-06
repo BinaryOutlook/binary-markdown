@@ -31,7 +31,7 @@ test.describe('コピー操作', () => {
         const clipboardContent = await page.evaluate(async () => {
             return new Promise((resolve) => {
                 document.addEventListener('copy', (e) => {
-                    const md = e.clipboardData.getData('text/x-any-md');
+                    const md = e.clipboardData.getData('text/x-binary-markdown');
                     const plain = e.clipboardData.getData('text/plain');
                     const html = e.clipboardData.getData('text/html');
                     resolve({ md, plain, html });
@@ -76,7 +76,7 @@ test.describe('コピー操作', () => {
         const clipboardContent = await page.evaluate(async () => {
             return new Promise((resolve) => {
                 document.addEventListener('copy', (e) => {
-                    const md = e.clipboardData.getData('text/x-any-md');
+                    const md = e.clipboardData.getData('text/x-binary-markdown');
                     const plain = e.clipboardData.getData('text/plain');
                     const html = e.clipboardData.getData('text/html');
                     resolve({ md, plain, html });
@@ -128,7 +128,7 @@ test.describe('コピー操作', () => {
         const clipboardContent = await page.evaluate(async () => {
             return new Promise((resolve) => {
                 document.addEventListener('copy', (e) => {
-                    const md = e.clipboardData.getData('text/x-any-md');
+                    const md = e.clipboardData.getData('text/x-binary-markdown');
                     const plain = e.clipboardData.getData('text/plain');
                     const html = e.clipboardData.getData('text/html');
                     resolve({ md, plain, html });
@@ -180,7 +180,7 @@ test.describe('コピー操作', () => {
         const clipboardContent = await page.evaluate(async () => {
             return new Promise((resolve) => {
                 document.addEventListener('copy', (e) => {
-                    const md = e.clipboardData.getData('text/x-any-md');
+                    const md = e.clipboardData.getData('text/x-binary-markdown');
                     const plain = e.clipboardData.getData('text/plain');
                     const html = e.clipboardData.getData('text/html');
                     resolve({ md, plain, html });
@@ -305,7 +305,7 @@ test.describe('コピー操作', () => {
         const clipboardContent = await page.evaluate(async () => {
             return new Promise((resolve) => {
                 document.addEventListener('copy', (e) => {
-                    const md = e.clipboardData.getData('text/x-any-md');
+                    const md = e.clipboardData.getData('text/x-binary-markdown');
                     const plain = e.clipboardData.getData('text/plain');
                     const html = e.clipboardData.getData('text/html');
                     resolve({ md, plain, html });
@@ -356,7 +356,7 @@ test.describe('コピー操作', () => {
         const clipboardContent = await page.evaluate(async () => {
             return new Promise((resolve) => {
                 document.addEventListener('copy', (e) => {
-                    const md = e.clipboardData.getData('text/x-any-md');
+                    const md = e.clipboardData.getData('text/x-binary-markdown');
                     const plain = e.clipboardData.getData('text/plain');
                     const html = e.clipboardData.getData('text/html');
                     resolve({ md, plain, html });
@@ -404,7 +404,7 @@ test.describe('コピー操作', () => {
         const clipboardContent = await page.evaluate(async () => {
             return new Promise((resolve) => {
                 document.addEventListener('copy', (e) => {
-                    const md = e.clipboardData.getData('text/x-any-md');
+                    const md = e.clipboardData.getData('text/x-binary-markdown');
                     const plain = e.clipboardData.getData('text/plain');
                     const html = e.clipboardData.getData('text/html');
                     resolve({ md, plain, html });
@@ -438,7 +438,7 @@ test.describe('リストへのペースト操作', () => {
             const clipboardData = {
                 _data: {
                     'text/plain': pastedMd,
-                    'text/x-any-md': pastedMd,
+                    'text/x-binary-markdown': pastedMd,
                     'text/html': ''
                 },
                 getData: function(type: string) {

@@ -1,0 +1,11 @@
+# Acknowledgments
+
+Binary Markdown is an independently maintained fork of [Any Markdown](https://github.com/raggbal/any-markdown), originally developed by raggbal and contributors under the MIT license.
+
+The visual editor, Markdown handling, themes, translations, desktop foundation, and existing icon artwork are inherited from that project. The original Git history and license notice are retained. The baseline for this fork is upstream commit `82487429`, whose extension package was version `0.195.393`.
+
+BinaryOutlook maintains this fork's code changes, roadmap, releases, and support. The original maintainers are not responsible for releases published as Binary Markdown. The [changelog](CHANGELOG.md) identifies changes developed here, including the code-copy and outline-state improvements proposed upstream as PRs #8 and #9.
+
+Runtime dependencies include Turndown, turndown-plugin-gfm, Mermaid, and KaTeX. Their bundled license notices are copied into `vendor/` during compilation and included in the VSIX. Any separately licensed bundled assets remain subject to their own terms.
+
+Historical documentation and presentation assets are kept in [archive/](archive/README.md) for reference and are excluded from extension packages.

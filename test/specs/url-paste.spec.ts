@@ -17,7 +17,7 @@ async function simulateExternalPaste(page, plainText: string) {
             _data: {
                 'text/plain': text,
                 'text/html': '',
-                // text/x-any-md は設定しない（外部ペーストをシミュレート）
+                // text/x-binary-markdown は設定しない（外部ペーストをシミュレート）
             },
             getData: function(type: string) {
                 return this._data[type] || '';

@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 test.describe('Table header with <br> ArrowUp navigation', () => {
     test.beforeEach(async ({ page }) => {
         page.on('console', msg => {
-            if (msg.text().includes('[DEBUG]') || msg.text().includes('[Any MD]')) {
+            if (msg.text().includes('[DEBUG]') || msg.text().includes('[Binary Markdown]')) {
                 console.log(`[BROWSER ${msg.type()}] ${msg.text()}`);
             }
         });

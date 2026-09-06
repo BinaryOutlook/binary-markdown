@@ -8,7 +8,7 @@ import { buildMenu } from './menu';
 import { setupUpdateChecker, checkForUpdates } from './updater';
 
 /**
- * Any Markdown — Electron Main Process
+ * Binary Markdown — Electron Main Process
  */
 
 const settingsManager = new SettingsManager();
@@ -59,7 +59,7 @@ function createWindow(filePath?: string): BrowserWindow {
         height: bounds?.height || 700,
         x: bounds?.x,
         y: bounds?.y,
-        title: 'Any Markdown',
+        title: 'Binary Markdown',
         webPreferences: {
             preload: path.join(__dirname, 'preload.js'),
             contextIsolation: true,

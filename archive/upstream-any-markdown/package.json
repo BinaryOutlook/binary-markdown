@@ -1,19 +1,22 @@
 {
-  "name": "binary-markdown",
-  "displayName": "Binary Markdown Editor",
-  "description": "Binary Markdown: an open-source visual Markdown editor with reliable code copying and a persistent outline.",
-  "version": "0.1.0",
-  "publisher": "BinaryOutlook",
+  "name": "any-markdown",
+  "displayName": "Any Markdown Editor",
+  "description": "A WYSIWYG markdown editor for VS Code with seamless live preview",
+  "version": "0.195.393",
+  "publisher": "imaken",
   "icon": "media/icon.png",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/BinaryOutlook/any-markdown"
+    "url": "https://github.com/raggbal/any-markdown"
   },
   "bugs": {
-    "url": "https://github.com/BinaryOutlook/any-markdown/issues"
+    "url": "https://github.com/raggbal/any-markdown/issues"
   },
-  "homepage": "https://github.com/BinaryOutlook/any-markdown#readme",
+  "homepage": "https://github.com/raggbal/any-markdown#readme",
+  "sponsor": {
+    "url": "https://github.com/sponsors/raggbal"
+  },
   "engines": {
     "vscode": "^1.85.0"
   },
@@ -36,55 +39,55 @@
   "contributes": {
     "commands": [
       {
-        "command": "binary-markdown.openEditor",
-        "title": "Open with Binary Markdown Editor",
-        "category": "Binary Markdown"
+        "command": "any-markdown.openEditor",
+        "title": "Open with Any Markdown Editor",
+        "category": "Any MD"
       },
       {
-        "command": "binary-markdown.exportToPdf",
+        "command": "any-markdown.exportToPdf",
         "title": "Export to PDF",
-        "category": "Binary Markdown"
+        "category": "Any MD"
       },
       {
-        "command": "binary-markdown.insertTable",
+        "command": "any-markdown.insertTable",
         "title": "Insert Table",
-        "category": "Binary Markdown"
+        "category": "Any MD"
       },
       {
-        "command": "binary-markdown.insertToc",
+        "command": "any-markdown.insertToc",
         "title": "Insert Table of Contents",
-        "category": "Binary Markdown"
+        "category": "Any MD"
       },
       {
-        "command": "binary-markdown.openAsText",
+        "command": "any-markdown.openAsText",
         "title": "Open as Text Editor",
-        "category": "Binary Markdown"
+        "category": "Any MD"
       },
       {
-        "command": "binary-markdown.toggleSourceMode",
+        "command": "any-markdown.toggleSourceMode",
         "title": "Toggle Source Mode",
-        "category": "Binary Markdown"
+        "category": "Any MD"
       },
       {
-        "command": "binary-markdown.compareAsText",
+        "command": "any-markdown.compareAsText",
         "title": "Compare as Text",
-        "category": "Binary Markdown"
+        "category": "Any MD"
       },
       {
-        "command": "binary-markdown.undo",
+        "command": "any-markdown.undo",
         "title": "Undo",
-        "category": "Binary Markdown"
+        "category": "Any MD"
       },
       {
-        "command": "binary-markdown.redo",
+        "command": "any-markdown.redo",
         "title": "Redo",
-        "category": "Binary Markdown"
+        "category": "Any MD"
       }
     ],
     "customEditors": [
       {
-        "viewType": "binary-markdown.editor",
-        "displayName": "Binary Markdown",
+        "viewType": "any-markdown.editor",
+        "displayName": "Any Markdown",
         "selector": [
           {
             "filenamePattern": "*.md"
@@ -97,9 +100,9 @@
       }
     ],
     "configuration": {
-      "title": "Binary Markdown",
+      "title": "Any Markdown",
       "properties": {
-        "binary-markdown.theme": {
+        "any-markdown.theme": {
           "type": "string",
           "enum": [
             "github",
@@ -113,22 +116,22 @@
           "default": "things",
           "description": "Editor theme"
         },
-        "binary-markdown.fontSize": {
+        "any-markdown.fontSize": {
           "type": "number",
           "default": 16,
           "description": "Base font size in pixels"
         },
-        "binary-markdown.imageDefaultDir": {
+        "any-markdown.imageDefaultDir": {
           "type": "string",
           "default": "",
           "description": "画像保存のデフォルトディレクトリ。空の場合はMarkdownファイルと同じディレクトリを使用。絶対パス（/path/to/dir）または相対パス（./images、images/）を指定可能。"
         },
-        "binary-markdown.forceRelativeImagePath": {
+        "any-markdown.forceRelativeImagePath": {
           "type": "boolean",
           "default": false,
           "description": "画像パスを常に相対パスで挿入します。絶対パスでimageDefaultDirを指定した場合でも、Markdownには相対パスが挿入されます。"
         },
-        "binary-markdown.language": {
+        "any-markdown.language": {
           "type": "string",
           "enum": [
             "default",
@@ -143,7 +146,7 @@
           "default": "default",
           "description": "UI language. 'default' uses VS Code's display language. / UI言語。'default'はVS Codeの表示言語を使用します。"
         },
-        "binary-markdown.toolbarMode": {
+        "any-markdown.toolbarMode": {
           "type": "string",
           "enum": [
             "full",
@@ -152,25 +155,7 @@
           "default": "simple",
           "description": "Toolbar display mode. 'full' shows all buttons. 'simple' shows only undo/redo and utility buttons (use Cmd+/ for other operations). / ツールバー表示モード。'full'は全ボタン表示。'simple'はundo/redoとユーティリティのみ（他はCmd+/で操作）。"
         },
-        "binary-markdown.outlineStateScope": {
-          "type": "string",
-          "enum": [
-            "file",
-            "global"
-          ],
-          "enumDescriptions": [
-            "Remember outline visibility separately for each Markdown file in the current workspace.",
-            "Use the last outline visibility for every Markdown file and across workspaces."
-          ],
-          "default": "file",
-          "description": "Controls whether outline visibility is remembered per file or shared globally."
-        },
-        "binary-markdown.outlineDefaultOpen": {
-          "type": "boolean",
-          "default": true,
-          "description": "Whether the outline starts open when no remembered visibility exists."
-        },
-        "binary-markdown.enableDebugLogging": {
+        "any-markdown.enableDebugLogging": {
           "type": "boolean",
           "default": false,
           "description": "Enable debug logging in the editor. Useful for troubleshooting. / エディタのデバッグログを有効にします。トラブルシューティングに便利です。"
@@ -180,31 +165,31 @@
     "menus": {
       "editor/context": [
         {
-          "command": "binary-markdown.insertTable",
+          "command": "any-markdown.insertTable",
           "when": "resourceLangId == markdown",
-          "group": "binary-markdown"
+          "group": "anymd"
         },
         {
-          "command": "binary-markdown.insertToc",
+          "command": "any-markdown.insertToc",
           "when": "resourceLangId == markdown",
-          "group": "binary-markdown"
+          "group": "anymd"
         }
       ],
       "explorer/context": [
         {
-          "command": "binary-markdown.openAsText",
+          "command": "any-markdown.openAsText",
           "when": "resourceLangId == markdown",
           "group": "navigation@99"
         },
         {
-          "command": "binary-markdown.compareAsText",
+          "command": "any-markdown.compareAsText",
           "when": "resourceLangId == markdown",
           "group": "3_compare"
         }
       ],
       "editor/title/context": [
         {
-          "command": "binary-markdown.openAsText",
+          "command": "any-markdown.openAsText",
           "when": "resourceLangId == markdown",
           "group": "navigation"
         }
@@ -212,34 +197,34 @@
     },
     "keybindings": [
       {
-        "command": "binary-markdown.undo",
+        "command": "any-markdown.undo",
         "key": "ctrl+z",
         "mac": "cmd+z",
-        "when": "activeCustomEditorId == 'binary-markdown.editor'"
+        "when": "activeCustomEditorId == 'any-markdown.editor'"
       },
       {
-        "command": "binary-markdown.redo",
+        "command": "any-markdown.redo",
         "key": "ctrl+shift+z",
         "mac": "cmd+shift+z",
-        "when": "activeCustomEditorId == 'binary-markdown.editor'"
+        "when": "activeCustomEditorId == 'any-markdown.editor'"
       },
       {
-        "command": "binary-markdown.redo",
+        "command": "any-markdown.redo",
         "key": "ctrl+y",
         "mac": "cmd+y",
-        "when": "activeCustomEditorId == 'binary-markdown.editor'"
+        "when": "activeCustomEditorId == 'any-markdown.editor'"
       },
       {
-        "command": "binary-markdown.toggleSourceMode",
+        "command": "any-markdown.toggleSourceMode",
         "key": "ctrl+.",
         "mac": "cmd+.",
-        "when": "activeCustomEditorId == 'binary-markdown.editor'"
+        "when": "activeCustomEditorId == 'any-markdown.editor'"
       },
       {
-        "command": "binary-markdown.openAsText",
+        "command": "any-markdown.openAsText",
         "key": "ctrl+shift+.",
         "mac": "cmd+shift+.",
-        "when": "activeCustomEditorId == 'binary-markdown.editor'"
+        "when": "activeCustomEditorId == 'any-markdown.editor'"
       }
     ]
   },
@@ -248,16 +233,13 @@
     "compile": "tsc -p ./ && node build-locales.js && node scripts/copy-webview.js && node scripts/copy-vendor.js",
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
-    "test": "npm run test:outline-state && npm run test:identity && npm run test:e2e",
     "lint": "eslint src --ext ts",
-    "package": "node scripts/package-vsix.js",
+    "package": "vsce package",
     "test:build": "node test/build-standalone.js",
-    "test:outline-state": "node --test test/unit/outline-state.test.js",
     "test:e2e": "npm run test:build && playwright test",
     "test:e2e:ui": "npm run test:build && playwright test --ui",
     "test:serve": "npx serve test/html -p 3000",
-    "build:locales": "node build-locales.js",
-    "test:identity": "node --test test/unit/extension-identity.test.js"
+    "build:locales": "node build-locales.js"
   },
   "devDependencies": {
     "@playwright/test": "^1.58.1",
@@ -265,7 +247,6 @@
     "@types/vscode": "^1.85.0",
     "@typescript-eslint/eslint-plugin": "^6.13.0",
     "@typescript-eslint/parser": "^6.13.0",
-    "@vscode/vsce": "3.7.1",
     "eslint": "^8.55.0",
     "jsdom": "^27.4.0",
     "serve": "^14.2.5",
@@ -276,6 +257,5 @@
     "mermaid": "^10.6.0",
     "turndown": "^7.2.2",
     "turndown-plugin-gfm": "^1.0.2"
-  },
-  "preview": true
+  }
 }

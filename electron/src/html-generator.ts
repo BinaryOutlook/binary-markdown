@@ -17,7 +17,7 @@ interface ElectronEditorConfig {
 }
 
 function getResourcePath(relativePath: string): string {
-    // 開発時: プロジェクトルートから相対パス (electron/ の親 = any-markdown/)
+    // 開発時: プロジェクトルートから相対パス (electron/ の親 = binary-markdown/)
     const devPath = path.join(__dirname, '..', '..', relativePath);
     if (fs.existsSync(devPath)) {
         console.log(`[html-generator] Found (dev): ${relativePath} → ${devPath}`);
@@ -84,7 +84,7 @@ export function generateEditorHtml(
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline' file:; script-src 'unsafe-inline' file:; img-src file: data: https: http:; font-src file: data:;">
-    <title>Any Markdown</title>
+    <title>Binary Markdown</title>
     <style>
         ${styles}
     </style>
@@ -107,7 +107,7 @@ export function generateEditorHtml(
 let tempCounter = 0;
 
 export function writeHtmlToTempFile(html: string): string {
-    const tempDir = path.join(os.tmpdir(), 'any-markdown');
+    const tempDir = path.join(os.tmpdir(), 'binary-markdown');
     fs.mkdirSync(tempDir, { recursive: true });
     const tempFile = path.join(tempDir, `editor-${process.pid}-${tempCounter++}.html`);
     fs.writeFileSync(tempFile, html, 'utf8');

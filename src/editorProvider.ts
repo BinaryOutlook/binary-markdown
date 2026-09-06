@@ -238,7 +238,7 @@ class ImageDirectoryManager {
         }
         
         // 3. VS Code設定のimageDefaultDirをチェック
-        const config = vscode.workspace.getConfiguration('any-markdown');
+        const config = vscode.workspace.getConfiguration('binary-markdown');
         const defaultDir = config.get<string>('imageDefaultDir', '');
         if (defaultDir) {
             const normalized = normalizeTrailingSlash(defaultDir);
@@ -271,7 +271,7 @@ class ImageDirectoryManager {
         }
         
         // 2. VS Code設定をチェック
-        const config = vscode.workspace.getConfiguration('any-markdown');
+        const config = vscode.workspace.getConfiguration('binary-markdown');
         return config.get<boolean>('forceRelativeImagePath', false);
     }
     
@@ -336,8 +336,8 @@ class ImageDirectoryManager {
 // グローバルインスタンス
 const imageDirectoryManager = new ImageDirectoryManager();
 
-export class AnyMarkdownEditorProvider implements vscode.CustomTextEditorProvider {
-    private static readonly viewType = 'any-markdown.editor';
+export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProvider {
+    private static readonly viewType = 'binary-markdown.editor';
 
     // Track the currently active webview panel for undo/redo command forwarding
     private activeWebviewPanel: vscode.WebviewPanel | undefined;
@@ -431,7 +431,7 @@ export class AnyMarkdownEditorProvider implements vscode.CustomTextEditorProvide
 
         const updateWebview = () => {
             try {
-                const config = vscode.workspace.getConfiguration('any-markdown');
+                const config = vscode.workspace.getConfiguration('binary-markdown');
                 const content = convertImagePaths(document.getText());
                 const outlineScope = config.get<OutlineStateScope>('outlineStateScope', 'file');
                 const outlineDefaultOpen = config.get<boolean>('outlineDefaultOpen', true);
@@ -455,7 +455,7 @@ export class AnyMarkdownEditorProvider implements vscode.CustomTextEditorProvide
                     }
                 );
             } catch (error) {
-                console.error('[Any MD] Error updating webview:', error);
+                console.error('[Binary Markdown] Error updating webview:', error);
                 // Show a minimal error page instead of crashing
                 webviewPanel.webview.html = `<!DOCTYPE html>
 <html>
@@ -483,7 +483,7 @@ export class AnyMarkdownEditorProvider implements vscode.CustomTextEditorProvide
             // Determine source
             const fileImageDir = imageDirectoryManager.getFileImageDir(uriKey);
             const docImageDir = extractImageDir(docContent);
-            const cfg = vscode.workspace.getConfiguration('any-markdown');
+            const cfg = vscode.workspace.getConfiguration('binary-markdown');
             const settingsDir = cfg.get<string>('imageDefaultDir', '');
 
             let source: 'file' | 'settings' | 'default';
@@ -603,7 +603,7 @@ export class AnyMarkdownEditorProvider implements vscode.CustomTextEditorProvide
                         }
                     } catch (error) {
                         isApplyingOwnEdit = false;
-                        console.error('[Any MD] Error reading file after external change:', error);
+                        console.error('[Binary Markdown] Error reading file after external change:', error);
                     }
                 }, 100);
             }
@@ -611,10 +611,10 @@ export class AnyMarkdownEditorProvider implements vscode.CustomTextEditorProvide
 
         // Listen for configuration changes
         const changeConfigSubscription = vscode.workspace.onDidChangeConfiguration(e => {
-            if (e.affectsConfiguration('any-markdown')) {
+            if (e.affectsConfiguration('binary-markdown')) {
                 // Re-initialize locale if language setting changed
-                if (e.affectsConfiguration('any-markdown.language')) {
-                    const langConfig = vscode.workspace.getConfiguration('any-markdown');
+                if (e.affectsConfiguration('binary-markdown.language')) {
+                    const langConfig = vscode.workspace.getConfiguration('binary-markdown');
                     initLocale(langConfig.get<string>('language', 'default'), vscode.env.language);
                 }
                 updateWebview();
@@ -653,7 +653,7 @@ export class AnyMarkdownEditorProvider implements vscode.CustomTextEditorProvide
                         );
                         await vscode.workspace.applyEdit(edit);
                     } catch (e) {
-                        console.log('[Any MD] Edit error (ignored):', e);
+                        console.log('[Binary Markdown] Edit error (ignored):', e);
                     } finally {
                         isApplyingOwnEdit = false;
                     }
@@ -693,7 +693,7 @@ export class AnyMarkdownEditorProvider implements vscode.CustomTextEditorProvide
                     if (typeof message.open !== 'boolean') {
                         break;
                     }
-                    const outlineConfig = vscode.workspace.getConfiguration('any-markdown');
+                    const outlineConfig = vscode.workspace.getConfiguration('binary-markdown');
                     const outlineScope = outlineConfig.get<OutlineStateScope>('outlineStateScope', 'file');
                     try {
                         await this.outlineStateStore.setOpen(
@@ -702,7 +702,7 @@ export class AnyMarkdownEditorProvider implements vscode.CustomTextEditorProvide
                             message.open
                         );
                     } catch (error) {
-                        console.error('[Any MD] Failed to persist outline state:', error);
+                        console.error('[Binary Markdown] Failed to persist outline state:', error);
                     }
                     break;
                 }
@@ -776,7 +776,7 @@ export class AnyMarkdownEditorProvider implements vscode.CustomTextEditorProvide
                     break;
 
                 case 'error':
-                    vscode.window.showErrorMessage(`Any MD: ${message.message}`);
+                    vscode.window.showErrorMessage(`Binary Markdown: ${message.message}`);
                     break;
 
                 case 'openInTextEditor':
@@ -811,7 +811,7 @@ export class AnyMarkdownEditorProvider implements vscode.CustomTextEditorProvide
                             await vscode.env.clipboard.writeText(selectedMd);
                         }
                     } catch (err) {
-                        console.error('[Any MD] sendToChat error:', err);
+                        console.error('[Binary Markdown] sendToChat error:', err);
                     }
                     break;
 
@@ -868,7 +868,7 @@ export class AnyMarkdownEditorProvider implements vscode.CustomTextEditorProvide
                 case 'getImageDir':
                     // Return current IMAGE_DIR to webview
                     const currentImageDir = extractImageDir(document.getText()) || '';
-                    const config = vscode.workspace.getConfiguration('any-markdown');
+                    const config = vscode.workspace.getConfiguration('binary-markdown');
                     const defaultImageDir = config.get<string>('imageDefaultDir', '');
                     webviewPanel.webview.postMessage({
                         type: 'imageDirInfo',

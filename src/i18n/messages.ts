@@ -167,7 +167,7 @@ function loadLocale(locale: string): { messages: Messages; webviewMessages: Webv
       webviewMessages: localeModule.webviewMessages,
     };
   } catch (error) {
-    console.error(`[Any MD] Failed to load locale '${locale}':`, error);
+    console.error(`[Binary Markdown] Failed to load locale '${locale}':`, error);
     return null;
   }
 }
@@ -185,7 +185,7 @@ export function initLocale(configLang: string, systemLang: string): void {
   if (!fallbackMessages) {
     fallbackMessages = loadLocale('en');
     if (!fallbackMessages) {
-      console.error('[Any MD] Failed to load fallback locale (en)');
+      console.error('[Binary Markdown] Failed to load fallback locale (en)');
     }
   }
   
@@ -195,13 +195,13 @@ export function initLocale(configLang: string, systemLang: string): void {
   } else {
     currentMessages = loadLocale(currentLocale);
     if (!currentMessages) {
-      console.warn(`[Any MD] Falling back to English`);
+      console.warn(`[Binary Markdown] Falling back to English`);
       currentMessages = fallbackMessages;
       currentLocale = 'en';
     }
   }
   
-  console.log(`[Any MD] Language: ${currentLocale} (configured: ${lang})`);
+  console.log(`[Binary Markdown] Language: ${currentLocale} (configured: ${lang})`);
 }
 
 /**

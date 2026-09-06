@@ -236,7 +236,7 @@
     
     const host = window.hostBridge;
     const i18n = {};
-    logger.log('[Any MD] i18n loaded:', i18n.livePreviewMode ? 'OK' : 'EMPTY', '- Sample:', i18n.bold || '(none)');
+    logger.log('[Binary Markdown] i18n loaded:', i18n.livePreviewMode ? 'OK' : 'EMPTY', '- Sample:', i18n.bold || '(none)');
     const editor = document.getElementById('editor');
     const sourceEditor = document.getElementById('sourceEditor');
     const outline = document.getElementById('outline');
@@ -374,7 +374,7 @@
         // Normalize line endings: \r\n → \n, lone \r → \n
         markdown = markdown.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
     } catch (e) {
-        console.error('[Any MD] Failed to decode Base64 content:', e);
+        console.error('[Binary Markdown] Failed to decode Base64 content:', e);
     }
     let saveTimeout = null;
     let syncTimeout = null;
@@ -615,9 +615,9 @@
     }
 
     // Initialize
-    logger.log('[Any MD] Starting init(), markdown length:', markdown.length, 'editor element:', !!editor);
+    logger.log('[Binary Markdown] Starting init(), markdown length:', markdown.length, 'editor element:', !!editor);
     init();
-    logger.log('[Any MD] init() completed, editor.innerHTML length:', editor.innerHTML.length);
+    logger.log('[Binary Markdown] init() completed, editor.innerHTML length:', editor.innerHTML.length);
 
     // ========== UNDO / REDO MANAGER ==========
     var undoManager = (function() {
@@ -768,11 +768,11 @@
         try {
             renderFromMarkdown();
         } catch (e) {
-            console.error('[Any MD] renderFromMarkdown() failed:', e);
+            console.error('[Binary Markdown] renderFromMarkdown() failed:', e);
         }
-        try { updateOutline(); } catch (e) { console.error('[Any MD] updateOutline() failed:', e); }
-        try { updateWordCount(); } catch (e) { console.error('[Any MD] updateWordCount() failed:', e); }
-        try { updateStatus(); } catch (e) { console.error('[Any MD] updateStatus() failed:', e); }
+        try { updateOutline(); } catch (e) { console.error('[Binary Markdown] updateOutline() failed:', e); }
+        try { updateWordCount(); } catch (e) { console.error('[Binary Markdown] updateWordCount() failed:', e); }
+        try { updateStatus(); } catch (e) { console.error('[Binary Markdown] updateStatus() failed:', e); }
         updatePlaceholder();
     }
 
@@ -1739,9 +1739,9 @@
     function renderFromMarkdown() {
         // Remove IMAGE_DIR and FORCE_RELATIVE_PATH directives before rendering (they're stored in variables)
         let markdownToRender = removeDirectivesFromMarkdown(markdown);
-        logger.log('[Any MD] renderFromMarkdown: markdown length:', markdown.length, 'after directive removal:', markdownToRender.length);
+        logger.log('[Binary Markdown] renderFromMarkdown: markdown length:', markdown.length, 'after directive removal:', markdownToRender.length);
         const html = markdownToHtmlFragment(markdownToRender);
-        logger.log('[Any MD] renderFromMarkdown: html length:', html.length, 'first 100 chars:', html.substring(0, 100));
+        logger.log('[Binary Markdown] renderFromMarkdown: html length:', html.length, 'first 100 chars:', html.substring(0, 100));
         editor.innerHTML = html || '<p><br></p>';
         setupInteractiveElements();
         updatePlaceholder();
@@ -1783,7 +1783,7 @@
             const textOffset = preRange.toString().length;
             return { blockIndex, blockText, textOffset };
         } catch (e) {
-            logger.log('[Any MD] saveCursorState failed:', e);
+            logger.log('[Binary Markdown] saveCursorState failed:', e);
             return null;
         }
     }
@@ -1883,7 +1883,7 @@
             sel.removeAllRanges();
             sel.addRange(range);
         } catch (e) {
-            logger.log('[Any MD] restoreCursorState failed:', e);
+            logger.log('[Binary Markdown] restoreCursorState failed:', e);
         }
     }
 
@@ -2011,7 +2011,7 @@
      * Diffs at block level and only replaces changed blocks.
      */
     function updateFromMarkdown() {
-        logger.log('[Any MD] updateFromMarkdown: cursor-preserving update');
+        logger.log('[Binary Markdown] updateFromMarkdown: cursor-preserving update');
 
         // 1. Save cursor state
         const cursorState = saveCursorState();
@@ -2046,7 +2046,7 @@
             } else if (oldBlock && newBlock) {
                 if (!blocksAreEqual(oldBlock, newBlock)) {
                     if (isProtectedBlock(oldBlock)) {
-                        logger.log('[Any MD] updateFromMarkdown: skipping protected block at index', i);
+                        logger.log('[Binary Markdown] updateFromMarkdown: skipping protected block at index', i);
                         continue;
                     }
                     const replacement = newBlock.cloneNode(true);
@@ -2059,9 +2059,9 @@
         if (changed) {
             // Re-setup interactive elements for the updated DOM
             setupInteractiveElements();
-            logger.log('[Any MD] updateFromMarkdown: DOM patched');
+            logger.log('[Binary Markdown] updateFromMarkdown: DOM patched');
         } else {
-            logger.log('[Any MD] updateFromMarkdown: no changes detected');
+            logger.log('[Binary Markdown] updateFromMarkdown: no changes detected');
         }
 
         // 4. Restore cursor
@@ -12022,7 +12022,7 @@
     function applyQueuedExternalChange() {
         if (queuedExternalContent === null) return;
 
-        logger.log('[Any MD] applying queued external change');
+        logger.log('[Binary Markdown] applying queued external change');
         markdown = queuedExternalContent;
         queuedExternalContent = null;
         currentImageDir = extractImageDirFromMarkdown(markdown);
@@ -12950,7 +12950,7 @@
             return;
         }
         if (message.type === 'update') {
-            logger.log('[Any MD] update message received, content length:', message.content?.length);
+            logger.log('[Binary Markdown] update message received, content length:', message.content?.length);
 
             // Normalize incoming content: strip BOM, normalize line endings
             let incomingContent = message.content || '';
@@ -12962,7 +12962,7 @@
             // Active editing guard: queue external changes while user is typing
             if (isActivelyEditing) {
                 queuedExternalContent = incomingContent;
-                logger.log('[Any MD] update queued: user is actively editing');
+                logger.log('[Binary Markdown] update queued: user is actively editing');
                 return;
             }
 
@@ -13647,7 +13647,7 @@
             // Set clipboard data
             e.clipboardData.setData('text/plain', md);
             e.clipboardData.setData('text/html', selectedHtml);
-            e.clipboardData.setData('text/x-any-md', md);
+            e.clipboardData.setData('text/x-binary-markdown', md);
             
         } catch (err) {
             logger.error('Copy error:', err);
@@ -13683,7 +13683,7 @@
             
             e.clipboardData.setData('text/plain', md);
             e.clipboardData.setData('text/html', selectedHtml);
-            e.clipboardData.setData('text/x-any-md', md);
+            e.clipboardData.setData('text/x-binary-markdown', md);
         } catch (err) {
             e.clipboardData.setData('text/plain', sel.toString());
         }
@@ -13730,7 +13730,7 @@
         e.preventDefault();
         
         // Check for internal copy (has our custom marker)
-        const internalMd = e.clipboardData.getData('text/x-any-md');
+        const internalMd = e.clipboardData.getData('text/x-binary-markdown');
         const html = e.clipboardData.getData('text/html');
         const text = e.clipboardData.getData('text/plain');
         

@@ -1,465 +1,102 @@
-<img src="media/icon.png" alt="Any Markdown" width="48" align="absmiddle"> Any Markdown - AI-Friendly WYSIWYG Markdown Editor for VS Code
-=
+# Binary Markdown Editor
 
-A WYSIWYG markdown editor designed for the AI coding era. Edit markdown visually while AI assistants (Claude Code, Cursor, GitHub Copilot, etc.) modify the same file in real-time — your edits and AI's edits coexist safely.
+An open-source visual Markdown editor for VS Code, independently maintained by BinaryOutlook. Edit Markdown in a rendered view, switch to source when needed, copy multiline code accurately, and keep the outline the way you prefer.
 
-![VS Code Marketplace](https://img.shields.io/visual-studio-marketplace/v/imaken.any-markdown?label=VS%20Code%20Marketplace)
-![Open VSX](https://img.shields.io/open-vsx/v/imaken/any-markdown?label=Open%20VSX)
-![License](https://img.shields.io/badge/license-MIT-green)
-![GitHub Sponsors](https://img.shields.io/github/sponsors/raggbal?label=Sponsor)
+Binary Markdown builds on [Any Markdown by raggbal and contributors](https://github.com/raggbal/any-markdown), licensed under MIT. The visual editor and most existing features come from that project. BinaryOutlook maintains this fork's changes, releases, and support. See [Acknowledgments](ACKNOWLEDGMENTS.md) and the [changelog](CHANGELOG.md) for provenance.
 
-**New: Redesigned for simplicity. **![assets/images/1772631963888.png](assets/images/1772631963888.png)
-**New: Action Palette (Cmd+/ / Ctrl+/)**
-![assets/images/1772632052456.png](assets/images/1772632052456.png)
-## 🎬 Demo (gif)
+## Install a test build
 
-You can freely use markdown using only the keyboard.
-lists, tables, code blocks, and everything else!And when you want to request AI Chat, select the range and press cmd+l (ctr+l).
-![Demo](assets/videos/movie.gif)
-> Note: The editor design shown in the gif above is from an older version.
+Version **0.1.0** is the first Binary Markdown [GitHub prerelease](https://github.com/BinaryOutlook/any-markdown/releases/tag/v0.1.0). Marketplace and Open VSX publication are pending.
 
-## 🆕 Important Changes
+1. Download [binary-markdown-0.1.0.vsix](https://github.com/BinaryOutlook/any-markdown/releases/download/v0.1.0/binary-markdown-0.1.0.vsix), or build it from source below. A SHA-256 checksum is included on the release page.
+2. In VS Code, open **Extensions**, select **… → Install from VSIX…**, and choose the file.
+3. Open a Markdown document and select **Reopen Editor With… → Binary Markdown**.
 
-### Action Palette (Cmd+/ or Ctrl+/)
+The extension is optional: installing it does not change your default Markdown editor. You can choose **Configure Default Editor…** yourself if you prefer to use it for every Markdown document.
 
-You can now press `Cmd+/` (macOS) or `Ctrl+/` (Windows/Linux) to open the **Action Palette** — a floating command menu that gives you quick access to all formatting and insertion actions (headings, lists, code blocks, Mermaid diagrams, math blocks, tables, etc.).
+The extension ID is `BinaryOutlook.binary-markdown`. It has separate commands, settings, and editor registration from Any Markdown. Read the [migration guide](docs/migration.md) if you used an earlier test build.
 
-### Toolbar Mode: Simple is now the default
+The same VSIX can be installed in editors that support VS Code extensions, subject to their API compatibility. Current manual validation covers VS Code **1.136.0 on macOS** before the naming migration; the renamed build and other environments need further manual testing.
 
-With the Action Palette available, the toolbar has been simplified by default. The new `simple` mode shows only essential buttons (outline, undo/redo, open in text editor, source mode toggle) for a cleaner editing experience.
+## Features
 
-If you prefer the previous full toolbar with all formatting buttons, change the setting:
+Inherited from Any Markdown:
+
+- Visual editing and a source-mode toggle for `.md` and `.markdown` files.
+- Headings and outline navigation; bold, italic, strikethrough, lists, task lists, and blockquotes.
+- Tables, links, images, code blocks with syntax highlighting, and YAML front matter.
+- Mermaid diagrams and KaTeX expressions in fenced `mermaid` and `math` blocks.
+- An action palette, keyboard shortcuts, multiple themes, and seven interface languages.
+- Synchronization with external file changes, including changes made by coding tools.
+
+Changes developed in this fork:
+
+- Code-block copying preserves rendered line breaks, indentation, and meaningful blank lines.
+- Outline visibility can be remembered per file or globally, with a configurable initial state.
+- Opening the outline does not mark the Markdown document as edited.
+- Independent Binary Markdown names and identifiers throughout the extension and desktop sources.
+
+The first two changes were also proposed upstream as [PR #8](https://github.com/raggbal/any-markdown/pull/8) and [PR #9](https://github.com/raggbal/any-markdown/pull/9). This fork's release decisions are independent of those PRs.
+
+## Configure the editor
+
+Open **Settings** (`Cmd+,` on macOS or `Ctrl+,` on Windows/Linux) and search for **Binary Markdown**. Settings can be applied at User or Workspace scope.
+
+| Setting | Default | Purpose |
+| --- | --- | --- |
+| `binary-markdown.outlineDefaultOpen` | `true` | Start with the outline open when no remembered state exists. |
+| `binary-markdown.outlineStateScope` | `file` | Remember each file separately, or choose `global` to share visibility across files and workspaces. |
+| `binary-markdown.toolbarMode` | `simple` | Use the compact toolbar or choose `full`. |
+| `binary-markdown.theme` | `things` | Choose `github`, `sepia`, `night`, `dark`, `minimal`, `perplexity`, or `things`. |
+| `binary-markdown.fontSize` | `16` | Editor font size in pixels. |
+| `binary-markdown.language` | `default` | Follow VS Code's language, or select a supported language. |
+| `binary-markdown.imageDefaultDir` | `""` | Image save directory; empty means the document's directory. |
+| `binary-markdown.forceRelativeImagePath` | `false` | Prefer relative Markdown image paths when an absolute image directory is configured. |
+| `binary-markdown.enableDebugLogging` | `false` | Enable diagnostic logging when investigating an issue. |
+
+To start new files with a closed outline:
 
 ```json
 {
-  "any-markdown.toolbarMode": "full"
+  "binary-markdown.outlineDefaultOpen": false,
+  "binary-markdown.outlineStateScope": "file"
 }
 ```
 
----
+A remembered visibility overrides the initial default. Changing the default does not erase previously saved outline states. These settings control the editor's outline, not VS Code's Explorer sidebar.
 
-## ✨ Features
+## Everyday commands
 
-### AI-Friendly Editing
+Search for **Binary Markdown** in the Command Palette. Commands include opening the editor, switching source mode, opening as text, comparing as text, inserting tables or a table of contents, and undo/redo.
 
-**Edit markdown visually while AI modifies the same file — your edits and AI's edits coexist safely.**
+| Action | macOS | Windows/Linux |
+| --- | --- | --- |
+| Open action palette | `Cmd+/` | `Ctrl+/` |
+| Toggle source mode | `Cmd+.` | `Ctrl+.` |
+| Open as text | `Cmd+Shift+.` | `Ctrl+Shift+.` |
 
-- `Cmd+L`** / **`Ctrl+L` — Select text in the WYSIWYG editor, press `Cmd+L`, and the source file opens in VS Code's text editor with the exact lines selected (even within lists and tables). Press `Cmd+L` again to send to AI chat. Works with VS Code, Cursor, Kiro, and more.
-- **Real-time external change sync** — When AI assistants modify the file, only changed blocks are patched via block-level DOM diff. Your cursor position and in-progress edits are preserved. No "file modified externally" dialogs.
+PDF export remains an inherited placeholder; it is not an implemented export feature. The [editor guide](docs/editor-guide.md) covers formatting, keyboard operations, and images.
 
----
+## Build and contribute
 
-### Seamless Live Preview
-- **WYSIWYG Editing** - Edit markdown in a beautifully rendered view
-- **No Split Windows** - Everything in one unified editor
-- **Source Mode Toggle** - Switch between WYSIWYG and raw markdown with one click
+To build the source used for this release:
 
-### Rich Markdown Support
-- Headers (H1-H6) with outline navigation
-- Text formatting (Bold, Italic, Strikethrough)
-- Lists (Ordered, Unordered, Task Lists with checkboxes)
-- Tables with column resize and alignment
-- Code blocks with syntax highlighting
-- Blockquotes
-- Horizontal rules
-- Links and Images (drag & drop, paste support)
-- Smart link creation — select text and paste a URL to create `[selected text](URL)`
-- Mermaid diagrams
-- KaTeX math equations
-- YAML Front Matter
-
-
----
-
-## 📦 Installation
-
-### From VS Code Marketplace
-
-1. Open VS Code
-2. Go to Extensions (`Ctrl+Shift+X`)
-3. Search for **"Any Markdown Editor"**
-4. Click **Install**
-
-Or install directly: [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=imaken.any-markdown)
-
-### From Open VSX (VSCodium / Gitpod / Eclipse Theia)
-
-[Open VSX Registry](https://open-vsx.org/extension/imaken/any-markdown)
-
-### From VSIX
-```bash
-code --install-extension any-markdown-{version}.vsix
-```
-
-### From Source
-```bash
-git clone https://github.com/raggbal/any-markdown
-cd any-markdown
-npm install
+```sh
+git clone --branch v0.1.0 https://github.com/BinaryOutlook/any-markdown binary-markdown
+cd binary-markdown
+npm ci
 npm run compile
-# Press F5 to launch in debug mode
+npm run package
 ```
 
----
+The repository currently retains its original GitHub path; the project and package name are Binary Markdown. `npm run package` compiles the extension and writes `dist/binary-markdown-0.1.0.vsix`. No Marketplace credentials are needed to build or share that file. The packaging tool version is pinned in the lockfile.
 
-## ⚙️ Set as Default Editor for Markdown Files
+Run `npm test` for the automated suites. See [CONTRIBUTING.md](CONTRIBUTING.md) for focused tests and [the manual fixture](docs/copy-paste-test.md) for the copy and outline scenarios.
 
-To always open `.md` files with Any Markdown Editor:
+Bug reports, documentation, translations, compatibility testing, and focused PRs are welcome in [this fork's issue tracker](https://github.com/BinaryOutlook/any-markdown/issues). Avoid including personal paths, usernames, or private documents in reports.
 
-1. Right-click any `.md` file in the Explorer
-2. Select **"Open With..."**
-3. Select **"Configure default editor for '*.md'..."**
-4. Select **"Any Markdown"**
+## Project history and license
 
----
+The [reference archive](archive/README.md) preserves superseded README, website, screenshots, and upstream release notes for historical reference. Archived instructions describe the original project and should not be used to install this fork.
 
-## 🚀 Usage
-
-1. Open any `.md` or `.markdown` file
-2. Right-click and select **"Open with Any Markdown Editor"**
-3. Or use Command Palette: `Any Markdown: Open with Any Markdown Editor`
-
----
-
-## 📝 Creating Markdown Elements
-
-### Block Elements
-
-| Element | Pattern Input | Toolbar | Shortcut |
-| --- | --- | --- | --- |
-| Heading 1 | `# ` + Space | Heading menu → H1 | `Ctrl+1` |
-| Heading 2 | `## ` + Space | Heading menu → H2 | `Ctrl+2` |
-| Heading 3 | `### ` + Space | Heading menu → H3 | `Ctrl+3` |
-| Heading 4 | `#### ` + Space | Heading menu → H4 | `Ctrl+4` |
-| Heading 5 | `##### ` + Space | Heading menu → H5 | `Ctrl+5` |
-| Heading 6 | `###### ` + Space | Heading menu → H6 | `Ctrl+6` |
-| Paragraph | (default)<br> | — | `Ctrl+0` |
-| Unordered List | `- ` or `* ` + Space | List button | `Ctrl+Shift+U` |
-| Ordered List | `1. ` + Space | Numbered list button | `Ctrl+Shift+O` |
-| Task List | `- [ ] ` + Space | Task list button | `Ctrl+Shift+X` |
-| Blockquote | `> ` + Space | Quote button | `Ctrl+Shift+Q` |
-| Code Block | ````` ``` ````` + Enter | Code button | `Ctrl+Shift+K` |
-| Table | `| col1 | col2 |` + Enter | Table button | `Ctrl+T` |
-| Horizontal Rule | `---` + Enter | HR button | `Ctrl+Shift+-` |
-
-
-### Inline Elements
-
-| Element | Pattern Input | Toolbar | Shortcut |
-| --- | --- | --- | --- |
-| Bold | `**text**` + Space | Bold button | `Ctrl+B` |
-| Italic | `*text*` + Space | Italic button | `Ctrl+I` |
-| Strikethrough | `~~text~~` + Space | Strikethrough button | `Ctrl+Shift+S` |
-| Inline Code | ``` `text` ``` + Space | Code button | ``` Ctrl+` ``` |
-| Link | `[text](url)` <br>Space conversion not supported<br> | Link button | `Ctrl+K` |
-| Image | `![text](url)` <br>Space conversion not supported<br> | Image button | `Ctrl+Shift+I` |
-
-
----
-
-## ⌨️ Special Operations
-
-### General Shortcuts
-
-These shortcuts are active when the Any Markdown editor is focused:
-
-| Shortcut | Action |
-| --- | --- |
-| `Cmd+/` / `Ctrl+/` | Open Action Palette |
-| `Cmd+.` / `Ctrl+.` | Toggle Source Mode |
-| `Cmd+Shift+.` / `Ctrl+Shift+.` | Open in Text Editor |
-| `Ctrl/Cmd + S` | Save |
-| `Ctrl/Cmd + Z` | Undo |
-| `Ctrl/Cmd + Shift + Z` | Redo |
-| `Ctrl/Cmd + B` | Bold |
-| `Ctrl/Cmd + I` | Italic |
-| `Ctrl/Cmd + K` | Insert link |
-| `Ctrl/Cmd + F` | Find |
-| `Ctrl/Cmd + H` | Find and replace |
-| `Ctrl/Cmd + L` | Open source file with selected lines in text editor |
-
-### Escaping Block Elements
-
-| Element | Key | Action |
-| --- | --- | --- |
-| Code Block | `Shift+Enter` | Exit code block and create new paragraph |
-| Blockquote | `Shift+Enter` | Exit blockquote and create new paragraph |
-| Mermaid/Math | `Shift+Enter` | Exit block and create new paragraph |
-| Code Block | `↑` at first line | Exit to previous element |
-| Code Block | `↓` at last line | Exit to next element |
-| Blockquote | `↑` at first line | Exit to previous element |
-| Blockquote | `↓` at last line | Exit to next element |
-| Mermaid/Math | `↑` at first line | Exit to previous element |
-| Mermaid/Math | `↓` at last line | Exit to next element |
-
-### Escaping Inline Elements
-
-To exit inline formatting, type the closing marker followed by Space:
-
-| Element | Input | Action |
-| --- | --- | --- |
-| Bold | `**` + Space | Close bold and move cursor outside |
-| Italic | `*` + Space | Close italic and move cursor outside |
-| Strikethrough | `~~` + Space | Close strikethrough and move cursor outside |
-| Inline Code | ``` ` ``` + Space | Close inline code and move cursor outside |
-
-### Table Operations
-
-| Key | Action |
-| --- | --- |
-| `Tab` | Move to next cell |
-| `Shift+Tab` | Move to previous cell |
-| `Enter` | Insert new row |
-| `Shift+Enter` | Insert line break within cell |
-| `↑` / `↓` | Navigate between rows |
-| `←` / `→` | Navigate within/between cells |
-| `Cmd+A` | Select all text in current cell |
-
-### Code Block Operations
-
-| Key | Action |
-| --- | --- |
-| `Tab` | Insert 4 spaces |
-| `Shift+Tab` | Remove up to 4 leading spaces |
-| `Cmd+A` | Select all text within code block |
-
-### List Operations
-
-| Key | Action |
-| --- | --- |
-| `Tab` | Indent list item (increase nesting) |
-| `Shift+Tab` | Outdent list item (decrease nesting) |
-| `Enter` on empty item | Convert to paragraph or decrease nesting |
-| `Backspace` at start | Convert to paragraph |
-| Pattern at line start + Space | Convert list type in-place (e.g., `1. ` converts `- item` to ordered list) |
-
-### Multi-Block Selection
-
-| Key | Action |
-| --- | --- |
-| `Tab` | Insert 4 spaces at the beginning of each selected block |
-| `Shift+Tab` | Remove up to 4 leading spaces from each selected block |
-
----
-
-## 💻 Code Block Features
-
-### Supported Languages
-
-The editor supports syntax highlighting for the following languages:
-
-`javascript`, `typescript`, `python`, `json`, `bash`, `shell`, `css`, `html`, `xml`, `sql`, `java`, `go`, `rust`, `yaml`, `markdown`, `c`, `cpp`, `csharp`, `php`, `ruby`, `swift`, `kotlin`, `dockerfile`, `plaintext`
-
-**Language Aliases:** `js`→javascript, `ts`→typescript, `py`→python, `sh`→bash, `yml`→yaml, `md`→markdown, `c++`→cpp, `c#`→csharp
-
-### Display Mode / Edit Mode
-
-- **Display Mode**: Shows syntax-highlighted code with language tag and copy button
-- **Edit Mode**: Plain text editing (click on code block to enter)
-- **Expand Button**: Open code in a separate VS Code editor tab for larger editing
-
-### Mermaid Diagrams
-
-Code blocks with language `mermaid` are rendered as diagrams:
-
-```mermaid
-graph TD
-    A[Start] --> B{Decision}
-    B -->|Yes| C[Action]
-    B -->|No| D[End]
-```
-
-- Click on diagram to edit source
-- Diagram re-renders when exiting edit mode
-
-### KaTeX Math Equations
-
-Code blocks with language `math` are rendered as mathematical equations using KaTeX:
-
-```math
-E = mc^2
-\int_0^\infty e^{-x} dx = 1
-\sum_{n=1}^{\infty} \frac{1}{n^2} = \frac{\pi^2}{6}
-```
-
-- Each line is rendered as an independent display-mode equation
-- Click on the rendered equation to edit the LaTeX source
-- Equations re-render automatically (500ms debounce) while editing
-- Invalid LaTeX is shown as a red error message (does not break the layout)
-- Empty blocks show "Empty expression"
-- Navigate in/out with arrow keys, just like code blocks and Mermaid diagrams
-
----
-
-## 🖼️ Image Path Configuration
-
-Images can be saved to custom directories when pasting or drag-and-dropping.
-
-### Configuration Levels
-
-| Level | Setting File | Description |
-| --- | --- | --- |
-| **Global** | `~/Library/Application Support/Code/User/settings.json` (macOS)<br>`%APPDATA%\Code\User\settings.json` (Windows)<br>`~/.config/Code/User/settings.json` (Linux) | VS Code user settings |
-| **Project** | `.vscode/settings.json` | Project-level override |
-| **File** | Per-file directive | Per-file override in markdown footer |
-
-### VS Code settings.json Setting
-
-```json
-{
-  "any-markdown.imageDefaultDir": "./images",
-  "any-markdown.forceRelativeImagePath": true
-}
-```
-
-### Per-File Directive
-
-Add at the end of your markdown file:
-
-```markdown
----
-IMAGE_DIR: ./assets/images
-FORCE_RELATIVE_PATH: true
-```
-
-### Path Behavior Matrix
-
-`forceRelativeImagePath` allows you to separate the **image save location** from the **path written in Markdown**.
-
-**Use case**: When you want to save images to a specific absolute path (e.g., `/Users/shared/images/`) but reference them using relative paths from the Markdown file, set this to `true`.
-
-> **Note**: `forceRelativeImagePath` only takes effect when `imageDefaultDir` is an absolute path. When using relative paths, the setting is ignored as paths are always relative.
-
-| imageDefaultDir | forceRelativeImagePath | Image Save Location | Path in Markdown |
-| --- | --- | --- | --- |
-| Absolute (e.g., `/Users/shared/images`) | `false` (default) | Specified absolute path | Absolute path |
-| Absolute (e.g., `/Users/shared/images`) | `true` | Specified absolute path | Relative path from Markdown file |
-| Relative (e.g., `./images`) | `false` | Relative to Markdown file | Relative path |
-| Relative (e.g., `./images`) | `true` | Relative to Markdown file | Relative path (setting ignored) |
-
----
-
-## 🎨 Configuration
-
-### VS Code Settings
-
-| Setting | Description | Default |
-| --- | --- | --- |
-| `any-markdown.theme` | Editor theme (`github`, `sepia`, `night`, `dark`, `minimal`, `perplexity`, `things`) | `things` |
-| `any-markdown.fontSize` | Base font size (px) | `16` |
-| `any-markdown.imageDefaultDir` | Default directory for saved images | `""` (same as markdown file) |
-| `any-markdown.forceRelativeImagePath` | Force relative paths for images | `false` |
-| `any-markdown.language` | UI language (`default`, `en`, `ja`, `zh-cn`, `zh-tw`, `ko`, `es`, `fr`) | `default` |
-| `any-markdown.toolbarMode` | Toolbar display mode (`full`, `simple`). Simple shows only undo/redo and utility buttons (use `Cmd+/` for other operations) | `simple` |
-| `any-markdown.outlineStateScope` | Remember outline visibility per Markdown file (`file`) or share it across all Markdown files (`global`) | `file` |
-| `any-markdown.outlineDefaultOpen` | Open the outline when the selected scope does not have a saved state yet | `true` |
-| `any-markdown.enableDebugLogging` | Enable debug logging in browser console | `false` |
-
-With `outlineStateScope` set to `file`, every Markdown resource restores its own last outline state in the current workspace. With `global`, toggling the outline controls the next Markdown editor that renders as well, and the preference survives VS Code restarts.
-
-### Themes
-
-| Theme | Description |
-| --- | --- |
-| `github` | Clean GitHub-style rendering |
-| `sepia` | Warm, paper-like appearance for comfortable reading |
-| `night` | Dark theme with Tokyo Night inspired colors (blue tint) |
-| `dark` | Pure dark theme with neutral black/gray colors |
-| `minimal` | Distraction-free black and white design |
-| `perplexity` | Light theme with Perplexity brand colors (Paper White background) |
-| `things` | Clean, minimal theme inspired by Things app (SF Pro font, blue accents) (default) |
-
----
-
-## 🌐 Supported Languages (i18n)
-
-The editor UI supports the following languages:
-
-| Language | Code |
-| --- | --- |
-| English | `en` (default) |
-| Japanese | `ja` |
-| Simplified Chinese | `zh-cn` |
-| Traditional Chinese | `zh-tw` |
-| Korean | `ko` |
-| Spanish | `es` |
-| French | `fr` |
-
-Set via `any-markdown.language` or use `default` to follow VS Code's display language.
-
----
-
-## 🔧 Commands
-
-Available in Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`):
-
-| Command | Description |
-| --- | --- |
-| `Any MD: Open with Any Markdown Editor` | Open markdown file in WYSIWYG editor |
-| `Any MD: Insert Table` | Insert a new table |
-| `Any MD: Insert TOC` | Insert table of contents |
-| `Any MD: Open as Text` | Open in standard text editor |
-| `Any MD: Compare as Text` | Compare with text version |
-| `Any MD: Toggle Source Mode` | Switch between WYSIWYG and source mode |
-| `Any MD: Undo` | Undo last edit |
-| `Any MD: Redo` | Redo last undone edit |
-
----
-
-## 🔄 External File Changes
-
-When another tool (e.g., AI coding assistants like Claude Code, Cursor, etc.) modifies the same markdown file while you have it open in Any Markdown:
-
-- **Block-level DOM diff**: Only changed blocks are updated — your cursor position and in-progress edits are preserved.
-- **Toast notification**: A notification appears allowing you to review and accept or dismiss external changes.
-- **Unsaved changes warning**: If you have unsaved edits, a confirmation dialog prevents accidental overwrites.
-
----
-
-## 🛠️ Development
-
-```bash
-# Install dependencies
-npm install
-
-# Compile TypeScript
-npm run compile
-
-# Watch for changes
-npm run watch
-
-# Run tests
-npm test
-
-# Package extension
-vsce package --no-dependencies
-```
-
----
-
-## 💖 Support This Project
-
-If you find this extension useful, please consider:
-
-- [**Sponsor** on GitHub](https://github.com/sponsors/raggbal) - Help keep this project maintained
-- **Star** this repository on [GitHub](https://github.com/raggbal/any-markdown)
-- **Report issues** or suggest features on [Issues](https://github.com/raggbal/any-markdown/issues)
-- **Contribute** with pull requests
-
-Your support helps keep this project maintained and improved!
-
----
-
-## 📄 License
-
-MIT License - feel free to use this extension in your projects.
-
----
-
-## 🙏 Acknowledgments
-
-- Built with love for the VS Code community
-
----
-IMAGE_DIR: ./assets/images
-FORCE_RELATIVE_PATH: true
+Binary Markdown remains [MIT licensed](LICENSE). Original copyright and license notices are preserved. Third-party library notices are included in packaged builds. The Electron desktop sources are retained under the Binary Markdown name; desktop installers and their compatibility are a separate release effort.

@@ -84,7 +84,7 @@ test('editor body starts open and hides the open button', () => {
 
 test('extension settings expose file and global outline persistence modes', () => {
     const properties = extensionManifest.contributes.configuration.properties;
-    const scopeSetting = properties['any-markdown.outlineStateScope'];
+    const scopeSetting = properties['binary-markdown.outlineStateScope'];
 
     assert.deepEqual(scopeSetting.enum, ['file', 'global']);
     assert.equal(scopeSetting.default, 'file');
@@ -92,7 +92,7 @@ test('extension settings expose file and global outline persistence modes', () =
 
 test('extension settings preserve the existing open default unless configured otherwise', () => {
     const properties = extensionManifest.contributes.configuration.properties;
-    const defaultOpenSetting = properties['any-markdown.outlineDefaultOpen'];
+    const defaultOpenSetting = properties['binary-markdown.outlineDefaultOpen'];
 
     assert.equal(defaultOpenSetting.type, 'boolean');
     assert.equal(defaultOpenSetting.default, true);

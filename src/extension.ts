@@ -1,20 +1,20 @@
 import * as vscode from 'vscode';
-import { AnyMarkdownEditorProvider } from './editorProvider';
+import { BinaryMarkdownEditorProvider } from './editorProvider';
 import { initLocale, t } from './i18n/messages';
 
 export function activate(context: vscode.ExtensionContext) {
     // Initialize localization
-    const config = vscode.workspace.getConfiguration('any-markdown');
+    const config = vscode.workspace.getConfiguration('binary-markdown');
     initLocale(config.get<string>('language', 'default'), vscode.env.language);
     
-    console.log('Any Markdown Editor is now active!');
+    console.log('Binary Markdown Editor is now active!');
 
     // Register the custom editor provider
-    const provider = new AnyMarkdownEditorProvider(context);
+    const provider = new BinaryMarkdownEditorProvider(context);
     
     context.subscriptions.push(
         vscode.window.registerCustomEditorProvider(
-            'any-markdown.editor',
+            'binary-markdown.editor',
             provider,
             {
                 webviewOptions: {
@@ -30,13 +30,13 @@ export function activate(context: vscode.ExtensionContext) {
 
     // Register commands
     context.subscriptions.push(
-        vscode.commands.registerCommand('any-markdown.openEditor', async () => {
+        vscode.commands.registerCommand('binary-markdown.openEditor', async () => {
             const activeEditor = vscode.window.activeTextEditor;
             if (activeEditor && activeEditor.document.languageId === 'markdown') {
                 await vscode.commands.executeCommand(
                     'vscode.openWith',
                     activeEditor.document.uri,
-                    'any-markdown.editor'
+                    'binary-markdown.editor'
                 );
             } else {
                 vscode.window.showInformationMessage(t('openMarkdownFirst'));
@@ -45,7 +45,7 @@ export function activate(context: vscode.ExtensionContext) {
     );
 
     context.subscriptions.push(
-        vscode.commands.registerCommand('any-markdown.insertTable', async () => {
+        vscode.commands.registerCommand('binary-markdown.insertTable', async () => {
             const rows = await vscode.window.showInputBox({
                 prompt: t('numberOfRows'),
                 value: '3',
@@ -77,7 +77,7 @@ export function activate(context: vscode.ExtensionContext) {
     );
 
     context.subscriptions.push(
-        vscode.commands.registerCommand('any-markdown.insertToc', () => {
+        vscode.commands.registerCommand('binary-markdown.insertToc', () => {
             const editor = vscode.window.activeTextEditor;
             if (editor) {
                 editor.edit(editBuilder => {
@@ -88,33 +88,33 @@ export function activate(context: vscode.ExtensionContext) {
     );
 
     context.subscriptions.push(
-        vscode.commands.registerCommand('any-markdown.exportToPdf', () => {
+        vscode.commands.registerCommand('binary-markdown.exportToPdf', () => {
             vscode.window.showInformationMessage(t('pdfExportComingSoon'));
         })
     );
 
     // Undo/Redo commands - forwarded to webview to bypass VSCode's native undo
     context.subscriptions.push(
-        vscode.commands.registerCommand('any-markdown.undo', () => {
+        vscode.commands.registerCommand('binary-markdown.undo', () => {
             provider.sendUndo();
         })
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand('any-markdown.redo', () => {
+        vscode.commands.registerCommand('binary-markdown.redo', () => {
             provider.sendRedo();
         })
     );
 
     // Toggle source mode - forwarded to webview
     context.subscriptions.push(
-        vscode.commands.registerCommand('any-markdown.toggleSourceMode', () => {
+        vscode.commands.registerCommand('binary-markdown.toggleSourceMode', () => {
             provider.sendToggleSourceMode();
         })
     );
 
     // Open markdown file in standard text editor
     context.subscriptions.push(
-        vscode.commands.registerCommand('any-markdown.openAsText', async (uri?: vscode.Uri) => {
+        vscode.commands.registerCommand('binary-markdown.openAsText', async (uri?: vscode.Uri) => {
             // Get URI from argument (context menu) or active editor
             let targetUri = uri;
             if (!targetUri) {
@@ -135,7 +135,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     // Compare markdown files as text
     context.subscriptions.push(
-        vscode.commands.registerCommand('any-markdown.compareAsText', async (uri?: vscode.Uri, uris?: vscode.Uri[]) => {
+        vscode.commands.registerCommand('binary-markdown.compareAsText', async (uri?: vscode.Uri, uris?: vscode.Uri[]) => {
             const fs = require('fs');
             const path = require('path');
             const os = require('os');
@@ -194,8 +194,8 @@ export function activate(context: vscode.ExtensionContext) {
             // Use timestamp to avoid conflicts
             const timestamp = Date.now();
             const tempDir = os.tmpdir();
-            const tempFile1 = path.join(tempDir, `anymd-compare-${timestamp}-1-${fileName1}.txt`);
-            const tempFile2 = path.join(tempDir, `anymd-compare-${timestamp}-2-${fileName2}.txt`);
+            const tempFile1 = path.join(tempDir, `binary-markdown-compare-${timestamp}-1-${fileName1}.txt`);
+            const tempFile2 = path.join(tempDir, `binary-markdown-compare-${timestamp}-2-${fileName2}.txt`);
             
             fs.writeFileSync(tempFile1, content1, 'utf8');
             fs.writeFileSync(tempFile2, content2, 'utf8');

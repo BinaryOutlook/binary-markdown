@@ -6,7 +6,7 @@ import { BrowserWindow, dialog, shell, net, app } from 'electron';
  * This avoids collision with VSCode extension releases on /releases/latest.
  */
 
-const GITHUB_OWNER = 'raggbal';
+const GITHUB_OWNER = 'BinaryOutlook';
 const GITHUB_REPO = 'any-markdown';
 const TAG_PREFIX = 'electron-v';
 const API_URL = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/releases`;
@@ -41,7 +41,7 @@ function fetchLatestElectronRelease(): Promise<GitHubRelease | null> {
     return new Promise((resolve) => {
         // Fetch first page (30 releases) — enough to find the latest electron release
         const request = net.request(`${API_URL}?per_page=30`);
-        request.setHeader('User-Agent', `AnyMarkdown/${getCurrentVersion()}`);
+        request.setHeader('User-Agent', `BinaryMarkdown/${getCurrentVersion()}`);
 
         let data = '';
         request.on('response', (response) => {

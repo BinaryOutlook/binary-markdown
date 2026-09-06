@@ -73,7 +73,7 @@ export class SettingsManager {
             resizable: false,
             minimizable: false,
             maximizable: false,
-            title: 'Any Markdown — Preferences',
+            title: 'Binary Markdown — Preferences',
             webPreferences: {
                 nodeIntegration: false,
                 contextIsolation: true,
