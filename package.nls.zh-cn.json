@@ -1,0 +1,23 @@
+{
+  "config.theme.description": "编辑器主题。",
+  "config.fontSize.description": "编辑器的基本字号，单位为像素。",
+  "config.imageDefaultDir.description": "保存图片的默认目录。留空时使用Markdown文件所在的目录。支持绝对路径（例如/path/to/dir）和相对路径（例如./images或images/）。",
+  "config.forceRelativeImagePath.description": "始终在Markdown中插入相对图片路径，即使imageDefaultDir设置为绝对路径。",
+  "config.language.description": "编辑器界面的语言。'default'使用VS Code的显示语言。设置说明始终跟随VS Code的显示语言。",
+  "config.language.default": "使用VS Code的显示语言。",
+  "config.language.en": "英语",
+  "config.language.ja": "日语",
+  "config.language.zhTW": "中文（繁体）",
+  "config.language.zhCN": "中文（简体）",
+  "config.language.ko": "韩语",
+  "config.language.es": "西班牙语",
+  "config.language.fr": "法语",
+  "config.toolbarMode.description": "工具栏的显示模式。",
+  "config.toolbarMode.full": "显示所有工具栏按钮。",
+  "config.toolbarMode.simple": "显示撤销、重做和实用工具按钮。其他操作请使用Cmd+/（macOS）或Ctrl+/（Windows/Linux）。",
+  "config.outlineStateScope.description": "控制是否为每个文件单独记住大纲的显示状态，或在全局共享此状态。",
+  "config.outlineStateScope.file": "为当前工作区中的每个Markdown文件单独记住大纲的显示状态。",
+  "config.outlineStateScope.global": "在所有Markdown文件和工作区中使用上次的大纲显示状态。",
+  "config.outlineDefaultOpen.description": "未记住显示状态时，是否默认打开大纲。",
+  "config.enableDebugLogging.description": "启用编辑器的调试日志，以便排查问题。"
+}

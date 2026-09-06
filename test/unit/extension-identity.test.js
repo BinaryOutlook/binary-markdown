@@ -74,9 +74,11 @@ test('menus and shortcuts resolve to declared commands and stay scoped to the op
 test('settings retain their defaults without sharing any upstream keys', () => {
     const current = manifest.contributes.configuration.properties;
     const original = upstream.contributes.configuration.properties;
+    // Presentation text may be translated independently of the setting's behavior.
+    const behavior = ({ description, enumDescriptions, ...schema }) => schema;
     for (const [oldKey, schema] of Object.entries(original)) {
         assert.equal(oldKey in current, false);
-        assert.deepEqual(current[oldKey.replace('any-markdown.', 'binary-markdown.')], schema);
+        assert.deepEqual(behavior(current[oldKey.replace('any-markdown.', 'binary-markdown.')]), behavior(schema));
     }
     assert.equal(current['binary-markdown.outlineStateScope'].default, 'file');
     assert.equal(current['binary-markdown.outlineDefaultOpen'].default, true);

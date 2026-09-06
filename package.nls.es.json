@@ -1,0 +1,23 @@
+{
+  "config.theme.description": "Tema del editor.",
+  "config.fontSize.description": "Tamaño de fuente base del editor, en píxeles.",
+  "config.imageDefaultDir.description": "Directorio predeterminado para guardar imágenes. Déjelo vacío para usar el directorio del archivo Markdown. Admite rutas absolutas (p. ej., /path/to/dir) y relativas (p. ej., ./images o images/).",
+  "config.forceRelativeImagePath.description": "Insertar siempre rutas de imágenes relativas en Markdown, incluso si imageDefaultDir es una ruta absoluta.",
+  "config.language.description": "Idioma de la interfaz del editor. 'default' usa el idioma de visualización de VS Code. Las descripciones de los ajustes siempre siguen el idioma de visualización de VS Code.",
+  "config.language.default": "Usar el idioma de visualización de VS Code.",
+  "config.language.en": "Inglés",
+  "config.language.ja": "Japonés",
+  "config.language.zhTW": "Chino (tradicional)",
+  "config.language.zhCN": "Chino (simplificado)",
+  "config.language.ko": "Coreano",
+  "config.language.es": "Español",
+  "config.language.fr": "Francés",
+  "config.toolbarMode.description": "Modo de visualización de la barra de herramientas.",
+  "config.toolbarMode.full": "Mostrar todos los botones de la barra de herramientas.",
+  "config.toolbarMode.simple": "Mostrar los botones de deshacer, rehacer y utilidades. Use Cmd+/ (macOS) o Ctrl+/ (Windows/Linux) para otras acciones.",
+  "config.outlineStateScope.description": "Controla si la visibilidad del esquema se recuerda por archivo o se comparte de forma global.",
+  "config.outlineStateScope.file": "Recordar la visibilidad del esquema por separado para cada archivo Markdown del área de trabajo actual.",
+  "config.outlineStateScope.global": "Usar el último estado de visibilidad del esquema para todos los archivos Markdown y en todas las áreas de trabajo.",
+  "config.outlineDefaultOpen.description": "Indica si el esquema se abre inicialmente cuando no hay un estado de visibilidad guardado.",
+  "config.enableDebugLogging.description": "Activar el registro de depuración del editor para solucionar problemas."
+}

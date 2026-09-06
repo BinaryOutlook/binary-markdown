@@ -1,0 +1,23 @@
+{
+  "config.theme.description": "편집기 테마입니다.",
+  "config.fontSize.description": "편집기의 기본 글꼴 크기입니다. 단위는 픽셀입니다.",
+  "config.imageDefaultDir.description": "이미지를 저장할 기본 디렉터리입니다. 비워 두면 Markdown 파일이 있는 디렉터리를 사용합니다. 절대 경로(예: /path/to/dir)와 상대 경로(예: ./images 또는 images/)를 지원합니다.",
+  "config.forceRelativeImagePath.description": "imageDefaultDir에 절대 경로를 지정해도 Markdown에 항상 상대 이미지 경로를 삽입합니다.",
+  "config.language.description": "편집기 인터페이스의 언어입니다. 'default'는 VS Code의 표시 언어를 사용합니다. 설정 설명은 항상 VS Code의 표시 언어를 따릅니다.",
+  "config.language.default": "VS Code의 표시 언어를 사용합니다.",
+  "config.language.en": "영어",
+  "config.language.ja": "일본어",
+  "config.language.zhTW": "중국어(번체)",
+  "config.language.zhCN": "중국어(간체)",
+  "config.language.ko": "한국어",
+  "config.language.es": "스페인어",
+  "config.language.fr": "프랑스어",
+  "config.toolbarMode.description": "도구 모음의 표시 모드입니다.",
+  "config.toolbarMode.full": "도구 모음의 모든 버튼을 표시합니다.",
+  "config.toolbarMode.simple": "실행 취소, 다시 실행 및 유틸리티 버튼을 표시합니다. 다른 작업에는 Cmd+/(macOS) 또는 Ctrl+/(Windows/Linux)를 사용하세요.",
+  "config.outlineStateScope.description": "개요 표시 상태를 파일별로 기억할지, 전역으로 공유할지 설정합니다.",
+  "config.outlineStateScope.file": "현재 작업 영역의 각 Markdown 파일에 대해 개요 표시 상태를 따로 기억합니다.",
+  "config.outlineStateScope.global": "모든 Markdown 파일과 작업 영역에 마지막 개요 표시 상태를 적용합니다.",
+  "config.outlineDefaultOpen.description": "기억된 표시 상태가 없을 때 개요를 열린 상태로 시작할지 설정합니다.",
+  "config.enableDebugLogging.description": "문제 해결을 위해 편집기의 디버그 로깅을 사용합니다."
+}

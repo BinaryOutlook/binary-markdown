@@ -19,12 +19,30 @@ Compilation builds TypeScript and translations, copies webview/shared modules, a
 npm run lint
 npm run test:outline-state
 npm run test:identity
+npm run test:localization
 npm run test:e2e -- test/specs/codeblock-copy.spec.ts test/specs/sidebar-state.spec.ts test/specs/copy-paste.spec.ts
 ```
 
 The browser tests need Playwright Chromium. On a new machine, install it with `npx playwright install chromium`. `npm test` runs compilation, lint, unit checks, and the full browser suite. Report failing tests and distinguish existing failures from changes introduced by your patch.
 
 The identity tests check registration consistency and separation from the archived upstream manifest. This helps prevent a rename from breaking commands, shortcuts, settings, or coexistence with the original extension.
+
+## Settings translations
+
+VS Code localizes settings descriptions and option explanations through `%key%` references in `package.json`. Keep English text in `package.nls.json` and the six other translations in `package.nls.<locale>.json` (`ja`, `zh-cn`, `zh-tw`, `ko`, `es`, and `fr`). These files are included directly in the VSIX; they are separate from the editor's runtime dictionaries in `src/i18n/locales/`.
+
+When adding or editing a setting, update every manifest dictionary and run `npm run test:localization`. The checks require all supported languages, complete non-empty translations, and explanations for every language, toolbar, and outline-scope option. Keep setting IDs, stored enum values, and defaults stable.
+
+For a UI check, install the packaged VSIX in the isolated environment below, open Settings, and search for `@ext:binaryoutlook.binary-markdown`. Verify the image-directory descriptions and the language, toolbar, and outline-scope dropdown explanations. Changing `binary-markdown.language` should affect the editor interface while settings descriptions continue to follow VS Code's display language. Also check an unsupported display language for English fallback. The standalone browser fixture does not exercise VS Code's native Settings page.
+
+Install an official VS Code language pack in the test extension directory and launch the test instance with an explicit locale, for example:
+
+```sh
+code --user-data-dir /tmp/binary-markdown-test --extensions-dir .vscode-test/manual/extensions --install-extension MS-CEINTL.vscode-language-pack-ja
+code --new-window --user-data-dir /tmp/binary-markdown-test --extensions-dir .vscode-test/manual/extensions --locale ja docs/copy-paste-test.md
+```
+
+Close the test instance before relaunching it with a different `--locale`. Use this launch flag for isolated checks because **Configure Display Language** writes a shared startup preference even with a separate user-data directory. Only trust the generated test fixture or this checkout when testing an extension disabled in Restricted Mode.
 
 ## Package and test
 

@@ -111,22 +111,22 @@
             "things"
           ],
           "default": "things",
-          "description": "Editor theme"
+          "description": "%config.theme.description%"
         },
         "binary-markdown.fontSize": {
           "type": "number",
           "default": 16,
-          "description": "Base font size in pixels"
+          "description": "%config.fontSize.description%"
         },
         "binary-markdown.imageDefaultDir": {
           "type": "string",
           "default": "",
-          "description": "画像保存のデフォルトディレクトリ。空の場合はMarkdownファイルと同じディレクトリを使用。絶対パス（/path/to/dir）または相対パス（./images、images/）を指定可能。"
+          "description": "%config.imageDefaultDir.description%"
         },
         "binary-markdown.forceRelativeImagePath": {
           "type": "boolean",
           "default": false,
-          "description": "画像パスを常に相対パスで挿入します。絶対パスでimageDefaultDirを指定した場合でも、Markdownには相対パスが挿入されます。"
+          "description": "%config.forceRelativeImagePath.description%"
         },
         "binary-markdown.language": {
           "type": "string",
@@ -140,8 +140,18 @@
             "es",
             "fr"
           ],
+          "enumDescriptions": [
+            "%config.language.default%",
+            "%config.language.en%",
+            "%config.language.ja%",
+            "%config.language.zhTW%",
+            "%config.language.zhCN%",
+            "%config.language.ko%",
+            "%config.language.es%",
+            "%config.language.fr%"
+          ],
           "default": "default",
-          "description": "UI language. 'default' uses VS Code's display language. / UI言語。'default'はVS Codeの表示言語を使用します。"
+          "description": "%config.language.description%"
         },
         "binary-markdown.toolbarMode": {
           "type": "string",
@@ -149,8 +159,12 @@
             "full",
             "simple"
           ],
+          "enumDescriptions": [
+            "%config.toolbarMode.full%",
+            "%config.toolbarMode.simple%"
+          ],
           "default": "simple",
-          "description": "Toolbar display mode. 'full' shows all buttons. 'simple' shows only undo/redo and utility buttons (use Cmd+/ for other operations). / ツールバー表示モード。'full'は全ボタン表示。'simple'はundo/redoとユーティリティのみ（他はCmd+/で操作）。"
+          "description": "%config.toolbarMode.description%"
         },
         "binary-markdown.outlineStateScope": {
           "type": "string",
@@ -159,21 +173,21 @@
             "global"
           ],
           "enumDescriptions": [
-            "Remember outline visibility separately for each Markdown file in the current workspace.",
-            "Use the last outline visibility for every Markdown file and across workspaces."
+            "%config.outlineStateScope.file%",
+            "%config.outlineStateScope.global%"
           ],
           "default": "file",
-          "description": "Controls whether outline visibility is remembered per file or shared globally."
+          "description": "%config.outlineStateScope.description%"
         },
         "binary-markdown.outlineDefaultOpen": {
           "type": "boolean",
           "default": true,
-          "description": "Whether the outline starts open when no remembered visibility exists."
+          "description": "%config.outlineDefaultOpen.description%"
         },
         "binary-markdown.enableDebugLogging": {
           "type": "boolean",
           "default": false,
-          "description": "Enable debug logging in the editor. Useful for troubleshooting. / エディタのデバッグログを有効にします。トラブルシューティングに便利です。"
+          "description": "%config.enableDebugLogging.description%"
         }
       }
     },
@@ -248,7 +262,7 @@
     "compile": "tsc -p ./ && node build-locales.js && node scripts/copy-webview.js && node scripts/copy-vendor.js",
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
-    "test": "npm run test:outline-state && npm run test:identity && npm run test:e2e",
+    "test": "npm run test:outline-state && npm run test:identity && npm run test:localization && npm run test:e2e",
     "lint": "eslint src --ext ts",
     "package": "node scripts/package-vsix.js",
     "test:build": "node test/build-standalone.js",
@@ -257,7 +271,8 @@
     "test:e2e:ui": "npm run test:build && playwright test --ui",
     "test:serve": "npx serve test/html -p 3000",
     "build:locales": "node build-locales.js",
-    "test:identity": "node --test test/unit/extension-identity.test.js"
+    "test:identity": "node --test test/unit/extension-identity.test.js",
+    "test:localization": "node --test test/unit/settings-localization.test.js"
   },
   "devDependencies": {
     "@playwright/test": "^1.58.1",

@@ -49,10 +49,12 @@ Open **Settings** (`Cmd+,` on macOS or `Ctrl+,` on Windows/Linux) and search for
 | `binary-markdown.toolbarMode` | `simple` | Use the compact toolbar or choose `full`. |
 | `binary-markdown.theme` | `things` | Choose `github`, `sepia`, `night`, `dark`, `minimal`, `perplexity`, or `things`. |
 | `binary-markdown.fontSize` | `16` | Editor font size in pixels. |
-| `binary-markdown.language` | `default` | Follow VS Code's language, or select a supported language. |
+| `binary-markdown.language` | `default` | Editor interface language: follow VS Code, or select a supported language. |
 | `binary-markdown.imageDefaultDir` | `""` | Image save directory; empty means the document's directory. |
 | `binary-markdown.forceRelativeImagePath` | `false` | Prefer relative Markdown image paths when an absolute image directory is configured. |
 | `binary-markdown.enableDebugLogging` | `false` | Enable diagnostic logging when investigating an issue. |
+
+Settings descriptions and option explanations follow **VS Code's display language**. English, Japanese, Simplified Chinese, Traditional Chinese, Korean, Spanish, and French are supported; other display languages fall back to English. Use **Configure Display Language** in the Command Palette and restart VS Code to change the display language. The `binary-markdown.language` setting controls the editor interface independently of these settings descriptions.
 
 To start new files with a closed outline:
 

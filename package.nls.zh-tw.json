@@ -1,0 +1,23 @@
+{
+  "config.theme.description": "編輯器佈景主題。",
+  "config.fontSize.description": "編輯器的基本字型大小，單位為像素。",
+  "config.imageDefaultDir.description": "儲存圖片的預設目錄。留空時使用Markdown檔案所在的目錄。支援絕對路徑（例如/path/to/dir）和相對路徑（例如./images或images/）。",
+  "config.forceRelativeImagePath.description": "一律在Markdown中插入相對圖片路徑，即使imageDefaultDir設為絕對路徑。",
+  "config.language.description": "編輯器介面的語言。'default'使用VS Code的顯示語言。設定說明一律跟隨VS Code的顯示語言。",
+  "config.language.default": "使用VS Code的顯示語言。",
+  "config.language.en": "英語",
+  "config.language.ja": "日語",
+  "config.language.zhTW": "中文（繁體）",
+  "config.language.zhCN": "中文（簡體）",
+  "config.language.ko": "韓語",
+  "config.language.es": "西班牙語",
+  "config.language.fr": "法語",
+  "config.toolbarMode.description": "工具列的顯示模式。",
+  "config.toolbarMode.full": "顯示所有工具列按鈕。",
+  "config.toolbarMode.simple": "顯示復原、重做和公用程式按鈕。其他操作請使用Cmd+/（macOS）或Ctrl+/（Windows/Linux）。",
+  "config.outlineStateScope.description": "控制是否為每個檔案分別記住大綱的顯示狀態，或在全域共用此狀態。",
+  "config.outlineStateScope.file": "為目前工作區中的每個Markdown檔案分別記住大綱的顯示狀態。",
+  "config.outlineStateScope.global": "在所有Markdown檔案和工作區中使用上次的大綱顯示狀態。",
+  "config.outlineDefaultOpen.description": "未記住顯示狀態時，是否預設開啟大綱。",
+  "config.enableDebugLogging.description": "啟用編輯器的偵錯記錄，以便疑難排解。"
+}

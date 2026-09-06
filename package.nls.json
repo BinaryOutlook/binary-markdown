@@ -1,0 +1,23 @@
+{
+  "config.theme.description": "Editor theme.",
+  "config.fontSize.description": "Base editor font size, in pixels.",
+  "config.imageDefaultDir.description": "Default directory for saving images. Leave empty to use the Markdown file's directory. Supports absolute paths (e.g. /path/to/dir) and relative paths (e.g. ./images or images/).",
+  "config.forceRelativeImagePath.description": "Always insert relative image paths in Markdown, even when imageDefaultDir is an absolute path.",
+  "config.language.description": "Language for the editor interface. 'default' follows VS Code's display language. Settings descriptions always follow VS Code's display language.",
+  "config.language.default": "Use VS Code's display language.",
+  "config.language.en": "English",
+  "config.language.ja": "Japanese",
+  "config.language.zhTW": "Chinese (Traditional)",
+  "config.language.zhCN": "Chinese (Simplified)",
+  "config.language.ko": "Korean",
+  "config.language.es": "Spanish",
+  "config.language.fr": "French",
+  "config.toolbarMode.description": "Toolbar display mode.",
+  "config.toolbarMode.full": "Show all toolbar buttons.",
+  "config.toolbarMode.simple": "Show undo, redo, and utility buttons. Use Cmd+/ (macOS) or Ctrl+/ (Windows/Linux) for other actions.",
+  "config.outlineStateScope.description": "Controls whether outline visibility is remembered per file or shared globally.",
+  "config.outlineStateScope.file": "Remember outline visibility separately for each Markdown file in the current workspace.",
+  "config.outlineStateScope.global": "Use the last outline visibility for every Markdown file and across workspaces.",
+  "config.outlineDefaultOpen.description": "Whether the outline starts open when no remembered visibility exists.",
+  "config.enableDebugLogging.description": "Enable editor debug logging for troubleshooting."
+}

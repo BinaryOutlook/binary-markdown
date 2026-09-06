@@ -1,0 +1,23 @@
+{
+  "config.theme.description": "エディターのテーマ。",
+  "config.fontSize.description": "エディターの基本フォントサイズ（ピクセル単位）。",
+  "config.imageDefaultDir.description": "画像保存の既定のディレクトリ。空の場合はMarkdownファイルと同じディレクトリを使用します。絶対パス（例：/path/to/dir）または相対パス（例：./images、images/）を指定できます。",
+  "config.forceRelativeImagePath.description": "imageDefaultDirに絶対パスを指定した場合でも、Markdownには常に相対パスで画像を挿入します。",
+  "config.language.description": "エディターの表示言語。'default'はVS Codeの表示言語を使用します。設定の説明は常にVS Codeの表示言語に従います。",
+  "config.language.default": "VS Codeの表示言語を使用します。",
+  "config.language.en": "英語",
+  "config.language.ja": "日本語",
+  "config.language.zhTW": "中国語（繁体字）",
+  "config.language.zhCN": "中国語（簡体字）",
+  "config.language.ko": "韓国語",
+  "config.language.es": "スペイン語",
+  "config.language.fr": "フランス語",
+  "config.toolbarMode.description": "ツールバーの表示モード。",
+  "config.toolbarMode.full": "ツールバーのすべてのボタンを表示します。",
+  "config.toolbarMode.simple": "元に戻す、やり直し、ユーティリティのボタンを表示します。その他の操作にはCmd+/（macOS）またはCtrl+/（Windows/Linux）を使用します。",
+  "config.outlineStateScope.description": "アウトラインの表示状態をファイルごとに記憶するか、全体で共有するかを指定します。",
+  "config.outlineStateScope.file": "現在のワークスペース内のMarkdownファイルごとに、アウトラインの表示状態を記憶します。",
+  "config.outlineStateScope.global": "ワークスペースをまたいで、すべてのMarkdownファイルに最後のアウトラインの表示状態を適用します。",
+  "config.outlineDefaultOpen.description": "記憶された表示状態がない場合に、アウトラインを開いた状態で開始するかどうかを指定します。",
+  "config.enableDebugLogging.description": "トラブルシューティング用にエディターのデバッグログを有効にします。"
+}
