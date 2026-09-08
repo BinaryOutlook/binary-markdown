@@ -81,7 +81,7 @@ The [editor guide](docs/editor-guide.md) covers formatting, keyboard operations,
 
 ## Experimental export — unreleased
 
-The `export-subsystem` branch adds **HTML, PDF, Word (.docx), and EPUB** export, initially targeting **local desktop VS Code on macOS**. Native installed-package checks have passed; human review and release remain pending. The existing `v0.1.0` release download above predates this feature. Build the implementation branch to evaluate it. See the [implementation and validation checklist](docs/export-validation.md) for the current evidence and declared limitations.
+The `export-subsystem` branch adds experimental **HTML, PDF, Word (.docx), and EPUB** export in **local desktop VS Code on macOS and Linux**. Native installed-package checks cover macOS ARM64 and Ubuntu x86-64; human review and release remain pending. The existing `v0.1.0` release download above predates this feature. Build the implementation branch to evaluate it. See the [implementation and validation checklist](docs/export-validation.md) for the exact tested environments and declared limitations.
 
 Save the named Markdown file, then select the sharing-arrow button immediately to the right of the VS Code-logo toolbar button. Choose a format from its dropdown. Unsaved work produces a save-and-retry message; export does not save automatically. The job shows its actual stage, supports cancellation, and reports the saved path and any fallback warnings.
 
@@ -95,10 +95,10 @@ Install Pandoc using its [official instructions](https://pandoc.org/installing.h
 
 Open VS Code Settings and search for `binary-markdown.export`. Leave the following **machine-specific** settings empty for automatic detection, or supply an absolute executable path:
 
-| Setting | Example macOS executable path |
-| --- | --- |
-| `binary-markdown.export.pandocPath` | `/opt/homebrew/bin/pandoc` |
-| `binary-markdown.export.browserPath` | `/Applications/Google Chrome.app/Contents/MacOS/Google Chrome` |
+| Setting | Example macOS executable path | Example Linux executable path |
+| --- | --- | --- |
+| `binary-markdown.export.pandocPath` | `/opt/homebrew/bin/pandoc` | `/usr/bin/pandoc` or an absolute user-space installation path |
+| `binary-markdown.export.browserPath` | `/Applications/Google Chrome.app/Contents/MacOS/Google Chrome` | `/usr/bin/google-chrome` |
 
 An invalid manual path is reported instead of silently selecting a different tool. Reopen the export menu after installing a tool to rescan. The initial workflow requires a trusted workspace; remote hosts, browser VS Code and Electron-app export are deferred.
 
