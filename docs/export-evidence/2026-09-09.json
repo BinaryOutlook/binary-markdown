@@ -1,0 +1,508 @@
+{
+  "recorded": "2026-09-09",
+  "status": "Engineering checks passed within declared scope; human acceptance, merge and release pending",
+  "productionCodeCommit": "99aff55e78338671af31ac94a44058776e491ca8",
+  "host": {
+    "os": "macOS 26.5.2 (25F84)",
+    "architecture": "arm64",
+    "vscode": "1.136.0",
+    "developmentNode": "20.20.0",
+    "pandoc": "3.8.3",
+    "chrome": "152.0.7977.65",
+    "playwrightCore": "1.58.1"
+  },
+  "finalPackage": {
+    "filename": "binary-markdown-0.1.0.vsix",
+    "bytes": 4187330,
+    "sha256": "958ba238a2b064888c9b5e76631c2aa884004e4769ade61c72523168c4808438",
+    "differenceFromNativeArtifactCandidate": "Packaged help and README documentation only; compiled code parity verified"
+  },
+  "nativeArtifactCandidateSha256": "dc5d1876917c17a09f3d795cb6debbf8c555ff3c79b9e178140c770704ba5967",
+  "frozenSourceSha256": "1db4863436896ffa05bcfcc1d413a5fc88cd1ce73ce5f1c8cd78eb37686cbe33",
+  "tests": {
+    "baselineBrowser": {
+      "passed": 662,
+      "skipped": 4,
+      "failed": 1
+    },
+    "fullBrowser": {
+      "passed": 684,
+      "skipped": 4,
+      "failed": 1
+    },
+    "knownFailure": "test/specs/perplexity-highlight-test.spec.ts:4; reproduced before implementation",
+    "fullUnit": {
+      "passed": 84,
+      "skipped": 1
+    },
+    "finalExportUnitWithRealToolsAndPackage": {
+      "passed": 74,
+      "skipped": 0,
+      "failed": 0
+    },
+    "postHarnessFixFocusedBrowser": {
+      "passed": 23,
+      "failed": 0
+    },
+    "compile": "passed",
+    "lint": {
+      "errors": 0,
+      "existingWarnings": 8
+    },
+    "electronSharedCompile": "passed; no Electron export/installer certification"
+  },
+  "outputs": [
+    {
+      "source": "basic.md",
+      "format": "html",
+      "filename": "basic_c41f30ee.html",
+      "bytes": 446868,
+      "sha256": "f876fd318d3742bd3b927dc608b2e4a154c6ffb7ec6060aaa23305edc41f30ee",
+      "warningCodes": [
+        "renderer-math-source",
+        "renderer-toc-source",
+        "renderer-footnote-source"
+      ]
+    },
+    {
+      "source": "basic.md",
+      "format": "pdf",
+      "filename": "basic_e1016ac6.pdf",
+      "bytes": 214616,
+      "sha256": "f6659187c1c372ced97a5958b87d2da045c8039cccd24648085ff977e1016ac6",
+      "warningCodes": [
+        "renderer-math-source",
+        "renderer-toc-source",
+        "renderer-footnote-source"
+      ]
+    },
+    {
+      "source": "basic.md",
+      "format": "docx",
+      "filename": "basic_9eb2dc73.docx",
+      "bytes": 35608,
+      "sha256": "b036a992573059de856e10d8bc891825d07c57856bed51722cca37fd9eb2dc73",
+      "warningCodes": [
+        "raw-content-fallback"
+      ]
+    },
+    {
+      "source": "basic.md",
+      "format": "epub",
+      "filename": "basic_f8a7fa53.epub",
+      "bytes": 16701,
+      "sha256": "34dd842c983ff73a5b2815ce8a094e8d8081fbb68e4561addc4ca7d8f8a7fa53",
+      "warningCodes": [
+        "raw-content-fallback"
+      ]
+    },
+    {
+      "source": "fallbacks.md",
+      "format": "html",
+      "filename": "fallbacks_e6db320d.html",
+      "bytes": 37722,
+      "sha256": "c30c0bc40db12b09ef4a29760c85080734274543d109079c18089c70e6db320d",
+      "warningCodes": [
+        "renderer-math-source",
+        "diagram-fallback",
+        "image-unavailable"
+      ]
+    },
+    {
+      "source": "fallbacks.md",
+      "format": "pdf",
+      "filename": "fallbacks_7d7cedec.pdf",
+      "bytes": 111311,
+      "sha256": "0f2ff4669bb410a13ce304e28847040b9709e1d08cc2c2d8551d2e837d7cedec",
+      "warningCodes": [
+        "renderer-math-source",
+        "diagram-fallback",
+        "image-unavailable"
+      ]
+    },
+    {
+      "source": "fallbacks.md",
+      "format": "docx",
+      "filename": "fallbacks_3eab9a6b.docx",
+      "bytes": 11864,
+      "sha256": "58cb5d1445dd09c81c77713c60fa17ba1772946214b6309a5e0cfe6b3eab9a6b",
+      "warningCodes": [
+        "diagram-fallback",
+        "image-fallback",
+        "diagram-fallback",
+        "raw-content-fallback",
+        "pandoc-writer"
+      ]
+    },
+    {
+      "source": "fallbacks.md",
+      "format": "epub",
+      "filename": "fallbacks_c0cbd627.epub",
+      "bytes": 7525,
+      "sha256": "f3af5683fc8a05ac64f184cfed311bd002a01912f676899ead946db5c0cbd627",
+      "warningCodes": [
+        "diagram-fallback",
+        "image-fallback",
+        "diagram-fallback",
+        "raw-content-fallback",
+        "pandoc-writer"
+      ]
+    },
+    {
+      "source": "pagination.md",
+      "format": "html",
+      "filename": "pagination_021f6e35.html",
+      "bytes": 102623,
+      "sha256": "97b005ceb265e830697b2e121ddbcb63c5ead8a5dd63168714055404021f6e35",
+      "warningCodes": []
+    },
+    {
+      "source": "pagination.md",
+      "format": "pdf",
+      "filename": "pagination_b2c84240.pdf",
+      "bytes": 255468,
+      "sha256": "bb3000684b0f8426303cba07aa477c167bc78381839882de660edecab2c84240",
+      "warningCodes": []
+    },
+    {
+      "source": "pagination.md",
+      "format": "docx",
+      "filename": "pagination_d9d1c811.docx",
+      "bytes": 17424,
+      "sha256": "b3f003aa3794fe6e795f11768f2b48338b8ca4cd2d59cc9eee8b12afd9d1c811",
+      "warningCodes": []
+    },
+    {
+      "source": "pagination.md",
+      "format": "epub",
+      "filename": "pagination_fa0aeb5e.epub",
+      "bytes": 9043,
+      "sha256": "80524f0e35dc63a8a4c753bc658b1c8b4affe23db91fdd7f68e0fe2dfa0aeb5e",
+      "warningCodes": []
+    },
+    {
+      "source": "w30-report.md",
+      "format": "html",
+      "filename": "w30-report_53be4876.html",
+      "bytes": 627220,
+      "sha256": "712b7c0bdb13cff5e4752953df7a94b1bc2393833d9de5f355c3c65653be4876",
+      "warningCodes": [
+        "renderer-math-source",
+        "renderer-toc-source",
+        "renderer-footnote-source",
+        "image-unavailable"
+      ]
+    },
+    {
+      "source": "w30-report.md",
+      "format": "pdf",
+      "filename": "w30-report_7ebb5691.pdf",
+      "bytes": 844235,
+      "sha256": "0efddcf331d9b2bfa0d7dca0af276301e7134509ee55491fdcd8b0ad7ebb5691",
+      "warningCodes": [
+        "renderer-math-source",
+        "renderer-toc-source",
+        "renderer-footnote-source",
+        "image-unavailable"
+      ]
+    },
+    {
+      "source": "w30-report.md",
+      "format": "docx",
+      "filename": "w30-report_da8f672b.docx",
+      "bytes": 97724,
+      "sha256": "e93215dc5a341466c63702dac3c15de31f79eb424b73e80677e829a9da8f672b",
+      "warningCodes": [
+        "image-fallback",
+        "raw-content-fallback",
+        "pandoc-writer"
+      ]
+    },
+    {
+      "source": "w30-report.md",
+      "format": "epub",
+      "filename": "w30-report_33754433.epub",
+      "bytes": 58013,
+      "sha256": "490da5139ecff20a38cb6c12ac29ca36bd1e6144f36c14f438a56c7b33754433",
+      "warningCodes": [
+        "image-fallback",
+        "raw-content-fallback",
+        "pandoc-writer"
+      ]
+    }
+  ],
+  "nativeSaves": [
+    {
+      "mode": "visual",
+      "save": "native",
+      "marker": "IMMEDIATE-visual-native-MARKER",
+      "result": "complete",
+      "output": "save-visual-native.html",
+      "sourceUnchanged": true,
+      "editorStateUnchanged": true
+    },
+    {
+      "mode": "visual",
+      "save": "keyboard",
+      "marker": "IMMEDIATE-visual-keyboard-MARKER",
+      "result": "complete",
+      "output": "save-visual-keyboard.html",
+      "sourceUnchanged": true,
+      "editorStateUnchanged": true
+    },
+    {
+      "mode": "source",
+      "save": "native",
+      "marker": "IMMEDIATE-source-native-MARKER",
+      "result": "complete",
+      "output": "save-source-native.html",
+      "sourceUnchanged": true,
+      "editorStateUnchanged": true
+    },
+    {
+      "mode": "source",
+      "save": "keyboard",
+      "marker": "IMMEDIATE-source-keyboard-MARKER",
+      "result": "complete",
+      "output": "save-source-keyboard.html",
+      "sourceUnchanged": true,
+      "editorStateUnchanged": true
+    }
+  ],
+  "nativeEdges": [
+    {
+      "name": "missing-Docx",
+      "state": "failed",
+      "htmlIndependent": true,
+      "settingsPreservedEditor": true
+    },
+    {
+      "name": "missing-Pdf",
+      "state": "failed",
+      "htmlIndependent": true,
+      "settingsPreservedEditor": true
+    },
+    {
+      "name": "manual-tools",
+      "available": true
+    },
+    {
+      "name": "native-hash-reuse",
+      "output": "edges_f58c19b2.html",
+      "reused": true
+    },
+    {
+      "name": "dirty-rejected",
+      "notAutoSaved": true
+    },
+    {
+      "name": "resource-cancel",
+      "editorUsable": true,
+      "sourceUnchanged": true,
+      "noOutput": true,
+      "requests": [
+        {
+          "url": "/required.png",
+          "method": "GET"
+        }
+      ]
+    },
+    {
+      "name": "worker-cancel",
+      "processEnded": true,
+      "noOutput": true
+    },
+    {
+      "name": "worker-failure",
+      "state": "failed",
+      "noOutput": true
+    }
+  ],
+  "nativeRemaining": [
+    {
+      "case": "untitled",
+      "state": "failed"
+    },
+    {
+      "case": "unwritable-destination",
+      "state": "failed",
+      "noPartialOutput": true
+    }
+  ],
+  "nativeUi": [
+    {
+      "mode": "full",
+      "language": "zh-CN",
+      "label": "导出",
+      "keyboard": true,
+      "position": true
+    },
+    {
+      "mode": "simple",
+      "language": "en",
+      "label": "Export",
+      "keyboard": true,
+      "position": true
+    },
+    {
+      "theme": "github",
+      "output": "appearance_8f85aff7.html"
+    },
+    {
+      "theme": "night",
+      "output": "appearance_58a7eccf.html"
+    }
+  ],
+  "nativeSelection": {
+    "case": "normal-text-tab-does-not-export-hidden-markdown",
+    "passed": true,
+    "noCaptureOrOutput": true
+  },
+  "nativeImmutable": {
+    "completed": true,
+    "capturedSourcePreserved": true,
+    "laterUnsavedEditPreserved": true,
+    "sourceDiskUnchanged": true
+  },
+  "offlineHtml": [
+    {
+      "file": "basic.md",
+      "externalRequests": 0,
+      "scriptErrors": 0,
+      "images": [
+        {
+          "width": 2400,
+          "height": 1600,
+          "complete": true
+        }
+      ],
+      "quoteColor": "rgb(36, 41, 47)",
+      "bodyBackground": "rgb(255, 255, 255)",
+      "editorControls": 0
+    },
+    {
+      "file": "fallbacks.md",
+      "externalRequests": 0,
+      "scriptErrors": 0,
+      "images": [],
+      "quoteColor": null,
+      "bodyBackground": "rgb(255, 255, 255)",
+      "editorControls": 0
+    },
+    {
+      "file": "pagination.md",
+      "externalRequests": 0,
+      "scriptErrors": 0,
+      "images": [
+        {
+          "width": 1200,
+          "height": 4800,
+          "complete": true
+        }
+      ],
+      "quoteColor": "rgb(36, 41, 47)",
+      "bodyBackground": "rgb(255, 255, 255)",
+      "editorControls": 0
+    },
+    {
+      "file": "w30-report.md",
+      "externalRequests": 0,
+      "scriptErrors": 0,
+      "images": [
+        {
+          "width": 2800,
+          "height": 900,
+          "complete": true
+        },
+        {
+          "width": 2400,
+          "height": 1600,
+          "complete": true
+        },
+        {
+          "width": 1200,
+          "height": 4800,
+          "complete": true
+        }
+      ],
+      "quoteColor": "rgb(36, 41, 47)",
+      "bodyBackground": "rgb(255, 255, 255)",
+      "editorControls": 0
+    }
+  ],
+  "artifactAudit": {
+    "scope": "Final candidate receipt-selected artifact audit passed; overall native user-flow and target-viewer acceptance are separate.",
+    "date": "2026-09-09",
+    "source_commit": "99aff55e78338671af31ac94a44058776e491ca8",
+    "installed_vsix_sha256_reported_by_integration": "dc5d1876917c17a09f3d795cb6debbf8c555ff3c79b9e178140c770704ba5967",
+    "receipts_sha256": "3fe349334475f287794627cb3eced3316921b460f98f760c832a46a17214f13b",
+    "audit_json_sha256": "1a040744ce0ed3c38bae1709e5914aa20c1a0345d43649a37ce4e4d8798d965f",
+    "outputs": 16,
+    "all_frozen_workspace_sources_match": true,
+    "all_markers_in_text_or_image_alternatives": true,
+    "all_original_media_match": true,
+    "native_pdf_pages": {
+      "basic.md": 4,
+      "fallbacks.md": 3,
+      "pagination.md": 16,
+      "w30-report.md": 51
+    },
+    "final_native_pdf_pages_visually_inspected": {
+      "w30-report.md": [
+        1,
+        2,
+        7,
+        16,
+        19,
+        35,
+        39,
+        48,
+        49,
+        50,
+        51
+      ],
+      "pagination.md": [
+        3,
+        7,
+        14,
+        15,
+        16
+      ],
+      "fallbacks.md": [
+        2,
+        3
+      ]
+    },
+    "resolved": [
+      "light-theme quotation readability",
+      "literal-math warning omission",
+      "TOC/footnote limitation warnings",
+      "missing-image alternative-text retention"
+    ],
+    "reference": {
+      "pages": 35,
+      "sha256": "d8881dae37ff926612e54ee6e805d657ea5cc829c8c2e0760cfe352e824707a1",
+      "source_html_sha256": "712b7c0bdb13cff5e4752953df7a94b1bc2393833d9de5f355c3c65653be4876",
+      "visually_inspected_pages": [
+        2,
+        11,
+        29,
+        33,
+        34,
+        35
+      ]
+    },
+    "unresolved_artifact_findings": []
+  },
+  "targetViewers": {
+    "Microsoft Word": "Representative DOCX opened; text, table, native equations, diagram and original image visibly inspected",
+    "Apple Books": "Representative EPUB opened; native MathML equations, diagram, image and text visibly inspected"
+  },
+  "knownLimits": [
+    "Unreleased local macOS VS Code only",
+    "Dollar math, TOC and footnote source preserved with warnings for HTML/PDF; fenced math rendered",
+    "Detailed diagnostics/fallback explanations currently English",
+    "One unchanged baseline browser test failure",
+    "Native save failure after preparation needs cancellation or save retry to clear abandoned wait"
+  ]
+}

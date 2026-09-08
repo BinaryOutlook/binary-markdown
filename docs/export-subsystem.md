@@ -1,10 +1,10 @@
 # Export subsystem
 
-Version 1.0 · Consolidated 2026-09-09 · **Status: implementation in progress on `export-subsystem`; acceptance remains pending.**
+Version 1.2 · Updated 2026-09-09 · **Status: D0–D5 implementation and engineering handback complete on `export-subsystem`; ready for review. No human acceptance, merge or release is recorded.**
 
 This is the authoritative task brief for Binary Markdown's experimental export subsystem. It consolidates the export reconnaissance, clarification answers, functional and non-functional requirements, implementation plan, and human–AI working agreement. A developer can work from this file without reconstructing the conversation. Keep subsequent scope decisions, milestone status, and evidence references here.
 
-The planning checkout was inspected at `main`, commit `9ff6ce04fa10cc5424783b016330bc4644d3529f`. Refresh the checkout and test baseline when implementation begins. Historical conversion probes below do not establish that an export feature is implemented, accepted, or released.
+The planning checkout was inspected at `main`, commit `9ff6ce04fa10cc5424783b016330bc4644d3529f`; implementation began from documentation commit `5488f37`. The current implementation/evidence record is below, with supporting detail in [export-validation.md](export-validation.md). Refresh the checkout and evidence when resuming. Historical conversion probes below remain separate from current implementation, acceptance and release state.
 
 Repository conventions: [CONTRIBUTING.md](../CONTRIBUTING.md). This file contains the complete export contract and relevant findings from the earlier feature comparison; no separate planning document is required.
 
@@ -100,7 +100,7 @@ HTML needs no additional native tool beyond the running extension/webview. Autom
 
 ### Shared contracts
 
-Choose exact TypeScript names during D0; preserve these meanings across adapters.
+The contracts are implemented in [types.ts](../src/export/types.ts) and correlated host/webview requests in [webview-rpc.ts](../src/export/webview-rpc.ts). Preserve these meanings across adapters.
 
 | Boundary | Required information and behavior |
 | --- | --- |
@@ -116,22 +116,23 @@ Keep source capture, export preparation, backend invocation, and output finaliza
 
 Render the entire captured document, including when the editor is in source mode. Reuse the production renderer with a document-only boundary; copying the live editor's visible viewport or a stale hidden preview is insufficient. Remove controls, caret/selection markup, hidden editors, host bridges, scroll-height restrictions, and active document-supplied scripts. Wait for actual math, diagram, font, and image readiness before capturing output.
 
-Build a small fixture-backed support matrix during D0–D3. The following are target rules, not completed compatibility claims:
+The [fixed fixtures](../test/fixtures/exports/README.md) exercise the following support boundary. Implemented behavior and representative checks do not establish compatibility with every document or target viewer; remaining acceptance evidence is tracked in [export-validation.md](export-validation.md).
 
 | Content | HTML/PDF target | DOCX/EPUB target |
 | --- | --- | --- |
 | Headings, prose, lists, links, tables, code | Supported displayed content and current appearance; PDF adapts for print. | Editable text and structural equivalents. |
-| Mathematics | Existing supported renderer output, with required styles/fonts. | Native target math where supported; declared fallback where conversion cannot preserve it. |
+| Mathematics | Supported fenced `math` blocks render with KaTeX styles/fonts. Dollar-delimited `$...$` and `$$...$$` remain visible source, matching the existing renderer, with a warning. | Pandoc produces native DOCX Office Math and EPUB MathML for supported equations; unsupported expressions require declared fallbacks. |
 | Mermaid/diagrams | Wait for diagram rendering; retain vector form where practical. | Package target-compatible assets; do not silently leave supported diagrams as code. |
 | Images and fonts | Resolve and embed needed assets; standalone HTML works after relocation offline. | Package compatible media; preserve source resolution without deliberate downsampling. |
 | Raw HTML, editor extensions, unsupported constructs | Follow declared renderer support and remove editor-only machinery. | Explicit target-specific behavior; visible fallback/warning for known incompatible content. |
-| Front matter, TOC, internal image directives | Account for their existing semantics and exclude editor-only metadata from visible export content. | Normalize temporary input deliberately; avoid duplicate TOCs or leaked directives. |
+| Front matter, TOC, internal image directives | Exclude front matter/editor-only directives from visible content. A literal `[TOC]` marker remains visible with a warning; this renderer does not generate a TOC from it. | Normalize temporary input deliberately; avoid duplicate TOCs or leaked directives. |
+| Footnotes | Existing footnote markers/definitions remain visible source with a warning; linked footnotes are not generated. | Use Pandoc's supported native note/navigation structures, with target-specific verification. |
 
 Do not claim a parser capability merely because Pandoc can write its output format. Existing rendering bugs are not silently expanded into export guarantees. Declare known limitations and preserve supported content; fallback acceptance is not permission to hide a regression by downgrading the support matrix.
 
 ### Dependency and resource handling
 
-Use native VS Code settings for machine-specific executable overrides and existing runtime UI for status/setup guidance. Suggested setting names such as `binary-markdown.export.pandocPath` and `binary-markdown.export.browserPath` follow the current namespace; their exact names remain implementation choices. A dedicated new settings page is not required.
+Native VS Code settings `binary-markdown.export.pandocPath` and `binary-markdown.export.browserPath` provide machine-scoped executable overrides; the export menu provides status and setup guidance. A dedicated new settings page is not required.
 
 Recommended discovery order is an explicit override, the extension host's PATH, then conventional platform locations. On macOS, GUI application PATH can differ from a terminal's PATH; consider standard Homebrew locations and installed Chrome/Edge application executables. An invalid explicit override is an error, not permission to select another executable silently. Validate the tool's version and needed capabilities; cache discovery and invalidate/rescan when relevant configuration changes.
 
@@ -145,14 +146,14 @@ Generate and validate complete bytes before exposing a successful final output. 
 
 ### Repository map and integration pitfalls
 
-These pointers describe the inspected source baseline; recheck them after rebasing.
+These pointers describe the implemented integration; recheck them after rebasing.
 
-| Area | Starting points | Implementation implication |
+| Area | Current source | Integration behavior / remaining caution |
 | --- | --- | --- |
-| Commands and toolbar | [extension.ts](../src/extension.ts), [editor-body-html.js](../src/shared/editor-body-html.js), [editor.js](../src/webview/editor.js) | PDF is currently a placeholder. Insert the menu beside the VS Code button and wire each format through the real host flow. |
-| Save synchronization | [editorProvider.ts](../src/editorProvider.ts), [editor.js](../src/webview/editor.js) | Webview synchronization is deferred and the host has a further edit queue. Establish save completion and snapshot agreement; checking only a dirty flag can miss pending edits. |
-| Host communication | [host-bridge.ts](../src/shared/host-bridge.ts), [shared modules](../src/shared) | Add explicit request/reply contracts, document identity and stale-response handling. Keep browser and host responsibilities separate. |
-| Renderer and resources | [editor.js](../src/webview/editor.js), [webviewContent.ts](../src/webviewContent.ts) | Rendering is coupled to editor state; Mermaid is asynchronous. Webview resource URLs and external font references need portable equivalents. |
+| Commands and toolbar | [extension.ts](../src/extension.ts), [editor-body-html.js](../src/shared/editor-body-html.js), [export-ui.js](../src/webview/export-ui.js) | All four formats enter the shared [controller](../src/export/controller.ts) through commands or the menu beside the VS Code button. Native selection checks reject commands from ordinary text tabs instead of exporting hidden documents. |
+| Save synchronization | [editorProvider.ts](../src/editorProvider.ts), [editor.js](../src/webview/editor.js), [edit-queue.ts](../src/export/edit-queue.ts) | Ordered edits, save acknowledgements and native-save completion feed a read-only snapshot agreement gate. Checking only a dirty flag remains insufficient. |
+| Host communication | [host-bridge.ts](../src/shared/host-bridge.ts), [webview-rpc.ts](../src/export/webview-rpc.ts) | Correlated capture/render/decode replies, cancellation and panel disposal handling separate browser and host responsibilities. |
+| Renderer and resources | [editor.js](../src/webview/editor.js), [html.ts](../src/export/html.ts), [resources.ts](../src/export/resources.ts) | Detached captured-source rendering awaits math/diagrams; host resource capture embeds supported assets and reports visible fallbacks. |
 | Temporary input cleanup | [editor.js](../src/webview/editor.js) | Serialization can include `IMAGE_DIR` and `FORCE_RELATIVE_PATH` directives. Recognize their actual syntax before stripping only temporary export input; preserve real code/YAML content. Handle `[TOC]` deliberately. |
 | Settings and localization | [settings-provider.ts](../src/shared/settings-provider.ts), [package.json](../package.json), [package.nls.json](../package.nls.json), [editorProvider.ts](../src/editorProvider.ts) | Some live paths read configuration directly. Updating an interface alone is insufficient. Preserve seven native settings catalogs and separate runtime language handling. Export-path changes should not rebuild editor content unnecessarily. |
 | VSIX packaging | [.vscodeignore](../.vscodeignore), [package-vsix.js](../scripts/package-vsix.js), [copy-vendor.js](../scripts/copy-vendor.js), [copy-webview.js](../scripts/copy-webview.js) | The packager uses `--no-dependencies` and excludes `node_modules/**`. A manifest dependency alone does not ship runtime code; bundle/copy required modules, assets, fonts and licenses explicitly. Test the installed package early. |
@@ -289,6 +290,10 @@ A downloaded PDF can guide fixture selection, but copying that PDF through the s
 
 Passing W-30 requires readable/structurally valid artifacts, preserved supported content, accounted-for fallbacks, valid progress, and safe completion. It does not require a particular duration. Measurements may be retained as diagnostic evidence, without turning them into NFR thresholds.
 
+The selected input is [w30-report.md](../test/fixtures/exports/w30-report.md), an original synthetic engineering report frozen as `exports-v1` with the other inputs/assets in [manifest.json](../test/fixtures/exports/manifest.json). Its 12,438 whitespace-delimited words, 84,675 UTF-8 bytes, 24 scenario cards and oversized appendices are workload descriptors. The [fixture README](../test/fixtures/exports/README.md) records provenance and content expectations; the public NIST reference supplies a complexity example without copied report content.
+
+The recorded reference-layout calibration is **35 pages**. The current native W-30 PDF is **51 pages** under the implemented export layout. These are different layout observations on the frozen workload: the latter provides capacity/content evidence and is not a failure to hit an exact page-count target. Preserve the frozen input and verify content, pagination and fallbacks; do not shorten it to force a count. See [export-validation.md](export-validation.md) for the calibration, current artifacts and inspection record. W-30 has been exported through all four native paths and its exact artifacts re-audited; human product acceptance remains separate.
+
 ## Acceptance criteria and milestone mapping
 
 | ID | Observable acceptance criterion | Milestone |
@@ -312,7 +317,7 @@ These criteria are specification targets, not executed results. Record unavailab
 
 ## Delivery backlog
 
-Implementation branch: `export-subsystem`. Its opening commit establishes this documentation baseline; application implementation remains future work.
+Implementation branch: `export-subsystem`. Its opening commit established this documentation baseline; D0–D4 are now implemented with focused and integrated tests. D5 continues the installed-package acceptance and handback checks described below.
 
 **Start from the implementation branch's current tip.** This file is versioned with the branch so delegated worktrees include the handoff. Preserve unrelated changes and verify Git identity before further commits.
 
@@ -331,20 +336,20 @@ D2 is the first useful end-to-end checkpoint: a user can export HTML from an ins
 
 ### Ticket boundaries and implementation notes
 
-- **D0:** put inspectable fixture inputs under `test/fixtures/exports/`; choose a public reference and document reuse terms before committing adapted material. Fix expectations before implementation. No W-30 fixture has yet been selected or passed.
+- **D0:** preserve the selected [fixture set](../test/fixtures/exports/README.md), its provenance and frozen manifest. W-30 is selected and calibrated; subsequent artifact inspection must use those inputs without silently revising their expected content.
 - **D1:** test pending webview changes, queued host edits, save followed immediately by export, both editor modes, document switching and stale/closed-document responses. Preserve source, selection and undo state. Export itself must not trigger saving.
 - **D2:** split UI, coordinator/finalization and resource preparation into smaller tickets if necessary. Render all content from the captured revision, use current appearance in both modes, and inspect representative light/dark output. Exercise collision races, fallback/warnings and cancellation through the shared path.
 - **D3:** add every new native settings translation and runtime message where appropriate. Test usable discovery, explicit invalid paths, missing Pandoc, spaces/Unicode, real conversions and unsupported content. Do not claim Word/EPUB fidelity from exit status alone.
 - **D4:** use the prepared HTML from D2. Remove editor overflow restrictions and apply print rules. `break-inside: avoid` alone cannot keep a block larger than a page intact; oversized content needs splitting/scaling and visual evidence. See [CSS fragmentation](https://www.w3.org/TR/css-break-3/#unforced-breaks).
 - **D5:** include the JavaScript actually needed at runtime in the VSIX. Stop development servers and record resolved external tools; a fresh VS Code profile can still discover developer-installed executables. Prove missing-dependency behavior separately.
 
-If multiple implementers are explicitly assigned later, keep one integration owner for commands, host bridges, settings and packaging. After the contracts stabilize, separate HTML and Pandoc work can advance in separate worktrees; PDF depends on prepared HTML. Each contributor must prove their user path, and the integration owner verifies the combined branch.
+Keep one integration owner for commands, host bridges, settings and packaging. The implementation has used bounded parallel slices for rendering, backends and fixtures; subsequent work should preserve those ownership boundaries. Each contributor supplies evidence for their path, and the integration owner verifies the combined branch.
 
 ## Verification and handback
 
 Use layered evidence: focused unit/contract tests for state and naming; production-renderer tests for preparation; real backend conversions for format behavior; native installed-VSIX checks for host integration. A standalone browser fixture cannot prove that VS Code saved the intended revision.
 
-Current repository commands are listed below; consult [CONTRIBUTING.md](../CONTRIBUTING.md) and package scripts for changes when implementation begins. Use the repository's declared Node version. Run `npm ci` when preparing the implementation environment.
+Current repository commands are listed below; consult [CONTRIBUTING.md](../CONTRIBUTING.md) and package scripts for changes when resuming. Use the repository's declared Node version. Run `npm ci` when preparing the implementation environment.
 
 ```sh
 npm run compile
@@ -352,12 +357,15 @@ npm run lint
 npm run test:outline-state
 npm run test:identity
 npm run test:localization
+python3 test/fixtures/exports/verify-fixtures.py
+npm run test:export
+npm run test:e2e -- test/specs/export-editor.spec.ts test/specs/export-ui.spec.ts
 npm run test:e2e -- test/specs/codeblock-copy.spec.ts test/specs/sidebar-state.spec.ts test/specs/copy-paste.spec.ts
-npm test
+EXPORT_REAL_TOOLS=1 npm test
 npm run package
 ```
 
-Integrate focused export tests into the normal test entry points. Compile regenerates and copies the production webview/shared/vendor resources; TypeScript watch alone is insufficient for every asset change. If shared editor/resources change, prepare the Electron development dependencies and run `npm run compile --prefix electron` as a compatibility check. This does not certify Electron export.
+Focused export tests are integrated into the normal test entry points. Real installed-tool tests require `EXPORT_REAL_TOOLS=1`; the separate package-content check requires `EXPORT_VSIX_PATH` pointing to the freshly built VSIX. Compile regenerates and copies the production webview/shared/vendor resources; TypeScript watch alone is insufficient for every asset change. If shared editor/resources change, prepare the Electron development dependencies and run `npm run compile --prefix electron` as a compatibility check. This does not certify Electron export.
 
 Install the actual VSIX using separate `--user-data-dir` and `--extensions-dir` directories, without replacing the user's normal profile. Use the current package artifact/version, open export fixtures, stop the development server, and exercise the toolbar/save/export flow. Declare tested macOS architecture, VS Code version, extension-host runtime, Pandoc/browser versions and resolved paths. Do not infer Windows/Linux, Intel/ARM equivalence, remote-host support or other viewer compatibility from one host.
 
@@ -398,27 +406,33 @@ For an ad hoc request, record: requested behavior, affected FR/NFR/AC IDs, effec
 
 ### Resumable status record
 
-Update this table at each milestone or meaningful interruption. Use `not started`, `in progress`, `verified`, or `blocked` with specific evidence. Track human acceptance, merge and release separately.
+Update this table at each milestone or meaningful interruption. Distinguish implemented/tested work from completed acceptance, and identify remaining observations explicitly. Track human acceptance, merge and release separately. Supporting receipts and the per-AC checklist belong in [export-validation.md](export-validation.md); this document retains the authoritative requirements and decisions.
 
 | Milestone | Current state | Evidence / next action |
 | --- | --- | --- |
-| D0 | In progress | Started at `5488f37` under Node 20.20.0. Fresh untouched baseline: compile and unit checks passed; browser suite reproduced 662 passed, 4 skipped and the existing Perplexity-color failure; saved/prepared/result contracts are defined in `src/export/types.ts`. Fixed fixtures are being prepared. |
-| D1 | In progress | Ordered host save barrier and mode-correct webview save acknowledgment pass 3 queue tests and 5 isolated browser tests. Native save/capture/export acceptance remains pending. |
-| D2 | In progress | Shared output finalization passes 3 focused tests covering naming/reuse, concurrent claims, cancellation and unwritable destinations. Installed HTML path remains pending. |
-| D3 | Not started | Deliver Pandoc DOCX/EPUB. |
-| D4 | Not started | Deliver browser PDF and pagination. |
-| D5 | Not started | Complete integrated acceptance and handback. |
+| D0 | Implemented; tested | Started at `5488f37` under Node 20.20.0. Untouched baseline reproduced 662 browser passes, 4 skips and the existing Perplexity-color failure. Contracts, frozen `exports-v1` fixtures and 35-page W-30 reference calibration are recorded; preserve the manifest during acceptance. |
+| D1 | Implemented; tested | Ordered edit/save barriers, mode-correct acknowledgement and immutable saved snapshots have queue, provider, controller and renderer tests. The installed walkthrough passed four mode/save-entry combinations. Native document-selection, dirty/untitled, later-edit capture and failure/cancellation checks passed under D5. |
+| D2 | Implemented; tested | Four-format toolbar/status UI, standalone HTML, portable resources, inert preparation, shared naming and cleanup are implemented. Native HTML artifacts and offline/rendering checks exist. All four actual HTML outputs passed relocation/offline checks; corrected native blockquotes and fallback labels were re-inspected. |
+| D3 | Implemented; tested | Installed-tool detection/manual paths and Pandoc DOCX/EPUB adapters pass real conversions plus structure/media/native-math checks. Representative Microsoft Word and Apple Books UI inspection is recorded; this does not certify every construct or viewer. |
+| D4 | Implemented; tested | Installed browser PDF conversion, offline preparation, readiness, fragmentation/scaling and cancellation are implemented and tested. Current native W-30 PDF is 51 pages; complete content and representative pagination inspection remain the fidelity criteria. |
+| D5 | Engineering handback complete; ready for review | All 16 native fixture outputs and four immediate-save combinations passed. Native dependency, naming, dirty/untitled, wrong-tab, immutable-capture, cancellation and failure cases passed; corrected artifacts and offline HTML were re-audited. AC-01–14 are accounted for in the validation record. Human acceptance, merge and release remain unrecorded. |
 
-Before pausing, leave the current ticket, files/commit, checks run and outcomes, next action, and any blocker here. Link detailed logs/artifacts as evidence when needed; keep the task's requirements and decisions in this file. No second competing specification or separate mandatory status document is needed.
+The latest full regression run recorded **684 browser tests passed, 4 skipped and the unchanged Perplexity-color failure**, plus **84 unit tests passed and 1 package test skipped** without `EXPORT_VSIX_PATH`. Compile passed; lint reported 0 errors and 8 existing warnings. After the test-harness script-preservation fix and additional blockquote coverage, **23 focused export browser tests passed**. These runs establish the stated test evidence, not a green full-suite result or blanket acceptance of AC-01–14. The final explicit export run passed **74/74 with no skips**, including real Pandoc, installed Chrome and packaged-runtime checks. See [export-validation.md](export-validation.md) for package/native receipts and limitations.
+
+Current handback: implementation is complete, the baseline Perplexity test remains failing, and the next action is human PR review. For later work, leave the current ticket, files/commit, checks run and outcomes, next action, and any blocker here. Link detailed logs/artifacts as evidence when needed; keep the task's requirements and decisions in this file. No second competing specification or separate mandatory status document is needed.
 
 ### Decision log
 
 | Date | Decision and reason | Affected scope / evidence |
 | --- | --- | --- |
-| 2026-09-09 | Consolidated the agreed four-format, local macOS VS Code MVP into one authoritative handoff. Preserved all 41 FRs, 15 NFRs and 14 ACs. | User clarification answers and consolidation request; implementation remains pending. |
+| 2026-09-09 | Consolidated the agreed four-format, local macOS VS Code MVP into one authoritative handoff. Preserved all 41 FRs, 15 NFRs and 14 ACs. | User clarification answers and consolidation request; the initial documentation milestone preceded implementation. |
 | 2026-09-09 | Separate rendered HTML/PDF from Pandoc DOCX/EPUB, sharing capture/resources/finalization. | Supports the different fidelity priorities; D0–D4 must verify the integrated design. |
 | 2026-09-09 | Use installed external tools with detection/manual paths; defer bundling/downloaders and typeset PDF. | Confirmed dependency scope; historical size/probe evidence below explains the tradeoff. |
 | 2026-09-09 | Use automatic sibling filenames with hashes of completed output bytes, identical-file reuse and numbered collision handling. | Confirmed follow-up decisions; FR-EXP-027–032 and FR-EXP-041, AC-09. |
+| 2026-09-09 | Freeze an original synthetic W-30 report and assets, using a public report only as a complexity reference. Record 35-page reference calibration separately from the current 51-page export layout. | Within the agreed workload/layout flexibility; NFR-EXP-015 and AC-13. Input hashes and content obligations remain unchanged; see the fixture manifest and validation record. |
+| 2026-09-09 | Preserve the existing displayed renderer: HTML/PDF retain dollar math, `[TOC]` and footnotes as visible source with explicit warnings; fenced math renders. Pandoc retains its supported native-math route for DOCX/EPUB. | Implements the agreed first-version rendering boundary; NFR-EXP-014 and AC-03–04, AC-07–08. Supplementary fenced-math coverage adds evidence without altering frozen fixture bytes or claiming new editor syntax support. |
+| 2026-09-09 | Render export diagrams with strict Mermaid settings and text SVG labels; capture assets before Pandoc sandboxed conversion. | Within-scope portability/execution safeguards; NFR-EXP-011–014 and AC-04, AC-07, AC-12. Interactive HTML labels are deliberately excluded from static export. |
+| 2026-09-09 | Track native save completion, bypass stale webview capture for external-file synchronization, and retain the strict read-only export gate. | Source integrity and AC-02/AC-11. VS Code has no native write-failed event: cancellation, a later save or panel closure releases an abandoned native wait; subsequent exports still require clean, matching saved content. |
 
 Append later decisions with date, reason, alternatives where relevant, affected IDs, user authorization or within-scope rationale, and evidence/commit. Rejected implementation experiments need only a short note when the lesson affects future work.
 
@@ -470,15 +484,15 @@ The Pandoc executable measurement does not establish a portable redistributable 
 
 | Risk | Why it matters | Resolution / completion gate |
 | --- | --- | --- |
-| Stale saved revision | Delayed webview synchronization plus the host edit queue can leave save/export agreement uncertain. | D1 handshake and native immediate-save/export tests; a risk observed in architecture, not a reproduced shipped-export bug. |
-| Missing packaged runtime | Manifest dependencies are excluded from the current VSIX by default. | D2 early installed smoke; D5 package inspection and isolated-profile evidence. |
+| Stale saved revision | Delayed webview synchronization plus the host edit queue can leave save/export agreement uncertain. | Save/snapshot barriers and four native save combinations are tested. Complete remaining native document-selection and failure/cancellation cases before D5 closure. |
+| Missing packaged runtime | `node_modules` remains excluded; required runtime code must be shipped explicitly. | Vendor packaging and isolated native exports are implemented. Tie final package-content checks and installed-profile receipts to the exact handback VSIX. |
 | Markdown interpretation differences | Editor semantics, Pandoc readers and raw HTML handling differ. | Existing renderer for HTML/PDF, explicit target preparation and fixed support fixtures; no mandatory parser rewrite. |
 | Incomplete assets or rendering readiness | Fonts, remote resources, async diagrams and target-specific image support can produce missing content. | Shared asset inventory/readiness and explicit fallbacks; offline and target-viewer checks. |
 | Pagination and oversized blocks | A short successful PDF does not cover long code/tables or large graphics. | D4 first/last content checks and page inspection, with W-30 integration at D5. |
 | Browser/library/host incompatibility | Development Node and browser caches can hide extension-host incompatibility or missing dependencies. | Pin compatible versions and test their resolved executables inside the installed extension. |
 | Settings/shared-build side effects | Existing config handlers can rebuild webviews; extension/Electron compilation and assets are separate. | Update only relevant services and verify both affected builds. |
 
-The largest uncertainties are source agreement, complete resource preparation, package contents and format fidelity. Tool autodetection itself is comparatively routine. Preserve the modest layout scope while resolving those integration gates.
+Source agreement, complete resource preparation, package contents and format fidelity remain the important acceptance boundaries even after successful native exports. Preserve the modest layout scope while completing the outstanding D5 checks.
 
 ## Deferred scope
 
@@ -498,10 +512,11 @@ FRs, NFRs, confirmed scope, naming rules and acceptance criteria in that documen
 as the current contract. Verify the starting revision and use the current
 export-subsystem branch tip so the implementation worktree includes this file.
 
-Continue on export-subsystem, using an isolated worktree if needed. Deliver D0–D5 as small,
-reviewable increments. First establish a fresh baseline and fixtures, then
-prove saved-revision capture, installed HTML export, Pandoc DOCX/EPUB, browser
-PDF, and the final installed-VSIX/W-30 acceptance.
+Continue on export-subsystem, using an isolated worktree if needed. Read the
+resumable status and docs/export-validation.md first: D0–D4 are implemented
+and tested; D5 native acceptance is underway. Preserve the frozen fixtures,
+refresh evidence affected by new changes, and complete remaining native edge,
+artifact/viewer and package checks as small, reviewable increments.
 
 Resolve routine implementation choices autonomously within the agreed scope.
 Use checkpoints for evidence and feedback. Record material proposed contract

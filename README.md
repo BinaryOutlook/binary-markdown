@@ -77,7 +77,45 @@ Search for **Binary Markdown** in the Command Palette. Commands include opening 
 | Toggle source mode | `Cmd+.` | `Ctrl+.` |
 | Open as text | `Cmd+Shift+.` | `Ctrl+Shift+.` |
 
-PDF export remains an inherited placeholder; it is not an implemented export feature. The [editor guide](docs/editor-guide.md) covers formatting, keyboard operations, and images.
+The [editor guide](docs/editor-guide.md) covers formatting, keyboard operations, and images. The implementation branch also adds the experimental export workflow described below.
+
+## Experimental export — unreleased
+
+The `export-subsystem` branch adds **HTML, PDF, Word (.docx), and EPUB** export, initially targeting **local desktop VS Code on macOS**. Native installed-package acceptance is in progress; the existing `v0.1.0` release download above predates this feature. Build the implementation branch to evaluate it. See the [implementation and validation checklist](docs/export-validation.md) for the current evidence and pending checks.
+
+Save the named Markdown file, then select the sharing-arrow button immediately to the right of the VS Code-logo toolbar button. Choose a format from its dropdown. Unsaved work produces a save-and-retry message; export does not save automatically. The job shows its actual stage, supports cancellation, and reports the saved path and any fallback warnings.
+
+| Format | Tool to install | Initial output goal |
+| --- | --- | --- |
+| HTML | None beyond the running extension | Standalone supported rendering with embedded resources |
+| PDF | Chrome, Chromium, or Microsoft Edge | Prepared HTML printed by a headless browser with simple pagination |
+| Word / EPUB | Pandoc | Editable text and document structure; layout can differ from browser output |
+
+Install Pandoc using its [official instructions](https://pandoc.org/installing.html); Homebrew users can use `brew install pandoc`. For PDF, install [Google Chrome](https://www.google.com/chrome/) or another supported Chromium-family browser. Native tools are user-managed and are not downloaded or bundled by the extension. A browser is the PDF rendering engine; HTML and Pandoc formats do not require it.
+
+Open VS Code Settings and search for `binary-markdown.export`. Leave the following **machine-specific** settings empty for automatic detection, or supply an absolute executable path:
+
+| Setting | Example macOS executable path |
+| --- | --- |
+| `binary-markdown.export.pandocPath` | `/opt/homebrew/bin/pandoc` |
+| `binary-markdown.export.browserPath` | `/Applications/Google Chrome.app/Contents/MacOS/Google Chrome` |
+
+An invalid manual path is reported instead of silently selecting a different tool. Reopen the export menu after installing a tool to rescan. The initial workflow requires a trusted workspace; remote hosts, browser VS Code and Electron-app export are deferred.
+
+Files are saved beside the Markdown source with the same filename stem. An occupied name uses the final eight SHA-256 hexadecimal characters of the completed output, then `_2`, `_3`, and so on if needed. An identical hash-named file is reused, and existing files are preserved. No destination dialog is shown.
+
+Supported resources retain source resolution; missing or unsupported content receives a visible fallback and warning summary. PDF uses simple block fitting, so blank regions are acceptable. Advanced pagination, templates, compression, custom destinations and unsaved export remain future work. See [export help](media/export-help.md) for the initial format limitations and [the subsystem outline](docs/export-subsystem.md) for the agreed implementation scope.
+
+For this unreleased subsystem, build the `export-subsystem` branch rather than the existing release tag:
+
+```sh
+git clone --branch export-subsystem https://github.com/BinaryOutlook/binary-markdown.git binary-markdown-export
+cd binary-markdown-export
+npm ci
+npm run package
+```
+
+See the [validation record](docs/export-validation.md) for installed VS Code checks, workload results and the known baseline test failure.
 
 ## Build and contribute
 

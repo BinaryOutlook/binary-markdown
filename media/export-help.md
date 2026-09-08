@@ -24,9 +24,10 @@ The editor displays the actual stage and an indeterminate activity indicator whi
 
 ## Initial format limitations
 
-- HTML and PDF reuse supported editor rendering and current appearance. Existing renderer limitations remain visible; unsupported math/diagrams receive source fallbacks and warnings.
+- HTML and PDF reuse supported editor rendering and current appearance. Fenced `math` blocks render with KaTeX. Dollar-delimited math (`$...$` / `$$...$$`), `[TOC]` and footnotes remain visible source with warnings, matching the current renderer. Invalid supported math/diagrams receive source fallbacks.
 - PDF uses simple pagination. Generous blank areas are acceptable; oversized text and tables split, while graphics scale to fit.
 - DOCX and EPUB prioritize editable structure and native math. Their layout differs from browser output. Raw HTML is exported as readable source when its behavior cannot be preserved.
 - Supported images retain source resolution. Unsupported image formats, unreadable resources and unrepresentable diagrams receive visible fallbacks.
 - Only needed referenced resources may be fetched. Conversion remains local. Standalone HTML embeds supported resources for offline viewing.
+- Interface and settings labels are localized; detailed conversion/resource diagnostics and fallback explanations currently remain English.
 - Custom output paths/names, compression, templates, unsaved export, advanced pagination, additional platforms and dependency installers are future work.
