@@ -43,6 +43,8 @@ export async function prepareStandaloneHtml(
         const reference = attributeValue('data-markdown-path') || attributeValue('src');
         if (!reference) { return tag; }
         const decoded = decodeAttribute(reference);
+        const alt = decodeAttribute(attributeValue('alt') || '');
+        const fallbackLabel = alt.trim() ? alt + ' (' + decoded + ')' : decoded;
         try {
             const resource = await operations.loadResource(decoded, document.sourcePath);
             if (!/^image\/(png|jpeg|gif|webp|svg\+xml)$/.test(resource.mime)) {
@@ -52,8 +54,8 @@ export async function prepareStandaloneHtml(
             return '<img' + preserved.map(attribute => attribute[0]).join('') + ' src="' + dataUri(resource) + '">';
         } catch (error) {
             checkCancelled(operations.signal);
-            operations.warnings.push({ code: 'image-unavailable', message: decoded + ': ' + String(error) });
-            return '<span class="export-fallback">[Image unavailable: ' + escapeText(decoded) + ']</span>';
+            operations.warnings.push({ code: 'image-unavailable', message: fallbackLabel + ': ' + String(error) });
+            return '<span class="export-fallback">[Image unavailable: ' + escapeText(fallbackLabel) + ']</span>';
         }
     });
     let styles = (await fs.readFile(path.join(extensionPath, 'out/webview/styles.css'), 'utf8'))

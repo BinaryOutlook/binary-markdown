@@ -125,3 +125,21 @@ test('unsupported SVG fragments produce a visible HTML fallback with a warning',
     assert.match(html, /Image unavailable: chart.svg#view/);
     assert.match(operations.warnings[0].message, /Resource fragments/);
 });
+
+test('missing image fallbacks preserve decoded alternative text and path without injecting markup', async t => {
+    const { dir, source } = await htmlFixture(t);
+    const operations = {
+        signal: new AbortController().signal, report() {}, warnings: [],
+        async loadResource() { throw new Error('Unavailable image'); }
+    };
+    const content = '<article class="editor"><img src="missing&quot;&amp;&lt;.png" alt="MISSING-IMAGE-MARKER &amp; &quot;quoted&quot; &lt;img src=\'injected\'&gt;"><img src="w30-missing.png" alt="W30-MISSING-IMAGE-MARKER"></article>';
+    const html = await prepareStandaloneHtml(source, { html: content, diagrams: [], warnings: [], theme: 'night', fontSize: 18 }, dir, operations);
+    const document = new JSDOM(html).window.document;
+    const labels = Array.from(document.querySelectorAll('.export-fallback'), element => element.textContent);
+    assert.equal(labels[0], '[Image unavailable: MISSING-IMAGE-MARKER & "quoted" <img src=\'injected\'> (missing"&<.png)]');
+    assert.equal(labels[1], '[Image unavailable: W30-MISSING-IMAGE-MARKER (w30-missing.png)]');
+    assert.equal(document.querySelectorAll('img,script').length, 0);
+    assert.match(operations.warnings[0].message, /MISSING-IMAGE-MARKER & "quoted"/);
+    assert.ok(operations.warnings[0].message.includes('missing"&<.png'));
+    assert.match(operations.warnings[1].message, /W30-MISSING-IMAGE-MARKER/);
+});
