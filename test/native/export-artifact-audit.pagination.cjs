@@ -9,8 +9,10 @@ const { execFileSync } = require('node:child_process');
 const { chromium } = require('../../vendor/playwright-core');
 const { convertPdf } = require('../../out/export/pdf');
 const { validateArtifact } = require('../../out/export/validate');
+const { discoverTool } = require('../../out/export/tools');
 
-const executable = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
+const browserOverride = process.env.EXPORT_BROWSER_PATH || (process.platform === 'darwin'
+    ? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' : '');
 const html = `<!doctype html><html><head><meta charset="UTF-8"><title>Controlled page movement</title><style>
 @page{size:A4;margin:16mm}html,body{margin:0;padding:0;color:#111;background:#fff;font:11pt/1.35 Helvetica,Arial,sans-serif}
 p{margin:0;padding:0;box-sizing:border-box}.spacer{height:700px;background:#eee}
@@ -23,6 +25,11 @@ blockquote{box-sizing:border-box;height:350px;margin:0;padding:12px;border:2px s
 </main></body></html>`;
 
 (async () => {
+    const browserStatus = await discoverTool('browser', browserOverride);
+    if (!browserStatus.available || !browserStatus.path) {
+        throw new Error(browserStatus.error || 'Install Chrome/Chromium/Edge or set EXPORT_BROWSER_PATH to its absolute executable path.');
+    }
+    const executable = browserStatus.path;
     const browser = await chromium.launch({ executablePath: executable, headless: true, chromiumSandbox: true });
     let measurements;
     try {
@@ -62,7 +69,7 @@ blockquote{box-sizing:border-box;height:350px;margin:0;padding:12px;border:2px s
         inputSha256: createHash('sha256').update(html).digest('hex'),
         measurements, output: path.basename(output), pages: pages.length,
         outputSha256: createHash('sha256').update(pdf).digest('hex'),
-        browser: execFileSync(executable, ['--version'], { encoding: 'utf8' }).trim(),
+        browser: browserStatus.version,
         precedingMarkerPage: 1, ordinaryBlockFirstMarkerPage: 2, ordinaryBlockLastMarkerPage: 2, warnings
     };
     await fs.writeFile(output + '.json', JSON.stringify(evidence, null, 2) + '\n');

@@ -7,12 +7,14 @@ const { createHash } = require('node:crypto');
 const { execFileSync } = require('node:child_process');
 const { convertPdf } = require('../../out/export/pdf');
 const { validateArtifact } = require('../../out/export/validate');
+const { discoverTool } = require('../../out/export/tools');
 
 const root = path.resolve(__dirname, '../..');
 const mode = process.argv[2] || 'declared';
 const directory = path.join(root, '.vscode-test/export-native/evidence/artifact-audit');
 const receiptsPath = path.resolve(process.argv[3] || path.join(root, '.vscode-test/export-native/evidence/formats.json'));
-const browser = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
+const browserOverride = process.env.EXPORT_BROWSER_PATH || (process.platform === 'darwin'
+    ? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' : '');
 const declared = '@media print{body,.editor{font-family:Helvetica,Arial,sans-serif!important;font-size:11pt!important;line-height:1.35!important}}';
 const compact = `@media print{
 body,.editor{font-family:Helvetica,Arial,sans-serif!important;font-size:11pt!important;line-height:1.35!important}
@@ -25,6 +27,11 @@ body,.editor{font-family:Helvetica,Arial,sans-serif!important;font-size:11pt!imp
 
 (async () => {
     if (!['declared', 'compact'].includes(mode)) { throw new Error('Use declared or compact reference layout.'); }
+    const browserStatus = await discoverTool('browser', browserOverride);
+    if (!browserStatus.available || !browserStatus.path) {
+        throw new Error(browserStatus.error || 'Install Chrome/Chromium/Edge or set EXPORT_BROWSER_PATH to its absolute executable path.');
+    }
+    const browser = browserStatus.path;
     const receipts = JSON.parse(await fs.readFile(receiptsPath, 'utf8'));
     const receipt = receipts.find(value => value.file === 'w30-report.md' && value.format === 'html' && value.state === 'complete');
     if (!receipt?.outputPath) { throw new Error('A complete W-30 HTML receipt is required for reference rendering.'); }
@@ -49,7 +56,7 @@ body,.editor{font-family:Helvetica,Arial,sans-serif!important;font-size:11pt!imp
         mode, sourceHtml: path.basename(source), sourceHtmlSha256: createHash('sha256').update(original).digest('hex'),
         frozenMarkdownSha256: '1db4863436896ffa05bcfcc1d413a5fc88cd1ce73ce5f1c8cd78eb37686cbe33',
         output: path.basename(output), bytes: bytes.length, sha256: createHash('sha256').update(bytes).digest('hex'),
-        browser: execFileSync(browser, ['--version'], { encoding: 'utf8' }).trim(),
+        browser: browserStatus.version,
         bodyFont: 'Helvetica, Arial, sans-serif', bodyPoints: 11, lineHeight: 1.35,
         paper: 'A4 portrait', marginsMm: 16, css,
         pages: Number(/^Pages:\s+(\d+)/m.exec(info)[1]), stages, warnings

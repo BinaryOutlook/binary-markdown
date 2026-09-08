@@ -10,9 +10,11 @@ const { chromium } = require('../../vendor/playwright-core');
 const { prepareStandaloneHtml } = require('../../out/export/html');
 const { convertPdf } = require('../../out/export/pdf');
 const { validateArtifact } = require('../../out/export/validate');
+const { discoverTool } = require('../../out/export/tools');
 
 const root = path.resolve(__dirname, '../..');
-const executable = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
+const browserOverride = process.env.EXPORT_BROWSER_PATH || (process.platform === 'darwin'
+    ? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' : '');
 const outputDirectory = path.join(root, '.vscode-test/export-native/evidence/artifact-audit');
 const body = '<div class="editor"><h1>Theme print check</h1>' +
     '<p>THEME-BODY-MARKER: Ordinary report text should remain readable.</p>' +
@@ -31,6 +33,11 @@ function luminance(rgb) {
 }
 
 (async () => {
+    const browserStatus = await discoverTool('browser', browserOverride);
+    if (!browserStatus.available || !browserStatus.path) {
+        throw new Error(browserStatus.error || 'Install Chrome/Chromium/Edge or set EXPORT_BROWSER_PATH to its absolute executable path.');
+    }
+    const executable = browserStatus.path;
     await fs.mkdir(outputDirectory, { recursive: true });
     const browser = await chromium.launch({ executablePath: executable, headless: true, chromiumSandbox: true });
     const evidence = [];
@@ -76,7 +83,7 @@ function luminance(rgb) {
         }
     } finally { await browser.close(); }
     const result = { kind: 'Supplemental production HTML/PDF check; not a native editor-theme receipt.',
-        browser: execFileSync(executable, ['--version'], { encoding: 'utf8' }).trim(), themes: evidence };
+        browser: browserStatus.version, themes: evidence };
     await fs.writeFile(path.join(outputDirectory, 'themes.json'), JSON.stringify(result, null, 2) + '\n');
     console.log(JSON.stringify(result));
 })().catch(error => { console.error(error); process.exitCode = 1; });
