@@ -15,7 +15,7 @@
     "filename": "binary-markdown-0.1.0.vsix",
     "bytes": 4187330,
     "sha256": "958ba238a2b064888c9b5e76631c2aa884004e4769ade61c72523168c4808438",
-    "differenceFromNativeArtifactCandidate": "Packaged help and README documentation only; compiled code parity verified"
+    "differenceFromNativeArtifactCandidate": "Packaged help and README documentation only; compiled code parity verified. Consolidated native run passed with this exact final package."
   },
   "nativeArtifactCandidateSha256": "dc5d1876917c17a09f3d795cb6debbf8c555ff3c79b9e178140c770704ba5967",
   "frozenSourceSha256": "1db4863436896ffa05bcfcc1d413a5fc88cd1ce73ce5f1c8cd78eb37686cbe33",
@@ -504,5 +504,33 @@
     "Detailed diagnostics/fallback explanations currently English",
     "One unchanged baseline browser test failure",
     "Native save failure after preparation needs cancellation or save retry to clear abandoned wait"
-  ]
+  ],
+  "consolidatedNativeHarness": {
+    "result": "passed",
+    "scenarioReceipts": 39,
+    "frozenInputsCheck": "passed",
+    "packageSha256": "958ba238a2b064888c9b5e76631c2aa884004e4769ade61c72523168c4808438",
+    "privateReceiptSha256": "015c74d0e3d05000b78735d2d358f0bf555877083b3d309724f879925e0c722c",
+    "scenarioCounts": {
+      "format": 16,
+      "immediate-save": 4,
+      "missing-docx": 1,
+      "missing-pdf": 1,
+      "hash-reuse": 1,
+      "dirty-rejected": 1,
+      "untitled-rejected": 1,
+      "unwritable-destination": 1,
+      "resource-cancel": 1,
+      "worker-cancel": 1,
+      "worker-failure": 1,
+      "toolbar": 2,
+      "theme": 2,
+      "wrong-active-tab": 1,
+      "immutable-capture": 1,
+      "offline-html": 4,
+      "complete": 1
+    },
+    "freshIsolatedInstallation": true,
+    "runCommand": "node test/native/export-smoke.cjs run --suite all --workdir .vscode-test/export-native-consolidated --port 9330"
+  }
 }

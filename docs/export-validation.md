@@ -31,6 +31,7 @@ The exported extension was loaded from an installed VSIX. A separate test-driver
 | Frozen input integrity | All seven original input hashes verified unchanged |
 | Installed output matrix | All 16 combinations of four fixed fixtures and four formats completed; exact receipt-selected artifacts audited |
 | Offline HTML | All four actual HTML exports relocated into an unrelated temporary directory and opened offline: zero external requests, zero script errors, complete terminal markers, decoded embedded images and no editor controls |
+| Consolidated native harness | Fresh isolated installation of the final VSIX: **39 scenario receipts plus unchanged frozen inputs**, covering all seven suites; same package hash as the evidence manifest |
 | Packaging | Archive CRCs, required files/locales/help, isolated backend/Playwright loading and compiled-byte parity passed; native executables and development dependencies absent |
 
 The full suite is **not green**: `test/specs/perplexity-highlight-test.spec.ts:4` retains the baseline color failure. It was reproduced before implementation; its assertions were not disabled or weakened. The browser fixture generator was corrected to preserve literal `$` replacement sequences in production JavaScript, then exact script inclusion, literal searches and focused export behavior were checked.
