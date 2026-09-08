@@ -233,6 +233,41 @@ test.describe('Export document-only rendering', () => {
         } finally { await standalone.close(); }
     });
 
+    test('exported blockquotes use readable theme text in GitHub and night output', async ({ page, context }) => {
+        const sourceText = '# Quote contrast\n\n> QUOTE-CONTRAST-MARKER: This quotation must remain readable.\n';
+        const rendered = await prepare(page, sourceText);
+        for (const theme of ['github', 'night']) {
+            const signal = new AbortController().signal;
+            const html = await prepareStandaloneHtml({
+                sourcePath: path.resolve(__dirname, '../fixtures/exports/quote-contrast.md'), markdown: sourceText,
+                version: 1, theme, fontSize: 16
+            }, {
+                html: rendered.html, diagrams: [], warnings: [], theme, fontSize: 16
+            }, path.resolve(__dirname, '../..'), { signal, report() {}, warnings: [], loadResource: createResourceLoader(signal) });
+            const exported = await context.newPage();
+            try {
+                await exported.setContent(html, { waitUntil: 'load' });
+                await expect(exported.locator('blockquote')).toContainText('QUOTE-CONTRAST-MARKER');
+                const colors = await exported.evaluate(() => ({
+                    quote: getComputedStyle(document.querySelector('blockquote')!).color,
+                    text: getComputedStyle(document.body).color,
+                    background: getComputedStyle(document.body).backgroundColor
+                }));
+                expect(colors.quote, theme + ' quotation inherits readable document text').toBe(colors.text);
+                const luminance = (color: string) => {
+                    const rgb = color.match(/[\d.]+/g)!.slice(0, 3).map(Number).map(value => {
+                        const channel = value / 255;
+                        return channel <= 0.04045 ? channel / 12.92 : Math.pow((channel + 0.055) / 1.055, 2.4);
+                    });
+                    return rgb[0] * 0.2126 + rgb[1] * 0.7152 + rgb[2] * 0.0722;
+                };
+                const foreground = luminance(colors.quote);
+                const background = luminance(colors.background);
+                expect((Math.max(foreground, background) + 0.05) / (Math.min(foreground, background) + 0.05), theme + ' quotation contrast').toBeGreaterThanOrEqual(4.5);
+            } finally { await exported.close(); }
+        }
+    });
+
     test('document diagram directives cannot enable active HTML labels', async ({ page }) => {
         const source = '%%{init: {"flowchart": {"htmlLabels": true}, "securityLevel": "loose"}}%%\ngraph TD\n A[First] --> B[Last]';
         const rendered = await prepare(page, '```mermaid\n' + source + '\n```\n');

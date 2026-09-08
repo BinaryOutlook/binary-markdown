@@ -92,6 +92,7 @@ export async function prepareStandaloneHtml(
         '<meta http-equiv="Content-Security-Policy" content="default-src \'none\'; img-src data:; style-src \'unsafe-inline\'; font-src data:;">' +
         '<title>' + escapeText(title) + '</title><style>' + styles.replace(/<\/style/gi, '<\\/style') +
         '\nhtml,body{height:auto!important;overflow:visible!important}body{margin:0;padding:24px}' +
+        '.export-root{--blockquote-color:var(--text-color)}' +
         '.editor{height:auto!important;max-height:none!important;overflow:visible!important;max-width:860px;margin:auto;outline:0}' +
         '.editor pre,.editor table{max-height:none!important;overflow:visible!important}' +
         '.editor img,.editor svg{max-width:100%;height:auto}.export-fallback,.export-warning-note{border:1px solid #a66;padding:8px;white-space:normal}' +
