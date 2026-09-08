@@ -1691,6 +1691,20 @@
         const normalizedSource = stripExportMetadata(source);
         template.innerHTML = markdownToHtmlFragment(normalizedSource);
         sanitizeExportTree(template.content, warnings);
+        // These are diagnostics about the current rendered output, not a new
+        // Markdown parser. Literal notation stays exactly as the user sees it.
+        const diagnosticTree = template.content.cloneNode(true);
+        diagnosticTree.querySelectorAll('pre,code,.math-wrapper,.mermaid-wrapper').forEach(element => element.remove());
+        const visibleSource = (diagnosticTree.textContent || '').replace(/\\\$/g, '');
+        if (/\$\$[\s\S]*?\$\$|\$(?!\$)(?=\S)[^$\n]*?[^\s$]\$(?![\d$])/.test(visibleSource)) {
+            exportWarning(warnings, 'renderer-math-source', 'The current displayed renderer leaves dollar-delimited mathematics ($...$ and $$...$$) as visible source. HTML/PDF preserve that behavior; use a fenced math block for rendered equations.');
+        }
+        if (/\[TOC\]/i.test(visibleSource)) {
+            exportWarning(warnings, 'renderer-toc-source', 'A literal [TOC] marker remains visible. HTML/PDF do not generate a table of contents from that marker in the current renderer.');
+        }
+        if (/\[\^[^\]\n]+\]/.test(visibleSource)) {
+            exportWarning(warnings, 'renderer-footnote-source', 'Footnote markers and definitions remain visible source. HTML/PDF do not generate linked footnotes in the current renderer.');
+        }
         const container = document.createElement('div');
         container.className = 'editor export-preparation';
         container.setAttribute('aria-hidden', 'true');

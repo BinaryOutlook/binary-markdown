@@ -1,4 +1,8 @@
 import { test, expect, Page } from '@playwright/test';
+import * as fs from 'fs';
+import * as path from 'path';
+import { prepareStandaloneHtml } from '../../src/export/html';
+import { createResourceLoader } from '../../src/export/resources';
 
 type ExportTestWindow = Window & {
     __testApi: { ready: boolean; setMarkdown(markdown: string): void; messages: Array<Record<string, any>> };
@@ -171,6 +175,62 @@ test.describe('Export document-only rendering', () => {
         expect(rendered.diagrams[0].svg).toContain('<svg');
         expect(rendered.warnings).toEqual([]);
         expect(await page.locator('.export-preparation').count()).toBe(0);
+    });
+
+    test('discloses dollar math, TOC and footnotes retained as visible renderer source', async ({ page }) => {
+        const source = '# Literal notation\n\nInline $x^2$ and $y$.\n\n$$\nE = mc^2\n$$\n\n[TOC]\n\nText with a footnote.[^note]\n\n[^note]: Footnote body.\n';
+        await setMarkdown(page, source);
+        const originalHtml = await page.locator('#editor').innerHTML();
+        const rendered = await prepare(page, source);
+        expect(rendered.html).toContain('$x^2$');
+        expect(rendered.html).toContain('$y$');
+        expect(rendered.html).toContain('$$');
+        expect(rendered.html).toContain('[TOC]');
+        expect(rendered.html).toContain('[^note]');
+        expect(rendered.html).not.toContain('katex');
+        expect(rendered.warnings.map((warning: { code: string }) => warning.code)).toEqual([
+            'renderer-math-source', 'renderer-toc-source', 'renderer-footnote-source'
+        ]);
+        expect(await page.locator('#editor').innerHTML()).toBe(originalHtml);
+        await sendHost(page, { type: 'captureExportSnapshot', requestId: 'literal-source-unchanged' });
+        expect((await messages(page, 'exportSnapshot')).at(-1)?.content).toBe(source);
+    });
+
+    test('does not label code examples, currency or escaped dollar signs as unsupported mathematics', async ({ page }) => {
+        const source = 'Prices are $5 and $10. Escaped \\$x\\$ remains text.\n\n`$x$ [TOC] [^note]`\n\n```text\n$$ x $$\n[TOC]\n[^note]: Example\n```\n';
+        const rendered = await prepare(page, source);
+        expect(rendered.warnings).toEqual([]);
+    });
+
+    test('supplementary native math fixture embeds KaTeX fonts and renders standalone offline', async ({ page, context }) => {
+        const fixturePath = path.resolve(__dirname, '../fixtures/exports/renderer-native-math.md');
+        const sourceText = fs.readFileSync(fixturePath, 'utf8');
+        const rendered = await prepare(page, sourceText);
+        expect(rendered.warnings).toEqual([]);
+        const signal = new AbortController().signal;
+        const operations = { signal, report() {}, warnings: [], loadResource: createResourceLoader(signal) };
+        const html = await prepareStandaloneHtml({
+            sourcePath: fixturePath, markdown: sourceText, version: 1, theme: 'github', fontSize: 16
+        }, {
+            html: rendered.html, diagrams: rendered.diagrams, warnings: rendered.warnings, theme: 'github', fontSize: 16
+        }, path.resolve(__dirname, '../..'), operations);
+        expect(operations.warnings).toEqual([]);
+        expect(html).toContain('data:font/woff2;base64,');
+        expect(html).not.toMatch(/url\(["']?(?:https?:|fonts\/)/i);
+        const standalone = await context.newPage();
+        const attemptedRequests: string[] = [];
+        await standalone.route('**/*', route => { attemptedRequests.push(route.request().url()); return route.abort(); });
+        try {
+            await standalone.setContent(html, { waitUntil: 'load' });
+            await standalone.evaluate(() => document.fonts.ready);
+            await expect(standalone.locator('.katex')).toHaveCount(2);
+            await expect(standalone.locator('.katex-error,.math-error')).toHaveCount(0);
+            await expect(standalone.locator('body')).toContainText('RENDERER-MATH-FIRST');
+            await expect(standalone.locator('body')).toContainText('RENDERER-MATH-LAST');
+            expect(await standalone.evaluate(() => Array.from(document.fonts).some(font => font.family.startsWith('KaTeX') && font.status === 'loaded'))).toBe(true);
+            expect(attemptedRequests).toEqual([]);
+            expect(fs.readFileSync(fixturePath, 'utf8')).toBe(sourceText);
+        } finally { await standalone.close(); }
     });
 
     test('document diagram directives cannot enable active HTML labels', async ({ page }) => {
