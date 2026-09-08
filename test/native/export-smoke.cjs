@@ -570,7 +570,8 @@ async function main() {
         const environment = { ...process.env };
         // An inherited integrated-terminal IPC hook must not redirect the CLI into another VS Code profile.
         delete environment.VSCODE_IPC_HOOK_CLI;
-        const child = spawnSync(settings.code, args, { stdio: 'inherit', env: environment });
+        // The CLI must not consume the remaining commands of a piped SSH script.
+        const child = spawnSync(settings.code, args, { stdio: ['ignore', 'inherit', 'inherit'], env: environment });
         if (child.error) throw child.error;
         assert.equal(child.status, 0, 'Isolated VS Code command failed');
         if (settings.command === 'install') fs.writeFileSync(path.join(owner.base, 'installed.json'), JSON.stringify({ token: owner.token, packagePath: settings.package, packageSha256: hash(fs.readFileSync(settings.package)), installedAt: new Date().toISOString() }, null, 2));
