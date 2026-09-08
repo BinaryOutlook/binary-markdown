@@ -116,7 +116,7 @@ The [frozen manifest](../test/fixtures/exports/manifest.json) fixes four Markdow
 
 The original synthetic report is MIT-licensed. [NIST SP 800-218](https://csrc.nist.gov/pubs/sp/800/218/final) is a complexity reference only; no third-party report text or assets were copied.
 
-A separate readable reference uses A4, 16 mm margins, Helvetica/Arial 11 pt and 1.35 line height, with 10 pt tables and 9 pt code. It produces **35 pages**, within the approximate workload definition; the native captured-appearance PDF produces **51 pages**. No source content or fixture expectation was removed. Exact reference CSS and the reason for this distinction are in [the artifact audit](../test/native/export-artifact-audit.md).
+A separate readable reference uses A4, 16 mm margins, Helvetica/Arial 11 pt and 1.35 line height, with 10 pt tables and 9 pt code. It produces **35 pages**, within the approximate workload definition; the original macOS native captured-appearance PDF produces **51 pages** (subsequent Ubuntu: **54 pages**). No source content or fixture expectation was removed. Exact reference CSS and the reason for this distinction are in [the artifact audit](../test/native/export-artifact-audit.md).
 
 The final W-30 audit accounts for all 289 markers in every format, including alternative-text metadata. All code lines, table rows and scenario cards survive. Original PNG/SVG bytes are retained in HTML/DOCX/EPUB; PDF raster dimensions and decoded RGB pixels match the originals. The tall graphic fits its page with only approximately 0.2% pixel/point rounding in displayed aspect ratio. Representative page inspection also caught and verified fixes for unreadable light-theme quotes and lost missing-image labels.
 
