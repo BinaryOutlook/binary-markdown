@@ -211,6 +211,6 @@ const html = `<!DOCTYPE html>
 </html>`;
 
 fs.writeFileSync(outputPath, html
-    .replace('__TEST_HOST_BRIDGE__', testHostBridgeScript)
-    .replace('__EDITOR_SCRIPT__', editorScript));
+    .replace('__TEST_HOST_BRIDGE__', () => testHostBridgeScript)
+    .replace('__EDITOR_SCRIPT__', () => editorScript));
 console.log('Generated:', outputPath);
