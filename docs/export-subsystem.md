@@ -1,6 +1,6 @@
 # Export subsystem
 
-Version 1.0 · Consolidated 2026-09-09 · **Status: agreed specification and implementation handoff; implementation has not started.**
+Version 1.0 · Consolidated 2026-09-09 · **Status: implementation in progress on `export-subsystem`; acceptance remains pending.**
 
 This is the authoritative task brief for Binary Markdown's experimental export subsystem. It consolidates the export reconnaissance, clarification answers, functional and non-functional requirements, implementation plan, and human–AI working agreement. A developer can work from this file without reconstructing the conversation. Keep subsequent scope decisions, milestone status, and evidence references here.
 
@@ -402,9 +402,9 @@ Update this table at each milestone or meaningful interruption. Use `not started
 
 | Milestone | Current state | Evidence / next action |
 | --- | --- | --- |
-| D0 | Not started | Establish fresh baseline, contracts and fixture expectations. |
+| D0 | In progress | Started at `5488f37` under Node 20.20.0. Untouched baseline suite is running separately; saved/prepared/result contracts are defined in `src/export/types.ts`. Fixed fixtures are being prepared. |
 | D1 | Not started | Implement and verify saved-revision capture. |
-| D2 | Not started | Deliver installed HTML export. |
+| D2 | In progress | Shared output finalization passes 3 focused tests covering naming/reuse, concurrent claims, cancellation and unwritable destinations. Installed HTML path remains pending. |
 | D3 | Not started | Deliver Pandoc DOCX/EPUB. |
 | D4 | Not started | Deliver browser PDF and pagination. |
 | D5 | Not started | Complete integrated acceptance and handback. |
