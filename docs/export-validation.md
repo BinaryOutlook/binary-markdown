@@ -146,4 +146,4 @@ The default export test command deliberately skips real native tools and explici
 - Interface/status/setup labels and native settings are localized separately. Detailed resource/converter diagnostics and document fallback explanations currently remain English.
 - Native binaries are user-managed. ZIP64/encrypted/multidisk converter output, unsupported image formats and SVGs requiring external dependencies are outside initial support. Compression, templates, output customization and finer pagination remain deferred.
 - VS Code has no native write-failed completion event. If a native save fails after preparation, cancel the waiting export or retry saving; this clears the abandoned wait. Every later export still requires clean, matching saved content.
-- The known full-suite failure and existing lint warnings remain recorded. No human acceptance, merge, Marketplace publication or release is implied by this handback.
+- The recorded full-suite failures and existing lint warnings remain documented. No human acceptance, merge, Marketplace publication or release is implied by this handback.
