@@ -35,6 +35,7 @@ async function setup(t) {
     const viewState = event();
     const incoming = event();
     const posts = [];
+    const notices = [];
     const renderConfigs = [];
     const locales = [];
     const timers = [];
@@ -42,7 +43,7 @@ async function setup(t) {
     const state = {
         text: '# OLD-EDITOR\n', disk: '# OLD-EDITOR\n', captureCalls: 0, saveCalls: 0,
         captures: async () => '# OLD-EDITOR\n', beforeWrite: async () => {}, failedWrite: false,
-        controller: undefined
+        controller: undefined, exports: []
     };
     const file = value => ({ scheme: 'file', fsPath: value, toString: () => 'file://' + value });
     const document = {
@@ -87,7 +88,7 @@ async function setup(t) {
                 return true;
             }
         },
-        window: { showInformationMessage: async () => undefined, showErrorMessage: async () => undefined }
+        window: { showInformationMessage: async message => { notices.push(message); }, showErrorMessage: async () => undefined }
     };
     const panel = {
         active: true,
@@ -101,6 +102,7 @@ async function setup(t) {
     class Controller {
         constructor(_context, _document, _panel, waitForSave) { this.waitForSave = waitForSave; this.refreshes = 0; state.controller = this; }
         captureForSave() { state.captureCalls++; return state.captures(); }
+        export(format) { state.exports.push(format); return Promise.resolve(); }
         refreshCapabilities() { this.refreshes++; }
         handleMessage() { return false; }
         dispose() { this.disposed = true; }
@@ -121,12 +123,32 @@ async function setup(t) {
     await provider.resolveCustomTextEditor(document, panel, {});
     t.after(() => disposed.fire());
     return {
-        state, document, panel, config, posts, renderConfigs, locales, disposed,
+        state, document, panel, provider, config, posts, notices, renderConfigs, locales, disposed,
         configChanged: keys => configChanges.fire({ affectsConfiguration: query => keys.some(key => key === query || key.startsWith(query + '.')) }),
         externalChange: async content => { state.disk = content; watcher.fire(document.uri); await timers.shift()(); },
         send: message => Promise.all(incoming.fire(message))
     };
 }
+
+test('export commands target the active custom editor for each format', async t => {
+    const h = await setup(t);
+    for (const format of ['html', 'pdf', 'docx', 'epub']) { h.provider.requestExport(format); }
+    assert.deepEqual(h.state.exports, ['html', 'pdf', 'docx', 'epub']);
+    assert.deepEqual(h.notices, []);
+});
+
+test('export command refuses a cached panel that is no longer active', async t => {
+    const h = await setup(t);
+    // Native focus can change before the queued view-state callback clears the
+    // provider's cached panel. A command must not export that previous document.
+    h.panel.active = false;
+    h.provider.requestExport('html');
+    assert.deepEqual(h.state.exports, []);
+    assert.deepEqual(h.notices, ['openMarkdownFirst']);
+    assert.equal(h.state.captureCalls, 0);
+    assert.equal(h.state.saveCalls, 0);
+    assert.equal(h.document.getText(), '# OLD-EDITOR\n');
+});
 
 test('provider native-save barrier waits through disk completion and didSave', async t => {
     const h = await setup(t);

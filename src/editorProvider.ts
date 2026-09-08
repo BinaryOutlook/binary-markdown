@@ -347,7 +347,8 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
     private readonly exportControllers = new Map<vscode.WebviewPanel, ExportController>();
 
     public requestExport(format: ExportFormat): void {
-        const controller = this.activeWebviewPanel && this.exportControllers.get(this.activeWebviewPanel);
+        const panel = this.activeWebviewPanel;
+        const controller = panel?.active ? this.exportControllers.get(panel) : undefined;
         if (controller) { void controller.export(format); }
         else { void vscode.window.showInformationMessage(t('openMarkdownFirst')); }
     }
