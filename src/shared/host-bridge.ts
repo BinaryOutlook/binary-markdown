@@ -38,14 +38,16 @@ export interface HostBridge {
 export interface ExportWarning { code: string; message: string; }
 export type ExportWebviewResponse =
     | { type: 'exportSnapshot'; requestId: string; content: string; pending: boolean }
-    | { type: 'exportPrepared'; requestId: string; html: string; warnings: ExportWarning[]; theme: string; fontSize: number }
+    | { type: 'exportPrepared'; requestId: string; html: string; warnings: ExportWarning[]; diagrams?: Array<{ source: string; svg: string }>; theme: string; fontSize: number }
     | { type: 'exportError'; requestId: string; error: string };
 
 /** ホスト → editor.js (受信メッセージ型) */
 export type HostMessage =
+    | { type: 'documentSaved'; content: string }
     | { type: 'saveResult'; revision: number; success: boolean }
     | { type: 'captureExportSnapshot'; requestId: string }
     | { type: 'prepareExport'; requestId: string; markdown: string }
+    | { type: 'cancelExportPreparation'; requestId: string }
     | { type: 'update'; content: string }
     | { type: 'performUndo' }
     | { type: 'performRedo' }
