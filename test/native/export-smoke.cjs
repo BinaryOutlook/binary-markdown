@@ -3,6 +3,7 @@
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
+const os = require('node:os');
 const crypto = require('node:crypto');
 const http = require('node:http');
 const net = require('node:net');
@@ -16,6 +17,13 @@ const inside = (base, target) => {
     const relative = path.relative(base, target);
     return relative === '' || (!relative.startsWith('..' + path.sep) && relative !== '..' && !path.isAbsolute(relative));
 };
+const harnessIdentity = () => ({ platform: process.platform, arch: process.arch, nodeVersion: process.version });
+const saveShortcut = () => process.platform === 'darwin' ? { label: 'Meta+S', modifiers: 4 } : { label: 'Ctrl+S', modifiers: 2 };
+const assertSupportedHost = () => {
+    assert.ok(['darwin', 'linux'].includes(process.platform), 'Use local desktop VS Code on macOS or Linux for this harness');
+    assert.notEqual(process.getuid?.(), 0, 'Run as the ordinary desktop user: root bypasses the unwritable-output test and browser sandbox');
+};
+const temporaryRoot = () => fs.realpathSync(os.tmpdir());
 
 function options() {
     const result = {
@@ -53,17 +61,20 @@ function verifyInputs(workspace) {
 }
 
 function initialize(settings) {
-    assert.equal(process.platform, 'darwin', 'The initial native acceptance harness targets macOS');
+    assertSupportedHost();
     if (fs.existsSync(settings.workdir)) throw new Error('Initialization requires a new directory; existing evidence is never erased. Choose another --workdir.');
     fs.mkdirSync(path.dirname(settings.workdir), { recursive: true });
     assert.ok(inside(fs.realpathSync(root), fs.realpathSync(path.dirname(settings.workdir))), 'Test directory must not escape through a symlink');
     assert.ok(fs.existsSync(settings.package), 'Build the VSIX before initializing the native harness.');
+    // Stay below the smaller macOS Unix-domain socket limit, including a conservative versioned socket name.
+    assert.ok(Buffer.byteLength(path.join(temporaryRoot(), 'bm-native-XXXXXX', '1.9999-main.sock')) <= 103,
+        'The temporary directory is too long for the VS Code IPC socket. Set TMPDIR to a shorter temporary directory for every harness command.');
     const token = crypto.randomUUID();
     const owner = {
         kind: 'binary-markdown-native-export-v1', token, base: settings.workdir,
         workspace: path.join(settings.workdir, 'workspace-' + token.slice(0, 8)),
-        // macOS Unix-domain socket paths must stay short even when this checkout is deeply nested.
-        profile: fs.mkdtempSync(path.join(fs.realpathSync('/tmp'), 'bm-native-')), extensions: path.join(settings.workdir, 'extensions'),
+        // Use the host temporary directory rather than the possibly deeply nested checkout.
+        profile: fs.mkdtempSync(path.join(temporaryRoot(), 'bm-native-')), extensions: path.join(settings.workdir, 'extensions'),
         driver: path.join(settings.workdir, 'driver'), port: settings.port
     };
     for (const directory of [owner.base, owner.profile, owner.extensions, owner.driver, path.join(owner.base, 'evidence')]) fs.mkdirSync(directory, { recursive: true });
@@ -95,7 +106,7 @@ function owned(settings) {
     for (const name of ['workspace', 'extensions', 'driver']) {
         assert.ok(inside(owner.base, owner[name]) && fs.realpathSync(owner[name]) === owner[name], 'Owned ' + name + ' is required');
     }
-    assert.equal(path.dirname(owner.profile), fs.realpathSync('/tmp'), 'The test profile must be a generated temporary directory');
+    assert.equal(path.dirname(owner.profile), temporaryRoot(), 'The test profile must be a generated temporary directory; keep TMPDIR consistent across commands');
     assert.match(path.basename(owner.profile), /^bm-native-[A-Za-z0-9]+$/);
     assert.equal(fs.realpathSync(owner.profile), owner.profile);
     const profileOwner = JSON.parse(fs.readFileSync(path.join(owner.profile, sentinelName), 'utf8'));
@@ -109,6 +120,9 @@ function receipt(owner) {
     assert.equal(response.token, owner.token, 'The installed test driver must confirm the ownership sentinel');
     assert.equal(response.workspace, owner.workspace);
     assert.equal(response.profile, owner.profile);
+    assert.equal(response.platform, process.platform, 'The driver must run on the same local operating system as the harness');
+    assert.equal(response.uiKind, 1, 'The driver must run in desktop VS Code');
+    assert.equal(response.remoteName, null, 'This harness validates a local extension host, not a remote VS Code extension host');
     assert.ok(response.extensionPath && inside(owner.extensions, response.extensionPath), 'The subject must be the isolated installed VSIX');
     assert.equal(response.trusted, true, 'Trust only the generated test workspace before running');
     return response;
@@ -229,7 +243,7 @@ function harness(settings, owner) {
 
 async function run(settings, owner) {
     receipt(owner); // All mutation is after workspace/profile/installed-extension verification.
-    assert.equal(process.platform, 'darwin', 'The initial native acceptance harness targets macOS');
+    assertSupportedHost();
     verifyInputs(owner.workspace);
     const installed = JSON.parse(fs.readFileSync(path.join(owner.base, 'installed.json'), 'utf8'));
     assert.equal(installed.token, owner.token);
@@ -239,7 +253,7 @@ async function run(settings, owner) {
     const report = path.join(owner.base, 'evidence', 'native-' + Date.now() + '.json');
     const record = (name, details = {}) => {
         receipts.push({ name, ...details });
-        fs.writeFileSync(report, JSON.stringify({ host: receipt(owner), packageSha256: hash(fs.readFileSync(settings.package)), receipts }, null, 2));
+        fs.writeFileSync(report, JSON.stringify({ harness: harnessIdentity(), host: receipt(owner), packageSha256: hash(fs.readFileSync(settings.package)), receipts }, null, 2));
         console.log(name, JSON.stringify(details));
     };
     const available = ['formats', 'saves', 'edges', 'ui', 'selection', 'immutable', 'offline'];
@@ -275,7 +289,7 @@ async function run(settings, owner) {
                 const marker = `IMMEDIATE-${mode}-${save}-MARKER`;
                 await connection.send('Input.insertText', { text: ' ' + marker });
                 if (save === 'native') await h.driver({ action: 'save' });
-                else for (const type of ['keyDown', 'keyUp']) await connection.send('Input.dispatchKeyEvent', { type, key: 's', code: 'KeyS', modifiers: 4 });
+                else for (const type of ['keyDown', 'keyUp']) await connection.send('Input.dispatchKeyEvent', { type, key: 's', code: 'KeyS', modifiers: saveShortcut().modifiers });
                 await h.until(() => read(file).toString().includes(marker));
                 const original = read(file);
                 const state = `JSON.stringify({text:document.getElementById('sourceEditor').value,selection:getSelection().toString(),mode:document.getElementById('sourceEditor').style.display})`;
@@ -284,7 +298,7 @@ async function run(settings, owner) {
                 assert.ok(fs.readFileSync(result.outputPath, 'utf8').includes(marker));
                 assert.ok(read(file).equals(original));
                 assert.equal(await connection.evaluate(state), before);
-                record('immediate-save', { mode, save, sourceUnchanged: true, editorStateUnchanged: true, output: path.basename(result.outputPath) });
+                record('immediate-save', { mode, save, shortcut: save === 'keyboard' ? saveShortcut().label : undefined, sourceUnchanged: true, editorStateUnchanged: true, output: path.basename(result.outputPath) });
             } finally { connection.close(); }
         }
         if (groups.includes('edges')) {
@@ -537,12 +551,14 @@ async function main() {
     if (settings.command === 'init') return initialize(settings);
     const owner = owned(settings);
     if (settings.command === 'install' || settings.command === 'launch') {
-        assert.equal(process.platform, 'darwin', 'Use local macOS VS Code for this harness');
+        assertSupportedHost();
         const args = ['--user-data-dir', owner.profile, '--extensions-dir', owner.extensions];
         if (settings.command === 'install') {
             assert.ok(fs.existsSync(settings.package), 'Build the requested VSIX first');
             args.push('--install-extension', settings.package, '--force');
         } else {
+            if (process.platform === 'linux') assert.ok(process.env.DISPLAY || process.env.WAYLAND_DISPLAY,
+                'Launch under the local Linux desktop session, or an explicitly provisioned Xvfb display.');
             // Refuse to connect accidentally to another running debugging session.
             const probe = net.createServer();
             await new Promise((resolve, reject) => { probe.once('error', reject); probe.listen(owner.port, '127.0.0.1', resolve); });
@@ -551,7 +567,10 @@ async function main() {
                 '--extensionDevelopmentPath=' + owner.driver, '--remote-debugging-port=' + owner.port,
                 '--remote-debugging-address=127.0.0.1', owner.workspace);
         }
-        const child = spawnSync(settings.code, args, { stdio: 'inherit' });
+        const environment = { ...process.env };
+        // An inherited integrated-terminal IPC hook must not redirect the CLI into another VS Code profile.
+        delete environment.VSCODE_IPC_HOOK_CLI;
+        const child = spawnSync(settings.code, args, { stdio: 'inherit', env: environment });
         if (child.error) throw child.error;
         assert.equal(child.status, 0, 'Isolated VS Code command failed');
         if (settings.command === 'install') fs.writeFileSync(path.join(owner.base, 'installed.json'), JSON.stringify({ token: owner.token, packagePath: settings.package, packageSha256: hash(fs.readFileSync(settings.package)), installedAt: new Date().toISOString() }, null, 2));
@@ -559,7 +578,7 @@ async function main() {
     }
     if (settings.command === 'check') {
         const response = await harness(settings, owner).driver({ action: 'inspect' });
-        console.log(JSON.stringify({ ready: true, frozenInputs: verifyInputs(owner.workspace), ...response }, null, 2));
+        console.log(JSON.stringify({ ready: true, frozenInputs: verifyInputs(owner.workspace), harness: harnessIdentity(), ...response }, null, 2));
         return;
     }
     if (settings.command === 'run') return run(settings, owner);

@@ -11,6 +11,7 @@ const inside = (base, target) => {
 };
 
 exports.activate = async function activate(context) {
+    if (!['darwin', 'linux'].includes(process.platform) || vscode.env.uiKind !== vscode.UIKind.Desktop || vscode.env.remoteName) return;
     const folders = vscode.workspace.workspaceFolders || [];
     if (folders.length !== 1 || folders[0].uri.scheme !== 'file') return;
     const workspace = fs.realpathSync(folders[0].uri.fsPath);
@@ -33,6 +34,8 @@ exports.activate = async function activate(context) {
     const identity = () => ({
         token: owner.token, workspace, profile: owner.profile, extensionPath: extension.extensionPath,
         extensionVersion: extension.packageJSON.version, vscodeVersion: vscode.version, nativeLanguage: vscode.env.language,
+        platform: process.platform, arch: process.arch, nodeVersion: process.version,
+        uiKind: vscode.env.uiKind, remoteName: vscode.env.remoteName ?? null,
         trusted: vscode.workspace.isTrusted
     });
     const respond = value => {
