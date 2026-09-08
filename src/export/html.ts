@@ -10,8 +10,9 @@ function escapeText(value: string): string {
 function decodeAttribute(value: string): string {
     return value.replace(/&(?:amp|quot|apos|lt|gt|#\d+|#x[\da-f]+);/gi, entity => {
         const named: Record<string, string> = { '&amp;': '&', '&quot;': '"', '&apos;': "'", '&lt;': '<', '&gt;': '>' };
-        return named[entity.toLowerCase()] || String.fromCodePoint(
-            entity.toLowerCase().startsWith('&#x') ? parseInt(entity.slice(3), 16) : parseInt(entity.slice(2), 10));
+        if (named[entity.toLowerCase()]) { return named[entity.toLowerCase()]; }
+        const codePoint = entity.toLowerCase().startsWith('&#x') ? parseInt(entity.slice(3), 16) : parseInt(entity.slice(2), 10);
+        return codePoint > 0 && codePoint <= 0x10ffff ? String.fromCodePoint(codePoint) : '\uFFFD';
     });
 }
 
@@ -29,10 +30,17 @@ export async function prepareStandaloneHtml(
     document: SavedExportDocument, prepared: PreparedExportDocument, extensionPath: string, operations: ExportOperations
 ): Promise<string> {
     operations.report('resources');
-    const imageHtml = await replaceAsync(prepared.html, /<img\b[^>]*>/gi, async match => {
+    const imageHtml = await replaceAsync(prepared.html, /<img\b(?:"[^"]*"|'[^']*'|[^'">])*>/gi, async match => {
         checkCancelled(operations.signal);
         const tag = match[0];
-        const reference = /\bdata-markdown-path="([^"]*)"/i.exec(tag)?.[1] || /\bsrc="([^"]*)"/i.exec(tag)?.[1];
+        // Match complete attributes so text such as alt='src="example" > text'
+        // cannot become a source attribute or terminate the image tag early.
+        const attributes = [...tag.matchAll(/\s+([^\s=/>]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+)))?/g)];
+        const attributeValue = (name: string) => {
+            const attribute = attributes.find(value => value[1].toLowerCase() === name);
+            return attribute ? attribute[2] ?? attribute[3] ?? attribute[4] ?? '' : undefined;
+        };
+        const reference = attributeValue('data-markdown-path') || attributeValue('src');
         if (!reference) { return tag; }
         const decoded = decodeAttribute(reference);
         try {
@@ -40,8 +48,8 @@ export async function prepareStandaloneHtml(
             if (!/^image\/(png|jpeg|gif|webp|svg\+xml)$/.test(resource.mime)) {
                 throw new Error('Unsupported image type: ' + resource.mime);
             }
-            const clean = tag.replace(/\s(?:src|srcset|data-markdown-path)="[^"]*"/gi, '');
-            return clean.replace(/\s*\/?>(\s*)$/, ' src="' + dataUri(resource) + '">');
+            const preserved = attributes.filter(attribute => !['src', 'srcset', 'data-markdown-path'].includes(attribute[1].toLowerCase()));
+            return '<img' + preserved.map(attribute => attribute[0]).join('') + ' src="' + dataUri(resource) + '">';
         } catch (error) {
             checkCancelled(operations.signal);
             operations.warnings.push({ code: 'image-unavailable', message: decoded + ': ' + String(error) });
@@ -91,5 +99,5 @@ export async function prepareStandaloneHtml(
         '.editor>*,.editor pre,.editor table{break-inside:avoid}.editor pre{white-space:pre-wrap!important;overflow-wrap:anywhere}' +
         '.editor table{width:100%;table-layout:fixed}.editor td,.editor th{overflow-wrap:anywhere}' +
         '.export-split{break-inside:auto!important}.editor img,.editor svg{max-height:265mm;object-fit:contain}}' +
-        '</style></head><body><main class="editor">' + imageHtml + '</main>' + warningNote + '</body></html>';
+        '</style></head><body><main class="export-root">' + imageHtml + '</main>' + warningNote + '</body></html>';
 }
