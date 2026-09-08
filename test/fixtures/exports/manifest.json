@@ -1,0 +1,275 @@
+{
+  "fixture_revision": "exports-v1",
+  "authored_on": "2026-09-09",
+  "purpose": "Fixed source inputs and expectations, not export acceptance evidence.",
+  "reuse_terms": "Original repository contributions under the repository MIT license. No external source text or assets copied.",
+  "complexity_reference": {
+    "title": "NIST SP 800-218, Secure Software Development Framework (SSDF) version 1.1",
+    "published": "2022-02",
+    "publication_url": "https://csrc.nist.gov/pubs/sp/800/218/final",
+    "pdf_url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-218.pdf",
+    "inspected_on": "2026-09-09",
+    "reference_pdf_pages": 36,
+    "use": "Complexity reference only; no adaptation or copied material."
+  },
+  "reference_layout": {
+    "status": "unverified; calibration and a real reference render required",
+    "paper": "A4 portrait",
+    "margins_mm": 16,
+    "initial_body_font_pt": 11,
+    "initial_line_height": 1.35,
+    "font_family": "record actual available or bundled font during calibration",
+    "rendered_w30_pages": null,
+    "engine_and_version": null,
+    "input_changes_during_acceptance": "Do not remove or shorten content to hide failed cases."
+  },
+  "intentionally_missing_assets": [
+    "assets/does-not-exist.png",
+    "assets/w30-deliberately-missing.png"
+  ],
+  "files": [
+    {
+      "path": "basic.md",
+      "kind": "markdown",
+      "bytes": 2478,
+      "sha256": "9d98c1883c6821bce3d7211d376b54e2ccc6e464f921e273b0d7606698455a7d",
+      "inventory": {
+        "utf8_bytes": 2478,
+        "whitespace_delimited_words": 331,
+        "source_lines": 81,
+        "headings": 6,
+        "fenced_blocks": [
+          {
+            "language": "typescript",
+            "lines": 4
+          },
+          {
+            "language": "mermaid",
+            "lines": 7
+          }
+        ],
+        "table_data_rows": [
+          3
+        ],
+        "display_equations": 1,
+        "inline_equations": 1,
+        "image_references": [
+          "assets/Field%20sample%20%E5%9B%BE%E5%83%8F.png"
+        ]
+      },
+      "required_markers": [
+        "BASIC-FIRST-MARKER",
+        "BASIC-LAST-MARKER",
+        "BASIC_CODE_FIRST",
+        "BASIC_CODE_LAST",
+        "BASIC-HTML-MARKER",
+        "BASIC-FOOTNOTE-MARKER"
+      ]
+    },
+    {
+      "path": "fallbacks.md",
+      "kind": "markdown",
+      "bytes": 1662,
+      "sha256": "d59a454ef83115862181e88f31ec3981c19bd6b84f0a14693e3087d79eeda5e1",
+      "inventory": {
+        "utf8_bytes": 1662,
+        "whitespace_delimited_words": 156,
+        "source_lines": 48,
+        "headings": 6,
+        "fenced_blocks": [
+          {
+            "language": "mermaid",
+            "lines": 2
+          },
+          {
+            "language": "sh",
+            "lines": 1
+          },
+          {
+            "language": "yaml",
+            "lines": 3
+          }
+        ],
+        "table_data_rows": [],
+        "display_equations": 1,
+        "inline_equations": 0,
+        "image_references": [
+          "assets/does-not-exist.png"
+        ]
+      },
+      "required_markers": [
+        "FALLBACK-FIRST-MARKER",
+        "FALLBACK-LAST-MARKER",
+        "MISSING-IMAGE-MARKER",
+        "UNSUPPORTED-MATH-AFTER-MARKER",
+        "INVALID-MERMAID-SOURCE-MARKER",
+        "RAW-HTML-SUMMARY-MARKER",
+        "RAW-HTML-BODY-MARKER",
+        "COMMAND-TEXT-MARKER",
+        "UNSAFE-LINK-TEXT-MARKER"
+      ]
+    },
+    {
+      "path": "pagination.md",
+      "kind": "markdown",
+      "bytes": 21954,
+      "sha256": "3557f7a847a1d6c8b80584a26c56f2da7ebf41d40f14e166cd1a92dc992711b4",
+      "inventory": {
+        "utf8_bytes": 21954,
+        "whitespace_delimited_words": 3404,
+        "source_lines": 321,
+        "headings": 5,
+        "fenced_blocks": [
+          {
+            "language": "text",
+            "lines": 160
+          }
+        ],
+        "table_data_rows": [
+          96
+        ],
+        "display_equations": 0,
+        "inline_equations": 0,
+        "image_references": [
+          "assets/tall-graphic.png"
+        ]
+      },
+      "required_markers": [
+        "PAGINATION-FIRST-MARKER",
+        "PAGINATION-LAST-MARKER",
+        "PAGE-MOVE-FIRST-MARKER",
+        "PAGE-MOVE-LAST-MARKER",
+        "PAGINATION-CODE-FIRST-MARKER",
+        "PAGINATION-CODE-LAST-MARKER",
+        "PAGINATION-TABLE-FIRST-MARKER",
+        "PAGINATION-TABLE-LAST-MARKER",
+        "PAGINATION-TALL-GRAPHIC-MARKER"
+      ]
+    },
+    {
+      "path": "w30-report.md",
+      "kind": "markdown",
+      "bytes": 84675,
+      "sha256": "1db4863436896ffa05bcfcc1d413a5fc88cd1ce73ce5f1c8cd78eb37686cbe33",
+      "inventory": {
+        "utf8_bytes": 84675,
+        "whitespace_delimited_words": 12438,
+        "source_lines": 747,
+        "headings": 43,
+        "fenced_blocks": [
+          {
+            "language": "mermaid",
+            "lines": 9
+          },
+          {
+            "language": "json",
+            "lines": 10
+          },
+          {
+            "language": "mermaid",
+            "lines": 8
+          },
+          {
+            "language": "sh",
+            "lines": 4
+          },
+          {
+            "language": "yaml",
+            "lines": 7
+          },
+          {
+            "language": "mermaid",
+            "lines": 10
+          },
+          {
+            "language": "text",
+            "lines": 160
+          }
+        ],
+        "table_data_rows": [
+          5,
+          4,
+          5,
+          4,
+          4,
+          5,
+          96
+        ],
+        "display_equations": 2,
+        "inline_equations": 1,
+        "image_references": [
+          "assets/architecture.svg",
+          "assets/Field%20sample%20%E5%9B%BE%E5%83%8F.png",
+          "assets/tall-graphic.png",
+          "assets/w30-deliberately-missing.png"
+        ]
+      },
+      "required_markers": [
+        "W30-FIRST-MARKER",
+        "W30-LAST-MARKER",
+        "W30-CODE-FIRST-MARKER",
+        "W30-CODE-LAST-MARKER",
+        "W30-TABLE-FIRST-MARKER",
+        "W30-TABLE-LAST-MARKER",
+        "W30-TALL-GRAPHIC-MARKER",
+        "W30-AFTER-TALL-GRAPHIC-MARKER",
+        "W30-MISSING-IMAGE-MARKER",
+        "W30-AFTER-UNSUPPORTED-MATH-MARKER",
+        "W30-RAW-HTML-SUMMARY-MARKER",
+        "W30-RAW-HTML-BODY-MARKER",
+        "W30-FOOTNOTE-MARKER",
+        "SCENARIO-A01-MARKER",
+        "SCENARIO-A02-MARKER",
+        "SCENARIO-A03-MARKER",
+        "SCENARIO-A04-MARKER",
+        "SCENARIO-A05-MARKER",
+        "SCENARIO-A06-MARKER",
+        "SCENARIO-A07-MARKER",
+        "SCENARIO-A08-MARKER",
+        "SCENARIO-A09-MARKER",
+        "SCENARIO-A10-MARKER",
+        "SCENARIO-A11-MARKER",
+        "SCENARIO-A12-MARKER",
+        "SCENARIO-A13-MARKER",
+        "SCENARIO-A14-MARKER",
+        "SCENARIO-A15-MARKER",
+        "SCENARIO-A16-MARKER",
+        "SCENARIO-A17-MARKER",
+        "SCENARIO-A18-MARKER",
+        "SCENARIO-A19-MARKER",
+        "SCENARIO-A20-MARKER",
+        "SCENARIO-A21-MARKER",
+        "SCENARIO-A22-MARKER",
+        "SCENARIO-A23-MARKER",
+        "SCENARIO-A24-MARKER"
+      ]
+    },
+    {
+      "path": "assets/Field sample 图像.png",
+      "kind": "png",
+      "bytes": 21682,
+      "sha256": "30fe5544fa816b4621b393a73f96c389ad918bd3ccedccceb59d02c927158943",
+      "width": 2400,
+      "height": 1600,
+      "original": true
+    },
+    {
+      "path": "assets/tall-graphic.png",
+      "kind": "png",
+      "bytes": 28722,
+      "sha256": "070f46dc3cd0f7b5941217f7f233224dfefc397d4a713175566e4007e512efc6",
+      "width": 1200,
+      "height": 4800,
+      "original": true
+    },
+    {
+      "path": "assets/architecture.svg",
+      "kind": "svg",
+      "bytes": 1382,
+      "sha256": "de1faf5fa0710793dab9f7665d2159db01f3df011cc5e3ff858ce4542ea791e2",
+      "width": 2800,
+      "height": 900,
+      "original": true
+    }
+  ]
+}
