@@ -91,7 +91,11 @@ async function harness(t, options = {}) {
     } } };
     const mocks = {
         vscode,
-        './tools': { discoverTool: async kind => { calls.discover++; return { kind, available: true, path: '/mock/' + kind, version: 'mock-only' }; } },
+        './tools': { discoverTool: async (kind, override, signal) => {
+            calls.discover++;
+            return options.discover ? options.discover({ kind, override, signal }) :
+                { kind, available: true, path: '/mock/' + kind, version: 'mock-only' };
+        } },
         './html': { prepareStandaloneHtml: async (source, prepared, _extensionPath, operations) => {
             calls.render++;
             if (options.render) return options.render({ source, prepared, operations, document });
@@ -350,6 +354,49 @@ test('cached available tools do not bypass changed workspace trust in capability
     await h.controller.export('html');
     assert.equal(h.terminal()[0].state, 'failed');
     assert.equal(h.calls.wait, 0);
+    await assertSourceIntact(h);
+});
+
+test('only the latest overlapping capability refresh publishes its configured tool result', async t => {
+    const earlier = deferred();
+    const config = { 'export.pandocPath': '/old/pandoc', 'export.browserPath': '/old/browser' };
+    const h = await harness(t, {
+        config, platform: 'linux',
+        discover: ({ kind, override }) => override.startsWith('/old/')
+            ? earlier.promise.then(() => ({ kind, available: true, path: override }))
+            : { kind, available: false, path: override, error: 'Configured path is unusable' }
+    });
+    h.controller.refreshCapabilities();
+    config['export.pandocPath'] = '/new/invalid-pandoc';
+    config['export.browserPath'] = '/new/invalid-browser';
+    h.controller.refreshCapabilities();
+    await h.waitForPost('exportCapabilities');
+    earlier.resolve();
+    await new Promise(resolve => setImmediate(resolve));
+    const updates = h.posts.filter(message => message.type === 'exportCapabilities');
+    assert.equal(updates.length, 1, 'An older completed probe cannot replace the latest labels');
+    assert.equal(updates[0].pandoc.path, '/new/invalid-pandoc');
+    assert.equal(updates[0].browser.path, '/new/invalid-browser');
+    assert.equal(updates[0].pandoc.available, false);
+    assert.equal(updates[0].browser.available, false);
+    assert.equal(h.calls.discover, 4);
+    await assertSourceIntact(h);
+});
+
+test('disposing the controller discards pending capability results and ignores later refreshes', async t => {
+    const pending = deferred();
+    const h = await harness(t, {
+        discover: ({ kind }) => pending.promise.then(() => ({ kind, available: true, path: '/mock/' + kind }))
+    });
+    h.controller.refreshCapabilities();
+    assert.equal(h.calls.discover, 2);
+    h.dispose();
+    pending.resolve();
+    await new Promise(resolve => setImmediate(resolve));
+    assert.equal(h.posts.some(message => message.type === 'exportCapabilities'), false);
+    h.controller.refreshCapabilities();
+    await new Promise(resolve => setImmediate(resolve));
+    assert.equal(h.calls.discover, 2, 'Closed editors do not start additional capability probes');
     await assertSourceIntact(h);
 });
 

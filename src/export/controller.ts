@@ -21,6 +21,8 @@ export class ExportController implements vscode.Disposable {
     readonly channel: ExportWebviewChannel;
     private running?: AbortController;
     private capabilities?: Promise<{ pandoc: ToolStatus; browser: ToolStatus }>;
+    private capabilityRefresh = 0;
+    private disposed = false;
 
     constructor(
         private readonly context: vscode.ExtensionContext,
@@ -54,9 +56,12 @@ export class ExportController implements vscode.Disposable {
     }
 
     refreshCapabilities(): void {
-        void this.getCapabilities(true).then(capabilities => this.postStatus({
-            type: 'exportCapabilities', ...capabilities
-        })).catch(() => { /* A closed editor no longer needs capability labels. */ });
+        if (this.disposed) { return; }
+        const refresh = ++this.capabilityRefresh;
+        void this.getCapabilities(true).then(capabilities => {
+            if (this.disposed || refresh !== this.capabilityRefresh) { return; }
+            return this.postStatus({ type: 'exportCapabilities', ...capabilities });
+        }).catch(() => { /* A closed editor no longer needs capability labels. */ });
     }
 
     private async postStatus(message: Record<string, unknown>): Promise<void> {
@@ -207,6 +212,8 @@ export class ExportController implements vscode.Disposable {
     }
 
     dispose(): void {
+        this.disposed = true;
+        this.capabilityRefresh++;
         this.running?.abort();
         this.channel.dispose();
     }
