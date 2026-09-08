@@ -402,8 +402,8 @@ Update this table at each milestone or meaningful interruption. Use `not started
 
 | Milestone | Current state | Evidence / next action |
 | --- | --- | --- |
-| D0 | In progress | Started at `5488f37` under Node 20.20.0. Untouched baseline suite is running separately; saved/prepared/result contracts are defined in `src/export/types.ts`. Fixed fixtures are being prepared. |
-| D1 | Not started | Implement and verify saved-revision capture. |
+| D0 | In progress | Started at `5488f37` under Node 20.20.0. Fresh untouched baseline: compile and unit checks passed; browser suite reproduced 662 passed, 4 skipped and the existing Perplexity-color failure; saved/prepared/result contracts are defined in `src/export/types.ts`. Fixed fixtures are being prepared. |
+| D1 | In progress | Ordered host save barrier and mode-correct webview save acknowledgment pass 3 queue tests and 5 isolated browser tests. Native save/capture/export acceptance remains pending. |
 | D2 | In progress | Shared output finalization passes 3 focused tests covering naming/reuse, concurrent claims, cancellation and unwritable destinations. Installed HTML path remains pending. |
 | D3 | Not started | Deliver Pandoc DOCX/EPUB. |
 | D4 | Not started | Deliver browser PDF and pagination. |

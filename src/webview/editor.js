@@ -153,6 +153,38 @@
     let syncTimeout = null;
     let pendingSync = false;
     let hasUserEdited = false; // Flag to track if user has made any edits
+    let clientRevision = 0;
+    let syncGeneration = 0;
+    let pendingSave = null;
+
+    // Capturing export eligibility must never normalize an untouched document.
+    function readCurrentMarkdown() {
+        return isSourceMode ? sourceEditor.value : (hasUserEdited ? htmlToMarkdown() : markdown);
+    }
+
+    function cancelScheduledSync() {
+        syncGeneration++;
+        clearTimeout(syncTimeout);
+        clearTimeout(saveTimeout);
+        syncTimeout = null;
+        saveTimeout = null;
+        pendingSync = false;
+    }
+
+    function saveCurrentDocument() {
+        const content = readCurrentMarkdown();
+        cancelScheduledSync();
+        markdown = content;
+        if (typeof host.respondExport === 'function') {
+            pendingSave = { revision: clientRevision, content: content };
+            host.save(content, clientRevision);
+        } else {
+            // The Electron adapter keeps its existing save contract.
+            if (hasUserEdited) host.syncContent(content);
+            host.save();
+            hasUserEdited = false;
+        }
+    }
     let currentImageDir = null; // IMAGE_DIR directive value (preserved during sync)
     let currentForceRelativePath = null; // FORCE_RELATIVE_PATH directive value (preserved during sync)
     let imageDirDisplayPath = null; // Resolved display path from extension
@@ -434,6 +466,7 @@
                 renderFromMarkdown();
                 if (state.cursor) restoreCursorState(state.cursor);
                 hasUserEdited = true;
+                clientRevision++;
                 notifyChangeImmediate();
             } finally {
                 _isUndoRedo = false;
@@ -453,6 +486,7 @@
                 renderFromMarkdown();
                 if (state.cursor) restoreCursorState(state.cursor);
                 hasUserEdited = true;
+                clientRevision++;
                 notifyChangeImmediate();
             } finally {
                 _isUndoRedo = false;
@@ -489,11 +523,15 @@
     function debouncedSync() {
         if (pendingSync) return; // Skip if already pending
         clearTimeout(syncTimeout);
+        const generation = syncGeneration;
         syncTimeout = setTimeout(() => {
+            syncTimeout = null;
+            if (generation !== syncGeneration) return;
             pendingSync = true;
             // Use requestIdleCallback to process during idle time, not blocking UI
             const doSync = () => {
-                markdown = htmlToMarkdown();
+                if (generation !== syncGeneration) return;
+                markdown = readCurrentMarkdown();
                 notifyChangeImmediate();
                 pendingSync = false;
             };
@@ -509,10 +547,13 @@
     function syncMarkdownDeferred() {
         markAsEdited(); // Any sync implies user edit
         clearTimeout(syncTimeout);
+        syncTimeout = null;
         pendingSync = true;
+        const generation = syncGeneration;
         // Defer to next frame to not block current operation
         requestAnimationFrame(() => {
-            markdown = htmlToMarkdown();
+            if (generation !== syncGeneration) return;
+            markdown = readCurrentMarkdown();
             notifyChangeImmediate();
             pendingSync = false;
         });
@@ -5263,9 +5304,12 @@
         markAsEdited(); // Any sync implies user edit
         // Cancel any pending sync from debouncedSync
         clearTimeout(syncTimeout);
+        syncTimeout = null;
         pendingSync = true;
+        const generation = syncGeneration;
         requestAnimationFrame(() => {
-            markdown = htmlToMarkdown();
+            if (generation !== syncGeneration) return;
+            markdown = readCurrentMarkdown();
             notifyChange();
             pendingSync = false;
             updatePlaceholder();
@@ -11094,6 +11138,8 @@
         if (!btn) return;
 
         const action = btn.dataset.action;
+        if (btn.matches('[data-export-format], [data-export-action]') ||
+            (action && action.indexOf('export') === 0)) return;
 
         // View-only actions do not change Markdown content
         if (action !== 'source' && action !== 'openOutline') {
@@ -11743,7 +11789,10 @@
         // Only save if user has made edits (prevents saving on initial load)
         if (!hasUserEdited) return;
         clearTimeout(saveTimeout);
+        const generation = syncGeneration;
         saveTimeout = setTimeout(() => {
+            saveTimeout = null;
+            if (generation !== syncGeneration) return;
             host.syncContent(markdown);
             updateOutline();
             updateWordCount();
@@ -11753,6 +11802,7 @@
     
     // Mark document as edited by user
     function markAsEdited() {
+        clientRevision++;
         if (!hasUserEdited) {
             hasUserEdited = true;
             logger.log('Document marked as edited by user');
@@ -11932,14 +11982,7 @@
         if (isMod && e.key === 's') {
             e.preventDefault();
             e.stopPropagation();
-            // Flush pending sync before save, then reset edit flag
-            clearTimeout(syncTimeout);
-            if (hasUserEdited) {
-                markdown = htmlToMarkdown();
-                host.syncContent(markdown);
-            }
-            host.save();
-            hasUserEdited = false;
+            saveCurrentDocument();
             return;
         }
         
@@ -12710,6 +12753,27 @@
 
     // Handle messages from host (VSCode / Electron / test)
     host.onMessage(function(message) {
+        if (message.type === 'saveResult') {
+            if (pendingSave && message.revision === pendingSave.revision) {
+                if (message.success && message.revision === clientRevision) {
+                    markdown = pendingSave.content;
+                    hasUserEdited = false;
+                    cancelScheduledSync();
+                }
+                pendingSave = null;
+            }
+            return;
+        }
+        if (message.type === 'captureExportSnapshot') {
+            if (typeof host.respondExport === 'function') {
+                host.respondExport({
+                    type: 'exportSnapshot', requestId: message.requestId,
+                    content: readCurrentMarkdown(),
+                    pending: Boolean(syncTimeout || saveTimeout || pendingSync || pendingSave || queuedExternalContent !== null)
+                });
+            }
+            return;
+        }
         if (message.type === 'performUndo') {
             if (!isSourceMode) undoManager.undo();
             return;

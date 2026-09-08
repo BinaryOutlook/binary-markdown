@@ -9,7 +9,11 @@
 export interface HostBridge {
     // ドキュメント操作
     syncContent(markdown: string): void;
-    save(): void;
+    save(content?: string, revision?: number): void;
+    requestExport?(format: 'html' | 'pdf' | 'docx' | 'epub'): void;
+    cancelExport?(): void;
+    openExportSettings?(tool?: 'pandoc' | 'browser'): void;
+    respondExport?(payload: ExportWebviewResponse): void;
 
     // フォーカス/編集状態
     reportEditingState(editing: boolean): void;
@@ -31,8 +35,17 @@ export interface HostBridge {
     onMessage(handler: (message: HostMessage) => void): void;
 }
 
+export interface ExportWarning { code: string; message: string; }
+export type ExportWebviewResponse =
+    | { type: 'exportSnapshot'; requestId: string; content: string; pending: boolean }
+    | { type: 'exportPrepared'; requestId: string; html: string; warnings: ExportWarning[]; theme: string; fontSize: number }
+    | { type: 'exportError'; requestId: string; error: string };
+
 /** ホスト → editor.js (受信メッセージ型) */
 export type HostMessage =
+    | { type: 'saveResult'; revision: number; success: boolean }
+    | { type: 'captureExportSnapshot'; requestId: string }
+    | { type: 'prepareExport'; requestId: string; markdown: string }
     | { type: 'update'; content: string }
     | { type: 'performUndo' }
     | { type: 'performRedo' }

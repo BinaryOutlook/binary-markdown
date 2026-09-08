@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { getWebviewContent } from './webviewContent';
+import { EditQueue } from './export/edit-queue';
 import { t, getWebviewMessages, initLocale } from './i18n/messages';
 
 type OutlineStateScope = 'file' | 'global';
@@ -622,59 +623,46 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
             }
         });
 
-        // Serialized edit queue — debounce + promise chain (no recursive retry, no freeze)
-        let pendingContent: string | null = null;
-        let editDebounceTimer: NodeJS.Timeout | null = null;
-        let applyEditQueue: Promise<void> = Promise.resolve();
-
-        const scheduleEdit = (content: string) => {
-            pendingContent = content;
-            if (editDebounceTimer) {
-                clearTimeout(editDebounceTimer);
+        const normalizeEol = (content: string) => originalEol === vscode.EndOfLine.CRLF
+            ? content.replace(/\r\n/g, '\n').replace(/\n/g, '\r\n') : content.replace(/\r\n/g, '\n');
+        const editQueue = new EditQueue(async content => {
+            if (content.replace(/\r\n/g, '\n') === document.getText().replace(/\r\n/g, '\n')) { return; }
+            isApplyingOwnEdit = true;
+            try {
+                const edit = new vscode.WorkspaceEdit();
+                edit.replace(document.uri, new vscode.Range(0, 0, document.lineCount, 0), content);
+                if (!await vscode.workspace.applyEdit(edit)) { throw new Error('Unable to apply the pending document edit.'); }
+            } finally {
+                isApplyingOwnEdit = false;
             }
-            editDebounceTimer = setTimeout(() => {
-                editDebounceTimer = null;
-                const contentToApply = pendingContent;
-                pendingContent = null;
-                if (contentToApply === null) return;
-
-                applyEditQueue = applyEditQueue.then(async () => {
-                    try {
-                        // Skip if content is identical — prevents unnecessary dirty marking
-                        const normalize = (s: string) => s.replace(/\r\n/g, '\n');
-                        if (normalize(contentToApply) === normalize(document.getText())) return;
-
-                        isApplyingOwnEdit = true;
-                        const edit = new vscode.WorkspaceEdit();
-                        edit.replace(
-                            document.uri,
-                            new vscode.Range(0, 0, document.lineCount, 0),
-                            contentToApply
-                        );
-                        await vscode.workspace.applyEdit(edit);
-                    } catch (e) {
-                        console.log('[Binary Markdown] Edit error (ignored):', e);
-                    } finally {
-                        isApplyingOwnEdit = false;
-                    }
-                });
-            }, 100);
-        };
+        });
+        let saveQueue: Promise<void> = Promise.resolve();
 
         // Handle messages from the webview
         webviewPanel.webview.onDidReceiveMessage(async message => {
             switch (message.type) {
                 case 'edit':
                     // Restore original line endings if document uses CRLF
-                    const editContent = originalEol === vscode.EndOfLine.CRLF
-                        ? message.content.replace(/\n/g, '\r\n')
-                        : message.content;
-                    scheduleEdit(editContent);
+                    if (typeof message.content === 'string') { editQueue.schedule(normalizeEol(message.content)); }
                     break;
 
-                case 'save':
-                    await document.save();
+                case 'save': {
+                    // Message order fixes the saved revision before later export requests.
+                    const content = typeof message.content === 'string' ? normalizeEol(message.content) : undefined;
+                    saveQueue = saveQueue.then(async () => {
+                        let success = false;
+                        try {
+                            if (content !== undefined) { editQueue.schedule(content); }
+                            await editQueue.flush();
+                            success = await document.save();
+                        } catch (error) {
+                            vscode.window.showErrorMessage(String(error));
+                        }
+                        await webviewPanel.webview.postMessage({ type: 'saveResult', revision: message.revision, success });
+                    });
+                    await saveQueue;
                     break;
+                }
 
                 case 'editingStateChanged':
                     isActivelyEditing = message.editing;
@@ -895,6 +883,7 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
             if (this.activeWebviewPanel === webviewPanel) {
                 this.activeWebviewPanel = undefined;
             }
+            editQueue.dispose();
             changeDocumentSubscription.dispose();
             changeConfigSubscription.dispose();
             fileChangeSubscription.dispose();

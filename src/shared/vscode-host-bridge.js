@@ -12,8 +12,20 @@
         syncContent: function(markdown) {
             api.postMessage({ type: 'edit', content: markdown });
         },
-        save: function() {
-            api.postMessage({ type: 'save' });
+        save: function(content, revision) {
+            api.postMessage({ type: 'save', content: content, revision: revision });
+        },
+        requestExport: function(format) {
+            api.postMessage({ type: 'export', format: format });
+        },
+        cancelExport: function() {
+            api.postMessage({ type: 'cancelExport' });
+        },
+        openExportSettings: function(tool) {
+            api.postMessage({ type: 'exportSettings', tool: tool });
+        },
+        respondExport: function(payload) {
+            api.postMessage(payload);
         },
 
         // フォーカス/編集状態
