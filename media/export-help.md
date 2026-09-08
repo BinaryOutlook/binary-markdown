@@ -1,6 +1,6 @@
 # Export from Binary Markdown
 
-Export is experimental and currently supported in local desktop VS Code on macOS.
+Export is experimental in local desktop VS Code on macOS and Linux. See the repository's validation record for the specific systems tested. Windows, remote extension hosts and browser VS Code remain outside the current export scope.
 
 Save the Markdown file, then use the sharing-arrow button beside the VS Code-logo button. Choose HTML, PDF, Word (.docx), or EPUB. Unsaved or unnamed work must be saved before retrying; export never saves it automatically.
 
@@ -12,6 +12,7 @@ HTML works without an additional tool. PDF uses an installed Chrome, Chromium or
 - Install [Google Chrome](https://www.google.com/chrome/) or [Microsoft Edge](https://www.microsoft.com/edge/download) for PDF.
 - Open VS Code Settings and search for `binary-markdown.export`. Leave executable paths blank for automatic detection, or enter an absolute executable path.
 - Typical macOS paths include `/opt/homebrew/bin/pandoc` and `/Applications/Google Chrome.app/Contents/MacOS/Google Chrome`.
+- Typical Linux paths include `/usr/bin/pandoc` and `/usr/bin/google-chrome`; a user-space Pandoc installation can use its own absolute executable path. PDF requires a browser that can run with its normal sandbox enabled.
 - An invalid manual path is reported; it does not silently select another tool. Reopen the export menu to rescan after installation.
 
 Native tools are installed and maintained by the user. The extension does not download them automatically. Changing export paths does not reload the editor.

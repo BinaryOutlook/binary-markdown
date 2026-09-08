@@ -109,7 +109,7 @@ async function harness(t, options = {}) {
         }
     };
     const compiled = { exports: {} };
-    // A module-local platform shim makes macOS support-gate cases deterministic
+    // A module-local platform shim makes host eligibility cases deterministic
     // on CI without changing the process or any other test's environment.
     new Function('require', 'module', 'exports', 'process', '__dirname', '__filename', controllerSource)(
         name => name in mocks ? mocks[name] : scopedRequire(name), compiled, compiled.exports,
@@ -121,7 +121,7 @@ async function harness(t, options = {}) {
     );
     t.after(async () => { controller.dispose(); await fs.rm(directory, { recursive: true, force: true }); });
     return {
-        controller, directory, sourcePath, original, document, posts, calls, notifications, notification, progressEvents, subscriptions, commands,
+        controller, directory, sourcePath, original, document, vscode, posts, calls, notifications, notification, progressEvents, subscriptions, commands,
         setText: content => { currentContent = content; },
         waitForPost: type => {
             const existing = posts.find(message => message.type === type);
@@ -140,14 +140,14 @@ async function assertSourceIntact(h) {
     assert.equal(await fs.readFile(h.sourcePath, 'utf8'), h.original);
 }
 
-for (const [name, options] of [
+for (const platform of ['darwin', 'linux']) for (const [name, options] of [
     ['dirty document', { document: { isDirty: true } }],
     ['untitled document', { document: { isUntitled: true } }],
     ['non-file document', { document: { uri: { scheme: 'untitled', fsPath: 'untitled:Untitled-1' } } }],
     ['divergent unsynchronized editor', { snapshot: '# UNSAVED-VISUAL-EDIT\n' }]
 ]) {
-    test('controller rejects ' + name + ' without saving or changing the source', async t => {
-        const h = await harness(t, options);
+    test(platform + ' controller rejects ' + name + ' without saving or changing the source', async t => {
+        const h = await harness(t, { ...options, platform });
         await h.controller.export('html');
         assert.deepEqual(h.terminal().map(result => result.state), ['failed']);
         assert.match(h.terminal()[0].message, /Save this Markdown file/);
@@ -319,16 +319,60 @@ test('invalid converted HTML is a failure and cannot produce a success file', as
     await assertSourceIntact(h);
 });
 
+for (const platform of ['darwin', 'linux']) {
+    test(platform + ' local desktop capabilities agree with successful saved HTML export', async t => {
+        const h = await harness(t, { platform });
+        const capabilities = await h.controller.getCapabilities();
+        assert.equal(capabilities.pandoc.available, true);
+        assert.equal(capabilities.browser.available, true);
+        assert.equal(h.calls.discover, 2);
+        await h.controller.getCapabilities();
+        assert.equal(h.calls.discover, 2, 'Repeated labels reuse tool probes');
+        await h.controller.export('html');
+        assert.equal(h.terminal()[0].state, 'complete');
+        assert.equal(h.calls.wait, 1);
+        assert.equal(h.calls.render, 1);
+        assert.equal(await fs.readFile(h.terminal()[0].outputPath, 'utf8'), validHtml);
+        await assertSourceIntact(h);
+    });
+}
+
+test('cached available tools do not bypass changed workspace trust in capability labels', async t => {
+    const h = await harness(t, { platform: 'linux' });
+    await h.controller.getCapabilities();
+    h.vscode.workspace.isTrusted = false;
+    const capabilities = await h.controller.getCapabilities();
+    for (const status of Object.values(capabilities)) {
+        assert.equal(status.available, false);
+        assert.match(status.error, /Trust this workspace/);
+    }
+    assert.equal(h.calls.discover, 2, 'Untrusted capability requests do not launch new probes');
+    await h.controller.export('html');
+    assert.equal(h.terminal()[0].state, 'failed');
+    assert.equal(h.calls.wait, 0);
+    await assertSourceIntact(h);
+});
+
 for (const [name, options] of [
     ['untrusted workspace', { trusted: false }],
     ['remote extension host', { remote: 'ssh-remote' }],
     ['web VS Code', { web: true }],
-    ['unsupported local platform', { platform: 'linux' }]
+    ['unsupported local platform', { platform: 'win32' }],
+    ['Linux untrusted workspace', { platform: 'linux', trusted: false }],
+    ['Linux Remote-SSH window', { platform: 'linux', remote: 'ssh-remote' }],
+    ['Linux web VS Code', { platform: 'linux', web: true }]
 ]) {
     test('controller rejects ' + name + ' before tool discovery or source capture', async t => {
         const h = await harness(t, options);
+        const capabilities = await h.controller.getCapabilities();
+        const reason = options.trusted === false ? /Trust this workspace/ : /local desktop VS Code on macOS or Linux/;
+        for (const status of Object.values(capabilities)) {
+            assert.equal(status.available, false);
+            assert.match(status.error, reason);
+        }
         await h.controller.export('html');
         assert.equal(h.terminal()[0].state, 'failed');
+        assert.match(h.terminal()[0].message, reason);
         assert.equal(h.calls.wait, 0);
         assert.equal(h.calls.discover, 0);
         assert.equal(h.posts.some(message => message.type === 'captureExportSnapshot'), false);

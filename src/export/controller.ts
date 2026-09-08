@@ -12,6 +12,11 @@ import { checkCancelled, ExportFormat, ExportOperations, PreparedExportDocument,
 
 const normalize = (value: string) => value.replace(/^\uFEFF/, '').replace(/\r\n?/g, '\n');
 
+function supportsExportHost(): boolean {
+    return !vscode.env.remoteName && vscode.env.uiKind === vscode.UIKind.Desktop &&
+        (process.platform === 'darwin' || process.platform === 'linux');
+}
+
 export class ExportController implements vscode.Disposable {
     readonly channel: ExportWebviewChannel;
     private running?: AbortController;
@@ -29,18 +34,21 @@ export class ExportController implements vscode.Disposable {
 
     async getCapabilities(refresh = false) {
         if (refresh) { this.capabilities = undefined; }
+        const messages = getExportMessages();
+        const unavailable = !supportsExportHost() ? messages.unsupportedHost :
+            !vscode.workspace.isTrusted ? messages.trustRequired : undefined;
+        if (unavailable) {
+            return {
+                pandoc: { kind: 'pandoc' as const, available: false, error: unavailable },
+                browser: { kind: 'browser' as const, available: false, error: unavailable }
+            };
+        }
         if (!this.capabilities) {
             const config = vscode.workspace.getConfiguration('binary-markdown');
-            const unavailable = getExportMessages().trustRequired;
-            this.capabilities = vscode.workspace.isTrusted && !vscode.env.remoteName
-                ? Promise.all([
-                    discoverTool('pandoc', config.get<string>('export.pandocPath', '')),
-                    discoverTool('browser', config.get<string>('export.browserPath', ''))
-                ]).then(([pandoc, browser]) => ({ pandoc, browser }))
-                : Promise.resolve({
-                    pandoc: { kind: 'pandoc' as const, available: false, error: unavailable },
-                    browser: { kind: 'browser' as const, available: false, error: unavailable }
-                });
+            this.capabilities = Promise.all([
+                discoverTool('pandoc', config.get<string>('export.pandocPath', '')),
+                discoverTool('browser', config.get<string>('export.browserPath', ''))
+            ]).then(([pandoc, browser]) => ({ pandoc, browser }));
         }
         return this.capabilities;
     }
@@ -119,7 +127,7 @@ export class ExportController implements vscode.Disposable {
             };
             try {
                 operations.report('checking');
-                if (vscode.env.remoteName || vscode.env.uiKind !== vscode.UIKind.Desktop || process.platform !== 'darwin') {
+                if (!supportsExportHost()) {
                     throw new Error(messages.unsupportedHost);
                 }
                 if (!vscode.workspace.isTrusted) { throw new Error(messages.trustRequired); }

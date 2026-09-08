@@ -5,7 +5,7 @@ const en = {
     experimental: 'Experimental export',
     limitations: 'HTML/PDF follow the supported preview. DOCX/EPUB prioritize editable structure. Unsupported content uses a visible fallback and warnings.',
     saveRequired: 'Save this Markdown file, then retry export.',
-    unsupportedHost: 'Export is currently available in local VS Code on macOS.',
+    unsupportedHost: 'Experimental export requires local desktop VS Code on macOS or Linux.',
     trustRequired: 'Trust this workspace before using export.',
     setup: 'Export settings and installation',
     cancel: 'Cancel export',
@@ -37,7 +37,7 @@ const translations: Record<string, ExportMessages> = {
         title: 'エクスポート', experimental: '試験提供のエクスポート',
         limitations: 'HTML/PDFは対応するプレビューを再現します。DOCX/EPUBは編集可能な構造を優先します。未対応の内容には代替表示と警告を付けます。',
         saveRequired: 'Markdownファイルを保存してから、もう一度エクスポートしてください。',
-        unsupportedHost: '現在はmacOS上のローカルVS Codeでエクスポートできます。', trustRequired: 'エクスポートするには、このワークスペースを信頼してください。',
+        unsupportedHost: '試験提供のエクスポートには、macOSまたはLinux上のローカルデスクトップ版VS Codeが必要です。', trustRequired: 'エクスポートするには、このワークスペースを信頼してください。',
         setup: 'エクスポートの設定とインストール', cancel: 'エクスポートをキャンセル', checking: '保存済み文書を確認中…', dependencies: 'エクスポートツールを確認中…',
         resources: '参照リソースを準備中…', rendering: '文書を描画中…', converting: '文書を変換中…', saving: '出力ファイルを保存中…',
         completed: 'エクスポート完了', reused: '同一内容の既存ファイルを再利用しました', cancelled: 'エクスポートをキャンセルしました', failed: 'エクスポートに失敗しました',
@@ -47,7 +47,7 @@ const translations: Record<string, ExportMessages> = {
     },
     'zh-cn': {
         title: '导出', experimental: '实验性导出', limitations: 'HTML/PDF遵循已支持的预览效果。DOCX/EPUB优先保留可编辑结构。不支持的内容将显示替代内容和警告。',
-        saveRequired: '请先保存此Markdown文件，然后重试导出。', unsupportedHost: '目前仅支持macOS上的本地VS Code导出。', trustRequired: '请先信任此工作区，再使用导出。',
+        saveRequired: '请先保存此Markdown文件，然后重试导出。', unsupportedHost: '实验性导出需要macOS或Linux上的本地桌面版VS Code。', trustRequired: '请先信任此工作区，再使用导出。',
         setup: '导出设置与安装说明', cancel: '取消导出', checking: '正在检查已保存的文档…', dependencies: '正在检查导出工具…', resources: '正在准备引用的资源…',
         rendering: '正在渲染文档…', converting: '正在转换文档…', saving: '正在保存导出文件…', completed: '导出完成', reused: '已复用内容完全相同的现有导出文件',
         cancelled: '已取消导出', failed: '导出失败', warnings: '导出警告', openOutput: '打开导出文件', busy: '已有导出任务正在进行。', available: '可用', unavailable: '需要设置', detecting: '正在检查工具…',
@@ -55,7 +55,7 @@ const translations: Record<string, ExportMessages> = {
     },
     'zh-tw': {
         title: '匯出', experimental: '實驗性匯出', limitations: 'HTML/PDF遵循已支援的預覽效果。DOCX/EPUB優先保留可編輯結構。不支援的內容將顯示替代內容和警告。',
-        saveRequired: '請先儲存此Markdown檔案，然後重試匯出。', unsupportedHost: '目前僅支援macOS上的本機VS Code匯出。', trustRequired: '請先信任此工作區，再使用匯出。',
+        saveRequired: '請先儲存此Markdown檔案，然後重試匯出。', unsupportedHost: '實驗性匯出需要macOS或Linux上的本機桌面版VS Code。', trustRequired: '請先信任此工作區，再使用匯出。',
         setup: '匯出設定與安裝說明', cancel: '取消匯出', checking: '正在檢查已儲存的文件…', dependencies: '正在檢查匯出工具…', resources: '正在準備引用的資源…',
         rendering: '正在繪製文件…', converting: '正在轉換文件…', saving: '正在儲存匯出檔案…', completed: '匯出完成', reused: '已重用內容完全相同的現有匯出檔案',
         cancelled: '已取消匯出', failed: '匯出失敗', warnings: '匯出警告', openOutput: '開啟匯出檔案', busy: '已有匯出工作正在進行。', available: '可用', unavailable: '需要設定', detecting: '正在檢查工具…',
@@ -63,7 +63,7 @@ const translations: Record<string, ExportMessages> = {
     },
     ko: {
         title: '내보내기', experimental: '실험적 내보내기', limitations: 'HTML/PDF는 지원되는 미리보기를 따릅니다. DOCX/EPUB는 편집 가능한 구조를 우선합니다. 지원되지 않는 내용에는 대체 표시와 경고를 제공합니다.',
-        saveRequired: 'Markdown 파일을 저장한 다음 내보내기를 다시 시도하세요.', unsupportedHost: '현재 macOS의 로컬 VS Code에서 내보내기를 사용할 수 있습니다.', trustRequired: '내보내기를 사용하려면 이 작업 영역을 신뢰하세요.',
+        saveRequired: 'Markdown 파일을 저장한 다음 내보내기를 다시 시도하세요.', unsupportedHost: '실험적 내보내기에는 macOS 또는 Linux의 로컬 데스크톱 VS Code가 필요합니다.', trustRequired: '내보내기를 사용하려면 이 작업 영역을 신뢰하세요.',
         setup: '내보내기 설정 및 설치 안내', cancel: '내보내기 취소', checking: '저장된 문서 확인 중…', dependencies: '내보내기 도구 확인 중…', resources: '참조 리소스 준비 중…',
         rendering: '문서 렌더링 중…', converting: '문서 변환 중…', saving: '내보낸 파일 저장 중…', completed: '내보내기 완료', reused: '내용이 동일한 기존 내보내기 파일을 재사용했습니다',
         cancelled: '내보내기 취소됨', failed: '내보내기 실패', warnings: '내보내기 경고', openOutput: '내보낸 파일 열기', busy: '이미 내보내기가 진행 중입니다.', available: '사용 가능', unavailable: '설정 필요', detecting: '도구 확인 중…',
@@ -71,7 +71,7 @@ const translations: Record<string, ExportMessages> = {
     },
     fr: {
         title: 'Exporter', experimental: 'Export expérimental', limitations: 'HTML/PDF suivent l’aperçu pris en charge. DOCX/EPUB privilégient une structure modifiable. Les éléments non pris en charge restent visibles avec un avertissement.',
-        saveRequired: 'Enregistrez ce fichier Markdown, puis réessayez l’export.', unsupportedHost: 'L’export est actuellement disponible dans VS Code local sur macOS.', trustRequired: 'Accordez votre confiance à cet espace de travail pour exporter.',
+        saveRequired: 'Enregistrez ce fichier Markdown, puis réessayez l’export.', unsupportedHost: 'L’export expérimental nécessite VS Code pour ordinateur, exécuté localement sur macOS ou Linux.', trustRequired: 'Accordez votre confiance à cet espace de travail pour exporter.',
         setup: 'Paramètres et installation de l’export', cancel: 'Annuler l’export', checking: 'Vérification du document enregistré…', dependencies: 'Vérification des outils d’export…', resources: 'Préparation des ressources référencées…',
         rendering: 'Rendu du document…', converting: 'Conversion du document…', saving: 'Enregistrement du fichier exporté…', completed: 'Export terminé', reused: 'Un export existant identique a été réutilisé',
         cancelled: 'Export annulé', failed: 'Échec de l’export', warnings: 'Avertissements de l’export', openOutput: 'Ouvrir le fichier exporté', busy: 'Un export est déjà en cours.', available: 'Disponible', unavailable: 'Configuration requise', detecting: 'Vérification des outils…',
@@ -79,7 +79,7 @@ const translations: Record<string, ExportMessages> = {
     },
     es: {
         title: 'Exportar', experimental: 'Exportación experimental', limitations: 'HTML/PDF siguen la vista previa compatible. DOCX/EPUB priorizan la estructura editable. El contenido no compatible se conserva como alternativa visible con avisos.',
-        saveRequired: 'Guarda este archivo Markdown y vuelve a intentar la exportación.', unsupportedHost: 'La exportación está disponible actualmente en VS Code local en macOS.', trustRequired: 'Confía en este espacio de trabajo para exportar.',
+        saveRequired: 'Guarda este archivo Markdown y vuelve a intentar la exportación.', unsupportedHost: 'La exportación experimental requiere VS Code de escritorio ejecutado localmente en macOS o Linux.', trustRequired: 'Confía en este espacio de trabajo para exportar.',
         setup: 'Configuración e instalación de exportación', cancel: 'Cancelar exportación', checking: 'Comprobando el documento guardado…', dependencies: 'Comprobando las herramientas de exportación…', resources: 'Preparando los recursos referenciados…',
         rendering: 'Renderizando el documento…', converting: 'Convirtiendo el documento…', saving: 'Guardando el archivo exportado…', completed: 'Exportación completada', reused: 'Se reutilizó una exportación existente idéntica',
         cancelled: 'Exportación cancelada', failed: 'Error de exportación', warnings: 'Avisos de exportación', openOutput: 'Abrir el archivo exportado', busy: 'Ya hay una exportación en curso.', available: 'Disponible', unavailable: 'Requiere configuración', detecting: 'Comprobando herramientas…',
