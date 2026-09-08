@@ -2,7 +2,56 @@
 
 Updated 2026-09-09. **Implementation and engineering handback complete; ready for review.** This record supplements [the authoritative requirements](export-subsystem.md). Human product acceptance, PR merge and release are separate and have not occurred.
 
-## Candidate and environment
+## Subsequent Ubuntu x86-64 cross-validation
+
+The user requested SSH-driven testing on Ubuntu, authorized temporary user-space installations, and asked that sudo blockers be skipped. Experimental export now permits local Linux desktop VS Code alongside macOS. Workspace trust, saved-source checks, remote/web restrictions and Chromium sandboxing remain enforced. Dependency labels now reflect host eligibility, and older asynchronous probes cannot overwrite newer settings results.
+
+The **same VSIX** passed installed native checks on Ubuntu x86-64 and macOS ARM64. It was built from `c726f240ea21643e3cd4df11c0a45ec803c03812`, with production changes through `77344ab`; subsequent commits change the harness and documentation only. Package size: **4,187,707 bytes**; SHA-256:
+
+```text
+5dcb591c64d405505bc0b3db4a28cd8f8d5f187e973af9b5d438a7da52f9a82a
+```
+
+| Check | Observed result |
+| --- | --- |
+| Ubuntu environment | Ubuntu 26.04 LTS, x86-64, kernel 7.0.0-30-generic; local VS Code 1.122.1, extension-host Node 22.22.1; Node 20.20.0 for development/tests |
+| Installed engines | Pandoc 3.8.3 in a temporary user-space installation; installed Google Chrome 149.0.7827.53; normal browser sandbox enabled |
+| Final Ubuntu units | **100/100 passed**, no skips, including all **86 export tests** with real tools and explicit VSIX inspection |
+| Final native Ubuntu | **39 scenarios plus unchanged frozen inputs**, in a fresh isolated installed profile; 16 fixture/format outputs, actual Ctrl-S/native saves, settings, cancellation, failures, immutable capture and offline HTML |
+| Same-package macOS regression | **86/86 export tests** and **39 native scenarios plus unchanged inputs**; VS Code 1.136.0, extension-host Node 24.18.1, Pandoc 3.8.3, Chrome 152.0.7977.65, ARM64 |
+| Final Ubuntu artifact audit | All 16 outputs inspected structurally; **2,260 marker checks** accounted for: 2,252 in text and 8 expected image-alt occurrences. Original PNG/SVG bytes survive HTML/DOCX/EPUB; original raster dimensions/decoded pixels survive PDF. Eight DOCX/EPUB archives passed CRC/container checks. |
+| Final PDF visual inspection | **20 representative pages** inspected across all four PDFs, including W-30 quotations on pages 3/17, code/table boundaries, diagrams, CJK text, full tall graphics and final warnings. No clipping or unreadable content observed on those pages; this is not an every-page visual certificate. |
+| Pagination and appearance | Basic/fallback/pagination/W-30 PDFs: **4/3/16/54 pages**. Compact W-30 reference: **35 pages**. Controlled block movement and three light/dark theme checks passed. Fonts/layout differ from macOS; identical page counts are not required. |
+| Full Ubuntu browser regression | **682 passed, 4 skipped, 4 failed** out of 690. All **27 export browser tests passed**. This full suite is not green. |
+| Compile / lint | Compilation passed; lint 0 errors and 8 existing warnings |
+
+The four broader failures are code-block indentation (`codeblock-edit-features.spec.ts:69`), list copying (`copy-paste.spec.ts:18`), Perplexity colouring (`perplexity-highlight-test.spec.ts:4`) and Mermaid cursor positioning (`special-wrapper-cursor-position.spec.ts:183`). **Each reproduced three times on the pre-Linux commit `0cd26a7` under the same Ubuntu Chrome environment**: all 12 targeted baseline runs failed. No webview/shared renderer or browser assertion changed in this Linux extension. These failures remain follow-up work; they were not disabled or counted as passes.
+
+One earlier final-package native run stopped on a simple-toolbar keyboard-focus assertion after 30 successful scenarios. The focused UI rerun and a new complete installation both passed, without a product-code change. This remains an intermittent test observation, not a proven root-cause fix. Two abandoned browser runs used an incorrect server port or overlapped a fixture refresh; their logs are retained but excluded from the completed totals.
+
+No privileged installation was needed: `sudo -n` was unavailable, so Node, Pandoc, Python audit libraries and unpacked Xvfb lived under the owned temporary directory. Playwright's bundled Chromium installer rejected Ubuntu 26.04; tests used the installed Chrome executable without disabling its sandbox. Native VS Code ran on an authenticated, TCP-disabled Xvfb display. This is a **local Ubuntu extension host**, even though SSH orchestrated it; `remoteName` was null in the receipt. No VS Code Remote-SSH compatibility claim follows.
+
+Machine-readable package, artifact and test evidence is in [the cross-platform manifest](export-evidence/2026-09-09-ubuntu-x64.json). Raw remote logs and copied artifacts are retained locally under `.vscode-test/export-ubuntu/`; the Ubuntu test root is `/var/tmp/binary-export-x86-P7n9N06Y`. Final native reports are `native-1788894953191.json` on Ubuntu and `native-1788894778807.json` on macOS. Only the owned test windows/processes and virtual display were closed; tools, profiles and evidence remain available. No normal VS Code profile was changed. Linux DOCX/EPUB reader UI, other distributions/architectures, Windows and remote/web hosts remain unverified.
+
+### Ubuntu reproduction notes
+
+Use a new temporary checkout and the [native harness](../test/native/export-smoke.md), matching `.node-version`. Install dependencies without modifying the user's normal VS Code profile. A user-space Pandoc may be selected explicitly or added to the launch PATH; the recorded native run exercised automatic discovery. Supply the same environment to every harness command:
+
+```sh
+export TMPDIR=/tmp
+export EXPORT_REAL_TOOLS=1
+export EXPORT_PANDOC_PATH=/absolute/path/to/pandoc
+export EXPORT_BROWSER_PATH=/usr/bin/google-chrome
+export EXPORT_PDFTOTEXT_PATH=/usr/bin/pdftotext
+export EXPORT_VSIX_PATH=dist/binary-markdown-0.1.0.vsix
+npm ci --no-audit --no-fund
+npm run package
+node --test test/unit/*.test.js
+```
+
+For native tests, preserve `DISPLAY` and `XAUTHORITY` for the dedicated local display, use a new `--workdir`/port, install the VSIX, launch, wait for the guarded driver response, then `check` and `run --suite all`. Keep original frozen input hashes intact. Use `EXPORT_BROWSER_PATH` for the supplemental artifact scripts too. The browser regression configuration can set `use.launchOptions.executablePath` to installed Chrome and `chromiumSandbox: true`. Keep the test server on port **3000** because existing specifications contain absolute URLs; do not reuse an unrelated server. Browser installation failure is separate from successful installed-browser execution.
+
+## Original macOS candidate and environment
 
 The installed native candidate contains production changes through `99aff55`. Later commits add reproducible tests and documentation. Public-safe output hashes, warnings and native observations are recorded in [the evidence manifest](export-evidence/2026-09-09.json); large documents/screenshots remain in ignored `.vscode-test/export-native/evidence/` and its sibling workspace.
 
@@ -18,7 +67,7 @@ The installed native candidate contains production changes through `99aff55`. La
 
 The exported extension was loaded from an installed VSIX. A separate test-driver development extension invoked public VS Code commands and reported document state; it did not implement export. The native flows used no development web server. An isolated profile can still discover system-installed tools, so missing and explicit-invalid dependencies were tested separately.
 
-## Verification results
+## Original macOS verification results
 
 | Check | Result and boundary |
 | --- | --- |
@@ -36,7 +85,7 @@ The exported extension was loaded from an installed VSIX. A separate test-driver
 
 The full suite is **not green**: `test/specs/perplexity-highlight-test.spec.ts:4` retains the baseline color failure. It was reproduced before implementation; its assertions were not disabled or weakened. The browser fixture generator was corrected to preserve literal `$` replacement sequences in production JavaScript, then exact script inclusion, literal searches and focused export behavior were checked.
 
-## Acceptance evidence
+## Original macOS acceptance evidence
 
 “Verified” below means the stated engineering observations were made on this environment. It does not mean every platform, viewer, language or Markdown construct is certified.
 
@@ -92,7 +141,7 @@ The default export test command deliberately skips real native tools and explici
 
 ## Remaining limits and review responsibility
 
-- This is an unreleased local macOS VS Code MVP. Other desktop hosts, remote/web VS Code and Electron export remain deferred. The existing `0.1.0` release download does not contain this branch's changes.
+- This is an unreleased local desktop VS Code MVP with recorded macOS ARM64 and Ubuntu x86-64 checks. Untested distributions/architectures, Windows, remote/web VS Code and Electron export remain deferred. The existing `0.1.0` release download does not contain this branch's changes.
 - HTML/PDF preserve the current renderer: fenced `math` renders; dollar math, `[TOC]` and footnotes remain visible source with warnings. DOCX/EPUB prefer native structure/math; raw HTML may become readable source. See [packaged help](../media/export-help.md).
 - Interface/status/setup labels and native settings are localized separately. Detailed resource/converter diagnostics and document fallback explanations currently remain English.
 - Native binaries are user-managed. ZIP64/encrypted/multidisk converter output, unsupported image formats and SVGs requiring external dependencies are outside initial support. Compression, templates, output customization and finer pagination remain deferred.
