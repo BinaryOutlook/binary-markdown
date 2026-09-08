@@ -81,7 +81,7 @@ The [editor guide](docs/editor-guide.md) covers formatting, keyboard operations,
 
 ## Experimental export — unreleased
 
-The `export-subsystem` branch adds **HTML, PDF, Word (.docx), and EPUB** export, initially targeting **local desktop VS Code on macOS**. Native installed-package acceptance is in progress; the existing `v0.1.0` release download above predates this feature. Build the implementation branch to evaluate it. See the [implementation and validation checklist](docs/export-validation.md) for the current evidence and pending checks.
+The `export-subsystem` branch adds **HTML, PDF, Word (.docx), and EPUB** export, initially targeting **local desktop VS Code on macOS**. Native installed-package checks have passed; human review and release remain pending. The existing `v0.1.0` release download above predates this feature. Build the implementation branch to evaluate it. See the [implementation and validation checklist](docs/export-validation.md) for the current evidence and declared limitations.
 
 Save the named Markdown file, then select the sharing-arrow button immediately to the right of the VS Code-logo toolbar button. Choose a format from its dropdown. Unsaved work produces a save-and-retry message; export does not save automatically. The job shows its actual stage, supports cancellation, and reports the saved path and any fallback warnings.
 
