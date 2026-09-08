@@ -5,7 +5,7 @@
  *
  * @param {Record<string, string>} messages - i18n メッセージ
  * @param {string} platform - process.platform ('darwin' | 'win32' | 'linux')
- * @param {{ outlineOpen?: boolean }} [options] - editor UI state
+ * @param {{ outlineOpen?: boolean, exportEnabled?: boolean }} [options] - editor UI state
  * @returns {string} <div class="container">...</div> の HTML文字列
  */
 function generateEditorBodyHtml(messages, platform, options) {
@@ -15,6 +15,25 @@ function generateEditorBodyHtml(messages, platform, options) {
     const outlineOpen = !options || options.outlineOpen !== false;
     const sidebarClass = outlineOpen ? 'sidebar' : 'sidebar hidden';
     const openButtonClass = outlineOpen ? 'menu-btn hidden' : 'menu-btn';
+    const exportEnabled = Boolean(options && options.exportEnabled);
+    const exportButton = exportEnabled ? `<button type="button" data-action="export" id="exportButton" title="Export" aria-label="Export" aria-haspopup="menu" aria-expanded="false" aria-controls="exportMenu"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 4 6 6-6 6"/><path d="M21 10H11a8 8 0 0 0-8 8v2"/></svg></button>` : '';
+    const exportPanels = exportEnabled ? `
+            <div id="exportMenu" class="export-menu" role="menu" aria-label="Export" aria-describedby="exportLimitations" hidden>
+                <strong id="exportExperimental" class="export-experimental"></strong>
+                <p id="exportLimitations" class="export-limitations"></p>
+                <button type="button" role="menuitem" data-export-format="html"><span>HTML</span><span data-export-tool-status="html"></span></button>
+                <button type="button" role="menuitem" data-export-format="pdf"><span>PDF</span><span data-export-tool-status="pdf"></span></button>
+                <button type="button" role="menuitem" data-export-format="docx"><span>DOCX</span><span data-export-tool-status="docx"></span></button>
+                <button type="button" role="menuitem" data-export-format="epub"><span>EPUB</span><span data-export-tool-status="epub"></span></button>
+                <button type="button" role="menuitem" data-export-action="settings" id="exportSettings"></button>
+                <button type="button" role="menuitem" data-export-action="pandoc" id="exportPandocSetup" hidden></button>
+                <button type="button" role="menuitem" data-export-action="browser" id="exportBrowserSetup" hidden></button>
+            </div>
+            <section id="exportStatus" class="export-status" role="status" aria-live="polite" aria-atomic="false" hidden>
+                <div class="export-status-row"><span id="exportSpinner" class="export-spinner" aria-hidden="true" hidden></span><span id="exportStatusMessage"></span><button type="button" data-export-action="cancel" id="exportCancel" hidden></button></div>
+                <div id="exportOutputPath" class="export-output-path"></div>
+                <details id="exportWarnings" hidden><summary id="exportWarningsSummary"></summary><ul id="exportWarningsList"></ul></details>
+            </section>` : '';
 
     return `<div class="container">
         <aside class="${sidebarClass}" id="sidebar">
@@ -83,10 +102,12 @@ function generateEditorBodyHtml(messages, platform, options) {
                 <div class="toolbar-fixed toolbar-fixed--right">
                     <div class="toolbar-group" data-group="utility">
                         <button data-action="openInTextEditor" title="${m('openInTextEditor')} (${mod}+Shift+.)"></button>
+                        ${exportButton}
                         <button data-action="source" title="${m('toggleSourceMode')} (${mod}+.)"></button>
                     </div>
                 </div>
             </div>
+            ${exportPanels}
             <div class="editor-wrapper" id="editorWrapper">
                 <div class="search-replace-box" id="searchReplaceBox" style="display: none;">
                     <div class="search-row">

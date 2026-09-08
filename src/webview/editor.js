@@ -12985,6 +12985,22 @@
 
     // Handle messages from host (VSCode / Electron / test)
     host.onMessage(function(message) {
+        if (message.type === 'validateExportImage') {
+            if (typeof host.respondExport !== 'function') return;
+            const image = new Image();
+            const dataUri = message.dataUri;
+            if (typeof dataUri !== 'string' || !/^data:image\/(?:png|jpeg|gif|webp|svg\+xml)(?:;[a-z0-9=.+-]+)*,/i.test(dataUri)) {
+                host.respondExport({ type: 'exportImageValidated', requestId: message.requestId, valid: false });
+                return;
+            }
+            image.src = dataUri;
+            image.decode().then(() => {
+                host.respondExport({ type: 'exportImageValidated', requestId: message.requestId, valid: image.naturalWidth > 0 && image.naturalHeight > 0 });
+            }, () => {
+                host.respondExport({ type: 'exportImageValidated', requestId: message.requestId, valid: false });
+            }).finally(() => image.removeAttribute('src'));
+            return;
+        }
         if (message.type === 'documentSaved') {
             const normalizeSaved = value => value.replace(/^\uFEFF/, '').replace(/\r\n?/g, '\n');
             if (typeof message.content === 'string' && normalizeSaved(readCurrentMarkdown()) === normalizeSaved(message.content)) {

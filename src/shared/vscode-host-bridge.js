@@ -18,6 +18,9 @@
         requestExport: function(format) {
             api.postMessage({ type: 'export', format: format });
         },
+        requestExportCapabilities: function() {
+            api.postMessage({ type: 'exportCapabilities' });
+        },
         cancelExport: function() {
             api.postMessage({ type: 'cancelExport' });
         },

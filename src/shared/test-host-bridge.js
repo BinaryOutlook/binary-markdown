@@ -25,6 +25,9 @@
         requestExport: function(format) {
             window.__testApi.messages.push({ type: 'export', format: format });
         },
+        requestExportCapabilities: function() {
+            window.__testApi.messages.push({ type: 'exportCapabilities' });
+        },
         cancelExport: function() {
             window.__testApi.messages.push({ type: 'cancelExport' });
         },

@@ -235,3 +235,23 @@ test.describe('Export document-only rendering', () => {
         expect((await messages(page, 'exportPrepared')).filter(message => message.requestId === 'cancelled')).toEqual([]);
     });
 });
+
+
+test('export image validation rejects malformed bytes and external references', async ({ page }) => {
+    await page.goto('/standalone-editor.html');
+    await page.waitForFunction(() => (window as unknown as ExportTestWindow).__testApi?.ready);
+    const validPng = await page.evaluate(() => {
+        const canvas = document.createElement('canvas');
+        canvas.width = 2; canvas.height = 2;
+        canvas.getContext('2d')!.fillRect(0, 0, 2, 2);
+        return canvas.toDataURL('image/png');
+    });
+    await sendHost(page, { type: 'validateExportImage', requestId: 'valid', dataUri: validPng });
+    await sendHost(page, { type: 'validateExportImage', requestId: 'truncated', dataUri: validPng.slice(0, 45) });
+    await sendHost(page, { type: 'validateExportImage', requestId: 'external', dataUri: 'https://example.invalid/image.png' });
+    await expect.poll(async () => (await messages(page, 'exportImageValidated')).length).toBe(3);
+    const replies = await messages(page, 'exportImageValidated');
+    expect(replies.find(reply => reply.requestId === 'valid')?.valid).toBe(true);
+    expect(replies.find(reply => reply.requestId === 'truncated')?.valid).toBe(false);
+    expect(replies.find(reply => reply.requestId === 'external')?.valid).toBe(false);
+});
