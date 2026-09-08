@@ -19,5 +19,11 @@
   "config.outlineStateScope.file": "分別記住目前工作區中每個 Markdown 檔案是否顯示大綱。",
   "config.outlineStateScope.global": "所有 Markdown 檔案都沿用上次的大綱顯示設定，切換工作區後也會保留。",
   "config.outlineDefaultOpen.description": "尚未儲存大綱的顯示設定時，預設開啟大綱面板。",
-  "config.enableDebugLogging.description": "記錄偵錯資訊，方便找出編輯器發生問題的原因。"
+  "config.enableDebugLogging.description": "記錄偵錯資訊，方便找出編輯器發生問題的原因。",
+  "config.export.pandocPath.description": "用於DOCX和EPUB匯出的Pandoc執行檔路徑。留空以偵測已安裝的工具。請自行安裝；手動路徑無效時會回報錯誤，不會改用其他工具。",
+  "config.export.browserPath.description": "用於無視窗PDF匯出的Chrome、Chromium或Edge執行檔路徑。留空以偵測已安裝的瀏覽器。不會自動下載瀏覽器。",
+  "command.exportToHtml.title": "匯出為HTML",
+  "command.exportToPdf.title": "匯出為PDF",
+  "command.exportToDocx.title": "匯出為Word",
+  "command.exportToEpub.title": "匯出為EPUB"
 }

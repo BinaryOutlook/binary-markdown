@@ -19,5 +19,11 @@
   "config.outlineStateScope.file": "Recordar por separado si el esquema está abierto o cerrado en cada archivo Markdown del área de trabajo actual.",
   "config.outlineStateScope.global": "Usar el último estado del esquema (abierto o cerrado) en todos los archivos Markdown, incluso en otras áreas de trabajo.",
   "config.outlineDefaultOpen.description": "Abrir el panel de esquema cuando no haya un estado anterior guardado.",
-  "config.enableDebugLogging.description": "Guardar información de depuración para facilitar el diagnóstico de problemas del editor."
+  "config.enableDebugLogging.description": "Guardar información de depuración para facilitar el diagnóstico de problemas del editor.",
+  "config.export.pandocPath.description": "Ruta al ejecutable de Pandoc para exportar DOCX y EPUB. Déjela vacía para detectar una instalación. La instalación es manual; una ruta explícita no válida muestra un error sin elegir otra herramienta.",
+  "config.export.browserPath.description": "Ruta al ejecutable de Chrome, Chromium o Edge para exportar PDF sin abrir una ventana. Déjela vacía para detectar un navegador instalado. No se descarga ningún navegador automáticamente.",
+  "command.exportToHtml.title": "Exportar a HTML",
+  "command.exportToPdf.title": "Exportar a PDF",
+  "command.exportToDocx.title": "Exportar a Word",
+  "command.exportToEpub.title": "Exportar a EPUB"
 }
