@@ -7276,7 +7276,9 @@
                     // The browser adds a sentinel \n only at the end; mid-content Enter
                     // does not produce a sentinel, so registering it would miscount lines.
                     const codeForSentinel = preElement.querySelector('code') || preElement;
-                    const textAfterInsert = codeForSentinel.textContent || '';
+                    // Chromium can represent the final line break and visibility
+                    // sentinel as BR nodes; textContent would omit both of them.
+                    const textAfterInsert = getCodePlainText(codeForSentinel);
                     if (textAfterInsert.endsWith('\n')) {
                         const sentinelTarget = preElement.closest('.mermaid-wrapper') || preElement.closest('.math-wrapper') || preElement;
                         codeBlocksWithSentinel.add(sentinelTarget);
