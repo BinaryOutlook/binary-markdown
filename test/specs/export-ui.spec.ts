@@ -32,6 +32,48 @@ async function outbound(page: Page, type: string) {
 }
 
 test.describe('Export toolbar and job status', () => {
+    test('static English label is not readiness while export initialization is delayed', async ({ page }) => {
+        let release!: () => void;
+        let requested!: () => void;
+        const gate = new Promise<void>(resolve => { release = resolve; });
+        const scriptRequested = new Promise<void>(resolve => { requested = resolve; });
+        await page.route('**/delayed-export.js', async route => {
+            requested();
+            await gate;
+            await route.fulfill({ contentType: 'text/javascript', body: fs.readFileSync(path.join(root, 'src/webview/export-ui.js'), 'utf8') });
+        });
+        await page.route('**/delayed-export.html', route => route.fulfill({
+            contentType: 'text/html',
+            body: '<!DOCTYPE html><html data-toolbar-mode="simple"><body>'
+                + generateEditorBodyHtml({}, 'darwin', { exportEnabled: true })
+                + '<script>' + fs.readFileSync(path.join(root, 'src/shared/test-host-bridge.js'), 'utf8')
+                + ';window.exportMessages=' + JSON.stringify(getExportMessages()) + ';</script>'
+                + '<script src="/delayed-export.js"></script></body></html>'
+        }));
+        try {
+            await page.goto('/delayed-export.html', { waitUntil: 'commit' });
+            await scriptRequested;
+            const button = page.locator('#exportButton');
+            // This is the old native readiness predicate; it is already true.
+            await expect(button).toHaveAttribute('aria-label', 'Export');
+            expect(await page.evaluate(() => document.readyState)).toBe('loading');
+            await expect(button).not.toHaveAttribute('data-export-ready', 'true');
+            await button.focus();
+            await page.keyboard.press('ArrowDown');
+            await expect(page.locator('#exportMenu')).toBeHidden();
+
+            release();
+            await expect(button).toHaveAttribute('data-export-ready', 'true');
+            await page.keyboard.press('ArrowDown');
+            await expect(page.locator('[data-export-format="html"]')).toBeFocused();
+            await page.keyboard.press('ArrowDown');
+            await expect(page.locator('[data-export-format="pdf"]')).toBeFocused();
+            await page.keyboard.press('Escape');
+            await expect(button).toBeFocused();
+            await expect(page.locator('#exportMenu')).toBeHidden();
+        } finally { release(); }
+    });
+
     test('button is immediately after VS Code, preserves source/selection, and lists four formats', async ({ page }, testInfo) => {
         await setup(page);
         await page.getByText('Selection remains intact.', { exact: true }).click();

@@ -200,4 +200,7 @@
         }
     });
     updateCapabilities();
+    // The static English label exists before scripts load. Publish readiness
+    // only after localization and every export interaction handler are installed.
+    button.dataset.exportReady = 'true';
 })();

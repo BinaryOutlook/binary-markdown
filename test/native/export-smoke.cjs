@@ -197,7 +197,7 @@ function harness(settings, owner) {
             await send('Runtime.enable');
             let contextId;
             for (const context of contexts.filter(value => value.auxData?.isDefault)) {
-                const found = await send('Runtime.evaluate', { expression: '!!document.querySelector("#editor")', contextId: context.id, returnByValue: true });
+                const found = await send('Runtime.evaluate', { expression: '!!document.querySelector("#editor") && !!document.querySelector(\'#exportButton[data-export-ready="true"]\')', contextId: context.id, returnByValue: true });
                 if (found.result.value) contextId = context.id;
             }
             assert.ok(contextId, 'The active editor context must be ready');
@@ -425,23 +425,26 @@ async function appearanceCases(h, owner, record) {
         catch { /* Appearance changes may briefly replace the webview. */ }
         connection?.close();
     });
-    for (const [mode, language, label] of [['full', 'zh-CN', '导出'], ['simple', 'en', 'Export']]) {
-        await h.driver({ action: 'config', key: 'toolbarMode', value: mode });
-        await h.driver({ action: 'config', key: 'language', value: language });
-        const connection = await matchingEditor(`document.getElementById('exportButton').getAttribute('aria-label')===${JSON.stringify(label)}`);
-        try {
-            assert.equal(receipt(owner).nativeLanguage, 'en', 'Native VS Code language remains independent of the runtime language');
-            assert.equal(await connection.evaluate(`document.getElementById('exportButton').previousElementSibling.dataset.action`), 'openInTextEditor');
-            await connection.evaluate(`document.getElementById('exportButton').focus()`);
-            for (const format of ['html', 'pdf']) {
-                await connection.send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'ArrowDown', code: 'ArrowDown' });
-                assert.equal(await connection.evaluate('document.activeElement.dataset.exportFormat'), format);
-            }
-            await connection.send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Escape', code: 'Escape' });
-            assert.equal(await connection.evaluate('document.getElementById("exportMenu").hidden'), true);
-            assert.equal(await connection.evaluate('document.activeElement.id'), 'exportButton');
-            record('toolbar', { mode, language, label, nativeLanguage: 'en', keyboardNavigation: true, nextToVsCode: true });
-        } finally { connection.close(); }
+    for (let cycle = 1; cycle <= 3; cycle++) {
+        for (const [mode, language, label] of [['full', 'zh-CN', '导出'], ['simple', 'en', 'Export']]) {
+            await h.driver({ action: 'config', key: 'toolbarMode', value: mode });
+            await h.driver({ action: 'config', key: 'language', value: language });
+            const connection = await matchingEditor(`document.documentElement.dataset.toolbarMode===${JSON.stringify(mode)} && document.getElementById('exportButton').getAttribute('aria-label')===${JSON.stringify(label)}`);
+            try {
+                assert.equal(receipt(owner).nativeLanguage, 'en', 'Native VS Code language remains independent of the runtime language');
+                assert.equal(await connection.evaluate(`document.getElementById('exportButton').previousElementSibling.dataset.action`), 'openInTextEditor');
+                await connection.evaluate(`document.getElementById('exportButton').focus()`);
+                for (const format of ['html', 'pdf']) {
+                    await connection.send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'ArrowDown', code: 'ArrowDown' });
+                    await connection.send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'ArrowDown', code: 'ArrowDown' });
+                    await h.until(() => connection.evaluate(`document.activeElement.dataset.exportFormat===${JSON.stringify(format)}`));
+                }
+                await connection.send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Escape', code: 'Escape' });
+                await connection.send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Escape', code: 'Escape' });
+                await h.until(() => connection.evaluate('document.getElementById("exportMenu").hidden && document.activeElement.id === "exportButton"'));
+                record('toolbar', { cycle, mode, language, label, nativeLanguage: 'en', keyboardNavigation: true, nextToVsCode: true });
+            } finally { connection.close(); }
+        }
     }
     for (const theme of ['github', 'night']) {
         await h.driver({ action: 'config', key: 'theme', value: theme });
@@ -509,7 +512,7 @@ async function offlineCases(h, owner, settings, outputs, record) {
     const { discoverTool } = require(path.join(receipt(owner).extensionPath, 'out/export/tools.js'));
     const tool = await discoverTool('browser', settings.browser);
     assert.equal(tool.available, true, tool.error);
-    const browser = await require('playwright-core').chromium.launch({ executablePath: tool.path, headless: true, chromiumSandbox: true });
+    const browser = await require('playwright-core').chromium.launch({ executablePath: tool.path, headless: true, chromiumSandbox: true, args: ['--disable-updater-scheduler'] });
     const folder = fs.mkdtempSync(path.join(owner.base, 'evidence/relocated-'));
     try {
         const context = await browser.newContext({ offline: true });
