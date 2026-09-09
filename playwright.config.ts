@@ -13,6 +13,15 @@ export default defineConfig({
         baseURL: 'http://localhost:3000',
         trace: 'on-first-retry',
         headless: true,
+        // Use an installed Chromium-family browser when Playwright's downloader
+        // does not support the host distribution (for example Ubuntu 26.04).
+        ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ? {
+            launchOptions: {
+                executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH,
+                chromiumSandbox: true,
+                args: ['--disable-updater-scheduler'],
+            },
+        } : {}),
     },
 
     projects: [
@@ -26,6 +35,6 @@ export default defineConfig({
         command: 'npx serve test/html -l 3000',
         port: 3000,
         timeout: 30000,
-        reuseExistingServer: true,
+        reuseExistingServer: !process.env.CI,
     },
 });

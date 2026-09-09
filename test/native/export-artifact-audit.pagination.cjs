@@ -30,7 +30,7 @@ blockquote{box-sizing:border-box;height:350px;margin:0;padding:12px;border:2px s
         throw new Error(browserStatus.error || 'Install Chrome/Chromium/Edge or set EXPORT_BROWSER_PATH to its absolute executable path.');
     }
     const executable = browserStatus.path;
-    const browser = await chromium.launch({ executablePath: executable, headless: true, chromiumSandbox: true });
+    const browser = await chromium.launch({ executablePath: executable, headless: true, chromiumSandbox: true, args: ['--disable-updater-scheduler'] });
     let measurements;
     try {
         const context = await browser.newContext({ javaScriptEnabled: false, viewport: { width: 673, height: 1002 } });

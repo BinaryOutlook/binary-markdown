@@ -39,7 +39,7 @@ function luminance(rgb) {
     }
     const executable = browserStatus.path;
     await fs.mkdir(outputDirectory, { recursive: true });
-    const browser = await chromium.launch({ executablePath: executable, headless: true, chromiumSandbox: true });
+    const browser = await chromium.launch({ executablePath: executable, headless: true, chromiumSandbox: true, args: ['--disable-updater-scheduler'] });
     const evidence = [];
     try {
         for (const theme of ['github', 'dark', 'night']) {

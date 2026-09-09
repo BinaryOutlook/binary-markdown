@@ -36,7 +36,9 @@ export async function convertPdf(html: string, executable: string, operations: E
             executablePath: executable,
             headless: true,
             chromiumSandbox: true,
-            args: ['--disable-background-networking', '--no-first-run', '--disable-default-apps', '--disable-sync', '--host-resolver-rules=MAP * ~NOTFOUND']
+            // Chrome's updater can inherit the worker pipes and keep close()
+            // pending after the browser exits. Disable it for this process only.
+            args: ['--disable-updater-scheduler', '--disable-background-networking', '--no-first-run', '--disable-default-apps', '--disable-sync', '--host-resolver-rules=MAP * ~NOTFOUND']
         });
         checkCancelled(operations.signal);
         context = await browser.newContext({

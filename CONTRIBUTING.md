@@ -25,6 +25,8 @@ npm run test:e2e -- test/specs/codeblock-copy.spec.ts test/specs/sidebar-state.s
 
 The browser tests need Playwright Chromium. On a new machine, install it with `npx playwright install chromium`. `npm test` runs compilation, lint, unit checks, and the full browser suite. Report failing tests and distinguish existing failures from changes introduced by your patch.
 
+If the downloader does not support your OS, set `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` to an installed Chrome/Chromium executable, for example `/usr/bin/google-chrome` on Linux. This path enables the browser sandbox; run as an ordinary user. It configures the test runner independently of the extension's export tool settings. Record the browser version with results. For merge validation, use `CI=1` and `--retries=0` so a stale localhost server or a failed first attempt cannot count as a clean pass.
+
 The identity tests check registration consistency and separation from the archived upstream manifest. This helps prevent a rename from breaking commands, shortcuts, settings, or coexistence with the original extension.
 
 ## Settings translations
