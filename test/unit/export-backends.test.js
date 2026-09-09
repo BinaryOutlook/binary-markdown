@@ -211,7 +211,7 @@ test('real headless browser produces complete, offline PDF with oversized conten
     assert.ok(bytes.subarray(0, 5).equals(Buffer.from('%PDF-')));
     const file = path.join(directory, 'report.pdf');
     await fs.writeFile(file, bytes);
-    const textTool = process.env.EXPORT_PDFTOTEXT_PATH || '/opt/homebrew/bin/pdftotext';
+    const textTool = process.env.EXPORT_PDFTOTEXT_PATH || 'pdftotext';
     const extracted = (await runTool(textTool, [file, '-'])).stdout.toString('utf8');
     assert.match(extracted, /FIRST_SENTINEL/);
     assert.match(extracted, /LAST_SENTINEL/);
