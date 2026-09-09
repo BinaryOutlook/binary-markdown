@@ -1,6 +1,6 @@
 # Export subsystem
 
-Version 1.3 · Updated 2026-09-09 · **Status: D0–D5 implementation complete on `export-subsystem`, with an additional user-authorized Ubuntu x86-64 validation pass. No human acceptance, merge or release is recorded.**
+Version 1.4 · Updated 2026-09-10 · **Status: D0–D5 implementation complete on `export-subsystem`, with macOS/Ubuntu revalidation and the reported test blockers resolved. AGPL-3.0-only licensing now applies with retained MIT/third-party notices. No human acceptance, merge or release is recorded.**
 
 This is the authoritative task brief for Binary Markdown's experimental export subsystem. It consolidates the export reconnaissance, clarification answers, functional and non-functional requirements, implementation plan, and human–AI working agreement. A developer can work from this file without reconstructing the conversation. Keep subsequent scope decisions, milestone status, and evidence references here.
 
@@ -317,7 +317,7 @@ These criteria are specification targets, not executed results. Record unavailab
 
 ## Delivery backlog
 
-Implementation branch: `export-subsystem`. Its opening commit established this documentation baseline; D0–D4 are now implemented with focused and integrated tests. D5 continues the installed-package acceptance and handback checks described below.
+Implementation branch: `export-subsystem`. Its opening commit established this documentation baseline; D0–D4 are now implemented with focused and integrated tests. D5 engineering handback and the subsequent regression fixes are complete; human review and product acceptance remain pending.
 
 **Start from the implementation branch's current tip.** This file is versioned with the branch so delegated worktrees include the handoff. Preserve unrelated changes and verify Git identity before further commits.
 
@@ -415,11 +415,13 @@ Update this table at each milestone or meaningful interruption. Distinguish impl
 | D2 | Implemented; tested | Four-format toolbar/status UI, standalone HTML, portable resources, inert preparation, shared naming and cleanup are implemented. Native HTML artifacts and offline/rendering checks exist. All four actual HTML outputs passed relocation/offline checks; corrected native blockquotes and fallback labels were re-inspected. |
 | D3 | Implemented; tested | Installed-tool detection/manual paths and Pandoc DOCX/EPUB adapters pass real conversions plus structure/media/native-math checks. Representative Microsoft Word and Apple Books UI inspection is recorded; this does not certify every construct or viewer. |
 | D4 | Implemented; tested | Installed browser PDF conversion, offline preparation, readiness, fragmentation/scaling and cancellation are implemented and tested. Native W-30 PDFs are 51 pages in the original macOS record and 54 pages in the subsequent Ubuntu record; complete content and representative pagination inspection remain the fidelity criteria. |
-| D5 | Engineering handback complete; ready for review | All 16 native fixture outputs and four immediate-save combinations passed. Native dependency, naming, dirty/untitled, wrong-tab, immutable-capture, cancellation and failure cases passed; corrected artifacts and offline HTML were re-audited. AC-01–14 are accounted for in the validation record. The consolidated native harness also passed 39 scenarios on a fresh installation. Human acceptance, merge and release remain unrecorded. |
+| D5 | Engineering handback complete; ready for review | All 16 native fixture outputs and four immediate-save combinations passed. Native dependency, naming, dirty/untitled, wrong-tab, immutable-capture, cancellation and failure cases passed; corrected artifacts and offline HTML were re-audited. AC-01–14 are accounted for in the validation record. The latest native harness passed 43 scenarios plus unchanged frozen inputs on each tested host. Human acceptance, merge and release remain unrecorded. |
 
 The original macOS full regression run recorded **684 browser tests passed, 4 skipped and the unchanged Perplexity-color failure**, plus **84 unit tests passed and 1 package test skipped** without `EXPORT_VSIX_PATH`. Compile passed; lint reported 0 errors and 8 existing warnings. After the test-harness script-preservation fix and additional blockquote coverage, **23 focused export browser tests passed**. These runs establish the stated test evidence, not a green full-suite result or blanket acceptance of AC-01–14. The final explicit export run passed **74/74 with no skips**, including real Pandoc, installed Chrome and packaged-runtime checks. See [export-validation.md](export-validation.md) for package/native receipts and limitations.
 
-Current handback: implementation and the subsequent Ubuntu x86-64 cross-validation are complete; the next action is human PR review. The same final VSIX passed 39 native scenarios plus unchanged inputs on each host, 100 Ubuntu units (including 86 export tests) and 86 macOS export tests. The completed Ubuntu browser run recorded 682 passes, 4 skips and 4 failures, each reproduced three times on the pre-Linux commit. Preserve these boundaries and the intermittent native toolbar-test observation in the validation record. For later work, leave the current ticket, files/commit, checks run and outcomes, next action, and any blocker here. Link detailed logs/artifacts as evidence when needed; keep the task's requirements and decisions in this file. No second competing specification or separate mandatory status document is needed.
+Current handback (2026-09-10): the reported regression blockers are resolved. The same AGPL VSIX from `8514de9` passed 43 native scenarios plus unchanged inputs on each host, with an additional 16-format run after the development server stopped. Both macOS ARM64 and Ubuntu x86-64 full browser suites passed **691/691 with no failures, skips or retries**, and both unit suites passed **100/100**, including real engines and packaged-runtime checks. Each host's 16 artifacts passed 2,260 marker checks; fourteen PDF pages were inspected across the hosts. The last code-adjacent commit, `54caee9`, only makes the PDF test inspection tool portable. See [the current validation record](export-validation.md#merge-blocker-fixes-and-revalidation--2026-09-10) and [dated evidence](export-evidence/2026-09-10-merge-readiness.json) for hashes, diagnosis, skip disposition and remaining viewer/platform limits. The next action is human PR review. No hosted CI gate, acceptance, merge or release is implied.
+
+For later work, leave the current ticket, files/commit, checks run and outcomes, next action, and any blocker here. Link detailed logs/artifacts as evidence when needed; keep the task's requirements and decisions in this file. No second competing specification or separate mandatory status document is needed.
 
 ### Decision log
 
@@ -435,6 +437,8 @@ Current handback: implementation and the subsequent Ubuntu x86-64 cross-validati
 | 2026-09-09 | Track native save completion, bypass stale webview capture for external-file synchronization, and retain the strict read-only export gate. | Source integrity and AC-02/AC-11. VS Code has no native write-failed event: cancellation, a later save or panel closure releases an abandoned native wait; subsequent exports still require clean, matching saved content. |
 | 2026-09-09 | Extend the experimental host gate to local Linux and cross-validate the same VSIX on Ubuntu x86-64 and macOS ARM64. Keep remote/web/Windows hosts rejected and the Chromium sandbox enabled. | Explicit subsequent user request for SSH-based Ubuntu testing, temporary installations and skipping sudo blockers; NFR-EXP-008 and AC-14 amended above. Exact evidence and remaining limits are in the validation record. |
 | 2026-09-09 | Only the newest dependency-status refresh may update the menu; disposal invalidates pending results. | Review reproduced older successful probes replacing a newer invalid-path result. Regression tests cover overlapping refresh and disposal; per-job tool validation remains independent. |
+| 2026-09-10 | Transition to AGPL-3.0-only in a separate first commit while retaining upstream/prior MIT and third-party notices. | Explicit user direction for future commits; `f2a73a5`. Licence/package metadata and shipped notice bytes verified; frozen MIT fixture bytes preserved. |
+| 2026-09-10 | Correct the four reported browser tests, restore three skips and replace absent sample fixtures with an independently authored pair. Fix the BR sentinel content bug, explicit export UI readiness and Chrome worker cleanup exposed by these checks. | User-authorized merge-blocker remediation; `3914cbe` through `54caee9`. No FR/NFR/AC scope changed. Full suites, same-package native runs and artifact checks are recorded in the current validation section. |
 
 Append later decisions with date, reason, alternatives where relevant, affected IDs, user authorization or within-scope rationale, and evidence/commit. Rejected implementation experiments need only a short note when the lesson affects future work.
 
@@ -486,7 +490,7 @@ The Pandoc executable measurement does not establish a portable redistributable 
 
 | Risk | Why it matters | Resolution / completion gate |
 | --- | --- | --- |
-| Stale saved revision | Delayed webview synchronization plus the host edit queue can leave save/export agreement uncertain. | Save/snapshot barriers and four native save combinations are tested. Complete remaining native document-selection and failure/cancellation cases before D5 closure. |
+| Stale saved revision | Delayed webview synchronization plus the host edit queue can leave save/export agreement uncertain. | Save/snapshot barriers and four native save combinations are tested. Native document-selection and failure/cancellation cases passed; repeat relevant cases when their implementation changes. |
 | Missing packaged runtime | `node_modules` remains excluded; required runtime code must be shipped explicitly. | Vendor packaging and isolated native exports are implemented. Tie final package-content checks and installed-profile receipts to the exact handback VSIX. |
 | Markdown interpretation differences | Editor semantics, Pandoc readers and raw HTML handling differ. | Existing renderer for HTML/PDF, explicit target preparation and fixed support fixtures; no mandatory parser rewrite. |
 | Incomplete assets or rendering readiness | Fonts, remote resources, async diagrams and target-specific image support can produce missing content. | Shared asset inventory/readiness and explicit fallbacks; offline and target-viewer checks. |
@@ -494,7 +498,7 @@ The Pandoc executable measurement does not establish a portable redistributable 
 | Browser/library/host incompatibility | Development Node and browser caches can hide extension-host incompatibility or missing dependencies. | Pin compatible versions and test their resolved executables inside the installed extension. |
 | Settings/shared-build side effects | Existing config handlers can rebuild webviews; extension/Electron compilation and assets are separate. | Update only relevant services and verify both affected builds. |
 
-Source agreement, complete resource preparation, package contents and format fidelity remain the important acceptance boundaries even after successful native exports. Preserve the modest layout scope while completing the outstanding D5 checks.
+Source agreement, complete resource preparation, package contents and format fidelity remain the important acceptance boundaries even after successful native exports. Preserve the modest layout scope and rerun affected checks for subsequent changes.
 
 ## Deferred scope
 
@@ -516,7 +520,7 @@ export-subsystem branch tip so the implementation worktree includes this file.
 
 Continue on export-subsystem, using an isolated worktree if needed. Read the
 resumable status and docs/export-validation.md first: D0–D4 are implemented
-and tested; D5 native acceptance is underway. Preserve the frozen fixtures,
+and tested; D5 engineering handback is complete and human acceptance is pending. Preserve the frozen fixtures,
 refresh evidence affected by new changes, and complete remaining native edge,
 artifact/viewer and package checks as small, reviewable increments.
 

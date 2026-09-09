@@ -115,7 +115,7 @@ npm ci
 npm run package
 ```
 
-See the [validation record](docs/export-validation.md) for installed VS Code checks, workload results and the known baseline test failure.
+See the [validation record](docs/export-validation.md) for installed VS Code checks, workload results and the current and historical regression records.
 
 ## Build and contribute
 
