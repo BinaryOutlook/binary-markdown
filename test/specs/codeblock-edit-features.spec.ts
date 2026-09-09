@@ -66,80 +66,53 @@ test.describe('《コードブロック》編集機能', () => {
     });
 
     test.describe('Enter時のインデント維持 (v0.195.95)', () => {
-        test('コードブロック内でインデントされた行でEnterを押すとインデントが維持される', async ({ page }) => {
-            // コードブロックをMarkdownで直接設定（インデントされた行を含む）
-            await page.evaluate(() => {
-                const testApi = (window as any).__testApi;
-                testApi.setMarkdown('```javascript\nfunction test() {\n    const x = 1;\n```');
-            });
-            await page.waitForTimeout(200);
-            
-            // コードブロック内をクリックしてフォーカス
-            await page.click('#editor pre code');
-            await page.waitForTimeout(100);
-            
-            // カーソルを最後の行の末尾に移動
-            await page.keyboard.press('End');
-            await page.waitForTimeout(100);
-            
-            // Enterを押す
-            await editor.press('Enter');
-            await page.waitForTimeout(100);
-            
-            // 新しい行にインデントが維持されているか確認
-            const result = await page.evaluate(() => {
-                const code = document.querySelector('pre code');
-                if (!code) return { hasIndent: false };
-                
-                // カーソル位置の前のテキストを取得
-                const sel = window.getSelection();
-                if (!sel || !sel.anchorNode) return { hasIndent: false };
-                
-                // コードの内容を取得
-                const content = code.textContent || '';
-                const lines = content.split('\n');
-                
-                // 最後の行（カーソルがある行）のインデントを確認
-                const lastLine = lines[lines.length - 1];
-                const hasIndent = lastLine.startsWith('    ');
-                
-                return { hasIndent, lastLine, lineCount: lines.length };
-            });
-            
-            expect(result.hasIndent).toBe(true);
-        });
+        for (const [name, indent] of [['spaces', '    '], ['tab', '\t']]) {
+            test(`Enter preserves ${name} indentation on the current code line`, async ({ page }) => {
+                const source = '```javascript\nfunction test() {\n' + indent + 'const x = 1;\n```';
+                await page.evaluate(md => (window as any).__testApi.setMarkdown(md), source);
+                await page.locator('#editor pre code').click();
+                await expect(page.locator('#editor pre')).toHaveAttribute('data-mode', 'edit');
 
-        test('タブインデントもEnter時に維持される', async ({ page }) => {
-            // コードブロックを作成
-            await editor.type('```');
-            await editor.press('Enter');
-            await page.waitForTimeout(200);
-            
-            // タブでインデントされた行を入力
-            await page.keyboard.type('\\tindented line', { delay: 30 });
-            await page.waitForTimeout(100);
-            
-            // Enterを押す
-            await editor.press('Enter');
-            await page.waitForTimeout(100);
-            
-            // 新しい行にタブインデントが維持されているか確認
-            const result = await page.evaluate(() => {
-                const code = document.querySelector('pre code');
-                if (!code) return { hasTabIndent: false };
-                
-                const content = code.textContent || '';
-                const lines = content.split('\\n');
-                const lastLine = lines[lines.length - 1];
-                
-                return { 
-                    hasTabIndent: lastLine.startsWith('\\t'),
-                    lastLine 
-                };
+                // A centre click plus End can land on the first line. Establish
+                // the indented line and caret explicitly before sending real Enter.
+                const before = await page.evaluate(() => {
+                    const code = document.querySelector('#editor pre code')!;
+                    const walker = document.createTreeWalker(code, NodeFilter.SHOW_TEXT);
+                    let node: Node | null;
+                    while ((node = walker.nextNode())) {
+                        if (!node.textContent?.includes('const x = 1;')) continue;
+                        const range = document.createRange();
+                        range.setStart(node, node.textContent.length);
+                        range.collapse(true);
+                        const selection = window.getSelection()!;
+                        selection.removeAllRanges();
+                        selection.addRange(range);
+                        return { line: node.textContent, offset: selection.anchorOffset };
+                    }
+                    throw new Error('The indented code line is missing');
+                });
+                expect(before).toEqual({ line: indent + 'const x = 1;', offset: indent.length + 12 });
+                await page.keyboard.press('Enter');
+
+                const after = await page.evaluate(() => {
+                    const code = document.querySelector('#editor pre code')!;
+                    const selection = window.getSelection()!;
+                    const prefix = document.createRange();
+                    prefix.selectNodeContents(code);
+                    prefix.setEnd(selection.anchorNode!, selection.anchorOffset);
+                    // DOM textContent and Range.toString omit BR line breaks.
+                    const text = (node: Node): string => node.nodeName === 'BR' ? '\n'
+                        : node.nodeType === Node.TEXT_NODE ? node.textContent || ''
+                        : Array.from(node.childNodes).map(text).join('');
+                    return {
+                        caretPrefix: text(prefix.cloneContents()),
+                        markdown: (window as any).__testApi.getMarkdown()
+                    };
+                });
+                expect(after.caretPrefix).toBe('function test() {\n' + indent + 'const x = 1;\n' + indent);
+                expect(after.markdown).toBe('```javascript\nfunction test() {\n' + indent + 'const x = 1;\n' + indent + '\n```\n');
             });
-            
-            expect(result.hasTabIndent).toBe(true);
-        });
+        }
     });
 
     test.describe('Shift+矢印キーでの範囲選択 (v0.195.96)', () => {
