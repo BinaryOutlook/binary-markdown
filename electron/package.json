@@ -7,7 +7,7 @@
     "name": "BinaryOutlook"
   },
   "homepage": "https://github.com/BinaryOutlook/any-markdown",
-  "license": "MIT",
+  "license": "AGPL-3.0-only",
   "scripts": {
     "compile": "cd .. && npm run compile && cd electron && tsc -p . && node ../scripts/copy-vendor.js",
     "start": "npm run compile && ELECTRON_RUN_AS_NODE= electron .",
@@ -58,6 +58,22 @@
         "filter": [
           "editor-body-html.js"
         ]
+      },
+      {
+        "from": "../LICENSE",
+        "to": "LICENSE"
+      },
+      {
+        "from": "../NOTICE",
+        "to": "NOTICE"
+      },
+      {
+        "from": "../LICENSES",
+        "to": "LICENSES"
+      },
+      {
+        "from": "../ACKNOWLEDGMENTS.md",
+        "to": "ACKNOWLEDGMENTS.md"
       }
     ],
     "mac": {

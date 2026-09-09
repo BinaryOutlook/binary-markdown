@@ -19,7 +19,7 @@ The basic and W-30 files end with actual editor directives. Those trailing direc
 
 ## Asset provenance and source resolution
 
-All three assets are original test data created for this repository. They contain no third-party images, fonts, external references or executable scripts. They use the repository's [MIT license](../../../LICENSE).
+All three assets are original test data created for this repository. They contain no third-party images, fonts, external references or executable scripts. They use the [retained MIT license](../../../LICENSES/AnyMarkdown-MIT.txt).
 
 | File | Intrinsic size | Authoring method | Expected landmarks |
 | --- | --- | --- | --- |
@@ -35,7 +35,7 @@ The references to `assets/does-not-exist.png` and `assets/w30-deliberately-missi
 
 The complexity reference is **NIST SP 800-218, Secure Software Development Framework (SSDF), version 1.1**, published February 2022: [official publication page](https://csrc.nist.gov/pubs/sp/800/218/final) and [official 36-page PDF](https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-218.pdf). These sources were inspected on 2026-09-09. The reference supplies an example of a substantial technical report with structured prose, tables, references and appendices; its 36-page count is **not** the rendered page count of W-30.
 
-The PDF's authority page says the publication is not subject to copyright in the United States and requests attribution. No NIST prose, tables, diagrams, logo, PDF bytes or other source material is copied into these fixtures. W-30 is an original, AI-assisted synthetic report about a fictional observation service, with original prose, individually authored scenario cards, deterministic invented table/listing records and original assets. It is not a summary, adaptation or reproduction of the NIST report. The fixture text/assets are contributions under the repository's MIT license; the link does not imply NIST endorsement. No downloaded reference PDF is required to run fixture checks.
+The PDF's authority page says the publication is not subject to copyright in the United States and requests attribution. No NIST prose, tables, diagrams, logo, PDF bytes or other source material is copied into these fixtures. W-30 is an original, AI-assisted synthetic report about a fictional observation service, with original prose, individually authored scenario cards, deterministic invented table/listing records and original assets. It is not a summary, adaptation or reproduction of the NIST report. The fixture text/assets are contributions that retain their original [MIT license](../../../LICENSES/AnyMarkdown-MIT.txt); the link does not imply NIST endorsement. No downloaded reference PDF is required to run fixture checks.
 
 ## Support expectations fixed before evaluation
 

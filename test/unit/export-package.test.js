@@ -54,6 +54,7 @@ test('packaged VSIX contains an isolated export runtime, UI, guidance and locali
     const bytes = await fs.readFile(path.resolve(process.env.EXPORT_VSIX_PATH));
     const entries = unpack(bytes);
     const required = [
+        'LICENSE.txt', 'NOTICE', 'LICENSES/AnyMarkdown-MIT.txt', 'ACKNOWLEDGMENTS.md',
         'out/export/controller.js', 'out/export/html.js', 'out/export/resources.js',
         'out/export/output.js', 'out/export/validate.js', 'out/export/webview-rpc.js',
         'out/export/pandoc.js', 'out/export/pdf.js', 'out/export/tools.js',
@@ -70,6 +71,14 @@ test('packaged VSIX contains an isolated export runtime, UI, guidance and locali
     const manifest = JSON.parse(entries.get('extension/package.json').toString('utf8'));
     const rootManifest = require('../../package.json');
     assert.equal(manifest.version, rootManifest.version);
+    assert.equal(manifest.license, 'AGPL-3.0-only');
+    assert.match(entries.get('extension/LICENSE.txt').toString('utf8'), /GNU AFFERO GENERAL PUBLIC LICENSE/);
+    assert.match(entries.get('extension/LICENSES/AnyMarkdown-MIT.txt').toString('utf8'), /Permission is hereby granted/);
+    for (const name of ['LICENSE', 'NOTICE', 'LICENSES/AnyMarkdown-MIT.txt']) {
+        // vsce normalizes the root licence filename to LICENSE.txt.
+        const packagedName = name === 'LICENSE' ? 'LICENSE.txt' : name;
+        assert.ok(entries.get('extension/' + packagedName).equals(await fs.readFile(path.join(__dirname, '../..', name))), name + ' differs from source');
+    }
     assert.equal(manifest.engines.vscode, '^1.85.0');
     const properties = manifest.contributes.configuration.properties;
     const settings = ['binary-markdown.export.pandocPath', 'binary-markdown.export.browserPath'];

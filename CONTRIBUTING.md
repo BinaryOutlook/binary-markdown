@@ -1,6 +1,6 @@
 # Contributing to Binary Markdown
 
-Contributions to code, tests, documentation, translations, and accessibility are welcome. Contributions are provided under the project's MIT license; contributors retain their copyright.
+Contributions to code, tests, documentation, translations, and accessibility are welcome. New contributions are provided under the project's [GNU AGPL version 3 only](LICENSE) (`AGPL-3.0-only`), except where a separately licensed file or fixture explicitly states otherwise. Contributors retain their copyright. Preserve existing upstream and third-party notices; see [NOTICE](NOTICE).
 
 ## Development
 
