@@ -2,18 +2,18 @@
   "name": "binary-markdown",
   "displayName": "Binary Markdown Editor",
   "description": "Binary Markdown: an open-source visual Markdown editor with reliable code copying and a persistent outline.",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "publisher": "BinaryOutlook",
   "icon": "media/icon.png",
-  "license": "AGPL-3.0-only",
+  "license": "AGPL-3.0-or-later",
   "repository": {
     "type": "git",
-    "url": "https://github.com/BinaryOutlook/any-markdown"
+    "url": "https://github.com/BinaryOutlook/binary-markdown"
   },
   "bugs": {
-    "url": "https://github.com/BinaryOutlook/any-markdown/issues"
+    "url": "https://github.com/BinaryOutlook/binary-markdown/issues"
   },
-  "homepage": "https://github.com/BinaryOutlook/any-markdown#readme",
+  "homepage": "https://github.com/BinaryOutlook/binary-markdown#readme",
   "engines": {
     "vscode": "^1.85.0"
   },

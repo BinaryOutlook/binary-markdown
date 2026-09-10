@@ -81,7 +81,7 @@ test('packaged VSIX contains an isolated export runtime, UI, guidance and locali
     const sanitizer = bundled.find(entry => entry.name === 'dompurify');
     assert.equal(sanitizer.version, require('../../node_modules/dompurify/package.json').version);
     assert.ok(entries.get('extension/vendor/mermaid.min.js').includes(Buffer.from('version="' + sanitizer.version + '"')));
-    assert.equal(manifest.license, 'AGPL-3.0-only');
+    assert.equal(manifest.license, 'AGPL-3.0-or-later');
     assert.match(entries.get('extension/LICENSE.txt').toString('utf8'), /GNU AFFERO GENERAL PUBLIC LICENSE/);
     assert.match(entries.get('extension/LICENSES/AnyMarkdown-MIT.txt').toString('utf8'), /Permission is hereby granted/);
     for (const name of ['LICENSE', 'NOTICE', 'LICENSES/AnyMarkdown-MIT.txt']) {
