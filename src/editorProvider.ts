@@ -449,6 +449,10 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
         const updateWebview = () => {
             try {
                 const config = vscode.workspace.getConfiguration('binary-markdown');
+                // Use the same settings snapshot for labels and layout. A locale
+                // cached by an earlier configuration event can be stale when
+                // settings change rapidly or while no editor is open.
+                initLocale(config.get<string>('language', 'default'), vscode.env.language);
                 const content = convertImagePaths(document.getText());
                 const outlineScope = config.get<OutlineStateScope>('outlineStateScope', 'file');
                 const outlineDefaultOpen = config.get<boolean>('outlineDefaultOpen', true);
@@ -636,11 +640,6 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
                 'toolbarMode', 'outlineStateScope', 'outlineDefaultOpen', 'enableDebugLogging'];
             const editorChanged = editorSettings.some(key => e.affectsConfiguration('binary-markdown.' + key));
             if (e.affectsConfiguration('binary-markdown') && (!exportChanged || editorChanged)) {
-                // Re-initialize locale if language setting changed
-                if (e.affectsConfiguration('binary-markdown.language')) {
-                    const langConfig = vscode.workspace.getConfiguration('binary-markdown');
-                    initLocale(langConfig.get<string>('language', 'default'), vscode.env.language);
-                }
                 updateWebview();
                 sendImageDirStatus();
             }

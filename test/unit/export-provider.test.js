@@ -38,6 +38,7 @@ async function setup(t) {
     const notices = [];
     const renderConfigs = [];
     const locales = [];
+    let cachedLocale = 'ja'; // A locale cached before the current configuration.
     const timers = [];
     const config = { theme: 'github', language: 'en' };
     const state = {
@@ -111,7 +112,10 @@ async function setup(t) {
         vscode,
         './webviewContent': { getWebviewContent: (_webview, _uri, _content, options) => { renderConfigs.push(options); return '<p>Fixture editor</p>'; } },
         './export/controller': { ExportController: Controller },
-        './i18n/messages': { t: key => key, getWebviewMessages: () => ({}), initLocale: locale => locales.push(locale) },
+        './i18n/messages': {
+            t: key => key, getWebviewMessages: () => ({ locale: cachedLocale }),
+            initLocale: locale => { locales.push(locale); cachedLocale = locale; }
+        },
         './shared/outline-state-store': { OutlineStateStore: class { getOpen(_scope, _uri, defaultOpen) { return defaultOpen; } } }
     };
     const compiled = { exports: {} };
@@ -236,6 +240,22 @@ test('export-only settings refresh capabilities without recreating editor HTML',
     assert.equal(h.renderConfigs.length, 1);
 });
 
+test('new editors and appearance rebuilds use the current configured language', async t => {
+    const h = await setup(t);
+    assert.equal(h.renderConfigs[0].webviewMessages.locale, 'en');
+    // A later settings value can be visible while handling an earlier event.
+    // Rendering must use that snapshot, not depend on a language-event side effect.
+    h.config.language = 'zh-CN';
+    h.config.theme = 'night';
+    h.configChanged(['binary-markdown.theme']);
+    assert.equal(h.renderConfigs.at(-1).webviewMessages.locale, 'zh-CN');
+    h.config.language = 'en';
+    h.config.toolbarMode = 'simple';
+    h.configChanged(['binary-markdown.toolbarMode']);
+    assert.equal(h.renderConfigs.at(-1).webviewMessages.locale, 'en');
+    assert.equal(h.renderConfigs.at(-1).toolbarMode, 'simple');
+});
+
 test('combined export and appearance/language changes update both integrations', async t => {
     const h = await setup(t);
     h.config.theme = 'night';
@@ -244,7 +264,7 @@ test('combined export and appearance/language changes update both integrations',
     assert.equal(h.state.controller.refreshes, 1);
     assert.equal(h.renderConfigs.length, 2);
     assert.equal(h.renderConfigs[1].theme, 'night');
-    assert.deepEqual(h.locales, ['zh-cn']);
+    assert.deepEqual(h.locales, ['en', 'zh-cn']);
 });
 
 test('disposing a panel releases an outstanding native-save wait', async t => {
