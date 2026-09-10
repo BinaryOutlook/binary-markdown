@@ -2,9 +2,8 @@ name: Validate VSIX
 
 on:
   push:
-    branches: [main, codex/0.2.0-integration]
+    branches: [main]
   pull_request:
-    branches: [main, codex/0.2.0-integration]
 
 permissions:
   contents: read
