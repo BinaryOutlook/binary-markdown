@@ -3,6 +3,7 @@ out/
 dist/
 vendor/
 *.vsix
+build-info.json
 .vscode-test/
 .DS_Store
 
@@ -30,4 +31,5 @@ Thumbs.db
 /images/
 /images2/
 /test2/
+/output/
 CLAUDE.md

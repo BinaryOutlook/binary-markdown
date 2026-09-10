@@ -25,5 +25,6 @@
   "command.exportToHtml.title": "HTMLに書き出し",
   "command.exportToPdf.title": "PDFに書き出し",
   "command.exportToDocx.title": "Wordに書き出し",
-  "command.exportToEpub.title": "EPUBに書き出し"
+  "command.exportToEpub.title": "EPUBに書き出し",
+  "command.copyBuildInformation.title": "ビルド情報をコピー"
 }

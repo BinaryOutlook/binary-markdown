@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { BinaryMarkdownEditorProvider } from './editorProvider';
 import { initLocale, t } from './i18n/messages';
+import { copyBuildInformation } from './build-info';
 
 export function activate(context: vscode.ExtensionContext) {
     // Initialize localization
@@ -29,6 +30,10 @@ export function activate(context: vscode.ExtensionContext) {
     );
 
     // Register commands
+    context.subscriptions.push(vscode.commands.registerCommand(
+        'binary-markdown.copyBuildInformation', () => copyBuildInformation(context)
+    ));
+
     context.subscriptions.push(
         vscode.commands.registerCommand('binary-markdown.openEditor', async () => {
             const activeEditor = vscode.window.activeTextEditor;
