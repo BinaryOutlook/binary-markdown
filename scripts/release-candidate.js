@@ -41,6 +41,17 @@ function verifyCandidate(directory, manifest, sourceCommit) {
     return { name, sha256, info };
 }
 
+function renderReleaseNotes(markdown, sourceCommit) {
+    assert.match(sourceCommit, /^[0-9a-f]{40}$/);
+    return markdown.replace(/\]\((?![a-z][a-z\d+.-]*:|#)([^\s)]+)\)/gi, (_, target) => {
+        const [file, anchor] = target.split('#');
+        const relative = path.posix.normalize(path.posix.join('docs/releases', file));
+        assert.ok(!relative.startsWith('../') && !path.posix.isAbsolute(relative));
+        return '](https://github.com/BinaryOutlook/binary-markdown/blob/' + sourceCommit + '/' +
+            relative.split('/').map(encodeURIComponent).join('/') + (anchor ? '#' + anchor : '') + ')';
+    });
+}
+
 if (require.main === module) {
     const [mode, first, second] = process.argv.slice(2);
     if (mode === 'inspect') {
@@ -52,7 +63,9 @@ if (require.main === module) {
         for (const [key, value] of Object.entries(packaged)) assert.deepEqual(result.info[key], value, key);
         assert.equal(packaged.sourceTree, execFileSync('git', ['rev-parse', 'HEAD^{tree}'], { encoding: 'utf8' }).trim());
         console.log('Verified candidate ' + result.name + ': ' + result.sha256);
-    } else throw new Error('Use inspect <run.json> <main-sha> or verify <candidate-directory> <source-sha>.');
+    } else if (mode === 'notes') {
+        process.stdout.write(renderReleaseNotes(fs.readFileSync(first, 'utf8'), second));
+    } else throw new Error('Use inspect <run.json> <main-sha>, verify <candidate-directory> <source-sha> or notes <notes.md> <source-sha>.');
 }
 
-module.exports = { verifyRun, verifyCandidate };
+module.exports = { verifyRun, verifyCandidate, renderReleaseNotes };

@@ -87,7 +87,7 @@ jobs:
           cp "$RUNNER_TEMP/validation-run.json" validation-evidence/validation-run.json
           tar -czf "dist/binary-markdown-$version-validation.tar.gz" -C validation-evidence .
           (cd dist && shasum -a 256 *.vsix *.json *.tar.gz > SHA256SUMS)
-          cp "docs/releases/$version.md" "$RUNNER_TEMP/release-notes.md"
+          node scripts/release-candidate.js notes "docs/releases/$version.md" "$SOURCE" > "$RUNNER_TEMP/release-notes.md"
           printf '\nSource commit: `%s`\n\nValidation: https://github.com/%s/actions/runs/%s (attempt %s).\n\nThe attached VSIX is the exact artifact validated by that run. Check `SHA256SUMS` before installation.\n' "$SOURCE" "$GITHUB_REPOSITORY" "$VALIDATION_RUN" "$ATTEMPT" >> "$RUNNER_TEMP/release-notes.md"
           gh release create "$tag" dist/* --draft --target "$SOURCE" --title "Binary Markdown $version" --notes-file "$RUNNER_TEMP/release-notes.md"
           printf 'Draft `%s` prepared from `%s`. Review the notes, checksums and validation evidence in GitHub Releases, then publish manually.\n' "$tag" "$SOURCE" >> "$GITHUB_STEP_SUMMARY"

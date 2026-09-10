@@ -4,13 +4,21 @@ const os = require('node:os');
 const path = require('node:path');
 const { createHash } = require('node:crypto');
 const test = require('node:test');
-const { verifyRun, verifyCandidate } = require('../../scripts/release-candidate');
+const { verifyRun, verifyCandidate, renderReleaseNotes } = require('../../scripts/release-candidate');
 const { assertArtifactAudit } = require('../native/assert-artifact-audit.cjs');
 
 const repository = 'BinaryOutlook/binary-markdown';
 const commit = 'a'.repeat(40);
 const run = () => ({ path: '.github/workflows/ci-vsix.yml', repository: { full_name: repository }, head_repository: { full_name: repository },
     head_branch: 'main', head_sha: commit, event: 'push', status: 'completed', conclusion: 'success', id: 123, run_attempt: 2 });
+test('published release-note links resolve against their matching source commit', () => {
+    const notes = '[Guide](../building.md#install) [Help](../../media/export-help.md) [Site](https://example.com) [Here](#notes)';
+    const result = renderReleaseNotes(notes, commit);
+    assert.ok(result.includes('/blob/' + commit + '/docs/building.md#install'));
+    assert.ok(result.includes('/blob/' + commit + '/media/export-help.md'));
+    assert.ok(result.includes('[Site](https://example.com) [Here](#notes)'));
+    assert.throws(() => renderReleaseNotes('[bad](../../../outside)', commit));
+});
 test('release promotion binds a successful main push to its exact artifact attempt', () => {
     assert.deepEqual(verifyRun(run(), repository, commit), { source: commit, artifact: `vsix-candidate-${commit}-2`, attempt: 2 });
     for (const [key, value] of Object.entries({ path: '.github/workflows/unrelated.yml', head_branch: 'experiment', head_sha: 'b'.repeat(40),
