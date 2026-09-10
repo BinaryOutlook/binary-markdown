@@ -205,8 +205,19 @@ function harness(settings, owner) {
                 // VS Code keeps the previous active document while a replacement
                 // initializes in #pending-frame. Its scripts can be ready before
                 // it is visible; never send input to that pending document.
-                const found = await send('Runtime.evaluate', { expression: 'window.frameElement?.id === "active-frame" && !!document.querySelector("#editor") && !!document.querySelector(\'#exportButton[data-export-ready="true"]\')', contextId: context.id, returnByValue: true });
-                if (found.result.value) contextId = context.id;
+                const found = await send('Runtime.evaluate', { expression: '!!document.querySelector("#editor") && !!document.querySelector(\'#exportButton[data-export-ready="true"]\')', contextId: context.id, returnByValue: true });
+                if (!found.result.value) continue;
+                // Electron 25 does not expose window.frameElement here. CDP
+                // identifies the owning iframe across that JavaScript boundary.
+                const ownerNode = await send('DOM.getFrameOwner', { frameId: context.auxData.frameId });
+                const { node } = await send('DOM.describeNode', { backendNodeId: ownerNode.backendNodeId });
+                const attributes = node.attributes || [];
+                for (let index = 0; index < attributes.length; index += 2) {
+                    if (attributes[index] === 'id' && attributes[index + 1] === 'active-frame') {
+                        assert.equal(contextId, undefined, 'Only one active editor context is permitted');
+                        contextId = context.id;
+                    }
+                }
             }
             assert.ok(contextId, 'The active editor context must be ready');
             return {
