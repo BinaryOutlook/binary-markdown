@@ -44,6 +44,14 @@ mkdir "$validation_tools/vscode"
 if [[ "$platform" == linux-* ]]; then
   tar -xzf "$validation_tools/vscode-download" -C "$validation_tools/vscode"
   validation_code="$validation_tools/vscode/VSCode-linux-x64/bin/code"
+  # A tar extraction has user ownership, unlike the installed .deb. Electron
+  # 25 (VS Code 1.85) needs its normal setuid helper on this runner. Configure
+  # the downloaded helper instead of disabling the application sandbox.
+  validation_sandbox="$validation_tools/vscode/VSCode-linux-x64/chrome-sandbox"
+  test -f "$validation_sandbox" && test ! -L "$validation_sandbox"
+  sudo chown root:root "$validation_sandbox"
+  sudo chmod 4755 "$validation_sandbox"
+  stat -c 'VS Code sandbox owner/mode: %u/%a' "$validation_sandbox"
 else
   unzip -q "$validation_tools/vscode-download" -d "$validation_tools/vscode"
   validation_code="$validation_tools/vscode/Visual Studio Code.app/Contents/Resources/app/bin/code"
