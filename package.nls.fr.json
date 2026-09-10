@@ -19,5 +19,11 @@
   "config.outlineStateScope.file": "Pour chaque fichier Markdown de l’espace de travail actuel, mémoriser séparément si le plan est ouvert ou fermé.",
   "config.outlineStateScope.global": "Réutiliser le dernier réglage d’affichage du plan pour tous les fichiers Markdown, même dans un autre espace de travail.",
   "config.outlineDefaultOpen.description": "Afficher le plan par défaut lorsqu’aucun réglage d’affichage n’a encore été enregistré.",
-  "config.enableDebugLogging.description": "Enregistrer des informations de débogage pour faciliter le diagnostic des problèmes de l’éditeur."
+  "config.enableDebugLogging.description": "Enregistrer des informations de débogage pour faciliter le diagnostic des problèmes de l’éditeur.",
+  "config.export.pandocPath.description": "Chemin de l’exécutable Pandoc pour exporter en DOCX et EPUB. Laissez vide pour détecter une installation. L’installation est manuelle ; un chemin explicite invalide produit une erreur sans sélectionner un autre outil.",
+  "config.export.browserPath.description": "Chemin de l’exécutable Chrome, Chromium ou Edge pour exporter un PDF sans fenêtre. Laissez vide pour détecter un navigateur installé. Aucun navigateur n’est téléchargé automatiquement.",
+  "command.exportToHtml.title": "Exporter en HTML",
+  "command.exportToPdf.title": "Exporter en PDF",
+  "command.exportToDocx.title": "Exporter vers Word",
+  "command.exportToEpub.title": "Exporter en EPUB"
 }

@@ -25,6 +25,14 @@ test('every settings description and option explanation uses a manifest translat
     }
 });
 
+test('every export command uses a native manifest translation key', () => {
+    const commands = manifest.contributes.commands.filter(command => command.command.startsWith('binary-markdown.exportTo'));
+    assert.equal(commands.length, 4);
+    for (const command of commands) {
+        assert.match(command.title, /^%[\w.]+%$/, command.command);
+    }
+});
+
 test('manifest translations cover every supported editor language with English as the default', () => {
     const expected = properties['binary-markdown.language'].enum
         .filter(locale => locale !== 'default')
@@ -33,8 +41,8 @@ test('manifest translations cover every supported editor language with English a
     assert.deepEqual(translationFiles(), expected);
 });
 
-test('all manifest translations resolve every settings key without empty or stale entries', () => {
-    const expectedKeys = [...new Set(settingsStrings().map(text => text.slice(1, -1)))].sort();
+test('all manifest translations resolve every referenced key without empty or stale entries', () => {
+    const expectedKeys = [...new Set([...JSON.stringify(manifest).matchAll(/"%([\w.]+)%"/g)].map(match => match[1]))].sort();
     // Read the English fallback explicitly so a missing collection cannot pass vacuously.
     const fallback = readTranslations('package.nls.json');
     assert.deepEqual(Object.keys(fallback).sort(), expectedKeys);

@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
 import { WebviewMessages } from './i18n/messages';
+import { getExportMessages } from './export/messages';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { generateEditorBodyHtml } = require('./shared/editor-body-html');
@@ -71,6 +72,7 @@ export function getWebviewContent(
     // Load external CSS and JS files
     const stylesPath = path.join(__dirname, 'webview', 'styles.css');
     const editorScriptPath = path.join(__dirname, 'webview', 'editor.js');
+    const exportScript = fs.readFileSync(path.join(__dirname, 'webview', 'export-ui.js'), 'utf8');
     
     const styles = fs.readFileSync(stylesPath, 'utf8')
         .replace('__FONT_SIZE__', String(safeConfig.fontSize));
@@ -110,7 +112,7 @@ export function getWebviewContent(
     </style>
 </head>
 <body>
-    ${generateEditorBodyHtml(msg, process.platform, { outlineOpen: safeConfig.outlineOpen })}
+    ${generateEditorBodyHtml(msg, process.platform, { outlineOpen: safeConfig.outlineOpen, exportEnabled: true })}
 
     <script src="${turndownUri}"></script>
     <script src="${turndownGfmUri}"></script>
@@ -122,6 +124,10 @@ export function getWebviewContent(
     </script>
     <script nonce="${nonce}">
         ${editorScript}
+    </script>
+    <script nonce="${nonce}">
+        window.exportMessages = ${JSON.stringify(getExportMessages())};
+        ${exportScript}
     </script>
 </body>
 </html>`;

@@ -24,8 +24,8 @@ test.describe('コピー操作', () => {
         await page.waitForTimeout(100);
         
         // 全選択
-        await page.keyboard.press('Meta+a');
-        await page.waitForTimeout(100);
+        await editor.shortcut('a');
+        await expect.poll(() => page.evaluate(() => window.getSelection()?.toString())).toBe('sss\nsdsd\nsdsds');
         
         // コピーしてクリップボードの内容を確認
         const clipboardContent = await page.evaluate(async () => {

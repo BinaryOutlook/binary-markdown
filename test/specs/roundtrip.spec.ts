@@ -259,35 +259,13 @@ test.describe('ファイルベースRound-trip変換', () => {
         await page.waitForFunction(() => (window as any).__testApi?.ready);
     });
 
-    test.skip('samples/b.md → Round-trip → samples/b2.md と一致', async ({ page }) => {
-        // このテストは複雑なファイル比較で、多くの要因が影響するためスキップ
-        // 入力ファイルを読み込み
-        const inputPath = path.join(__dirname, '../../samples/b.md');
-        const expectedPath = path.join(__dirname, '../../samples/b2.md');
-        
-        const inputMarkdown = fs.readFileSync(inputPath, 'utf-8');
-        const expectedMarkdown = fs.readFileSync(expectedPath, 'utf-8');
-        
-        // エディタにMarkdownを設定
-        await page.evaluate((md) => {
-            (window as any).__testApi.setMarkdown(md);
-        }, inputMarkdown);
-        
-        // Round-trip後のMarkdownを取得
-        const resultMarkdown = await page.evaluate(() => {
-            return (window as any).__testApi.getMarkdown();
-        });
-        
-        // 期待結果と比較（空白の正規化を行う）
-        // - 改行コードを統一
-        // - 連続する空行を1つに正規化
-        // - 前後の空白を削除
-        const normalizeMarkdown = (s: string) => 
-            s.replace(/\r\n/g, '\n')
-             .replace(/\n{3,}/g, '\n\n')
-             .trim();
-        
-        expect(normalizeMarkdown(resultMarkdown)).toBe(normalizeMarkdown(expectedMarkdown));
+    test('committed mixed document matches its independently authored canonical Markdown', async ({ page }) => {
+        const fixture = path.join(__dirname, '../fixtures/roundtrip');
+        const inputMarkdown = fs.readFileSync(path.join(fixture, 'mixed-input.md'), 'utf8');
+        const expectedMarkdown = fs.readFileSync(path.join(fixture, 'mixed-expected.md'), 'utf8');
+        await page.evaluate(md => (window as any).__testApi.setMarkdown(md), inputMarkdown);
+        const result = await page.evaluate(() => (window as any).__testApi.getMarkdown());
+        expect(result).toBe(expectedMarkdown);
     });
 
     test('Round-tripを2回実行しても空行が増えない', async ({ page }) => {

@@ -1,0 +1,630 @@
+{
+  "recorded": "2026-09-09",
+  "status": "Final same-package native export checks passed on the two declared hosts; broader browser suite is not green; human acceptance, merge and release pending",
+  "packageSourceCommit": "c726f240ea21643e3cd4df11c0a45ec803c03812",
+  "lastProductionChange": "77344ab",
+  "package": {
+    "filename": "binary-markdown-0.1.0.vsix",
+    "bytes": 4187707,
+    "sha256": "5dcb591c64d405505bc0b3db4a28cd8f8d5f187e973af9b5d438a7da52f9a82a",
+    "buildHost": "Ubuntu x86-64",
+    "runtimeByteParityOnBothHosts": "passed"
+  },
+  "ubuntu": {
+    "os": "Ubuntu 26.04 LTS",
+    "kernel": "7.0.0-30-generic",
+    "architecture": "x86_64",
+    "vscode": "1.122.1",
+    "extensionHostNode": "22.22.1",
+    "developmentNode": "20.20.0",
+    "pandoc": "3.8.3",
+    "chrome": "149.0.7827.53",
+    "playwrightCore": "1.58.1",
+    "python": "3.14.4",
+    "poppler": "26.01.0",
+    "uiKind": 1,
+    "remoteName": null,
+    "display": "Authenticated Xvfb with TCP disabled; normal browser sandbox enabled"
+  },
+  "macOS": {
+    "os": "macOS 26.5.2 (25F84)",
+    "architecture": "arm64",
+    "vscode": "1.136.0",
+    "extensionHostNode": "v24.18.1",
+    "developmentNode": "20.20.0",
+    "pandoc": "3.8.3",
+    "chrome": "152.0.7977.65",
+    "uiKind": 1,
+    "remoteName": null
+  },
+  "tests": {
+    "ubuntuAllUnits": {
+      "passed": 100,
+      "failed": 0,
+      "skipped": 0,
+      "realToolsAndVsixEnabled": true
+    },
+    "exportSubsetEachHost": {
+      "passed": 86,
+      "failed": 0,
+      "skipped": 0
+    },
+    "nativeEachHost": {
+      "scenarios": 39,
+      "frozenInputChecks": 1,
+      "passedRecords": 40
+    },
+    "ubuntuFullBrowser": {
+      "passed": 682,
+      "failed": 4,
+      "skipped": 4,
+      "total": 690,
+      "exportSubsetPassed": 27
+    },
+    "preLinuxFailureComparison": {
+      "commit": "0cd26a7170e7921035d76c174d1e34a8fff45ca8",
+      "sameUbuntuBrowser": true,
+      "files": [
+        "test/specs/codeblock-edit-features.spec.ts:69",
+        "test/specs/copy-paste.spec.ts:18",
+        "test/specs/perplexity-highlight-test.spec.ts:4",
+        "test/specs/special-wrapper-cursor-position.spec.ts:183"
+      ],
+      "repetitionsPerCase": 3,
+      "failuresReproduced": 12,
+      "rendererAndBrowserTestDiffSinceCommit": "empty"
+    },
+    "compile": "passed",
+    "lint": {
+      "errors": 0,
+      "existingWarnings": 8
+    }
+  },
+  "nativeScenarioCounts": {
+    "format": 16,
+    "immediate-save": 4,
+    "missing-docx": 1,
+    "missing-pdf": 1,
+    "hash-reuse": 1,
+    "dirty-rejected": 1,
+    "untitled-rejected": 1,
+    "unwritable-destination": 1,
+    "resource-cancel": 1,
+    "worker-cancel": 1,
+    "worker-failure": 1,
+    "toolbar": 2,
+    "theme": 2,
+    "wrong-active-tab": 1,
+    "immutable-capture": 1,
+    "offline-html": 4,
+    "complete": 1
+  },
+  "nativeReports": {
+    "ubuntu": "native-1788894953191.json",
+    "ubuntuSha256": "07b19b0a7284c3d15bbd7f2ac13482848356d5998dc2e8d2cd04d8a83923aeea",
+    "macOS": "native-1788894778807.json",
+    "macOSSha256": "194ff00989a1c39db475595571c5b230593477f39610ad546f2ec27e5dc6e81c"
+  },
+  "artifactAudit": {
+    "outputs": 16,
+    "markerChecks": 2260,
+    "textOccurrences": 2252,
+    "expectedAltOnlyOccurrences": 8,
+    "unaccountedMarkers": 0,
+    "originalAssetBytesHtmlDocxEpub": "preserved",
+    "originalRasterDimensionsAndRgbPdf": "preserved",
+    "zipCrcContainersPassed": 8,
+    "expectedNativeMathObjects": 8,
+    "auditSha256": "43a39849a9a9947e8dca7f1becda43b923dad52ce4c41e20d9bb43d87f158d56"
+  },
+  "visualInspection": {
+    "scope": "Final Ubuntu x86-64 artifact visual inspection; findings are limited to listed pages and matched artifact bytes.",
+    "date": "2026-09-09",
+    "package_sha256": "5dcb591c64d405505bc0b3db4a28cd8f8d5f187e973af9b5d438a7da52f9a82a",
+    "native_report_sha256": "07b19b0a7284c3d15bbd7f2ac13482848356d5998dc2e8d2cd04d8a83923aeea",
+    "artifact_audit_sha256": "43a39849a9a9947e8dca7f1becda43b923dad52ce4c41e20d9bb43d87f158d56",
+    "method": "Rendered 20 selected PDF pages locally with Poppler pdftoppm 26.03.0 at maximum dimension 1800 pixels; inspected contact sheets and full-page views of W30 pages 17, 51, 54 and pagination page 3. No PDF source content was modified.",
+    "pdf_producer": "Skia/PDF m149",
+    "page_size": "A4 portrait",
+    "pdfs": [
+      {
+        "file": "basic.pdf",
+        "sha256": "744e422af354875e98f6cffccc9a2c0bd188cfbedc152543d6afde87fd0cb0ee",
+        "pages": 4,
+        "inspected_pages": [
+          2,
+          3
+        ],
+        "findings": [
+          "Code and literal dollar mathematics are readable on page 2.",
+          "Mermaid diagram labels/arrows and original chart are visible within the printable page on page 3."
+        ],
+        "observed_clipping_or_unreadable_content_on_inspected_pages": false
+      },
+      {
+        "file": "fallbacks.pdf",
+        "sha256": "a6c9b7f3594595b0e4411712c68358ecefb646e81fed3623478d90a45b141072",
+        "pages": 3,
+        "inspected_pages": [
+          1,
+          2,
+          3
+        ],
+        "findings": [
+          "Missing-image alternative text and unsupported math source are readable on page 1.",
+          "Invalid diagram source and raw-content fallbacks are readable on page 2.",
+          "Final marker and warning summary are readable and within the page on page 3."
+        ],
+        "observed_clipping_or_unreadable_content_on_inspected_pages": false
+      },
+      {
+        "file": "pagination.pdf",
+        "sha256": "689fd1fdf8b591b20be77aff703d73f29610ddfcad4c39d600c2ccf6150278bc",
+        "pages": 16,
+        "inspected_pages": [
+          3,
+          7,
+          14,
+          15,
+          16
+        ],
+        "findings": [
+          "Complete quotation and first code marker are readable on page 3.",
+          "Last code marker and first table marker are readable on page 7.",
+          "Last table row is readable on page 14.",
+          "All tall-graphic colour bands and both edge rails fit visibly on page 15.",
+          "The paragraph after the tall graphic remains visible on page 16."
+        ],
+        "observed_clipping_or_unreadable_content_on_inspected_pages": false
+      },
+      {
+        "file": "w30-report.pdf",
+        "sha256": "da49ecac6cffeca497dde629c268b49db711910833e09dd7a4511dc2a5247241",
+        "pages": 54,
+        "inspected_pages": [
+          1,
+          3,
+          17,
+          20,
+          37,
+          41,
+          51,
+          52,
+          53,
+          54
+        ],
+        "findings": [
+          "Both quotations are readable on pages 3 and 17.",
+          "Original chart is fully visible on page 20.",
+          "Last scenario and first code marker are readable on page 37.",
+          "Last code marker and first table marker are readable on page 41.",
+          "Final table row including CJK text is readable on page 51.",
+          "All tall-graphic colour bands and both edge rails fit visibly on page 52.",
+          "Following paragraph, missing-image alternative text and unsupported-source fallbacks remain readable on page 53.",
+          "Footnote source, last document marker and limitation warning summary remain readable on page 54."
+        ],
+        "observed_clipping_or_unreadable_content_on_inspected_pages": false
+      }
+    ],
+    "cross_checks": {
+      "actual_downloaded_artifact_hashes_match_audit": 16,
+      "actual_saved_source_hashes_match_frozen_manifest": 16,
+      "marker_checks": 2260,
+      "markers_in_document_text": 2252,
+      "expected_image_alt_only_markers": 8,
+      "unexplained_missing_markers": 0,
+      "actual_docx_epub_zip_crc_and_content_xml_rechecks": 8,
+      "original_png_svg_archive_bytes_match_manifest": true,
+      "pdf_original_raster_dimensions_match_manifest": true,
+      "native_math_objects_in_docx_epub": 8,
+      "html_diagram_svg_counts": {
+        "basic": 1,
+        "w30": 3
+      },
+      "tall_graphic_display_aspect_ratio_rounding_error_approximately": 0.002
+    },
+    "limitations": [
+      "This is representative-page inspection, not a claim that every PDF page was visually reviewed.",
+      "HTML/PDF retain dollar mathematics, TOC markers and footnote syntax as source with visible limitation warnings.",
+      "Whitespace from ordinary block movement and separate graphic pages remains part of the accepted initial pagination design.",
+      "The Linux report uses Noto Sans and Liberation fonts and spans 54 pages; macOS page counts are not required to match.",
+      "DOCX and EPUB target-viewer UI behavior was not re-evaluated in this visual PDF pass."
+    ],
+    "unresolved_findings_on_inspected_pages": []
+  },
+  "reference": {
+    "kind": "Supplemental reference render; does not replace actual native output.",
+    "mode": "compact",
+    "sourceHtml": "w30-report.html",
+    "sourceHtmlSha256": "7816f6523a4ba86675543f95b54c5e93a28d6cafa6f480cd252ffa3af700bec3",
+    "frozenMarkdownSha256": "1db4863436896ffa05bcfcc1d413a5fc88cd1ce73ce5f1c8cd78eb37686cbe33",
+    "output": "w30-reference-compact.pdf",
+    "bytes": 602139,
+    "sha256": "b41c7f24bf77212da4e8426280a6897bc0b73531a145bb7d5dc7394f466dc227",
+    "browser": "Google Chrome 149.0.7827.53",
+    "bodyFont": "Helvetica, Arial, sans-serif",
+    "bodyPoints": 11,
+    "lineHeight": 1.35,
+    "paper": "A4 portrait",
+    "marginsMm": 16,
+    "css": "@media print{\nbody,.editor{font-family:Helvetica,Arial,sans-serif!important;font-size:11pt!important;line-height:1.35!important}\n.editor p{margin:.5em 0!important}\n.editor p:empty,.editor p:has(>br:only-child){height:0!important;line-height:0!important;margin:0!important;padding:0!important}\n.editor table{table-layout:auto!important}.editor td,.editor th{font-size:10pt!important;line-height:1.3!important;padding:3pt 5pt!important}\n.editor pre,.editor code{font-size:9pt!important;line-height:1.3!important}\n.editor h1,.editor h2,.editor h3{margin-top:.65em!important;margin-bottom:.3em!important}\n}",
+    "pages": 35,
+    "stages": [
+      "rendering",
+      "converting"
+    ],
+    "warnings": []
+  },
+  "controlledPagination": {
+    "kind": "Supplemental controlled backend check; not a native saved-Markdown receipt.",
+    "inputSha256": "6c5bcfdd9d3579b6b004a085e8bf22827fce3d104aeffdd536486ea2272fb662",
+    "measurements": {
+      "precedingHeight": 700,
+      "ordinaryBlockHeight": 350,
+      "ordinaryBlockUnpagedTop": 700,
+      "printablePageHeight": 1001.5748031496064,
+      "remainingAfterPreceding": 301.5748031496064
+    },
+    "output": "controlled-page-movement.pdf",
+    "pages": 2,
+    "outputSha256": "8964e27f11448fd5bda52879b14c7d821f8f565202467a2c31c381c9d8c805f7",
+    "browser": "Google Chrome 149.0.7827.53",
+    "precedingMarkerPage": 1,
+    "ordinaryBlockFirstMarkerPage": 2,
+    "ordinaryBlockLastMarkerPage": 2,
+    "warnings": []
+  },
+  "themeCheck": {
+    "kind": "Supplemental production HTML/PDF check; not a native editor-theme receipt.",
+    "browser": "Google Chrome 149.0.7827.53",
+    "themes": [
+      {
+        "theme": "github",
+        "quoteForeground": "rgb(36, 41, 47)",
+        "quoteBackground": "rgba(0, 0, 0, 0)",
+        "pageBackground": "rgb(255, 255, 255)",
+        "bodyForeground": "rgb(36, 41, 47)",
+        "quoteContrastRatio": 14.652157369459891,
+        "output": "theme-github.pdf",
+        "htmlSha256": "48e54d30f947bedddc243425ca0f48d365995c9e5ac0f908a2501ca3ebdbd1f2",
+        "outputSha256": "ea80b8cd7304406c94384dfae3f853eed0005f7157884ae2b90ce12c46868f1d",
+        "warnings": []
+      },
+      {
+        "theme": "dark",
+        "quoteForeground": "rgb(212, 212, 212)",
+        "quoteBackground": "rgba(0, 0, 0, 0)",
+        "pageBackground": "rgb(30, 30, 30)",
+        "bodyForeground": "rgb(212, 212, 212)",
+        "quoteContrastRatio": 11.247073869530501,
+        "output": "theme-dark.pdf",
+        "htmlSha256": "5892cf0e9b9bf7481f7b6d919d2983e27530fe6b76728bb555000c1cb0255b24",
+        "outputSha256": "2b99698a0781a36ec9e2b3e617a074007acb9dab617ca0c05016ed538b5124b5",
+        "warnings": []
+      },
+      {
+        "theme": "night",
+        "quoteForeground": "rgb(192, 202, 245)",
+        "quoteBackground": "rgba(0, 0, 0, 0)",
+        "pageBackground": "rgb(26, 27, 38)",
+        "bodyForeground": "rgb(192, 202, 245)",
+        "quoteContrastRatio": 10.586955488631288,
+        "output": "theme-night.pdf",
+        "htmlSha256": "4f6055fb7999742a002d537c8a46d0553285346cd6df8294671790db5ec8a0f8",
+        "outputSha256": "fcdf480a2ebd9c35eed739db9b08bef80e0ea2998daff635ee7b027eb41be15f",
+        "warnings": []
+      }
+    ]
+  },
+  "observations": [
+    "An earlier final-package Ubuntu native run passed 30 scenarios then failed a simple-toolbar focus assertion. Focused UI and a new full installation passed without product changes; root cause remains unproven.",
+    "sudo -n unavailable: privileged installation skipped. Node, Pandoc, Python libraries and extracted Xvfb installed in the owned temporary directory.",
+    "Playwright bundled Chromium installer rejected Ubuntu 26.04. Installed Google Chrome ran all PDF, artifact and browser tests with chromiumSandbox true.",
+    "Two abandoned browser runs (incorrect server port; source fixture refresh) are excluded from completed totals.",
+    "Linux DOCX/EPUB reader UI, other Linux distributions/architectures, Windows, remote/web VS Code and Electron export remain unverified."
+  ],
+  "cleanup": {
+    "ownedUbuntuProfilesClosed": 3,
+    "ownedMacOSProfilesClosed": 2,
+    "debugEndpointsClosed": true,
+    "ownedXvfbStopped": true,
+    "normalProfilesChanged": false,
+    "artifactsToolsProfilesRetained": true
+  },
+  "outputs": [
+    {
+      "source": "basic.md",
+      "format": "html",
+      "output": "basic.html",
+      "bytes": 446688,
+      "sha256": "56c29993995b22fa1492fa8097bf82f35c5698be3bdc6a695e550ced510f31bc",
+      "source_sha256": "9d98c1883c6821bce3d7211d376b54e2ccc6e464f921e273b0d7606698455a7d",
+      "warning_codes": [
+        "renderer-math-source",
+        "renderer-toc-source",
+        "renderer-footnote-source"
+      ],
+      "markers_checked": 6,
+      "markers_present_in_image_alternatives": [],
+      "unaccountedMarkers": [],
+      "svg_count": 1
+    },
+    {
+      "source": "basic.md",
+      "format": "pdf",
+      "output": "basic.pdf",
+      "bytes": 116209,
+      "sha256": "744e422af354875e98f6cffccc9a2c0bd188cfbedc152543d6afde87fd0cb0ee",
+      "source_sha256": "9d98c1883c6821bce3d7211d376b54e2ccc6e464f921e273b0d7606698455a7d",
+      "warning_codes": [
+        "renderer-math-source",
+        "renderer-toc-source",
+        "renderer-footnote-source"
+      ],
+      "markers_checked": 6,
+      "markers_present_in_image_alternatives": [],
+      "unaccountedMarkers": [],
+      "pages": 4
+    },
+    {
+      "source": "basic.md",
+      "format": "docx",
+      "output": "basic.docx",
+      "bytes": 35533,
+      "sha256": "bd4862166f37789c74d3e1895f38d4447856b01cdb73f11fd4981b7836506987",
+      "source_sha256": "9d98c1883c6821bce3d7211d376b54e2ccc6e464f921e273b0d7606698455a7d",
+      "warning_codes": [
+        "raw-content-fallback"
+      ],
+      "markers_checked": 6,
+      "markers_present_in_image_alternatives": [],
+      "unaccountedMarkers": [],
+      "native_math_count": 2,
+      "zip_crc": "pass"
+    },
+    {
+      "source": "basic.md",
+      "format": "epub",
+      "output": "basic.epub",
+      "bytes": 16687,
+      "sha256": "56ebe368f6d41f238077c3319b278367bc217ccfbf2b5512a96e085f332379af",
+      "source_sha256": "9d98c1883c6821bce3d7211d376b54e2ccc6e464f921e273b0d7606698455a7d",
+      "warning_codes": [
+        "raw-content-fallback"
+      ],
+      "markers_checked": 6,
+      "markers_present_in_image_alternatives": [],
+      "unaccountedMarkers": [],
+      "native_math_count": 2,
+      "zip_crc": "pass"
+    },
+    {
+      "source": "fallbacks.md",
+      "format": "html",
+      "output": "fallbacks.html",
+      "bytes": 37725,
+      "sha256": "0d4dfe4027497b7182af1cf729fec515105fbbab557377d6eb4c9a911aceb0ec",
+      "source_sha256": "d59a454ef83115862181e88f31ec3981c19bd6b84f0a14693e3087d79eeda5e1",
+      "warning_codes": [
+        "renderer-math-source",
+        "diagram-fallback",
+        "image-unavailable"
+      ],
+      "markers_checked": 9,
+      "markers_present_in_image_alternatives": [],
+      "unaccountedMarkers": [],
+      "svg_count": 0
+    },
+    {
+      "source": "fallbacks.md",
+      "format": "pdf",
+      "output": "fallbacks.pdf",
+      "bytes": 47310,
+      "sha256": "a6c9b7f3594595b0e4411712c68358ecefb646e81fed3623478d90a45b141072",
+      "source_sha256": "d59a454ef83115862181e88f31ec3981c19bd6b84f0a14693e3087d79eeda5e1",
+      "warning_codes": [
+        "renderer-math-source",
+        "diagram-fallback",
+        "image-unavailable"
+      ],
+      "markers_checked": 9,
+      "markers_present_in_image_alternatives": [],
+      "unaccountedMarkers": [],
+      "pages": 3
+    },
+    {
+      "source": "fallbacks.md",
+      "format": "docx",
+      "output": "fallbacks.docx",
+      "bytes": 11864,
+      "sha256": "58cb5d1445dd09c81c77713c60fa17ba1772946214b6309a5e0cfe6b3eab9a6b",
+      "source_sha256": "d59a454ef83115862181e88f31ec3981c19bd6b84f0a14693e3087d79eeda5e1",
+      "warning_codes": [
+        "diagram-fallback",
+        "image-fallback",
+        "diagram-fallback",
+        "raw-content-fallback",
+        "pandoc-writer"
+      ],
+      "markers_checked": 9,
+      "markers_present_in_image_alternatives": [],
+      "unaccountedMarkers": [],
+      "native_math_count": 0,
+      "zip_crc": "pass"
+    },
+    {
+      "source": "fallbacks.md",
+      "format": "epub",
+      "output": "fallbacks.epub",
+      "bytes": 7525,
+      "sha256": "f3af5683fc8a05ac64f184cfed311bd002a01912f676899ead946db5c0cbd627",
+      "source_sha256": "d59a454ef83115862181e88f31ec3981c19bd6b84f0a14693e3087d79eeda5e1",
+      "warning_codes": [
+        "diagram-fallback",
+        "image-fallback",
+        "diagram-fallback",
+        "raw-content-fallback",
+        "pandoc-writer"
+      ],
+      "markers_checked": 9,
+      "markers_present_in_image_alternatives": [],
+      "unaccountedMarkers": [],
+      "native_math_count": 0,
+      "zip_crc": "pass"
+    },
+    {
+      "source": "pagination.md",
+      "format": "html",
+      "output": "pagination.html",
+      "bytes": 102623,
+      "sha256": "97b005ceb265e830697b2e121ddbcb63c5ead8a5dd63168714055404021f6e35",
+      "source_sha256": "3557f7a847a1d6c8b80584a26c56f2da7ebf41d40f14e166cd1a92dc992711b4",
+      "warning_codes": [],
+      "markers_checked": 261,
+      "markers_present_in_image_alternatives": [
+        "PAGINATION-TALL-GRAPHIC-MARKER"
+      ],
+      "unaccountedMarkers": [],
+      "svg_count": 0
+    },
+    {
+      "source": "pagination.md",
+      "format": "pdf",
+      "output": "pagination.pdf",
+      "bytes": 187194,
+      "sha256": "689fd1fdf8b591b20be77aff703d73f29610ddfcad4c39d600c2ccf6150278bc",
+      "source_sha256": "3557f7a847a1d6c8b80584a26c56f2da7ebf41d40f14e166cd1a92dc992711b4",
+      "warning_codes": [],
+      "markers_checked": 261,
+      "markers_present_in_image_alternatives": [
+        "PAGINATION-TALL-GRAPHIC-MARKER"
+      ],
+      "unaccountedMarkers": [],
+      "pages": 16
+    },
+    {
+      "source": "pagination.md",
+      "format": "docx",
+      "output": "pagination.docx",
+      "bytes": 17424,
+      "sha256": "b3f003aa3794fe6e795f11768f2b48338b8ca4cd2d59cc9eee8b12afd9d1c811",
+      "source_sha256": "3557f7a847a1d6c8b80584a26c56f2da7ebf41d40f14e166cd1a92dc992711b4",
+      "warning_codes": [],
+      "markers_checked": 261,
+      "markers_present_in_image_alternatives": [
+        "PAGINATION-TALL-GRAPHIC-MARKER"
+      ],
+      "unaccountedMarkers": [],
+      "native_math_count": 0,
+      "zip_crc": "pass"
+    },
+    {
+      "source": "pagination.md",
+      "format": "epub",
+      "output": "pagination.epub",
+      "bytes": 9043,
+      "sha256": "80524f0e35dc63a8a4c753bc658b1c8b4affe23db91fdd7f68e0fe2dfa0aeb5e",
+      "source_sha256": "3557f7a847a1d6c8b80584a26c56f2da7ebf41d40f14e166cd1a92dc992711b4",
+      "warning_codes": [],
+      "markers_checked": 261,
+      "markers_present_in_image_alternatives": [
+        "PAGINATION-TALL-GRAPHIC-MARKER"
+      ],
+      "unaccountedMarkers": [],
+      "native_math_count": 0,
+      "zip_crc": "pass"
+    },
+    {
+      "source": "w30-report.md",
+      "format": "html",
+      "output": "w30-report.html",
+      "bytes": 627029,
+      "sha256": "7816f6523a4ba86675543f95b54c5e93a28d6cafa6f480cd252ffa3af700bec3",
+      "source_sha256": "1db4863436896ffa05bcfcc1d413a5fc88cd1ce73ce5f1c8cd78eb37686cbe33",
+      "warning_codes": [
+        "renderer-math-source",
+        "renderer-toc-source",
+        "renderer-footnote-source",
+        "image-unavailable"
+      ],
+      "markers_checked": 289,
+      "markers_present_in_image_alternatives": [
+        "W30-TALL-GRAPHIC-MARKER"
+      ],
+      "unaccountedMarkers": [],
+      "svg_count": 3
+    },
+    {
+      "source": "w30-report.md",
+      "format": "pdf",
+      "output": "w30-report.pdf",
+      "bytes": 656049,
+      "sha256": "da49ecac6cffeca497dde629c268b49db711910833e09dd7a4511dc2a5247241",
+      "source_sha256": "1db4863436896ffa05bcfcc1d413a5fc88cd1ce73ce5f1c8cd78eb37686cbe33",
+      "warning_codes": [
+        "renderer-math-source",
+        "renderer-toc-source",
+        "renderer-footnote-source",
+        "image-unavailable"
+      ],
+      "markers_checked": 289,
+      "markers_present_in_image_alternatives": [
+        "W30-TALL-GRAPHIC-MARKER"
+      ],
+      "unaccountedMarkers": [],
+      "pages": 54
+    },
+    {
+      "source": "w30-report.md",
+      "format": "docx",
+      "output": "w30-report.docx",
+      "bytes": 97607,
+      "sha256": "e97095761a586e4c48f1134740c61e3c707f9d8ecbc136e994d2b35c7fd76fb8",
+      "source_sha256": "1db4863436896ffa05bcfcc1d413a5fc88cd1ce73ce5f1c8cd78eb37686cbe33",
+      "warning_codes": [
+        "image-fallback",
+        "raw-content-fallback",
+        "pandoc-writer"
+      ],
+      "markers_checked": 289,
+      "markers_present_in_image_alternatives": [
+        "W30-TALL-GRAPHIC-MARKER"
+      ],
+      "unaccountedMarkers": [],
+      "native_math_count": 2,
+      "zip_crc": "pass"
+    },
+    {
+      "source": "w30-report.md",
+      "format": "epub",
+      "output": "w30-report.epub",
+      "bytes": 57997,
+      "sha256": "582675eca5ce4b76b56c499e833bb0be62cc409802e0ec13bde7bfceb991e3eb",
+      "source_sha256": "1db4863436896ffa05bcfcc1d413a5fc88cd1ce73ce5f1c8cd78eb37686cbe33",
+      "warning_codes": [
+        "image-fallback",
+        "raw-content-fallback",
+        "pandoc-writer"
+      ],
+      "markers_checked": 289,
+      "markers_present_in_image_alternatives": [
+        "W30-TALL-GRAPHIC-MARKER"
+      ],
+      "unaccountedMarkers": [],
+      "native_math_count": 2,
+      "zip_crc": "pass"
+    }
+  ],
+  "retainedLogHashes": {
+    "environment.json": "0baed19365ac7a0e75d99a1e2b0d1b80129b591e916930f84a2817140f923a6c",
+    "export-final.log": "59dd9eeab87ec9e28b9df38c898732afd30ccf2291d8c341ccd16d9287c4fc98",
+    "all-units-final.log": "60036edaa1a69a050b9d304e57f6dc1d89b3469a5016679cacac8ed51e47d572",
+    "lint-final.log": "6ba8e388a1296d83368b04f3f0f8f807039ff252c35ef1a9e56f78c34e7d358c",
+    "package-final.log": "b11d76a29413b47151138ed8a0b080bc78ac273d0fcbdc78fba56cc370b7a723",
+    "browser-full.log": "14f0401daf297ba3a975165dbe28ca1a8eaee833f1642de160d4acb031e262f7",
+    "pre-linux-failure-reproduction.log": "7cf364e1bc5d7fb819cb6cd1bc06294a13ac7bbdadc584e808a4f440c80904b2",
+    "native-all-confirm.log": "8178c962f79d7ab375c614ccc493c97a8f5e7a6b644e02f186e34dadc4eadc56",
+    "native-ui-recheck.log": "28ddd393e351516e21e4f58fd52c12a561990e5ada7ce306491895902adc57f0",
+    "closure.json": "378c30c0fb09dd8b6e1854c87a0227d75a85662417687f0c1ddfbb59f1c4524a"
+  }
+}

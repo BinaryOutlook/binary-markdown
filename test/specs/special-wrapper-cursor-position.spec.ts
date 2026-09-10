@@ -180,145 +180,59 @@ test.describe('Mermaid/Math block cursor position after editing', () => {
         expect(result.isAtLineStart).toBe(true);
     });
 
-    test('ArrowUp into mermaid block after adding lines with Enter - realistic', async ({ page }) => {
-        // Setup: mermaid block with paragraph below
+    test('ArrowUp enters the last empty Mermaid line after editing and leaving the block', async ({ page }) => {
         await page.evaluate(() => {
             window.__testApi.setMarkdown('```mermaid\ngraph TD\n    A --> B\n```\nParagraph below\n');
         });
-        await page.waitForTimeout(500);
-
-        // Step 1: Enter edit mode by clicking on the mermaid wrapper via evaluate
+        const wrapper = page.locator('.mermaid-wrapper');
+        await wrapper.click();
+        await expect(wrapper).toHaveAttribute('data-mode', 'edit');
         await page.evaluate(() => {
-            const wrapper = document.querySelector('.mermaid-wrapper');
-            if (wrapper) {
-                // Dispatch click directly
-                wrapper.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-            }
+            const code = document.querySelector('.mermaid-wrapper code') as HTMLElement;
+            code.focus();
+            const range = document.createRange();
+            range.selectNodeContents(code);
+            range.collapse(false);
+            const selection = window.getSelection()!;
+            selection.removeAllRanges();
+            selection.addRange(range);
         });
-        await page.waitForTimeout(300);
-
-        // Step 2: Move cursor to end of code content
-        await page.evaluate(() => {
-            const wrapper = document.querySelector('.mermaid-wrapper');
-            const code = wrapper?.querySelector('code');
-            if (code) {
-                code.focus();
-                const sel = window.getSelection();
-                const range = document.createRange();
-                range.selectNodeContents(code);
-                range.collapse(false);
-                sel.removeAllRanges();
-                sel.addRange(range);
-            }
-        });
-        await page.waitForTimeout(100);
-
-        // Step 3: Press Enter twice to add empty lines
         await page.keyboard.press('Enter');
-        await page.waitForTimeout(100);
         await page.keyboard.press('Enter');
-        await page.waitForTimeout(200);
 
-        // Debug: check code content
-        const afterEnter = await page.evaluate(() => {
-            const code = document.querySelector('.mermaid-wrapper code');
-            return {
-                innerHTML: code?.innerHTML,
-                childNodes: Array.from(code?.childNodes || []).map(n =>
-                    n.nodeType === 3 ? `TEXT:"${n.textContent}"` : n.nodeName
-                )
-            };
+        const expectedMarkdown = '```mermaid\ngraph TD\n    A --> B\n\n\n```\nParagraph below\n';
+        expect(await page.evaluate(() => window.__testApi.getMarkdown())).toBe(expectedMarkdown);
+
+        // Leave through the real click/focus lifecycle, not a data-mode mutation.
+        const paragraph = page.getByText('Paragraph below', { exact: true });
+        await paragraph.click();
+        await expect(wrapper).toHaveAttribute('data-mode', 'display');
+        expect(await page.evaluate(() => window.__testApi.getMarkdown())).toBe(expectedMarkdown);
+        await paragraph.evaluate(element => {
+            const range = document.createRange();
+            range.selectNodeContents(element);
+            range.collapse(true);
+            const selection = window.getSelection()!;
+            selection.removeAllRanges();
+            selection.addRange(range);
         });
-        console.log('After Enter x2:', JSON.stringify(afterEnter));
-
-        // Step 4: Exit edit mode by clicking on the paragraph below using evaluate
-        await page.evaluate(() => {
-            const wrapper = document.querySelector('.mermaid-wrapper');
-            if (wrapper) {
-                // Exit edit mode
-                wrapper.setAttribute('data-mode', 'display');
-            }
-            // Focus on paragraph below
-            const children = Array.from(document.getElementById('editor').children);
-            for (let i = children.length - 1; i >= 0; i--) {
-                if (children[i].tagName === 'P' && children[i].textContent.trim()) {
-                    const range = document.createRange();
-                    range.selectNodeContents(children[i]);
-                    range.collapse(true);
-                    const sel = window.getSelection();
-                    sel.removeAllRanges();
-                    sel.addRange(range);
-                    break;
-                }
-            }
-        });
-        await page.waitForTimeout(300);
-
-        // Debug: check state before ArrowUp
-        const beforeArrowUp = await page.evaluate(() => {
-            const wrapper = document.querySelector('.mermaid-wrapper');
-            const code = wrapper?.querySelector('code');
-            const sel = window.getSelection();
-            return {
-                mode: wrapper?.getAttribute('data-mode'),
-                codeHTML: code?.innerHTML,
-                childNodes: Array.from(code?.childNodes || []).map(n =>
-                    n.nodeType === 3 ? `TEXT:"${n.textContent}"` : n.nodeName
-                ),
-                cursorIn: sel?.anchorNode?.parentElement?.tagName
-            };
-        });
-        console.log('Before ArrowUp:', JSON.stringify(beforeArrowUp));
-
-        // Step 5: Press ArrowUp to enter the mermaid block from below
         await page.keyboard.press('ArrowUp');
-        await page.waitForTimeout(500);
+        await expect(wrapper).toHaveAttribute('data-mode', 'edit');
 
-        // Step 6: Check cursor position
-        const cursorInfo = await page.evaluate(() => {
-            const sel = window.getSelection();
-            if (!sel || !sel.rangeCount) return { error: 'no selection' };
-
-            const range = sel.getRangeAt(0);
-            const anchorNode = sel.anchorNode;
-
-            let codeEl = anchorNode;
-            while (codeEl && codeEl.tagName !== 'CODE') {
-                codeEl = codeEl.parentElement;
-            }
-
-            if (!codeEl) {
-                return {
-                    error: 'cursor not in code element',
-                    anchorNodeName: anchorNode?.nodeName,
-                    anchorNodeText: anchorNode?.textContent?.substring(0, 50),
-                    anchorOffset: sel.anchorOffset,
-                    parentTag: anchorNode?.parentElement?.tagName,
-                    parentClass: anchorNode?.parentElement?.className
-                };
-            }
-
-            const cursorRange = document.createRange();
-            cursorRange.selectNodeContents(codeEl);
-            cursorRange.setEnd(range.startContainer, range.startOffset);
-            const textBeforeCursor = cursorRange.toString();
-
-            const lastNewline = textBeforeCursor.lastIndexOf('\n');
-            const posInLine = lastNewline === -1 ? textBeforeCursor.length : textBeforeCursor.length - lastNewline - 1;
-
-            return {
-                textBeforeCursor,
-                positionInLine: posInLine,
-                isAtLineStart: posInLine === 0,
-                codeHTML: codeEl.innerHTML,
-                childNodes: Array.from(codeEl.childNodes).map(n =>
-                    n.nodeType === 3 ? `TEXT:"${n.textContent}"` : n.nodeName
-                )
-            };
+        const cursor = await page.evaluate(() => {
+            const code = document.querySelector('.mermaid-wrapper code')!;
+            const selection = window.getSelection()!;
+            if (!code.contains(selection.anchorNode)) throw new Error('Caret is outside Mermaid code');
+            const prefix = document.createRange();
+            prefix.selectNodeContents(code);
+            prefix.setEnd(selection.anchorNode!, selection.anchorOffset);
+            const text = (node: Node): string => node.nodeName === 'BR' ? '\n'
+                : node.nodeType === Node.TEXT_NODE ? node.textContent || ''
+                : Array.from(node.childNodes).map(text).join('');
+            return { prefix: text(prefix.cloneContents()), markdown: window.__testApi.getMarkdown() };
         });
-        console.log('Cursor info after ArrowUp:', JSON.stringify(cursorInfo));
-
-        expect(cursorInfo.error).toBeUndefined();
-        expect(cursorInfo.isAtLineStart).toBe(true);
+        // Check both row and column: column zero on an earlier row is incorrect.
+        expect(cursor.prefix).toBe('graph TD\n    A --> B\n\n');
+        expect(cursor.markdown).toBe(expectedMarkdown);
     });
 });
