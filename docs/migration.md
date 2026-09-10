@@ -1,6 +1,12 @@
 # Moving to Binary Markdown
 
-Binary Markdown 0.1.0 uses a new installation identity. It does not overwrite either of the earlier packages:
+## Updating 0.1.0 to 0.2.0
+
+Version 0.2.0 keeps `BinaryOutlook.binary-markdown`, its command/settings IDs and outline storage keys. Installing the new VSIX updates the existing extension; no preference migration is required. Reopen existing editor tabs or reload VS Code after installation. The new icon and license do not create a new extension. To return to 0.1.0, install that published VSIX.
+
+## Moving from earlier Any Markdown IDs
+
+Binary Markdown 0.1.0 introduced a new installation identity. It does not overwrite either of the earlier packages:
 
 | Package | Extension ID |
 | --- | --- |

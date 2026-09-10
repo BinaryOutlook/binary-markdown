@@ -4,11 +4,25 @@ An open-source visual Markdown editor for VS Code, independently maintained by B
 
 Binary Markdown builds on [Any Markdown by raggbal and contributors](https://github.com/raggbal/any-markdown), licensed under MIT. The visual editor and most existing features come from that project. BinaryOutlook maintains this fork's changes, releases, and support. See [Acknowledgments](ACKNOWLEDGMENTS.md) and the [changelog](CHANGELOG.md) for provenance.
 
-## Install a test build
+## Open source, releases and support
 
-Version **0.1.0** is the first Binary Markdown [GitHub prerelease](https://github.com/BinaryOutlook/any-markdown/releases/tag/v0.1.0). Marketplace and Open VSX publication are pending.
+Binary Markdown is proudly open source. Official releases are published periodically, when a set of changes has completed release validation; we do not promise a fixed release schedule.
 
-1. Download [binary-markdown-0.1.0.vsix](https://github.com/BinaryOutlook/any-markdown/releases/download/v0.1.0/binary-markdown-0.1.0.vsix), or build it from source below. A SHA-256 checksum is included on the release page.
+You are welcome to build, study, and modify the extension between releases. For development builds, we recommend starting from `main`, where changes are integrated. Other branches may contain incomplete experiments. An unreleased build has not necessarily undergone the same validation as an official release.
+
+Bug reports from development builds are welcome—even when the affected commit is not the latest release or the current tip of `main`. Please include the full commit ID, whether you made local changes, your environment, and clear reproduction steps. This helps us check out the same revision and investigate.
+
+We will make a reasonable effort to reproduce and diagnose reported problems. We may ask you to test a newer commit, and fixes will normally land in current development rather than being backported to every historical revision.
+
+Access to the source is central to this project. Building your own version is an intended way to use Binary Markdown.
+
+Read the [build guide](docs/building.md), [release and support policy](docs/releases-and-support.md), and [roadmap](docs/roadmap.md).
+
+## Install
+
+Download a version from [GitHub Releases](https://github.com/BinaryOutlook/binary-markdown/releases). Check its release notes for included features; the **0.1.0 prerelease** predates export. Marketplace and Open VSX publication remain future work.
+
+1. Download the `.vsix` and its SHA-256 checksum from the chosen release, or [build from source](docs/building.md).
 2. In VS Code, open **Extensions**, select **… → Install from VSIX…**, and choose the file.
 3. Open a Markdown document and select **Reopen Editor With… → Binary Markdown**.
 
@@ -16,7 +30,7 @@ The extension is optional: installing it does not change your default Markdown e
 
 The extension ID is `BinaryOutlook.binary-markdown`. It has separate commands, settings, and editor registration from Any Markdown. Read the [migration guide](docs/migration.md) if you used an earlier test build.
 
-The same VSIX can be installed in editors that support VS Code extensions, subject to their API compatibility. Current manual validation covers VS Code **1.136.0 on macOS** before the naming migration; the renamed build and other environments need further manual testing.
+The package declares VS Code 1.85.0 or later. Validation targets local desktop VS Code on macOS ARM64 and Ubuntu x86-64; see the [candidate validation record](docs/validation/0.2.0.md) for actual results. Other editors and platforms need their own compatibility checks.
 
 ## Features
 
@@ -35,6 +49,8 @@ Changes developed in this fork:
 - Outline visibility can be remembered per file or globally, with a configurable initial state.
 - Opening the outline does not mark the Markdown document as edited.
 - Independent Binary Markdown names and identifiers throughout the extension and desktop sources.
+- Experimental HTML, PDF, DOCX and EPUB export, with local conversion and visible progress.
+- A source-stamped VSIX and **Copy Build Information** command for reproducible bug reports.
 
 The first two changes were also proposed upstream as [PR #8](https://github.com/raggbal/any-markdown/pull/8) and [PR #9](https://github.com/raggbal/any-markdown/pull/9). This fork's release decisions are independent of those PRs.
 
@@ -77,11 +93,11 @@ Search for **Binary Markdown** in the Command Palette. Commands include opening 
 | Toggle source mode | `Cmd+.` | `Ctrl+.` |
 | Open as text | `Cmd+Shift+.` | `Ctrl+Shift+.` |
 
-The [editor guide](docs/editor-guide.md) covers formatting, keyboard operations, and images. The implementation branch also adds the experimental export workflow described below.
+The [editor guide](docs/editor-guide.md) covers formatting, keyboard operations, and images. Export commands and **Copy Build Information** are also available here.
 
-## Experimental export — unreleased
+## Experimental export
 
-The `export-subsystem` branch adds experimental **HTML, PDF, Word (.docx), and EPUB** export in **local desktop VS Code on macOS and Linux**. Native installed-package checks cover macOS ARM64 and Ubuntu x86-64; human review and release remain pending. The existing `v0.1.0` release download above predates this feature. Build the implementation branch to evaluate it. See the [implementation and validation checklist](docs/export-validation.md) for the exact tested environments and declared limitations.
+Export supports **HTML, PDF, Word (.docx), and EPUB** in **local desktop VS Code on macOS and Linux**. HTML/PDF follow supported editor rendering; DOCX/EPUB prioritize editable content and structure. See [candidate validation](docs/validation/0.2.0.md) and the [export validation history](docs/export-validation.md) for tested systems and limitations.
 
 Save the named Markdown file, then select the sharing-arrow button immediately to the right of the VS Code-logo toolbar button. Choose a format from its dropdown. Unsaved work produces a save-and-retry message; export does not save automatically. The job shows its actual stage, supports cancellation, and reports the saved path and any fallback warnings.
 
@@ -106,37 +122,24 @@ Files are saved beside the Markdown source with the same filename stem. An occup
 
 Supported resources retain source resolution; missing or unsupported content receives a visible fallback and warning summary. PDF uses simple block fitting, so blank regions are acceptable. Advanced pagination, templates, compression, custom destinations and unsaved export remain future work. See [export help](media/export-help.md) for the initial format limitations and [the subsystem outline](docs/export-subsystem.md) for the agreed implementation scope.
 
-For this unreleased subsystem, build the `export-subsystem` branch rather than the existing release tag:
-
-```sh
-git clone --branch export-subsystem https://github.com/BinaryOutlook/binary-markdown.git binary-markdown-export
-cd binary-markdown-export
-npm ci
-npm run package
-```
-
-See the [validation record](docs/export-validation.md) for installed VS Code checks, workload results and the current and historical regression records.
 
 ## Build and contribute
 
-To build the source used for this release:
+Start development builds from `main`, select the Node version in `.node-version`, then run:
 
 ```sh
-git clone --branch v0.1.0 https://github.com/BinaryOutlook/any-markdown binary-markdown
+git clone https://github.com/BinaryOutlook/binary-markdown.git
 cd binary-markdown
 npm ci
-npm run compile
 npm run package
 ```
 
-The repository currently retains its original GitHub path; the project and package name are Binary Markdown. `npm run package` compiles the extension and writes `dist/binary-markdown-0.1.0.vsix`. No Marketplace credentials are needed to build or share that file. The packaging tool version is pinned in the lockfile.
+The package command compiles the extension and writes `dist/<name>-<version>.vsix`, a SHA-256 checksum, and build information. It links installed documentation to the source commit. See [building](docs/building.md) for historical revisions, isolated installation and verification, and [CONTRIBUTING.md](CONTRIBUTING.md) for tests and focused PRs.
 
-Run `npm test` for the automated suites. See [CONTRIBUTING.md](CONTRIBUTING.md) for focused tests and [the manual fixture](docs/copy-paste-test.md) for the copy and outline scenarios.
-
-Bug reports, documentation, translations, compatibility testing, and focused PRs are welcome in [this fork's issue tracker](https://github.com/BinaryOutlook/any-markdown/issues). Avoid including personal paths, usernames, or private documents in reports.
+Bug reports, translations, accessibility work and compatibility testing are welcome in [this fork's issue tracker](https://github.com/BinaryOutlook/binary-markdown/issues). Reports from identifiable older development commits are welcome too.
 
 ## Project history and license
 
 The [reference archive](archive/README.md) preserves superseded README, website, screenshots, and upstream release notes for historical reference. Archived instructions describe the original project and should not be used to install this fork.
 
-For the 0.2.0 transition, Binary Markdown is licensed under [GNU AGPL version 3 or later](LICENSE) (`AGPL-3.0-or-later`). Earlier MIT releases retain their original terms. The [retained MIT notice](LICENSES/AnyMarkdown-MIT.txt) covers inherited upstream code and prior MIT contributions; third-party components retain their own licences. See [NOTICE](NOTICE) for scope and exceptions. Project and dependency licence notices are included in packaged builds. The Electron desktop sources are retained under the Binary Markdown name; desktop installers and their compatibility are a separate release effort.
+For the 0.2.0 transition, Binary Markdown is licensed under [GNU AGPL version 3 or later](LICENSE) (`AGPL-3.0-or-later`). Earlier MIT releases retain their original terms. The [retained MIT notice](LICENSES/AnyMarkdown-MIT.txt) covers inherited upstream code and prior MIT contributions; third-party components retain their own licences. See [NOTICE](NOTICE) and the [licensing guide](docs/licensing.md) for scope, retained grants and matching source. Project and dependency licence notices are included in packaged builds. The Electron desktop sources are retained under the Binary Markdown name; desktop installers and their compatibility are a separate release effort.
