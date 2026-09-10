@@ -115,7 +115,8 @@
           "ext": "md",
           "name": "Markdown Document"
         }
-      ]
+      ],
+      "icon": "build/icon.ico"
     },
     "linux": {
       "icon": "build/icon.png",
