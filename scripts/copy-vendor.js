@@ -19,7 +19,6 @@ fs.mkdirSync(path.join(VENDOR, 'fonts'), { recursive: true });
 const files = [
     { src: 'turndown/dist/turndown.js', dest: 'turndown.js' },
     { src: 'turndown-plugin-gfm/dist/turndown-plugin-gfm.js', dest: 'turndown-plugin-gfm.js' },
-    { src: 'mermaid/dist/mermaid.min.js', dest: 'mermaid.min.js' },
     { src: 'katex/dist/katex.min.js', dest: 'katex.min.js' },
     { src: 'katex/dist/katex.min.css', dest: 'katex.min.css' },
 ];
@@ -31,6 +30,8 @@ for (const { src, dest } of files) {
     const size = (fs.statSync(destPath).size / 1024).toFixed(1);
     console.log(`  ✓ ${dest} (${size} KB)`);
 }
+
+require('./bundle-mermaid')(ROOT, VENDOR);
 
 // KaTeX WOFF2 フォントのみコピー (woff/ttf は不要 — 全モダンブラウザが woff2 対応)
 const katexFontsDir = path.join(NODE_MODULES, 'katex/dist/fonts');
@@ -57,7 +58,6 @@ console.log('  ✓ katex.min.css (stripped woff/ttf references)');
 const licenses = [
     { pkg: 'turndown', dest: 'LICENSE-turndown' },
     { pkg: 'turndown-plugin-gfm', dest: 'LICENSE-turndown-plugin-gfm' },
-    { pkg: 'mermaid', dest: 'LICENSE-mermaid' },
     { pkg: 'katex', dest: 'LICENSE-katex' },
 ];
 for (const { pkg, dest } of licenses) {

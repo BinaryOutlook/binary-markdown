@@ -309,6 +309,7 @@
     "@typescript-eslint/eslint-plugin": "^6.13.0",
     "@typescript-eslint/parser": "^6.13.0",
     "@vscode/vsce": "3.7.1",
+    "esbuild": "0.28.2",
     "eslint": "^8.55.0",
     "jsdom": "^27.4.0",
     "serve": "^14.2.5",
@@ -316,7 +317,7 @@
   },
   "dependencies": {
     "katex": "^0.16.9",
-    "mermaid": "^10.6.0",
+    "mermaid": "10.9.8",
     "turndown": "^7.2.2",
     "turndown-plugin-gfm": "^1.0.2"
   },
