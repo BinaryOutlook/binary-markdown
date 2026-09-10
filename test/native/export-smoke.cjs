@@ -162,6 +162,7 @@ function harness(settings, owner) {
             return await callback(matches[0]);
         } finally { await browser.close(); }
     };
+    let lastEditorFrames = [];
     const connect = async () => {
         const visibleUrl = await workbench(async page => {
             const visible = await page.locator('iframe.webview').evaluateAll(frames => frames.filter(frame => {
@@ -201,22 +202,28 @@ function harness(settings, owner) {
         try {
             await send('Runtime.enable');
             let contextId;
+            lastEditorFrames = [];
             for (const context of contexts.filter(value => value.auxData?.isDefault)) {
-                // VS Code keeps the previous active document while a replacement
-                // initializes in #pending-frame. Its scripts can be ready before
-                // it is visible; never send input to that pending document.
-                const found = await send('Runtime.evaluate', { expression: '!!document.querySelector("#editor") && !!document.querySelector(\'#exportButton[data-export-ready="true"]\')', contextId: context.id, returnByValue: true });
-                if (!found.result.value) continue;
-                // Electron 25 does not expose window.frameElement here. CDP
-                // identifies the owning iframe across that JavaScript boundary.
-                const ownerNode = await send('DOM.getFrameOwner', { frameId: context.auxData.frameId });
-                const { node } = await send('DOM.describeNode', { backendNodeId: ownerNode.backendNodeId });
-                const attributes = node.attributes || [];
-                for (let index = 0; index < attributes.length; index += 2) {
-                    if (attributes[index] === 'id' && attributes[index + 1] === 'active-frame') {
-                        assert.equal(contextId, undefined, 'Only one active editor context is permitted');
-                        contextId = context.id;
+                const found = await send('Runtime.evaluate', {
+                    expression: `({ editor:!!document.querySelector('#editor'), ready:document.getElementById('exportButton')?.dataset.exportReady, label:document.getElementById('exportButton')?.getAttribute('aria-label'), mode:document.documentElement.dataset.toolbarMode, loading:document.readyState, childFrames:Array.from(document.querySelectorAll('iframe')).map(frame=>frame.id) })`,
+                    contextId: context.id, returnByValue: true
+                });
+                let frame = 'outer';
+                if (context.auxData.frameId !== target.id) {
+                    // CDP identifies the owner even when older Electron hides
+                    // window.frameElement across the JavaScript boundary.
+                    const ownerNode = await send('DOM.getFrameOwner', { frameId: context.auxData.frameId });
+                    const { node } = await send('DOM.describeNode', { backendNodeId: ownerNode.backendNodeId });
+                    const attributes = node.attributes || [];
+                    for (let index = 0; index < attributes.length; index += 2) {
+                        if (attributes[index] === 'id') frame = attributes[index + 1];
                     }
+                }
+                lastEditorFrames.push({ frame, ...found.result.value });
+                // A pending document can run its scripts before it is visible.
+                if (frame === 'active-frame' && found.result.value?.editor && found.result.value.ready === 'true') {
+                    assert.equal(contextId, undefined, 'Only one active editor context is permitted');
+                    contextId = context.id;
                 }
             }
             assert.ok(contextId, 'The active editor context must be ready');
@@ -266,7 +273,7 @@ function harness(settings, owner) {
                 frames.push(await frame.evaluate(`({url:location.href,ready:document.readyState,editor:!!document.getElementById('editor'),exportReady:document.getElementById('exportButton')?.dataset.exportReady,mode:document.documentElement.dataset.toolbarMode,focused:document.hasFocus(),label:document.getElementById('exportButton')?.getAttribute('aria-label'),active:document.activeElement?.id})`));
             } catch (error) { frames.push({ error: error.message }); }
         }
-        return frames;
+        return { workbench: frames, editorFrames: lastEditorFrames };
     });
     return { until, driver, connect, open, reset, terminal, output, exportFile, workbench, sourceMode, diagnose };
 }
