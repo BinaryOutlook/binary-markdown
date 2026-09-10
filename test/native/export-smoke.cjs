@@ -150,7 +150,10 @@ function harness(settings, owner) {
     };
     const workbench = async callback => {
         receipt(owner);
-        const browser = await require('playwright-core').chromium.connectOverCDP('http://127.0.0.1:' + owner.port);
+        // Older Electron rejects Browser.setDownloadBehavior. Preserve the
+        // installed workbench's defaults, including real focus, when attaching.
+        // This dev-only alias leaves the shipped PDF controller unchanged.
+        const browser = await require('native-playwright').chromium.connectOverCDP('http://127.0.0.1:' + owner.port, { noDefaults: true });
         try {
             const pages = browser.contexts().flatMap(context => context.pages());
             const matches = [];

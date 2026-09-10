@@ -319,6 +319,7 @@
     "esbuild": "0.28.2",
     "eslint": "^8.55.0",
     "jsdom": "^27.4.0",
+    "native-playwright": "npm:playwright-core@1.63.0",
     "serve": "^14.2.5",
     "typescript": "^5.3.0"
   },
