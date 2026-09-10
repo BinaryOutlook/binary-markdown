@@ -71,7 +71,7 @@ test('packaged VSIX contains an isolated export runtime, UI, guidance and locali
     const manifest = JSON.parse(entries.get('extension/package.json').toString('utf8'));
     const rootManifest = require('../../package.json');
     assert.equal(manifest.version, rootManifest.version);
-    assert.equal(manifest.license, 'AGPL-3.0-only');
+    assert.equal(manifest.license, 'AGPL-3.0-or-later');
     assert.match(entries.get('extension/LICENSE.txt').toString('utf8'), /GNU AFFERO GENERAL PUBLIC LICENSE/);
     assert.match(entries.get('extension/LICENSES/AnyMarkdown-MIT.txt').toString('utf8'), /Permission is hereby granted/);
     for (const name of ['LICENSE', 'NOTICE', 'LICENSES/AnyMarkdown-MIT.txt']) {
