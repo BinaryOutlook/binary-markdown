@@ -11,7 +11,7 @@ case "$(uname -s)-$(uname -m)" in
   Darwin-x86_64) platform=darwin; pandoc_asset=x86_64-macOS.zip; pandoc_sha=922e35c0210d7ca20ee9327811361d6d7f0ef0adda089e0e74cb3756c3d713f9 ;;
   *) echo 'Unsupported validation runner' >&2; exit 1 ;;
 esac
-curl --fail --location --retry 3 "https://github.com/jgm/pandoc/releases/download/3.8.3/pandoc-3.8.3-$pandoc_asset" -o "$validation_tools/pandoc-download"
+curl --fail --location --retry 3 --retry-all-errors "https://github.com/jgm/pandoc/releases/download/3.8.3/pandoc-3.8.3-$pandoc_asset" -o "$validation_tools/pandoc-download"
 printf '%s  %s\n' "$pandoc_sha" "$validation_tools/pandoc-download" | shasum -a 256 --check
 if [[ "$platform" == linux-* ]]; then
   tar -xzf "$validation_tools/pandoc-download" -C "$validation_tools"
@@ -38,7 +38,7 @@ pdftotext -v
 # The minimum version is an extra Linux lane; stable exercises today's release.
 validation_code_version="${VALIDATION_CODE_VERSION:-latest}"
 case "$validation_code_version" in latest|1.85.0) ;; *) echo 'Unexpected VS Code validation version' >&2; exit 1 ;; esac
-curl --fail --location --retry 3 "https://update.code.visualstudio.com/$validation_code_version/$platform/stable" -o "$validation_tools/vscode-download"
+curl --fail --location --retry 3 --retry-all-errors "https://update.code.visualstudio.com/$validation_code_version/$platform/stable" -o "$validation_tools/vscode-download"
 shasum -a 256 "$validation_tools/vscode-download"
 mkdir "$validation_tools/vscode"
 if [[ "$platform" == linux-* ]]; then

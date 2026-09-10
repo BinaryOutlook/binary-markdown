@@ -45,8 +45,20 @@ try {
     const processes = execFileSync('ps', ['-ax', '-o', 'pid=,command='], { encoding: 'utf8' });
     for (const line of processes.split('\n')) {
         const match = line.trim().match(/^(\d+)\s+(.*)$/);
-        if (match && ownedArgument.test(match[2])) {
-            try { process.kill(Number(match[1]), 'SIGTERM'); } catch (error) { if (error.code !== 'ESRCH') throw error; }
+        if (match && ownedArgument.test(match[2]) && match[2].includes('--extensionDevelopmentPath=' + owner.driver)) {
+            const pid = Number(match[1]);
+            try { process.kill(pid, 'SIGTERM'); } catch (error) { if (error.code !== 'ESRCH') throw error; }
+            const delay = new Int32Array(new SharedArrayBuffer(4));
+            const deadline = Date.now() + 5000;
+            while (Date.now() < deadline) {
+                try { process.kill(pid, 0); } catch (error) { if (error.code === 'ESRCH') break; throw error; }
+                Atomics.wait(delay, 0, 0, 100);
+            }
+            // Dirty fixtures can prevent graceful exit. Re-check identity before
+            // terminating only this test process; keep its files and evidence.
+            let remaining = '';
+            try { remaining = execFileSync('ps', ['-p', String(pid), '-o', 'command='], { encoding: 'utf8' }); } catch { /* Exited. */ }
+            if (ownedArgument.test(remaining) && remaining.includes('--extensionDevelopmentPath=' + owner.driver)) process.kill(pid, 'SIGKILL');
         }
     }
 }

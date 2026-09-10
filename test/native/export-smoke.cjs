@@ -590,7 +590,14 @@ async function main() {
         return;
     }
     if (settings.command === 'check') {
-        const response = await harness(settings, owner).driver({ action: 'inspect' });
+        const h = harness(settings, owner);
+        // CLI launch returns before the isolated extension host writes its first
+        // receipt. Wait for that observable event while preserving every guard.
+        await h.until(() => {
+            try { return receipt(owner); }
+            catch (error) { if (error.code === 'ENOENT' || error instanceof SyntaxError) return false; throw error; }
+        });
+        const response = await h.driver({ action: 'inspect' });
         console.log(JSON.stringify({ ready: true, frozenInputs: verifyInputs(owner.workspace), harness: harnessIdentity(), ...response }, null, 2));
         return;
     }

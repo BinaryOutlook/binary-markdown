@@ -110,14 +110,17 @@ jobs:
           else
             node .github/scripts/native-check.cjs | tee ci-results/native-tests.txt
           fi
+      - name: Collect browser traces
+        if: always()
+        run: |
+          mkdir -p ci-results
+          if [[ -d test-results ]]; then cp -R test-results ci-results/browser-traces; fi
       - name: Retain validation evidence
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: validation-${{ matrix.label }}-${{ needs.package.outputs.source }}-${{ github.run_attempt }}
-          path: |
-            ci-results/**
-            test-results/**
+          path: ci-results
           if-no-files-found: warn
           retention-days: 7
 
