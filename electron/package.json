@@ -1,12 +1,12 @@
 {
   "name": "binary-markdown-desktop",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Binary Markdown: an open-source visual Markdown editor for desktop.",
   "main": "out/main.js",
   "author": {
     "name": "BinaryOutlook"
   },
-  "homepage": "https://github.com/BinaryOutlook/any-markdown",
+  "homepage": "https://github.com/BinaryOutlook/binary-markdown",
   "license": "AGPL-3.0-or-later",
   "scripts": {
     "compile": "cd .. && npm run compile && cd electron && tsc -p . && node ../scripts/copy-vendor.js",
