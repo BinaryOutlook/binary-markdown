@@ -1,14 +1,14 @@
 {
   "status": "Automated integration evidence; maintainer acceptance and publication are separate.",
   "observed_utc_date": "2026-09-10",
-  "source_commit": "6e431dbe0528c6da4d2410e1244727f2d9ecc2ec",
-  "vsix_sha256": "a7f94dea987067f6c13e75c386f3dac580ff8c6027bc6ae1df351f357117e207",
+  "source_commit": "427e3a5e0bb908f0bb11af06ed411100cb68293a",
+  "vsix_sha256": "79543cde27d6b58cb57c05fcdb41106c0be2bd67afaf0c84618b79dee422dc4c",
   "version": "0.2.0",
   "license": "AGPL-3.0-or-later",
   "platforms": [
     {
       "platform": "macOS ARM64",
-      "harness_source": "0619c384680568b5ef29afd33438b3f9d5cd8c89",
+      "harness_source": "427e3a5e0bb908f0bb11af06ed411100cb68293a",
       "harness": {
         "platform": "darwin",
         "arch": "arm64",
@@ -25,7 +25,9 @@
         "remoteName": null,
         "trusted": true
       },
-      "native_receipt_sha256": "563b1e2108e058c1e542ed5be631f1f3f0fd0dd7ae232146f2a77b3ebb6980e8",
+      "native_receipt_sha256": "83f68f6b9e5c62fb9a4b7198d1022337049f8d834272245f4e542b03ff6d5ee9",
+      "unit_checks_passed": 113,
+      "unit_checks_skipped": 0,
       "native_scenarios": 44,
       "frozen_inputs": 7,
       "frozen_inputs_unchanged": true,
@@ -67,7 +69,7 @@
           "format": "pdf",
           "workspace_source_matches_frozen": true,
           "bytes": 214616,
-          "sha256": "5191e7710aa96931cbb9c48c113e8860f0e395d46efd766f8c25d0465e861a5e",
+          "sha256": "60ec9d7718add06e36e5b8c6a08ce9bc1bab2f44d7b08149342953b5867e739f",
           "warning_codes": [
             "renderer-math-source",
             "renderer-toc-source",
@@ -103,7 +105,7 @@
           "format": "html",
           "workspace_source_matches_frozen": true,
           "bytes": 37737,
-          "sha256": "d7a41cd572b821fa510a9ed8980c88c8295951b296a07c094b74630f37c3e4b6",
+          "sha256": "7c0177be457814ff9068b7fb41dd91c0056eca1cb1e48cb5458111ca2b6393f1",
           "warning_codes": [
             "renderer-math-source",
             "diagram-fallback",
@@ -115,8 +117,8 @@
           "source": "fallbacks.md",
           "format": "pdf",
           "workspace_source_matches_frozen": true,
-          "bytes": 115219,
-          "sha256": "43bd349f696fee65223cda2a0f2794bed31d518a9c5a7fff0dff933303e73a63",
+          "bytes": 115218,
+          "sha256": "377cf0979f078334dff6f4d19d566a148facacbc25f60747e005e83a288f2e1b",
           "warning_codes": [
             "renderer-math-source",
             "diagram-fallback",
@@ -169,7 +171,7 @@
           "format": "pdf",
           "workspace_source_matches_frozen": true,
           "bytes": 255468,
-          "sha256": "f9cf1071b64b7160a17e0b7da73723ea519512332caebad069dc476368c48658",
+          "sha256": "38c4c297875fba48acb4c656762b6c5a8776615bba5849905763766941d494e8",
           "warning_codes": [],
           "pages": 16,
           "markers_checked": 261
@@ -197,7 +199,7 @@
           "format": "html",
           "workspace_source_matches_frozen": true,
           "bytes": 627235,
-          "sha256": "703579f11a792ed04b0dcea956dea3f96850426d2a025fc02f67c601b97c822a",
+          "sha256": "861fcaea5726637cd62dff2f928be64d231e1dbe7763f04700e8eddd60bb6b71",
           "warning_codes": [
             "renderer-math-source",
             "renderer-toc-source",
@@ -210,8 +212,8 @@
           "source": "w30-report.md",
           "format": "pdf",
           "workspace_source_matches_frozen": true,
-          "bytes": 844288,
-          "sha256": "bccab3ea5833d64907ff7e0115de87d229af22b9d8f865d42e6fe3b08245a238",
+          "bytes": 844277,
+          "sha256": "79847d6f300413afd02fef7f3261244599d3bbf44fc4a26a28810efa93e7cbb7",
           "warning_codes": [
             "renderer-math-source",
             "renderer-toc-source",
@@ -251,7 +253,7 @@
     },
     {
       "platform": "Ubuntu x86-64",
-      "harness_source": "6e431dbe0528c6da4d2410e1244727f2d9ecc2ec",
+      "harness_source": "427e3a5e0bb908f0bb11af06ed411100cb68293a",
       "harness": {
         "platform": "linux",
         "arch": "x64",
@@ -268,7 +270,9 @@
         "remoteName": null,
         "trusted": true
       },
-      "native_receipt_sha256": "51c956b4250090ac26ab3ce1d59ca00b751f63f565b4fa1ca78fea44953c6041",
+      "native_receipt_sha256": "8407c33920e177e55cc7ff5a52d7cd5d7501327f7af8636bdf38ac578665cd71",
+      "unit_checks_passed": 113,
+      "unit_checks_skipped": 0,
       "native_scenarios": 44,
       "frozen_inputs": 7,
       "frozen_inputs_unchanged": true,
@@ -310,7 +314,7 @@
           "format": "pdf",
           "workspace_source_matches_frozen": true,
           "bytes": 116209,
-          "sha256": "28d495a51624065b28ab6f86df1c02b3a8d430fe46a558dbb9c46e0ef674c206",
+          "sha256": "bffc68caa2aa0935f7d4e4d433f64990c7edcb56485f9d304abe9be9a1c7a504",
           "warning_codes": [
             "renderer-math-source",
             "renderer-toc-source",
@@ -346,7 +350,7 @@
           "format": "html",
           "workspace_source_matches_frozen": true,
           "bytes": 37740,
-          "sha256": "4349c048caf4bcefb1b410c2a5feeb857445749a306d0150040f150131deacd7",
+          "sha256": "60d42712a50e4b87b78a285e83bdd09838ad8afc798c7654dc89545ff6abbf6f",
           "warning_codes": [
             "renderer-math-source",
             "diagram-fallback",
@@ -358,8 +362,8 @@
           "source": "fallbacks.md",
           "format": "pdf",
           "workspace_source_matches_frozen": true,
-          "bytes": 47720,
-          "sha256": "0f78c3f9f97703433ae2f8e8590cacfdf3040fd4323fd2912c6d1dc2f2632241",
+          "bytes": 47716,
+          "sha256": "caf45a670a4fcb48ff3c90e7741e521d5f18774c457e68a0d175e8abc8ddbb7e",
           "warning_codes": [
             "renderer-math-source",
             "diagram-fallback",
@@ -412,7 +416,7 @@
           "format": "pdf",
           "workspace_source_matches_frozen": true,
           "bytes": 187194,
-          "sha256": "32e024e5306b828c678811051e06b397ee9201479fcc5253126fec621be31c2c",
+          "sha256": "3def2798dc95ce1d0202793d11761bb3a565dedfbc0d386fb894d858845f6929",
           "warning_codes": [],
           "pages": 16,
           "markers_checked": 261
@@ -440,7 +444,7 @@
           "format": "html",
           "workspace_source_matches_frozen": true,
           "bytes": 627044,
-          "sha256": "54645b7dac1a473f3592b71bdde4b0a98ebda33641bc22818a0b82bbd72975ca",
+          "sha256": "1e6b0b150802c48c2f5617714c0870707ec5302879ff9147ec9659714c7fbaa8",
           "warning_codes": [
             "renderer-math-source",
             "renderer-toc-source",
@@ -453,8 +457,8 @@
           "source": "w30-report.md",
           "format": "pdf",
           "workspace_source_matches_frozen": true,
-          "bytes": 656106,
-          "sha256": "d0c7510e34355b9aa73ed984e4626dd888590e23e945c4e0fc0af1486ae28763",
+          "bytes": 656115,
+          "sha256": "165384a26ee67f588096c39e624ec211aea713ec590d120f6db186582bbc2332",
           "warning_codes": [
             "renderer-math-source",
             "renderer-toc-source",
