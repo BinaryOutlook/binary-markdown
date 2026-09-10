@@ -465,12 +465,18 @@ async function appearanceCases(h, owner, record) {
     (await h.open(file)).close();
     let lastAppearanceObservation;
     const appearanceState = `({mode:document.documentElement.dataset.toolbarMode,theme:document.documentElement.dataset.theme,label:document.getElementById('exportButton')?.getAttribute('aria-label'),ready:document.getElementById('exportButton')?.dataset.exportReady,active:document.activeElement?.id,format:document.activeElement?.dataset.exportFormat,menuHidden:document.getElementById('exportMenu')?.hidden,focused:document.hasFocus()})`;
-    const matchingEditor = expression => h.until(async () => {
+    const matchingEditor = async expression => {
+        // Native converter windows can leave VS Code in the background on
+        // macOS. Restore the user's foreground-window precondition before
+        // waiting for the replacement webview, not only before sending keys.
+        await h.workbench(page => page.bringToFront());
+        return h.until(async () => {
         let connection;
         try { connection = await h.connect(); lastAppearanceObservation = await connection.evaluate(appearanceState); if (await connection.evaluate(expression)) return connection; }
         catch (error) { lastAppearanceObservation = { connectionError: error.message }; }
         connection?.close();
-    }, 'appearance rebuild: ' + expression, () => lastAppearanceObservation);
+        }, 'appearance rebuild: ' + expression, () => lastAppearanceObservation);
+    };
     for (let cycle = 1; cycle <= 3; cycle++) {
         for (const [mode, language, label] of [['full', 'zh-CN', '导出'], ['simple', 'en', 'Export']]) {
             await h.driver({ action: 'config', key: 'toolbarMode', value: mode });
