@@ -1,6 +1,6 @@
 # Native export artifact audit
 
-Final candidate artifact audit, 2026-09-09. All 16 regenerated receipts selected by `.vscode-test/export-native/evidence/formats.json` were re-audited for installed source **`99aff55e78338671af31ac94a44058776e491ca8`**, VSIX SHA-256 **`dc5d1876917c17a09f3d795cb6debbf8c555ff3c79b9e178140c770704ba5967`**. The artifact checks below passed, including visual confirmation of corrected blockquotes and visible limitation warnings. The historical artifact defects are resolved for this candidate. This record establishes artifact evidence; the overall native workflow and target-viewer acceptance are recorded separately in [export validation](../../docs/export-validation.md).
+Historical export-branch artifact audit, 2026-09-09. Follow [0.2.0 integration validation](../../docs/validation/0.2.0.md) for later package and page-inspection evidence. All 16 regenerated receipts selected by `.vscode-test/export-native/evidence/formats.json` were re-audited for installed source **`99aff55e78338671af31ac94a44058776e491ca8`**, VSIX SHA-256 **`dc5d1876917c17a09f3d795cb6debbf8c555ff3c79b9e178140c770704ba5967`**. The artifact checks below passed, including visual confirmation of corrected blockquotes and visible limitation warnings. The historical artifact defects are resolved for this candidate. This record establishes artifact evidence; the overall native workflow and target-viewer acceptance are recorded separately in [export validation](../../docs/export-validation.md).
 
 ## Reproduction
 

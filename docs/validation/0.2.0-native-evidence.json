@@ -1,0 +1,496 @@
+{
+  "status": "Automated integration evidence; maintainer acceptance and publication are separate.",
+  "observed_utc_date": "2026-09-10",
+  "source_commit": "6e431dbe0528c6da4d2410e1244727f2d9ecc2ec",
+  "vsix_sha256": "a7f94dea987067f6c13e75c386f3dac580ff8c6027bc6ae1df351f357117e207",
+  "version": "0.2.0",
+  "license": "AGPL-3.0-or-later",
+  "platforms": [
+    {
+      "platform": "macOS ARM64",
+      "harness_source": "0619c384680568b5ef29afd33438b3f9d5cd8c89",
+      "harness": {
+        "platform": "darwin",
+        "arch": "arm64",
+        "nodeVersion": "v24.21.0"
+      },
+      "host": {
+        "extensionVersion": "0.2.0",
+        "vscodeVersion": "1.136.0",
+        "nativeLanguage": "en",
+        "platform": "darwin",
+        "arch": "arm64",
+        "nodeVersion": "v24.18.1",
+        "uiKind": 1,
+        "remoteName": null,
+        "trusted": true
+      },
+      "native_receipt_sha256": "563b1e2108e058c1e542ed5be631f1f3f0fd0dd7ae232146f2a77b3ebb6980e8",
+      "native_scenarios": 44,
+      "frozen_inputs": 7,
+      "frozen_inputs_unchanged": true,
+      "native_scenario_counts": {
+        "build-information": 1,
+        "format": 16,
+        "immediate-save": 4,
+        "missing-docx": 1,
+        "missing-pdf": 1,
+        "hash-reuse": 1,
+        "dirty-rejected": 1,
+        "untitled-rejected": 1,
+        "unwritable-destination": 1,
+        "resource-cancel": 1,
+        "worker-cancel": 1,
+        "worker-failure": 1,
+        "toolbar": 6,
+        "theme": 2,
+        "wrong-active-tab": 1,
+        "immutable-capture": 1,
+        "offline-html": 4
+      },
+      "artifacts": [
+        {
+          "source": "basic.md",
+          "format": "html",
+          "workspace_source_matches_frozen": true,
+          "bytes": 446868,
+          "sha256": "ca81b1cb2fe22cbd59b1b603e852b9a65175aba66defe081852bd0907ea1afbe",
+          "warning_codes": [
+            "renderer-math-source",
+            "renderer-toc-source",
+            "renderer-footnote-source"
+          ],
+          "markers_checked": 6
+        },
+        {
+          "source": "basic.md",
+          "format": "pdf",
+          "workspace_source_matches_frozen": true,
+          "bytes": 214616,
+          "sha256": "5191e7710aa96931cbb9c48c113e8860f0e395d46efd766f8c25d0465e861a5e",
+          "warning_codes": [
+            "renderer-math-source",
+            "renderer-toc-source",
+            "renderer-footnote-source"
+          ],
+          "pages": 4,
+          "markers_checked": 6
+        },
+        {
+          "source": "basic.md",
+          "format": "docx",
+          "workspace_source_matches_frozen": true,
+          "bytes": 35467,
+          "sha256": "2447bfc4e9f757e389f45b5df026644c59135e4e1e89e47b8f70b4543ea8e7d6",
+          "warning_codes": [
+            "raw-content-fallback"
+          ],
+          "markers_checked": 6
+        },
+        {
+          "source": "basic.md",
+          "format": "epub",
+          "workspace_source_matches_frozen": true,
+          "bytes": 16704,
+          "sha256": "831fff205e3153909d6f3addf263da16588f864f22dce320c72949bcc31259ad",
+          "warning_codes": [
+            "raw-content-fallback"
+          ],
+          "markers_checked": 6
+        },
+        {
+          "source": "fallbacks.md",
+          "format": "html",
+          "workspace_source_matches_frozen": true,
+          "bytes": 37737,
+          "sha256": "d7a41cd572b821fa510a9ed8980c88c8295951b296a07c094b74630f37c3e4b6",
+          "warning_codes": [
+            "renderer-math-source",
+            "diagram-fallback",
+            "image-unavailable"
+          ],
+          "markers_checked": 9
+        },
+        {
+          "source": "fallbacks.md",
+          "format": "pdf",
+          "workspace_source_matches_frozen": true,
+          "bytes": 115219,
+          "sha256": "43bd349f696fee65223cda2a0f2794bed31d518a9c5a7fff0dff933303e73a63",
+          "warning_codes": [
+            "renderer-math-source",
+            "diagram-fallback",
+            "image-unavailable"
+          ],
+          "pages": 3,
+          "markers_checked": 9
+        },
+        {
+          "source": "fallbacks.md",
+          "format": "docx",
+          "workspace_source_matches_frozen": true,
+          "bytes": 11864,
+          "sha256": "58cb5d1445dd09c81c77713c60fa17ba1772946214b6309a5e0cfe6b3eab9a6b",
+          "warning_codes": [
+            "diagram-fallback",
+            "image-fallback",
+            "diagram-fallback",
+            "raw-content-fallback",
+            "pandoc-writer"
+          ],
+          "markers_checked": 9
+        },
+        {
+          "source": "fallbacks.md",
+          "format": "epub",
+          "workspace_source_matches_frozen": true,
+          "bytes": 7525,
+          "sha256": "f3af5683fc8a05ac64f184cfed311bd002a01912f676899ead946db5c0cbd627",
+          "warning_codes": [
+            "diagram-fallback",
+            "image-fallback",
+            "diagram-fallback",
+            "raw-content-fallback",
+            "pandoc-writer"
+          ],
+          "markers_checked": 9
+        },
+        {
+          "source": "pagination.md",
+          "format": "html",
+          "workspace_source_matches_frozen": true,
+          "bytes": 102623,
+          "sha256": "97b005ceb265e830697b2e121ddbcb63c5ead8a5dd63168714055404021f6e35",
+          "warning_codes": [],
+          "markers_checked": 261
+        },
+        {
+          "source": "pagination.md",
+          "format": "pdf",
+          "workspace_source_matches_frozen": true,
+          "bytes": 255468,
+          "sha256": "f9cf1071b64b7160a17e0b7da73723ea519512332caebad069dc476368c48658",
+          "warning_codes": [],
+          "pages": 16,
+          "markers_checked": 261
+        },
+        {
+          "source": "pagination.md",
+          "format": "docx",
+          "workspace_source_matches_frozen": true,
+          "bytes": 17424,
+          "sha256": "b3f003aa3794fe6e795f11768f2b48338b8ca4cd2d59cc9eee8b12afd9d1c811",
+          "warning_codes": [],
+          "markers_checked": 261
+        },
+        {
+          "source": "pagination.md",
+          "format": "epub",
+          "workspace_source_matches_frozen": true,
+          "bytes": 9043,
+          "sha256": "80524f0e35dc63a8a4c753bc658b1c8b4affe23db91fdd7f68e0fe2dfa0aeb5e",
+          "warning_codes": [],
+          "markers_checked": 261
+        },
+        {
+          "source": "w30-report.md",
+          "format": "html",
+          "workspace_source_matches_frozen": true,
+          "bytes": 627235,
+          "sha256": "703579f11a792ed04b0dcea956dea3f96850426d2a025fc02f67c601b97c822a",
+          "warning_codes": [
+            "renderer-math-source",
+            "renderer-toc-source",
+            "renderer-footnote-source",
+            "image-unavailable"
+          ],
+          "markers_checked": 289
+        },
+        {
+          "source": "w30-report.md",
+          "format": "pdf",
+          "workspace_source_matches_frozen": true,
+          "bytes": 844288,
+          "sha256": "bccab3ea5833d64907ff7e0115de87d229af22b9d8f865d42e6fe3b08245a238",
+          "warning_codes": [
+            "renderer-math-source",
+            "renderer-toc-source",
+            "renderer-footnote-source",
+            "image-unavailable"
+          ],
+          "pages": 51,
+          "markers_checked": 289
+        },
+        {
+          "source": "w30-report.md",
+          "format": "docx",
+          "workspace_source_matches_frozen": true,
+          "bytes": 97607,
+          "sha256": "d41c864b99d807a7af87362d16349653e203653de2c3c9b5a21338e2718a942e",
+          "warning_codes": [
+            "image-fallback",
+            "raw-content-fallback",
+            "pandoc-writer"
+          ],
+          "markers_checked": 289
+        },
+        {
+          "source": "w30-report.md",
+          "format": "epub",
+          "workspace_source_matches_frozen": true,
+          "bytes": 58049,
+          "sha256": "3246187a68fbfcfd2721fba30d827c4355c90436a4af3b46c90714d295d1e954",
+          "warning_codes": [
+            "image-fallback",
+            "raw-content-fallback",
+            "pandoc-writer"
+          ],
+          "markers_checked": 289
+        }
+      ]
+    },
+    {
+      "platform": "Ubuntu x86-64",
+      "harness_source": "6e431dbe0528c6da4d2410e1244727f2d9ecc2ec",
+      "harness": {
+        "platform": "linux",
+        "arch": "x64",
+        "nodeVersion": "v24.21.0"
+      },
+      "host": {
+        "extensionVersion": "0.2.0",
+        "vscodeVersion": "1.122.1",
+        "nativeLanguage": "en",
+        "platform": "linux",
+        "arch": "x64",
+        "nodeVersion": "v22.22.1",
+        "uiKind": 1,
+        "remoteName": null,
+        "trusted": true
+      },
+      "native_receipt_sha256": "51c956b4250090ac26ab3ce1d59ca00b751f63f565b4fa1ca78fea44953c6041",
+      "native_scenarios": 44,
+      "frozen_inputs": 7,
+      "frozen_inputs_unchanged": true,
+      "native_scenario_counts": {
+        "build-information": 1,
+        "format": 16,
+        "immediate-save": 4,
+        "missing-docx": 1,
+        "missing-pdf": 1,
+        "hash-reuse": 1,
+        "dirty-rejected": 1,
+        "untitled-rejected": 1,
+        "unwritable-destination": 1,
+        "resource-cancel": 1,
+        "worker-cancel": 1,
+        "worker-failure": 1,
+        "toolbar": 6,
+        "theme": 2,
+        "wrong-active-tab": 1,
+        "immutable-capture": 1,
+        "offline-html": 4
+      },
+      "artifacts": [
+        {
+          "source": "basic.md",
+          "format": "html",
+          "workspace_source_matches_frozen": true,
+          "bytes": 446688,
+          "sha256": "e8c8e185c5dd2de7d490245272cc07f8fbb83b63286753f673bc8eacf403dfc5",
+          "warning_codes": [
+            "renderer-math-source",
+            "renderer-toc-source",
+            "renderer-footnote-source"
+          ],
+          "markers_checked": 6
+        },
+        {
+          "source": "basic.md",
+          "format": "pdf",
+          "workspace_source_matches_frozen": true,
+          "bytes": 116209,
+          "sha256": "28d495a51624065b28ab6f86df1c02b3a8d430fe46a558dbb9c46e0ef674c206",
+          "warning_codes": [
+            "renderer-math-source",
+            "renderer-toc-source",
+            "renderer-footnote-source"
+          ],
+          "pages": 4,
+          "markers_checked": 6
+        },
+        {
+          "source": "basic.md",
+          "format": "docx",
+          "workspace_source_matches_frozen": true,
+          "bytes": 35417,
+          "sha256": "4cbd2c8569ad816a8f4bc8f2bafd3ea48e1164169b1c149f85a4bc53172ad4b9",
+          "warning_codes": [
+            "raw-content-fallback"
+          ],
+          "markers_checked": 6
+        },
+        {
+          "source": "basic.md",
+          "format": "epub",
+          "workspace_source_matches_frozen": true,
+          "bytes": 16695,
+          "sha256": "f8a30210a6de5ee7b42c4b06392083113498853b05a7f416ce1d3fca2f0a1e3d",
+          "warning_codes": [
+            "raw-content-fallback"
+          ],
+          "markers_checked": 6
+        },
+        {
+          "source": "fallbacks.md",
+          "format": "html",
+          "workspace_source_matches_frozen": true,
+          "bytes": 37740,
+          "sha256": "4349c048caf4bcefb1b410c2a5feeb857445749a306d0150040f150131deacd7",
+          "warning_codes": [
+            "renderer-math-source",
+            "diagram-fallback",
+            "image-unavailable"
+          ],
+          "markers_checked": 9
+        },
+        {
+          "source": "fallbacks.md",
+          "format": "pdf",
+          "workspace_source_matches_frozen": true,
+          "bytes": 47720,
+          "sha256": "0f78c3f9f97703433ae2f8e8590cacfdf3040fd4323fd2912c6d1dc2f2632241",
+          "warning_codes": [
+            "renderer-math-source",
+            "diagram-fallback",
+            "image-unavailable"
+          ],
+          "pages": 3,
+          "markers_checked": 9
+        },
+        {
+          "source": "fallbacks.md",
+          "format": "docx",
+          "workspace_source_matches_frozen": true,
+          "bytes": 11864,
+          "sha256": "58cb5d1445dd09c81c77713c60fa17ba1772946214b6309a5e0cfe6b3eab9a6b",
+          "warning_codes": [
+            "diagram-fallback",
+            "image-fallback",
+            "diagram-fallback",
+            "raw-content-fallback",
+            "pandoc-writer"
+          ],
+          "markers_checked": 9
+        },
+        {
+          "source": "fallbacks.md",
+          "format": "epub",
+          "workspace_source_matches_frozen": true,
+          "bytes": 7525,
+          "sha256": "f3af5683fc8a05ac64f184cfed311bd002a01912f676899ead946db5c0cbd627",
+          "warning_codes": [
+            "diagram-fallback",
+            "image-fallback",
+            "diagram-fallback",
+            "raw-content-fallback",
+            "pandoc-writer"
+          ],
+          "markers_checked": 9
+        },
+        {
+          "source": "pagination.md",
+          "format": "html",
+          "workspace_source_matches_frozen": true,
+          "bytes": 102623,
+          "sha256": "97b005ceb265e830697b2e121ddbcb63c5ead8a5dd63168714055404021f6e35",
+          "warning_codes": [],
+          "markers_checked": 261
+        },
+        {
+          "source": "pagination.md",
+          "format": "pdf",
+          "workspace_source_matches_frozen": true,
+          "bytes": 187194,
+          "sha256": "32e024e5306b828c678811051e06b397ee9201479fcc5253126fec621be31c2c",
+          "warning_codes": [],
+          "pages": 16,
+          "markers_checked": 261
+        },
+        {
+          "source": "pagination.md",
+          "format": "docx",
+          "workspace_source_matches_frozen": true,
+          "bytes": 17424,
+          "sha256": "b3f003aa3794fe6e795f11768f2b48338b8ca4cd2d59cc9eee8b12afd9d1c811",
+          "warning_codes": [],
+          "markers_checked": 261
+        },
+        {
+          "source": "pagination.md",
+          "format": "epub",
+          "workspace_source_matches_frozen": true,
+          "bytes": 9043,
+          "sha256": "80524f0e35dc63a8a4c753bc658b1c8b4affe23db91fdd7f68e0fe2dfa0aeb5e",
+          "warning_codes": [],
+          "markers_checked": 261
+        },
+        {
+          "source": "w30-report.md",
+          "format": "html",
+          "workspace_source_matches_frozen": true,
+          "bytes": 627044,
+          "sha256": "54645b7dac1a473f3592b71bdde4b0a98ebda33641bc22818a0b82bbd72975ca",
+          "warning_codes": [
+            "renderer-math-source",
+            "renderer-toc-source",
+            "renderer-footnote-source",
+            "image-unavailable"
+          ],
+          "markers_checked": 289
+        },
+        {
+          "source": "w30-report.md",
+          "format": "pdf",
+          "workspace_source_matches_frozen": true,
+          "bytes": 656106,
+          "sha256": "d0c7510e34355b9aa73ed984e4626dd888590e23e945c4e0fc0af1486ae28763",
+          "warning_codes": [
+            "renderer-math-source",
+            "renderer-toc-source",
+            "renderer-footnote-source",
+            "image-unavailable"
+          ],
+          "pages": 54,
+          "markers_checked": 289
+        },
+        {
+          "source": "w30-report.md",
+          "format": "docx",
+          "workspace_source_matches_frozen": true,
+          "bytes": 97556,
+          "sha256": "2953b1e5f9aa6f77d345c594bc87b75d1b29380f4321c4868f41d7e7fed797c4",
+          "warning_codes": [
+            "image-fallback",
+            "raw-content-fallback",
+            "pandoc-writer"
+          ],
+          "markers_checked": 289
+        },
+        {
+          "source": "w30-report.md",
+          "format": "epub",
+          "workspace_source_matches_frozen": true,
+          "bytes": 58028,
+          "sha256": "051a7a31c5f68f22cb1e60708ad91ad6037d9987fbc0d7225c7023e23f70f816",
+          "warning_codes": [
+            "image-fallback",
+            "raw-content-fallback",
+            "pandoc-writer"
+          ],
+          "markers_checked": 289
+        }
+      ]
+    }
+  ]
+}
