@@ -19,5 +19,11 @@
   "config.outlineStateScope.file": "このワークスペース内の Markdown ファイルごとに、アウトラインの開閉状態を保存します。",
   "config.outlineStateScope.global": "ワークスペースに関係なく、すべての Markdown ファイルで直前の開閉状態を引き継ぎます。",
   "config.outlineDefaultOpen.description": "開閉状態が保存されていない場合に、アウトラインを自動で開きます。",
-  "config.enableDebugLogging.description": "問題の調査に使うデバッグログを出力します。"
+  "config.enableDebugLogging.description": "問題の調査に使うデバッグログを出力します。",
+  "config.export.pandocPath.description": "DOCX・EPUB書き出しに使うPandoc実行ファイルのパス。空欄でインストール済みツールを検出します。インストールは手動です。指定したパスが無効な場合は別のツールを選ばずエラーを表示します。",
+  "config.export.browserPath.description": "PDF書き出しに使うChrome・Chromium・Edge実行ファイルのパス。空欄でインストール済みブラウザーを検出します。ブラウザーは自動ダウンロードされません。",
+  "command.exportToHtml.title": "HTMLに書き出し",
+  "command.exportToPdf.title": "PDFに書き出し",
+  "command.exportToDocx.title": "Wordに書き出し",
+  "command.exportToEpub.title": "EPUBに書き出し"
 }

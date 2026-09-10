@@ -1,0 +1,23 @@
+Binary Markdown
+Copyright (c) 2026 BinaryOutlook and contributors
+
+Starting with the licence-transition commit on the export-subsystem branch,
+this project is distributed under GNU AGPL version 3 only (AGPL-3.0-only).
+The full licence is in LICENSE. Earlier releases and contributions made
+available under MIT retain those grants; this transition does not revoke them.
+
+Binary Markdown derives from Any Markdown by raggbal and contributors,
+originally distributed under MIT. LICENSES/AnyMarkdown-MIT.txt preserves
+the copyright and permission notice for that code and prior MIT contributions
+to this fork. Keep that notice with copies or substantial portions of the
+covered software, including when distributing this fork under AGPL.
+
+The frozen exports-v1 Markdown documents and assets in test/fixtures/exports
+retain their explicit MIT licence, as recorded in that directory's README.
+Archived material retains its original notices. Third-party libraries and
+assets retain their own licences; bundled dependency notices are in vendor/.
+
+Corresponding source and build instructions for this project are available at:
+https://github.com/BinaryOutlook/binary-markdown
+Distributors of modified builds must provide the corresponding source for
+their build as required by the AGPL; this upstream URL alone may not suffice.

@@ -5,7 +5,7 @@
   "version": "0.1.0",
   "publisher": "BinaryOutlook",
   "icon": "media/icon.png",
-  "license": "MIT",
+  "license": "AGPL-3.0-only",
   "repository": {
     "type": "git",
     "url": "https://github.com/BinaryOutlook/any-markdown"
@@ -42,7 +42,7 @@
       },
       {
         "command": "binary-markdown.exportToPdf",
-        "title": "Export to PDF",
+        "title": "%command.exportToPdf.title%",
         "category": "Binary Markdown"
       },
       {
@@ -78,6 +78,21 @@
       {
         "command": "binary-markdown.redo",
         "title": "Redo",
+        "category": "Binary Markdown"
+      },
+      {
+        "command": "binary-markdown.exportToHtml",
+        "title": "%command.exportToHtml.title%",
+        "category": "Binary Markdown"
+      },
+      {
+        "command": "binary-markdown.exportToDocx",
+        "title": "%command.exportToDocx.title%",
+        "category": "Binary Markdown"
+      },
+      {
+        "command": "binary-markdown.exportToEpub",
+        "title": "%command.exportToEpub.title%",
         "category": "Binary Markdown"
       }
     ],
@@ -188,6 +203,18 @@
           "type": "boolean",
           "default": false,
           "description": "%config.enableDebugLogging.description%"
+        },
+        "binary-markdown.export.pandocPath": {
+          "type": "string",
+          "default": "",
+          "scope": "machine",
+          "description": "%config.export.pandocPath.description%"
+        },
+        "binary-markdown.export.browserPath": {
+          "type": "string",
+          "default": "",
+          "scope": "machine",
+          "description": "%config.export.browserPath.description%"
         }
       }
     },
@@ -262,7 +289,7 @@
     "compile": "tsc -p ./ && node build-locales.js && node scripts/copy-webview.js && node scripts/copy-vendor.js",
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
-    "test": "npm run test:outline-state && npm run test:identity && npm run test:localization && npm run test:e2e",
+    "test": "npm run test:outline-state && npm run test:identity && npm run test:localization && npm run test:export && npm run test:e2e",
     "lint": "eslint src --ext ts",
     "package": "node scripts/package-vsix.js",
     "test:build": "node test/build-standalone.js",
@@ -272,7 +299,8 @@
     "test:serve": "npx serve test/html -p 3000",
     "build:locales": "node build-locales.js",
     "test:identity": "node --test test/unit/extension-identity.test.js",
-    "test:localization": "node --test test/unit/settings-localization.test.js"
+    "test:localization": "node --test test/unit/settings-localization.test.js",
+    "test:export": "node --test test/unit/export-*.test.js"
   },
   "devDependencies": {
     "@playwright/test": "^1.58.1",

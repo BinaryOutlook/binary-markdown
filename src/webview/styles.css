@@ -1034,3 +1034,49 @@ body {
 }
 
 ::selection { background: var(--selection-bg); }
+
+/* Export uses a fixed menu so every toolbar mode can expose the four formats. */
+.export-menu[hidden], .export-status[hidden], .export-menu [hidden], .export-status [hidden] { display: none !important; }
+.export-menu {
+    position: fixed;
+    z-index: 1000;
+    padding: 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--bg-color);
+    color: var(--text-color);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    overflow-y: auto;
+    font-size: 13px;
+    line-height: 1.5;
+}
+.export-experimental { font-size: 14px; }
+.export-limitations { margin: 6px 0 10px; color: var(--text-color); opacity: 0.85; }
+.export-menu button {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
+    padding: 8px;
+    border: 0;
+    border-radius: 4px;
+    background: transparent;
+    color: inherit;
+    text-align: left;
+    font: inherit;
+    cursor: pointer;
+}
+.export-menu button:hover, .export-menu button:focus-visible { background: var(--selection-bg); outline: 2px solid var(--link-color); outline-offset: -2px; }
+.export-menu [data-export-tool-status] { color: var(--text-color); opacity: 0.8; font-size: 12px; }
+.export-menu [aria-disabled="true"] { opacity: 0.7; }
+.export-menu [data-export-action] { margin-top: 5px; border-top: 1px solid var(--border-color); }
+.export-status { flex-shrink: 0; max-height: 180px; overflow: auto; padding: 8px 16px; border-bottom: 1px solid var(--border-color); background: var(--bg-color); font-size: 13px; line-height: 1.5; }
+.export-status-row { display: flex; align-items: center; gap: 8px; }
+.export-status-row button { margin-left: auto; padding: 4px 8px; color: var(--link-color); background: transparent; border: 1px solid var(--border-color); border-radius: 4px; cursor: pointer; }
+.export-status button:focus-visible, .export-status summary:focus-visible { outline: 2px solid var(--link-color); outline-offset: 2px; }
+.export-output-path { overflow-wrap: anywhere; user-select: text; }
+.export-status details { margin-top: 4px; }
+.export-status ul { padding-left: 20px; }
+.export-spinner { display: inline-block; flex-shrink: 0; width: 13px; height: 13px; border: 2px solid var(--border-color); border-top-color: var(--link-color); border-radius: 50%; animation: export-active 0.9s linear infinite; }
+@keyframes export-active { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .export-spinner { animation: none; border-style: dotted; } }

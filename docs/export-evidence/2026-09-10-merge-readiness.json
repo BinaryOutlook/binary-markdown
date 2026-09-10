@@ -1,0 +1,926 @@
+{
+  "date": "2026-09-10",
+  "timezone": "Asia/Singapore",
+  "status": "Previously reported test blockers resolved; review pending, not merged or released",
+  "runtime_source_commit": "8514de94097b645aa3e3a10e839d878c263bdfe2",
+  "unit_test_source_commit": "54caee9b6cc0781b45c56571140c6ee53a7c4b26",
+  "package": {
+    "name": "binary-markdown-merge-8514de9.vsix",
+    "bytes": 4200916,
+    "sha256": "7a70aae923b0b0b9c5d8cb3f906a3a5d19c21b61cba4c4f07ab6d2f6dfcc0ed1",
+    "license": "AGPL-3.0-only",
+    "retained_notices": [
+      "LICENSE.txt",
+      "NOTICE",
+      "LICENSES/AnyMarkdown-MIT.txt"
+    ],
+    "source_license_url": "https://www.gnu.org/licenses/agpl-3.0.txt",
+    "runtime_sha256": {
+      "out/export/pdf.js": "fdaf76a80cc50ade5eab24506b5f3d268c235369df51e88c62bd7991451fa234",
+      "out/webview/editor.js": "28826aa2bc0a006dcaccc54c9490efd3782444e8f611df1673bb19a84764802f",
+      "out/webview/export-ui.js": "4535b2b644e5815cfc95c805ef8da6fde31cff2dfcd8a567219116fc83e4a3b9"
+    }
+  },
+  "fixture_revision": "exports-v1",
+  "frozen_manifest_sha256": "95318a93834cd33cc0e9259003a7b9eab4145d53d2ae5885a781d801fe24fbf8",
+  "hosts": {
+    "macos-arm64": {
+      "os": "macOS 26.5.2 (25F84)",
+      "native_host": {
+        "vscodeVersion": "1.136.0",
+        "platform": "darwin",
+        "arch": "arm64",
+        "nodeVersion": "v24.18.1",
+        "nativeLanguage": "en",
+        "remoteName": null,
+        "uiKind": 1,
+        "trusted": true
+      },
+      "harness": {
+        "platform": "darwin",
+        "arch": "arm64",
+        "nodeVersion": "v20.20.0"
+      },
+      "tools": {
+        "pandoc": "3.8.3",
+        "chrome": "152.0.7977.83",
+        "playwright_core": "1.58.1",
+        "chromium_sandbox": true
+      },
+      "browser_suite": {
+        "passed": 691,
+        "failed": 0,
+        "skipped": 0,
+        "flaky": 0,
+        "retries": 0,
+        "report": {
+          "path": ".vscode-test/failure-analysis-2026-09-10/full-mac.json",
+          "sha256": "ea6511f587c983214169b465a5c28da2f78363be31aacffa85180e143749052e"
+        }
+      },
+      "unit_suite": {
+        "passed": 100,
+        "export_tests_included": 86,
+        "failed": 0,
+        "skipped": 0,
+        "real_tools": true,
+        "package_gate": true,
+        "log": {
+          "path": ".vscode-test/failure-analysis-2026-09-10/units-mac.log",
+          "sha256": "9143f4f359b91ce8a2438ced3f70b0ff309ccccb543105275c385708e32d8b6c"
+        }
+      },
+      "native": {
+        "scenarios": 43,
+        "frozen_input_check": true,
+        "toolbar_cycles": 3,
+        "toolbar_observations": [
+          {
+            "name": "toolbar",
+            "cycle": 1,
+            "mode": "full",
+            "language": "zh-CN",
+            "label": "导出",
+            "nativeLanguage": "en",
+            "keyboardNavigation": true,
+            "nextToVsCode": true
+          },
+          {
+            "name": "toolbar",
+            "cycle": 1,
+            "mode": "simple",
+            "language": "en",
+            "label": "Export",
+            "nativeLanguage": "en",
+            "keyboardNavigation": true,
+            "nextToVsCode": true
+          },
+          {
+            "name": "toolbar",
+            "cycle": 2,
+            "mode": "full",
+            "language": "zh-CN",
+            "label": "导出",
+            "nativeLanguage": "en",
+            "keyboardNavigation": true,
+            "nextToVsCode": true
+          },
+          {
+            "name": "toolbar",
+            "cycle": 2,
+            "mode": "simple",
+            "language": "en",
+            "label": "Export",
+            "nativeLanguage": "en",
+            "keyboardNavigation": true,
+            "nextToVsCode": true
+          },
+          {
+            "name": "toolbar",
+            "cycle": 3,
+            "mode": "full",
+            "language": "zh-CN",
+            "label": "导出",
+            "nativeLanguage": "en",
+            "keyboardNavigation": true,
+            "nextToVsCode": true
+          },
+          {
+            "name": "toolbar",
+            "cycle": 3,
+            "mode": "simple",
+            "language": "en",
+            "label": "Export",
+            "nativeLanguage": "en",
+            "keyboardNavigation": true,
+            "nextToVsCode": true
+          }
+        ],
+        "report": {
+          "path": ".vscode-test/export-merge-mac/evidence/native-1788972845255.json",
+          "sha256": "ce9aa982508fefd4a922b093f3812c1512668b971af4906d729c72a144ea4f59"
+        },
+        "without_development_server": {
+          "format_exports": 16,
+          "frozen_input_check": true,
+          "report": {
+            "path": ".vscode-test/export-merge-mac/evidence/native-1788973309033.json",
+            "sha256": "75f0235a8e33fe6932b77c9038f193ba729dcdfbb160ef9d9ffb547c29f25232"
+          }
+        }
+      },
+      "artifact_audit": {
+        "artifacts": 16,
+        "markers_checked": 2260,
+        "unaccounted_markers": 0,
+        "report": {
+          "path": ".vscode-test/export-merge-mac/evidence/artifact-audit.json",
+          "sha256": "ab7ef04d55804e505b8669a757c5f0a6bc5d1f93c8a9f3fc6827252e1b59d5e2"
+        },
+        "results": [
+          {
+            "source": "basic.md",
+            "format": "html",
+            "output": "basic.html",
+            "bytes": 446868,
+            "sha256": "f876fd318d3742bd3b927dc608b2e4a154c6ffb7ec6060aaa23305edc41f30ee",
+            "source_sha256": "9d98c1883c6821bce3d7211d376b54e2ccc6e464f921e273b0d7606698455a7d",
+            "warning_codes": [
+              "renderer-math-source",
+              "renderer-toc-source",
+              "renderer-footnote-source"
+            ],
+            "markers_checked": 6,
+            "markers_present_in_image_alternatives": []
+          },
+          {
+            "source": "basic.md",
+            "format": "pdf",
+            "output": "basic.pdf",
+            "bytes": 214616,
+            "sha256": "3d50ecccdab5e481f31eb28a1284ebce8a44fb828f70296f3ce236f3f717df72",
+            "source_sha256": "9d98c1883c6821bce3d7211d376b54e2ccc6e464f921e273b0d7606698455a7d",
+            "warning_codes": [
+              "renderer-math-source",
+              "renderer-toc-source",
+              "renderer-footnote-source"
+            ],
+            "markers_checked": 6,
+            "markers_present_in_image_alternatives": [],
+            "pages": 4
+          },
+          {
+            "source": "basic.md",
+            "format": "docx",
+            "output": "basic.docx",
+            "bytes": 35608,
+            "sha256": "b036a992573059de856e10d8bc891825d07c57856bed51722cca37fd9eb2dc73",
+            "source_sha256": "9d98c1883c6821bce3d7211d376b54e2ccc6e464f921e273b0d7606698455a7d",
+            "warning_codes": [
+              "raw-content-fallback"
+            ],
+            "markers_checked": 6,
+            "markers_present_in_image_alternatives": [],
+            "zip_crc": "pass",
+            "native_math_count": 2
+          },
+          {
+            "source": "basic.md",
+            "format": "epub",
+            "output": "basic.epub",
+            "bytes": 16701,
+            "sha256": "34dd842c983ff73a5b2815ce8a094e8d8081fbb68e4561addc4ca7d8f8a7fa53",
+            "source_sha256": "9d98c1883c6821bce3d7211d376b54e2ccc6e464f921e273b0d7606698455a7d",
+            "warning_codes": [
+              "raw-content-fallback"
+            ],
+            "markers_checked": 6,
+            "markers_present_in_image_alternatives": [],
+            "zip_crc": "pass",
+            "native_math_count": 2
+          },
+          {
+            "source": "fallbacks.md",
+            "format": "html",
+            "output": "fallbacks.html",
+            "bytes": 37734,
+            "sha256": "3a7d5c7cbf61cdac5fbfe57575332d1a36bd419d914f6700e329fdc31c538d55",
+            "source_sha256": "d59a454ef83115862181e88f31ec3981c19bd6b84f0a14693e3087d79eeda5e1",
+            "warning_codes": [
+              "renderer-math-source",
+              "diagram-fallback",
+              "image-unavailable"
+            ],
+            "markers_checked": 9,
+            "markers_present_in_image_alternatives": []
+          },
+          {
+            "source": "fallbacks.md",
+            "format": "pdf",
+            "output": "fallbacks.pdf",
+            "bytes": 112775,
+            "sha256": "4e0088004a70628abb4623cb1fe4194933c156b4c110d736ffedb586f231772a",
+            "source_sha256": "d59a454ef83115862181e88f31ec3981c19bd6b84f0a14693e3087d79eeda5e1",
+            "warning_codes": [
+              "renderer-math-source",
+              "diagram-fallback",
+              "image-unavailable"
+            ],
+            "markers_checked": 9,
+            "markers_present_in_image_alternatives": [],
+            "pages": 3
+          },
+          {
+            "source": "fallbacks.md",
+            "format": "docx",
+            "output": "fallbacks.docx",
+            "bytes": 11864,
+            "sha256": "58cb5d1445dd09c81c77713c60fa17ba1772946214b6309a5e0cfe6b3eab9a6b",
+            "source_sha256": "d59a454ef83115862181e88f31ec3981c19bd6b84f0a14693e3087d79eeda5e1",
+            "warning_codes": [
+              "diagram-fallback",
+              "image-fallback",
+              "diagram-fallback",
+              "raw-content-fallback",
+              "pandoc-writer"
+            ],
+            "markers_checked": 9,
+            "markers_present_in_image_alternatives": [],
+            "zip_crc": "pass",
+            "native_math_count": 0
+          },
+          {
+            "source": "fallbacks.md",
+            "format": "epub",
+            "output": "fallbacks.epub",
+            "bytes": 7525,
+            "sha256": "f3af5683fc8a05ac64f184cfed311bd002a01912f676899ead946db5c0cbd627",
+            "source_sha256": "d59a454ef83115862181e88f31ec3981c19bd6b84f0a14693e3087d79eeda5e1",
+            "warning_codes": [
+              "diagram-fallback",
+              "image-fallback",
+              "diagram-fallback",
+              "raw-content-fallback",
+              "pandoc-writer"
+            ],
+            "markers_checked": 9,
+            "markers_present_in_image_alternatives": [],
+            "zip_crc": "pass",
+            "native_math_count": 0
+          },
+          {
+            "source": "pagination.md",
+            "format": "html",
+            "output": "pagination.html",
+            "bytes": 102623,
+            "sha256": "97b005ceb265e830697b2e121ddbcb63c5ead8a5dd63168714055404021f6e35",
+            "source_sha256": "3557f7a847a1d6c8b80584a26c56f2da7ebf41d40f14e166cd1a92dc992711b4",
+            "warning_codes": [],
+            "markers_checked": 261,
+            "markers_present_in_image_alternatives": [
+              "PAGINATION-TALL-GRAPHIC-MARKER"
+            ]
+          },
+          {
+            "source": "pagination.md",
+            "format": "pdf",
+            "output": "pagination.pdf",
+            "bytes": 255468,
+            "sha256": "0fd6433140f075fe5bdf3d440c90b317b116a7c471f3a75b1c868fb03dff7f82",
+            "source_sha256": "3557f7a847a1d6c8b80584a26c56f2da7ebf41d40f14e166cd1a92dc992711b4",
+            "warning_codes": [],
+            "markers_checked": 261,
+            "markers_present_in_image_alternatives": [
+              "PAGINATION-TALL-GRAPHIC-MARKER"
+            ],
+            "pages": 16
+          },
+          {
+            "source": "pagination.md",
+            "format": "docx",
+            "output": "pagination.docx",
+            "bytes": 17424,
+            "sha256": "b3f003aa3794fe6e795f11768f2b48338b8ca4cd2d59cc9eee8b12afd9d1c811",
+            "source_sha256": "3557f7a847a1d6c8b80584a26c56f2da7ebf41d40f14e166cd1a92dc992711b4",
+            "warning_codes": [],
+            "markers_checked": 261,
+            "markers_present_in_image_alternatives": [
+              "PAGINATION-TALL-GRAPHIC-MARKER"
+            ],
+            "zip_crc": "pass",
+            "native_math_count": 0
+          },
+          {
+            "source": "pagination.md",
+            "format": "epub",
+            "output": "pagination.epub",
+            "bytes": 9043,
+            "sha256": "80524f0e35dc63a8a4c753bc658b1c8b4affe23db91fdd7f68e0fe2dfa0aeb5e",
+            "source_sha256": "3557f7a847a1d6c8b80584a26c56f2da7ebf41d40f14e166cd1a92dc992711b4",
+            "warning_codes": [],
+            "markers_checked": 261,
+            "markers_present_in_image_alternatives": [
+              "PAGINATION-TALL-GRAPHIC-MARKER"
+            ],
+            "zip_crc": "pass",
+            "native_math_count": 0
+          },
+          {
+            "source": "w30-report.md",
+            "format": "html",
+            "output": "w30-report.html",
+            "bytes": 627232,
+            "sha256": "76e4c1a55e4279abb651b86adedef8b81cfcc8d005b8fb337660d74df4bb3d61",
+            "source_sha256": "1db4863436896ffa05bcfcc1d413a5fc88cd1ce73ce5f1c8cd78eb37686cbe33",
+            "warning_codes": [
+              "renderer-math-source",
+              "renderer-toc-source",
+              "renderer-footnote-source",
+              "image-unavailable"
+            ],
+            "markers_checked": 289,
+            "markers_present_in_image_alternatives": [
+              "W30-TALL-GRAPHIC-MARKER"
+            ]
+          },
+          {
+            "source": "w30-report.md",
+            "format": "pdf",
+            "output": "w30-report.pdf",
+            "bytes": 844270,
+            "sha256": "ef56eb303649797839cb5ee2a065a32d4e5edfe323d8aeb86209af0f33e7d5f0",
+            "source_sha256": "1db4863436896ffa05bcfcc1d413a5fc88cd1ce73ce5f1c8cd78eb37686cbe33",
+            "warning_codes": [
+              "renderer-math-source",
+              "renderer-toc-source",
+              "renderer-footnote-source",
+              "image-unavailable"
+            ],
+            "markers_checked": 289,
+            "markers_present_in_image_alternatives": [
+              "W30-TALL-GRAPHIC-MARKER"
+            ],
+            "pages": 51
+          },
+          {
+            "source": "w30-report.md",
+            "format": "docx",
+            "output": "w30-report.docx",
+            "bytes": 97724,
+            "sha256": "e93215dc5a341466c63702dac3c15de31f79eb424b73e80677e829a9da8f672b",
+            "source_sha256": "1db4863436896ffa05bcfcc1d413a5fc88cd1ce73ce5f1c8cd78eb37686cbe33",
+            "warning_codes": [
+              "image-fallback",
+              "raw-content-fallback",
+              "pandoc-writer"
+            ],
+            "markers_checked": 289,
+            "markers_present_in_image_alternatives": [
+              "W30-TALL-GRAPHIC-MARKER"
+            ],
+            "zip_crc": "pass",
+            "native_math_count": 2
+          },
+          {
+            "source": "w30-report.md",
+            "format": "epub",
+            "output": "w30-report.epub",
+            "bytes": 58013,
+            "sha256": "490da5139ecff20a38cb6c12ac29ca36bd1e6144f36c14f438a56c7b33754433",
+            "source_sha256": "1db4863436896ffa05bcfcc1d413a5fc88cd1ce73ce5f1c8cd78eb37686cbe33",
+            "warning_codes": [
+              "image-fallback",
+              "raw-content-fallback",
+              "pandoc-writer"
+            ],
+            "markers_checked": 289,
+            "markers_present_in_image_alternatives": [
+              "W30-TALL-GRAPHIC-MARKER"
+            ],
+            "zip_crc": "pass",
+            "native_math_count": 2
+          }
+        ]
+      },
+      "pdf_visual_review": {
+        "scope": "Representative pages only; readable text, code, tables, quotations, full tall graphics and warnings on inspected pages, without observed clipping. Other pages are not individually certified.",
+        "pages": [
+          {
+            "path": ".vscode-test/export-merge-mac/evidence/pdf-review/basic-2.png",
+            "sha256": "16f47dfb746d8aa510351deb4618e1fe5a0569eef13af5af400794250aff2453"
+          },
+          {
+            "path": ".vscode-test/export-merge-mac/evidence/pdf-review/fallbacks-3.png",
+            "sha256": "90e7283a59200847db3112e0735c98bf2e6bc0ca0ee503264a3ea5819a5d754b"
+          },
+          {
+            "path": ".vscode-test/export-merge-mac/evidence/pdf-review/pagination-15.png",
+            "sha256": "e221a8a837e46b94773d1cd5d8397fe35f3caadb7a189107c5c9384f6fdb1b77"
+          },
+          {
+            "path": ".vscode-test/export-merge-mac/evidence/pdf-review/pagination-3.png",
+            "sha256": "7363577e8a2935c039f5bee1e97b1b0dd49e535dd50531beff2452b2a9f80caa"
+          },
+          {
+            "path": ".vscode-test/export-merge-mac/evidence/pdf-review/w30-report-3.png",
+            "sha256": "cdcbfe5f849d221bcd6801a3d1430bc1307eab9816a7686261a2ccd60344e469"
+          },
+          {
+            "path": ".vscode-test/export-merge-mac/evidence/pdf-review/w30-report-49.png",
+            "sha256": "e221a8a837e46b94773d1cd5d8397fe35f3caadb7a189107c5c9384f6fdb1b77"
+          },
+          {
+            "path": ".vscode-test/export-merge-mac/evidence/pdf-review/w30-report-51.png",
+            "sha256": "bfbde17b7ab898e2c58c0e3e65f9e765e83f2297956d95a75ede9e8d9ab72707"
+          }
+        ]
+      },
+      "cleanup": {
+        "owned_native_profile_closed": true,
+        "normal_profile_changed": false,
+        "evidence_retained": true
+      }
+    },
+    "ubuntu-x86-64": {
+      "os": "Ubuntu 26.04 LTS",
+      "native_host": {
+        "vscodeVersion": "1.122.1",
+        "platform": "linux",
+        "arch": "x64",
+        "nodeVersion": "v22.22.1",
+        "nativeLanguage": "en",
+        "remoteName": null,
+        "uiKind": 1,
+        "trusted": true
+      },
+      "harness": {
+        "platform": "linux",
+        "arch": "x64",
+        "nodeVersion": "v20.20.0"
+      },
+      "tools": {
+        "pandoc": "3.8.3",
+        "chrome": "149.0.7827.53",
+        "playwright_core": "1.58.1",
+        "chromium_sandbox": true
+      },
+      "browser_suite": {
+        "passed": 691,
+        "failed": 0,
+        "skipped": 0,
+        "flaky": 0,
+        "retries": 0,
+        "report": {
+          "path": ".vscode-test/failure-analysis-2026-09-10/ubuntu-logs/full-ubuntu.json",
+          "sha256": "b13f0b05ed6c6fc1fd92c3ba0c02b2aa08a3e370f18b590b4f0c0850f3061fc5"
+        }
+      },
+      "unit_suite": {
+        "passed": 100,
+        "export_tests_included": 86,
+        "failed": 0,
+        "skipped": 0,
+        "real_tools": true,
+        "package_gate": true,
+        "log": {
+          "path": ".vscode-test/failure-analysis-2026-09-10/ubuntu-logs/units-ubuntu-final.log",
+          "sha256": "239ffbd1a04e3e5451de986d255106b7e0616443b26cc912530484b58cb41a28"
+        }
+      },
+      "native": {
+        "scenarios": 43,
+        "frozen_input_check": true,
+        "toolbar_cycles": 3,
+        "toolbar_observations": [
+          {
+            "name": "toolbar",
+            "cycle": 1,
+            "mode": "full",
+            "language": "zh-CN",
+            "label": "导出",
+            "nativeLanguage": "en",
+            "keyboardNavigation": true,
+            "nextToVsCode": true
+          },
+          {
+            "name": "toolbar",
+            "cycle": 1,
+            "mode": "simple",
+            "language": "en",
+            "label": "Export",
+            "nativeLanguage": "en",
+            "keyboardNavigation": true,
+            "nextToVsCode": true
+          },
+          {
+            "name": "toolbar",
+            "cycle": 2,
+            "mode": "full",
+            "language": "zh-CN",
+            "label": "导出",
+            "nativeLanguage": "en",
+            "keyboardNavigation": true,
+            "nextToVsCode": true
+          },
+          {
+            "name": "toolbar",
+            "cycle": 2,
+            "mode": "simple",
+            "language": "en",
+            "label": "Export",
+            "nativeLanguage": "en",
+            "keyboardNavigation": true,
+            "nextToVsCode": true
+          },
+          {
+            "name": "toolbar",
+            "cycle": 3,
+            "mode": "full",
+            "language": "zh-CN",
+            "label": "导出",
+            "nativeLanguage": "en",
+            "keyboardNavigation": true,
+            "nextToVsCode": true
+          },
+          {
+            "name": "toolbar",
+            "cycle": 3,
+            "mode": "simple",
+            "language": "en",
+            "label": "Export",
+            "nativeLanguage": "en",
+            "keyboardNavigation": true,
+            "nextToVsCode": true
+          }
+        ],
+        "report": {
+          "path": ".vscode-test/failure-analysis-2026-09-10/ubuntu-native-evidence/native-1788972972335.json",
+          "sha256": "cb83f5ab473fc18ff23b0c9d815582cf99d1f5a0b3a215affb368fdc620cda30"
+        },
+        "without_development_server": {
+          "format_exports": 16,
+          "frozen_input_check": true,
+          "report": {
+            "path": ".vscode-test/failure-analysis-2026-09-10/ubuntu-native-evidence/evidence/native-1788973306930.json",
+            "sha256": "5f6de8c923c6a65965a07f427d427855121c98149672e5650adea79407586c36"
+          }
+        }
+      },
+      "artifact_audit": {
+        "artifacts": 16,
+        "markers_checked": 2260,
+        "unaccounted_markers": 0,
+        "report": {
+          "path": ".vscode-test/failure-analysis-2026-09-10/ubuntu-native-evidence/artifact-audit.json",
+          "sha256": "fc07709f07d77a95b0a0b33a6dfbde3554c474943891fddb8ad025ad54c0a631"
+        },
+        "results": [
+          {
+            "source": "basic.md",
+            "format": "html",
+            "output": "basic.html",
+            "bytes": 446688,
+            "sha256": "56c29993995b22fa1492fa8097bf82f35c5698be3bdc6a695e550ced510f31bc",
+            "source_sha256": "9d98c1883c6821bce3d7211d376b54e2ccc6e464f921e273b0d7606698455a7d",
+            "warning_codes": [
+              "renderer-math-source",
+              "renderer-toc-source",
+              "renderer-footnote-source"
+            ],
+            "markers_checked": 6,
+            "markers_present_in_image_alternatives": []
+          },
+          {
+            "source": "basic.md",
+            "format": "pdf",
+            "output": "basic.pdf",
+            "bytes": 116209,
+            "sha256": "588cc5c84e502c2fb9c4257f8eeecf6a1692038fedf1c9547592ad2d40ad8bd2",
+            "source_sha256": "9d98c1883c6821bce3d7211d376b54e2ccc6e464f921e273b0d7606698455a7d",
+            "warning_codes": [
+              "renderer-math-source",
+              "renderer-toc-source",
+              "renderer-footnote-source"
+            ],
+            "markers_checked": 6,
+            "markers_present_in_image_alternatives": [],
+            "pages": 4
+          },
+          {
+            "source": "basic.md",
+            "format": "docx",
+            "output": "basic.docx",
+            "bytes": 35533,
+            "sha256": "bd4862166f37789c74d3e1895f38d4447856b01cdb73f11fd4981b7836506987",
+            "source_sha256": "9d98c1883c6821bce3d7211d376b54e2ccc6e464f921e273b0d7606698455a7d",
+            "warning_codes": [
+              "raw-content-fallback"
+            ],
+            "markers_checked": 6,
+            "markers_present_in_image_alternatives": [],
+            "zip_crc": "pass",
+            "native_math_count": 2
+          },
+          {
+            "source": "basic.md",
+            "format": "epub",
+            "output": "basic.epub",
+            "bytes": 16687,
+            "sha256": "56ebe368f6d41f238077c3319b278367bc217ccfbf2b5512a96e085f332379af",
+            "source_sha256": "9d98c1883c6821bce3d7211d376b54e2ccc6e464f921e273b0d7606698455a7d",
+            "warning_codes": [
+              "raw-content-fallback"
+            ],
+            "markers_checked": 6,
+            "markers_present_in_image_alternatives": [],
+            "zip_crc": "pass",
+            "native_math_count": 2
+          },
+          {
+            "source": "fallbacks.md",
+            "format": "html",
+            "output": "fallbacks.html",
+            "bytes": 37746,
+            "sha256": "f910c5b8c50fc186a5de659cba81f04167e18714e00950168295d35be1cc4fc9",
+            "source_sha256": "d59a454ef83115862181e88f31ec3981c19bd6b84f0a14693e3087d79eeda5e1",
+            "warning_codes": [
+              "renderer-math-source",
+              "diagram-fallback",
+              "image-unavailable"
+            ],
+            "markers_checked": 9,
+            "markers_present_in_image_alternatives": []
+          },
+          {
+            "source": "fallbacks.md",
+            "format": "pdf",
+            "output": "fallbacks.pdf",
+            "bytes": 47545,
+            "sha256": "b7516b0e8359df2d40e009b130e3d3b18f39d535c20554d567198da13e61ccd5",
+            "source_sha256": "d59a454ef83115862181e88f31ec3981c19bd6b84f0a14693e3087d79eeda5e1",
+            "warning_codes": [
+              "renderer-math-source",
+              "diagram-fallback",
+              "image-unavailable"
+            ],
+            "markers_checked": 9,
+            "markers_present_in_image_alternatives": [],
+            "pages": 3
+          },
+          {
+            "source": "fallbacks.md",
+            "format": "docx",
+            "output": "fallbacks.docx",
+            "bytes": 11864,
+            "sha256": "58cb5d1445dd09c81c77713c60fa17ba1772946214b6309a5e0cfe6b3eab9a6b",
+            "source_sha256": "d59a454ef83115862181e88f31ec3981c19bd6b84f0a14693e3087d79eeda5e1",
+            "warning_codes": [
+              "diagram-fallback",
+              "image-fallback",
+              "diagram-fallback",
+              "raw-content-fallback",
+              "pandoc-writer"
+            ],
+            "markers_checked": 9,
+            "markers_present_in_image_alternatives": [],
+            "zip_crc": "pass",
+            "native_math_count": 0
+          },
+          {
+            "source": "fallbacks.md",
+            "format": "epub",
+            "output": "fallbacks.epub",
+            "bytes": 7525,
+            "sha256": "f3af5683fc8a05ac64f184cfed311bd002a01912f676899ead946db5c0cbd627",
+            "source_sha256": "d59a454ef83115862181e88f31ec3981c19bd6b84f0a14693e3087d79eeda5e1",
+            "warning_codes": [
+              "diagram-fallback",
+              "image-fallback",
+              "diagram-fallback",
+              "raw-content-fallback",
+              "pandoc-writer"
+            ],
+            "markers_checked": 9,
+            "markers_present_in_image_alternatives": [],
+            "zip_crc": "pass",
+            "native_math_count": 0
+          },
+          {
+            "source": "pagination.md",
+            "format": "html",
+            "output": "pagination.html",
+            "bytes": 102623,
+            "sha256": "97b005ceb265e830697b2e121ddbcb63c5ead8a5dd63168714055404021f6e35",
+            "source_sha256": "3557f7a847a1d6c8b80584a26c56f2da7ebf41d40f14e166cd1a92dc992711b4",
+            "warning_codes": [],
+            "markers_checked": 261,
+            "markers_present_in_image_alternatives": [
+              "PAGINATION-TALL-GRAPHIC-MARKER"
+            ]
+          },
+          {
+            "source": "pagination.md",
+            "format": "pdf",
+            "output": "pagination.pdf",
+            "bytes": 187194,
+            "sha256": "6227e7b25d493db106e820aacf1d7501a2bd6938c5579da9a6ad10467874228c",
+            "source_sha256": "3557f7a847a1d6c8b80584a26c56f2da7ebf41d40f14e166cd1a92dc992711b4",
+            "warning_codes": [],
+            "markers_checked": 261,
+            "markers_present_in_image_alternatives": [
+              "PAGINATION-TALL-GRAPHIC-MARKER"
+            ],
+            "pages": 16
+          },
+          {
+            "source": "pagination.md",
+            "format": "docx",
+            "output": "pagination.docx",
+            "bytes": 17424,
+            "sha256": "b3f003aa3794fe6e795f11768f2b48338b8ca4cd2d59cc9eee8b12afd9d1c811",
+            "source_sha256": "3557f7a847a1d6c8b80584a26c56f2da7ebf41d40f14e166cd1a92dc992711b4",
+            "warning_codes": [],
+            "markers_checked": 261,
+            "markers_present_in_image_alternatives": [
+              "PAGINATION-TALL-GRAPHIC-MARKER"
+            ],
+            "zip_crc": "pass",
+            "native_math_count": 0
+          },
+          {
+            "source": "pagination.md",
+            "format": "epub",
+            "output": "pagination.epub",
+            "bytes": 9043,
+            "sha256": "80524f0e35dc63a8a4c753bc658b1c8b4affe23db91fdd7f68e0fe2dfa0aeb5e",
+            "source_sha256": "3557f7a847a1d6c8b80584a26c56f2da7ebf41d40f14e166cd1a92dc992711b4",
+            "warning_codes": [],
+            "markers_checked": 261,
+            "markers_present_in_image_alternatives": [
+              "PAGINATION-TALL-GRAPHIC-MARKER"
+            ],
+            "zip_crc": "pass",
+            "native_math_count": 0
+          },
+          {
+            "source": "w30-report.md",
+            "format": "html",
+            "output": "w30-report.html",
+            "bytes": 627050,
+            "sha256": "13ddf6472df5722418ce355113d599df1770294a0372d19f91831bb71baa8890",
+            "source_sha256": "1db4863436896ffa05bcfcc1d413a5fc88cd1ce73ce5f1c8cd78eb37686cbe33",
+            "warning_codes": [
+              "renderer-math-source",
+              "renderer-toc-source",
+              "renderer-footnote-source",
+              "image-unavailable"
+            ],
+            "markers_checked": 289,
+            "markers_present_in_image_alternatives": [
+              "W30-TALL-GRAPHIC-MARKER"
+            ]
+          },
+          {
+            "source": "w30-report.md",
+            "format": "pdf",
+            "output": "w30-report.pdf",
+            "bytes": 656116,
+            "sha256": "763f11baa76b91864b867f7d9da9498fa248a090ab8c9325b3098756139071e3",
+            "source_sha256": "1db4863436896ffa05bcfcc1d413a5fc88cd1ce73ce5f1c8cd78eb37686cbe33",
+            "warning_codes": [
+              "renderer-math-source",
+              "renderer-toc-source",
+              "renderer-footnote-source",
+              "image-unavailable"
+            ],
+            "markers_checked": 289,
+            "markers_present_in_image_alternatives": [
+              "W30-TALL-GRAPHIC-MARKER"
+            ],
+            "pages": 54
+          },
+          {
+            "source": "w30-report.md",
+            "format": "docx",
+            "output": "w30-report.docx",
+            "bytes": 97607,
+            "sha256": "e97095761a586e4c48f1134740c61e3c707f9d8ecbc136e994d2b35c7fd76fb8",
+            "source_sha256": "1db4863436896ffa05bcfcc1d413a5fc88cd1ce73ce5f1c8cd78eb37686cbe33",
+            "warning_codes": [
+              "image-fallback",
+              "raw-content-fallback",
+              "pandoc-writer"
+            ],
+            "markers_checked": 289,
+            "markers_present_in_image_alternatives": [
+              "W30-TALL-GRAPHIC-MARKER"
+            ],
+            "zip_crc": "pass",
+            "native_math_count": 2
+          },
+          {
+            "source": "w30-report.md",
+            "format": "epub",
+            "output": "w30-report.epub",
+            "bytes": 57997,
+            "sha256": "582675eca5ce4b76b56c499e833bb0be62cc409802e0ec13bde7bfceb991e3eb",
+            "source_sha256": "1db4863436896ffa05bcfcc1d413a5fc88cd1ce73ce5f1c8cd78eb37686cbe33",
+            "warning_codes": [
+              "image-fallback",
+              "raw-content-fallback",
+              "pandoc-writer"
+            ],
+            "markers_checked": 289,
+            "markers_present_in_image_alternatives": [
+              "W30-TALL-GRAPHIC-MARKER"
+            ],
+            "zip_crc": "pass",
+            "native_math_count": 2
+          }
+        ]
+      },
+      "pdf_visual_review": {
+        "scope": "Representative pages only; readable text, code, tables, quotations, full tall graphics and warnings on inspected pages, without observed clipping. Other pages are not individually certified.",
+        "pages": [
+          {
+            "path": ".vscode-test/failure-analysis-2026-09-10/ubuntu-pdf-review/basic-2.png",
+            "sha256": "59968bf4fa4d00b1f9d2b7f3d35f17329f31e09075ee4c414fb063dd6e212b0a"
+          },
+          {
+            "path": ".vscode-test/failure-analysis-2026-09-10/ubuntu-pdf-review/fallbacks-3.png",
+            "sha256": "13150c24ee88cbdead53c7705c437b91d684c0db024f17a6d50baa5d820239d7"
+          },
+          {
+            "path": ".vscode-test/failure-analysis-2026-09-10/ubuntu-pdf-review/pagination-15.png",
+            "sha256": "e221a8a837e46b94773d1cd5d8397fe35f3caadb7a189107c5c9384f6fdb1b77"
+          },
+          {
+            "path": ".vscode-test/failure-analysis-2026-09-10/ubuntu-pdf-review/pagination-3.png",
+            "sha256": "0d832db184b1e69b7659080307464db87ab360a51ef20ba6dcf1416548479f0a"
+          },
+          {
+            "path": ".vscode-test/failure-analysis-2026-09-10/ubuntu-pdf-review/w30-report-3.png",
+            "sha256": "c67e1479577c0c435cc21c5581ab47a8979f2470a723287b47e51c714a5f85f6"
+          },
+          {
+            "path": ".vscode-test/failure-analysis-2026-09-10/ubuntu-pdf-review/w30-report-49.png",
+            "sha256": "cdd3b5d0519f092e6125116b0d07d20120aa735c38135ba90168d8ff7b66ad08"
+          },
+          {
+            "path": ".vscode-test/failure-analysis-2026-09-10/ubuntu-pdf-review/w30-report-54.png",
+            "sha256": "3506e03d3e083330d1f9c6517394679778762fa2e0bec3b8740426f6d63ec940"
+          }
+        ]
+      },
+      "cleanup": {
+        "owned_native_profile_closed": true,
+        "normal_profile_changed": false,
+        "evidence_retained": true
+      }
+    }
+  },
+  "other_checks": {
+    "compile": "pass",
+    "electron_typecheck": "pass; Electron export is not certified",
+    "lint": {
+      "errors": 0,
+      "existing_warnings": 8
+    },
+    "frozen_input_files": 7,
+    "license_package_gate": "AGPL text and retained MIT notice bytes match source"
+  },
+  "abandoned_or_corrected_runs": [
+    "Two exploratory macOS runs reported their assertions but stalled in Chrome updater teardown; excluded from completed totals. A process-scoped Chromium flag was verified in three PDF/close probes and the full suites.",
+    "The first Ubuntu unit run passed 99/100; PDF inspection used a hard-coded Homebrew executable. The final run uses PATH discovery and passed 100/100.",
+    "Exploratory Mermaid test inputs included a blank intervening paragraph; the committed test explicitly tests adjacent navigation and exact source preservation."
+  ],
+  "browser_cleanup_source": "https://chromium.googlesource.com/chromium/src/+/e5ca8c2b4b9cbee1040bfc3d12cd3d20f99786cc",
+  "remaining_limits": [
+    "No configured GitHub CI checks; local/SSH execution evidence does not create a required CI gate.",
+    "Human product acceptance, merge and release pending.",
+    "Linux DOCX/EPUB reader UI and fresh post-fix Word/Books UI checks remain unverified; current archive/content audits passed.",
+    "Existing renderer limitations for dollar math, TOC and footnotes remain disclosed.",
+    "Windows, remote/web VS Code and Electron export remain outside validated scope.",
+    "Original 35-page compact reference is historical; current native W-30 PDFs are 51 pages on macOS and 54 on Ubuntu."
+  ]
+}

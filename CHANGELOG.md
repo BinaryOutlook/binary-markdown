@@ -1,5 +1,18 @@
 # Binary Markdown changelog
 
+## Unreleased — experimental export subsystem
+
+Implemented and verified on `export-subsystem` for local desktop VS Code on macOS, including installed-package, W-30 and representative Word/Apple Books checks. Human acceptance and release remain pending; these changes are not part of the existing `0.1.0` prerelease download.
+
+- Add a sharing-arrow menu for standalone HTML, rendered PDF, Word (.docx), and EPUB.
+- Require a named saved document, capture one revision per job, and preserve ongoing editing state.
+- Detect installed Pandoc and Chrome/Chromium/Edge, with machine-specific executable settings and setup guidance. Native binaries remain user-installed.
+- Save beside the source using collision-safe output-byte hashes, identical-file reuse and numbered suffixes.
+- Add real stage reporting, cancellation, original-resolution resource preparation, explicit fallbacks and completed-artifact integrity checks.
+- Freeze mixed-content, fallback, pagination and complex-report fixtures for reproducible validation.
+
+See [export setup](README.md#experimental-export--unreleased), the [implementation outline](docs/export-subsystem.md), and the [validation checklist](docs/export-validation.md). This entry records branch work, not release acceptance.
+
 ## 0.1.0 — GitHub prerelease
 
 First independently versioned Binary Markdown build, based on Any Markdown's upstream `main` at `82487429` (package version `0.195.393`). Most editor functionality is inherited from that project.

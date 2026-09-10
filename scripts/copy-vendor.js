@@ -67,4 +67,11 @@ for (const { pkg, dest } of licenses) {
 }
 console.log(`  ✓ LICENSE files (${licenses.length} packages)`);
 
+// The VSIX excludes node_modules. Ship the control library, never browser binaries.
+const playwrightPackage = path.join(NODE_MODULES, 'playwright-core');
+const playwrightTarget = path.join(VENDOR, 'playwright-core');
+fs.rmSync(playwrightTarget, { recursive: true, force: true });
+fs.cpSync(playwrightPackage, playwrightTarget, { recursive: true });
+console.log('  ✓ playwright-core (browser control only; installed browser required)');
+
 console.log('\nVendor copy complete.');

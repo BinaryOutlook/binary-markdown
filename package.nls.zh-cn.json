@@ -19,5 +19,11 @@
   "config.outlineStateScope.file": "分别记住当前工作区中每个 Markdown 文件是否显示大纲。",
   "config.outlineStateScope.global": "所有 Markdown 文件都沿用上次的大纲显示设置，切换工作区后也会保留。",
   "config.outlineDefaultOpen.description": "如果尚未保存大纲的显示设置，默认打开大纲面板。",
-  "config.enableDebugLogging.description": "启用调试日志，便于排查编辑器问题。"
+  "config.enableDebugLogging.description": "启用调试日志，便于排查编辑器问题。",
+  "config.export.pandocPath.description": "用于DOCX和EPUB导出的Pandoc可执行文件路径。留空以检测已安装的工具。请自行安装；手动路径无效时会报告错误，不会改用其他工具。",
+  "config.export.browserPath.description": "用于无窗口PDF导出的Chrome、Chromium或Edge可执行文件路径。留空以检测已安装的浏览器。不会自动下载浏览器。",
+  "command.exportToHtml.title": "导出为HTML",
+  "command.exportToPdf.title": "导出为PDF",
+  "command.exportToDocx.title": "导出为Word",
+  "command.exportToEpub.title": "导出为EPUB"
 }
