@@ -16,6 +16,8 @@ build-info.json
 # Test artifacts
 test-results/
 playwright-report/
+ci-results/
+validation-evidence/
 test/html/vendor/
 
 # Temporary files

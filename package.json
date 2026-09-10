@@ -294,7 +294,7 @@
     "compile": "tsc -p ./ && node build-locales.js && node scripts/copy-webview.js && node scripts/copy-vendor.js",
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
-    "test": "npm run test:outline-state && npm run test:identity && npm run test:build-info && npm run test:localization && npm run test:export && npm run test:e2e",
+    "test": "npm run test:outline-state && npm run test:identity && npm run test:build-info && npm run test:release && npm run test:localization && npm run test:export && npm run test:e2e",
     "lint": "eslint src --ext ts",
     "package": "node scripts/package-vsix.js",
     "test:build": "node test/build-standalone.js",
@@ -306,7 +306,8 @@
     "test:identity": "node --test test/unit/extension-identity.test.js",
     "test:localization": "node --test test/unit/settings-localization.test.js",
     "test:export": "node --test test/unit/export-*.test.js",
-    "test:build-info": "node --test test/unit/build-*.test.js"
+    "test:build-info": "node --test test/unit/build-*.test.js",
+    "test:release": "node --test test/unit/release-candidate.test.js"
   },
   "devDependencies": {
     "@playwright/test": "^1.58.1",

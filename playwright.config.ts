@@ -4,14 +4,14 @@ export default defineConfig({
     testDir: './test/specs',
     fullyParallel: true,
     forbidOnly: !!process.env.CI,
-    retries: process.env.CI ? 2 : 0,
+    retries: 0,
     workers: process.env.CI ? 1 : 2,
     reporter: 'list',
     timeout: 30000,
     
     use: {
         baseURL: 'http://localhost:3000',
-        trace: 'on-first-retry',
+        trace: 'retain-on-failure',
         headless: true,
         // Use an installed Chromium-family browser when Playwright's downloader
         // does not support the host distribution (for example Ubuntu 26.04).

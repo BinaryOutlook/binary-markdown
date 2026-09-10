@@ -17,6 +17,8 @@ CONTRIBUTING.md
 !vendor/**
 test/**
 test-results/**
+ci-results/**
+validation-evidence/**
 samples/**
 images/**
 images2/**
