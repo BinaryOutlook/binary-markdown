@@ -1,6 +1,6 @@
 # Export subsystem validation
 
-Updated 2026-09-10. **Implementation and engineering handback complete; ready for review.** This record supplements [the authoritative requirements](export-subsystem.md). Human product acceptance, PR merge and release are separate and have not occurred.
+Historical export-branch record, updated 2026-09-10. It supplements [the authoritative requirements](export-subsystem.md). The results below identify their original packages and environments. Follow [0.2.0 candidate validation](validation/0.2.0.md) for subsequent integration, corrected AGPL-3.0-or-later policy, packaging and hosted CI. Historical references to unmerged work or AGPL-3.0-only describe the original observation, not the current integration state.
 
 ## Merge-blocker fixes and revalidation — 2026-09-10
 
