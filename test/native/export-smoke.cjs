@@ -129,10 +129,12 @@ function receipt(owner) {
 }
 
 function harness(settings, owner) {
-    const until = async callback => {
+    const until = async (callback, label = 'condition', diagnose) => {
         const end = Date.now() + settings.timeout;
         while (Date.now() < end) { const result = await callback(); if (result) return result; await sleep(100); }
-        throw new Error('Native test watchdog expired. Inspect the isolated window and evidence; this is not a performance target.');
+        let detail = '';
+        if (diagnose) { try { detail = ' Last observation: ' + JSON.stringify(await diagnose()); } catch (error) { detail = ' Inspection failed: ' + error.message; } }
+        throw new Error('Native test watchdog expired: ' + label + '.' + detail + ' Inspect the isolated window and evidence; this is not a performance target.');
     };
     const driver = async action => {
         receipt(owner);
@@ -213,7 +215,8 @@ function harness(settings, owner) {
     };
     const open = async file => {
         await driver({ action: 'open', file });
-        return until(async () => { try { return await connect(); } catch { return null; } });
+        let lastError;
+        return until(async () => { try { return await connect(); } catch (error) { lastError = error.message; return null; } }, 'open visible editor: ' + file, () => ({ connectionError: lastError }));
     };
     const reset = connection => connection.evaluate(`window.__nativeExportEvents=[];if(!window.__nativeExportListener){window.__nativeExportListener=e=>{if(e.data.type==='exportStatus')window.__nativeExportEvents.push(e.data)};window.addEventListener('message',window.__nativeExportListener)}`);
     const terminal = connection => until(async () => (await connection.evaluate('window.__nativeExportEvents')).findLast(event => ['complete', 'failed', 'cancelled'].includes(event.state)));
@@ -238,7 +241,17 @@ function harness(settings, owner) {
         return { ...result, stages: (await connection.evaluate('window.__nativeExportEvents')).filter(event => event.stage).map(event => event.stage) };
     };
     const sourceMode = connection => connection.evaluate(`if(getComputedStyle(document.getElementById('sourceEditor')).display==='none')document.querySelector('[data-action="source"]').click();const e=document.getElementById('sourceEditor');e.focus();e.setSelectionRange(e.value.length,e.value.length)`);
-    return { until, driver, connect, open, reset, terminal, output, exportFile, workbench, sourceMode };
+    const diagnose = () => workbench(async page => {
+        await page.screenshot({ path: path.join(owner.base, 'evidence', 'failure-window.png'), timeout: 10000 });
+        const frames = [];
+        for (const frame of page.frames()) {
+            try {
+                frames.push(await frame.evaluate(`({url:location.href,ready:document.readyState,editor:!!document.getElementById('editor'),exportReady:document.getElementById('exportButton')?.dataset.exportReady,mode:document.documentElement.dataset.toolbarMode,focused:document.hasFocus(),label:document.getElementById('exportButton')?.getAttribute('aria-label'),active:document.activeElement?.id})`));
+            } catch (error) { frames.push({ error: error.message }); }
+        }
+        return frames;
+    });
+    return { until, driver, connect, open, reset, terminal, output, exportFile, workbench, sourceMode, diagnose };
 }
 
 async function run(settings, owner) {
@@ -360,6 +373,11 @@ async function run(settings, owner) {
         if (groups.includes('offline')) await offlineCases(h, owner, settings, htmlExports, record);
         verifyInputs(owner.workspace);
         record('complete', { frozenInputsUnchanged: true });
+    } catch (error) {
+        let diagnostics;
+        try { diagnostics = await h.diagnose(); } catch (inspectionError) { diagnostics = { error: inspectionError.message }; }
+        record('failure', { error: error.message, diagnostics });
+        throw error;
     } finally {
         await h.driver({ action: 'config', key: 'export.pandocPath', value: settings.pandoc });
         await h.driver({ action: 'config', key: 'export.browserPath', value: settings.browser });
@@ -428,29 +446,38 @@ async function appearanceCases(h, owner, record) {
     const file = 'appearance.md';
     fs.writeFileSync(path.join(owner.workspace, file), '# Appearance fixture\n\n> A readable quotation.\n\n```math\nE = mc^2\n```\n');
     (await h.open(file)).close();
+    let lastAppearanceObservation;
+    const appearanceState = `({mode:document.documentElement.dataset.toolbarMode,theme:document.documentElement.dataset.theme,label:document.getElementById('exportButton')?.getAttribute('aria-label'),ready:document.getElementById('exportButton')?.dataset.exportReady,active:document.activeElement?.id,format:document.activeElement?.dataset.exportFormat,menuHidden:document.getElementById('exportMenu')?.hidden,focused:document.hasFocus()})`;
     const matchingEditor = expression => h.until(async () => {
         let connection;
-        try { connection = await h.connect(); if (await connection.evaluate(expression)) return connection; }
-        catch { /* Appearance changes may briefly replace the webview. */ }
+        try { connection = await h.connect(); lastAppearanceObservation = await connection.evaluate(appearanceState); if (await connection.evaluate(expression)) return connection; }
+        catch (error) { lastAppearanceObservation = { connectionError: error.message }; }
         connection?.close();
-    });
+    }, 'appearance rebuild: ' + expression, () => lastAppearanceObservation);
     for (let cycle = 1; cycle <= 3; cycle++) {
         for (const [mode, language, label] of [['full', 'zh-CN', '导出'], ['simple', 'en', 'Export']]) {
             await h.driver({ action: 'config', key: 'toolbarMode', value: mode });
             await h.driver({ action: 'config', key: 'language', value: language });
             const connection = await matchingEditor(`document.documentElement.dataset.toolbarMode===${JSON.stringify(mode)} && document.getElementById('exportButton').getAttribute('aria-label')===${JSON.stringify(label)}`);
             try {
+                const phase = 'toolbar cycle ' + cycle + ' ' + mode + '/' + language;
+                console.log('checking', phase);
+                const observe = () => connection.evaluate(appearanceState);
                 assert.equal(receipt(owner).nativeLanguage, 'en', 'Native VS Code language remains independent of the runtime language');
                 assert.equal(await connection.evaluate(`document.getElementById('exportButton').previousElementSibling.dataset.action`), 'openInTextEditor');
+                // A ready document is not necessarily the focused native window.
+                // Establish the real keyboard precondition before sending input.
+                await h.workbench(page => page.bringToFront());
                 await connection.evaluate(`document.getElementById('exportButton').focus()`);
+                await h.until(() => connection.evaluate('document.hasFocus() && document.activeElement.id === "exportButton"'), phase + ' button focus', observe);
                 for (const format of ['html', 'pdf']) {
                     await connection.send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'ArrowDown', code: 'ArrowDown' });
                     await connection.send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'ArrowDown', code: 'ArrowDown' });
-                    await h.until(() => connection.evaluate(`document.activeElement.dataset.exportFormat===${JSON.stringify(format)}`));
+                    await h.until(() => connection.evaluate(`document.activeElement.dataset.exportFormat===${JSON.stringify(format)}`), phase + ' ArrowDown to ' + format, observe);
                 }
                 await connection.send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Escape', code: 'Escape' });
                 await connection.send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Escape', code: 'Escape' });
-                await h.until(() => connection.evaluate('document.getElementById("exportMenu").hidden && document.activeElement.id === "exportButton"'));
+                await h.until(() => connection.evaluate('document.getElementById("exportMenu").hidden && document.activeElement.id === "exportButton"'), phase + ' Escape', observe);
                 record('toolbar', { cycle, mode, language, label, nativeLanguage: 'en', keyboardNavigation: true, nextToVsCode: true });
             } finally { connection.close(); }
         }

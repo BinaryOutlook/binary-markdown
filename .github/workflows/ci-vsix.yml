@@ -98,11 +98,6 @@ jobs:
         run: |
           mkdir -p ci-results
           node --test test/unit/*.test.js | tee ci-results/unit-tests.txt
-      - name: Browser regressions with no retries
-        if: matrix.browserSuite
-        run: |
-          npm run test:build
-          npx playwright test --workers=2 --retries=0 | tee ci-results/browser-tests.txt
       - name: Installed VSIX user flows and artifact integrity
         run: |
           if [[ "$RUNNER_OS" == Linux ]]; then
@@ -110,6 +105,11 @@ jobs:
           else
             node .github/scripts/native-check.cjs | tee ci-results/native-tests.txt
           fi
+      - name: Browser regressions with no retries
+        if: matrix.browserSuite
+        run: |
+          npm run test:build
+          npx playwright test --workers=2 --retries=0 | tee ci-results/browser-tests.txt
       - name: Collect browser traces
         if: always()
         run: |
