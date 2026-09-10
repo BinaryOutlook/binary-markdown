@@ -49,6 +49,7 @@ test('the compiled extension activates alongside upstream registrations and wire
             if (id === 'vscode') return vscode;
             if (id === './editorProvider') return { BinaryMarkdownEditorProvider: class {} };
             if (id === './i18n/messages') return { initLocale() {}, t: key => key };
+            if (id === './build-info') return { copyBuildInformation() {} };
             throw new Error(`Unexpected activation dependency: ${id}`);
         },
     });

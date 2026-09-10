@@ -1,0 +1,93 @@
+name: Prepare VSIX release draft
+
+on:
+  workflow_dispatch:
+    inputs:
+      validation_run:
+        description: Successful Validate VSIX run ID for the current main commit
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+
+defaults:
+  run:
+    shell: bash
+
+concurrency:
+  group: prepare-vsix-release
+  cancel-in-progress: false
+
+jobs:
+  draft:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: write
+      actions: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      VALIDATION_RUN: ${{ inputs.validation_run }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+          persist-credentials: false
+      - name: Verify trusted validation run
+        id: candidate
+        run: |
+          [[ "$VALIDATION_RUN" =~ ^[1-9][0-9]*$ ]]
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$VALIDATION_RUN" > "$RUNNER_TEMP/validation-run.json"
+          main_commit=$(gh api "repos/$GITHUB_REPOSITORY/commits/main" --jq .sha)
+          node scripts/release-candidate.js inspect "$RUNNER_TEMP/validation-run.json" "$main_commit" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ steps.candidate.outputs.source }}
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .node-version
+          package-manager-cache: false
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: ${{ steps.candidate.outputs.artifact }}
+          path: dist
+          run-id: ${{ inputs.validation_run }}
+          github-token: ${{ github.token }}
+      - name: Verify exact validated bytes and source
+        env:
+          SOURCE: ${{ steps.candidate.outputs.source }}
+        run: node scripts/release-candidate.js verify dist "$SOURCE"
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          pattern: validation-*-${{ steps.candidate.outputs.source }}-${{ steps.candidate.outputs.attempt }}
+          path: validation-evidence
+          run-id: ${{ inputs.validation_run }}
+          github-token: ${{ github.token }}
+      - name: Assemble reviewable release material without rebuilding
+        env:
+          SOURCE: ${{ steps.candidate.outputs.source }}
+          ATTEMPT: ${{ steps.candidate.outputs.attempt }}
+        run: |
+          version=$(node -p 'require("./package.json").version')
+          tag="v$version"
+          test -f "docs/releases/$version.md"
+          for lane in ubuntu macos vscode-minimum; do
+            test -f "validation-evidence/validation-$lane-$SOURCE-$ATTEMPT/artifact-audit.json"
+          done
+          set +e
+          git ls-remote --exit-code --tags origin "refs/tags/$tag" > "$RUNNER_TEMP/existing-tag.txt"
+          tag_status=$?
+          set -e
+          test "$tag_status" -eq 2 || { echo 'Release tag already exists, or its absence could not be verified.' >&2; exit 1; }
+          git archive --format=tar.gz --prefix="binary-markdown-$version/" -o "dist/binary-markdown-$version-source.tar.gz" "$SOURCE"
+          cp "$RUNNER_TEMP/validation-run.json" validation-evidence/validation-run.json
+          tar -czf "dist/binary-markdown-$version-validation.tar.gz" -C validation-evidence .
+          (cd dist && shasum -a 256 *.vsix *.json *.tar.gz > SHA256SUMS)
+          node scripts/release-candidate.js notes "docs/releases/$version.md" "$SOURCE" > "$RUNNER_TEMP/release-notes.md"
+          printf '\nSource commit: `%s`\n\nValidation: https://github.com/%s/actions/runs/%s (attempt %s).\n\nThe attached VSIX is the exact artifact validated by that run. Check `SHA256SUMS` before installation.\n' "$SOURCE" "$GITHUB_REPOSITORY" "$VALIDATION_RUN" "$ATTEMPT" >> "$RUNNER_TEMP/release-notes.md"
+          gh release create "$tag" dist/* --draft --target "$SOURCE" --title "Binary Markdown $version" --notes-file "$RUNNER_TEMP/release-notes.md"
+          printf 'Draft `%s` prepared from `%s`. Review the notes, checksums and validation evidence in GitHub Releases, then publish manually.\n' "$tag" "$SOURCE" >> "$GITHUB_STEP_SUMMARY"

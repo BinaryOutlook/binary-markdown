@@ -25,5 +25,6 @@
   "command.exportToHtml.title": "Exportar a HTML",
   "command.exportToPdf.title": "Exportar a PDF",
   "command.exportToDocx.title": "Exportar a Word",
-  "command.exportToEpub.title": "Exportar a EPUB"
+  "command.exportToEpub.title": "Exportar a EPUB",
+  "command.copyBuildInformation.title": "Copiar información de compilación"
 }

@@ -25,5 +25,6 @@
   "command.exportToHtml.title": "HTML로 내보내기",
   "command.exportToPdf.title": "PDF로 내보내기",
   "command.exportToDocx.title": "Word로 내보내기",
-  "command.exportToEpub.title": "EPUB로 내보내기"
+  "command.exportToEpub.title": "EPUB로 내보내기",
+  "command.copyBuildInformation.title": "빌드 정보 복사"
 }

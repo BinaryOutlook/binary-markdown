@@ -54,8 +54,17 @@ exports.activate = async function activate(context) {
     try { last = JSON.parse(fs.readFileSync(path.join(workspace, 'request.json'), 'utf8')).id; } catch { /* Fresh workspace. */ }
     const execute = async request => {
         if (request.token !== owner.token) throw new Error('Test workspace ownership token mismatch.');
+        let buildInformation;
         switch (request.action) {
             case 'inspect': break;
+            case 'buildInformation': {
+                const previous = await vscode.env.clipboard.readText();
+                try {
+                    await vscode.commands.executeCommand('binary-markdown.copyBuildInformation');
+                    buildInformation = await vscode.env.clipboard.readText();
+                } finally { await vscode.env.clipboard.writeText(previous); }
+                break;
+            }
             case 'open':
                 await vscode.commands.executeCommand('vscode.openWith', vscode.Uri.file(localFile(request.file, '.md')), 'binary-markdown.editor');
                 break;
@@ -89,7 +98,7 @@ exports.activate = async function activate(context) {
             case 'close': await vscode.commands.executeCommand('workbench.action.closeActiveEditor'); break;
             default: throw new Error('Unsupported test-driver action.');
         }
-        return { id: request.id, ok: true, documents: inspect() };
+        return { id: request.id, ok: true, documents: inspect(), ...(buildInformation ? { buildInformation } : {}) };
     };
     const poll = async () => {
         let request;

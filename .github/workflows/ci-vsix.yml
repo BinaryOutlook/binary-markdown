@@ -1,0 +1,142 @@
+name: Validate VSIX
+
+on:
+  push:
+    branches: [main, codex/0.2.0-integration]
+  pull_request:
+    branches: [main, codex/0.2.0-integration]
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+concurrency:
+  group: vsix-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  package:
+    name: Build candidate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    outputs:
+      source: ${{ steps.identity.outputs.source }}
+      artifact: ${{ steps.identity.outputs.artifact }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .node-version
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - name: Audit runtime and build dependencies
+        run: npm audit
+      - name: Package the clean source revision once
+        run: npm run package -- --release
+      - name: Identify immutable candidate
+        id: identity
+        run: |
+          source=$(git rev-parse HEAD)
+          printf 'source=%s\nartifact=vsix-candidate-%s-%s\n' "$source" "$source" "$GITHUB_RUN_ATTEMPT" >> "$GITHUB_OUTPUT"
+          (cd dist && shasum -a 256 --check *.vsix.sha256)
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: ${{ steps.identity.outputs.artifact }}
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 0
+
+  validate:
+    name: Validate (${{ matrix.label }})
+    needs: package
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {label: ubuntu, os: ubuntu-24.04, code: latest, browserSuite: true}
+          - {label: macos, os: macos-15, code: latest, browserSuite: true}
+          - {label: vscode-minimum, os: ubuntu-24.04, code: '1.85.0', browserSuite: false}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 40
+    env:
+      CI: '1'
+      TMPDIR: /tmp
+      EXPORT_REAL_TOOLS: '1'
+      VALIDATION_CODE_VERSION: ${{ matrix.code }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.package.outputs.source }}
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .node-version
+          cache: npm
+      - run: npm ci
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: ${{ needs.package.outputs.artifact }}
+          path: dist
+      - name: Verify downloaded candidate
+        run: |
+          (cd dist && shasum -a 256 --check *.vsix.sha256)
+          printf 'EXPORT_VSIX_PATH=%s/dist/%s-%s.vsix\n' "$GITHUB_WORKSPACE" "$(node -p 'require("./package.json").name')" "$(node -p 'require("./package.json").version')" >> "$GITHUB_ENV"
+      - name: Compile checkout for archive parity checks
+        run: npm run compile
+      - name: Provision actual export engines and isolated VS Code
+        run: bash .github/scripts/provision-validation.sh
+      - name: Frozen source contract
+        run: python3 test/fixtures/exports/verify-fixtures.py
+      - name: Units, real converters and archive parity
+        run: |
+          mkdir -p ci-results
+          node --test test/unit/*.test.js | tee ci-results/unit-tests.txt
+      - name: Browser regressions with no retries
+        if: matrix.browserSuite
+        run: |
+          npm run test:build
+          npx playwright test --workers=2 --retries=0 | tee ci-results/browser-tests.txt
+      - name: Installed VSIX user flows and artifact integrity
+        run: |
+          if [[ "$RUNNER_OS" == Linux ]]; then
+            xvfb-run --auto-servernum --server-args='-screen 0 1920x1080x24 -nolisten tcp' node .github/scripts/native-check.cjs | tee ci-results/native-tests.txt
+          else
+            node .github/scripts/native-check.cjs | tee ci-results/native-tests.txt
+          fi
+      - name: Collect browser traces
+        if: always()
+        run: |
+          mkdir -p ci-results
+          if [[ -d test-results ]]; then cp -R test-results ci-results/browser-traces; fi
+      - name: Retain validation evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: validation-${{ matrix.label }}-${{ needs.package.outputs.source }}-${{ github.run_attempt }}
+          path: ci-results
+          if-no-files-found: warn
+          retention-days: 7
+
+  ready:
+    name: VSIX validation
+    needs: [package, validate]
+    if: always()
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Require every validation lane
+        env:
+          PACKAGE_RESULT: ${{ needs.package.result }}
+          VALIDATION_RESULT: ${{ needs.validate.result }}
+          CANDIDATE: ${{ needs.package.outputs.artifact }}
+          SOURCE: ${{ needs.package.outputs.source }}
+        run: |
+          test "$PACKAGE_RESULT" = success
+          test "$VALIDATION_RESULT" = success
+          printf 'Validated source: `%s`\n\nCandidate: `%s`\n\nAll required lanes passed. Publication remains a separate maintainer decision.\n' "$SOURCE" "$CANDIDATE" >> "$GITHUB_STEP_SUMMARY"

@@ -25,5 +25,6 @@
   "command.exportToHtml.title": "导出为HTML",
   "command.exportToPdf.title": "导出为PDF",
   "command.exportToDocx.title": "导出为Word",
-  "command.exportToEpub.title": "导出为EPUB"
+  "command.exportToEpub.title": "导出为EPUB",
+  "command.copyBuildInformation.title": "复制构建信息"
 }

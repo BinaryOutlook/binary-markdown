@@ -3,6 +3,7 @@ out/
 dist/
 vendor/
 *.vsix
+build-info.json
 .vscode-test/
 .DS_Store
 
@@ -15,6 +16,8 @@ vendor/
 # Test artifacts
 test-results/
 playwright-report/
+ci-results/
+validation-evidence/
 test/html/vendor/
 
 # Temporary files
@@ -30,4 +33,5 @@ Thumbs.db
 /images/
 /images2/
 /test2/
+/output/
 CLAUDE.md

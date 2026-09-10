@@ -256,13 +256,22 @@ async function run(settings, owner) {
         fs.writeFileSync(report, JSON.stringify({ harness: harnessIdentity(), host: receipt(owner), packageSha256: hash(fs.readFileSync(settings.package)), receipts }, null, 2));
         console.log(name, JSON.stringify(details));
     };
-    const available = ['formats', 'saves', 'edges', 'ui', 'selection', 'immutable', 'offline'];
+    const available = ['identity', 'formats', 'saves', 'edges', 'ui', 'selection', 'immutable', 'offline'];
     const groups = settings.suite === 'all' ? available : [settings.suite];
     assert.ok(groups.every(value => available.includes(value)), 'Suite must be all, ' + available.join(', '));
     const htmlExports = [];
     const write = (file, content) => fs.writeFileSync(path.join(owner.workspace, file), content);
     const read = file => fs.readFileSync(path.join(owner.workspace, file));
     try {
+        if (groups.includes('identity')) {
+            const info = JSON.parse(fs.readFileSync(path.join(receipt(owner).extensionPath, 'build-info.json'), 'utf8'));
+            const { buildInformation } = await h.driver({ action: 'buildInformation' });
+            assert.ok(buildInformation.includes('Binary Markdown ' + info.version));
+            assert.ok(buildInformation.includes('Source commit: ' + info.sourceCommit));
+            assert.ok(buildInformation.includes('Local source changes: ' + (info.dirty ? 'yes' : 'no')));
+            assert.ok(buildInformation.includes('VS Code: ' + receipt(owner).vscodeVersion));
+            record('build-information', { sourceCommit: info.sourceCommit, version: info.version, dirty: info.dirty, clipboardRestored: true });
+        }
         await h.driver({ action: 'config', key: 'export.pandocPath', value: settings.pandoc });
         await h.driver({ action: 'config', key: 'export.browserPath', value: settings.browser });
         if (groups.includes('formats')) for (const file of ['basic.md', 'fallbacks.md', 'pagination.md', 'w30-report.md']) {
@@ -581,7 +590,14 @@ async function main() {
         return;
     }
     if (settings.command === 'check') {
-        const response = await harness(settings, owner).driver({ action: 'inspect' });
+        const h = harness(settings, owner);
+        // CLI launch returns before the isolated extension host writes its first
+        // receipt. Wait for that observable event while preserving every guard.
+        await h.until(() => {
+            try { return receipt(owner); }
+            catch (error) { if (error.code === 'ENOENT' || error instanceof SyntaxError) return false; throw error; }
+        });
+        const response = await h.driver({ action: 'inspect' });
         console.log(JSON.stringify({ ready: true, frozenInputs: verifyInputs(owner.workspace), harness: harnessIdentity(), ...response }, null, 2));
         return;
     }

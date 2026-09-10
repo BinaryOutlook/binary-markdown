@@ -54,6 +54,8 @@ test('packaged VSIX contains an isolated export runtime, UI, guidance and locali
     const bytes = await fs.readFile(path.resolve(process.env.EXPORT_VSIX_PATH));
     const entries = unpack(bytes);
     const required = [
+        'build-info.json', 'out/build-info.js',
+        'vendor/MERMAID-DEPENDENCIES.json', 'vendor/MERMAID-THIRD-PARTY-LICENSES.txt',
         'LICENSE.txt', 'NOTICE', 'LICENSES/AnyMarkdown-MIT.txt', 'ACKNOWLEDGMENTS.md',
         'out/export/controller.js', 'out/export/html.js', 'out/export/resources.js',
         'out/export/output.js', 'out/export/validate.js', 'out/export/webview-rpc.js',
@@ -71,6 +73,14 @@ test('packaged VSIX contains an isolated export runtime, UI, guidance and locali
     const manifest = JSON.parse(entries.get('extension/package.json').toString('utf8'));
     const rootManifest = require('../../package.json');
     assert.equal(manifest.version, rootManifest.version);
+    const identity = JSON.parse(entries.get('extension/build-info.json').toString('utf8'));
+    assert.equal(identity.version, manifest.version);
+    assert.equal(identity.license, manifest.license);
+    assert.equal(identity.name, manifest.name);
+    const bundled = JSON.parse(entries.get('extension/vendor/MERMAID-DEPENDENCIES.json').toString('utf8'));
+    const sanitizer = bundled.find(entry => entry.name === 'dompurify');
+    assert.equal(sanitizer.version, require('../../node_modules/dompurify/package.json').version);
+    assert.ok(entries.get('extension/vendor/mermaid.min.js').includes(Buffer.from('version="' + sanitizer.version + '"')));
     assert.equal(manifest.license, 'AGPL-3.0-or-later');
     assert.match(entries.get('extension/LICENSE.txt').toString('utf8'), /GNU AFFERO GENERAL PUBLIC LICENSE/);
     assert.match(entries.get('extension/LICENSES/AnyMarkdown-MIT.txt').toString('utf8'), /Permission is hereby granted/);
