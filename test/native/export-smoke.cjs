@@ -202,7 +202,10 @@ function harness(settings, owner) {
             await send('Runtime.enable');
             let contextId;
             for (const context of contexts.filter(value => value.auxData?.isDefault)) {
-                const found = await send('Runtime.evaluate', { expression: '!!document.querySelector("#editor") && !!document.querySelector(\'#exportButton[data-export-ready="true"]\')', contextId: context.id, returnByValue: true });
+                // VS Code keeps the previous active document while a replacement
+                // initializes in #pending-frame. Its scripts can be ready before
+                // it is visible; never send input to that pending document.
+                const found = await send('Runtime.evaluate', { expression: 'window.frameElement?.id === "active-frame" && !!document.querySelector("#editor") && !!document.querySelector(\'#exportButton[data-export-ready="true"]\')', contextId: context.id, returnByValue: true });
                 if (found.result.value) contextId = context.id;
             }
             assert.ok(contextId, 'The active editor context must be ready');
@@ -378,7 +381,7 @@ async function run(settings, owner) {
         record('complete', { frozenInputsUnchanged: true });
     } catch (error) {
         let diagnostics;
-        try { diagnostics = await h.diagnose(); } catch (inspectionError) { diagnostics = { error: inspectionError.message }; }
+        try { diagnostics = { frames: await h.diagnose(), driver: await h.driver({ action: 'inspect' }) }; } catch (inspectionError) { diagnostics = { error: inspectionError.message }; }
         record('failure', { error: error.message, diagnostics });
         throw error;
     } finally {

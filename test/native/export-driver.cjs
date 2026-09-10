@@ -36,7 +36,9 @@ exports.activate = async function activate(context) {
         extensionVersion: extension.packageJSON.version, vscodeVersion: vscode.version, nativeLanguage: vscode.env.language,
         platform: process.platform, arch: process.arch, nodeVersion: process.version,
         uiKind: vscode.env.uiKind, remoteName: vscode.env.remoteName ?? null,
-        trusted: vscode.workspace.isTrusted
+        trusted: vscode.workspace.isTrusted,
+        appearance: Object.fromEntries(['language', 'toolbarMode', 'theme'].map(key =>
+            [key, vscode.workspace.getConfiguration('binary-markdown').get(key)]))
     });
     const respond = value => {
         const temporary = path.join(workspace, 'response.json.tmp');
