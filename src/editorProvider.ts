@@ -632,6 +632,9 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
             }
         });
 
+        // Coalesce a settings burst into one HTML replacement. Overlapping
+        // replacements can leave a loaded frame pending in native VS Code.
+        let configurationRefresh: ReturnType<typeof setTimeout> | undefined;
         // Listen for configuration changes
         const changeConfigSubscription = vscode.workspace.onDidChangeConfiguration(e => {
             const exportChanged = e.affectsConfiguration('binary-markdown.export');
@@ -640,8 +643,13 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
                 'toolbarMode', 'outlineStateScope', 'outlineDefaultOpen', 'enableDebugLogging'];
             const editorChanged = editorSettings.some(key => e.affectsConfiguration('binary-markdown.' + key));
             if (e.affectsConfiguration('binary-markdown') && (!exportChanged || editorChanged)) {
-                updateWebview();
-                sendImageDirStatus();
+                clearTimeout(configurationRefresh);
+                configurationRefresh = setTimeout(() => {
+                    configurationRefresh = undefined;
+                    if (disposed) return;
+                    updateWebview();
+                    sendImageDirStatus();
+                }, 250);
             }
         });
 
@@ -975,6 +983,8 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
                 this.activeWebviewPanel = undefined;
             }
             disposed = true;
+            clearTimeout(configurationRefresh);
+            configurationRefresh = undefined;
             if (nativeSave) { finishNativeSave(nativeSave, new Error('The document editor was closed.')); }
             exportController.dispose();
             this.exportControllers.delete(webviewPanel);

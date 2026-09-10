@@ -39,7 +39,14 @@ async function setup(t) {
     const renderConfigs = [];
     const locales = [];
     let cachedLocale = 'ja'; // A locale cached before the current configuration.
-    const timers = [];
+    const timers = new Map();
+    let nextTimer = 0;
+    const flushTimers = async () => {
+        for (const [id, callback] of timers) {
+            timers.delete(id);
+            await callback();
+        }
+    };
     const config = { theme: 'github', language: 'en' };
     const state = {
         text: '# OLD-EDITOR\n', disk: '# OLD-EDITOR\n', captureCalls: 0, saveCalls: 0,
@@ -119,17 +126,18 @@ async function setup(t) {
         './shared/outline-state-store': { OutlineStateStore: class { getOpen(_scope, _uri, defaultOpen) { return defaultOpen; } } }
     };
     const compiled = { exports: {} };
-    new Function('require', 'module', 'exports', '__dirname', '__filename', 'setTimeout', providerSource)(
+    new Function('require', 'module', 'exports', '__dirname', '__filename', 'setTimeout', 'clearTimeout', providerSource)(
         name => name in mocks ? mocks[name] : scopedRequire(name), compiled, compiled.exports,
-        path.dirname(providerPath), providerPath, callback => { timers.push(callback); return timers.length; }
+        path.dirname(providerPath), providerPath,
+        callback => { const id = ++nextTimer; timers.set(id, callback); return id; }, id => timers.delete(id)
     );
     const provider = new compiled.exports.BinaryMarkdownEditorProvider({ extensionUri: file('/extension-fixture'), workspaceState: {}, globalState: {} });
     await provider.resolveCustomTextEditor(document, panel, {});
     t.after(() => disposed.fire());
     return {
-        state, document, panel, provider, config, posts, notices, renderConfigs, locales, disposed,
+        state, document, panel, provider, config, posts, notices, renderConfigs, locales, disposed, flushTimers,
         configChanged: keys => configChanges.fire({ affectsConfiguration: query => keys.some(key => key === query || key.startsWith(query + '.')) }),
-        externalChange: async content => { state.disk = content; watcher.fire(document.uri); await timers.shift()(); },
+        externalChange: async content => { state.disk = content; watcher.fire(document.uri); await flushTimers(); },
         send: message => Promise.all(incoming.fire(message))
     };
 }
@@ -248,10 +256,12 @@ test('new editors and appearance rebuilds use the current configured language', 
     h.config.language = 'zh-CN';
     h.config.theme = 'night';
     h.configChanged(['binary-markdown.theme']);
+    await h.flushTimers();
     assert.equal(h.renderConfigs.at(-1).webviewMessages.locale, 'zh-CN');
     h.config.language = 'en';
     h.config.toolbarMode = 'simple';
     h.configChanged(['binary-markdown.toolbarMode']);
+    await h.flushTimers();
     assert.equal(h.renderConfigs.at(-1).webviewMessages.locale, 'en');
     assert.equal(h.renderConfigs.at(-1).toolbarMode, 'simple');
 });
@@ -262,9 +272,38 @@ test('combined export and appearance/language changes update both integrations',
     h.config.language = 'zh-cn';
     h.configChanged(['binary-markdown.export.browserPath', 'binary-markdown.theme', 'binary-markdown.language']);
     assert.equal(h.state.controller.refreshes, 1);
+    await h.flushTimers();
     assert.equal(h.renderConfigs.length, 2);
     assert.equal(h.renderConfigs[1].theme, 'night');
     assert.deepEqual(h.locales, ['en', 'zh-cn']);
+});
+
+test('configuration bursts render the latest settings in a single replacement', async t => {
+    const h = await setup(t);
+    h.config.toolbarMode = 'simple';
+    h.configChanged(['binary-markdown.toolbarMode']);
+    h.config.language = 'zh-CN';
+    h.configChanged(['binary-markdown.language']);
+    h.config.toolbarMode = 'full';
+    h.config.theme = 'night';
+    h.configChanged(['binary-markdown.toolbarMode', 'binary-markdown.theme']);
+    assert.equal(h.renderConfigs.length, 1);
+    await h.flushTimers();
+    assert.equal(h.renderConfigs.length, 2);
+    assert.equal(h.renderConfigs[1].toolbarMode, 'full');
+    assert.equal(h.renderConfigs[1].theme, 'night');
+    assert.equal(h.renderConfigs[1].webviewMessages.locale, 'zh-CN');
+});
+
+test('closing an editor cancels a queued configuration replacement', async t => {
+    const h = await setup(t);
+    h.config.language = 'zh-CN';
+    h.configChanged(['binary-markdown.language']);
+    h.disposed.fire();
+    const postCount = h.posts.length;
+    await h.flushTimers();
+    assert.equal(h.renderConfigs.length, 1);
+    assert.equal(h.posts.length, postCount);
 });
 
 test('disposing a panel releases an outstanding native-save wait', async t => {
