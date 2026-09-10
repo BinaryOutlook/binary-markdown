@@ -1,6 +1,6 @@
 # Export subsystem
 
-Version 1.4 · Updated 2026-09-10 · **Status: D0–D5 implementation complete on `export-subsystem`, with macOS/Ubuntu revalidation and the reported test blockers resolved. AGPL-3.0-only licensing now applies with retained MIT/third-party notices. No human acceptance, merge or release is recorded.**
+Version 1.5 · Updated 2026-09-10 · **Status: D0–D5 implemented; converging in the 0.2.0 integration candidate. The selected license policy is AGPL-3.0-or-later with retained MIT and third-party notices. Maintainer acceptance, merge to main and release remain separate.**
 
 This is the authoritative task brief for Binary Markdown's experimental export subsystem. It consolidates the export reconnaissance, clarification answers, functional and non-functional requirements, implementation plan, and human–AI working agreement. A developer can work from this file without reconstructing the conversation. Keep subsequent scope decisions, milestone status, and evidence references here.
 
@@ -319,7 +319,7 @@ These criteria are specification targets, not executed results. Record unavailab
 
 Implementation branch: `export-subsystem`. Its opening commit established this documentation baseline; D0–D4 are now implemented with focused and integrated tests. D5 engineering handback and the subsequent regression fixes are complete; human review and product acceptance remain pending.
 
-**Start from the implementation branch's current tip.** This file is versioned with the branch so delegated worktrees include the handoff. Preserve unrelated changes and verify Git identity before further commits.
+**Start from the reviewed integration revision.** During 0.2.0 preparation use `codex/0.2.0-integration`; after integration use `main`. Record the full commit ID. This file travels with the implementation so delegated worktrees include the handoff. Preserve unrelated changes and verify Git identity before further commits.
 
 Milestones describe observable increments; numbered tickets are intended commit/review slices. Split a ticket if it grows across independent behaviors. Deliver settings and UI with the backend they enable.
 
@@ -419,7 +419,7 @@ Update this table at each milestone or meaningful interruption. Distinguish impl
 
 The original macOS full regression run recorded **684 browser tests passed, 4 skipped and the unchanged Perplexity-color failure**, plus **84 unit tests passed and 1 package test skipped** without `EXPORT_VSIX_PATH`. Compile passed; lint reported 0 errors and 8 existing warnings. After the test-harness script-preservation fix and additional blockquote coverage, **23 focused export browser tests passed**. These runs establish the stated test evidence, not a green full-suite result or blanket acceptance of AC-01–14. The final explicit export run passed **74/74 with no skips**, including real Pandoc, installed Chrome and packaged-runtime checks. See [export-validation.md](export-validation.md) for package/native receipts and limitations.
 
-Current handback (2026-09-10): the reported regression blockers are resolved. The same AGPL VSIX from `8514de9` passed 43 native scenarios plus unchanged inputs on each host, with an additional 16-format run after the development server stopped. Both macOS ARM64 and Ubuntu x86-64 full browser suites passed **691/691 with no failures, skips or retries**, and both unit suites passed **100/100**, including real engines and packaged-runtime checks. Each host's 16 artifacts passed 2,260 marker checks; fourteen PDF pages were inspected across the hosts. The last code-adjacent commit, `54caee9`, only makes the PDF test inspection tool portable. See [the current validation record](export-validation.md#merge-blocker-fixes-and-revalidation--2026-09-10) and [dated evidence](export-evidence/2026-09-10-merge-readiness.json) for hashes, diagnosis, skip disposition and remaining viewer/platform limits. The next action is human PR review. No hosted CI gate, acceptance, merge or release is implied.
+Export-branch handback before v0.2 convergence (2026-09-10): the reported regression blockers are resolved. The same AGPL VSIX from `8514de9` passed 43 native scenarios plus unchanged inputs on each host, with an additional 16-format run after the development server stopped. Both macOS ARM64 and Ubuntu x86-64 full browser suites passed **691/691 with no failures, skips or retries**, and both unit suites passed **100/100**, including real engines and packaged-runtime checks. Each host's 16 artifacts passed 2,260 marker checks; fourteen PDF pages were inspected across the hosts. The last code-adjacent commit, `54caee9`, only makes the PDF test inspection tool portable. See [the current validation record](export-validation.md#merge-blocker-fixes-and-revalidation--2026-09-10) and [dated evidence](export-evidence/2026-09-10-merge-readiness.json) for hashes, diagnosis, skip disposition and remaining viewer/platform limits. That receipt did not establish hosted CI, acceptance, merge or release. The combined 0.2.0 package, corrected license policy, dependency updates and new CI have their own [validation record](validation/0.2.0.md).
 
 For later work, leave the current ticket, files/commit, checks run and outcomes, next action, and any blocker here. Link detailed logs/artifacts as evidence when needed; keep the task's requirements and decisions in this file. No second competing specification or separate mandatory status document is needed.
 
@@ -439,6 +439,7 @@ For later work, leave the current ticket, files/commit, checks run and outcomes,
 | 2026-09-09 | Only the newest dependency-status refresh may update the menu; disposal invalidates pending results. | Review reproduced older successful probes replacing a newer invalid-path result. Regression tests cover overlapping refresh and disposal; per-job tool validation remains independent. |
 | 2026-09-10 | Transition to AGPL-3.0-only in a separate first commit while retaining upstream/prior MIT and third-party notices. | Explicit user direction for future commits; `f2a73a5`. Licence/package metadata and shipped notice bytes verified; frozen MIT fixture bytes preserved. |
 | 2026-09-10 | Correct the four reported browser tests, restore three skips and replace absent sample fixtures with an independently authored pair. Fix the BR sentinel content bug, explicit export UI readiness and Chrome worker cleanup exposed by these checks. | User-authorized merge-blocker remediation; `3914cbe` through `54caee9`. No FR/NFR/AC scope changed. Full suites, same-package native runs and artifact checks are recorded in the current validation section. |
+| 2026-09-10 | Converge export, release identity, documentation and VSIX automation in an isolated integration branch; align the license to the selected AGPL-3.0-or-later policy. | Maintainer-authorized 0.2.0 integration. Preserve export FR/NFR and frozen inputs; see [Decision 001](decisions/001-agpl-transition.md) and the [combined validation record](validation/0.2.0.md). Final main PR and release publication remain review boundaries. |
 
 Append later decisions with date, reason, alternatives where relevant, affected IDs, user authorization or within-scope rationale, and evidence/commit. Rejected implementation experiments need only a short note when the lesson affects future work.
 
@@ -515,11 +516,10 @@ Implement the export MVP specified in docs/export-subsystem.md.
 
 Read the repository's applicable instructions and CONTRIBUTING.md. Treat the
 FRs, NFRs, confirmed scope, naming rules and acceptance criteria in that document
-as the current contract. Verify the starting revision and use the current
-export-subsystem branch tip so the implementation worktree includes this file.
-
-Continue on export-subsystem, using an isolated worktree if needed. Read the
-resumable status and docs/export-validation.md first: D0–D4 are implemented
+as the current contract. Pin the starting revision from codex/0.2.0-integration
+during release preparation, or main after integration. Use an isolated feature
+worktree and focused commits. Read the resumable status, docs/validation/0.2.0.md
+and the dated docs/export-validation.md first: D0–D4 are implemented
 and tested; D5 engineering handback is complete and human acceptance is pending. Preserve the frozen fixtures,
 refresh evidence affected by new changes, and complete remaining native edge,
 artifact/viewer and package checks as small, reviewable increments.

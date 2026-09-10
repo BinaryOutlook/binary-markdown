@@ -1,0 +1,43 @@
+name: Bug report
+description: Report a problem in a release, development commit or community build.
+title: "[Bug] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Reports from older development commits are welcome. Please identify the revision and reproduction; testing a newer commit is useful but is not required to open this report. Remove private documents and personal paths.
+  - type: textarea
+    id: build
+    attributes:
+      label: Build identity and environment
+      description: Paste Binary Markdown → Copy Build Information, or give the full commit ID, release tag, VS Code version, OS and architecture. Explain unknown fields.
+      render: text
+    validations:
+      required: true
+  - type: dropdown
+    id: changes
+    attributes:
+      label: Were there local source changes?
+      options:
+        - "No"
+        - "Yes (describe below)"
+        - "Unknown"
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction, expected and actual behaviour
+      description: Give clear steps and a small Markdown example. If modified, describe the relevant changes or provide a patch.
+    validations:
+      required: true
+  - type: textarea
+    id: export
+    attributes:
+      label: Export details, if relevant
+      description: Format, Pandoc/browser versions, warning text, relevant settings and whether the named source was saved.
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Logs, screenshots or optional newer-commit retest
+      description: Include only what helps reproduce the problem. A newer-commit retest is optional.
