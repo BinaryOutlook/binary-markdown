@@ -12,9 +12,13 @@ import { checkCancelled, ExportFormat, ExportOperations, PreparedExportDocument,
 
 const normalize = (value: string) => value.replace(/^\uFEFF/, '').replace(/\r\n?/g, '\n');
 
-function supportsExportHost(): boolean {
-    return !vscode.env.remoteName && vscode.env.uiKind === vscode.UIKind.Desktop &&
-        (process.platform === 'darwin' || process.platform === 'linux');
+function exportAvailabilityError(): string | undefined {
+    const messages = getExportMessages();
+    if (vscode.env.remoteName) { return messages.unsupportedRemote; }
+    if (vscode.env.uiKind !== vscode.UIKind.Desktop ||
+        (process.platform !== 'darwin' && process.platform !== 'linux')) { return messages.unsupportedHost; }
+    if (!vscode.workspace.isTrusted) { return messages.trustRequired; }
+    return undefined;
 }
 
 export class ExportController implements vscode.Disposable {
@@ -36,11 +40,10 @@ export class ExportController implements vscode.Disposable {
 
     async getCapabilities(refresh = false) {
         if (refresh) { this.capabilities = undefined; }
-        const messages = getExportMessages();
-        const unavailable = !supportsExportHost() ? messages.unsupportedHost :
-            !vscode.workspace.isTrusted ? messages.trustRequired : undefined;
+        const unavailable = exportAvailabilityError();
         if (unavailable) {
             return {
+                host: { available: false, error: unavailable },
                 pandoc: { kind: 'pandoc' as const, available: false, error: unavailable },
                 browser: { kind: 'browser' as const, available: false, error: unavailable }
             };
@@ -52,7 +55,7 @@ export class ExportController implements vscode.Disposable {
                 discoverTool('browser', config.get<string>('export.browserPath', ''))
             ]).then(([pandoc, browser]) => ({ pandoc, browser }));
         }
-        return this.capabilities;
+        return { host: { available: true }, ...await this.capabilities };
     }
 
     refreshCapabilities(): void {
@@ -132,10 +135,8 @@ export class ExportController implements vscode.Disposable {
             };
             try {
                 operations.report('checking');
-                if (!supportsExportHost()) {
-                    throw new Error(messages.unsupportedHost);
-                }
-                if (!vscode.workspace.isTrusted) { throw new Error(messages.trustRequired); }
+                const unavailable = exportAvailabilityError();
+                if (unavailable) { throw new Error(unavailable); }
                 await this.waitForSave(abort.signal);
                 checkCancelled(abort.signal);
                 if (this.document.isClosed || this.document.isUntitled || this.document.uri.scheme !== 'file' || this.document.isDirty) {

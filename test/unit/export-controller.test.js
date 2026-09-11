@@ -327,6 +327,7 @@ for (const platform of ['darwin', 'linux']) {
     test(platform + ' local desktop capabilities agree with successful saved HTML export', async t => {
         const h = await harness(t, { platform });
         const capabilities = await h.controller.getCapabilities();
+        assert.equal(capabilities.host.available, true);
         assert.equal(capabilities.pandoc.available, true);
         assert.equal(capabilities.browser.available, true);
         assert.equal(h.calls.discover, 2);
@@ -412,7 +413,7 @@ for (const [name, options] of [
     test('controller rejects ' + name + ' before tool discovery or source capture', async t => {
         const h = await harness(t, options);
         const capabilities = await h.controller.getCapabilities();
-        const reason = options.trusted === false ? /Trust this workspace/ : /local desktop VS Code on macOS or Linux/;
+        const reason = options.trusted === false ? /Trust this workspace/ : options.remote ? /not yet supported in remote windows, including Remote-SSH/ : /local desktop VS Code on macOS or Linux/;
         for (const status of Object.values(capabilities)) {
             assert.equal(status.available, false);
             assert.match(status.error, reason);

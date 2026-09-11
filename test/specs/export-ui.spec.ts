@@ -100,7 +100,7 @@ test.describe('Export toolbar and job status', () => {
         await page.locator('#exportButton').focus();
         await page.keyboard.press('ArrowDown');
         await expect(page.locator('[data-export-format="html"]')).toBeFocused();
-        await hostMessage(page, { type: 'exportCapabilities', pandoc: { kind: 'pandoc', available: false }, browser: { kind: 'browser', available: true } });
+        await hostMessage(page, { type: 'exportCapabilities', host: { available: true }, pandoc: { kind: 'pandoc', available: false }, browser: { kind: 'browser', available: true } });
         await expect(page.locator('[data-export-format="docx"]')).toHaveAttribute('aria-disabled', 'true');
         await expect(page.locator('#exportPandocSetup')).toBeVisible();
         await page.keyboard.press('ArrowDown');
@@ -111,6 +111,54 @@ test.describe('Export toolbar and job status', () => {
         await page.locator('#exportPandocSetup').click();
         expect(await outbound(page, 'exportSettings')).toEqual([{ type: 'exportSettings', tool: 'pandoc' }]);
     });
+
+    test('formats wait for host availability without offering tool installation', async ({ page }) => {
+        await setup(page);
+        await page.locator('#exportButton').click();
+        for (const format of ['html', 'pdf', 'docx', 'epub']) {
+            await expect(page.locator('[data-export-format="' + format + '"]')).toHaveAttribute('aria-disabled', 'true');
+        }
+        await expect(page.locator('#exportPandocSetup')).toBeHidden();
+        await expect(page.locator('#exportBrowserSetup')).toBeHidden();
+        await page.locator('[data-export-format="html"]').focus();
+        await page.keyboard.press('Enter');
+        expect(await outbound(page, 'export')).toEqual([]);
+    });
+
+    for (const reason of [getExportMessages().unsupportedRemote, getExportMessages().trustRequired]) {
+        test('host restriction blocks every format and explains recovery: ' + reason, async ({ page }) => {
+            await setup(page);
+            await page.locator('#exportButton').click();
+            await hostMessage(page, {
+                type: 'exportCapabilities', host: { available: false, error: reason },
+                pandoc: { kind: 'pandoc', available: false, error: reason },
+                browser: { kind: 'browser', available: false, error: reason }
+            });
+            await expect(page.locator('#exportLimitations')).toHaveText(reason);
+            for (const format of ['html', 'pdf', 'docx', 'epub']) {
+                const item = page.locator('[data-export-format="' + format + '"]');
+                await expect(item).toHaveAttribute('aria-disabled', 'true');
+                await expect(item).toContainText('Unavailable');
+                await item.focus();
+                await page.keyboard.press('Enter');
+            }
+            await expect(page.locator('#exportPandocSetup')).toBeHidden();
+            await expect(page.locator('#exportBrowserSetup')).toBeHidden();
+            expect(await outbound(page, 'export')).toEqual([]);
+
+            // Restoring a supported host leaves HTML independent of native tools.
+            await hostMessage(page, {
+                type: 'exportCapabilities', host: { available: true },
+                pandoc: { kind: 'pandoc', available: false }, browser: { kind: 'browser', available: false }
+            });
+            await expect(page.locator('#exportLimitations')).toHaveText(getExportMessages().limitations);
+            await expect(page.locator('[data-export-format="html"]')).toHaveAttribute('aria-disabled', 'false');
+            await expect(page.locator('#exportPandocSetup')).toBeVisible();
+            await expect(page.locator('#exportBrowserSetup')).toBeVisible();
+            await page.locator('[data-export-format="html"]').click();
+            expect(await outbound(page, 'export')).toEqual([{ type: 'export', format: 'html' }]);
+        });
+    }
 
     test('real stages show activity, cancellation and a safe warning summary', async ({ page }) => {
         await setup(page);

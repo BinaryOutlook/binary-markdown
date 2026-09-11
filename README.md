@@ -103,6 +103,8 @@ The [editor guide](docs/editor-guide.md) covers formatting, keyboard operations,
 
 Export supports **HTML, PDF, Word (.docx), and EPUB** in **local desktop VS Code on macOS and Linux**. HTML/PDF follow supported editor rendering; DOCX/EPUB prioritize editable content and structure. See [candidate validation](docs/validation/0.2.0.md) and the [export validation history](docs/export-validation.md) for tested systems and limitations.
 
+**Remote-SSH export is not yet supported.** The menu explains this restriction and marks every format unavailable. To export now, open a local copy of the Markdown file and its referenced assets in desktop VS Code on macOS or Linux. Installing Pandoc or a browser does not enable export in a remote window.
+
 Save the named Markdown file, then select the sharing-arrow button immediately to the right of the VS Code-logo toolbar button. Choose a format from its dropdown. Unsaved work produces a save-and-retry message; export does not save automatically. The job shows its actual stage, supports cancellation, and reports the saved path and any fallback warnings.
 
 | Format | Tool to install | Initial output goal |

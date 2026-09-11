@@ -2,6 +2,8 @@
 
 Export is experimental in local desktop VS Code on macOS and Linux. See the repository's validation record for the specific systems tested. Windows, remote extension hosts and browser VS Code remain outside the current export scope.
 
+**Remote-SSH export is not yet supported.** Open a local copy of the Markdown file and its referenced assets in desktop VS Code on macOS or Linux to export. The menu disables every format and explains unsupported environments before an export starts; installing conversion tools does not remove a host restriction.
+
 Save the Markdown file, then use the sharing-arrow button beside the VS Code-logo button. Choose HTML, PDF, Word (.docx), or EPUB. Unsaved or unnamed work must be saved before retrying; export never saves it automatically.
 
 ## Tools and settings

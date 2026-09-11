@@ -71,17 +71,21 @@
     }
 
     function updateCapabilities() {
+        const blocked = capabilities && !capabilities.host.available;
+        document.getElementById('exportLimitations').textContent = blocked
+            ? capabilities.host.error : text('limitations');
         menu.querySelectorAll('[data-export-format]').forEach(item => {
             const format = item.dataset.exportFormat;
-            const tool = format === 'html' ? { available: true } : capabilities && capabilities[format === 'pdf' ? 'browser' : 'pandoc'];
-            const label = tool ? text(tool.available ? 'available' : 'unavailable') : text('detecting');
+            const tool = capabilities && (blocked ? capabilities.host :
+                format === 'html' ? { available: true } : capabilities[format === 'pdf' ? 'browser' : 'pandoc']);
+            const label = blocked ? text('blocked') : tool ? text(tool.available ? 'available' : 'unavailable') : text('detecting');
             item.querySelector('[data-export-tool-status]').textContent = label;
             item.setAttribute('aria-label', format.toUpperCase() + ' — ' + label);
-            item.setAttribute('aria-disabled', String(running || Boolean(tool && !tool.available)));
+            item.setAttribute('aria-disabled', String(running || !tool || !tool.available));
             item.title = tool && !tool.available && tool.error ? tool.error : '';
         });
-        document.getElementById('exportPandocSetup').hidden = !capabilities || Boolean(capabilities.pandoc.available);
-        document.getElementById('exportBrowserSetup').hidden = !capabilities || Boolean(capabilities.browser.available);
+        document.getElementById('exportPandocSetup').hidden = !capabilities || blocked || Boolean(capabilities.pandoc.available);
+        document.getElementById('exportBrowserSetup').hidden = !capabilities || blocked || Boolean(capabilities.browser.available);
     }
 
     function openMenu(keyboard) {
@@ -140,10 +144,7 @@
         if (!item) return;
         const format = item.dataset.exportFormat;
         if (format) {
-            if (running) return;
-            const toolKind = format === 'pdf' ? 'browser' : (format === 'html' ? null : 'pandoc');
-            const tool = toolKind && capabilities && capabilities[toolKind];
-            if (tool && !tool.available) return;
+            if (item.getAttribute('aria-disabled') === 'true') return;
             closeMenu(false);
             host.requestExport(format);
         } else {
@@ -170,7 +171,7 @@
     window.addEventListener('message', event => {
         const message = event.data || {};
         if (message.type === 'exportCapabilities') {
-            if (!message.pandoc || !message.browser) return;
+            if (!message.host || !message.pandoc || !message.browser) return;
             capabilities = message;
             updateCapabilities();
         } else if (message.type === 'exportStatus') {
