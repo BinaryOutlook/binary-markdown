@@ -20,6 +20,7 @@
   "config.outlineStateScope.global": "ワークスペースに関係なく、すべての Markdown ファイルで直前の開閉状態を引き継ぎます。",
   "config.outlineDefaultOpen.description": "開閉状態が保存されていない場合に、アウトラインを自動で開きます。",
   "config.enableDebugLogging.description": "問題の調査に使うデバッグログを出力します。",
+  "config.export.pdfWhiteBackground.description": "PDFを白いページとGitHubのライトテーマで書き出し、文字や図を読みやすくします。無効にすると、余白を含むページ全体に現在のエディターテーマを使用します。他の書き出し形式には影響しません。",
   "config.export.pandocPath.description": "DOCX・EPUB書き出しに使うPandoc実行ファイルのパス。空欄でインストール済みツールを検出します。インストールは手動です。指定したパスが無効な場合は別のツールを選ばずエラーを表示します。",
   "config.export.browserPath.description": "PDF書き出しに使うChrome・Chromium・Edge実行ファイルのパス。空欄でインストール済みブラウザーを検出します。ブラウザーは自動ダウンロードされません。",
   "command.exportToHtml.title": "HTMLに書き出し",

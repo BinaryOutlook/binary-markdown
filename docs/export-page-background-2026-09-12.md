@@ -1,6 +1,6 @@
 # Export page background: bug report and feasibility assessment
 
-Recorded: 2026-09-12. **Status: PDF defect reproduced; correction feasible; implementation pending.** DOCX did not exhibit the same page-background defect in the checks below. This is a bug record and implementation assessment, not a shipped feature or fix.
+Recorded: 2026-09-12. **Status: PDF fixes implemented on the issue #6 branch; final validation in progress.** DOCX did not exhibit the same page-background defect. The investigation below preserves the original baseline; the implementation follow-up records subsequent changes. This is not a release claim.
 
 ## Report
 
@@ -125,3 +125,11 @@ One boundary remains: DOCX packages prepared Mermaid SVGs and original images, w
 The existing [theme audit](../test/native/export-artifact-audit.themes.cjs) checks quotation contrast and extracted markers but does not sample PDF margins. Extend that coverage with actual page-edge assertions so this defect cannot pass unnoticed again. Keep the original frozen export fixtures unchanged; add a small dedicated background case if needed.
 
 Raw synthetic inputs, the generation/audit scripts, all nine PDFs, four DOCX files and rasterized PDF pages are retained locally under the ignored `.vscode-test/export-page-background-2026-09-12/` directory. The committed receipt contains portable hashes and observations, not private paths or generated binary documents.
+
+## Implementation follow-up
+
+The user authorized implementation and a reviewable PR on 2026-09-12. [Issue #6](https://github.com/BinaryOutlook/binary-markdown/issues/6) tracks the work on `codex/pdf-export-background`, which retains this report, its original evidence receipt and the roadmap update.
+
+The PDF converter now paints `@page` with the captured theme background. The new `binary-markdown.export.pdfWhiteBackground` setting defaults to `true` and selects GitHub light appearance while keeping the captured base font size. Disabling it retains the editor theme across the page. The host sends frozen appearance to offscreen rendering, including Mermaid, and all seven native settings translations describe the behavior. Source images and explicit diagram node colours remain authored content. DOCX page styling is unchanged; regression coverage compares document, styles and settings XML across all seven editor themes.
+
+Validation results will be recorded here before handback. The baseline measurements above are not post-fix results.

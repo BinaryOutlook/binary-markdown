@@ -132,6 +132,26 @@ test('failed Pandoc conversion removes its owned intermediate directory', async 
 
 const realTools = process.env.EXPORT_REAL_TOOLS === '1';
 
+test('real DOCX pages do not acquire editor background or text colours', { skip: !realTools }, async t => {
+    const directory = await temporary(t);
+    const status = await discoverTool('pandoc', process.env.EXPORT_PANDOC_PATH || '');
+    assert.equal(status.available, true, status.error);
+    let reference;
+    for (const theme of ['github', 'sepia', 'night', 'dark', 'minimal', 'things', 'perplexity']) {
+        const saved = { sourcePath: path.join(directory, 'theme.md'), version: 1, theme, fontSize: 16,
+            markdown: '# DOCX heading\n\nReadable body.\n\n> Readable quotation.\n\nDOCX-LAST-MARKER\n' };
+        const entries = archiveEntries(await convertPandoc('docx', saved,
+            { html: '', theme, fontSize: 16, diagrams: [], warnings: [] }, status.path, operations()));
+        const document = entries.get('word/document.xml').toString('utf8');
+        assert.doesNotMatch(document, /<w:(?:background|shd)\b/);
+        assert.match(document, /DOCX-LAST-MARKER/);
+        // Timestamp metadata can differ; compare the paper and typography parts.
+        const appearance = ['word/document.xml', 'word/styles.xml', 'word/settings.xml'].map(name => entries.get(name));
+        if (reference) assert.deepEqual(appearance, reference, theme + ' DOCX appearance matches the light export');
+        else reference = appearance;
+    }
+});
+
 test('real Pandoc exports structured content, native math and original assets without active raw HTML', { skip: !realTools }, async t => {
     const directory = await temporary(t);
     const status = await discoverTool('pandoc', process.env.EXPORT_PANDOC_PATH || '');

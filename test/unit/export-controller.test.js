@@ -193,6 +193,36 @@ test('controller compares normalized display content but exports the untouched h
     await assertSourceIntact(h);
 });
 
+for (const theme of ['github', 'sepia', 'night', 'dark', 'minimal', 'things', 'perplexity']) {
+    for (const [format, white, expected] of [
+        ['pdf', undefined, 'github'], ['pdf', true, 'github'], ['pdf', false, theme],
+        ['html', true, theme], ['docx', true, theme], ['epub', true, theme]
+    ]) {
+        test(`${format} captures ${theme} appearance with white-PDF setting ${white}`, async t => {
+            const config = { theme, fontSize: 19 };
+            if (white !== undefined) config['export.pdfWhiteBackground'] = white;
+            const h = await harness(t, {
+                config, holdPreparation: true,
+                discover: ({ kind }) => {
+                    // A slow dependency probe must not let later settings
+                    // replace the appearance already captured for this job.
+                    Object.assign(config, { theme: 'night', fontSize: 24, 'export.pdfWhiteBackground': !white });
+                    return { kind, available: true, path: '/mock/' + kind };
+                }
+            });
+            const job = h.controller.export(format);
+            const request = await h.waitForPost('prepareExport');
+            assert.equal(request.theme, expected);
+            assert.equal(request.fontSize, 19);
+            assert.equal(request.markdown, h.original);
+            h.controller.handleMessage({ type: 'cancelExport' });
+            await job;
+            assert.equal(h.terminal()[0].state, 'cancelled');
+            await assertSourceIntact(h);
+        });
+    }
+}
+
 test('a revision change while the webview snapshot is pending rejects stale capture', async t => {
     const h = await harness(t, { holdSnapshot: true });
     const job = h.controller.export('html');

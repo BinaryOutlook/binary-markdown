@@ -1683,7 +1683,7 @@
         exportWarning(warnings, code, label);
     }
 
-    async function prepareExportDocument(source, signal) {
+    async function prepareExportDocument(source, appearance, signal) {
         checkExportCancellation(signal);
         const warnings = [];
         const diagrams = [];
@@ -1707,9 +1707,14 @@
         }
         const container = document.createElement('div');
         container.className = 'editor export-preparation';
+        container.dataset.theme = appearance.theme;
         container.setAttribute('aria-hidden', 'true');
         container.setAttribute('inert', '');
         container.style.cssText = 'position:fixed;left:-100000px;top:0;width:860px;max-height:none;overflow:visible;pointer-events:none;';
+        container.style.setProperty('--font-size', appearance.fontSize + 'px');
+        container.style.fontSize = 'var(--font-size)';
+        container.style.fontFamily = 'var(--font-family)';
+        container.style.color = 'var(--text-color)';
         // Asset fetching/embedding belongs to the host so files are read once at
         // original resolution. Do not trigger duplicate image loads in this tree.
         const images = Array.from(template.content.querySelectorAll('img')).map(image => {
@@ -1753,11 +1758,16 @@
                 try {
                     // Reuse the production Mermaid library with strict settings;
                     // never run click handlers or document-provided directives.
-                    mermaid.initialize(Object.assign({}, previousConfig, {
+                    // Start with the captured palette. getConfig() includes
+                    // resolved themeVariables which would otherwise retain the
+                    // live editor's dark colours even when theme is changed.
+                    mermaid.initialize({
+                        theme: ['dark', 'night'].includes(appearance.theme) ? 'dark' : 'default',
                         securityLevel: 'strict', startOnLoad: false, htmlLabels: false,
-                        secure: Array.from(new Set([...(previousConfig.secure || []), 'securityLevel', 'htmlLabels', 'flowchart'])),
-                        flowchart: Object.assign({}, previousConfig.flowchart, { htmlLabels: false })
-                    }));
+                        secure: Array.from(new Set([...(previousConfig.secure || []), 'securityLevel', 'htmlLabels', 'flowchart', 'theme', 'themeVariables'])),
+                        flowchart: { useMaxWidth: true, htmlLabels: false },
+                        sequence: { useMaxWidth: true }
+                    });
                     const result = await awaitExportReady(mermaid.render(id, diagramSource, measurement), signal);
                     checkExportCancellation(signal);
                     const fragment = document.createElement('template');
@@ -1798,8 +1808,8 @@
                 html: '<article class="editor export-document">' + output.innerHTML + '</article>',
                 warnings: warnings,
                 diagrams: diagrams,
-                theme: document.documentElement.dataset.theme || 'github',
-                fontSize: parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--font-size')) || 16
+                theme: appearance.theme,
+                fontSize: appearance.fontSize
             };
         } finally {
             container.remove();
@@ -13045,11 +13055,17 @@
         }
         if (message.type === 'prepareExport') {
             if (typeof host.respondExport !== 'function') return;
+            // Capture before queuing so later editor settings cannot change an
+            // in-flight export. Optional fields support older host fixtures.
+            const appearance = {
+                theme: message.theme || document.documentElement.dataset.theme || 'github',
+                fontSize: message.fontSize || parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--font-size')) || 16
+            };
             const controller = new AbortController();
             exportRenderRequests.set(message.requestId, controller);
             exportRenderQueue = exportRenderQueue.catch(() => {}).then(async () => {
                 try {
-                    const prepared = await prepareExportDocument(message.markdown, controller.signal);
+                    const prepared = await prepareExportDocument(message.markdown, appearance, controller.signal);
                     host.respondExport(Object.assign({ type: 'exportPrepared', requestId: message.requestId }, prepared));
                 } catch (error) {
                     host.respondExport({ type: 'exportError', requestId: message.requestId, error: error.message || String(error) });
