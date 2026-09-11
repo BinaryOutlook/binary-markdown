@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="media/icon.png" alt="Binary Markdown logo: 01 above MD" width="160" height="160">
+</p>
+
 # Binary Markdown Editor
 
 An open-source visual Markdown editor for VS Code, independently maintained by BinaryOutlook. Edit Markdown in a rendered view, switch to source when needed, copy multiline code accurately, and keep the outline the way you prefer.
