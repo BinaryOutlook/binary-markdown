@@ -1,0 +1,168 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-09-11T17:24:58.556Z",
+  "issue": "https://github.com/BinaryOutlook/binary-markdown/issues/6",
+  "pullRequest": "https://github.com/BinaryOutlook/binary-markdown/pull/7",
+  "baselineCommit": "f84dd0d1d091824665c6f4ba52f51ec3725010be",
+  "implementationCommit": "048826106800ed3047eecd048a5d597a9d079b00",
+  "environment": {
+    "os": "macOS 26.5.2",
+    "arch": "arm64",
+    "harnessNode": "v24.21.0",
+    "vscode": "1.136.0",
+    "extensionHostNode": "v24.18.1",
+    "browser": "Google Chrome 153.0.8010.36",
+    "pandoc": "pandoc 3.8.3"
+  },
+  "package": {
+    "schemaVersion": 1,
+    "name": "binary-markdown",
+    "version": "0.2.0",
+    "license": "AGPL-3.0-or-later",
+    "sourceCommit": "048826106800ed3047eecd048a5d597a9d079b00",
+    "sourceTree": "c9c6d28798cf82835332dd0fed5bf3fc69fb2617",
+    "sourceKind": "git",
+    "dirty": false,
+    "repository": "https://github.com/BinaryOutlook/binary-markdown",
+    "sourceUrl": "https://github.com/BinaryOutlook/binary-markdown/tree/048826106800ed3047eecd048a5d597a9d079b00",
+    "buildNode": "24.21.0",
+    "sha256": "782708212c90585c8c26220bbb014f7e6c636bcc90ba5bd639639b95ffab0633",
+    "artifact": "binary-markdown-0.2.0.vsix"
+  },
+  "validation": {
+    "unitConverterPackage": {
+      "passed": 165,
+      "failed": 0,
+      "skipped": 0,
+      "sourceCommit": "048826106800ed3047eecd048a5d597a9d079b00",
+      "logSha256": "1f09275634bb085f634d8aade5293d556979cff6a2eae5cd916ceafb04291cdb"
+    },
+    "fullBrowser": {
+      "passed": 702,
+      "failed": 0,
+      "skipped": 0,
+      "retries": 0,
+      "fixtureSourceCommit": "9b24c87e664284cd42bfba32dfb739b1b5902394",
+      "logSha256": "f89a12bbb63af8531067631d56413f6927420abb88a79356c6bcb7c6746d0020"
+    },
+    "finalExportBrowser": {
+      "passed": 27,
+      "failed": 0,
+      "skipped": 0,
+      "retries": 0,
+      "scope": "Final export source and spec including authored diagram palette preservation; isolated fixture on port 3001",
+      "logSha256": "2ae50fe1f3e0cc38a3008997d4386985761fc962cb78d49b17876cc3f2d8bca1"
+    },
+    "native": {
+      "scenarios": 48,
+      "frozenInputsUnchanged": true,
+      "packageSha256": "782708212c90585c8c26220bbb014f7e6c636bcc90ba5bd639639b95ffab0633",
+      "reportSha256": "28a6cd50815987884939c1dc20abe6ff367eb50d5608cf15c88655b076c9740d"
+    },
+    "artifactAudit": {
+      "outputs": 16,
+      "markersAccountedFor": 2260,
+      "gate": "passed",
+      "reportSha256": "25ebb6c35bfbb835b7d03bb3fff0927db407aa8d740b4eef00caa68212f816ba"
+    },
+    "themedPdfRaster": {
+      "themes": [
+        "github",
+        "sepia",
+        "night",
+        "dark",
+        "minimal",
+        "things",
+        "perplexity"
+      ],
+      "pagesPerTheme": 3,
+      "allOutermostPixelsChecked": true,
+      "contentMarginsMm": 16,
+      "paper": "A4",
+      "checks": "Searchable page markers, visible ink inset, every outermost pixel, middle of each margin and unused final area"
+    },
+    "docx": {
+      "themes": [
+        "github",
+        "sepia",
+        "night",
+        "dark",
+        "minimal",
+        "things",
+        "perplexity"
+      ],
+      "equalParts": [
+        "word/document.xml",
+        "word/styles.xml",
+        "word/settings.xml"
+      ],
+      "noDocumentPageBackgroundOrShading": true,
+      "viewerEvidence": "See original baseline report for Word editing versus print-view observations."
+    },
+    "hostedCi": "See PR checks for validation of the final merge candidate on Ubuntu, macOS and minimum VS Code; this local receipt does not assert their outcome."
+  },
+  "pdfSettingCases": [
+    {
+      "mode": "default",
+      "pages": 5,
+      "expectedRgb": [
+        255,
+        255,
+        255
+      ],
+      "output": "pdf-background.pdf",
+      "sha256": "8441a5af9053a20bcac7578fffa2620b1f318fd5bf495746d00609c84ade42dd",
+      "sourceUnchanged": true,
+      "editorUnchanged": true
+    },
+    {
+      "mode": "theme",
+      "pages": 5,
+      "expectedRgb": [
+        26,
+        27,
+        38
+      ],
+      "output": "pdf-background_38303bd1.pdf",
+      "sha256": "a94ba6515b178217de2f0dded117c7583dbcd00da77dd1194682bf3d38303bd1",
+      "sourceUnchanged": true,
+      "editorUnchanged": true
+    },
+    {
+      "mode": "white",
+      "pages": 5,
+      "expectedRgb": [
+        255,
+        255,
+        255
+      ],
+      "output": "pdf-background_bb50af37.pdf",
+      "sha256": "80998c7b8ebc644faa64d8422005fd26d17b634a6fcb6b36845bfb15bb50af37",
+      "sourceUnchanged": true,
+      "editorUnchanged": true
+    }
+  ],
+  "screenshots": [
+    {
+      "file": "2026-09-12-pdf-white.png",
+      "pdfSha256": "8441a5af9053a20bcac7578fffa2620b1f318fd5bf495746d00609c84ade42dd",
+      "page": 1,
+      "dpi": 96,
+      "sha256": "3bdbd9b4cdea2a9c307ea0ae3ae64d2ab6fe59256bef03b1daa091b0ddcd24cb",
+      "inspection": "Continuous paper background, readable heading, quotation, math and diagram labels; normal text inset."
+    },
+    {
+      "file": "2026-09-12-pdf-theme.png",
+      "pdfSha256": "a94ba6515b178217de2f0dded117c7583dbcd00da77dd1194682bf3d38303bd1",
+      "page": 1,
+      "dpi": 96,
+      "sha256": "bf712111cb659081991505bcc4144cf0e351e2e3962d9245d8a7ab99e0d74d94",
+      "inspection": "Continuous paper background, readable heading, quotation, math and diagram labels; normal text inset."
+    }
+  ],
+  "limits": [
+    "No release or merge claimed.",
+    "Explicit colours in source images and diagram styles are preserved, not recoloured.",
+    "Full browser run used the earlier implementation fixture; final touched export files passed their focused suite and final VSIX passed units/native checks. Hosted PR checks cover the final merge candidate."
+  ]
+}

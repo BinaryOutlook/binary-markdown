@@ -1,6 +1,6 @@
 # Export page background: bug report and feasibility assessment
 
-Recorded: 2026-09-12. **Status: PDF fixes implemented on the issue #6 branch; final validation in progress.** DOCX did not exhibit the same page-background defect. The investigation below preserves the original baseline; the implementation follow-up records subsequent changes. This is not a release claim.
+Recorded: 2026-09-12. **Status: implemented and locally validated; tracked in [PR #7](https://github.com/BinaryOutlook/binary-markdown/pull/7).** DOCX did not exhibit the same page-background defect. The investigation below preserves the original baseline; the implementation follow-up records subsequent changes. This is not a release claim.
 
 ## Report
 
@@ -77,7 +77,7 @@ The successful proof is limited to Chrome 153 on macOS. Repeat the actual page-e
 
 ### White PDF setting: feasible, with colour and diagram work
 
-Proposed setting: **`binary-markdown.export.pdfWhiteBackground`**, a boolean with a recommended default of **`true`**. The setting name and default are a proposal recorded for the next implementation, not an existing configuration option.
+Proposed setting: **`binary-markdown.export.pdfWhiteBackground`**, a boolean with a recommended default of **`true`**. At the investigation baseline this was a proposal; it is now implemented as recorded in the follow-up below.
 
 | Value | Intended output |
 | --- | --- |
@@ -132,4 +132,24 @@ The user authorized implementation and a reviewable PR on 2026-09-12. [Issue #6]
 
 The PDF converter now paints `@page` with the captured theme background. The new `binary-markdown.export.pdfWhiteBackground` setting defaults to `true` and selects GitHub light appearance while keeping the captured base font size. Disabling it retains the editor theme across the page. The host sends frozen appearance to offscreen rendering, including Mermaid, and all seven native settings translations describe the behavior. Source images and explicit diagram node colours remain authored content. DOCX page styling is unchanged; regression coverage compares document, styles and settings XML across all seven editor themes.
 
-Validation results will be recorded here before handback. The baseline measurements above are not post-fix results.
+### Post-fix validation
+
+The [post-fix receipt](export-evidence/2026-09-12-pdf-background-fix.json) records source and artifact hashes. The final local VSIX was built from clean commit `048826106800ed3047eecd048a5d597a9d079b00`, SHA-256 `782708212c90585c8c26220bbb014f7e6c636bcc90ba5bd639639b95ffab0633`. Validation used macOS 26.5.2 ARM64, Node 24.21.0, VS Code 1.136.0, Chrome 153.0.8010.36 and Pandoc 3.8.3.
+
+| Check | Observed result |
+| --- | --- |
+| Unit, real-converter and package checks | 165 passed; no failures or skips on the final VSIX. |
+| Browser regressions | 702 passed without retries/skips on the earlier implementation fixture. The final export source and spec, including preservation of authored diagram palettes, passed all 27 focused browser checks. |
+| Installed VSIX | 48 scenarios plus the frozen-input check passed on the final package; 16 artifacts passed the integrity audit with 2,260 markers accounted for. |
+| Page backgrounds | All seven themes passed a three-page raster check of every outermost pixel, margins, final blank area and text inset. Installed setting checks additionally passed on five-page default-white, themed and explicit-white PDFs. |
+| White-mode readability | Headings, prose, quotations, links, code tokens, math and generated diagram labels passed light-output checks from every editor theme. Native PDF first/final pages were inspected. |
+| Capture and editor state | Later setting changes, cancellation, Mermaid configuration restoration and PDF-setting changes without editor reload passed. |
+| DOCX parity | All seven themes produced matching document/styles/settings XML with no document page background or shading introduced. Earlier Word print-view observations remain in the baseline receipt. |
+
+[PR #7 checks](https://github.com/BinaryOutlook/binary-markdown/pull/7/checks) track the final merge candidate's Ubuntu, macOS and minimum-VS-Code validation. These local results do not claim a release, merge or untested viewer support.
+
+Representative first pages from the same night-theme editor, rendered from the final installed VSIX:
+
+| Default white PDF | Theme retained, including margins |
+| --- | --- |
+| ![White PDF page](export-evidence/2026-09-12-pdf-white.png) | ![Themed PDF page](export-evidence/2026-09-12-pdf-theme.png) |
