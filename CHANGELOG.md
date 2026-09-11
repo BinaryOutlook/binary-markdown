@@ -1,5 +1,11 @@
 # Binary Markdown changelog
 
+## Unreleased
+
+- Default PDF export to a white page with readable GitHub light appearance; disable `binary-markdown.export.pdfWhiteBackground` to retain the editor theme.
+- Fill themed PDF pages through every margin and the unused final-page area while keeping the existing text margins.
+- Capture export appearance before asynchronous rendering so generated diagrams follow the selected PDF appearance without changing the editor. DOCX retains its existing white-page styling.
+
 ## 0.2.0
 
 This version combines export, license/branding/documentation alignment, and VSIX automation. The 0.1.0 prerelease predates these changes; the [validation record](docs/validation/0.2.0.md) records evidence and remaining scope. Published artifacts and their exact source are listed on [GitHub Releases](https://github.com/BinaryOutlook/binary-markdown/releases).

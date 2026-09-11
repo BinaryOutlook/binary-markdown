@@ -93,6 +93,8 @@ test('packaged VSIX contains an isolated export runtime, UI, guidance and locali
     const properties = manifest.contributes.configuration.properties;
     const settings = ['binary-markdown.export.pandocPath', 'binary-markdown.export.browserPath'];
     for (const setting of settings) assert.equal(properties[setting].scope, 'machine');
+    assert.equal(properties['binary-markdown.export.pdfWhiteBackground'].default, true);
+    settings.push('binary-markdown.export.pdfWhiteBackground');
     for (const locale of ['', '.es', '.fr', '.ja', '.ko', '.zh-cn', '.zh-tw']) {
         const dictionary = JSON.parse(entries.get('extension/package.nls' + locale + '.json').toString('utf8'));
         for (const setting of settings) {

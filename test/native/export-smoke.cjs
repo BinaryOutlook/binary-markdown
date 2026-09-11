@@ -8,7 +8,7 @@ const crypto = require('node:crypto');
 const http = require('node:http');
 const net = require('node:net');
 const { pathToFileURL } = require('node:url');
-const { spawnSync } = require('node:child_process');
+const { spawnSync, execFileSync } = require('node:child_process');
 const root = path.resolve(__dirname, '../..');
 const sentinelName = '.binary-markdown-native-export.json';
 const hash = bytes => crypto.createHash('sha256').update(bytes).digest('hex');
@@ -293,7 +293,7 @@ async function run(settings, owner) {
         fs.writeFileSync(report, JSON.stringify({ harness: harnessIdentity(), host: receipt(owner), packageSha256: hash(fs.readFileSync(settings.package)), receipts }, null, 2));
         console.log(name, JSON.stringify(details));
     };
-    const available = ['identity', 'formats', 'saves', 'edges', 'ui', 'selection', 'immutable', 'offline'];
+    const available = ['identity', 'formats', 'saves', 'edges', 'ui', 'pdf-background', 'selection', 'immutable', 'offline'];
     const groups = settings.suite === 'all' ? available : [settings.suite];
     assert.ok(groups.every(value => available.includes(value)), 'Suite must be all, ' + available.join(', '));
     const htmlExports = [];
@@ -392,6 +392,7 @@ async function run(settings, owner) {
         // Restore real discovery before the remaining scenarios after the controlled worker.
         await h.driver({ action: 'config', key: 'export.pandocPath', value: settings.pandoc });
         if (groups.includes('ui')) await appearanceCases(h, owner, record);
+        if (groups.includes('pdf-background')) await pdfBackgroundCases(h, owner, record);
         if (groups.includes('selection')) await selectionCase(h, owner, record);
         if (groups.includes('immutable')) await immutableCase(h, owner, record);
         if (groups.includes('offline')) await offlineCases(h, owner, settings, htmlExports, record);
@@ -405,9 +406,61 @@ async function run(settings, owner) {
     } finally {
         await h.driver({ action: 'config', key: 'export.pandocPath', value: settings.pandoc });
         await h.driver({ action: 'config', key: 'export.browserPath', value: settings.browser });
+        await h.driver({ action: 'config', key: 'export.pdfWhiteBackground', value: true });
         for (const [key, value] of [['theme', 'github'], ['language', 'en'], ['toolbarMode', 'full']]) await h.driver({ action: 'config', key, value });
     }
     console.log('Evidence:', report);
+}
+
+async function pdfBackgroundCases(h, owner, record) {
+    const file = 'pdf-background.md';
+    const source = '# PDF background\n\n> Readable quotation.\n\n```math\nx^2+y^2=z^2\n```\n\n```mermaid\ngraph LR; A[First label] -->|Edge label| B[Last label]\n```\n\n' +
+        Array.from({ length: 60 }, (_, index) => 'Background paragraph ' + index + '. Readable text keeps its page margins.\n\n').join('') + 'PDF-BACKGROUND-LAST-MARKER\n';
+    fs.writeFileSync(path.join(owner.workspace, file), source);
+    assert.equal((await h.driver({ action: 'inspect' })).appearance['export.pdfWhiteBackground'], true, 'Installed setting defaults to white');
+    await h.driver({ action: 'config', key: 'theme', value: 'night' });
+    const connection = await h.open(file);
+    try {
+        await h.until(() => connection.evaluate('document.documentElement.dataset.theme === "night" && !!document.querySelector("#editor .mermaid-diagram svg")'));
+        await connection.evaluate('window.__pdfBackgroundProbe = "preserve-live-editor"');
+        const originalHtml = await connection.evaluate('document.getElementById("editor").innerHTML');
+        for (const white of [undefined, false, true]) {
+            if (white !== undefined) await h.driver({ action: 'config', key: 'export.pdfWhiteBackground', value: white });
+            const result = await h.exportFile(connection, file, 'pdf');
+            const text = execFileSync(process.env.EXPORT_PDFTOTEXT_PATH || 'pdftotext', [result.outputPath, '-'], { encoding: 'utf8' });
+            assert.match(text, /PDF-BACKGROUND-LAST-MARKER/);
+            assert.match(text, /First label/);
+            assert.match(text, /Last label/);
+            const pages = text.split('\f').filter(page => page.trim()).length;
+            assert.ok(pages >= 2, 'Exercise multiple pages and the short final page');
+            const expected = white === false ? [26, 27, 38] : [255, 255, 255];
+            for (let page = 1; page <= pages; page++) {
+                const ppm = execFileSync(process.env.EXPORT_PDFTOPPM_PATH || 'pdftoppm', ['-f', String(page), '-singlefile', '-r', '72', result.outputPath], { maxBuffer: 8 * 1024 * 1024 });
+                const header = /^P6\s+(\d+)\s+(\d+)\s+255\s/.exec(ppm.subarray(0, 100).toString('latin1'));
+                assert.ok(header, 'PDF raster is RGB PPM');
+                const width = Number(header[1]), height = Number(header[2]);
+                assert.ok(Math.abs(width - 595) <= 2 && Math.abs(height - 842) <= 2, 'A4 paper');
+                const pixels = ppm.subarray(header[0].length);
+                for (const [x, y] of [[0, 0], [width - 1, 0], [0, height - 1], [width - 1, height - 1], [10, 400], [width - 11, 400], [300, 10], [300, height - 11]]) {
+                    const offset = (y * width + x) * 3;
+                    assert.deepEqual([...pixels.subarray(offset, offset + 3)], expected, `Page ${page} margin (${x},${y})`);
+                }
+            }
+            assert.equal(await connection.evaluate('window.__pdfBackgroundProbe'), 'preserve-live-editor', 'Setting does not reload the editor');
+            assert.equal(await connection.evaluate('document.documentElement.dataset.theme'), 'night');
+            assert.equal(await connection.evaluate('document.getElementById("editor").innerHTML'), originalHtml);
+            assert.equal(fs.readFileSync(path.join(owner.workspace, file), 'utf8'), source);
+            record('pdf-background', { mode: white === undefined ? 'default' : white ? 'white' : 'theme', pages, expectedRgb: expected,
+                outputPath: result.outputPath, sha256: hash(fs.readFileSync(result.outputPath)), sourceUnchanged: true, editorUnchanged: true });
+        }
+        const html = await h.exportFile(connection, file, 'html');
+        assert.match(fs.readFileSync(html.outputPath, 'utf8'), /data-theme="night"/);
+        record('pdf-setting-html-isolation', { outputPath: html.outputPath, theme: 'night' });
+    } finally {
+        connection.close();
+        await h.driver({ action: 'config', key: 'export.pdfWhiteBackground', value: true });
+        await h.driver({ action: 'config', key: 'theme', value: 'github' });
+    }
 }
 
 async function cancellationCases(h, owner, record) {

@@ -110,7 +110,7 @@ Save the named Markdown file, then select the sharing-arrow button immediately t
 | Format | Tool to install | Initial output goal |
 | --- | --- | --- |
 | HTML | None beyond the running extension | Standalone supported rendering with embedded resources |
-| PDF | Chrome, Chromium, or Microsoft Edge | Prepared HTML printed by a headless browser with simple pagination |
+| PDF | Chrome, Chromium, or Microsoft Edge | Prepared HTML printed by a headless browser with simple pagination; white page by default |
 | Word / EPUB | Pandoc | Editable text and document structure; layout can differ from browser output |
 
 Install Pandoc using its [official instructions](https://pandoc.org/installing.html); Homebrew users can use `brew install pandoc`. For PDF, install [Google Chrome](https://www.google.com/chrome/) or another supported Chromium-family browser. Native tools are user-managed and are not downloaded or bundled by the extension. A browser is the PDF rendering engine; HTML and Pandoc formats do not require it.
@@ -125,6 +125,8 @@ Open VS Code Settings and search for `binary-markdown.export`. Leave the followi
 An invalid manual path is reported instead of silently selecting a different tool. Reopen the export menu after installing a tool to rescan. The initial workflow requires a trusted workspace; remote hosts, browser VS Code and Electron-app export are deferred.
 
 Files are saved beside the Markdown source with the same filename stem. An occupied name uses the final eight SHA-256 hexadecimal characters of the completed output, then `_2`, `_3`, and so on if needed. An identical hash-named file is reused, and existing files are preserved. No destination dialog is shown.
+
+PDF defaults to a white page with GitHub light appearance. Disable `binary-markdown.export.pdfWhiteBackground` in VS Code settings to fill the entire page, including margins, with the current editor theme. Text keeps its 16 mm inset. This setting does not change the editor, source images or other export formats.
 
 Supported resources retain source resolution; missing or unsupported content receives a visible fallback and warning summary. PDF uses simple block fitting, so blank regions are acceptable. Advanced pagination, templates, compression, custom destinations and unsaved export remain future work. See [export help](media/export-help.md) for the initial format limitations and [the subsystem outline](docs/export-subsystem.md) for the agreed implementation scope.
 

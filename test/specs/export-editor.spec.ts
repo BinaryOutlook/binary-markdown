@@ -331,12 +331,12 @@ test.describe('Export document-only rendering', () => {
         }
     });
 
-    test('document diagram directives cannot enable active HTML labels', async ({ page }) => {
+    test('authored diagram palettes are preserved while active HTML labels remain disabled', async ({ page }) => {
         const source = '%%{init: {"flowchart": {"htmlLabels": true}, "securityLevel": "loose", "theme": "dark", "themeVariables": {"primaryTextColor": "#ffffff"}}}%%\ngraph TD\n A[First] --> B[Last]';
         const rendered = await prepare(page, '```mermaid\n' + source + '\n```\n', 'directives', { theme: 'github', fontSize: 16 });
         expect(rendered.diagrams).toHaveLength(1);
         expect(rendered.diagrams[0].svg).not.toContain('foreignObject');
-        expect(rendered.diagrams[0].svg).toContain('fill:#ECECFF');
+        expect(rendered.diagrams[0].svg).toContain('fill:#1f2020');
     });
 
     test('settings changed during diagram rendering do not replace captured export appearance', async ({ page }) => {

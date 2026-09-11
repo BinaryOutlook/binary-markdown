@@ -1764,7 +1764,7 @@
                     mermaid.initialize({
                         theme: ['dark', 'night'].includes(appearance.theme) ? 'dark' : 'default',
                         securityLevel: 'strict', startOnLoad: false, htmlLabels: false,
-                        secure: Array.from(new Set([...(previousConfig.secure || []), 'securityLevel', 'htmlLabels', 'flowchart', 'theme', 'themeVariables'])),
+                        secure: Array.from(new Set([...(previousConfig.secure || []), 'securityLevel', 'htmlLabels', 'flowchart'])),
                         flowchart: { useMaxWidth: true, htmlLabels: false },
                         sequence: { useMaxWidth: true }
                     });
