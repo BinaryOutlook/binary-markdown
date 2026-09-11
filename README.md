@@ -24,7 +24,7 @@ Read the [build guide](docs/building.md), [release and support policy](docs/rele
 
 ## Install
 
-Download a version from [GitHub Releases](https://github.com/BinaryOutlook/binary-markdown/releases). Check its release notes for included features; the **0.1.0 prerelease** predates export. Marketplace and Open VSX publication remain future work.
+Download a version from [GitHub Releases](https://github.com/BinaryOutlook/binary-markdown/releases). **0.2.0 introduces experimental export**; the older 0.1.0 prerelease predates it. Check the chosen release's notes for supported environments and limitations. Marketplace and Open VSX publication remain future work.
 
 1. Download the `.vsix` and its SHA-256 checksum from the chosen release, or [build from source](docs/building.md).
 2. In VS Code, open **Extensions**, select **… → Install from VSIX…**, and choose the file.

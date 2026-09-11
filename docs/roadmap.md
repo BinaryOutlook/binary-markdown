@@ -14,6 +14,8 @@ We would like to explore a standalone desktop app when capacity permits, with **
 
 Windows export, VS Code Remote/SSH, browser-hosted VS Code and Electron export remain outside the initial validated export scope. Running local desktop VS Code under Xvfb on an Ubuntu machine accessed by SSH tests the Ubuntu local extension host; it does not establish Remote-SSH export support.
 
+The planned first Remote-SSH export path is desktop VS Code on a Mac connected to Ubuntu, with conversion tools and output files on Ubuntu. Start with HTML, then DOCX/EPUB, then browser-based PDF. Acceptance must cover remote referenced assets, saved-revision capture, collision-safe output, cancellation/disconnection, and access to completed files. This is follow-up work, not a supported 0.2.0 path or a promised release date.
+
 For an implementation handoff, follow the [export FR/NFR and change rules](export-subsystem.md). Split work into small reviewable slices with acceptance evidence and focused commits. Routine implementation choices can change within the agreed contracts; update requirements and record the decision when changing saved-source behaviour, output naming, platform scope, dependencies or fidelity promises.
 
 Work can be implemented, ready for review, accepted, merged or released. These are separate states. Passing tests does not substitute for maintainer acceptance, and a merged feature is not automatically an official release.
