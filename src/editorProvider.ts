@@ -1,5 +1,8 @@
 import * as vscode from 'vscode';
 import { getWebviewContent } from './webviewContent';
+import { EditQueue } from './export/edit-queue';
+import { ExportController } from './export/controller';
+import { ExportFormat } from './export/types';
 import { t, getWebviewMessages, initLocale } from './i18n/messages';
 
 type OutlineStateScope = 'file' | 'global';
@@ -341,6 +344,14 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
 
     // Track the currently active webview panel for undo/redo command forwarding
     private activeWebviewPanel: vscode.WebviewPanel | undefined;
+    private readonly exportControllers = new Map<vscode.WebviewPanel, ExportController>();
+
+    public requestExport(format: ExportFormat): void {
+        const panel = this.activeWebviewPanel;
+        const controller = panel?.active ? this.exportControllers.get(panel) : undefined;
+        if (controller) { void controller.export(format); }
+        else { void vscode.window.showInformationMessage(t('openMarkdownFirst')); }
+    }
     private readonly outlineStateStore: OutlineStateStoreContract;
 
     constructor(private readonly context: vscode.ExtensionContext) {
@@ -389,6 +400,7 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
         
         const localResourceRoots = [
             vscode.Uri.joinPath(this.context.extensionUri, 'media'),
+            vscode.Uri.joinPath(this.context.extensionUri, 'vendor'),
             vscode.Uri.joinPath(this.context.extensionUri, 'node_modules'),
             documentDir,
             homeDirUri // Allow access to home directory (Downloads, Pictures, etc.)
@@ -406,6 +418,7 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
         const documentBaseUri = webviewPanel.webview.asWebviewUri(documentDir).toString();
         
         // Convert absolute image paths to webview URIs
+        const originalImagePaths = new Map<string, string>();
         const convertImagePaths = (content: string): string => {
             // Match image markdown: ![alt](path)
             return content.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (match, alt, src) => {
@@ -419,6 +432,7 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
                 if (src.startsWith('/')) {
                     const fileUri = vscode.Uri.file(src);
                     const webviewUri = webviewPanel.webview.asWebviewUri(fileUri).toString();
+                    originalImagePaths.set(webviewUri, src);
                     return `![${alt}](${webviewUri})`;
                 }
                 // Relative path - will be resolved by webview using documentBaseUri
@@ -426,12 +440,19 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
             });
         };
         
+        const restoreImagePaths = (content: string): string => content.replace(/!\[([^\]]*)\]\(([^)]+)\)/g,
+            (match, alt, src) => originalImagePaths.has(src) ? '!' + '[' + alt + '](' + originalImagePaths.get(src) + ')' : match);
+
         // Remember the original line ending style to preserve on save
         const originalEol = document.eol;
 
         const updateWebview = () => {
             try {
                 const config = vscode.workspace.getConfiguration('binary-markdown');
+                // Use the same settings snapshot for labels and layout. A locale
+                // cached by an earlier configuration event can be stale when
+                // settings change rapidly or while no editor is open.
+                initLocale(config.get<string>('language', 'default'), vscode.env.language);
                 const content = convertImagePaths(document.getText());
                 const outlineScope = config.get<OutlineStateScope>('outlineStateScope', 'file');
                 const outlineDefaultOpen = config.get<boolean>('outlineDefaultOpen', true);
@@ -592,7 +613,9 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
                             isApplyingOwnEdit = false;
 
                             // Save immediately to clear dirty state — file on disk is already up to date
-                            await document.save();
+                            // The webview still contains the old external revision.
+                            // This disk-sync save must not capture that stale content.
+                            await saveWithoutSnapshot();
 
                             // Notify webview directly (since isApplyingOwnEdit suppressed onDidChangeTextDocument)
                             const content = convertImagePaths(newContent);
@@ -609,72 +632,136 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
             }
         });
 
+        // Coalesce a settings burst into one HTML replacement. Overlapping
+        // replacements can leave a loaded frame pending in native VS Code.
+        let configurationRefresh: ReturnType<typeof setTimeout> | undefined;
         // Listen for configuration changes
         const changeConfigSubscription = vscode.workspace.onDidChangeConfiguration(e => {
-            if (e.affectsConfiguration('binary-markdown')) {
-                // Re-initialize locale if language setting changed
-                if (e.affectsConfiguration('binary-markdown.language')) {
-                    const langConfig = vscode.workspace.getConfiguration('binary-markdown');
-                    initLocale(langConfig.get<string>('language', 'default'), vscode.env.language);
-                }
-                updateWebview();
-                sendImageDirStatus();
+            const exportChanged = e.affectsConfiguration('binary-markdown.export');
+            if (exportChanged) { exportController.refreshCapabilities(); }
+            const editorSettings = ['theme', 'fontSize', 'imageDefaultDir', 'forceRelativeImagePath', 'language',
+                'toolbarMode', 'outlineStateScope', 'outlineDefaultOpen', 'enableDebugLogging'];
+            const editorChanged = editorSettings.some(key => e.affectsConfiguration('binary-markdown.' + key));
+            if (e.affectsConfiguration('binary-markdown') && (!exportChanged || editorChanged)) {
+                clearTimeout(configurationRefresh);
+                configurationRefresh = setTimeout(() => {
+                    configurationRefresh = undefined;
+                    if (disposed) return;
+                    updateWebview();
+                    sendImageDirStatus();
+                }, 250);
             }
         });
 
-        // Serialized edit queue — debounce + promise chain (no recursive retry, no freeze)
-        let pendingContent: string | null = null;
-        let editDebounceTimer: NodeJS.Timeout | null = null;
-        let applyEditQueue: Promise<void> = Promise.resolve();
-
-        const scheduleEdit = (content: string) => {
-            pendingContent = content;
-            if (editDebounceTimer) {
-                clearTimeout(editDebounceTimer);
+        const normalizeEol = (content: string) => originalEol === vscode.EndOfLine.CRLF
+            ? content.replace(/\r\n/g, '\n').replace(/\n/g, '\r\n') : content.replace(/\r\n/g, '\n');
+        const editQueue = new EditQueue(async content => {
+            if (content.replace(/\r\n/g, '\n') === document.getText().replace(/\r\n/g, '\n')) { return; }
+            isApplyingOwnEdit = true;
+            try {
+                const edit = new vscode.WorkspaceEdit();
+                edit.replace(document.uri, new vscode.Range(0, 0, document.lineCount, 0), content);
+                if (!await vscode.workspace.applyEdit(edit)) { throw new Error('Unable to apply the pending document edit.'); }
+            } finally {
+                isApplyingOwnEdit = false;
             }
-            editDebounceTimer = setTimeout(() => {
-                editDebounceTimer = null;
-                const contentToApply = pendingContent;
-                pendingContent = null;
-                if (contentToApply === null) return;
-
-                applyEditQueue = applyEditQueue.then(async () => {
-                    try {
-                        // Skip if content is identical — prevents unnecessary dirty marking
-                        const normalize = (s: string) => s.replace(/\r\n/g, '\n');
-                        if (normalize(contentToApply) === normalize(document.getText())) return;
-
-                        isApplyingOwnEdit = true;
-                        const edit = new vscode.WorkspaceEdit();
-                        edit.replace(
-                            document.uri,
-                            new vscode.Range(0, 0, document.lineCount, 0),
-                            contentToApply
-                        );
-                        await vscode.workspace.applyEdit(edit);
-                    } catch (e) {
-                        console.log('[Binary Markdown] Edit error (ignored):', e);
-                    } finally {
-                        isApplyingOwnEdit = false;
-                    }
-                });
-            }, 100);
+        });
+        let saveQueue: Promise<void> = Promise.resolve();
+        let ownSaveDepth = 0;
+        let disposed = false;
+        interface PendingNativeSave { promise: Promise<void>; resolve(): void; reject(error: unknown): void; }
+        let nativeSave: PendingNativeSave | undefined;
+        const finishNativeSave = (pending: PendingNativeSave, error?: unknown) => {
+            if (nativeSave === pending) { nativeSave = undefined; }
+            if (error) { pending.reject(error); } else { pending.resolve(); }
         };
+        const postSaveState = (message: Record<string, unknown>) => {
+            try { void Promise.resolve(webviewPanel.webview.postMessage(message)).catch(() => undefined); }
+            catch { /* Closing a panel must not turn a completed save into a failure. */ }
+        };
+        const saveWithoutSnapshot = async (): Promise<boolean> => {
+            ownSaveDepth++;
+            try { return await document.save(); } finally { ownSaveDepth--; }
+        };
+        const waitForSaves = async (signal?: AbortSignal): Promise<void> => {
+            while (true) {
+                if (disposed) { throw new Error('The document editor was closed.'); }
+                const keyboardSave = saveQueue;
+                const pendingNative = nativeSave;
+                await new Promise<void>((resolve, reject) => {
+                    const cancelled = () => {
+                        // VS Code has no native save-failed event. Forget an
+                        // abandoned native wait when the user cancels; retries
+                        // still require the document to be clean and identical.
+                        if (pendingNative && nativeSave === pendingNative) { finishNativeSave(pendingNative); }
+                        const error = new Error('Export cancelled');
+                        error.name = 'AbortError';
+                        reject(error);
+                    };
+                    signal?.addEventListener('abort', cancelled, { once: true });
+                    if (signal?.aborted) { cancelled(); }
+                    Promise.all([keyboardSave, pendingNative?.promise]).then(() => resolve(), reject)
+                        .finally(() => signal?.removeEventListener('abort', cancelled));
+                });
+                if (keyboardSave === saveQueue && (!nativeSave || nativeSave === pendingNative)) { return; }
+            }
+        };
+        const exportController = new ExportController(this.context, document, webviewPanel, waitForSaves, convertImagePaths);
+        this.exportControllers.set(webviewPanel, exportController);
+        const willSaveSubscription = vscode.workspace.onWillSaveTextDocument(event => {
+            if (event.document !== document || ownSaveDepth > 0 || disposed) { return; }
+            // A retry supersedes a native write that failed without a didSave event.
+            if (nativeSave) { finishNativeSave(nativeSave); }
+            let resolve!: () => void;
+            let reject!: (error: unknown) => void;
+            const promise = new Promise<void>((done, fail) => { resolve = done; reject = fail; });
+            const pending = { promise, resolve, reject };
+            nativeSave = pending;
+            void promise.catch(() => undefined); // A save may happen without any export waiter.
+            const preparation = (async () => {
+                await editQueue.flush();
+                const content = normalizeEol(restoreImagePaths(await exportController.captureForSave()));
+                return content === document.getText() ? [] : [vscode.TextEdit.replace(
+                    new vscode.Range(0, 0, document.lineCount, 0), content)];
+            })();
+            void preparation.catch(error => finishNativeSave(pending, error));
+            // Keep this listener to source synchronization; rendering and export
+            // work must never consume VS Code's shared native-save time budget.
+            event.waitUntil(preparation);
+        });
+        const didSaveSubscription = vscode.workspace.onDidSaveTextDocument(saved => {
+            if (saved === document) {
+                if (nativeSave) { finishNativeSave(nativeSave); }
+                postSaveState({ type: 'documentSaved', content: convertImagePaths(document.getText()) });
+            }
+        });
 
         // Handle messages from the webview
         webviewPanel.webview.onDidReceiveMessage(async message => {
+            if (exportController.handleMessage(message)) { return; }
             switch (message.type) {
                 case 'edit':
                     // Restore original line endings if document uses CRLF
-                    const editContent = originalEol === vscode.EndOfLine.CRLF
-                        ? message.content.replace(/\n/g, '\r\n')
-                        : message.content;
-                    scheduleEdit(editContent);
+                    if (typeof message.content === 'string') { editQueue.schedule(normalizeEol(restoreImagePaths(message.content))); }
                     break;
 
-                case 'save':
-                    await document.save();
+                case 'save': {
+                    // Message order fixes the saved revision before later export requests.
+                    const content = typeof message.content === 'string' ? normalizeEol(restoreImagePaths(message.content)) : undefined;
+                    saveQueue = saveQueue.catch(() => undefined).then(async () => {
+                        let success = false;
+                        try {
+                            if (content !== undefined) { editQueue.schedule(content); }
+                            await editQueue.flush();
+                            success = await saveWithoutSnapshot();
+                        } catch (error) {
+                            vscode.window.showErrorMessage(String(error));
+                        }
+                        postSaveState({ type: 'saveResult', revision: message.revision, success });
+                    });
+                    await saveQueue;
                     break;
+                }
 
                 case 'editingStateChanged':
                     isActivelyEditing = message.editing;
@@ -895,6 +982,15 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
             if (this.activeWebviewPanel === webviewPanel) {
                 this.activeWebviewPanel = undefined;
             }
+            disposed = true;
+            clearTimeout(configurationRefresh);
+            configurationRefresh = undefined;
+            if (nativeSave) { finishNativeSave(nativeSave, new Error('The document editor was closed.')); }
+            exportController.dispose();
+            this.exportControllers.delete(webviewPanel);
+            willSaveSubscription.dispose();
+            didSaveSubscription.dispose();
+            editQueue.dispose();
             changeDocumentSubscription.dispose();
             changeConfigSubscription.dispose();
             fileChangeSubscription.dispose();

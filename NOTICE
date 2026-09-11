@@ -1,0 +1,29 @@
+Binary Markdown
+Copyright (c) 2026 BinaryOutlook and contributors
+
+Binary Markdown is free software: you can redistribute it and/or modify it
+under the GNU Affero General Public License as published by the Free Software
+Foundation, either version 3 of the License, or (at your option) any later
+version (AGPL-3.0-or-later). The full license text is in LICENSE.
+
+Commit f2a73a5 first introduced AGPL-3.0-only on the export workstream.
+The subsequent 0.2.0 policy-alignment change adopts AGPL-3.0-or-later.
+See docs/decisions/001-agpl-transition.md for the transition record.
+Earlier releases and contributions made available under MIT retain those
+grants; this transition does not revoke them.
+
+Binary Markdown derives from Any Markdown by raggbal and contributors,
+originally distributed under MIT. LICENSES/AnyMarkdown-MIT.txt preserves
+the copyright and permission notice for that code and prior MIT contributions
+to this fork. Keep that notice with copies or substantial portions of the
+covered software, including when distributing this fork under AGPL.
+
+The frozen exports-v1 Markdown documents and assets in test/fixtures/exports
+retain their explicit MIT licence, as recorded in that directory's README.
+Archived material retains its original notices. Third-party libraries and
+assets retain their own licences; bundled dependency notices are in vendor/.
+
+Corresponding source and build instructions for this project are available at:
+https://github.com/BinaryOutlook/binary-markdown
+Distributors of modified builds must provide the corresponding source for
+their build as required by the AGPL; this upstream URL alone may not suffice.

@@ -4,7 +4,7 @@ test.describe('コードブロック 描画モード/編集モード', () => {
     
     test.beforeEach(async ({ page }) => {
         await page.goto('http://localhost:3000/standalone-editor.html');
-        await page.waitForSelector('#editor');
+        await page.waitForFunction(() => (window as any).__testApi?.ready);
     });
 
     test.describe('初期状態', () => {
@@ -49,20 +49,25 @@ test.describe('コードブロック 描画モード/編集モード', () => {
     });
 
     test.describe('描画モード → 編集モード切り替え', () => {
-        test.skip('上の段落から↓キーでコードブロックに侵入すると編集モードになる', async ({ page }) => {
-            // Note: This test is skipped because arrow key navigation in Playwright
-            // doesn't reliably trigger the same behavior as real user interaction.
-            // The functionality is tested manually and works correctly.
-            
+        test('上の段落から↓キーでコードブロックに侵入すると編集モードになる', async ({ page }) => {
             // Setup markdown
             await page.evaluate(() => {
                 const testApi = (window as any).__testApi;
-                testApi.setMarkdown('Paragraph above\n\n```javascript\nconst x = 1;\n```');
+                testApi.setMarkdown('Paragraph above\n```javascript\nconst x = 1;\n```');
             });
             
             // Click on paragraph to focus it
-            await page.click('#editor p');
-            await page.waitForTimeout(50);
+            const paragraph = page.getByText('Paragraph above', { exact: true });
+            await paragraph.click();
+            expect(await paragraph.evaluate(element => element.nextElementSibling?.tagName)).toBe('PRE');
+            await paragraph.evaluate(element => {
+                const range = document.createRange();
+                range.selectNodeContents(element);
+                range.collapse(false);
+                const selection = window.getSelection()!;
+                selection.removeAllRanges();
+                selection.addRange(range);
+            });
             
             // Press ArrowDown to enter code block
             await page.keyboard.press('ArrowDown');
@@ -85,21 +90,25 @@ test.describe('コードブロック 描画モード/編集モード', () => {
             expect(result.hasHighlightSpan).toBe(false);
         });
 
-        test.skip('下の段落から↑キーでコードブロックに侵入すると編集モードになる', async ({ page }) => {
-            // Note: This test is skipped because arrow key navigation in Playwright
-            // doesn't reliably trigger the same behavior as real user interaction.
-            // The functionality is tested manually and works correctly.
-            
+        test('下の段落から↑キーでコードブロックに侵入すると編集モードになる', async ({ page }) => {
             // Setup markdown
             await page.evaluate(() => {
                 const testApi = (window as any).__testApi;
-                testApi.setMarkdown('```javascript\nconst x = 1;\n```\n\nParagraph below');
+                testApi.setMarkdown('```javascript\nconst x = 1;\n```\nParagraph below');
             });
             
             // Click on the paragraph below the code block
-            const paragraphs = await page.locator('#editor p');
-            await paragraphs.last().click();
-            await page.waitForTimeout(50);
+            const paragraph = page.getByText('Paragraph below', { exact: true });
+            await paragraph.click();
+            expect(await paragraph.evaluate(element => element.previousElementSibling?.tagName)).toBe('PRE');
+            await paragraph.evaluate(element => {
+                const range = document.createRange();
+                range.selectNodeContents(element);
+                range.collapse(true);
+                const selection = window.getSelection()!;
+                selection.removeAllRanges();
+                selection.addRange(range);
+            });
             
             // Press ArrowUp to enter code block
             await page.keyboard.press('ArrowUp');
@@ -234,15 +243,11 @@ test.describe('コードブロック 描画モード/編集モード', () => {
             expect(result.hasHighlight).toBe(true);
         });
 
-        test.skip('編集モードでコードブロック外をクリックすると描画モードになる', async ({ page }) => {
-            // Note: This test is skipped because focusout behavior in Playwright
-            // doesn't reliably trigger the same behavior as real user interaction.
-            // The functionality is tested manually and works correctly.
-            
+        test('編集モードでコードブロック外をクリックすると描画モードになる', async ({ page }) => {
             // Setup markdown
             await page.evaluate(() => {
                 const testApi = (window as any).__testApi;
-                testApi.setMarkdown('Paragraph above\n\n```javascript\nconst x = 1;\n```');
+                testApi.setMarkdown('Paragraph above\n```javascript\nconst x = 1;\n```');
             });
             
             // Click on code block to enter edit mode

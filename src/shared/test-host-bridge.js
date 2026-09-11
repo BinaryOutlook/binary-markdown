@@ -19,8 +19,23 @@
         syncContent: function(markdown) {
             window.__testApi.messages.push({ type: 'edit', content: markdown });
         },
-        save: function() {
-            window.__testApi.messages.push({ type: 'save' });
+        save: function(content, revision) {
+            window.__testApi.messages.push({ type: 'save', content: content, revision: revision });
+        },
+        requestExport: function(format) {
+            window.__testApi.messages.push({ type: 'export', format: format });
+        },
+        requestExportCapabilities: function() {
+            window.__testApi.messages.push({ type: 'exportCapabilities' });
+        },
+        cancelExport: function() {
+            window.__testApi.messages.push({ type: 'cancelExport' });
+        },
+        openExportSettings: function(tool) {
+            window.__testApi.messages.push({ type: 'exportSettings', tool: tool });
+        },
+        respondExport: function(payload) {
+            window.__testApi.messages.push(payload);
         },
 
         // フォーカス/編集状態

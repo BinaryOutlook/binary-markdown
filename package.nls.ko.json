@@ -19,5 +19,12 @@
   "config.outlineStateScope.file": "현재 작업 영역에서 Markdown 파일마다 개요 패널을 열었는지 닫았는지 따로 저장합니다.",
   "config.outlineStateScope.global": "마지막으로 사용한 개요 패널 상태를 모든 Markdown 파일에 적용합니다. 다른 작업 영역에서도 같은 설정을 사용합니다.",
   "config.outlineDefaultOpen.description": "이전에 저장한 상태가 없으면 개요 패널을 열어 둡니다.",
-  "config.enableDebugLogging.description": "문제의 원인을 찾을 수 있도록 편집기의 디버그 로그를 기록합니다."
+  "config.enableDebugLogging.description": "문제의 원인을 찾을 수 있도록 편집기의 디버그 로그를 기록합니다.",
+  "config.export.pandocPath.description": "DOCX 및 EPUB 내보내기에 사용할 Pandoc 실행 파일 경로입니다. 비워 두면 설치된 도구를 검색합니다. 설치는 사용자가 직접 합니다. 지정한 경로가 잘못되면 다른 도구를 선택하지 않고 오류를 표시합니다.",
+  "config.export.browserPath.description": "창 없이 PDF를 내보내는 Chrome, Chromium 또는 Edge 실행 파일 경로입니다. 비워 두면 설치된 브라우저를 검색합니다. 브라우저를 자동으로 다운로드하지 않습니다.",
+  "command.exportToHtml.title": "HTML로 내보내기",
+  "command.exportToPdf.title": "PDF로 내보내기",
+  "command.exportToDocx.title": "Word로 내보내기",
+  "command.exportToEpub.title": "EPUB로 내보내기",
+  "command.copyBuildInformation.title": "빌드 정보 복사"
 }

@@ -17,6 +17,8 @@ CONTRIBUTING.md
 !vendor/**
 test/**
 test-results/**
+ci-results/**
+validation-evidence/**
 samples/**
 images/**
 images2/**
@@ -31,4 +33,5 @@ playwright.config.js
 test-*.js
 electron/**
 assets/**
+output/**
 .claude/skills/publish/references/**

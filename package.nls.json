@@ -19,5 +19,12 @@
   "config.outlineStateScope.file": "Remember whether the outline is open or closed for each Markdown file in the current workspace.",
   "config.outlineStateScope.global": "Reuse the outline's last open or closed state for all Markdown files, across all workspaces.",
   "config.outlineDefaultOpen.description": "Open the outline by default if no previous choice has been saved.",
-  "config.enableDebugLogging.description": "Record debug logs to help troubleshoot editor problems."
+  "config.enableDebugLogging.description": "Record debug logs to help troubleshoot editor problems.",
+  "config.export.pandocPath.description": "Path to the Pandoc executable for DOCX and EPUB export. Leave blank to detect an installed tool. Installation is user-managed; an invalid explicit path is reported without falling back.",
+  "config.export.browserPath.description": "Path to a Chrome, Chromium or Edge executable for headless PDF export. Leave blank to detect an installed browser. No browser is downloaded automatically.",
+  "command.exportToHtml.title": "Export to HTML",
+  "command.exportToPdf.title": "Export to PDF",
+  "command.exportToDocx.title": "Export to Word",
+  "command.exportToEpub.title": "Export to EPUB",
+  "command.copyBuildInformation.title": "Copy Build Information"
 }

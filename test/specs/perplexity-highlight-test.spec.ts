@@ -1,9 +1,13 @@
 import { test, expect } from '@playwright/test';
+import * as path from 'node:path';
 
 test.describe('Perplexity theme syntax highlighting', () => {
     test('JavaScript keywords should have colored highlight spans', async ({ page }) => {
         await page.goto('http://localhost:3000/standalone-editor.html');
-        await page.waitForSelector('#editor');
+        await page.waitForFunction(() => (window as any).__testApi?.ready);
+        // The minimal standalone fixture has no syntax palette. Exercise the CSS
+        // shipped in the webview rather than copying theme colours into the test.
+        await page.addStyleTag({ path: path.resolve(__dirname, '../../src/webview/styles.css') });
 
         // Set perplexity theme
         await page.evaluate(() => {

@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2800" height="900" viewBox="0 0 2800 900" role="img" aria-labelledby="title description">
+  <title id="title">Original observatory architecture fixture</title>
+  <desc id="description">A field station, durable queue, catalogue, and review desk connected from left to right.</desc>
+  <rect width="2800" height="900" fill="#f7f9fc"/>
+  <g stroke="#1f4c76" stroke-width="12" fill="#dcebf5">
+    <rect x="80" y="270" width="520" height="360" rx="28"/>
+    <rect x="780" y="270" width="520" height="360" rx="28"/>
+    <rect x="1480" y="270" width="520" height="360" rx="28"/>
+    <rect x="2180" y="270" width="520" height="360" rx="28"/>
+  </g>
+  <g stroke="#317c58" stroke-width="20" fill="none">
+    <path d="M620 450H740M710 415L745 450L710 485"/>
+    <path d="M1320 450H1440M1410 415L1445 450L1410 485"/>
+    <path d="M2020 450H2140M2110 415L2145 450L2110 485"/>
+  </g>
+  <g font-family="sans-serif" font-size="62" text-anchor="middle" fill="#183049">
+    <text x="340" y="465">Field station</text>
+    <text x="1040" y="465">Durable queue</text>
+    <text x="1740" y="465">Catalogue</text>
+    <text x="2440" y="465">Review desk</text>
+    <text x="1400" y="160" font-size="76">W30-ARCHITECTURE-MARKER</text>
+    <text x="1400" y="760" font-size="48">Original vector test asset · no external resources or scripts</text>
+  </g>
+</svg>

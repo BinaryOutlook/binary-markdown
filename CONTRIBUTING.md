@@ -1,6 +1,8 @@
 # Contributing to Binary Markdown
 
-Contributions to code, tests, documentation, translations, and accessibility are welcome. Contributions are provided under the project's MIT license; contributors retain their copyright.
+Contributions to code, tests, documentation, translations, and accessibility are welcome. New contributions are provided under the project's [GNU AGPL version 3 or later](LICENSE) (`AGPL-3.0-or-later`), except where a separately licensed file or fixture explicitly states otherwise. Contributors retain their copyright. Preserve existing upstream and third-party notices; see [NOTICE](NOTICE).
+
+See [building](docs/building.md) for complete setup and source identity, and [releases and support](docs/releases-and-support.md) for development-build reports and release promotion.
 
 ## Development
 
@@ -19,11 +21,15 @@ Compilation builds TypeScript and translations, copies webview/shared modules, a
 npm run lint
 npm run test:outline-state
 npm run test:identity
+npm run test:build-info
+npm run test:release
 npm run test:localization
 npm run test:e2e -- test/specs/codeblock-copy.spec.ts test/specs/sidebar-state.spec.ts test/specs/copy-paste.spec.ts
 ```
 
 The browser tests need Playwright Chromium. On a new machine, install it with `npx playwright install chromium`. `npm test` runs compilation, lint, unit checks, and the full browser suite. Report failing tests and distinguish existing failures from changes introduced by your patch.
+
+If the downloader does not support your OS, set `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` to an installed Chrome/Chromium executable, for example `/usr/bin/google-chrome` on Linux. This path enables the browser sandbox; run as an ordinary user. It configures the test runner independently of the extension's export tool settings. Record the browser version with results. For merge validation, use `CI=1` and `--retries=0` so a stale localhost server or a failed first attempt cannot count as a clean pass.
 
 The identity tests check registration consistency and separation from the archived upstream manifest. This helps prevent a rename from breaking commands, shortcuts, settings, or coexistence with the original extension.
 
@@ -50,14 +56,14 @@ Close the test instance before relaunching it with a different `--locale`. Use t
 npm run package
 ```
 
-Install the resulting `dist/binary-markdown-0.1.0.vsix` through **Extensions → … → Install from VSIX…**. Close old editor tabs and reload the window after updating. Use [the manual fixture](docs/copy-paste-test.md) to verify copying and outline state.
+Install the resulting `dist/binary-markdown-0.2.0.vsix` through **Extensions → … → Install from VSIX…**. Close old editor tabs and reload the window after updating. Use [the manual fixture](docs/copy-paste-test.md) to verify copying and outline state.
 
-Packaged documentation links target the matching `v<version>` Git tag, so a release keeps its own instructions even when the default branch changes.
+Packaged documentation links target the identified source commit. The VSIX and its sidecar record local-change state; **Copy Build Information** adds the running host environment. A clean source stamp does not itself mean that a package is an official release.
 
 For an isolated local environment on macOS/Linux:
 
 ```sh
-code --user-data-dir /tmp/binary-markdown-test --extensions-dir .vscode-test/manual/extensions --install-extension dist/binary-markdown-0.1.0.vsix --force
+code --user-data-dir /tmp/binary-markdown-test --extensions-dir .vscode-test/manual/extensions --install-extension dist/binary-markdown-0.2.0.vsix --force
 code --new-window --user-data-dir /tmp/binary-markdown-test --extensions-dir .vscode-test/manual/extensions docs/copy-paste-test.md
 ```
 
@@ -72,5 +78,9 @@ The Electron app has its own package in `electron/`. Its identity has been align
 - Preserve Markdown content and user settings. View-only actions should not edit documents.
 - Keep active product identifiers under `binary-markdown`; preserve original project names in attribution and historical material.
 - Do not copy terminal usernames, personal paths, or private documents into public reports.
+
+Reports from older development commits are welcome. Include the full commit ID, local modifications, environment and reproduction steps; testing a newer commit is useful but not a prerequisite for an initial report. Use the issue form and omit private documents.
+
+Use small, focused commits after checked slices. Keep FR/NFR changes and acceptance evidence explicit; consult the [export outline](docs/export-subsystem.md) when adjusting the subsystem.
 
 BinaryOutlook currently handles reviews and releases. Changes may be developed and tested locally without publishing. Merging a PR does not itself publish a Marketplace extension.

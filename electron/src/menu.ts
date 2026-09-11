@@ -127,7 +127,7 @@ export function buildMenu(handlers: {
                 { type: 'separator' },
                 {
                     label: 'GitHub Repository',
-                    click: () => shell.openExternal('https://github.com/BinaryOutlook/any-markdown'),
+                    click: () => shell.openExternal('https://github.com/BinaryOutlook/binary-markdown'),
                 },
             ],
         },

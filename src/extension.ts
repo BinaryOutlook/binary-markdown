@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { BinaryMarkdownEditorProvider } from './editorProvider';
 import { initLocale, t } from './i18n/messages';
+import { copyBuildInformation } from './build-info';
 
 export function activate(context: vscode.ExtensionContext) {
     // Initialize localization
@@ -29,6 +30,10 @@ export function activate(context: vscode.ExtensionContext) {
     );
 
     // Register commands
+    context.subscriptions.push(vscode.commands.registerCommand(
+        'binary-markdown.copyBuildInformation', () => copyBuildInformation(context)
+    ));
+
     context.subscriptions.push(
         vscode.commands.registerCommand('binary-markdown.openEditor', async () => {
             const activeEditor = vscode.window.activeTextEditor;
@@ -89,9 +94,13 @@ export function activate(context: vscode.ExtensionContext) {
 
     context.subscriptions.push(
         vscode.commands.registerCommand('binary-markdown.exportToPdf', () => {
-            vscode.window.showInformationMessage(t('pdfExportComingSoon'));
+            provider.requestExport('pdf');
         })
     );
+
+    for (const [suffix, format] of [['Html', 'html'], ['Docx', 'docx'], ['Epub', 'epub']] as const) {
+        context.subscriptions.push(vscode.commands.registerCommand('binary-markdown.exportTo' + suffix, () => provider.requestExport(format)));
+    }
 
     // Undo/Redo commands - forwarded to webview to bypass VSCode's native undo
     context.subscriptions.push(
