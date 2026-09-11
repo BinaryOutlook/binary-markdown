@@ -152,7 +152,9 @@ export class ExportController implements vscode.Disposable {
                 const config = vscode.workspace.getConfiguration('binary-markdown');
                 const source: SavedExportDocument = Object.freeze({
                     sourcePath: this.document.uri.fsPath, markdown: raw, version,
-                    theme: config.get<string>('theme', 'github'), fontSize: config.get<number>('fontSize', 16)
+                    theme: format === 'pdf' && config.get<boolean>('export.pdfWhiteBackground', true)
+                        ? 'github' : config.get<string>('theme', 'github'),
+                    fontSize: config.get<number>('fontSize', 16)
                 });
                 let executable = '';
                 if (format !== 'html') {
@@ -167,7 +169,9 @@ export class ExportController implements vscode.Disposable {
                     executable = tool.path;
                 }
                 operations.report('rendering');
-                const rendered = await this.channel.request('prepareExport', { markdown: raw }, abort.signal);
+                const rendered = await this.channel.request('prepareExport', {
+                    markdown: raw, theme: source.theme, fontSize: source.fontSize
+                }, abort.signal);
                 if (typeof rendered.html !== 'string' || !Array.isArray(rendered.warnings)) {
                     throw new Error('The document renderer returned an invalid export response.');
                 }

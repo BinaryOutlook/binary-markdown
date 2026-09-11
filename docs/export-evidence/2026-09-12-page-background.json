@@ -1,0 +1,823 @@
+{
+  "recordedDate": "2026-09-12",
+  "status": "Investigation complete; no exporter source changes; implementation pending.",
+  "sourceRevision": "f84dd0d1d091824665c6f4ba52f51ec3725010be",
+  "environment": {
+    "os": "Darwin",
+    "osVersion": "25.5.0",
+    "architecture": "arm64",
+    "node": "v24.21.0",
+    "browser": "Google Chrome 153.0.8010.36",
+    "playwright": "1.58.1",
+    "pandoc": "pandoc 3.8.3",
+    "macOS": "26.5.2",
+    "word": "16.112.3"
+  },
+  "boundary": "Current production HTML/PDF and Pandoc functions with synthetic prepared content; no installed VSIX or live editor capture.",
+  "sourceSha256": {
+    "src/export/pdf.ts": "5ac7eeb9357ca9ddc28e788cfb91794180ebe088e581786e4040d282610e84f8",
+    "src/export/html.ts": "38afe86db4c6e7736e30f4fb29e54bd32d0d4569a13e72ca62dbb12c0c27e8a0",
+    "src/export/pandoc.ts": "b43c75b18c425cd446dfdbcb365df67f32810ce55fe45d550411adb68d1edb2d",
+    "src/webview/styles.css": "3b50c475b2fdb55dfa01141fe3cab25b1134929676df23c6b67f0af00b6f6367"
+  },
+  "markdownInputSha256": "07e0b2b483cad145e03df631f27f36e3922981817585103c419f9ba29edb3cc0",
+  "localArtifactsDirectory": ".vscode-test/export-page-background-2026-09-12/",
+  "pdfInspection": {
+    "rasterDpi": 72,
+    "insetPerimeterPixels": 2,
+    "sampledAllPages": true,
+    "expectedPagesPerFile": 3
+  },
+  "pdf": [
+    {
+      "format": "pdf",
+      "theme": "github",
+      "variant": "current",
+      "file": "github-current.pdf",
+      "sha256": "4c8ee324f0ee931ddd382dd10524391989c56c1a8e81f4ddfe0404f8204bbed3",
+      "warnings": [],
+      "wordGeometryMatchesDarkBaseline": true,
+      "pages": [
+        {
+          "page": 1,
+          "sizePt": [
+            594.95996,
+            841.91998
+          ],
+          "samples": {
+            "topLeft": "#ffffff",
+            "topRight": "#ffffff",
+            "bottomLeft": "#ffffff",
+            "bottomRight": "#ffffff",
+            "topMargin": "#ffffff",
+            "bottomMargin": "#ffffff",
+            "leftMargin": "#ffffff",
+            "rightMargin": "#ffffff",
+            "unusedInterior": "#ffffff"
+          },
+          "insetPerimeterColors": [
+            "#ffffff"
+          ],
+          "pageMarkerPresent": true
+        },
+        {
+          "page": 2,
+          "sizePt": [
+            594.95996,
+            841.91998
+          ],
+          "samples": {
+            "topLeft": "#ffffff",
+            "topRight": "#ffffff",
+            "bottomLeft": "#ffffff",
+            "bottomRight": "#ffffff",
+            "topMargin": "#ffffff",
+            "bottomMargin": "#ffffff",
+            "leftMargin": "#ffffff",
+            "rightMargin": "#ffffff",
+            "unusedInterior": "#ffffff"
+          },
+          "insetPerimeterColors": [
+            "#ffffff"
+          ],
+          "pageMarkerPresent": true
+        },
+        {
+          "page": 3,
+          "sizePt": [
+            594.95996,
+            841.91998
+          ],
+          "samples": {
+            "topLeft": "#ffffff",
+            "topRight": "#ffffff",
+            "bottomLeft": "#ffffff",
+            "bottomRight": "#ffffff",
+            "topMargin": "#ffffff",
+            "bottomMargin": "#ffffff",
+            "leftMargin": "#ffffff",
+            "rightMargin": "#ffffff",
+            "unusedInterior": "#ffffff"
+          },
+          "insetPerimeterColors": [
+            "#ffffff"
+          ],
+          "pageMarkerPresent": true
+        }
+      ]
+    },
+    {
+      "format": "pdf",
+      "theme": "dark",
+      "variant": "current",
+      "file": "dark-current.pdf",
+      "sha256": "40dc856c42bcdc73810ee550fc3a3ec392c574941dd7199fb2d1d021c22e1e8a",
+      "warnings": [],
+      "wordGeometryMatchesDarkBaseline": true,
+      "pages": [
+        {
+          "page": 1,
+          "sizePt": [
+            594.95996,
+            841.91998
+          ],
+          "samples": {
+            "topLeft": "#ffffff",
+            "topRight": "#ffffff",
+            "bottomLeft": "#ffffff",
+            "bottomRight": "#ffffff",
+            "topMargin": "#ffffff",
+            "bottomMargin": "#ffffff",
+            "leftMargin": "#ffffff",
+            "rightMargin": "#ffffff",
+            "unusedInterior": "#1e1e1e"
+          },
+          "insetPerimeterColors": [
+            "#ffffff"
+          ],
+          "pageMarkerPresent": true,
+          "outermostPerimeterColors": [
+            "#ffffff"
+          ]
+        },
+        {
+          "page": 2,
+          "sizePt": [
+            594.95996,
+            841.91998
+          ],
+          "samples": {
+            "topLeft": "#ffffff",
+            "topRight": "#ffffff",
+            "bottomLeft": "#ffffff",
+            "bottomRight": "#ffffff",
+            "topMargin": "#ffffff",
+            "bottomMargin": "#ffffff",
+            "leftMargin": "#ffffff",
+            "rightMargin": "#ffffff",
+            "unusedInterior": "#1e1e1e"
+          },
+          "insetPerimeterColors": [
+            "#ffffff"
+          ],
+          "pageMarkerPresent": true,
+          "outermostPerimeterColors": [
+            "#ffffff"
+          ]
+        },
+        {
+          "page": 3,
+          "sizePt": [
+            594.95996,
+            841.91998
+          ],
+          "samples": {
+            "topLeft": "#ffffff",
+            "topRight": "#ffffff",
+            "bottomLeft": "#ffffff",
+            "bottomRight": "#ffffff",
+            "topMargin": "#ffffff",
+            "bottomMargin": "#ffffff",
+            "leftMargin": "#ffffff",
+            "rightMargin": "#ffffff",
+            "unusedInterior": "#1e1e1e"
+          },
+          "insetPerimeterColors": [
+            "#ffffff"
+          ],
+          "pageMarkerPresent": true,
+          "outermostPerimeterColors": [
+            "#ffffff"
+          ]
+        }
+      ]
+    },
+    {
+      "format": "pdf",
+      "theme": "dark",
+      "variant": "page-literal",
+      "file": "dark-page-literal.pdf",
+      "sha256": "994c1ec41c6081555ce1e8ea700af04c8f8d948411e23ba5b394f0d398abbf08",
+      "warnings": [],
+      "wordGeometryMatchesDarkBaseline": true,
+      "pages": [
+        {
+          "page": 1,
+          "sizePt": [
+            594.95996,
+            841.91998
+          ],
+          "samples": {
+            "topLeft": "#1e1e1e",
+            "topRight": "#1e1e1e",
+            "bottomLeft": "#1e1e1e",
+            "bottomRight": "#1e1e1e",
+            "topMargin": "#1e1e1e",
+            "bottomMargin": "#1e1e1e",
+            "leftMargin": "#1e1e1e",
+            "rightMargin": "#1e1e1e",
+            "unusedInterior": "#1e1e1e"
+          },
+          "insetPerimeterColors": [
+            "#1e1e1e"
+          ],
+          "pageMarkerPresent": true,
+          "outermostPerimeterColors": [
+            "#1e1e1e"
+          ]
+        },
+        {
+          "page": 2,
+          "sizePt": [
+            594.95996,
+            841.91998
+          ],
+          "samples": {
+            "topLeft": "#1e1e1e",
+            "topRight": "#1e1e1e",
+            "bottomLeft": "#1e1e1e",
+            "bottomRight": "#1e1e1e",
+            "topMargin": "#1e1e1e",
+            "bottomMargin": "#1e1e1e",
+            "leftMargin": "#1e1e1e",
+            "rightMargin": "#1e1e1e",
+            "unusedInterior": "#1e1e1e"
+          },
+          "insetPerimeterColors": [
+            "#1e1e1e"
+          ],
+          "pageMarkerPresent": true,
+          "outermostPerimeterColors": [
+            "#1e1e1e"
+          ]
+        },
+        {
+          "page": 3,
+          "sizePt": [
+            594.95996,
+            841.91998
+          ],
+          "samples": {
+            "topLeft": "#1e1e1e",
+            "topRight": "#1e1e1e",
+            "bottomLeft": "#1e1e1e",
+            "bottomRight": "#1e1e1e",
+            "topMargin": "#1e1e1e",
+            "bottomMargin": "#1e1e1e",
+            "leftMargin": "#1e1e1e",
+            "rightMargin": "#1e1e1e",
+            "unusedInterior": "#1e1e1e"
+          },
+          "insetPerimeterColors": [
+            "#1e1e1e"
+          ],
+          "pageMarkerPresent": true,
+          "outermostPerimeterColors": [
+            "#1e1e1e"
+          ]
+        }
+      ]
+    },
+    {
+      "format": "pdf",
+      "theme": "dark",
+      "variant": "page-variable",
+      "file": "dark-page-variable.pdf",
+      "sha256": "994c1ec41c6081555ce1e8ea700af04c8f8d948411e23ba5b394f0d398abbf08",
+      "warnings": [],
+      "wordGeometryMatchesDarkBaseline": true,
+      "pages": [
+        {
+          "page": 1,
+          "sizePt": [
+            594.95996,
+            841.91998
+          ],
+          "samples": {
+            "topLeft": "#1e1e1e",
+            "topRight": "#1e1e1e",
+            "bottomLeft": "#1e1e1e",
+            "bottomRight": "#1e1e1e",
+            "topMargin": "#1e1e1e",
+            "bottomMargin": "#1e1e1e",
+            "leftMargin": "#1e1e1e",
+            "rightMargin": "#1e1e1e",
+            "unusedInterior": "#1e1e1e"
+          },
+          "insetPerimeterColors": [
+            "#1e1e1e"
+          ],
+          "pageMarkerPresent": true,
+          "outermostPerimeterColors": [
+            "#1e1e1e"
+          ]
+        },
+        {
+          "page": 2,
+          "sizePt": [
+            594.95996,
+            841.91998
+          ],
+          "samples": {
+            "topLeft": "#1e1e1e",
+            "topRight": "#1e1e1e",
+            "bottomLeft": "#1e1e1e",
+            "bottomRight": "#1e1e1e",
+            "topMargin": "#1e1e1e",
+            "bottomMargin": "#1e1e1e",
+            "leftMargin": "#1e1e1e",
+            "rightMargin": "#1e1e1e",
+            "unusedInterior": "#1e1e1e"
+          },
+          "insetPerimeterColors": [
+            "#1e1e1e"
+          ],
+          "pageMarkerPresent": true,
+          "outermostPerimeterColors": [
+            "#1e1e1e"
+          ]
+        },
+        {
+          "page": 3,
+          "sizePt": [
+            594.95996,
+            841.91998
+          ],
+          "samples": {
+            "topLeft": "#1e1e1e",
+            "topRight": "#1e1e1e",
+            "bottomLeft": "#1e1e1e",
+            "bottomRight": "#1e1e1e",
+            "topMargin": "#1e1e1e",
+            "bottomMargin": "#1e1e1e",
+            "leftMargin": "#1e1e1e",
+            "rightMargin": "#1e1e1e",
+            "unusedInterior": "#1e1e1e"
+          },
+          "insetPerimeterColors": [
+            "#1e1e1e"
+          ],
+          "pageMarkerPresent": true,
+          "outermostPerimeterColors": [
+            "#1e1e1e"
+          ]
+        }
+      ]
+    },
+    {
+      "format": "pdf",
+      "theme": "dark",
+      "variant": "root-background",
+      "file": "dark-root-background.pdf",
+      "sha256": "f9a0d5e3f99bcc3a3089af558597e0bd16efe1c80d7435eaeb3d96ec8b39a3e9",
+      "warnings": [],
+      "wordGeometryMatchesDarkBaseline": true,
+      "pages": [
+        {
+          "page": 1,
+          "sizePt": [
+            594.95996,
+            841.91998
+          ],
+          "samples": {
+            "topLeft": "#ffffff",
+            "topRight": "#ffffff",
+            "bottomLeft": "#ffffff",
+            "bottomRight": "#ffffff",
+            "topMargin": "#ffffff",
+            "bottomMargin": "#ffffff",
+            "leftMargin": "#ffffff",
+            "rightMargin": "#ffffff",
+            "unusedInterior": "#1e1e1e"
+          },
+          "insetPerimeterColors": [
+            "#ffffff"
+          ],
+          "pageMarkerPresent": true
+        },
+        {
+          "page": 2,
+          "sizePt": [
+            594.95996,
+            841.91998
+          ],
+          "samples": {
+            "topLeft": "#ffffff",
+            "topRight": "#ffffff",
+            "bottomLeft": "#ffffff",
+            "bottomRight": "#ffffff",
+            "topMargin": "#ffffff",
+            "bottomMargin": "#ffffff",
+            "leftMargin": "#ffffff",
+            "rightMargin": "#ffffff",
+            "unusedInterior": "#1e1e1e"
+          },
+          "insetPerimeterColors": [
+            "#ffffff"
+          ],
+          "pageMarkerPresent": true
+        },
+        {
+          "page": 3,
+          "sizePt": [
+            594.95996,
+            841.91998
+          ],
+          "samples": {
+            "topLeft": "#ffffff",
+            "topRight": "#ffffff",
+            "bottomLeft": "#ffffff",
+            "bottomRight": "#ffffff",
+            "topMargin": "#ffffff",
+            "bottomMargin": "#ffffff",
+            "leftMargin": "#ffffff",
+            "rightMargin": "#ffffff",
+            "unusedInterior": "#1e1e1e"
+          },
+          "insetPerimeterColors": [
+            "#ffffff"
+          ],
+          "pageMarkerPresent": true
+        }
+      ]
+    },
+    {
+      "format": "pdf",
+      "theme": "dark",
+      "variant": "fixed-background",
+      "file": "dark-fixed-background.pdf",
+      "sha256": "c173f119f2c74a04e290fbabfa6d95a64a9896d8584ce30de96690a9af6482d5",
+      "warnings": [],
+      "wordGeometryMatchesDarkBaseline": true,
+      "pages": [
+        {
+          "page": 1,
+          "sizePt": [
+            594.95996,
+            841.91998
+          ],
+          "samples": {
+            "topLeft": "#ffffff",
+            "topRight": "#ffffff",
+            "bottomLeft": "#ffffff",
+            "bottomRight": "#ffffff",
+            "topMargin": "#ffffff",
+            "bottomMargin": "#ffffff",
+            "leftMargin": "#ffffff",
+            "rightMargin": "#ffffff",
+            "unusedInterior": "#1e1e1e"
+          },
+          "insetPerimeterColors": [
+            "#ffffff"
+          ],
+          "pageMarkerPresent": true
+        },
+        {
+          "page": 2,
+          "sizePt": [
+            594.95996,
+            841.91998
+          ],
+          "samples": {
+            "topLeft": "#ffffff",
+            "topRight": "#ffffff",
+            "bottomLeft": "#ffffff",
+            "bottomRight": "#ffffff",
+            "topMargin": "#ffffff",
+            "bottomMargin": "#ffffff",
+            "leftMargin": "#ffffff",
+            "rightMargin": "#ffffff",
+            "unusedInterior": "#1e1e1e"
+          },
+          "insetPerimeterColors": [
+            "#ffffff"
+          ],
+          "pageMarkerPresent": true
+        },
+        {
+          "page": 3,
+          "sizePt": [
+            594.95996,
+            841.91998
+          ],
+          "samples": {
+            "topLeft": "#ffffff",
+            "topRight": "#ffffff",
+            "bottomLeft": "#ffffff",
+            "bottomRight": "#ffffff",
+            "topMargin": "#ffffff",
+            "bottomMargin": "#ffffff",
+            "leftMargin": "#ffffff",
+            "rightMargin": "#ffffff",
+            "unusedInterior": "#1e1e1e"
+          },
+          "insetPerimeterColors": [
+            "#ffffff"
+          ],
+          "pageMarkerPresent": true
+        }
+      ]
+    },
+    {
+      "format": "pdf",
+      "theme": "dark",
+      "variant": "white-background-only",
+      "file": "dark-white-background-only.pdf",
+      "sha256": "90d5cd585d9b10b66389b68026aa174f7ee92adfcbdc9ac0ee5ac048f90fbfa9",
+      "warnings": [],
+      "wordGeometryMatchesDarkBaseline": true,
+      "pages": [
+        {
+          "page": 1,
+          "sizePt": [
+            594.95996,
+            841.91998
+          ],
+          "samples": {
+            "topLeft": "#ffffff",
+            "topRight": "#ffffff",
+            "bottomLeft": "#ffffff",
+            "bottomRight": "#ffffff",
+            "topMargin": "#ffffff",
+            "bottomMargin": "#ffffff",
+            "leftMargin": "#ffffff",
+            "rightMargin": "#ffffff",
+            "unusedInterior": "#ffffff"
+          },
+          "insetPerimeterColors": [
+            "#ffffff"
+          ],
+          "pageMarkerPresent": true
+        },
+        {
+          "page": 2,
+          "sizePt": [
+            594.95996,
+            841.91998
+          ],
+          "samples": {
+            "topLeft": "#ffffff",
+            "topRight": "#ffffff",
+            "bottomLeft": "#ffffff",
+            "bottomRight": "#ffffff",
+            "topMargin": "#ffffff",
+            "bottomMargin": "#ffffff",
+            "leftMargin": "#ffffff",
+            "rightMargin": "#ffffff",
+            "unusedInterior": "#ffffff"
+          },
+          "insetPerimeterColors": [
+            "#ffffff"
+          ],
+          "pageMarkerPresent": true
+        },
+        {
+          "page": 3,
+          "sizePt": [
+            594.95996,
+            841.91998
+          ],
+          "samples": {
+            "topLeft": "#ffffff",
+            "topRight": "#ffffff",
+            "bottomLeft": "#ffffff",
+            "bottomRight": "#ffffff",
+            "topMargin": "#ffffff",
+            "bottomMargin": "#ffffff",
+            "leftMargin": "#ffffff",
+            "rightMargin": "#ffffff",
+            "unusedInterior": "#ffffff"
+          },
+          "insetPerimeterColors": [
+            "#ffffff"
+          ],
+          "pageMarkerPresent": true
+        }
+      ]
+    },
+    {
+      "format": "pdf",
+      "theme": "night",
+      "variant": "current",
+      "file": "night-current.pdf",
+      "sha256": "bb6c3b95881bee9009bdb94468f0a240c775e0e32445ad1cf2f265030f754d40",
+      "warnings": [],
+      "wordGeometryMatchesDarkBaseline": true,
+      "pages": [
+        {
+          "page": 1,
+          "sizePt": [
+            594.95996,
+            841.91998
+          ],
+          "samples": {
+            "topLeft": "#ffffff",
+            "topRight": "#ffffff",
+            "bottomLeft": "#ffffff",
+            "bottomRight": "#ffffff",
+            "topMargin": "#ffffff",
+            "bottomMargin": "#ffffff",
+            "leftMargin": "#ffffff",
+            "rightMargin": "#ffffff",
+            "unusedInterior": "#1a1b26"
+          },
+          "insetPerimeterColors": [
+            "#ffffff"
+          ],
+          "pageMarkerPresent": true
+        },
+        {
+          "page": 2,
+          "sizePt": [
+            594.95996,
+            841.91998
+          ],
+          "samples": {
+            "topLeft": "#ffffff",
+            "topRight": "#ffffff",
+            "bottomLeft": "#ffffff",
+            "bottomRight": "#ffffff",
+            "topMargin": "#ffffff",
+            "bottomMargin": "#ffffff",
+            "leftMargin": "#ffffff",
+            "rightMargin": "#ffffff",
+            "unusedInterior": "#1a1b26"
+          },
+          "insetPerimeterColors": [
+            "#ffffff"
+          ],
+          "pageMarkerPresent": true
+        },
+        {
+          "page": 3,
+          "sizePt": [
+            594.95996,
+            841.91998
+          ],
+          "samples": {
+            "topLeft": "#ffffff",
+            "topRight": "#ffffff",
+            "bottomLeft": "#ffffff",
+            "bottomRight": "#ffffff",
+            "topMargin": "#ffffff",
+            "bottomMargin": "#ffffff",
+            "leftMargin": "#ffffff",
+            "rightMargin": "#ffffff",
+            "unusedInterior": "#1a1b26"
+          },
+          "insetPerimeterColors": [
+            "#ffffff"
+          ],
+          "pageMarkerPresent": true
+        }
+      ]
+    },
+    {
+      "format": "pdf",
+      "theme": "sepia",
+      "variant": "current",
+      "file": "sepia-current.pdf",
+      "sha256": "97f420be59f06a6e942a97db8565afcf39d97018436c11b93b94e3a449a767bd",
+      "warnings": [],
+      "wordGeometryMatchesDarkBaseline": true,
+      "pages": [
+        {
+          "page": 1,
+          "sizePt": [
+            594.95996,
+            841.91998
+          ],
+          "samples": {
+            "topLeft": "#ffffff",
+            "topRight": "#ffffff",
+            "bottomLeft": "#ffffff",
+            "bottomRight": "#ffffff",
+            "topMargin": "#ffffff",
+            "bottomMargin": "#ffffff",
+            "leftMargin": "#ffffff",
+            "rightMargin": "#ffffff",
+            "unusedInterior": "#fbf8f1"
+          },
+          "insetPerimeterColors": [
+            "#ffffff"
+          ],
+          "pageMarkerPresent": true
+        },
+        {
+          "page": 2,
+          "sizePt": [
+            594.95996,
+            841.91998
+          ],
+          "samples": {
+            "topLeft": "#ffffff",
+            "topRight": "#ffffff",
+            "bottomLeft": "#ffffff",
+            "bottomRight": "#ffffff",
+            "topMargin": "#ffffff",
+            "bottomMargin": "#ffffff",
+            "leftMargin": "#ffffff",
+            "rightMargin": "#ffffff",
+            "unusedInterior": "#fbf8f1"
+          },
+          "insetPerimeterColors": [
+            "#ffffff"
+          ],
+          "pageMarkerPresent": true
+        },
+        {
+          "page": 3,
+          "sizePt": [
+            594.95996,
+            841.91998
+          ],
+          "samples": {
+            "topLeft": "#ffffff",
+            "topRight": "#ffffff",
+            "bottomLeft": "#ffffff",
+            "bottomRight": "#ffffff",
+            "topMargin": "#ffffff",
+            "bottomMargin": "#ffffff",
+            "leftMargin": "#ffffff",
+            "rightMargin": "#ffffff",
+            "unusedInterior": "#fbf8f1"
+          },
+          "insetPerimeterColors": [
+            "#ffffff"
+          ],
+          "pageMarkerPresent": true
+        }
+      ]
+    }
+  ],
+  "docx": [
+    {
+      "format": "docx",
+      "theme": "github",
+      "file": "github-current.docx",
+      "sha256": "a93ccdab89087cf21db8e361e47cf47beb364f96478c877cb9e97d1df3a278f7",
+      "warnings": [],
+      "pageBackgroundElements": [],
+      "documentShadingElements": [],
+      "endMarkerPresent": true,
+      "differentEntriesFromGithub": [],
+      "documentSha256": "7dbb3eb9bc041bcfca3d2ba8fab6be8c5c87fa1828a6001fc8762d4519e1e56b",
+      "stylesSha256": "819710d6c278b68ac018347609cb8cd7f40318b01227c63ca8025a39da7b9b29"
+    },
+    {
+      "format": "docx",
+      "theme": "dark",
+      "file": "dark-current.docx",
+      "sha256": "a93ccdab89087cf21db8e361e47cf47beb364f96478c877cb9e97d1df3a278f7",
+      "warnings": [],
+      "pageBackgroundElements": [],
+      "documentShadingElements": [],
+      "endMarkerPresent": true,
+      "differentEntriesFromGithub": [],
+      "documentSha256": "7dbb3eb9bc041bcfca3d2ba8fab6be8c5c87fa1828a6001fc8762d4519e1e56b",
+      "stylesSha256": "819710d6c278b68ac018347609cb8cd7f40318b01227c63ca8025a39da7b9b29"
+    },
+    {
+      "format": "docx",
+      "theme": "night",
+      "file": "night-current.docx",
+      "sha256": "a93ccdab89087cf21db8e361e47cf47beb364f96478c877cb9e97d1df3a278f7",
+      "warnings": [],
+      "pageBackgroundElements": [],
+      "documentShadingElements": [],
+      "endMarkerPresent": true,
+      "differentEntriesFromGithub": [],
+      "documentSha256": "7dbb3eb9bc041bcfca3d2ba8fab6be8c5c87fa1828a6001fc8762d4519e1e56b",
+      "stylesSha256": "819710d6c278b68ac018347609cb8cd7f40318b01227c63ca8025a39da7b9b29"
+    },
+    {
+      "format": "docx",
+      "theme": "sepia",
+      "file": "sepia-current.docx",
+      "sha256": "a93ccdab89087cf21db8e361e47cf47beb364f96478c877cb9e97d1df3a278f7",
+      "warnings": [],
+      "pageBackgroundElements": [],
+      "documentShadingElements": [],
+      "endMarkerPresent": true,
+      "differentEntriesFromGithub": [],
+      "documentSha256": "7dbb3eb9bc041bcfca3d2ba8fab6be8c5c87fa1828a6001fc8762d4519e1e56b",
+      "stylesSha256": "819710d6c278b68ac018347609cb8cd7f40318b01227c63ca8025a39da7b9b29"
+    }
+  ],
+  "wordObservation": {
+    "file": "dark-current.docx",
+    "previewPageCount": 3,
+    "inspectedPrintPreviewPages": [
+      1,
+      3
+    ],
+    "result": "Uniform white page, margins and unused final-page area; readable text. Editing canvas appeared dark. No printing or saving performed."
+  },
+  "verification": {
+    "compile": "Passed after restoring locked dependencies with npm ci; Node matches .node-version.",
+    "installedVsix": "Not exercised.",
+    "linuxAndOlderBrowsers": "Not exercised.",
+    "mermaidAndExternalImages": "Not exercised.",
+    "allBuiltinThemes": "Four of seven exercised."
+  }
+}

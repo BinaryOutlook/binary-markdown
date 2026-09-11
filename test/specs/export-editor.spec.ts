@@ -131,8 +131,8 @@ test.describe('Export saved snapshot agreement', () => {
     });
 });
 
-async function prepare(page: Page, markdown: string, requestId = 'render') {
-    await sendHost(page, { type: 'prepareExport', requestId, markdown });
+async function prepare(page: Page, markdown: string, requestId = 'render', appearance: { theme?: string; fontSize?: number } = {}) {
+    await sendHost(page, { type: 'prepareExport', requestId, markdown, ...appearance });
     await expect.poll(async () => (await messages(page, 'exportPrepared')).some(message => message.requestId === requestId)).toBe(true);
     return (await messages(page, 'exportPrepared')).find(message => message.requestId === requestId)!;
 }
@@ -176,6 +176,69 @@ test.describe('Export document-only rendering', () => {
         expect(rendered.warnings).toEqual([]);
         expect(await page.locator('.export-preparation').count()).toBe(0);
     });
+
+    for (const theme of ['github', 'sepia', 'night', 'dark', 'minimal', 'things', 'perplexity']) {
+        test(`captured PDF appearance renders readable white output from ${theme} without changing the editor`, async ({ page, context }) => {
+            await page.evaluate(theme => {
+                document.documentElement.dataset.theme = theme;
+                document.documentElement.style.setProperty('--font-size', '24px');
+            }, theme);
+            await setMarkdown(page, '# Live document\n\n```mermaid\ngraph LR; A[Live] --> B[Editor]\n```\n');
+            await expect(page.locator('#editor .mermaid-diagram svg')).toHaveCount(1);
+            const before = await page.locator('#editor').innerHTML();
+            const config = () => page.evaluate(() => JSON.stringify((window as any).mermaid.mermaidAPI.getConfig()));
+            const previousConfig = await config();
+            const source = '# Export heading\n\nReadable body.\n\n> Readable quotation.\n\n[Readable link](https://example.com)\n\n```javascript\nconst value = "readable";\n```\n\n```math\nx^2 + y^2 = z^2\n```\n\n```mermaid\ngraph LR; A[First label] -->|Edge label| B[Last label]\n```\n';
+            for (const exportTheme of ['github', theme].filter((value, index, all) => all.indexOf(value) === index)) {
+                const rendered = await prepare(page, source, 'appearance-' + exportTheme, { theme: exportTheme, fontSize: 19 });
+                expect(rendered).toMatchObject({ theme: exportTheme, fontSize: 19, warnings: [] });
+                expect(rendered.diagrams).toHaveLength(1);
+                expect(await config()).toBe(previousConfig);
+                expect(await page.locator('#editor').innerHTML()).toBe(before);
+                expect(await page.locator('html').getAttribute('data-theme')).toBe(theme);
+                expect(await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--font-size'))).toBe('24px');
+                const signal = new AbortController().signal;
+                const html = await prepareStandaloneHtml({
+                    sourcePath: path.resolve(__dirname, '../fixtures/exports/basic.md'), markdown: source, version: 1,
+                    theme: exportTheme, fontSize: 19
+                }, rendered as any, path.resolve(__dirname, '../..'), {
+                    signal, report() {}, warnings: [],
+                    loadResource: async () => { throw new Error('Offline fixture uses system fonts'); }
+                });
+                const exported = await context.newPage();
+                try {
+                    await exported.setContent(html);
+                    await expect(exported.locator('.katex')).toHaveCount(1);
+                    const colors = await exported.evaluate(() => {
+                        const style = (selector: string) => getComputedStyle(document.querySelector(selector)!);
+                        return {
+                            background: style('body').backgroundColor, fontSize: style('body').fontSize,
+                            text: ['h1', 'p', 'blockquote', 'a', '.hljs-keyword', '.hljs-string', '.katex'].map(selector => style(selector).color),
+                            node: style('svg .node rect').fill,
+                            labels: Array.from(document.querySelectorAll('svg text')).map(text => ({ text: text.textContent, fill: getComputedStyle(text).fill }))
+                        };
+                    });
+                    // Things intentionally renders one pixel below the base
+                    // size; white mode uses the captured base size unchanged.
+                    expect(colors.fontSize).toBe(exportTheme === 'things' ? '18px' : '19px');
+                    expect(colors.labels.map(label => label.text).join(' ')).toMatch(/First label.*Last label|Last label.*First label/);
+                    expect(colors.labels.map(label => label.text).join(' ')).toContain('Edge label');
+                    expect(colors.node).toBe(['dark', 'night'].includes(exportTheme) ? 'rgb(31, 32, 32)' : 'rgb(236, 236, 255)');
+                    if (exportTheme === 'github') {
+                        expect(colors.background).toBe('rgb(255, 255, 255)');
+                        for (const color of [...colors.text, ...colors.labels.map(label => label.fill)]) {
+                            const rgb = color.match(/[\d.]+/g)!.slice(0, 3).map(Number).map(value => {
+                                const channel = value / 255;
+                                return channel <= 0.04045 ? channel / 12.92 : Math.pow((channel + 0.055) / 1.055, 2.4);
+                            });
+                            const luminance = rgb[0] * 0.2126 + rgb[1] * 0.7152 + rgb[2] * 0.0722;
+                            expect(1.05 / (luminance + 0.05), 'Readable light export foreground: ' + color).toBeGreaterThanOrEqual(4.5);
+                        }
+                    }
+                } finally { await exported.close(); }
+            }
+        });
+    }
 
     test('discloses dollar math, TOC and footnotes retained as visible renderer source', async ({ page }) => {
         const source = '# Literal notation\n\nInline $x^2$ and $y$.\n\n$$\nE = mc^2\n$$\n\n[TOC]\n\nText with a footnote.[^note]\n\n[^note]: Footnote body.\n';
@@ -268,11 +331,40 @@ test.describe('Export document-only rendering', () => {
         }
     });
 
-    test('document diagram directives cannot enable active HTML labels', async ({ page }) => {
-        const source = '%%{init: {"flowchart": {"htmlLabels": true}, "securityLevel": "loose"}}%%\ngraph TD\n A[First] --> B[Last]';
-        const rendered = await prepare(page, '```mermaid\n' + source + '\n```\n');
+    test('authored diagram palettes are preserved while active HTML labels remain disabled', async ({ page }) => {
+        const source = '%%{init: {"flowchart": {"htmlLabels": true}, "securityLevel": "loose", "theme": "dark", "themeVariables": {"primaryTextColor": "#ffffff"}}}%%\ngraph TD\n A[First] --> B[Last]';
+        const rendered = await prepare(page, '```mermaid\n' + source + '\n```\n', 'directives', { theme: 'github', fontSize: 16 });
         expect(rendered.diagrams).toHaveLength(1);
         expect(rendered.diagrams[0].svg).not.toContain('foreignObject');
+        expect(rendered.diagrams[0].svg).toContain('fill:#1f2020');
+    });
+
+    test('settings changed during diagram rendering do not replace captured export appearance', async ({ page }) => {
+        await page.evaluate(() => {
+            document.documentElement.dataset.theme = 'dark';
+            const current = window as any;
+            const render = current.mermaid.render.bind(current.mermaid);
+            current.mermaid.render = async (...args: any[]) => {
+                const result = await render(...args);
+                await new Promise(resolve => { current.finishAppearanceDiagram = resolve; });
+                return result;
+            };
+        });
+        await sendHost(page, { type: 'prepareExport', requestId: 'captured-appearance', theme: 'github', fontSize: 19,
+            markdown: '```mermaid\ngraph TD\nA[First] --> B[Last]\n```\n' });
+        await page.waitForFunction(() => !!(window as any).finishAppearanceDiagram);
+        expect(await page.locator('.export-preparation').evaluate(element => getComputedStyle(element).fontSize)).toBe('19px');
+        await page.evaluate(() => {
+            document.documentElement.dataset.theme = 'night';
+            document.documentElement.style.setProperty('--font-size', '30px');
+            (window as any).finishAppearanceDiagram();
+        });
+        await expect.poll(async () => (await messages(page, 'exportPrepared')).length).toBe(1);
+        const [rendered] = await messages(page, 'exportPrepared');
+        expect(rendered).toMatchObject({ theme: 'github', fontSize: 19 });
+        expect(rendered.diagrams[0].svg).toContain('fill:#ECECFF');
+        expect(await page.locator('html').getAttribute('data-theme')).toBe('night');
+        expect(await page.evaluate(() => (window as any).mermaid.mermaidAPI.getConfig().theme)).toBe('dark');
     });
 
     test('provides visible source fallbacks and warnings for failed math and diagrams', async ({ page }) => {
@@ -316,16 +408,19 @@ test.describe('Export document-only rendering', () => {
 
     test('cancellation removes the owned rendering container and ignores late diagram completion', async ({ page }) => {
         await page.evaluate(() => {
+            document.documentElement.dataset.theme = 'night';
             const current = window as Window & { mermaid: { render: () => Promise<unknown> }; finishExportDiagram?: () => void };
             current.mermaid.render = () => new Promise(resolve => {
                 current.finishExportDiagram = () => resolve({ svg: '<svg xmlns="http://www.w3.org/2000/svg"><text>Late</text></svg>' });
             });
         });
-        await sendHost(page, { type: 'prepareExport', requestId: 'cancelled', markdown: '```mermaid\ngraph TD\nA --> B\n```\n' });
+        await sendHost(page, { type: 'prepareExport', requestId: 'cancelled', theme: 'github', fontSize: 19, markdown: '```mermaid\ngraph TD\nA --> B\n```\n' });
         await expect(page.locator('.export-preparation')).toHaveCount(1);
         await sendHost(page, { type: 'cancelExportPreparation', requestId: 'cancelled' });
         await expect.poll(async () => (await messages(page, 'exportError')).some(message => message.requestId === 'cancelled')).toBe(true);
         await expect(page.locator('.export-preparation')).toHaveCount(0);
+        expect(await page.evaluate(() => (window as any).mermaid.mermaidAPI.getConfig().theme)).toBe('dark');
+        expect(await page.locator('html').getAttribute('data-theme')).toBe('night');
         await page.evaluate(() => (window as Window & { finishExportDiagram?: () => void }).finishExportDiagram?.());
         expect((await messages(page, 'exportPrepared')).filter(message => message.requestId === 'cancelled')).toEqual([]);
     });

@@ -49,7 +49,7 @@ export type HostMessage =
     | { type: 'documentSaved'; content: string }
     | { type: 'saveResult'; revision: number; success: boolean }
     | { type: 'captureExportSnapshot'; requestId: string }
-    | { type: 'prepareExport'; requestId: string; markdown: string }
+    | { type: 'prepareExport'; requestId: string; markdown: string; theme?: string; fontSize?: number }
     | { type: 'cancelExportPreparation'; requestId: string }
     | { type: 'update'; content: string }
     | { type: 'performUndo' }

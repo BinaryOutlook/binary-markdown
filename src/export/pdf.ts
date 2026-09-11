@@ -3,7 +3,7 @@ import type { Browser, BrowserContext, Page } from 'playwright-core';
 import { checkCancelled, ExportOperations } from './types';
 
 const printStyles = `
-@page { size: A4; margin: 16mm; }
+@page { size: A4; margin: 16mm; background: var(--bg-color, #fff); }
 html, body { height: auto !important; min-height: 0 !important; max-height: none !important; overflow: visible !important; }
 body { margin: 0 !important; }
 *, *::before, *::after { -webkit-print-color-adjust: exact; print-color-adjust: exact; }

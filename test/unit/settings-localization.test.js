@@ -15,6 +15,12 @@ function settingsStrings() {
     return Object.values(properties).flatMap(schema => [schema.description, ...(schema.enumDescriptions || [])]);
 }
 
+test('PDF exports default to a white page with a user-configurable setting', () => {
+    const setting = properties['binary-markdown.export.pdfWhiteBackground'];
+    assert.equal(setting.type, 'boolean');
+    assert.equal(setting.default, true);
+});
+
 test('every settings description and option explanation uses a manifest translation key', () => {
     for (const text of settingsStrings()) {
         assert.match(text, /^%[\w.]+%$/, `Hard-coded or missing settings text: ${text}`);

@@ -34,7 +34,7 @@ The user has answered all product clarification questions needed for this MVP.
 | --- | --- |
 | Required host | Local desktop VS Code on macOS first; the user subsequently requested basic Ubuntu x86-64 cross-validation. Experimental local Linux export is enabled, with evidence scoped to the tested Ubuntu environment. Keep shared editor/Electron builds compatible; other environments require their own acceptance. |
 | Formats | Standalone HTML, rendered PDF, Word `.docx`, and EPUB. All four are required for the completed branch. |
-| HTML/PDF fidelity | Reuse supported displayed rendering and current appearance. Keep the existing renderer initially. |
+| HTML/PDF fidelity | Reuse supported displayed rendering. HTML retains current appearance; PDF defaults to a white page with GitHub light appearance, with an option to retain the current theme across the whole page. Keep the existing renderer. |
 | DOCX/EPUB fidelity | Prioritize editable text and document structure; disclose styling/layout differences. |
 | Source eligibility | Named, saved Markdown only. Show “save and retry” for unsaved work; no automatic save. |
 | Resources | Embed/package original-resolution supported images and prepared diagrams/math. Retrieve only referenced resources needed for the export. Conversion stays local. |
@@ -120,7 +120,7 @@ The [fixed fixtures](../test/fixtures/exports/README.md) exercise the following 
 
 | Content | HTML/PDF target | DOCX/EPUB target |
 | --- | --- | --- |
-| Headings, prose, lists, links, tables, code | Supported displayed content and current appearance; PDF adapts for print. | Editable text and structural equivalents. |
+| Headings, prose, lists, links, tables, code | Supported displayed content and captured appearance; PDF uses the selected white/theme mode and adapts for print. | Editable text and structural equivalents. |
 | Mathematics | Supported fenced `math` blocks render with KaTeX styles/fonts. Dollar-delimited `$...$` and `$$...$$` remain visible source, matching the existing renderer, with a warning. | Pandoc produces native DOCX Office Math and EPUB MathML for supported equations; unsupported expressions require declared fallbacks. |
 | Mermaid/diagrams | Wait for diagram rendering; retain vector form where practical. | Package target-compatible assets; do not silently leave supported diagrams as code. |
 | Images and fonts | Resolve and embed needed assets; standalone HTML works after relocation offline. | Package compatible media; preserve source resolution without deliberate downsampling. |
@@ -209,6 +209,15 @@ The current insertion point is in the utility group in [editor-body-html.js](../
 
 Large blank regions are acceptable. Advanced pagination optimization is deferred. Reference paper size/margins belong to the fixture/export defaults; matching the precise page count of every target application is not required.
 
+### PDF page appearance
+
+| ID | Requirement | Basis | Acceptance |
+| --- | --- | --- | --- |
+| FR-EXP-042 | `binary-markdown.export.pdfWhiteBackground` shall default to `true`. PDF shall use a white page and a coherent GitHub light appearance for text, code, math and generated diagram labels, while retaining the captured base font size. This setting shall not change the editor or other export formats. | User, 2026-09-12 | AC-15 |
+| FR-EXP-043 | With the white-background option disabled, PDF shall paint the captured theme background across the entire A4 page, including margins and the unused part of the final page, while retaining 16 mm content margins. | User, 2026-09-12 | AC-15 |
+
+The effective appearance is captured once with the saved revision, before dependency discovery and asynchronous rendering. Offscreen Mermaid rendering uses that palette and restores the live renderer configuration after completion, failure or cancellation. Explicit colours inside source images and diagram node styles remain authored content; white mode is not image recolouring. DOCX keeps Pandoc's page styling: the investigated defect does not require DOCX page-background rewriting. See [the bug record](export-page-background-2026-09-12.md) and [issue #6](https://github.com/BinaryOutlook/binary-markdown/issues/6).
+
 ### Dependency configuration
 
 | ID | Requirement | Basis | Acceptance |
@@ -273,7 +282,7 @@ There are **no export-duration, throughput, or response-time targets** in this s
 | NFR-EXP-014 | **Fidelity:** Export shall retain supported document content and structure according to the declared format-support matrix, with visible/accounted-for fallbacks for known unsupported content. | User | AC-03, AC-06, AC-07, AC-08, AC-13 |
 | NFR-EXP-015 | **Workload suitability:** The subsystem shall successfully export the defined approximately 30-page complex-report Markdown fixture to all four MVP formats on the declared test environment. | User | AC-13 |
 
-For HTML/PDF, fidelity refers to supported displayed rendering and current appearance. For DOCX/EPUB, fidelity prioritizes editable text and structure, including native mathematical objects where supported, rather than identical browser styling. Scaling an image for layout does not require reducing its stored source resolution. The support matrix must name current limitations; accepting warnings is not permission to silently omit supported content.
+For HTML/PDF, fidelity refers to supported displayed rendering and captured appearance, including PDF's selected white/theme mode. For DOCX/EPUB, fidelity prioritizes editable text and structure, including native mathematical objects where supported, rather than identical browser styling. Scaling an image for layout does not require reducing its stored source resolution. The support matrix must name current limitations; accepting warnings is not permission to silently omit supported content.
 
 ## Reference workload W-30
 
@@ -312,6 +321,7 @@ The recorded reference-layout calibration is **35 pages**. The original macOS na
 | AC-12 | Inspect resource requests and exercise document text resembling commands/active content. Verify only needed referenced resources are retrieved, no document upload occurs, and content is not treated as executable instructions. | D2, D3, D4, D5 |
 | AC-13 | Run fixed W-30 input through all four formats, inspect supported content/fallbacks and representative output pages, and observe valid progress and continued editor usability. Record the workload/environment, without pass/fail timing thresholds. | D0 fixture; D5 verification |
 | AC-14 | Install the actual VSIX in isolated local macOS and Ubuntu x86-64 VS Code profiles, independently of any development server, record resolved external tools and host architecture/runtime, and reproduce the native entry/save/export flows. Missing-dependency cases remain part of this check. SSH may orchestrate the Ubuntu desktop process; VS Code Remote-SSH remains outside scope. | D2 early smoke; D5 final; subsequent Ubuntu extension |
+| AC-15 | Verify default/explicit-white and theme-retaining PDF modes across all seven themes. Rasterize multi-page A4 output and check every page edge, margins and final blank area; check readable light text, code, math and Mermaid labels. Confirm captured settings survive later changes and cancellation, setting changes leave the editor intact, translations resolve, and HTML/DOCX/EPUB appearance is unaffected by the PDF setting. Compare DOCX page/style XML across themes. | D4, D5 |
 
 These criteria are specification targets, not executed results. Record unavailable target viewers or required host checks as unverified. Existing regression failures must be distinguished from new ones; disabling assertions or replacing expected output with the implementation's own output does not establish acceptance.
 
@@ -338,7 +348,7 @@ D2 is the first useful end-to-end checkpoint: a user can export HTML from an ins
 
 - **D0:** preserve the selected [fixture set](../test/fixtures/exports/README.md), its provenance and frozen manifest. W-30 is selected and calibrated; subsequent artifact inspection must use those inputs without silently revising their expected content.
 - **D1:** test pending webview changes, queued host edits, save followed immediately by export, both editor modes, document switching and stale/closed-document responses. Preserve source, selection and undo state. Export itself must not trigger saving.
-- **D2:** split UI, coordinator/finalization and resource preparation into smaller tickets if necessary. Render all content from the captured revision, use current appearance in both modes, and inspect representative light/dark output. Exercise collision races, fallback/warnings and cancellation through the shared path.
+- **D2:** split UI, coordinator/finalization and resource preparation into smaller tickets if necessary. Render all content from the captured revision, use captured effective appearance in both editing modes, and inspect representative light/dark output. Exercise collision races, fallback/warnings and cancellation through the shared path.
 - **D3:** add every new native settings translation and runtime message where appropriate. Test usable discovery, explicit invalid paths, missing Pandoc, spaces/Unicode, real conversions and unsupported content. Do not claim Word/EPUB fidelity from exit status alone.
 - **D4:** use the prepared HTML from D2. Remove editor overflow restrictions and apply print rules. `break-inside: avoid` alone cannot keep a block larger than a page intact; oversized content needs splitting/scaling and visual evidence. See [CSS fragmentation](https://www.w3.org/TR/css-break-3/#unforced-breaks).
 - **D5:** include the JavaScript actually needed at runtime in the VSIX. Stop development servers and record resolved external tools; a fresh VS Code profile can still discover developer-installed executables. Prove missing-dependency behavior separately.
@@ -428,6 +438,7 @@ For later work, leave the current ticket, files/commit, checks run and outcomes,
 | Date | Decision and reason | Affected scope / evidence |
 | --- | --- | --- |
 | 2026-09-09 | Consolidated the agreed four-format, local macOS VS Code MVP into one authoritative handoff. Preserved all 41 FRs, 15 NFRs and 14 ACs. | User clarification answers and consolidation request; the initial documentation milestone preceded implementation. |
+| 2026-09-12 | Default PDF to white/GitHub light appearance; allow the captured theme to fill the whole page. Keep DOCX page styling after negative parity checks. | User-authorized issue #6; FR-EXP-042–043 and AC-15. The dated bug record preserves baseline evidence. |
 | 2026-09-09 | Separate rendered HTML/PDF from Pandoc DOCX/EPUB, sharing capture/resources/finalization. | Supports the different fidelity priorities; D0–D4 must verify the integrated design. |
 | 2026-09-09 | Use installed external tools with detection/manual paths; defer bundling/downloaders and typeset PDF. | Confirmed dependency scope; historical size/probe evidence below explains the tradeoff. |
 | 2026-09-09 | Use automatic sibling filenames with hashes of completed output bytes, identical-file reuse and numbered collision handling. | Confirmed follow-up decisions; FR-EXP-027–032 and FR-EXP-041, AC-09. |
@@ -503,7 +514,7 @@ Source agreement, complete resource preparation, package contents and format fid
 
 ## Deferred scope
 
-Deferred work includes Windows, untested Linux distributions/architectures and remote-host acceptance, browser-only VS Code, Electron export integration, unsaved/untitled export, batch export, destination/name customization, templates and export styling controls, image compression/storage optimization, advanced pagination, native runtime bundles/downloaders, typeset PDF, additional Pandoc writers, whole-document image export, arbitrary filters/custom commands, and a full renderer/parser replacement.
+Deferred work includes Windows, untested Linux distributions/architectures and remote-host acceptance, browser-only VS Code, Electron export integration, unsaved/untitled export, batch export, destination/name customization, templates and styling controls beyond the PDF white-background setting, image compression/storage optimization, advanced pagination, native runtime bundles/downloaders, typeset PDF, additional Pandoc writers, whole-document image export, arbitrary filters/custom commands, and a full renderer/parser replacement.
 
 Potential later paths include Electron's built-in PDF API, managed native-tool installation, additional Pandoc profiles or PDF engines, and richer print layout. They should be selected from user feedback and concrete failed cases, with their own requirements and acceptance evidence. No current MVP acceptance depends on delivering them.
 

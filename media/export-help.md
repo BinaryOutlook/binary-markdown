@@ -19,6 +19,8 @@ HTML works without an additional tool. PDF uses an installed Chrome, Chromium or
 
 Native tools are installed and maintained by the user. The extension does not download them automatically. Changing export paths does not reload the editor.
 
+PDF exports default to a white page with GitHub light appearance so text and generated diagrams remain readable. Disable **Binary Markdown › Export: Pdf White Background** (`binary-markdown.export.pdfWhiteBackground`) to use the editor theme across the entire page, including margins. Text keeps its 16 mm page inset. The setting is captured when export begins; changing it does not reload the editor or affect HTML, DOCX or EPUB. Source images and explicitly authored diagram colours are preserved.
+
 ## Output and progress
 
 The output is saved beside the Markdown file: `report.md` becomes `report.pdf`, for example. If occupied, the filename uses the last eight SHA-256 hexadecimal characters of the completed output, then numbered suffixes if necessary. Identical hash-named files are reused. Existing files are never overwritten.
@@ -27,7 +29,7 @@ The editor displays the actual stage and an indeterminate activity indicator whi
 
 ## Initial format limitations
 
-- HTML and PDF reuse supported editor rendering and current appearance. Fenced `math` blocks render with KaTeX. Dollar-delimited math (`$...$` / `$$...$$`), `[TOC]` and footnotes remain visible source with warnings, matching the current renderer. Invalid supported math/diagrams receive source fallbacks.
+- HTML and PDF reuse supported editor rendering. HTML retains the editor theme; PDF uses the white/theme setting above. Fenced `math` blocks render with KaTeX. Dollar-delimited math (`$...$` / `$$...$$`), `[TOC]` and footnotes remain visible source with warnings, matching the current renderer. Invalid supported math/diagrams receive source fallbacks.
 - PDF uses simple pagination. Generous blank areas are acceptable; oversized text and tables split, while graphics scale to fit.
 - DOCX and EPUB prioritize editable structure and native math. Their layout differs from browser output. Raw HTML is exported as readable source when its behavior cannot be preserved.
 - Supported images retain source resolution. Unsupported image formats, unreadable resources and unrepresentable diagrams receive visible fallbacks.

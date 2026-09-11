@@ -20,6 +20,7 @@
   "config.outlineStateScope.global": "Reuse the outline's last open or closed state for all Markdown files, across all workspaces.",
   "config.outlineDefaultOpen.description": "Open the outline by default if no previous choice has been saved.",
   "config.enableDebugLogging.description": "Record debug logs to help troubleshoot editor problems.",
+  "config.export.pdfWhiteBackground.description": "Export PDFs with a white page and the GitHub light appearance for readable text and diagrams. Disable to use the current editor theme across the whole page, including margins. Other export formats are unaffected.",
   "config.export.pandocPath.description": "Path to the Pandoc executable for DOCX and EPUB export. Leave blank to detect an installed tool. Installation is user-managed; an invalid explicit path is reported without falling back.",
   "config.export.browserPath.description": "Path to a Chrome, Chromium or Edge executable for headless PDF export. Leave blank to detect an installed browser. No browser is downloaded automatically.",
   "command.exportToHtml.title": "Export to HTML",
