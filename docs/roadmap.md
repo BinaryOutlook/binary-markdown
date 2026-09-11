@@ -10,6 +10,8 @@ Binary Markdown aims to be a useful, free, open-source Markdown editor that user
 
 The release workload is a frozen complex report, calibrated to approximately 30 pages under reference typography. Actual PDF page counts vary with rendering and machine fonts. This is a practical content-coverage target; the product promises useful stage updates rather than a fixed completion time. Do not remove hard fixture cases or hide warnings to achieve a smaller page count.
 
+The next PDF appearance work is recorded in the [page-background bug and feasibility assessment](export-page-background-2026-09-12.md): add a white-output preference and fill the full page when retaining a non-white theme. The PDF defect is reproduced and a page-background correction is feasible; implementation is pending. The corresponding DOCX checks did not reproduce the page-background defect.
+
 We would like to explore a standalone desktop app when capacity permits, with **Ubuntu first, macOS second and Windows last**. Shared editor code and Electron sources provide a starting point. A standalone release is not required for 0.2.0, and no delivery date, measured percentage of shared code or feature parity is promised. Installer dependencies and host-specific behaviour need independent work and validation.
 
 Windows export, VS Code Remote/SSH, browser-hosted VS Code and Electron export remain outside the initial validated export scope. Running local desktop VS Code under Xvfb on an Ubuntu machine accessed by SSH tests the Ubuntu local extension host; it does not establish Remote-SSH export support.
