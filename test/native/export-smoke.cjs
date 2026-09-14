@@ -242,12 +242,16 @@ function harness(settings, owner) {
         } catch (error) { socket.close(); throw error; }
     };
     const open = async file => {
+        // Native converters and other desktop applications can take focus.
+        // Restore the same visible-window precondition as the keyboard cases.
+        await workbench(page => page.bringToFront());
         await driver({ action: 'open', file });
         let lastError;
         return until(async () => { try { return await connect(); } catch (error) { lastError = error.message; return null; } }, 'open visible editor: ' + file, () => ({ connectionError: lastError }));
     };
     const reset = connection => connection.evaluate(`window.__nativeExportEvents=[];if(!window.__nativeExportListener){window.__nativeExportListener=e=>{if(e.data.type==='exportStatus')window.__nativeExportEvents.push(e.data)};window.addEventListener('message',window.__nativeExportListener)}`);
-    const terminal = connection => until(async () => (await connection.evaluate('window.__nativeExportEvents')).findLast(event => ['complete', 'failed', 'cancelled'].includes(event.state)));
+    const terminal = connection => until(async () => (await connection.evaluate('window.__nativeExportEvents')).findLast(event => ['complete', 'failed', 'cancelled'].includes(event.state)),
+        'export terminal event', () => connection.evaluate('({events:window.__nativeExportEvents, visibleStatus:document.getElementById("exportStatus").textContent})'));
     const output = (result, file, format) => {
         assert.equal(result.state, 'complete', result.message);
         assert.equal(path.dirname(result.outputPath), path.dirname(path.join(owner.workspace, file)), 'Output belongs beside the selected source');
@@ -259,7 +263,7 @@ function harness(settings, owner) {
     const exportFile = async (connection, file, format, viaCommand = false, expectSuccess = true) => {
         if (!viaCommand) {
             await connection.evaluate('document.getElementById("exportButton").click()');
-            await until(() => connection.evaluate(`document.querySelector('[data-export-format="${format}"] [data-export-tool-status]').textContent === 'Available'`));
+            await until(() => connection.evaluate(`document.querySelector('[data-export-format="${format}"] [data-export-tool-status]').textContent === 'Available'`), 'format availability: ' + file + ' ' + format);
         }
         await reset(connection);
         if (viaCommand) await driver({ action: 'export', format });
@@ -343,7 +347,7 @@ async function run(settings, owner) {
             const image = path.join(folder, 'Image 图像.png');
             fs.copyFileSync(path.join(owner.workspace, 'assets/Field sample 图像.png'), image);
             const file = path.join('Path cases 文件', 'CRLF report.md');
-            const source = '# CRLF-PATH-MARKER\r\n\r\n![Original image](<' + image.replace(/\\/g, '/') + '>)\r\n';
+            const source = '# CRLF-PATH-MARKER\r\n\r\n![Original image](' + encodeURI(image.replace(/\\/g, '/')) + ')\r\n';
             write(file, source);
             const connection = await h.open(file);
             try {

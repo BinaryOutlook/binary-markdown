@@ -67,6 +67,7 @@ jobs:
     timeout-minutes: 40
     env:
       CI: '1'
+      PYTHONUTF8: '1'
       TMPDIR: ${{ matrix.label == 'windows' && runner.temp || '/tmp' }}
       EXPORT_REAL_TOOLS: '1'
       VALIDATION_CODE_VERSION: ${{ matrix.code }}
@@ -98,7 +99,7 @@ jobs:
         shell: pwsh
         run: ./.github/scripts/provision-validation.ps1
       - name: Frozen source contract
-        run: python3 test/fixtures/exports/verify-fixtures.py
+        run: node -e "require('node:child_process').execFileSync(process.env.VALIDATION_PYTHON, ['test/fixtures/exports/verify-fixtures.py'], {stdio:'inherit'})"
       - name: Units, real converters and archive parity
         run: |
           mkdir -p ci-results
