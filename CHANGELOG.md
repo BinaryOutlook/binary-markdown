@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Check `main` daily for automatic VSIX publication after at least three days since the previous official release. Preserve manual releases, validate bot version bumps through PRs, and reuse the exact tested package and source.
+- Keep inline equation edits open and cancellable while delayed outline updates or document synchronization run.
 
 ## 0.2.1
 

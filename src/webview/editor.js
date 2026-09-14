@@ -163,10 +163,15 @@
     let syncGeneration = 0;
     let pendingSave = null;
 
+    // Background reads must leave an in-progress equation edit cancellable.
     // Capturing export eligibility must never normalize an untouched document.
+    function readCommittedMarkdown() {
+        return isSourceMode ? sourceEditor.value : (hasUserEdited && !visualSourceCurrent ? htmlToMarkdown() : markdown);
+    }
+
     function readCurrentMarkdown() {
         if (finishInlineMathEdit) finishInlineMathEdit(true, false);
-        return isSourceMode ? sourceEditor.value : (hasUserEdited && !visualSourceCurrent ? htmlToMarkdown() : markdown);
+        return readCommittedMarkdown();
     }
 
     function cancelScheduledSync() {
@@ -542,7 +547,7 @@
             // Use requestIdleCallback to process during idle time, not blocking UI
             const doSync = () => {
                 if (generation !== syncGeneration) return;
-                markdown = readCurrentMarkdown();
+                markdown = readCommittedMarkdown();
                 notifyChangeImmediate();
                 pendingSync = false;
             };
@@ -564,7 +569,7 @@
         // Defer to next frame to not block current operation
         requestAnimationFrame(() => {
             if (generation !== syncGeneration) return;
-            markdown = readCurrentMarkdown();
+            markdown = readCommittedMarkdown();
             notifyChangeImmediate();
             pendingSync = false;
         });
@@ -5926,7 +5931,7 @@
         const generation = syncGeneration;
         requestAnimationFrame(() => {
             if (generation !== syncGeneration) return;
-            markdown = readCurrentMarkdown();
+            markdown = readCommittedMarkdown();
             notifyChange();
             pendingSync = false;
             updatePlaceholder();
@@ -12554,7 +12559,7 @@
     }
 
     function updateOutline() {
-        assignHeadingAnchors(editor, readCurrentMarkdown());
+        assignHeadingAnchors(editor, readCommittedMarkdown());
         const headings = editor.querySelectorAll('h1, h2, h3, h4, h5, h6');
         const headingsArray = Array.from(headings);
         outline.innerHTML = headingsArray.map((h, i) => {
