@@ -1,5 +1,6 @@
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { normalizeForPandoc } = require('../shared/math-syntax');
+import { scan as scanDocumentAux, START as TOC_START, END as TOC_END, headingText } from '../shared/document-aux';
 import * as fs from 'fs/promises';
 import * as os from 'os';
 import * as path from 'path';
@@ -27,6 +28,12 @@ function textIn(value: Json): string {
 
 /** Only the editor's trailing directive block is metadata; fenced examples remain content. */
 export function preparePandocMarkdown(markdown: string): string {
+    // Remove only managed boundary comments; leave examples and author HTML alone.
+    const managed = scanDocumentAux(markdown).tocs;
+    for (const block of managed.slice().reverse()) {
+        const list = block.source.slice(TOC_START.length, -TOC_END.length);
+        markdown = markdown.slice(0, block.start) + list + markdown.slice(block.end);
+    }
     const lines = markdown.replace(/\r\n/g, '\n').split('\n');
     let fence: { marker: string; length: number } | undefined;
     const outsideFence: boolean[] = [];
@@ -102,6 +109,22 @@ export async function convertPandoc(
         }
 
         const headings = ast.blocks.filter(value => node(value)?.t === 'Header');
+        const managedSource = scanDocumentAux(document.markdown);
+        if (managedSource.tocs.length) {
+            // Managed links use the editor's ATX anchors. Match in document order,
+            // leaving other Pandoc-only heading forms on their existing path.
+            let sourceIndex = 0;
+            for (const heading of headings) {
+                const content = node(heading)?.c as Json[];
+                const text = textIn(content[2]);
+                const expected = managedSource.headings[sourceIndex];
+                if (expected && Number(content[0]) === expected.level &&
+                    headingText(expected.label).replace(/\s+#+\s*$/, '') === text) {
+                    (content[1] as Json[])[0] = expected.id;
+                    sourceIndex++;
+                }
+            }
+        }
         const toc: Json = {
             t: 'BulletList',
             c: headings.map(value => {

@@ -11,6 +11,8 @@
     const mathSyntax = window.BinaryMath;
     const mathBackslashDelimiters = __MATH_BACKSLASH__;
     var finishInlineMathEdit = null;
+    const documentAux = window.documentAux;
+    let frontMatterOpen = false;
     const i18n = __I18N__;
     logger.log('[Binary Markdown] i18n loaded:', i18n.livePreviewMode ? 'OK' : 'EMPTY', '- Sample:', i18n.bold || '(none)');
     const editor = document.getElementById('editor');
@@ -155,6 +157,7 @@
     let saveTimeout = null;
     let syncTimeout = null;
     let pendingSync = false;
+    let visualSourceCurrent = true;
     let hasUserEdited = false; // Flag to track if user has made any edits
     let clientRevision = 0;
     let syncGeneration = 0;
@@ -163,7 +166,7 @@
     // Capturing export eligibility must never normalize an untouched document.
     function readCurrentMarkdown() {
         if (finishInlineMathEdit) finishInlineMathEdit(true, false);
-        return isSourceMode ? sourceEditor.value : (hasUserEdited ? htmlToMarkdown() : markdown);
+        return isSourceMode ? sourceEditor.value : (hasUserEdited && !visualSourceCurrent ? htmlToMarkdown() : markdown);
     }
 
     function cancelScheduledSync() {
@@ -176,6 +179,7 @@
     }
 
     function saveCurrentDocument() {
+        try { refreshManagedTocs(false); } catch (error) { showExternalChangeToast(error.message); return; }
         const content = readCurrentMarkdown();
         cancelScheduledSync();
         markdown = content;
@@ -1574,7 +1578,9 @@
         const html = markdownToHtmlFragment(markdownToRender);
         logger.log('[Binary Markdown] renderFromMarkdown: html length:', html.length, 'first 100 chars:', html.substring(0, 100));
         editor.innerHTML = html || '<p><br></p>';
+        visualSourceCurrent = true;
         setupInteractiveElements();
+        assignHeadingAnchors(editor, markdown);
         updatePlaceholder();
     }
 
@@ -1605,10 +1611,7 @@
 
     function stripExportMetadata(source) {
         let text = source.replace(/^\uFEFF/, '').replace(/\r\n?/g, '\n');
-        const frontMatter = text.match(/^---\n([\s\S]*?)\n(?:---|\.\.\.)(?:\n|$)/);
-        if (frontMatter && /^\s*[\w-]+\s*:/m.test(frontMatter[1])) {
-            text = text.slice(frontMatter[0].length);
-        }
+        text = documentAux.splitFrontMatter(text).body;
         // Only a trailing app directive block outside a code fence is metadata.
         const directiveStart = text.lastIndexOf('\n---\n');
         if (directiveStart >= 0 && /^(?:(?:IMAGE_DIR:\s*[^\n]+|FORCE_RELATIVE_PATH:\s*(?:true|false))\n?)+\s*$/i.test(text.slice(directiveStart + 5))) {
@@ -1704,6 +1707,9 @@
         const template = document.createElement('template');
         const normalizedSource = stripExportMetadata(source);
         template.innerHTML = markdownToHtmlFragment(normalizedSource);
+        assignHeadingAnchors(template.content, normalizedSource);
+        template.content.querySelectorAll('.toc-refresh').forEach(button => button.remove());
+        template.content.querySelectorAll('[data-toc-source]').forEach(block => block.removeAttribute('data-toc-source'));
         sanitizeExportTree(template.content, warnings);
         // These are diagnostics about the current rendered output, not a new
         // Markdown parser. Literal notation stays exactly as the user sees it.
@@ -2167,10 +2173,171 @@
     }
 
     // Convert markdown to HTML fragment (reusable for both full render and partial paste)
+    function renderFrontMatter(raw) {
+        return '<div class="document-aux front-matter" contenteditable="false"><details' + (frontMatterOpen ? ' open' : '') + '>' +
+            '<summary>' + escapeHtml(i18n.frontMatter || 'Front matter') + '</summary>' +
+            '<textarea class="front-matter-source" aria-label="' + (i18n.frontMatter || 'Front matter').replace(/"/g, '&quot;') +
+            '" spellcheck="false" rows="7">' + escapeHtml(raw) + '</textarea></details></div>';
+    }
+
+    function renderTocBlock(raw) {
+        const label = i18n.tocContents || 'Contents';
+        const refreshLabel = i18n.refreshToc || 'Refresh table of contents';
+        let list = '<ul>';
+        for (const line of raw.split('\n')) {
+            const item = /^( *)- \[(.*)\]\(#(.*)\)$/.exec(line);
+            if (!item) continue;
+            const text = item[2].replace(/\\([\\[\]`*_~])/g, '$1');
+            list += '<li style="margin-left:' + (item[1].length / 2) + 'em"><a href="#' +
+                encodeURIComponent(item[3]) + '">' + escapeHtml(text) + '</a></li>';
+        }
+        list += '</ul>';
+        if (/^\[toc\]$/i.test(raw)) list += '<p class="toc-pending">' + escapeHtml(i18n.tocPending || 'Save or refresh to generate contents.') + '</p>';
+        return '<div class="document-aux toc-block" contenteditable="false" data-toc-source="' + encodeURIComponent(raw) + '">' +
+            '<div class="toc-heading"><strong>' + escapeHtml(label) + '</strong><button class="toc-refresh" type="button" aria-label="' +
+            refreshLabel.replace(/"/g, '&quot;') + '" title="' + refreshLabel.replace(/"/g, '&quot;') + '">↻</button></div>' + list + '</div>';
+    }
+
+    function assignHeadingAnchors(root, source) {
+        if (!root.querySelector('.toc-block')) return;
+        let headings;
+        try { headings = documentAux.scan(source).headings; }
+        catch (_) { return; } // Keep malformed source editable; save/export report it.
+        const nodes = Array.from(root.querySelectorAll('h1,h2,h3,h4,h5,h6')).filter(h => !h.closest('.document-aux'));
+        nodes.forEach((node, index) => { if (headings[index]) node.id = headings[index].id; });
+    }
+
+    function refreshManagedTocs(notify) {
+        const current = readCurrentMarkdown();
+        const next = documentAux.refreshTocs(current);
+        if (next === current) return false;
+        cancelScheduledSync();
+        markdown = current;
+        undoManager.saveSnapshot();
+        if (isSourceMode) {
+            const start = sourceEditor.selectionStart, end = sourceEditor.selectionEnd;
+            sourceEditor.value = next;
+            // Keep selection on the same source text when the generated list grows.
+            let prefix = 0, suffix = 0;
+            while (prefix < current.length && prefix < next.length && current[prefix] === next[prefix]) prefix++;
+            while (suffix < current.length - prefix && suffix < next.length - prefix && current[current.length - 1 - suffix] === next[next.length - 1 - suffix]) suffix++;
+            const map = offset => offset <= prefix ? offset : offset >= current.length - suffix ? offset + next.length - current.length : prefix;
+            if (sourceEditor.setSelectionRange) sourceEditor.setSelectionRange(map(start), map(end));
+        } else {
+            const parsed = documentAux.scan(next);
+            const replacements = parsed.tocs;
+            if (editor.querySelectorAll('.toc-block').length !== replacements.length) {
+                markdown = next;
+                const cursor = saveCursorState();
+                renderFromMarkdown();
+                if (cursor) restoreCursorState(cursor);
+            }
+            editor.querySelectorAll('.toc-block').forEach((block, index) => {
+                if (!replacements[index]) return;
+                const holder = document.createElement('template');
+                holder.innerHTML = renderTocBlock(replacements[index].source);
+                block.replaceWith(holder.content.firstElementChild);
+            });
+            setupDocumentAux();
+        }
+        markdown = next;
+        markAsEdited();
+        visualSourceCurrent = true;
+        updateOutline();
+        updateWordCount();
+        if (notify) notifyChangeImmediate();
+        return true;
+    }
+
+    function insertManagedToc() {
+        try {
+            const current = readCurrentMarkdown();
+            const parsed = documentAux.scan(current);
+            if (parsed.tocs.length || parsed.markers.length) { refreshManagedTocs(true); return; }
+            const raw = documentAux.generateToc(parsed.headings);
+            markdown = current;
+            undoManager.saveSnapshot();
+            cancelScheduledSync();
+            if (isSourceMode) {
+                const at = Math.max(sourceEditor.selectionStart || 0, parsed.front.raw.length);
+                sourceEditor.value = current.slice(0, at) + '\n\n' + raw + '\n\n' + current.slice(at);
+                markdown = sourceEditor.value;
+                markAsEdited();
+                notifyChangeImmediate();
+            } else {
+                const holder = document.createElement('template');
+                holder.innerHTML = renderTocBlock(raw);
+                const block = holder.content.firstElementChild;
+                const line = getCurrentLine();
+                if (line && line.parentNode === editor && !line.classList.contains('front-matter')) {
+                    if (line.tagName === 'P' && !line.textContent.trim()) line.replaceWith(block);
+                    else line.after(block);
+                } else {
+                    const metadata = editor.querySelector(':scope > .front-matter');
+                    if (metadata) metadata.after(block); else editor.prepend(block);
+                }
+                if (!block.nextSibling) { const p = document.createElement('p'); p.innerHTML = '<br>'; block.after(p); }
+                setupDocumentAux();
+                syncMarkdownSync();
+                updateOutline();
+            }
+        } catch (error) { showExternalChangeToast(error.message); }
+    }
+
+    function setupDocumentAux() {
+        editor.querySelectorAll('.toc-block').forEach(block => {
+            if (block.dataset.auxSetup) return;
+            block.dataset.auxSetup = 'true';
+            block.querySelector('.toc-refresh').addEventListener('click', e => {
+                e.preventDefault(); e.stopPropagation();
+                try { refreshManagedTocs(true); } catch (error) { showExternalChangeToast(error.message); }
+            });
+            block.querySelectorAll('a').forEach(a => a.addEventListener('click', e => {
+                e.preventDefault(); e.stopPropagation();
+                const id = decodeURIComponent(a.getAttribute('href').slice(1));
+                const target = Array.from(editor.querySelectorAll('h1,h2,h3,h4,h5,h6')).find(h => h.id === id);
+                if (target) target.scrollIntoView({ block: 'start', behavior: 'smooth' });
+            }));
+        });
+        editor.querySelectorAll('.front-matter').forEach(block => {
+            if (block.dataset.auxSetup) return;
+            block.dataset.auxSetup = 'true';
+            const details = block.querySelector('details');
+            const input = block.querySelector('textarea');
+            details.addEventListener('toggle', () => { frontMatterOpen = details.open; });
+            input.addEventListener('beforeinput', () => { undoManager.saveSnapshotDebounced(); });
+            input.addEventListener('input', e => {
+                e.stopPropagation();
+                markActivelyEditing();
+                syncMarkdownSync();
+            });
+            input.addEventListener('keydown', e => {
+                e.stopPropagation();
+                if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') { e.preventDefault(); saveCurrentDocument(); }
+                if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+                    e.preventDefault();
+                    if (e.shiftKey) undoManager.redo(); else undoManager.undo();
+                }
+            });
+        });
+    }
+
     function markdownToHtmlFragment(markdownText) {
         // Normalize line endings: \r\n → \n, lone \r → \n
-        const lines = markdownText.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
-        let html = '';
+        const front = documentAux.splitFrontMatter(markdownText.replace(/\r\n?/g, '\n'));
+        let body = front.body;
+        const tocSlots = [];
+        try {
+            const parsed = documentAux.scan(body);
+            for (const block of [...parsed.tocs, ...parsed.markers].sort((a, b) => b.start - a.start)) {
+                const raw = body.slice(block.start, block.end);
+                const slot = tocSlots.length;
+                tocSlots.push(raw);
+                body = body.slice(0, block.start) + '\x00BMTOC' + slot + '\x00' + body.slice(block.end);
+            }
+        } catch (_) { /* Preserve incomplete markers as editable source. */ }
+        const lines = body.split('\n');
+        let html = front.raw ? renderFrontMatter(front.raw) : '';
         let inCodeBlock = false;
         let codeContent = '';
         let codeLang = '';
@@ -2327,6 +2494,13 @@
 
         for (let i = 0; i < lines.length; i++) {
             const line = lines[i];
+            const tocSlot = /^\x00BMTOC(\d+)\x00$/.exec(line);
+            if (tocSlot && tocSlots[Number(tocSlot[1])] !== undefined) {
+                if (inBlockquote) { html += renderBlockquote(blockquoteLines); inBlockquote = false; blockquoteLines = []; }
+                if (inTable) { html += renderTable(tableRows); inTable = false; tableRows = []; }
+                html += closeAllLists() + renderTocBlock(tocSlots[Number(tocSlot[1])]);
+                continue;
+            }
 
             // Handle code blocks (\`\`\`+ or ~~~+)
             // Match opening/closing fence: 3+ backticks or tildes
@@ -2583,6 +2757,7 @@
 
     function setupInteractiveElements() {
         setupInlineMath();
+        setupDocumentAux();
         // Make checkboxes work
         editor.querySelectorAll('input[type="checkbox"]').forEach(cb => {
             cb.addEventListener('change', () => {
@@ -2593,6 +2768,7 @@
 
         // Handle link clicks
         editor.querySelectorAll('a').forEach(a => {
+            if (a.closest('.toc-block')) return;
             a.addEventListener('click', e => {
                 e.preventDefault();
                 host.openLink(a.getAttribute('href'));
@@ -4479,6 +4655,7 @@
     });
 
     editor.addEventListener('click', function(e) {
+        if (e.target.closest && e.target.closest('.front-matter')) return;
         const cell = e.target.closest ? e.target.closest('th, td') : null;
         if (cell && editor.contains(cell)) {
             activeTableCell = cell;
@@ -5833,6 +6010,11 @@
 
         const tag = node.tagName.toLowerCase();
 
+        if (node.classList.contains('toc-block')) return decodeURIComponent(node.dataset.tocSource) + '\n';
+        if (node.classList.contains('front-matter')) {
+            const raw = node.querySelector('textarea').value;
+            return raw && node.nextSibling && !raw.endsWith('\n') ? raw + '\n' : raw;
+        }
         switch (tag) {
             case 'h1': return '# ' + mdGetInlineMarkdown(node) + '\n';
             case 'h2': return '## ' + mdGetInlineMarkdown(node) + '\n';
@@ -6595,6 +6777,7 @@
 
     // Key input handler
     editor.addEventListener('keydown', function(e) {
+        if (e.target.closest && e.target.closest('.front-matter')) return;
         logger.log('Editor keydown:', e.key);
         if (isSourceMode) return;
 
@@ -11052,6 +11235,7 @@
 
     // BeforeInput handler - handle triple-click selection replacement
     editor.addEventListener('beforeinput', function(e) {
+        if (e.target.closest && e.target.closest('.front-matter')) return;
         if (isSourceMode) return;
         
         const sel = window.getSelection();
@@ -11201,6 +11385,7 @@
 
     // Input handler - debounced sync for performance
     editor.addEventListener('input', function(e) {
+        if (e.target.closest && e.target.closest('.front-matter')) return;
         if (isSourceMode) return;
         markActivelyEditing();
         markAsEdited(); // User has made an edit
@@ -11804,6 +11989,9 @@
             case 'image':
                 host.requestInsertImage();
                 break;
+            case 'toc':
+                insertManagedToc();
+                break;
             case 'table':
                 var tableHtml = '<table><tr><th>Header 1</th><th>Header 2</th></tr><tr><td>Cell</td><td>Cell</td></tr></table>';
                 document.execCommand('insertHTML', false, tableHtml);
@@ -11856,6 +12044,7 @@
         // Group: Insert
         { group: 'insert', action: 'link',  i18nKey: 'insertLink',  icon: 'link' },
         { group: 'insert', action: 'image', i18nKey: 'insertImage', icon: 'image' },
+        { group: 'insert', action: 'toc', i18nKey: 'insertToc', icon: 'ul' },
         { group: 'insert', action: 'table', i18nKey: 'insertTable', icon: 'table' },
     ];
 
@@ -12298,6 +12487,7 @@
     
     // Mark document as edited by user
     function markAsEdited() {
+        visualSourceCurrent = false;
         clientRevision++;
         if (!hasUserEdited) {
             hasUserEdited = true;
@@ -12358,11 +12548,12 @@
     }
 
     function updateOutline() {
+        assignHeadingAnchors(editor, readCurrentMarkdown());
         const headings = editor.querySelectorAll('h1, h2, h3, h4, h5, h6');
         const headingsArray = Array.from(headings);
         outline.innerHTML = headingsArray.map((h, i) => {
             const level = h.tagName[1];
-            return '<a class="outline-item" data-level="' + level + '" data-index="' + i + '">' + h.textContent + '</a>';
+            return '<a class="outline-item" data-level="' + level + '" data-index="' + i + '">' + escapeHtml(h.textContent) + '</a>';
         }).join('');
 
         outline.querySelectorAll('.outline-item').forEach(item => {
@@ -12385,7 +12576,7 @@
     function updateWordCount() {
         const plain = editor.cloneNode(true);
         plain.querySelectorAll('.math-inline').forEach(span => { span.textContent = inlineMathMarkdown(span); });
-        plain.querySelectorAll('.math-display,.mermaid-diagram').forEach(display => display.remove());
+        plain.querySelectorAll('.math-display,.mermaid-diagram,.document-aux').forEach(display => display.remove());
         const text = plain.textContent || '';
         const words = text.trim().split(/\s+/).filter(w => w.length > 0).length;
         const chars = text.length;
@@ -13319,6 +13510,10 @@
         }
         if (message.type === 'captureExportSnapshot') {
             if (typeof host.respondExport === 'function') {
+                if (message.refreshToc) {
+                    try { refreshManagedTocs(false); }
+                    catch (error) { host.respondExport({ type: 'exportError', requestId: message.requestId, error: error.message }); return; }
+                }
                 host.respondExport({
                     type: 'exportSnapshot', requestId: message.requestId,
                     content: readCurrentMarkdown(),
@@ -13335,6 +13530,7 @@
             if (!isSourceMode) undoManager.redo();
             return;
         }
+        if (message.type === 'insertToc') { insertManagedToc(); return; }
         if (message.type === 'toggleSourceMode') {
             toggleSourceMode();
             return;
@@ -13721,6 +13917,7 @@
 
     // Copy handler - convert selection to Markdown and set to clipboard
     editor.addEventListener('copy', function(e) {
+        if (e.target.closest && e.target.closest('.front-matter')) return;
         if (isSourceMode) return;
         
         const sel = window.getSelection();
@@ -14048,6 +14245,7 @@
 
     // Cut handler - same as copy but also delete selection
     editor.addEventListener('cut', function(e) {
+        if (e.target.closest && e.target.closest('.front-matter')) return;
         if (isSourceMode) return;
         
         const sel = window.getSelection();
@@ -14085,6 +14283,7 @@
 
     // Paste handler - insert Markdown into source, then re-render
     editor.addEventListener('paste', function(e) {
+        if (e.target.closest && e.target.closest('.front-matter')) return;
         if (isSourceMode) return;
 
         undoManager.saveSnapshot();

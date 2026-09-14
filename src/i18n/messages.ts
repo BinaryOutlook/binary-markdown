@@ -31,6 +31,11 @@ export interface Messages {
 }
 
 export interface WebviewMessages {
+  frontMatter: string;
+  insertToc: string;
+  refreshToc: string;
+  tocContents: string;
+  tocPending: string;
   closeOutline: string;
   openOutline: string;
   openInTextEditor: string;

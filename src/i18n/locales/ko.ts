@@ -28,6 +28,12 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  insertToc: '목차 삽입',
+  refreshToc: '목차 새로 고침',
+  tocContents: '목차',
+  tocPending: '저장하거나 새로 고쳐 목차를 생성하세요.',
+
+  frontMatter: '프런트 매터',
   closeOutline: '개요 닫기',
   openOutline: '개요 열기',
   openInTextEditor: '텍스트 편집기에서 열기',

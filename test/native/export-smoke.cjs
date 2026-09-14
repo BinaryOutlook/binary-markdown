@@ -293,7 +293,7 @@ async function run(settings, owner) {
         fs.writeFileSync(report, JSON.stringify({ harness: harnessIdentity(), host: receipt(owner), packageSha256: hash(fs.readFileSync(settings.package)), receipts }, null, 2));
         console.log(name, JSON.stringify(details));
     };
-    const available = ['identity', 'formats', 'saves', 'edges', 'ui', 'equations', 'pdf-background', 'selection', 'immutable', 'offline'];
+    const available = ['identity', 'formats', 'saves', 'edges', 'ui', 'equations', 'pdf-background', 'selection', 'immutable', 'offline', 'document-aux'];
     const groups = settings.suite === 'all' ? available : [settings.suite];
     assert.ok(groups.every(value => available.includes(value)), 'Suite must be all, ' + available.join(', '));
     const htmlExports = [];
@@ -346,6 +346,65 @@ async function run(settings, owner) {
                 assert.equal(await connection.evaluate(state), before);
                 record('immediate-save', { mode, save, shortcut: save === 'keyboard' ? saveShortcut().label : undefined, sourceUnchanged: true, editorStateUnchanged: true, output: path.basename(result.outputPath) });
             } finally { connection.close(); }
+        }
+        if (groups.includes('document-aux')) {
+            const aux = require('../../src/shared/document-aux');
+            for (const mode of ['visual', 'source']) for (const save of ['native', 'keyboard']) {
+                const file = `aux-${Date.now()}-${mode}-${save}.md`;
+                const metadata = '---\ntitle: "Native report" # preserve\ntags: [test, report]\n---\n';
+                const paragraphs = mode === 'visual' && save === 'native' ? ('A paragraph describing the project and its evaluation with enough detail to exercise pagination.\n\n').repeat(55) : '';
+                write(file, metadata + '\n[TOC]\n\n# Introduction\n\n' + paragraphs + '# Results\n\nNATIVE-AUX-END\n');
+                const connection = await h.open(file);
+                try {
+                    await h.until(() => connection.evaluate(`!!document.querySelector('.front-matter-source') && !!document.querySelector('.toc-refresh')`));
+                    await connection.evaluate(`document.querySelector('.front-matter summary').click()`);
+                    const state = await h.driver({ action: 'inspect' });
+                    assert.equal(state.documents.find(d => d.path === path.join(owner.workspace, file)).dirty, false);
+                    await connection.evaluate(`document.querySelector('.toc-refresh').click()`);
+                    await h.driver({ action: 'save' });
+                    await h.until(() => aux.refreshTocs(read(file).toString()) === read(file).toString());
+                    await h.workbench(page => page.bringToFront());
+                    if (mode === 'source') {
+                        await h.sourceMode(connection);
+                        await connection.evaluate(`(()=>{const e=document.getElementById('sourceEditor'); const at=e.value.lastIndexOf('# Results')+2;e.focus();e.setSelectionRange(at, at+7)})()`);
+                    } else {
+                        await connection.evaluate(`(()=>{const e=document.querySelectorAll('#editor > h1')[1];document.getElementById('editor').focus();const r=document.createRange();r.selectNodeContents(e);const s=getSelection();s.removeAllRanges();s.addRange(r)})()`);
+                    }
+                    await connection.send('Input.insertText', { text: 'Evaluation' });
+                    if (save === 'native') await h.driver({ action: 'save' });
+                    else for (const type of ['keyDown', 'keyUp']) await connection.send('Input.dispatchKeyEvent', { type, key: 's', code: 'KeyS', modifiers: saveShortcut().modifiers });
+                    await h.until(() => read(file).toString().includes('[Evaluation](#evaluation)'));
+                    const saved = read(file).toString();
+                    assert.ok(saved.startsWith(metadata));
+                    assert.equal(aux.refreshTocs(saved), saved);
+                    await h.driver({ action: 'save' });
+                    assert.equal(read(file).toString(), saved);
+                    const html = await h.exportFile(connection, file, 'html');
+                    const output = fs.readFileSync(html.outputPath, 'utf8');
+                    assert.ok(output.includes('id="evaluation"') && output.includes('href="#evaluation"'));
+                    assert.ok(!output.includes('class="toc-refresh"') && !output.includes('Native report'));
+                    const artifacts = { html: html.outputPath };
+                    if (mode === 'visual' && save === 'native') {
+                        artifacts.pdf = (await h.exportFile(connection, file, 'pdf')).outputPath;
+                        artifacts.docx = (await h.exportFile(connection, file, 'docx')).outputPath;
+                        artifacts.epub = (await h.exportFile(connection, file, 'epub')).outputPath;
+                    }
+                    record('document-aux-save-export', { mode, save, metadataPreserved: true, repeatedSaveUnchanged: true, ...artifacts });
+                } finally { connection.close(); }
+            }
+        }
+        if (groups.includes('document-aux')) {
+            const file = 'aux-auto-save-' + Date.now() + '.md';
+            write(file, '[TOC]\n\n# Original\n');
+            const connection = await h.open(file);
+            try {
+                await h.driver({ action: 'autoSave', value: 'afterDelay' });
+                await h.workbench(page => page.bringToFront());
+                await connection.evaluate(`(()=>{const e=document.querySelector('#editor > h1');document.getElementById('editor').focus();const r=document.createRange();r.selectNodeContents(e);const s=getSelection();s.removeAllRanges();s.addRange(r)})()`);
+                await connection.send('Input.insertText', { text: 'Auto Save heading' });
+                await h.until(() => read(file).toString().includes('[Auto Save heading](#auto-save-heading)'));
+                record('document-aux-auto-save', { currentTocSaved: true });
+            } finally { await h.driver({ action: 'autoSave', value: 'off' }); connection.close(); }
         }
         if (groups.includes('edges')) {
             write('edges.md', '# Edge fixture\n\nSAVED-EDGE-MARKER\n');

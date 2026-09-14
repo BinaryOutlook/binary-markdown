@@ -36,7 +36,7 @@ if (fs.existsSync(vendorSrc)) {
 }
 
 // editor.jsを読み込み
-let editorScript = fs.readFileSync(editorJsPath, 'utf-8');
+let editorScript = fs.readFileSync(path.join(__dirname, '../src/shared/document-aux.js'), 'utf8') + '\n' + fs.readFileSync(editorJsPath, 'utf-8');
 
 // テスト用HostBridgeを読み込み
 const testHostBridgeScript = fs.readFileSync(testHostBridgePath, 'utf-8');

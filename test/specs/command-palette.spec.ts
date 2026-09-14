@@ -68,7 +68,8 @@ test.describe('コマンドパレット', () => {
 
         // 全アイテム数を確認
         const allItems = await page.locator('.command-palette-item').count();
-        expect(allItems).toBe(22); // Includes display and inline equations
+        expect(allItems).toBe(23); // Includes inline equations and the table of contents command.
+        await expect(page.locator('.command-palette-item[data-action="toc"]')).toHaveCount(1);
 
         // "heading" でフィルタ
         const input = page.locator('.command-palette-input');

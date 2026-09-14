@@ -28,6 +28,12 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  insertToc: '插入目錄',
+  refreshToc: '重新整理目錄',
+  tocContents: '目錄',
+  tocPending: '儲存或重新整理以產生目錄。',
+
+  frontMatter: '文件中繼資料',
   closeOutline: '關閉大綱',
   openOutline: '開啟大綱',
   openInTextEditor: '在文字編輯器中開啟',

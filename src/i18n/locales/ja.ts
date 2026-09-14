@@ -28,6 +28,12 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  insertToc: '目次を挿入',
+  refreshToc: '目次を更新',
+  tocContents: '目次',
+  tocPending: '保存または更新すると目次が生成されます。',
+
+  frontMatter: 'フロントマター',
   closeOutline: 'アウトラインを閉じる',
   openOutline: 'アウトラインを開く',
   openInTextEditor: 'テキストエディタで開く',

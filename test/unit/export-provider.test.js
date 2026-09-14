@@ -149,6 +149,35 @@ test('export commands target the active custom editor for each format', async t 
     assert.deepEqual(h.notices, []);
 });
 
+test('native save refreshes TOC in the same disk write and repeated save is unchanged', async t => {
+    const h = await setup(t);
+    h.state.captures = async () => h.state.text;
+    h.state.text = '---\ntitle: "Report" # keep\n---\n\n[TOC]\n\n# Changed heading\n';
+    h.document.isDirty = true;
+    await h.document.save();
+    assert.match(h.state.disk, /\[Changed heading\]\(#changed-heading\)/);
+    assert.match(h.state.disk, /title: "Report" # keep/);
+    const saved = h.state.disk;
+    await h.document.save();
+    assert.equal(h.state.disk, saved);
+});
+
+test('keyboard save refreshes explicit snapshot before the disk write', async t => {
+    const h = await setup(t);
+    await h.send({ type: 'save', content: '[TOC]\n\n# Latest source\n', revision: 3 });
+    assert.match(h.state.disk, /\[Latest source\]\(#latest-source\)/);
+    assert.equal(h.state.captureCalls, 0);
+    assert.ok(h.posts.some(p => p.type === 'saveResult' && p.revision === 3 && p.success));
+});
+
+test('TOC insertion targets only the active custom editor', async t => {
+    const h = await setup(t);
+    assert.equal(h.provider.insertToc(), true);
+    assert.ok(h.posts.some(p => p.type === 'insertToc'));
+    h.panel.active = false;
+    assert.equal(h.provider.insertToc(), false);
+});
+
 test('export command refuses a cached panel that is no longer active', async t => {
     const h = await setup(t);
     // Native focus can change before the queued view-state callback clears the

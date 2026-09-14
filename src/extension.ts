@@ -1,3 +1,4 @@
+import { refreshTocs, scan } from './shared/document-aux';
 import * as vscode from 'vscode';
 import { BinaryMarkdownEditorProvider } from './editorProvider';
 import { initLocale, t } from './i18n/messages';
@@ -83,11 +84,19 @@ export function activate(context: vscode.ExtensionContext) {
 
     context.subscriptions.push(
         vscode.commands.registerCommand('binary-markdown.insertToc', () => {
+            if (provider.insertToc()) { return; }
             const editor = vscode.window.activeTextEditor;
             if (editor) {
-                editor.edit(editBuilder => {
-                    editBuilder.insert(editor.selection.active, '[TOC]\n');
-                });
+                const current = editor.document.getText();
+                try {
+                    const parsed = scan(current);
+                    const offset = Math.max(editor.document.offsetAt(editor.selection.active), parsed.front.raw.length);
+                    const next = refreshTocs(parsed.tocs.length || parsed.markers.length ? current :
+                        current.slice(0, offset) + '\n\n[TOC]\n\n' + current.slice(offset));
+                    void editor.edit(editBuilder => {
+                        editBuilder.replace(new vscode.Range(0, 0, editor.document.lineCount, 0), next);
+                    });
+                } catch (error) { void vscode.window.showErrorMessage(String(error)); }
             }
         })
     );

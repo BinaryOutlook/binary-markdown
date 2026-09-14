@@ -28,6 +28,12 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  insertToc: '插入目录',
+  refreshToc: '刷新目录',
+  tocContents: '目录',
+  tocPending: '保存或刷新以生成目录。',
+
+  frontMatter: '文档元数据',
   closeOutline: '关闭大纲',
   openOutline: '打开大纲',
   openInTextEditor: '在文本编辑器中打开',

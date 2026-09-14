@@ -28,6 +28,12 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  insertToc: 'Insertar índice',
+  refreshToc: 'Actualizar índice',
+  tocContents: 'Índice',
+  tocPending: 'Guarda o actualiza para generar el índice.',
+
+  frontMatter: 'Metadatos',
   closeOutline: 'Cerrar esquema',
   openOutline: 'Abrir esquema',
   openInTextEditor: 'Abrir en editor de texto',
