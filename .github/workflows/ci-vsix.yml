@@ -106,21 +106,46 @@ jobs:
       - name: Frozen source contract
         run: node -e "require('node:child_process').execFileSync(process.env.VALIDATION_PYTHON, ['test/fixtures/exports/verify-fixtures.py'], {stdio:'inherit'})"
       - name: Units, real converters and archive parity
+        if: runner.os != 'Windows'
         run: |
           mkdir -p ci-results
           node --test test/unit/*.test.js | tee ci-results/unit-tests.txt
+      # Git Bash enables backup/restore privileges for administrator tokens,
+      # allowing its children to bypass the denied-directory test's ACL.
+      - name: Units, real converters and archive parity (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force ci-results | Out-Null
+          node --test test/unit/*.test.js | Tee-Object -FilePath ci-results/unit-tests.txt
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Installed VSIX user flows and artifact integrity
+        if: runner.os != 'Windows'
         run: |
           if [[ "$RUNNER_OS" == Linux ]]; then
             xvfb-run --auto-servernum --server-args='-screen 0 1920x1080x24 -nolisten tcp' node .github/scripts/native-check.cjs | tee ci-results/native-tests.txt
           else
             node .github/scripts/native-check.cjs | tee ci-results/native-tests.txt
           fi
+      - name: Installed VSIX user flows and artifact integrity (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          node .github/scripts/native-check.cjs | Tee-Object -FilePath ci-results/native-tests.txt
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Browser regressions with no retries
-        if: matrix.browserSuite
+        if: matrix.browserSuite && runner.os != 'Windows'
         run: |
           npm run test:build
           npx playwright test --workers=2 --retries=0 | tee ci-results/browser-tests.txt
+      - name: Browser regressions with no retries (Windows)
+        if: matrix.browserSuite && runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          npm.cmd run test:build
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          npx.cmd playwright test --workers=2 --retries=0 | Tee-Object -FilePath ci-results/browser-tests.txt
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Collect browser traces
         if: always()
         run: |

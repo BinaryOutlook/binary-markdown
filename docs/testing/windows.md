@@ -40,7 +40,10 @@ reliably print a version to stdout. Remote windows and browser VS Code remain
 outside the local export scope.
 
 Permission tests deny writes with an ACL on a newly owned fixture directory and
-restore it in `finally`. Process cleanup matches both the exact test profile and
+restore it in `finally`. Run Windows tests from native PowerShell: elevated Git
+Bash enables backup/restore privileges that can bypass ACLs. The fixture checks
+that directory creation is actually denied before testing export failure.
+Process cleanup matches both the exact test profile and
 the test driver before terminating that process tree. `.gitattributes` keeps
 checkout bytes consistent for frozen fixtures and shared-candidate comparisons.
 
