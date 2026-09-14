@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Edit inline and display equations while preserving their source delimiters; render multiline expressions and retain native math in DOCX/EPUB.
+- Preserve YAML front matter in a collapsible source editor and refresh managed tables of contents on save, with linked heading destinations in exports.
+- Style editable DOCX code blocks and add optional language tabs to DOCX/PDF exports, with a dedicated extension settings shortcut.
+- Add an export tutorial and separate the export contract, architecture, verification guide and development history.
+
 - Default PDF export to a white page with readable GitHub light appearance; disable `binary-markdown.export.pdfWhiteBackground` to retain the editor theme.
 - Fill themed PDF pages through every margin and the unused final-page area while keeping the existing text margins.
 - Capture export appearance before asynchronous rendering so generated diagrams follow the selected PDF appearance without changing the editor. DOCX retains its existing white-page styling.

@@ -83,7 +83,7 @@ test.describe('コマンドパレット', () => {
         await input.fill('');
         await page.waitForTimeout(100);
         const restoredItems = await page.locator('.command-palette-item').count();
-        expect(restoredItems).toBe(22);
+        expect(restoredItems).toBe(allItems);
     });
 
     test('↑↓でアイテム選択が移動する', async ({ page }) => {

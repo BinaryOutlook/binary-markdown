@@ -495,3 +495,28 @@ test('real browser cancellation closes the worker and returns cancellation inste
     await assert.rejects(convertPdf('<!doctype html><html><body><p>Cancel this export.</p></body></html>', status.path, ops), { name: 'AbortError' });
     assert.deepEqual(ops.stages, ['rendering', 'converting']);
 });
+
+test('real exports retain TOC destinations for equation headings and following headings', { skip: !realTools }, async t => {
+    const { refreshTocs, scan } = require('../../src/shared/document-aux');
+    const directory = await temporary(t);
+    const status = await discoverTool('pandoc', process.env.EXPORT_PANDOC_PATH || '');
+    assert.equal(status.available, true, status.error);
+    const source = refreshTocs('---\ntitle: Integrated report\n---\n\n[TOC]\n\n# Cost $x^2$\n\n## Complexity \\(O(V^3)\\)\n\n# Following heading\n\n```python\nprint("kept")\n```\n');
+    const saved = { sourcePath: path.join(directory, 'integrated.md'), markdown: source, version: 1, theme: 'github', fontSize: 16 };
+    const prepared = { html: '', theme: 'github', fontSize: 16, diagrams: [], warnings: [] };
+    for (const format of ['docx', 'epub']) {
+        const entries = archiveEntries(await convertPandoc(format, saved, prepared, status.path, operations()));
+        if (format === 'docx') {
+            const xml = xmlDocument(entries.get('word/document.xml'));
+            const targets = new Set(wordElements(xml, 'bookmarkStart').map(element => wordValue(element, 'name')));
+            const links = wordElements(xml, 'hyperlink').map(element => wordValue(element, 'anchor')).filter(Boolean);
+            assert.equal(links.length, scan(source).headings.length);
+            for (const link of links) assert.ok(targets.has(link), 'DOCX TOC target exists: ' + link);
+            assert.match(wordText(xml), /Python/);
+        } else {
+            const content = [...entries].filter(([name]) => name.endsWith('.xhtml')).map(([, bytes]) => bytes.toString()).join('\n');
+            for (const heading of scan(source).headings) assert.ok(content.includes('id="' + heading.id + '"'), 'EPUB TOC target exists: ' + heading.id);
+        }
+    }
+    assert.equal(saved.markdown, source);
+});

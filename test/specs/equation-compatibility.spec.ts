@@ -216,3 +216,32 @@ test('an inline input ignores composing Enter and exports invalid TeX as visible
     expect(result.html).toContain('$\\invalidcommand$');
     expect(result.warnings.some((warning: any) => warning.code === 'math-fallback')).toBe(true);
 });
+
+test('saving an open equation edit refreshes TOC and preserves YAML and code', async ({ page }) => {
+    const front = '---\ntitle: "Keep: exact" # metadata\n---\n';
+    await setMarkdown(page, front + '\n[TOC]\n\n# Cost $x^2$\n\n```python\nprint("kept")\n```\n');
+    await page.locator('#editor h1 .math-inline').click();
+    await page.locator('.math-inline-input').fill('y^3');
+    await page.locator('.math-inline-input').press('Control+s');
+    const saves = () => page.evaluate(() => (window as any).__testApi.messages.filter((m: any) => m.type === 'save'));
+    await expect.poll(async () => (await saves()).length).toBe(1);
+    const saved = (await saves())[0].content;
+    expect(saved.startsWith(front)).toBe(true);
+    expect(saved).toContain('# Cost $y^3$');
+    expect(saved).toContain('[Cost $y^3$](#cost-y3)');
+    expect(saved).toContain('```python\nprint("kept")\n```');
+    await expect(page.locator('#editor h1')).toHaveAttribute('id', 'cost-y3');
+    await page.evaluate(() => document.dispatchEvent(new KeyboardEvent('keydown', { key: 's', ctrlKey: true, bubbles: true, cancelable: true })));
+    await expect.poll(async () => (await saves()).length).toBe(2);
+    expect((await saves())[1].content).toBe(saved);
+    await page.evaluate(md => (window as any).__hostMessageHandler({ type: 'prepareExport', requestId: 'combined', markdown: md }), saved);
+    await expect.poll(() => page.evaluate(() => (window as any).__testApi.messages.some((m: any) => m.type === 'exportPrepared' && m.requestId === 'combined'))).toBe(true);
+    const exported = await page.evaluate(() => (window as any).__testApi.messages.find((m: any) => m.type === 'exportPrepared' && m.requestId === 'combined'));
+    expect(exported.html).toContain('katex');
+    expect(exported.html).toContain('href="#cost-y3"');
+    expect(exported.html).not.toContain('front-matter-source');
+    expect(exported.html).not.toContain('toc-refresh');
+    // TOC labels are plain source text, so the literal equation label is disclosed.
+    expect(exported.html).toContain('Cost $y^3$');
+    expect(exported.warnings.map((warning: { code: string }) => warning.code)).toEqual(['renderer-math-source']);
+});

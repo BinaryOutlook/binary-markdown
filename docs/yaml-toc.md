@@ -1,6 +1,6 @@
 # Front matter and a TOC refreshed on save
 
-Implemented on the local `v0.2-YAML_AUX` branch. This is development work, not a published release.
+Available in the next-version integration candidate. This is development work, not a published release.
 
 ## Front matter
 
@@ -43,6 +43,8 @@ The marked region is generated: edit headings rather than entries, because a ref
 Headings follow the visual editor's existing ATX syntax (`# Heading` through `###### Heading`). Metadata, fenced examples and the TOC itself are excluded. Nested levels are indented, duplicate headings get distinct destinations, and Unicode labels are supported. Renaming/reordering headings can change their anchors; generated links are rebuilt at the next refresh. This does not promise persistent externally published anchors or full CommonMark parsing.
 
 Export still requires a successful save. It verifies the TOC against that saved revision and refuses a stale TOC without changing the source. This covers a save participant being skipped, an external editor leaving old entries, or another save participant changing headings afterward. The freshness guarantee concerns the captured revision; typing after capture does not change an export already in progress.
+
+TOC labels are plain text derived from heading source. Equation notation in a label remains literal (for example, `$x^2$`) even when the heading renders as math; HTML/PDF export reports the visible literal notation with a warning.
 
 HTML/PDF include the list and internal links. PDF page-numbered contents and sidebar bookmarks are outside this change. DOCX/EPUB keep their existing converter and strip only managed boundary comments, retaining the ordinary generated links. Other Markdown viewers display the list according to their own anchor rules.
 
