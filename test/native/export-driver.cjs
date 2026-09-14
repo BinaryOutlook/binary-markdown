@@ -4,6 +4,7 @@
 const vscode = require('vscode');
 const fs = require('node:fs');
 const path = require('node:path');
+const { sameDirectory } = require('./directory-identity.cjs');
 const sentinelName = '.binary-markdown-native-export.json';
 const inside = (base, target) => {
     const relative = path.relative(base, target);
@@ -18,9 +19,9 @@ exports.activate = async function activate(context) {
     const sentinelPath = path.join(workspace, sentinelName);
     if (!fs.existsSync(sentinelPath)) return;
     const owner = JSON.parse(fs.readFileSync(sentinelPath, 'utf8'));
-    if (owner.kind !== 'binary-markdown-native-export-v1' || owner.workspace !== workspace || !owner.token) return;
+    if (owner.kind !== 'binary-markdown-native-export-v1' || !sameDirectory(owner.workspace, workspace) || !owner.token) return;
     const rootOwner = JSON.parse(fs.readFileSync(path.join(owner.base, sentinelName), 'utf8'));
-    if (rootOwner.token !== owner.token || rootOwner.profile !== owner.profile || fs.realpathSync(owner.workspace) !== workspace) return;
+    if (rootOwner.token !== owner.token || rootOwner.profile !== owner.profile) return;
     const profileOwner = JSON.parse(fs.readFileSync(path.join(owner.profile, sentinelName), 'utf8'));
     if (profileOwner.token !== owner.token || profileOwner.base !== owner.base) return;
     // A driver accidentally loaded in the user's normal profile must do nothing.

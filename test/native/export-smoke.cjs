@@ -9,6 +9,7 @@ const http = require('node:http');
 const net = require('node:net');
 const { pathToFileURL } = require('node:url');
 const { spawnSync, execFileSync } = require('node:child_process');
+const { sameDirectory } = require('./directory-identity.cjs');
 const root = path.resolve(__dirname, '../..');
 const sentinelName = '.binary-markdown-native-export.json';
 const hash = bytes => crypto.createHash('sha256').update(bytes).digest('hex');
@@ -86,6 +87,7 @@ function initialize(settings) {
     verifyInputs(owner.workspace);
     for (const directory of [owner.base, owner.workspace, owner.profile]) fs.writeFileSync(path.join(directory, sentinelName), JSON.stringify(owner, null, 2));
     fs.copyFileSync(path.join(__dirname, 'export-driver.cjs'), path.join(owner.driver, 'main.cjs'));
+    fs.copyFileSync(path.join(__dirname, 'directory-identity.cjs'), path.join(owner.driver, 'directory-identity.cjs'));
     fs.writeFileSync(path.join(owner.driver, 'package.json'), JSON.stringify({
         name: 'binary-export-test-driver', publisher: 'local', version: '0.0.1', engines: { vscode: '^1.85.0' },
         activationEvents: ['workspaceContains:' + sentinelName], main: 'main.cjs'
@@ -254,7 +256,7 @@ function harness(settings, owner) {
         'export terminal event', () => connection.evaluate('({events:window.__nativeExportEvents, visibleStatus:document.getElementById("exportStatus").textContent})'));
     const output = (result, file, format) => {
         assert.equal(result.state, 'complete', result.message);
-        assert.equal(path.dirname(result.outputPath), path.dirname(path.join(owner.workspace, file)), 'Output belongs beside the selected source');
+        assert.ok(sameDirectory(path.dirname(result.outputPath), path.dirname(path.join(owner.workspace, file))), 'Output belongs beside the selected source');
         const stem = path.basename(file, '.md');
         const escaped = stem.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         assert.match(path.basename(result.outputPath), new RegExp('^' + escaped + '(?:_[0-9a-f]{8}(?:_(?:[2-9]|[1-9][0-9]+))?)?\\.' + format + '$'), 'Output must belong to the selected document, not a stale iframe');
