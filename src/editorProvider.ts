@@ -452,6 +452,8 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
 
         // Remember the original line ending style to preserve on save
         const originalEol = document.eol;
+        let lastSavedContent: string | undefined = document.isDirty ? undefined : document.getText();
+        let diskSaveGeneration = 0;
 
         let disposed = false;
         let renderGeneration = 0;
@@ -616,8 +618,14 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
             if (uri.toString() === document.uri.toString()) {
                 setTimeout(async () => {
                     try {
+                        const readGeneration = diskSaveGeneration;
                         const fileContent = await vscode.workspace.fs.readFile(uri);
+                        if (disposed || readGeneration !== diskSaveGeneration) { return; }
                         const newContent = new TextDecoder().decode(fileContent);
+                        // Our own save can notify the watcher after the user has
+                        // already typed again. That disk snapshot is not a new
+                        // external edit and must not replace the newer document.
+                        if (newContent === lastSavedContent) { return; }
                         const currentContent = document.getText();
 
                         if (newContent !== currentContent) {
@@ -750,6 +758,8 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
         });
         const didSaveSubscription = vscode.workspace.onDidSaveTextDocument(saved => {
             if (saved === document) {
+                lastSavedContent = document.getText();
+                diskSaveGeneration++;
                 if (nativeSave) { finishNativeSave(nativeSave); }
                 postSaveState({ type: 'documentSaved', content: convertImagePaths(document.getText()) });
             }

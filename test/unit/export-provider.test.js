@@ -57,7 +57,7 @@ async function setup(t) {
     const config = { theme: 'github', language: 'en' };
     const state = {
         text: '# OLD-EDITOR\n', disk: '# OLD-EDITOR\n', captureCalls: 0, saveCalls: 0,
-        captures: async () => '# OLD-EDITOR\n', beforeWrite: async () => {}, failedWrite: false,
+        captures: async () => '# OLD-EDITOR\n', beforeWrite: async () => {}, beforeRead: async () => {}, failedWrite: false,
         controller: undefined, exports: []
     };
     const file = value => ({ scheme: 'file', fsPath: value, toString: () => 'file://' + value });
@@ -97,7 +97,7 @@ async function setup(t) {
             onWillSaveTextDocument: willSave.listen,
             onDidSaveTextDocument: didSave.listen,
             createFileSystemWatcher: () => ({ onDidChange: watcher.listen, dispose: () => {} }),
-            fs: { readFile: async () => Buffer.from(state.disk) },
+            fs: { readFile: async () => { const bytes = Buffer.from(state.disk); await state.beforeRead(); return bytes; } },
             applyEdit: async edit => {
                 for (const text of edit.edits) { state.text = text; document.version++; document.isDirty = true; }
                 changes.fire({ document, contentChanges: [{ text: state.text }] });
@@ -285,6 +285,39 @@ test('external file synchronization bypasses stale webview capture before saving
     assert.equal(h.state.disk, '# EXTERNAL-EDITOR-REVISION\n');
     assert.equal(h.document.getText(), '# EXTERNAL-EDITOR-REVISION\n');
     assert.equal(h.posts.find(message => message.type === 'update').content, '# EXTERNAL-EDITOR-REVISION\n');
+});
+
+test('a delayed notification for our own save cannot overwrite a later edit', async t => {
+    const h = await setup(t);
+    await h.document.save();
+    const saved = h.state.disk;
+    h.state.text = '# TYPED-AFTER-SAVE\n';
+    h.document.isDirty = true;
+    h.document.version++;
+    await h.externalChange(saved);
+    assert.equal(h.document.getText(), '# TYPED-AFTER-SAVE\n');
+    assert.equal(h.document.isDirty, true);
+    assert.equal(h.state.disk, saved);
+    assert.equal(h.state.saveCalls, 1);
+    assert.ok(!h.posts.some(message => message.type === 'update'));
+});
+
+test('a disk read started before a newer save cannot replay stale contents', async t => {
+    const h = await setup(t);
+    const reading = deferred();
+    const release = deferred();
+    h.state.beforeRead = async () => { reading.resolve(); await release.promise; };
+    const external = h.externalChange('# OLD-DISK-READ\n');
+    await reading.promise;
+    h.state.text = '# NEWLY-SAVED\n';
+    h.document.isDirty = true;
+    h.state.captures = async () => h.state.text;
+    await h.document.save();
+    release.resolve();
+    await external;
+    assert.equal(h.document.getText(), '# NEWLY-SAVED\n');
+    assert.equal(h.state.disk, '# NEWLY-SAVED\n');
+    assert.equal(h.state.saveCalls, 1);
 });
 
 test('keyboard save carries explicit content without recapturing the webview', async t => {
