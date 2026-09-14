@@ -175,3 +175,44 @@ test('clearing an inline equation removes it and undo restores its source', asyn
     await page.keyboard.press('Control+z');
     expect(await page.evaluate(() => (window as any).__testApi.getMarkdown())).toBe('Before $x$ after\n');
 });
+
+test('copying rendered equations keeps their TeX and delimiters', async ({ page }) => {
+    const source = 'Inline \\(x^2\\) and **$y^3$**.\n\n$$\n\\frac{a}{b}\n$$\n';
+    await setMarkdown(page, source);
+    await expect(page.locator('#editor .katex')).toHaveCount(3);
+    const copied = await page.locator('#editor').evaluate(editor => {
+        const range = document.createRange(); range.selectNodeContents(editor);
+        const selection = getSelection()!; selection.removeAllRanges(); selection.addRange(range);
+        const clipboard = new DataTransfer();
+        editor.dispatchEvent(new ClipboardEvent('copy', { bubbles: true, clipboardData: clipboard }));
+        return clipboard.getData('text/plain');
+    });
+    expect(copied).toBe(source.trim());
+});
+
+test('unrecognized inline delimiters stay literal after save and reopen', async ({ page }) => {
+    const source = String.raw`Currency $5 and $10; escaped \$x\$; code \(unfinished.` + '\n';
+    await setMarkdown(page, source);
+    const saved = await page.evaluate(() => (window as any).__testApi.getMarkdown());
+    await setMarkdown(page, saved);
+    await expect(page.locator('#editor .math-inline')).toHaveCount(0);
+    expect(saved).toContain(String.raw`\$x\$`);
+});
+
+test('an inline input ignores composing Enter and exports invalid TeX as visible source', async ({ page }) => {
+    await setMarkdown(page, '$x$\n');
+    await page.locator('#editor .math-inline').click();
+    await page.locator('.math-inline-input').dispatchEvent('keydown', { key: 'Enter', isComposing: true });
+    await expect(page.locator('.math-inline-input')).toBeVisible();
+    await page.locator('.math-inline-input').fill('\\invalidcommand');
+    await page.locator('.math-inline-input').press('Enter');
+    await page.evaluate(() => (window as any).__hostMessageHandler({
+        type: 'prepareExport', requestId: 'invalid-inline', markdown: '$\\invalidcommand$\n'
+    }));
+    await expect.poll(() => page.evaluate(() => (window as any).__testApi.messages
+        .filter((message: any) => message.type === 'exportPrepared').length)).toBe(1);
+    const result = await page.evaluate(() => (window as any).__testApi.messages.find((message: any) => message.type === 'exportPrepared'));
+    expect(result.html).toContain('class="export-warning"');
+    expect(result.html).toContain('$\\invalidcommand$');
+    expect(result.warnings.some((warning: any) => warning.code === 'math-fallback')).toBe(true);
+});

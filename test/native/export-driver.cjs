@@ -83,6 +83,7 @@ exports.activate = async function activate(context) {
                     'export.pandocPath': value => typeof value === 'string',
                     'export.browserPath': value => typeof value === 'string',
                     'export.pdfWhiteBackground': value => typeof value === 'boolean',
+                    'math.backslashDelimiters': value => typeof value === 'boolean',
                     toolbarMode: value => ['simple', 'full'].includes(value),
                     language: value => ['en', 'zh-CN'].includes(value),
                     theme: value => ['github', 'night'].includes(value)
