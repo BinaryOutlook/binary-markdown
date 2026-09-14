@@ -12,12 +12,21 @@ function verifyRun(run, repository, mainCommit) {
     assert.equal(run.head_repository.full_name, repository);
     assert.equal(run.head_branch, 'main');
     assert.equal(run.head_sha, mainCommit, 'Select a successful build of the current main revision');
-    assert.equal(run.event, 'push', 'PR and manually supplied artifacts cannot become official releases');
+    assert.ok(['push', 'workflow_dispatch'].includes(run.event), 'Only full main validation can become an official release');
     assert.equal(run.status, 'completed');
     assert.equal(run.conclusion, 'success');
     assert.ok(Number.isSafeInteger(run.id) && run.id > 0);
     assert.ok(Number.isSafeInteger(run.run_attempt) && run.run_attempt > 0);
     return { source: run.head_sha, artifact: `vsix-candidate-${run.head_sha}-${run.run_attempt}`, attempt: run.run_attempt };
+}
+
+function verifyValidationJobs(jobs) {
+    for (const name of ['Build candidate', 'Validate (ubuntu)', 'Validate (macos)', 'Validate (windows)', 'Validate (vscode-minimum)', 'VSIX validation']) {
+        const matching = jobs.filter(job => job.name === name);
+        assert.equal(matching.length, 1, 'Missing or ambiguous validation job: ' + name);
+        assert.equal(matching[0].status, 'completed', name);
+        assert.equal(matching[0].conclusion, 'success', 'Every required lane must succeed: ' + name);
+    }
 }
 
 function verifyCandidate(directory, manifest, sourceCommit) {
@@ -68,4 +77,4 @@ if (require.main === module) {
     } else throw new Error('Use inspect <run.json> <main-sha>, verify <candidate-directory> <source-sha> or notes <notes.md> <source-sha>.');
 }
 
-module.exports = { verifyRun, verifyCandidate, renderReleaseNotes };
+module.exports = { verifyRun, verifyCandidate, renderReleaseNotes, verifyValidationJobs };

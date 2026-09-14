@@ -1,0 +1,45 @@
+name: Automatic VSIX release
+
+on:
+  schedule:
+    # Check daily at 09:17 Singapore time. The script measures the full interval.
+    - cron: '17 1 * * *'
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: Check eligibility only, or run the normal three-day release policy
+        type: choice
+        options: [check, release]
+        default: check
+
+permissions:
+  contents: read
+
+concurrency:
+  group: vsix-release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    if: github.repository == 'BinaryOutlook/binary-markdown' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 130
+    permissions:
+      contents: write
+      pull-requests: write
+      actions: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RELEASE_MODE: ${{ github.event_name == 'schedule' && 'release' || inputs.mode }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .node-version
+          package-manager-cache: false
+      - name: Apply the release policy
+        run: node scripts/auto-release.cjs "$RELEASE_MODE"

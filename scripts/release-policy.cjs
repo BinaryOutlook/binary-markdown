@@ -83,6 +83,13 @@ function planRelease({ config, releases, version, hasNotes, changes, now = Date.
         reason: 'Only classified patch changes are pending.', changes: relevant };
 }
 
+function assertSameReleasePlan(expected, actual) {
+    assert.equal(actual.eligible, true, actual.reason);
+    for (const key of ['source', 'version', 'latestReleaseId', 'action']) {
+        assert.equal(actual[key], expected[key], 'Release eligibility changed: ' + key);
+    }
+}
+
 function patchFiles(files, fromVersion, toVersion, changes) {
     assert.equal(toVersion, nextPatch(fromVersion), 'Automation may only increment the patch component');
     const updated = {};
@@ -112,4 +119,4 @@ function patchFiles(files, fromVersion, toVersion, changes) {
     return updated;
 }
 
-module.exports = { latestOfficialRelease, isReleaseRelevant, patchEligible, planRelease, patchFiles, nextPatch };
+module.exports = { latestOfficialRelease, isReleaseRelevant, patchEligible, planRelease, patchFiles, nextPatch, assertSameReleasePlan };

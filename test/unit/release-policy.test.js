@@ -1,7 +1,8 @@
 'use strict';
 const assert = require('node:assert/strict');
 const test = require('node:test');
-const { latestOfficialRelease, isReleaseRelevant, patchEligible, planRelease, patchFiles, nextPatch } = require('../../scripts/release-policy.cjs');
+const { latestOfficialRelease, isReleaseRelevant, patchEligible, planRelease, patchFiles, nextPatch, assertSameReleasePlan } = require('../../scripts/release-policy.cjs');
+const { onlyVersionChanged } = require('../../scripts/auto-release.cjs');
 
 const published = '2026-09-11T14:51:40Z';
 const threshold = Date.parse(published) + 3 * 86400000;
@@ -68,4 +69,19 @@ test('patch increments do not roll over and version metadata stays aligned', () 
     assert.match(updated['release-notes/0.2.10.md'], /commit\/a{40}/);
     assert.throws(() => patchFiles(files, '0.2.9', '0.3.0', [change()]));
     assert.throws(() => patchFiles({ ...files, 'package.json': '{"version":"0.2.8"}' }, '0.2.9', '0.2.10', [change()]));
+});
+test('a concurrent release, changed main or policy hold prevents publication and bot merging', () => {
+    const expected = { ...planRelease(input({ version: '0.2.2' })), source: 'a'.repeat(40) };
+    assertSameReleasePlan(expected, { ...expected });
+    for (const altered of [{ latestReleaseId: 2 }, { source: 'b'.repeat(40) }, { version: '0.2.3' },
+        { action: 'bump' }, { eligible: false, reason: 'A manual release reset the timer.' }]) {
+        assert.throws(() => assertSameReleasePlan(expected, { ...expected, ...altered }));
+    }
+});
+test('a metadata-only version bump does not count as a new application change', () => {
+    const before = { version: '0.2.1', packages: { '': { version: '0.2.1' }, dep: { version: '1.0.0' } } };
+    const after = { version: '0.2.2', packages: { '': { version: '0.2.2' }, dep: { version: '1.0.0' } } };
+    assert.equal(onlyVersionChanged(JSON.stringify(before), JSON.stringify(after)), true);
+    after.packages.dep.version = '1.0.1';
+    assert.equal(onlyVersionChanged(JSON.stringify(before), JSON.stringify(after)), false);
 });

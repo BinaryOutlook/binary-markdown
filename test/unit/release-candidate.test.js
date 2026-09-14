@@ -4,7 +4,7 @@ const os = require('node:os');
 const path = require('node:path');
 const { createHash } = require('node:crypto');
 const test = require('node:test');
-const { verifyRun, verifyCandidate, renderReleaseNotes } = require('../../scripts/release-candidate');
+const { verifyRun, verifyCandidate, renderReleaseNotes, verifyValidationJobs } = require('../../scripts/release-candidate');
 const { assertArtifactAudit } = require('../native/assert-artifact-audit.cjs');
 
 const repository = 'BinaryOutlook/binary-markdown';
@@ -26,6 +26,21 @@ test('release promotion binds a successful main push to its exact artifact attem
         repository: { full_name: 'other/repo' }, head_repository: { full_name: 'other/fork' } })) {
         assert.throws(() => verifyRun({ ...run(), [key]: value }, repository, commit), key);
     }
+});
+test('explicit full main validation is accepted but dispatches from a bot branch cannot publish', () => {
+    assert.equal(verifyRun({ ...run(), event: 'workflow_dispatch' }, repository, commit).source, commit);
+    assert.throws(() => verifyRun({ ...run(), event: 'workflow_dispatch', head_branch: 'codex/auto-release-0.2.1' }, repository, commit));
+    assert.throws(() => verifyRun({ ...run(), event: 'workflow_run' }, repository, commit));
+});
+test('release promotion refuses skipped, failed, missing and ambiguous validation lanes', () => {
+    const jobs = ['Build candidate', 'Validate (ubuntu)', 'Validate (macos)', 'Validate (windows)', 'Validate (vscode-minimum)', 'VSIX validation']
+        .map(name => ({ name, status: 'completed', conclusion: 'success' }));
+    verifyValidationJobs(jobs);
+    for (const conclusion of ['skipped', 'failure', 'cancelled', 'neutral']) {
+        assert.throws(() => verifyValidationJobs(jobs.map(job => job.name === 'Validate (windows)' ? { ...job, conclusion } : job)));
+    }
+    assert.throws(() => verifyValidationJobs(jobs.slice(1)));
+    assert.throws(() => verifyValidationJobs([...jobs, jobs[0]]));
 });
 test('release candidate rejects changed bytes, dirty source and mismatched identities', t => {
     const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'binary-release-'));

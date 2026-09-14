@@ -1,5 +1,9 @@
 # Binary Markdown changelog
 
+## Unreleased
+
+- Check `main` daily for automatic VSIX publication after at least three days since the previous official release. Preserve manual releases, validate bot version bumps through PRs, and reuse the exact tested package and source.
+
 ## 0.2.1
 
 Integrate editor and export improvements with Windows validation. See the
