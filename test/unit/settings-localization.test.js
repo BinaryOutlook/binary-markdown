@@ -63,3 +63,12 @@ test('all manifest translations resolve every referenced key without empty or st
         }
     }
 });
+
+test('image and extension settings controls have distinct labels in every supported language', () => {
+    for (const locale of ['en', 'es', 'fr', 'ja', 'ko', 'zh-cn', 'zh-tw']) {
+        const { webviewMessages } = require('../../out/locales/' + locale + '.js');
+        assert.ok(webviewMessages.openExtensionSettings?.trim(), locale + ': settings tooltip');
+        assert.ok(webviewMessages.setImageDir?.trim(), locale + ': image tooltip');
+        assert.notEqual(webviewMessages.openExtensionSettings, webviewMessages.setImageDir);
+    }
+});

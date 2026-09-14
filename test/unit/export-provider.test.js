@@ -36,6 +36,7 @@ async function setup(t) {
     const incoming = event();
     const posts = [];
     const notices = [];
+    const commands = [];
     const renderConfigs = [];
     const locales = [];
     let cachedLocale = 'ja'; // A locale cached before the current configuration.
@@ -75,6 +76,7 @@ async function setup(t) {
         }
     };
     const vscode = {
+        commands: { executeCommand: async (...args) => { commands.push(args); } },
         EndOfLine: { LF: 1, CRLF: 2 }, env: { language: 'en' },
         Uri: { file, joinPath: (base, ...parts) => file(path.join(base.fsPath, ...parts)) },
         Range: class { constructor(...values) { this.values = values; } },
@@ -135,7 +137,7 @@ async function setup(t) {
     await provider.resolveCustomTextEditor(document, panel, {});
     t.after(() => disposed.fire());
     return {
-        state, document, panel, provider, config, posts, notices, renderConfigs, locales, disposed, flushTimers,
+        state, document, panel, provider, config, posts, notices, commands, renderConfigs, locales, disposed, flushTimers,
         configChanged: keys => configChanges.fire({ affectsConfiguration: query => keys.some(key => key === query || key.startsWith(query + '.')) }),
         externalChange: async content => { state.disk = content; watcher.fire(document.uri); await flushTimers(); },
         send: message => Promise.all(incoming.fire(message))
@@ -147,6 +149,22 @@ test('export commands target the active custom editor for each format', async t 
     for (const format of ['html', 'pdf', 'docx', 'epub']) { h.provider.requestExport(format); }
     assert.deepEqual(h.state.exports, ['html', 'pdf', 'docx', 'epub']);
     assert.deepEqual(h.notices, []);
+});
+
+test('the production settings bridge opens only this extension settings without changing the document', async t => {
+    const h = await setup(t);
+    const window = {};
+    const messages = [];
+    new Function('window', 'acquireVsCodeApi', fs.readFileSync(path.join(__dirname, '../../src/shared/vscode-host-bridge.js'), 'utf8'))(
+        window, () => ({ postMessage: message => messages.push(message) })
+    );
+    window.hostBridge.openSettings();
+    assert.deepEqual(messages, [{ type: 'openExtensionSettings' }]);
+    await h.send(messages[0]);
+    const manifest = require('../../package.json');
+    assert.deepEqual(h.commands, [['workbench.action.openSettings', '@ext:' + manifest.publisher + '.' + manifest.name]]);
+    assert.equal(h.state.saveCalls, 0);
+    assert.equal(h.document.getText(), '# OLD-EDITOR\n');
 });
 
 test('export command refuses a cached panel that is no longer active', async t => {

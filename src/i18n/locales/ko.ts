@@ -50,6 +50,7 @@ export const webviewMessages = {
   insertLink: '링크 삽입 (Ctrl+K)',
   insertImage: '이미지 삽입 (Ctrl+Shift+I)',
   setImageDir: '이미지 디렉토리 설정',
+  openExtensionSettings: 'Binary Markdown 설정 열기',
   insertTable: '표 삽입 (Ctrl+T)',
   horizontalRule: '수평선 (Ctrl+Shift+-)',
   mermaidBlock: 'Mermaid 다이어그램',

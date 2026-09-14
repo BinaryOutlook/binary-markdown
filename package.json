@@ -225,6 +225,12 @@
           "default": "",
           "scope": "machine",
           "description": "%config.export.browserPath.description%"
+        },
+        "binary-markdown.export.showCodeLanguage": {
+          "type": "boolean",
+          "default": true,
+          "scope": "resource",
+          "description": "%config.export.showCodeLanguage.description%"
         }
       }
     },

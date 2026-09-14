@@ -149,7 +149,10 @@ export class ExportController implements vscode.Disposable {
                     this.document.version !== version || this.document.isDirty) {
                     throw new Error(messages.saveRequired);
                 }
-                const config = vscode.workspace.getConfiguration('binary-markdown');
+                const config = vscode.workspace.getConfiguration('binary-markdown', this.document.uri);
+                const codeOptions = Object.freeze({
+                    showCodeLanguage: config.get<boolean>('export.showCodeLanguage', true)
+                });
                 const source: SavedExportDocument = Object.freeze({
                     sourcePath: this.document.uri.fsPath, markdown: raw, version,
                     theme: format === 'pdf' && config.get<boolean>('export.pdfWhiteBackground', true)
@@ -186,9 +189,9 @@ export class ExportController implements vscode.Disposable {
                 let bytes: Buffer;
                 if (format === 'html' || format === 'pdf') {
                     const html = await prepareStandaloneHtml(source, prepared, this.context.extensionPath, operations);
-                    bytes = format === 'html' ? Buffer.from(html, 'utf8') : await convertPdf(html, executable, operations);
+                    bytes = format === 'html' ? Buffer.from(html, 'utf8') : await convertPdf(html, executable, operations, codeOptions);
                 } else {
-                    bytes = await convertPandoc(format, source, prepared, executable, operations);
+                    bytes = await convertPandoc(format, source, prepared, executable, operations, codeOptions);
                 }
                 checkCancelled(abort.signal);
                 validateArtifact(format, bytes);

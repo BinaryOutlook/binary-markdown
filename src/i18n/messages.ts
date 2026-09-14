@@ -53,6 +53,7 @@ export interface WebviewMessages {
   insertLink: string;
   insertImage: string;
   setImageDir: string;
+  openExtensionSettings: string;
   insertTable: string;
   horizontalRule: string;
   mermaidBlock: string;

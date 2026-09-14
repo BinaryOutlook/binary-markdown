@@ -1,6 +1,8 @@
 import * as path from 'path';
 import type { Browser, BrowserContext, Page } from 'playwright-core';
 import { checkCancelled, ExportOperations } from './types';
+import { codeLanguageLabel } from './code-language';
+import { languageTabPath } from './language-tab';
 
 const printStyles = `
 @page { size: A4; margin: 16mm; background: var(--bg-color, #fff); }
@@ -18,10 +20,16 @@ tr { break-inside: avoid-page; page-break-inside: avoid; }
 thead { display: table-header-group; } tfoot { display: table-footer-group; }
 img, svg, canvas { max-width: 100% !important; height: auto; object-fit: contain; }
 .export-oversized { break-inside: auto !important; page-break-inside: auto !important; }
+.export-code-block { break-inside: avoid-page; page-break-inside: avoid; }
+.export-code-block > pre { margin-bottom: 0 !important; border: 1px solid var(--border-color, #d0d7de) !important; border-bottom-right-radius: 0 !important; break-after: avoid-page; page-break-after: avoid; }
+.export-code-language { display: flex; justify-content: flex-end; margin: 0 0 1em; text-align: right; font-size: 9pt; font-style: italic; line-height: 1.4; break-before: avoid-page; page-break-before: avoid; break-inside: avoid; }
+/* A decorative vector outline leaves the label selectable and the top seam single. */
+.export-code-language > span { position: relative; isolation: isolate; box-sizing: border-box; max-width: 100%; padding: 2px 14px 3px; text-align: center; color: var(--text-color, #57606a); overflow-wrap: anywhere; }
+.export-code-language > span > svg { position: absolute; inset: 0; z-index: -1; width: 100%; height: 100%; max-width: none; overflow: visible; }
 `;
 
 /** Print a self-contained, script-free document using an explicitly selected browser. */
-export async function convertPdf(html: string, executable: string, operations: ExportOperations): Promise<Buffer> {
+export async function convertPdf(html: string, executable: string, operations: ExportOperations, options: { showCodeLanguage?: boolean } = {}): Promise<Buffer> {
     checkCancelled(operations.signal);
     operations.report('rendering');
     // The extension excludes node_modules from its VSIX. copy-vendor.js owns this runtime and its licenses.
@@ -58,9 +66,50 @@ export async function convertPdf(html: string, executable: string, operations: E
         await page.setContent(printHtml, { waitUntil: 'load', timeout: 0 });
         await page.emulateMedia({ media: 'print' });
         checkCancelled(operations.signal);
+        const languages = options.showCodeLanguage === false ? [] : await page.evaluate<string[]>(
+            `Array.from(document.querySelectorAll('pre[data-lang]'), pre => pre.getAttribute('data-lang') || '')`
+        );
+        const labels = languages.map(info => {
+            const classes = info.trim().split(/\s+/);
+            return classes.includes('math') || classes.includes('mermaid') ? undefined : codeLanguageLabel(classes);
+        });
         // This is extension-owned code. Document scripts stay disabled throughout the isolated context.
         const readiness = await page.evaluate<{ failedImages: number; oversizedBlocks: number }>(`(async () => {
+            const labels = ${JSON.stringify(labels)};
+            document.querySelectorAll('pre[data-lang]').forEach((pre, index) => {
+                if (!labels[index]) return;
+                const wrapper = document.createElement('div');
+                wrapper.className = 'export-code-block';
+                const footer = document.createElement('div');
+                footer.className = 'export-code-language';
+                const badge = document.createElement('span');
+                badge.textContent = labels[index];
+                footer.appendChild(badge);
+                pre.replaceWith(wrapper);
+                wrapper.append(pre, footer);
+                wrapper.style.setProperty('--export-code-background', getComputedStyle(pre).backgroundColor);
+            });
             await document.fonts.ready;
+            const tabPath = ${languageTabPath.toString()};
+            for (const badge of document.querySelectorAll('.export-code-language > span')) {
+                const rect = badge.getBoundingClientRect();
+                const outline = tabPath(rect.width, rect.height);
+                const ns = 'http://www.w3.org/2000/svg';
+                const svg = document.createElementNS(ns, 'svg');
+                svg.setAttribute('viewBox', '0 0 ' + rect.width + ' ' + rect.height);
+                svg.setAttribute('aria-hidden', 'true');
+                svg.setAttribute('focusable', 'false');
+                const fill = document.createElementNS(ns, 'path');
+                fill.setAttribute('d', outline + ' Z');
+                fill.setAttribute('fill', 'var(--export-code-background, #f6f8fa)');
+                const border = document.createElementNS(ns, 'path');
+                border.setAttribute('d', outline);
+                border.setAttribute('fill', 'none');
+                border.setAttribute('stroke', 'var(--border-color, #d0d7de)');
+                border.setAttribute('stroke-width', '1');
+                svg.append(fill, border);
+                badge.prepend(svg);
+            }
             const images = Array.from(document.images);
             await Promise.all(images.map(image => image.complete ? Promise.resolve() : new Promise(resolve => {
                 image.addEventListener('load', resolve, { once: true });
@@ -89,7 +138,7 @@ export async function convertPdf(html: string, executable: string, operations: E
                 }
             }
             let oversizedBlocks = 0;
-            for (const block of document.querySelectorAll('p, pre, blockquote, table, tr, li, figure, h1, h2, h3, h4, h5, h6')) {
+            for (const block of document.querySelectorAll('p, pre, blockquote, table, tr, li, figure, h1, h2, h3, h4, h5, h6, .export-code-block')) {
                 if (block.getBoundingClientRect().height > pageHeight) {
                     block.classList.add('export-oversized');
                     oversizedBlocks++;

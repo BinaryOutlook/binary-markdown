@@ -50,7 +50,10 @@ async function harness(t, options = {}) {
     const vscode = {
         UIKind: { Desktop: 1, Web: 2 }, ProgressLocation: { Notification: 15 },
         env: { uiKind: 1, remoteName: undefined, openExternal: async target => { commands.push(['openExternal', target.fsPath]); return true; } },
-        workspace: { isTrusted: true, getConfiguration: () => configApi, applyEdit: async () => { calls.applyEdit++; throw new Error('Export must never edit the source.'); } },
+        workspace: { isTrusted: true, getConfiguration: (section, resource) => {
+            options.onConfiguration?.(section, resource);
+            return configApi;
+        }, applyEdit: async () => { calls.applyEdit++; throw new Error('Export must never edit the source.'); } },
         Uri: { file: value => ({ scheme: 'file', fsPath: value }), joinPath: (base, ...parts) => ({ scheme: 'file', fsPath: path.join(base.fsPath, ...parts) }) },
         commands: { executeCommand: async (...args) => { commands.push(args); } },
         window: {
@@ -101,10 +104,14 @@ async function harness(t, options = {}) {
             if (options.render) return options.render({ source, prepared, operations, document });
             return validHtml;
         } },
-        './pandoc': { convertPandoc: async () => { calls.converter++; throw new Error('Unexpected native Pandoc call in controller fixture.'); } },
-        './pdf': { convertPdf: async (_html, executable, operations) => {
+        './pandoc': { convertPandoc: async (format, source, prepared, executable, operations, settings) => {
             calls.converter++;
-            if (options.pdf) return options.pdf({ executable, operations });
+            if (options.pandoc) return options.pandoc({ format, source, prepared, executable, operations, settings });
+            throw new Error('Unexpected native Pandoc call in controller fixture.');
+        } },
+        './pdf': { convertPdf: async (_html, executable, operations, settings) => {
+            calls.converter++;
+            if (options.pdf) return options.pdf({ executable, operations, settings });
             throw new Error('Unexpected native browser call in controller fixture.');
         } },
         './resources': {
@@ -143,6 +150,52 @@ async function assertSourceIntact(h) {
     assert.equal(h.calls.applyEdit, 0);
     assert.equal(await fs.readFile(h.sourcePath, 'utf8'), h.original);
 }
+
+test('DOCX captures the document-scoped language setting per job and refreshes it for the next export', async t => {
+    const fixture = await fs.readFile(path.join(__dirname, '../../media/export-reference.docx'));
+    for (const initial of [undefined, false, true]) {
+        const setting = 'export.showCodeLanguage';
+        const config = initial === undefined ? {} : { [setting]: initial };
+        const seen = [];
+        const resources = [];
+        const h = await harness(t, {
+            config,
+            onConfiguration: (section, resource) => { if (section === 'binary-markdown' && resource) resources.push(resource); },
+            onPrepare: () => { config[setting] = !(config[setting] ?? true); },
+            pandoc: ({ format, settings }) => {
+                assert.equal(format, 'docx');
+                seen.push(settings.showCodeLanguage);
+                return fixture;
+            }
+        });
+        await h.controller.export('docx');
+        await h.controller.export('docx');
+        assert.deepEqual(seen, [initial ?? true, !(initial ?? true)], 'an in-flight export retains its captured setting');
+        assert.deepEqual(resources, [h.document.uri, h.document.uri], 'folder settings resolve against the exported document');
+        assert.deepEqual(h.terminal().map(status => status.state), ['complete', 'complete']);
+        await assertSourceIntact(h);
+    }
+});
+
+test('PDF receives the same captured language setting as DOCX, including its enabled default', async t => {
+    for (const initial of [undefined, false, true]) {
+        const config = initial === undefined ? {} : { 'export.showCodeLanguage': initial };
+        const seen = [];
+        const h = await harness(t, {
+            config,
+            onPrepare: () => { config['export.showCodeLanguage'] = !(config['export.showCodeLanguage'] ?? true); },
+            pdf: ({ settings }) => {
+                seen.push(settings.showCodeLanguage);
+                throw new Error('Controlled stop after PDF settings capture');
+            }
+        });
+        await h.controller.export('pdf');
+        await h.controller.export('pdf');
+        assert.deepEqual(seen, [initial ?? true, !(initial ?? true)]);
+        assert.ok(h.terminal().every(status => status.message.includes('Controlled stop after PDF settings capture')));
+        await assertSourceIntact(h);
+    }
+});
 
 for (const platform of ['darwin', 'linux']) for (const [name, options] of [
     ['dirty document', { document: { isDirty: true } }],
