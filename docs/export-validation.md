@@ -2,6 +2,20 @@
 
 Historical export-branch record, updated 2026-09-10. It supplements [the authoritative requirements](export-subsystem.md). The results below identify their original packages and environments. Follow [0.2.0 candidate validation](validation/0.2.0.md) for subsequent integration, corrected AGPL-3.0-or-later policy, packaging and hosted CI. Historical references to unmerged work or AGPL-3.0-only describe the original observation, not the current integration state.
 
+## Reading this record
+
+Use this page to inspect historical results. For a new run on the current
+checkout, use [Validate an export change](export-verification.md), the checkout's
+`.node-version`, and its package manifest. Reproduction commands below retain
+the versions and filenames used in the original runs. Pending-release language
+also belongs to those dated observations.
+
+- [2026-09-10 revalidation](#merge-blocker-fixes-and-revalidation--2026-09-10)
+- [2026-09-09 Ubuntu cross-validation](#historical-ubuntu-x86-64-cross-validation--2026-09-09)
+- [Original macOS acceptance evidence](#original-macos-acceptance-evidence)
+- [Workload and artifact inspection](#workload-and-artifact-inspection)
+- [Original remaining limits](#remaining-limits-and-review-responsibility)
+
 ## Merge-blocker fixes and revalidation — 2026-09-10
 
 The four reported browser failures are resolved, all four old skips have been reviewed, and the full suite passes on both tested platforms. The project transitioned to **AGPL-3.0-only** in the first fix commit, `f2a73a5`, retaining upstream/prior MIT notices, the frozen fixtures' explicit MIT grant and third-party licences. Both manifests/lockfile root entries, contribution guidance and distribution notices agree. The VSIX licence-text and retained-notice bytes were checked against source; dependency licences were not rewritten.
