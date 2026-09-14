@@ -870,8 +870,7 @@ async function main() {
         if (process.platform === 'win32') {
             // Run the archive's CLI through its own Electron executable; a .cmd
             // wrapper would introduce shell quoting and cannot use spawnSync directly.
-            const cli = path.join(path.dirname(settings.code), 'resources/app/out/cli.js');
-            assert.ok(path.isAbsolute(settings.code) && fs.existsSync(cli), 'Use the isolated Code.exe archive path');
+            const cli = require('../utils/vscode-cli.cjs').windowsCli(settings.code);
             args.unshift(cli);
             environment.ELECTRON_RUN_AS_NODE = '1';
         }

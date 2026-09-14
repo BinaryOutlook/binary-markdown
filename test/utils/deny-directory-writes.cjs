@@ -14,7 +14,9 @@ function denyDirectoryWrites(directory) {
         '[System.Security.Principal.WindowsIdentity]::GetCurrent().User.Value'], { encoding: 'utf8', timeout: 10000 }).trim();
     if (!/^S-1-[\d-]+$/.test(sid)) throw new Error('Cannot identify the test user for a temporary directory ACL');
     const acl = args => execFileSync('icacls.exe', [directory, ...args], { stdio: 'pipe', timeout: 10000 });
-    acl(['/deny', '*' + sid + ':(OI)(CI)(W)']);
+    // Specify add-file and add-subdirectory rights explicitly. The export
+    // finalizer first creates a staging directory beside the source file.
+    acl(['/deny', '*' + sid + ':(OI)(CI)(WD,AD,WEA,WA)']);
     return () => acl(['/remove:d', '*' + sid]);
 }
 

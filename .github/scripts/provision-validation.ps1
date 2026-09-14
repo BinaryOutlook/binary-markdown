@@ -45,14 +45,12 @@ if ($codeVersion -notin @('latest', '1.85.0')) { throw 'Unexpected VS Code valid
 $codeRoot = Download-Archive "https://update.code.visualstudio.com/$codeVersion/win32-x64-archive/stable" 'vscode' ''
 $code = Join-Path $codeRoot 'Code.exe'
 if (!(Test-Path -LiteralPath $code)) { throw 'Isolated VS Code archive is incomplete' }
+$cli = (& node test/utils/vscode-cli.cjs $code).Trim()
+# Code.exe is a GUI executable: run it through Node's synchronous process API so
+# a failed version probe cannot silently continue provisioning in PowerShell.
+& node -e 'const r=require("node:child_process").spawnSync(process.argv[1],[process.argv[2],"--version"],{env:{...process.env,ELECTRON_RUN_AS_NODE:"1"},stdio:"inherit"});if(r.error)throw r.error;process.exit(r.status??1)' $code $cli
+if ($LASTEXITCODE -ne 0) { throw 'Isolated VS Code version probe failed' }
 Export-Environment 'VALIDATION_CODE' $code
-$previousElectronMode = $env:ELECTRON_RUN_AS_NODE
-try {
-    $env:ELECTRON_RUN_AS_NODE = '1'
-    & $code (Join-Path $codeRoot 'resources/app/out/cli.js') --version
-} finally {
-    $env:ELECTRON_RUN_AS_NODE = $previousElectronMode
-}
 & python -m venv (Join-Path $tools 'audit-venv')
 $python = Join-Path $tools 'audit-venv/Scripts/python.exe'
 & $python -m pip install --disable-pip-version-check 'pypdf==6.18.0' 'Pillow==12.3.0'
