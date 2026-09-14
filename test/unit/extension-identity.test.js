@@ -50,6 +50,7 @@ test('the compiled extension activates alongside upstream registrations and wire
             if (id === './editorProvider') return { BinaryMarkdownEditorProvider: class {} };
             if (id === './i18n/messages') return { initLocale() {}, t: key => key };
             if (id === './build-info') return { copyBuildInformation() {} };
+            if (id === './shared/document-aux') return require('../../src/shared/document-aux');
             throw new Error(`Unexpected activation dependency: ${id}`);
         },
     });

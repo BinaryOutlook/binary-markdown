@@ -28,6 +28,11 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  insertToc: 'Insert table of contents',
+  refreshToc: 'Refresh table of contents',
+  tocContents: 'Contents',
+  tocPending: 'Save or refresh to generate contents.',
+
   frontMatter: 'Front matter',
   closeOutline: 'Close Outline',
   openOutline: 'Open Outline',

@@ -93,6 +93,12 @@ exports.activate = async function activate(context) {
                 await vscode.workspace.getConfiguration('binary-markdown').update(request.key, request.value, vscode.ConfigurationTarget.Global);
                 break;
             }
+            case 'autoSave': {
+                if (!['off', 'afterDelay'].includes(request.value)) throw new Error('Invalid isolated Auto Save mode.');
+                await vscode.workspace.getConfiguration('files').update('autoSaveDelay', 200, vscode.ConfigurationTarget.Global);
+                await vscode.workspace.getConfiguration('files').update('autoSave', request.value, vscode.ConfigurationTarget.Global);
+                break;
+            }
             case 'untitled': {
                 const document = await vscode.workspace.openTextDocument({ language: 'markdown', content: 'Untitled test' });
                 await vscode.commands.executeCommand('vscode.openWith', document.uri, 'binary-markdown.editor');

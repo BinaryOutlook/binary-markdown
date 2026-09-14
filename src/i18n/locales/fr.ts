@@ -28,6 +28,11 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  insertToc: 'Insérer une table des matières',
+  refreshToc: 'Actualiser la table des matières',
+  tocContents: 'Sommaire',
+  tocPending: 'Enregistrez ou actualisez pour générer le sommaire.',
+
   frontMatter: 'Métadonnées',
   closeOutline: 'Fermer le plan',
   openOutline: 'Ouvrir le plan',

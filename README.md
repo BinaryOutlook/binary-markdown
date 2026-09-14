@@ -54,6 +54,7 @@ Changes developed in this fork:
 - Opening the outline does not mark the Markdown document as edited.
 - Independent Binary Markdown names and identifiers throughout the extension and desktop sources.
 - Experimental HTML, PDF, DOCX and EPUB export, with local conversion and visible progress.
+- Protected YAML front matter and a generated TOC refreshed on save or with its refresh button; see the [front matter and TOC guide](docs/yaml-toc.md).
 - A source-stamped VSIX and **Copy Build Information** command for reproducible bug reports.
 
 The first two changes were also proposed upstream as [PR #8](https://github.com/raggbal/any-markdown/pull/8) and [PR #9](https://github.com/raggbal/any-markdown/pull/9). This fork's release decisions are independent of those PRs.

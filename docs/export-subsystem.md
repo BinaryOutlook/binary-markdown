@@ -551,3 +551,16 @@ human acceptance, merge or release from test completion. Remote publication,
 merging and marketplace release require separate authorization unless already
 provided in this task.
 ```
+
+
+## Development addendum: front matter and TOC (v0.2-YAML_AUX)
+
+User-approved scope, 2026-09-14. The saved-source requirement remains unchanged.
+
+| Requirement | Behavior | Acceptance |
+| --- | --- | --- |
+| FR-EXP-043 | Save preparation refreshes explicitly managed TOCs using the same source generator as manual refresh. No conversion/rendering work is added to the native save participant. | Native and keyboard saves in visual/source modes preserve metadata and write current entries; repeated saves are unchanged. |
+| FR-EXP-044 | Export verifies that managed TOCs match the captured saved source and rejects stale/malformed regions without editing or saving the source. | Clean-but-stale input cannot reach conversion or produce a success output. |
+| FR-EXP-045 | HTML/PDF include TOC entries with unique heading destinations, excluding refresh controls and boundary comments. Front matter remains absent from the visible body. | Inspect real HTML links and PDF internal-link destinations; no generated page numbers or PDF bookmarks are promised. |
+
+The editor stores raw leading metadata and ordinary Markdown links within named TOC boundaries. See [behavior and implementation scope](yaml-toc.md). DOCX/EPUB strip managed comment boundaries before conversion and retain generated links. Existing metadata allowlisting remains in effect. The dated 0.2.0 validation receipts remain historical evidence; this addendum does not retroactively extend their coverage.

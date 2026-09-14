@@ -116,6 +116,15 @@ test('temporary Markdown normalization preserves YAML and fenced directive examp
     assert.equal(preparePandocMarkdown(directives), frontMatter);
 });
 
+test('Pandoc receives generated links without managed comments, preserving code examples', () => {
+    const { refreshTocs, START } = require('../../src/shared/document-aux');
+    const source = refreshTocs('[TOC]\n\n# Heading\n') + '\n```html\n' + START + '\n```\n';
+    const prepared = preparePandocMarkdown(source);
+    assert.ok(prepared.includes('[Heading](#heading)'));
+    assert.equal(prepared.split(START).length - 1, 1);
+    assert.ok(prepared.includes('```html\n' + START));
+});
+
 test('failed Pandoc conversion removes its owned intermediate directory', async t => {
     const directory = await temporary(t);
     const receipt = path.join(directory, 'worker-directory');

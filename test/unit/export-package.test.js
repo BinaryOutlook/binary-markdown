@@ -61,7 +61,7 @@ test('packaged VSIX contains an isolated export runtime, UI, guidance and locali
         'out/export/output.js', 'out/export/validate.js', 'out/export/webview-rpc.js',
         'out/export/pandoc.js', 'out/export/pdf.js', 'out/export/tools.js',
         'out/export/messages.js', 'out/webview/editor.js', 'out/webview/styles.css',
-        'out/shared/editor-body-html.js', 'out/shared/host-bridge.js', 'media/export-help.md',
+        'out/shared/document-aux.js', 'out/shared/editor-body-html.js', 'out/shared/host-bridge.js', 'media/export-help.md',
         'vendor/playwright-core/package.json', 'vendor/playwright-core/LICENSE',
         'vendor/playwright-core/NOTICE', 'vendor/katex.min.css', 'vendor/mermaid.min.js'
     ];
