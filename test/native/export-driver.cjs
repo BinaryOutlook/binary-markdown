@@ -5,6 +5,7 @@ const vscode = require('vscode');
 const fs = require('node:fs');
 const path = require('node:path');
 const { sameDirectory } = require('./directory-identity.cjs');
+const { replaceFile } = require('./replace-file.cjs');
 const sentinelName = '.binary-markdown-native-export.json';
 const inside = (base, target) => {
     const relative = path.relative(base, target);
@@ -44,7 +45,7 @@ exports.activate = async function activate(context) {
     const respond = value => {
         const temporary = path.join(workspace, 'response.json.tmp');
         fs.writeFileSync(temporary, JSON.stringify({ ...identity(), ...value }, null, 2));
-        fs.renameSync(temporary, path.join(workspace, 'response.json'));
+        replaceFile(temporary, path.join(workspace, 'response.json'));
     };
     const localFile = (name, suffix) => {
         const file = path.resolve(workspace, name);
