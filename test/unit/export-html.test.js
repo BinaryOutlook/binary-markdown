@@ -61,13 +61,14 @@ test('standalone HTML embeds referenced images, preserves appearance and declare
 
 test('local resources handle literal percent, escaped separators, queries and unsupported fragments deliberately', async t => {
     const { dir, source } = await htmlFixture(t);
-    for (const name of ['原图 100%.png', 'hash#question?.png']) { await fs.writeFile(path.join(dir, name), validPng); }
+    const punctuationName = process.platform === 'win32' ? 'hash#question.png' : 'hash#question?.png';
+    for (const name of ['原图 100%.png', punctuationName]) { await fs.writeFile(path.join(dir, name), validPng); }
     const load = createResourceLoader(new AbortController().signal);
     const plain = await load('原图 100%.png', source.sourcePath);
     assert.deepEqual(plain.bytes, validPng);
     assert.equal(await load(encodeURI('原图 100%.png'), source.sourcePath), plain);
     assert.equal(await load('原图 100%.png?revision=2', source.sourcePath), plain);
-    assert.deepEqual((await load('hash%23question%3F.png', source.sourcePath)).bytes, validPng);
+    assert.deepEqual((await load(encodeURIComponent(punctuationName), source.sourcePath)).bytes, validPng);
     assert.equal(resourceUrl('chart.svg#view', source.sourcePath).hash, '#view');
     assert.equal(resourceUrl('chart.svg#view', source.sourcePath).pathname.endsWith('/chart.svg'), true);
     await assert.rejects(load('chart.svg#view', source.sourcePath), /Resource fragments/);
@@ -142,4 +143,13 @@ test('missing image fallbacks preserve decoded alternative text and path without
     assert.match(operations.warnings[0].message, /MISSING-IMAGE-MARKER & "quoted"/);
     assert.ok(operations.warnings[0].message.includes('missing"&<.png'));
     assert.match(operations.warnings[1].message, /W30-MISSING-IMAGE-MARKER/);
+});
+
+// URL normalization is deterministic on every host; actual file access is also
+// exercised by the native Windows lane using drive paths and Unicode fixtures.
+test('Windows drive and UNC resources retain URL escaping and reject drive-relative paths', () => {
+    assert.equal(resourceUrl(String.raw`C:\Work files\图像%20one.png`, 'file:///C:/report.md').href, 'file:///C:/Work%20files/%E5%9B%BE%E5%83%8F%20one.png');
+    assert.equal(resourceUrl('C:/Work/image.png?revision=2', 'file:///C:/report.md').search, '?revision=2');
+    assert.equal(resourceUrl(String.raw`\\server\share\image.png`, 'file:///C:/report.md').href, 'file://server/share/image.png');
+    assert.throws(() => resourceUrl('C:relative.png', 'file:///C:/report.md'), /Unsupported resource scheme/);
 });

@@ -32,7 +32,7 @@ Suggested priority: **P2 / medium**. The defect visibly degrades exported docume
 
 The current production `prepareStandaloneHtml`, `convertPdf` and `convertPandoc` functions were compiled and invoked with synthetic prepared content. The PDF case contains headings, prose, a quotation, highlighted code and a table, followed by two explicit page breaks and a short final page. The DOCX case contains ordinary Markdown structure and 40 paragraphs. Neither case contains private documents, external resources or Mermaid diagrams.
 
-Environment: macOS 26.5.2 ARM64, Node 24.21.0, Google Chrome 153.0.8010.36, Pandoc 3.8.3 and Microsoft Word 16.112.3. Exact source/output hashes, browser-control version and observations are in the [evidence receipt](export-evidence/2026-09-12-page-background.json).
+Environment: macOS 26.5.2 ARM64, Node 24.21.0, Google Chrome 153.0.8010.36, Pandoc 3.8.3 and Microsoft Word 16.112.3. Exact source/output hashes, browser-control version and observations are in the [evidence receipt](../validation/evidence/2026-09-12-page-background.json).
 
 | Case | Observation | Result |
 | --- | --- | --- |
@@ -55,7 +55,7 @@ These are backend and artifact checks, with a representative Word print-preview 
 
 ### PDF page background: small, local correction
 
-[The shared HTML builder](../src/export/html.ts) includes the editor stylesheet and sets the document's `data-theme`. [The stylesheet](../src/webview/styles.css) applies `--bg-color` to the body. Both the HTML builder and [the PDF adapter](../src/export/pdf.ts) declare an A4 page with 16 mm margins; the adapter also requests those margins in `page.pdf()`.
+[The shared HTML builder](../../src/export/html.ts) includes the editor stylesheet and sets the document's `data-theme`. [The stylesheet](../../src/webview/styles.css) applies `--bg-color` to the body. Both the HTML builder and [the PDF adapter](../../src/export/pdf.ts) declare an A4 page with 16 mm margins; the adapter also requests those margins in `page.pdf()`.
 
 The adapter already enables `printBackground` and exact print colours. Those options preserve backgrounds that are painted; they do not supply a page-level colour. The current body/canvas background stops at the page's content area in the tested browser, while the unpainted margin remains white. [Playwright's PDF API](https://playwright.dev/docs/api/class-page#page-pdf) documents the print-media and background options separately from margins.
 
@@ -90,11 +90,11 @@ The implementation should resolve the setting once when the job captures its sou
 
 | Area | Needed change |
 | --- | --- |
-| [Manifest](../package.json) and `package.nls*.json` | Add the setting and descriptions in all seven supported manifest languages. |
-| [Controller](../src/export/controller.ts) and [export types](../src/export/types.ts) | Capture the PDF appearance policy per job and give the HTML/PDF path a consistent resolved appearance. |
-| [Host messages](../src/shared/host-bridge.ts) and [webview preparation](../src/webview/editor.js) | Pass export appearance explicitly to the offscreen preparation path, including diagram rendering. |
-| [HTML preparation](../src/export/html.ts) and [PDF adapter](../src/export/pdf.ts) | Apply the light palette or captured theme consistently, then paint the entire page using the resolved base colour. |
-| [Export requirements](export-subsystem.md), [help](../media/export-help.md) and [editor guide](editor-guide.md) | Record the PDF appearance exception and both setting behaviours when implemented. |
+| [Manifest](../../package.json) and `package.nls*.json` | Add the setting and descriptions in all seven supported manifest languages. |
+| [Controller](../../src/export/controller.ts) and [export types](../../src/export/types.ts) | Capture the PDF appearance policy per job and give the HTML/PDF path a consistent resolved appearance. |
+| [Host messages](../../src/shared/host-bridge.ts) and [webview preparation](../../src/webview/editor.js) | Pass export appearance explicitly to the offscreen preparation path, including diagram rendering. |
+| [HTML preparation](../../src/export/html.ts) and [PDF adapter](../../src/export/pdf.ts) | Apply the light palette or captured theme consistently, then paint the entire page using the resolved base colour. |
+| [Export requirements](../../docs/export-subsystem.md), [help](../../media/export-help.md) and [editor guide](../../docs/editor-guide.md) | Record the PDF appearance exception and both setting behaviours when implemented. |
 
 Reusing the existing GitHub light palette is a practical starting point. Whichever palette implementation is chosen, check headings, body text, links, quotations, syntax highlighting, tables, math and warning/fallback labels; theme-specific selectors contain some literal colours as well as variables. Preserve the captured font size. Code/table surfaces can retain suitable light contrast backgrounds, and source image pixels should remain intact.
 
@@ -104,7 +104,7 @@ Estimated scope: **low complexity for the page-margin correction; moderate for t
 
 ### DOCX: no equivalent page fix currently needed
 
-[The Pandoc adapter](../src/export/pandoc.ts) reads captured Markdown into Pandoc's document representation and writes DOCX. It does not feed the styled HTML to the DOCX writer or map `document.theme` into page styles. Its fresh data directory also prevents a personal Pandoc `reference.docx` from being silently selected. The identical internal files and Word print previews support keeping this path unchanged for this page-background issue.
+[The Pandoc adapter](../../src/export/pandoc.ts) reads captured Markdown into Pandoc's document representation and writes DOCX. It does not feed the styled HTML to the DOCX writer or map `document.theme` into page styles. Its fresh data directory also prevents a personal Pandoc `reference.docx` from being silently selected. The identical internal files and Word print previews support keeping this path unchanged for this page-background issue.
 
 If themed DOCX pages are desired later, that is a separate styling feature. [Pandoc's reference-document mechanism](https://pandoc.org/MANUAL.html#option--reference-doc) supports DOCX styles and page properties; browser CSS is not the DOCX styling mechanism.
 
@@ -122,7 +122,7 @@ One boundary remains: DOCX packages prepared Mermaid SVGs and original images, w
 | Format boundary | The PDF preference does not recolour HTML, DOCX or EPUB. DOCX page/style XML remains theme-independent for ordinary text; recheck a representative Word print preview. |
 | Packaging and supported hosts | Settings localization, relevant host/webview tests, real PDF conversions and an installed-VSIX setting flow pass on the supported macOS/Linux lanes. |
 
-The existing [theme audit](../test/native/export-artifact-audit.themes.cjs) checks quotation contrast and extracted markers but does not sample PDF margins. Extend that coverage with actual page-edge assertions so this defect cannot pass unnoticed again. Keep the original frozen export fixtures unchanged; add a small dedicated background case if needed.
+The existing [theme audit](../../test/native/export-artifact-audit.themes.cjs) checks quotation contrast and extracted markers but does not sample PDF margins. Extend that coverage with actual page-edge assertions so this defect cannot pass unnoticed again. Keep the original frozen export fixtures unchanged; add a small dedicated background case if needed.
 
 Raw synthetic inputs, the generation/audit scripts, all nine PDFs, four DOCX files and rasterized PDF pages are retained locally under the ignored `.vscode-test/export-page-background-2026-09-12/` directory. The committed receipt contains portable hashes and observations, not private paths or generated binary documents.
 
@@ -134,7 +134,7 @@ The PDF converter now paints `@page` with the captured theme background. The new
 
 ### Post-fix validation
 
-The [post-fix receipt](export-evidence/2026-09-12-pdf-background-fix.json) records source and artifact hashes. The final local VSIX was built from clean commit `048826106800ed3047eecd048a5d597a9d079b00`, SHA-256 `782708212c90585c8c26220bbb014f7e6c636bcc90ba5bd639639b95ffab0633`. Validation used macOS 26.5.2 ARM64, Node 24.21.0, VS Code 1.136.0, Chrome 153.0.8010.36 and Pandoc 3.8.3.
+The [post-fix receipt](../validation/evidence/2026-09-12-pdf-background-fix.json) records source and artifact hashes. The final local VSIX was built from clean commit `048826106800ed3047eecd048a5d597a9d079b00`, SHA-256 `782708212c90585c8c26220bbb014f7e6c636bcc90ba5bd639639b95ffab0633`. Validation used macOS 26.5.2 ARM64, Node 24.21.0, VS Code 1.136.0, Chrome 153.0.8010.36 and Pandoc 3.8.3.
 
 | Check | Observed result |
 | --- | --- |
@@ -152,4 +152,4 @@ Representative first pages from the same night-theme editor, rendered from the f
 
 | Default white PDF | Theme retained, including margins |
 | --- | --- |
-| ![White PDF page](export-evidence/2026-09-12-pdf-white.png) | ![Themed PDF page](export-evidence/2026-09-12-pdf-theme.png) |
+| ![White PDF page](../validation/evidence/2026-09-12-pdf-white.png) | ![Themed PDF page](../validation/evidence/2026-09-12-pdf-theme.png) |

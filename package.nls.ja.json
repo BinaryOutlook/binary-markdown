@@ -23,9 +23,11 @@
   "config.export.pdfWhiteBackground.description": "PDFを白いページとGitHubのライトテーマで書き出し、文字や図を読みやすくします。無効にすると、余白を含むページ全体に現在のエディターテーマを使用します。他の書き出し形式には影響しません。",
   "config.export.pandocPath.description": "DOCX・EPUB書き出しに使うPandoc実行ファイルのパス。空欄でインストール済みツールを検出します。インストールは手動です。指定したパスが無効な場合は別のツールを選ばずエラーを表示します。",
   "config.export.browserPath.description": "PDF書き出しに使うChrome・Chromium・Edge実行ファイルのパス。空欄でインストール済みブラウザーを検出します。ブラウザーは自動ダウンロードされません。",
+  "config.export.showCodeLanguage.description": "DOCX・PDF書き出し時に、指定されたコード言語を各コードブロックの下に斜体の枠付きラベルで表示します。無効にしてもコードブロックの書式は保持されます。",
   "command.exportToHtml.title": "HTMLに書き出し",
   "command.exportToPdf.title": "PDFに書き出し",
   "command.exportToDocx.title": "Wordに書き出し",
   "command.exportToEpub.title": "EPUBに書き出し",
-  "command.copyBuildInformation.title": "ビルド情報をコピー"
+  "command.copyBuildInformation.title": "ビルド情報をコピー",
+  "config.math.backslashDelimiters.description": "エディターとエクスポートで数式の区切り \\( ... \\) と \\[ ... \\] を認識します。無効にすると通常の Markdown エスケープとして扱います。"
 }

@@ -28,6 +28,12 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  insertToc: '목차 삽입',
+  refreshToc: '목차 새로 고침',
+  tocContents: '목차',
+  tocPending: '저장하거나 새로 고쳐 목차를 생성하세요.',
+
+  frontMatter: '프런트 매터',
   closeOutline: '개요 닫기',
   openOutline: '개요 열기',
   openInTextEditor: '텍스트 편집기에서 열기',
@@ -50,10 +56,14 @@ export const webviewMessages = {
   insertLink: '링크 삽입 (Ctrl+K)',
   insertImage: '이미지 삽입 (Ctrl+Shift+I)',
   setImageDir: '이미지 디렉토리 설정',
+  openExtensionSettings: 'Binary Markdown 설정 열기',
   insertTable: '표 삽입 (Ctrl+T)',
   horizontalRule: '수평선 (Ctrl+Shift+-)',
   mermaidBlock: 'Mermaid 다이어그램',
   mathBlock: '수식 블록',
+  inlineMath: "인라인 수식",
+  editEquation: "수식 편집",
+  equationEditHint: "Enter로 적용, Escape로 취소",
   searchPlaceholder: '검색...',
   replacePlaceholder: '바꾸기...',
   searchPrev: '이전 (Shift+Enter)',

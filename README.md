@@ -20,11 +20,14 @@ We will make a reasonable effort to reproduce and diagnose reported problems. We
 
 Access to the source is central to this project. Building your own version is an intended way to use Binary Markdown.
 
-Read the [build guide](docs/building.md), [release and support policy](docs/releases-and-support.md), and [roadmap](docs/roadmap.md).
+Start with the [documentation index](docs/README.md) for editor guides, export,
+building and validation. The [reports index](reports/README.md) separates dated
+findings from current instructions; [release notes](release-notes/README.md)
+describe individual versions.
 
 ## Install
 
-Download a version from [GitHub Releases](https://github.com/BinaryOutlook/binary-markdown/releases). **0.2.0 introduces experimental export**; the older 0.1.0 prerelease predates it. Check the chosen release's notes for supported environments and limitations. Marketplace and Open VSX publication remain future work.
+Download a version from [GitHub Releases](https://github.com/BinaryOutlook/binary-markdown/releases), which identifies published builds. The current source version is **0.2.1**, with Windows validation and editor/export improvements described in the [version notes](release-notes/0.2.1.md). Check the chosen release's notes for supported environments and limitations. Marketplace and Open VSX publication remain future work.
 
 1. Download the `.vsix` and its SHA-256 checksum from the chosen release, or [build from source](docs/building.md).
 2. In VS Code, open **Extensions**, select **… → Install from VSIX…**, and choose the file.
@@ -34,7 +37,7 @@ The extension is optional: installing it does not change your default Markdown e
 
 The extension ID is `BinaryOutlook.binary-markdown`. It has separate commands, settings, and editor registration from Any Markdown. Read the [migration guide](docs/migration.md) if you used an earlier test build.
 
-The package declares VS Code 1.85.0 or later. Validation targets local desktop VS Code on macOS ARM64 and Ubuntu x86-64; see the [candidate validation record](docs/validation/0.2.0.md) for actual results. Other editors and platforms need their own compatibility checks.
+The package declares VS Code 1.85.0 or later. Validation targets local desktop VS Code on Windows x86-64, macOS ARM64 and Ubuntu x86-64; see the [version notes](release-notes/0.2.1.md) for scope and validation evidence. The [Windows validation guide](docs/testing/windows.md) describes the added checks; historical release records apply only to the platforms they list. Other editors and platforms need their own compatibility checks.
 
 ## Features
 
@@ -49,11 +52,13 @@ Inherited from Any Markdown:
 
 Changes developed in this fork:
 
+- Inline and display equations with dollar or backslash delimiters, source-preserving editing, and complete multiline TeX rendering in existing `math` fences. See the [equation guide](docs/editor-guide.md#katex-math-equations).
 - Code-block copying preserves rendered line breaks, indentation, and meaningful blank lines.
 - Outline visibility can be remembered per file or globally, with a configurable initial state.
 - Opening the outline does not mark the Markdown document as edited.
 - Independent Binary Markdown names and identifiers throughout the extension and desktop sources.
 - Experimental HTML, PDF, DOCX and EPUB export, with local conversion and visible progress.
+- Protected YAML front matter and a generated TOC refreshed on save or with its refresh button; see the [front matter and TOC guide](docs/yaml-toc.md).
 - A source-stamped VSIX and **Copy Build Information** command for reproducible bug reports.
 
 The first two changes were also proposed upstream as [PR #8](https://github.com/raggbal/any-markdown/pull/8) and [PR #9](https://github.com/raggbal/any-markdown/pull/9). This fork's release decisions are independent of those PRs.
@@ -101,9 +106,9 @@ The [editor guide](docs/editor-guide.md) covers formatting, keyboard operations,
 
 ## Experimental export
 
-Export supports **HTML, PDF, Word (.docx), and EPUB** in **local desktop VS Code on macOS and Linux**. HTML/PDF follow supported editor rendering; DOCX/EPUB prioritize editable content and structure. See [candidate validation](docs/validation/0.2.0.md) and the [export validation history](docs/export-validation.md) for tested systems and limitations.
+Export supports **HTML, PDF, Word (.docx), and EPUB** in **local desktop VS Code on macOS, Linux and Windows**. HTML/PDF follow supported editor rendering; DOCX/EPUB prioritize editable content and structure. See the [version notes](release-notes/0.2.1.md) and the [export validation history](reports/validation/2026-09-10-export.md) for tested systems and limitations.
 
-**Remote-SSH export is not yet supported.** The menu explains this restriction and marks every format unavailable. To export now, open a local copy of the Markdown file and its referenced assets in desktop VS Code on macOS or Linux. Installing Pandoc or a browser does not enable export in a remote window.
+**Remote-SSH export is not yet supported.** The menu explains this restriction and marks every format unavailable. To export now, open a local copy of the Markdown file and its referenced assets in desktop VS Code on macOS, Linux or Windows. Installing Pandoc or a browser does not enable export in a remote window.
 
 Save the named Markdown file, then select the sharing-arrow button immediately to the right of the VS Code-logo toolbar button. Choose a format from its dropdown. Unsaved work produces a save-and-retry message; export does not save automatically. The job shows its actual stage, supports cancellation, and reports the saved path and any fallback warnings.
 
@@ -117,10 +122,10 @@ Install Pandoc using its [official instructions](https://pandoc.org/installing.h
 
 Open VS Code Settings and search for `binary-markdown.export`. Leave the following **machine-specific** settings empty for automatic detection, or supply an absolute executable path:
 
-| Setting | Example macOS executable path | Example Linux executable path |
-| --- | --- | --- |
-| `binary-markdown.export.pandocPath` | `/opt/homebrew/bin/pandoc` | `/usr/bin/pandoc` or an absolute user-space installation path |
-| `binary-markdown.export.browserPath` | `/Applications/Google Chrome.app/Contents/MacOS/Google Chrome` | `/usr/bin/google-chrome` |
+| Setting | Example macOS executable path | Example Linux executable path | Example Windows executable path |
+| --- | --- | --- | --- |
+| `binary-markdown.export.pandocPath` | `/opt/homebrew/bin/pandoc` | `/usr/bin/pandoc` or an absolute user-space installation path | `C:\Program Files\Pandoc\pandoc.exe` |
+| `binary-markdown.export.browserPath` | `/Applications/Google Chrome.app/Contents/MacOS/Google Chrome` | `/usr/bin/google-chrome` | `C:\Program Files\Google\Chrome\Application\chrome.exe` |
 
 An invalid manual path is reported instead of silently selecting a different tool. Reopen the export menu after installing a tool to rescan. The initial workflow requires a trusted workspace; remote hosts, browser VS Code and Electron-app export are deferred.
 

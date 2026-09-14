@@ -1,6 +1,6 @@
 # Decision 001: AGPL policy for 0.2.0
 
-Status: implemented in the 0.2.0 release-preparation workstream; release pending.
+Status: accepted and reflected in the source. [GitHub Releases](https://github.com/BinaryOutlook/binary-markdown/releases) records publication separately.
 Decision date: 2026-09-10.
 
 The maintainer selected `AGPL-3.0-or-later` in the transition policy answers.

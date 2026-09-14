@@ -22,7 +22,12 @@ function sourceRepository(value) {
 function buildIdentity(root, environment = process.env) {
     const manifest = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
     const top = git(root, ['rev-parse', '--show-toplevel']);
-    const checkout = top && fs.realpathSync(top) === fs.realpathSync(root);
+    // Git and Windows APIs can spell the same directory with different drive
+    // casing. Compare directory identities without accepting an archive nested
+    // inside another checkout or folding distinct case-sensitive paths together.
+    const topStat = top && fs.statSync(top, { bigint: true });
+    const rootStat = fs.statSync(root, { bigint: true });
+    const checkout = topStat && topStat.dev === rootStat.dev && topStat.ino === rootStat.ino;
     const provided = environment.BINARY_MARKDOWN_SOURCE_COMMIT || null;
     if (provided && !/^[0-9a-f]{40}$/.test(provided)) throw new Error('Source commit must be a full lowercase Git SHA.');
     const sourceCommit = checkout ? git(root, ['rev-parse', 'HEAD']) : provided;

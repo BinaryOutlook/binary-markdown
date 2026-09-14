@@ -1,9 +1,9 @@
 /**
- * Test HostBridge — テスト環境用のモック実装。
+ * Test HostBridge: mock implementation for the test environment.
  *
- * test/build-standalone.js により editor.js の前に注入される。
- * window.__testApi.messages に送信メッセージを記録する。
- * window.__hostMessageHandler でホスト→エディタのメッセージを送信できる。
+ * Injected before editor.js by test/build-standalone.js.
+ * Records outgoing messages in window.__testApi.messages.
+ * Use window.__hostMessageHandler to send messages from the host to the editor.
  */
 (function() {
     window.__testApi = {
@@ -15,7 +15,7 @@
     };
 
     window.hostBridge = {
-        // ドキュメント操作
+        // Document operations.
         syncContent: function(markdown) {
             window.__testApi.messages.push({ type: 'edit', content: markdown });
         },
@@ -38,7 +38,7 @@
             window.__testApi.messages.push(payload);
         },
 
-        // フォーカス/編集状態
+        // Focus and editing state.
         reportEditingState: function(editing) {
             window.__testApi.messages.push({ type: 'editingStateChanged', editing: editing });
         },
@@ -52,7 +52,7 @@
             window.__testApi.messages.push({ type: 'outlineStateChanged', open: open });
         },
 
-        // ホスト側 UI が必要な操作
+        // Operations that require host interface support.
         openLink: function(href) {
             window.__testApi.messages.push({ type: 'openLink', href: href });
         },
@@ -64,6 +64,9 @@
         },
         requestSetImageDir: function() {
             window.__testApi.messages.push({ type: 'setImageDir' });
+        },
+        openSettings: function() {
+            window.__testApi.messages.push({ type: 'openExtensionSettings' });
         },
         saveImageAndInsert: function(dataUrl, fileName) {
             window.__testApi.messages.push({ type: 'saveImageAndInsert', dataUrl: dataUrl, fileName: fileName });
@@ -78,7 +81,7 @@
             window.__testApi.messages.push({ type: 'sendToChat', startLine: startLine, endLine: endLine, selectedMarkdown: selectedMarkdown });
         },
 
-        // ホストからのメッセージ受信
+        // Receive messages from the host.
         onMessage: function(handler) {
             window.__hostMessageHandler = handler;
         }

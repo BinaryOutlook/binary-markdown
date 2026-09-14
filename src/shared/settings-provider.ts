@@ -1,8 +1,8 @@
 /**
- * SettingsProvider — エディタ設定の読み書きを抽象化するインターフェース
+ * SettingsProvider: an abstraction for reading editor settings and observing changes.
  *
- * VSCode: vscode.workspace.getConfiguration('binary-markdown') をラップ
- * Electron: electron-store ベースの実装 (フェーズ3)
+ * VS Code: wraps vscode.workspace.getConfiguration('binary-markdown').
+ * Electron: uses an electron-store implementation.
  */
 
 export interface EditorSettings {

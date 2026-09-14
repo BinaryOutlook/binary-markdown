@@ -28,6 +28,12 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  insertToc: 'Insert table of contents',
+  refreshToc: 'Refresh table of contents',
+  tocContents: 'Contents',
+  tocPending: 'Save or refresh to generate contents.',
+
+  frontMatter: 'Front matter',
   closeOutline: 'Close Outline',
   openOutline: 'Open Outline',
   openInTextEditor: 'Open in Text Editor',
@@ -50,10 +56,14 @@ export const webviewMessages = {
   insertLink: 'Insert Link (Ctrl+K)',
   insertImage: 'Insert Image (Ctrl+Shift+I)',
   setImageDir: 'Set Image Directory',
+  openExtensionSettings: 'Open Binary Markdown Settings',
   insertTable: 'Insert Table (Ctrl+T)',
   horizontalRule: 'Horizontal Rule (Ctrl+Shift+-)',
   mermaidBlock: 'Mermaid Diagram',
   mathBlock: 'Math Block',
+  inlineMath: "Inline Equation",
+  editEquation: "Edit equation",
+  equationEditHint: "Enter to apply; Escape to cancel",
   searchPlaceholder: 'Search...',
   replacePlaceholder: 'Replace...',
   searchPrev: 'Previous (Shift+Enter)',

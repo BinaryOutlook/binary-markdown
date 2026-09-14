@@ -39,8 +39,8 @@ const path = __importStar(require("path"));
 const electron_1 = require("electron");
 const chokidar = __importStar(require("chokidar"));
 /**
- * Electron 用ファイル管理
- * editorProvider.ts のファイルI/O機能を Electron 向けに移植
+ * File management for Electron.
+ * Adapts the file I/O functionality in editorProvider.ts for Electron.
  */
 class FileManager {
     win;

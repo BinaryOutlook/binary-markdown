@@ -28,6 +28,12 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  insertToc: '目次を挿入',
+  refreshToc: '目次を更新',
+  tocContents: '目次',
+  tocPending: '保存または更新すると目次が生成されます。',
+
+  frontMatter: 'フロントマター',
   closeOutline: 'アウトラインを閉じる',
   openOutline: 'アウトラインを開く',
   openInTextEditor: 'テキストエディタで開く',
@@ -50,10 +56,14 @@ export const webviewMessages = {
   insertLink: 'リンク挿入 (Ctrl+K)',
   insertImage: '画像挿入 (Ctrl+Shift+I)',
   setImageDir: '画像ディレクトリ設定',
+  openExtensionSettings: 'Binary Markdown の設定を開く',
   insertTable: 'テーブル挿入 (Ctrl+T)',
   horizontalRule: '水平線 (Ctrl+Shift+-)',
   mermaidBlock: 'Mermaidダイアグラム',
   mathBlock: '数式ブロック',
+  inlineMath: "インライン数式",
+  editEquation: "数式を編集",
+  equationEditHint: "Enter で適用、Escape でキャンセル",
   searchPlaceholder: '検索...',
   replacePlaceholder: '置換...',
   searchPrev: '前へ (Shift+Enter)',

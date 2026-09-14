@@ -14,10 +14,12 @@ type UiWindow = Window & {
 
 async function setup(page: Page, exportEnabled = true) {
     await page.goto('/standalone-editor.html');
-    await page.setContent('<!DOCTYPE html><html data-theme="github" data-toolbar-mode="full"><head></head><body>' + generateEditorBodyHtml({}, 'darwin', { exportEnabled }) + '</body></html>');
+    await page.setContent('<!DOCTYPE html><html data-theme="github" data-toolbar-mode="full"><head></head><body>' + generateEditorBodyHtml({ setImageDir: 'Set Image Directory', openExtensionSettings: 'Open Binary Markdown Settings' }, 'darwin', { exportEnabled, settingsEnabled: true }) + '</body></html>');
     await page.addStyleTag({ content: fs.readFileSync(path.join(root, 'src/webview/styles.css'), 'utf8').replace('__FONT_SIZE__', '16') });
     await page.addScriptTag({ content: fs.readFileSync(path.join(root, 'src/shared/test-host-bridge.js'), 'utf8') });
+    await page.addScriptTag({ content: fs.readFileSync(path.join(root, 'src/shared/math-syntax.js'), 'utf8') });
     const editor = fs.readFileSync(path.join(root, 'src/webview/editor.js'), 'utf8')
+        .replace('__MATH_BACKSLASH__', 'true')
         .replace('__DEBUG_MODE__', 'false').replace('__I18N__', '{}')
         .replace('__DOCUMENT_BASE_URI__', '').replace('__CONTENT__', JSON.stringify(Buffer.from(original).toString('base64')));
     await page.addScriptTag({ content: editor });
@@ -32,6 +34,25 @@ async function outbound(page: Page, type: string) {
 }
 
 test.describe('Export toolbar and job status', () => {
+    test('image and extension settings buttons have distinct actions and work with mouse and keyboard', async ({ page }) => {
+        await setup(page);
+        const image = page.getByRole('button', { name: 'Set Image Directory', exact: true });
+        const settings = page.getByRole('button', { name: 'Open Binary Markdown Settings', exact: true });
+        await expect(image.locator('svg rect')).toHaveCount(1);
+        await expect(settings.locator('svg circle')).toHaveCount(1);
+        await image.click();
+        expect(await outbound(page, 'setImageDir')).toHaveLength(1);
+        expect(await outbound(page, 'openExtensionSettings')).toHaveLength(0);
+        await settings.click();
+        await settings.focus();
+        await page.keyboard.press('Enter');
+        await page.keyboard.press('Space');
+        expect(await outbound(page, 'openExtensionSettings')).toHaveLength(3);
+        expect(await outbound(page, 'setImageDir')).toHaveLength(1);
+        expect(await outbound(page, 'edit')).toHaveLength(0);
+        expect(generateEditorBodyHtml({}, 'darwin')).not.toContain('id="extensionSettingsBtn"');
+    });
+
     test('static English label is not readiness while export initialization is delayed', async ({ page }) => {
         let release!: () => void;
         let requested!: () => void;

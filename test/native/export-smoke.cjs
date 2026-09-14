@@ -9,9 +9,14 @@ const http = require('node:http');
 const net = require('node:net');
 const { pathToFileURL } = require('node:url');
 const { spawnSync, execFileSync } = require('node:child_process');
+const { sameDirectory } = require('./directory-identity.cjs');
+const { replaceFile } = require('./replace-file.cjs');
 const root = path.resolve(__dirname, '../..');
 const sentinelName = '.binary-markdown-native-export.json';
 const hash = bytes => crypto.createHash('sha256').update(bytes).digest('hex');
+const archiveText = (file, pattern) => execFileSync(process.env.VALIDATION_PYTHON || 'python3', ['-c',
+    'import sys,zipfile,fnmatch; z=zipfile.ZipFile(sys.argv[1]); print("".join(z.read(n).decode("utf-8") for n in z.namelist() if fnmatch.fnmatch(n,sys.argv[2])))',
+    file, pattern], { encoding: 'utf8' });
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 const inside = (base, target) => {
     const relative = path.relative(base, target);
@@ -20,9 +25,10 @@ const inside = (base, target) => {
 const harnessIdentity = () => ({ platform: process.platform, arch: process.arch, nodeVersion: process.version });
 const saveShortcut = () => process.platform === 'darwin' ? { label: 'Meta+S', modifiers: 4 } : { label: 'Ctrl+S', modifiers: 2 };
 const assertSupportedHost = () => {
-    assert.ok(['darwin', 'linux'].includes(process.platform), 'Use local desktop VS Code on macOS or Linux for this harness');
+    assert.ok(['darwin', 'linux', 'win32'].includes(process.platform), 'Use local desktop VS Code on macOS, Linux or Windows for this harness');
     assert.notEqual(process.getuid?.(), 0, 'Run as the ordinary desktop user: root bypasses the unwritable-output test and browser sandbox');
 };
+const samePath = (a, b) => process.platform === 'win32' ? path.resolve(a).toLowerCase() === path.resolve(b).toLowerCase() : a === b;
 const temporaryRoot = () => fs.realpathSync(os.tmpdir());
 
 function options() {
@@ -67,7 +73,7 @@ function initialize(settings) {
     assert.ok(inside(fs.realpathSync(root), fs.realpathSync(path.dirname(settings.workdir))), 'Test directory must not escape through a symlink');
     assert.ok(fs.existsSync(settings.package), 'Build the VSIX before initializing the native harness.');
     // Stay below the smaller macOS Unix-domain socket limit, including a conservative versioned socket name.
-    assert.ok(Buffer.byteLength(path.join(temporaryRoot(), 'bm-native-XXXXXX', '1.9999-main.sock')) <= 103,
+    assert.ok(process.platform === 'win32' || Buffer.byteLength(path.join(temporaryRoot(), 'bm-native-XXXXXX', '1.9999-main.sock')) <= 103,
         'The temporary directory is too long for the VS Code IPC socket. Set TMPDIR to a shorter temporary directory for every harness command.');
     const token = crypto.randomUUID();
     const owner = {
@@ -82,6 +88,8 @@ function initialize(settings) {
     verifyInputs(owner.workspace);
     for (const directory of [owner.base, owner.workspace, owner.profile]) fs.writeFileSync(path.join(directory, sentinelName), JSON.stringify(owner, null, 2));
     fs.copyFileSync(path.join(__dirname, 'export-driver.cjs'), path.join(owner.driver, 'main.cjs'));
+    fs.copyFileSync(path.join(__dirname, 'directory-identity.cjs'), path.join(owner.driver, 'directory-identity.cjs'));
+    fs.copyFileSync(path.join(__dirname, 'replace-file.cjs'), path.join(owner.driver, 'replace-file.cjs'));
     fs.writeFileSync(path.join(owner.driver, 'package.json'), JSON.stringify({
         name: 'binary-export-test-driver', publisher: 'local', version: '0.0.1', engines: { vscode: '^1.85.0' },
         activationEvents: ['workspaceContains:' + sentinelName], main: 'main.cjs'
@@ -118,7 +126,7 @@ function owned(settings) {
 function receipt(owner) {
     const response = JSON.parse(fs.readFileSync(path.join(owner.workspace, 'response.json'), 'utf8'));
     assert.equal(response.token, owner.token, 'The installed test driver must confirm the ownership sentinel');
-    assert.equal(response.workspace, owner.workspace);
+    assert.ok(samePath(response.workspace, owner.workspace));
     assert.equal(response.profile, owner.profile);
     assert.equal(response.platform, process.platform, 'The driver must run on the same local operating system as the harness');
     assert.equal(response.uiKind, 1, 'The driver must run in desktop VS Code');
@@ -141,7 +149,7 @@ function harness(settings, owner) {
         const id = crypto.randomUUID();
         const temporary = path.join(owner.workspace, 'request.json.tmp');
         fs.writeFileSync(temporary, JSON.stringify({ id, token: owner.token, ...action }));
-        fs.renameSync(temporary, path.join(owner.workspace, 'request.json'));
+        replaceFile(temporary, path.join(owner.workspace, 'request.json'));
         return until(() => {
             let response;
             try { response = receipt(owner); } catch (error) { if (error.code === 'ENOENT' || error instanceof SyntaxError) return; throw error; }
@@ -238,15 +246,19 @@ function harness(settings, owner) {
         } catch (error) { socket.close(); throw error; }
     };
     const open = async file => {
+        // Native converters and other desktop applications can take focus.
+        // Restore the same visible-window precondition as the keyboard cases.
+        await workbench(page => page.bringToFront());
         await driver({ action: 'open', file });
         let lastError;
         return until(async () => { try { return await connect(); } catch (error) { lastError = error.message; return null; } }, 'open visible editor: ' + file, () => ({ connectionError: lastError }));
     };
     const reset = connection => connection.evaluate(`window.__nativeExportEvents=[];if(!window.__nativeExportListener){window.__nativeExportListener=e=>{if(e.data.type==='exportStatus')window.__nativeExportEvents.push(e.data)};window.addEventListener('message',window.__nativeExportListener)}`);
-    const terminal = connection => until(async () => (await connection.evaluate('window.__nativeExportEvents')).findLast(event => ['complete', 'failed', 'cancelled'].includes(event.state)));
+    const terminal = connection => until(async () => (await connection.evaluate('window.__nativeExportEvents')).findLast(event => ['complete', 'failed', 'cancelled'].includes(event.state)),
+        'export terminal event', () => connection.evaluate('({events:window.__nativeExportEvents, visibleStatus:document.getElementById("exportStatus").textContent})'));
     const output = (result, file, format) => {
         assert.equal(result.state, 'complete', result.message);
-        assert.equal(path.dirname(result.outputPath), path.dirname(path.join(owner.workspace, file)), 'Output belongs beside the selected source');
+        assert.ok(sameDirectory(path.dirname(result.outputPath), path.dirname(path.join(owner.workspace, file))), 'Output belongs beside the selected source');
         const stem = path.basename(file, '.md');
         const escaped = stem.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         assert.match(path.basename(result.outputPath), new RegExp('^' + escaped + '(?:_[0-9a-f]{8}(?:_(?:[2-9]|[1-9][0-9]+))?)?\\.' + format + '$'), 'Output must belong to the selected document, not a stale iframe');
@@ -255,7 +267,7 @@ function harness(settings, owner) {
     const exportFile = async (connection, file, format, viaCommand = false, expectSuccess = true) => {
         if (!viaCommand) {
             await connection.evaluate('document.getElementById("exportButton").click()');
-            await until(() => connection.evaluate(`document.querySelector('[data-export-format="${format}"] [data-export-tool-status]').textContent === 'Available'`));
+            await until(() => connection.evaluate(`document.querySelector('[data-export-format="${format}"] [data-export-tool-status]').textContent === 'Available'`), 'format availability: ' + file + ' ' + format);
         }
         await reset(connection);
         if (viaCommand) await driver({ action: 'export', format });
@@ -278,6 +290,28 @@ function harness(settings, owner) {
     return { until, driver, connect, open, reset, terminal, output, exportFile, workbench, sourceMode, diagnose };
 }
 
+// Keep frozen inputs byte-identical. Exercise TOC save preparation on a derived
+// copy in the same directory, so image paths and all original content are retained.
+async function openExportFixture(h, owner, file) {
+    const { refreshTocs } = require('../../src/shared/document-aux');
+    const original = fs.readFileSync(path.join(owner.workspace, file));
+    const expected = refreshTocs(original.toString('utf8'));
+    const sourceFile = expected === original.toString('utf8') ? file : 'prepared-' + file;
+    if (sourceFile !== file) fs.writeFileSync(path.join(owner.workspace, sourceFile), original);
+    const connection = await h.open(sourceFile);
+    try {
+        if (sourceFile !== file) {
+            await h.until(() => connection.evaluate('!!document.querySelector(".toc-refresh")'));
+            await connection.evaluate('document.querySelector(".toc-refresh").click()');
+            await h.driver({ action: 'save' });
+            await h.until(() => fs.readFileSync(path.join(owner.workspace, sourceFile), 'utf8') === expected,
+                'derived fixture saved with only generated TOC changes');
+        }
+        assert.ok(fs.readFileSync(path.join(owner.workspace, file)).equals(original), 'Frozen source stays unchanged');
+        return { connection, sourceFile, original: Buffer.from(expected), inputSha256: hash(original) };
+    } catch (error) { connection.close(); throw error; }
+}
+
 async function run(settings, owner) {
     receipt(owner); // All mutation is after workspace/profile/installed-extension verification.
     assertSupportedHost();
@@ -293,7 +327,7 @@ async function run(settings, owner) {
         fs.writeFileSync(report, JSON.stringify({ harness: harnessIdentity(), host: receipt(owner), packageSha256: hash(fs.readFileSync(settings.package)), receipts }, null, 2));
         console.log(name, JSON.stringify(details));
     };
-    const available = ['identity', 'formats', 'saves', 'edges', 'ui', 'pdf-background', 'selection', 'immutable', 'offline'];
+    const available = ['identity', 'filesystem', 'formats', 'saves', 'edges', 'ui', 'equations', 'pdf-background', 'selection', 'immutable', 'offline', 'document-aux'];
     const groups = settings.suite === 'all' ? available : [settings.suite];
     assert.ok(groups.every(value => available.includes(value)), 'Suite must be all, ' + available.join(', '));
     const htmlExports = [];
@@ -311,15 +345,32 @@ async function run(settings, owner) {
         }
         await h.driver({ action: 'config', key: 'export.pandocPath', value: settings.pandoc });
         await h.driver({ action: 'config', key: 'export.browserPath', value: settings.browser });
-        if (groups.includes('formats')) for (const file of ['basic.md', 'fallbacks.md', 'pagination.md', 'w30-report.md']) {
+        if (groups.includes('filesystem')) {
+            const folder = path.join(owner.workspace, 'Path cases 文件');
+            fs.mkdirSync(folder, { recursive: true });
+            const image = path.join(folder, 'Image 图像.png');
+            fs.copyFileSync(path.join(owner.workspace, 'assets/Field sample 图像.png'), image);
+            const file = path.join('Path cases 文件', 'CRLF report.md');
+            const source = '# CRLF-PATH-MARKER\r\n\r\n![Original image](' + encodeURI(image.replace(/\\/g, '/')) + ')\r\n';
+            write(file, source);
             const connection = await h.open(file);
-            const original = read(file);
+            try {
+                for (const format of ['html', 'pdf', 'docx', 'epub']) {
+                    const result = await h.exportFile(connection, file, format);
+                    assert.equal(read(file).toString('utf8'), source, 'Export preserves CRLF source bytes');
+                    if (format === 'html') assert.ok(fs.readFileSync(result.outputPath, 'utf8').includes('data:image/png;base64,' + fs.readFileSync(image).toString('base64')));
+                    record('filesystem', { format, unicodeAndSpaces: true, absoluteImagePath: true, crlfSourceUnchanged: true, ...result });
+                }
+            } finally { connection.close(); }
+        }
+        if (groups.includes('formats')) for (const file of ['basic.md', 'fallbacks.md', 'pagination.md', 'w30-report.md']) {
+            const { connection, sourceFile, original, inputSha256 } = await openExportFixture(h, owner, file);
             try {
                 await h.until(() => connection.evaluate('document.getElementById("editor").innerText.length > 50'));
                 for (const format of ['html', 'pdf', 'docx', 'epub']) {
-                    const result = await h.exportFile(connection, file, format);
-                    assert.ok(read(file).equals(original));
-                    record('format', { file, format, ...result });
+                    const result = await h.exportFile(connection, sourceFile, format);
+                    assert.ok(read(sourceFile).equals(original));
+                    record('format', { file, sourceFile, inputSha256, savedSha256: hash(original), format, ...result });
                     if (format === 'html') htmlExports.push({ file, outputPath: result.outputPath });
                 }
             } finally { connection.close(); }
@@ -346,6 +397,65 @@ async function run(settings, owner) {
                 assert.equal(await connection.evaluate(state), before);
                 record('immediate-save', { mode, save, shortcut: save === 'keyboard' ? saveShortcut().label : undefined, sourceUnchanged: true, editorStateUnchanged: true, output: path.basename(result.outputPath) });
             } finally { connection.close(); }
+        }
+        if (groups.includes('document-aux')) {
+            const aux = require('../../src/shared/document-aux');
+            for (const mode of ['visual', 'source']) for (const save of ['native', 'keyboard']) {
+                const file = `aux-${Date.now()}-${mode}-${save}.md`;
+                const metadata = '---\ntitle: "Native report" # preserve\ntags: [test, report]\n---\n';
+                const paragraphs = mode === 'visual' && save === 'native' ? ('A paragraph describing the project and its evaluation with enough detail to exercise pagination.\n\n').repeat(55) : '';
+                write(file, metadata + '\n[TOC]\n\n# Introduction\n\n' + paragraphs + '# Results\n\nNATIVE-AUX-END\n');
+                const connection = await h.open(file);
+                try {
+                    await h.until(() => connection.evaluate(`!!document.querySelector('.front-matter-source') && !!document.querySelector('.toc-refresh')`));
+                    await connection.evaluate(`document.querySelector('.front-matter summary').click()`);
+                    const state = await h.driver({ action: 'inspect' });
+                    assert.equal(state.documents.find(d => samePath(d.path, path.join(owner.workspace, file))).dirty, false);
+                    await connection.evaluate(`document.querySelector('.toc-refresh').click()`);
+                    await h.driver({ action: 'save' });
+                    await h.until(() => aux.refreshTocs(read(file).toString()) === read(file).toString());
+                    await h.workbench(page => page.bringToFront());
+                    if (mode === 'source') {
+                        await h.sourceMode(connection);
+                        await connection.evaluate(`(()=>{const e=document.getElementById('sourceEditor'); const at=e.value.lastIndexOf('# Results')+2;e.focus();e.setSelectionRange(at, at+7)})()`);
+                    } else {
+                        await connection.evaluate(`(()=>{const e=document.querySelectorAll('#editor > h1')[1];document.getElementById('editor').focus();const r=document.createRange();r.selectNodeContents(e);const s=getSelection();s.removeAllRanges();s.addRange(r)})()`);
+                    }
+                    await connection.send('Input.insertText', { text: 'Evaluation' });
+                    if (save === 'native') await h.driver({ action: 'save' });
+                    else for (const type of ['keyDown', 'keyUp']) await connection.send('Input.dispatchKeyEvent', { type, key: 's', code: 'KeyS', modifiers: saveShortcut().modifiers });
+                    await h.until(() => read(file).toString().includes('[Evaluation](#evaluation)'));
+                    const saved = read(file).toString();
+                    assert.ok(saved.startsWith(metadata));
+                    assert.equal(aux.refreshTocs(saved), saved);
+                    await h.driver({ action: 'save' });
+                    assert.equal(read(file).toString(), saved);
+                    const html = await h.exportFile(connection, file, 'html');
+                    const output = fs.readFileSync(html.outputPath, 'utf8');
+                    assert.ok(output.includes('id="evaluation"') && output.includes('href="#evaluation"'));
+                    assert.ok(!output.includes('class="toc-refresh"') && !output.includes('Native report'));
+                    const artifacts = { html: html.outputPath };
+                    if (mode === 'visual' && save === 'native') {
+                        artifacts.pdf = (await h.exportFile(connection, file, 'pdf')).outputPath;
+                        artifacts.docx = (await h.exportFile(connection, file, 'docx')).outputPath;
+                        artifacts.epub = (await h.exportFile(connection, file, 'epub')).outputPath;
+                    }
+                    record('document-aux-save-export', { mode, save, metadataPreserved: true, repeatedSaveUnchanged: true, ...artifacts });
+                } finally { connection.close(); }
+            }
+        }
+        if (groups.includes('document-aux')) {
+            const file = 'aux-auto-save-' + Date.now() + '.md';
+            write(file, '[TOC]\n\n# Original\n');
+            const connection = await h.open(file);
+            try {
+                await h.driver({ action: 'autoSave', value: 'afterDelay' });
+                await h.workbench(page => page.bringToFront());
+                await connection.evaluate(`(()=>{const e=document.querySelector('#editor > h1');document.getElementById('editor').focus();const r=document.createRange();r.selectNodeContents(e);const s=getSelection();s.removeAllRanges();s.addRange(r)})()`);
+                await connection.send('Input.insertText', { text: 'Auto Save heading' });
+                await h.until(() => read(file).toString().includes('[Auto Save heading](#auto-save-heading)'));
+                record('document-aux-auto-save', { currentTocSaved: true });
+            } finally { await h.driver({ action: 'autoSave', value: 'off' }); connection.close(); }
         }
         if (groups.includes('edges')) {
             write('edges.md', '# Edge fixture\n\nSAVED-EDGE-MARKER\n');
@@ -381,17 +491,18 @@ async function run(settings, owner) {
             } finally { connection.close(); }
             const directory = path.join(owner.workspace, 'readonly'); fs.mkdirSync(directory, { recursive: true });
             write('readonly/report.md', '# READONLY-SOURCE-MARKER\n'); connection = await h.open('readonly/report.md');
+            const restore = require('../utils/deny-directory-writes.cjs').denyDirectoryWrites(directory);
             try {
-                fs.chmodSync(directory, 0o555);
                 const result = await h.exportFile(connection, 'readonly/report.md', 'html', false, false);
                 assert.equal(result.state, 'failed'); assert.match(result.message, /EACCES|EPERM/);
                 assert.deepEqual(fs.readdirSync(directory), ['report.md']); record('unwritable-destination', { noPartialOutput: true });
-            } finally { fs.chmodSync(directory, 0o755); connection.close(); }
+            } finally { restore(); connection.close(); }
             await cancellationCases(h, owner, record);
         }
         // Restore real discovery before the remaining scenarios after the controlled worker.
         await h.driver({ action: 'config', key: 'export.pandocPath', value: settings.pandoc });
         if (groups.includes('ui')) await appearanceCases(h, owner, record);
+        if (groups.includes('equations')) await equationCases(h, owner, record);
         if (groups.includes('pdf-background')) await pdfBackgroundCases(h, owner, record);
         if (groups.includes('selection')) await selectionCase(h, owner, record);
         if (groups.includes('immutable')) await immutableCase(h, owner, record);
@@ -410,6 +521,73 @@ async function run(settings, owner) {
         for (const [key, value] of [['theme', 'github'], ['language', 'en'], ['toolbarMode', 'full']]) await h.driver({ action: 'config', key, value });
     }
     console.log('Evidence:', report);
+}
+
+async function equationCases(h, owner, record) {
+    const file = 'equations.md';
+    const source = [
+        '# Equation compatibility', '', 'Inline $a^2$ and \\(b^3\\).', '',
+        '$$', '\\begin{aligned}', 'x&=1\\\\', 'y&=2', '\\end{aligned}', '$$', '',
+        '\\[', '\\begin{pmatrix}', '1&2\\\\', '3&4', '\\end{pmatrix}', '\\]', '',
+        '$$c^2$$', '', '\\[d^3\\]', '',
+        '```math', '\\begin{gathered}', 'e=1\\\\', 'f=2', '\\end{gathered}', '```', '',
+        '| Cost |', '| --- |', '| \\(O(V^3)\\) |', '',
+        '> \\[', '> g^2', '> \\]', '',
+        '- Parent', '  - Child', '    \\[', '    h^3', '    \\]', '',
+        '`\\(literal-code\\)`', '', '```text', '\\[literal-fence\\]', '```', '',
+        'EQUATION-LAST-MARKER', ''
+    ].join('\n');
+    const filePath = path.join(owner.workspace, file);
+    await h.driver({ action: 'close' });
+    fs.writeFileSync(filePath, source);
+    let connection = await h.open(file);
+    try {
+        await h.until(() => connection.evaluate('document.querySelectorAll("#editor .katex").length === 10'));
+        assert.equal(await connection.evaluate('document.querySelectorAll("#editor .katex-error, #editor .math-error").length'), 0);
+        await h.sourceMode(connection);
+        assert.equal(await connection.evaluate('document.getElementById("sourceEditor").value'), source);
+        await connection.evaluate('document.querySelector(\'[data-action="source"]\').click()');
+        await h.until(() => connection.evaluate('document.querySelectorAll("#editor .katex").length === 10'));
+        await connection.evaluate(`Array.from(document.querySelectorAll('#editor .math-inline')).find(span => span.dataset.mathOpen !== '$').click(); document.querySelector('.math-inline-input').value='b^4'`);
+        // Native Save must flush the active equation source input too.
+        await h.driver({ action: 'save' });
+        await h.until(() => fs.readFileSync(filePath, 'utf8').includes('\\(b^4\\)'));
+        const saved = fs.readFileSync(filePath, 'utf8');
+        assert.ok(saved.includes('\\[') && saved.includes('```math'));
+        assert.ok(!saved.includes('katex'));
+        for (const format of ['html', 'pdf', 'docx', 'epub']) {
+            const result = await h.exportFile(connection, file, format);
+            if (format === 'html') {
+                const html = fs.readFileSync(result.outputPath, 'utf8');
+                assert.equal((html.match(/class="katex"/g) || []).length, 10);
+                assert.doesNotMatch(html, /<input\b[^>]*math-inline-input/);
+            } else if (format === 'pdf') {
+                const text = execFileSync(process.env.EXPORT_PDFTOTEXT_PATH || 'pdftotext', [result.outputPath, '-'], { encoding: 'utf8' });
+                assert.match(text, /EQUATION-LAST-MARKER/);
+                assert.doesNotMatch(text, /begin\{aligned\}|begin\{pmatrix\}/);
+            } else {
+                const content = archiveText(result.outputPath, format === 'docx' ? 'word/document.xml' : '*.xhtml');
+                const equations = content.match(format === 'docx' ? /<m:oMath[ >]/g : /<math[ >]/g) || [];
+                assert.equal(equations.length, 10, format + ' native equations');
+            }
+            assert.equal(fs.readFileSync(filePath, 'utf8'), saved);
+            record('equations-export', { format, equations: 10, sourceUnchanged: true, outputPath: result.outputPath });
+        }
+        await h.workbench(page => page.screenshot({ path: path.join(owner.base, 'evidence', 'equations.png') }));
+        connection.close(); connection = null;
+        await h.driver({ action: 'close' });
+        await h.driver({ action: 'config', key: 'math.backslashDelimiters', value: false });
+        connection = await h.open(file);
+        await h.until(() => connection.evaluate('document.querySelectorAll("#editor .katex").length === 4'));
+        assert.equal(fs.readFileSync(filePath, 'utf8'), saved);
+        const literal = await h.exportFile(connection, file, 'docx');
+        const xml = archiveText(literal.outputPath, 'word/document.xml');
+        assert.equal((xml.match(/<m:oMath[ >]/g) || []).length, 4);
+        record('equations-backslash-disabled', { equations: 4, sourceUnchanged: true });
+    } finally {
+        if (connection) connection.close();
+        await h.driver({ action: 'config', key: 'math.backslashDelimiters', value: true });
+    }
 }
 
 async function pdfBackgroundCases(h, owner, record) {
@@ -495,12 +673,10 @@ async function cancellationCases(h, owner, record) {
     } finally { connection?.close(); for (const socket of sockets) socket.destroy(); await new Promise(resolve => server.close(resolve)); }
 
     const pidFile = path.join(owner.workspace, 'worker.pid');
-    const script = path.join(owner.workspace, 'controlled-pandoc.cjs');
-    const executable = path.join(owner.workspace, 'controlled pandoc 工具.sh');
-    const quote = value => "'" + value.replace(/'/g, "'\\''") + "'";
-    const prefix = `const fs=require('node:fs');const argument=process.argv[2];if(argument==='--version')console.log('pandoc 3.8.3');else if(argument==='--list-input-formats')console.log('commonmark_x\\njson');else if(argument==='--list-output-formats')console.log('json\\ndocx\\nepub');else if(argument==='--list-extensions=commonmark_x')console.log('+tex_math_gfm');else{fs.writeFileSync(${JSON.stringify(pidFile)},String(process.pid));`;
-    fs.writeFileSync(script, prefix + 'process.stdin.resume();setInterval(()=>{},1000)}');
-    fs.writeFileSync(executable, '#!/bin/sh\nexec ' + quote(process.execPath) + ' ' + quote(script) + ' "$@"\n', { mode: 0o700 });
+    const workerDirectory = path.join(owner.workspace, 'controlled worker 工具');
+    fs.mkdirSync(workerDirectory, { recursive: true });
+    const { toolFixture } = require('../utils/tool-fixture.cjs');
+    const executable = await toolFixture(workerDirectory, 'controlled-pandoc', pidFile);
     fs.rmSync(pidFile, { force: true });
     fs.writeFileSync(path.join(owner.workspace, 'worker-cancel.md'), '# WORKER-CANCEL-SOURCE\n');
     connection = await h.open('worker-cancel.md');
@@ -512,7 +688,7 @@ async function cancellationCases(h, owner, record) {
         await connection.evaluate('document.getElementById("exportCancel").click()'); assert.equal((await h.terminal(connection)).state, 'cancelled');
         await h.until(() => { try { process.kill(pid, 0); return false; } catch { return true; } });
         assert.ok(!fs.existsSync(path.join(owner.workspace, 'worker-cancel.docx'))); record('worker-cancel', { processEnded: true, noOutput: true });
-        fs.writeFileSync(script, prefix + "console.error('CONTROLLED-WRITER-FAILURE');process.exit(2)}");
+        await toolFixture(workerDirectory, 'controlled-pandoc-fail', pidFile);
         const failure = await h.exportFile(connection, 'worker-cancel.md', 'docx', true, false);
         assert.equal(failure.state, 'failed'); assert.match(failure.message, /CONTROLLED-WRITER-FAILURE/);
         assert.ok(!fs.existsSync(path.join(owner.workspace, 'worker-cancel.docx'))); record('worker-failure', { noOutput: true });
@@ -624,8 +800,11 @@ async function immutableCase(h, owner, record) {
 async function offlineCases(h, owner, settings, outputs, record) {
     // A focused offline run first creates its own installed-VSIX HTML outputs.
     if (!outputs.length) for (const file of ['basic.md', 'fallbacks.md', 'pagination.md', 'w30-report.md']) {
-        const connection = await h.open(file);
-        try { outputs.push({ file, outputPath: (await h.exportFile(connection, file, 'html')).outputPath }); }
+        const { connection, sourceFile, original } = await openExportFixture(h, owner, file);
+        try {
+            outputs.push({ file, outputPath: (await h.exportFile(connection, sourceFile, 'html')).outputPath });
+            assert.ok(fs.readFileSync(path.join(owner.workspace, sourceFile)).equals(original));
+        }
         finally { connection.close(); }
     }
     const { discoverTool } = require(path.join(receipt(owner).extensionPath, 'out/export/tools.js'));
@@ -692,6 +871,13 @@ async function main() {
         const environment = { ...process.env };
         // An inherited integrated-terminal IPC hook must not redirect the CLI into another VS Code profile.
         delete environment.VSCODE_IPC_HOOK_CLI;
+        if (process.platform === 'win32') {
+            // Run the archive's CLI through its own Electron executable; a .cmd
+            // wrapper would introduce shell quoting and cannot use spawnSync directly.
+            const cli = require('../utils/vscode-cli.cjs').windowsCli(settings.code);
+            args.unshift(cli);
+            environment.ELECTRON_RUN_AS_NODE = '1';
+        }
         // The CLI must not consume the remaining commands of a piped SSH script.
         const child = spawnSync(settings.code, args, { stdio: ['ignore', 'inherit', 'inherit'], env: environment });
         if (child.error) throw child.error;

@@ -40,28 +40,5 @@ try {
 } finally {
     if (fs.existsSync(path.join(workdir, 'evidence'))) fs.cpSync(path.join(workdir, 'evidence'), path.join(results, 'native'), { recursive: true });
     if (fs.existsSync(path.join(owner.profile, 'logs'))) fs.cpSync(path.join(owner.profile, 'logs'), path.join(results, 'native-host-logs'), { recursive: true });
-    // Match the exact newly owned profile argument, never a process name alone.
-    const escaped = owner.profile.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const ownedArgument = new RegExp('(?:^|\\s)--user-data-dir(?:=|\\s+)' + escaped + '(?:\\s|$)');
-    const processes = execFileSync('ps', ['-ax', '-o', 'pid=,command='], { encoding: 'utf8' });
-    for (const line of processes.split('\n')) {
-        const match = line.trim().match(/^(\d+)\s+(.*)$/);
-        if (match && ownedArgument.test(match[2]) && match[2].includes('--extensionDevelopmentPath=' + owner.driver)) {
-            const pid = Number(match[1]);
-            try { process.kill(pid, 'SIGTERM'); } catch (error) { if (error.code !== 'ESRCH') throw error; }
-            const delay = new Int32Array(new SharedArrayBuffer(4));
-            const deadline = Date.now() + 5000;
-            while (Date.now() < deadline) {
-                try { process.kill(pid, 0); } catch (error) { if (error.code === 'ESRCH') break; throw error; }
-                Atomics.wait(delay, 0, 0, 100);
-            }
-            // Dirty fixtures can prevent graceful exit. Re-check identity before
-            // terminating only this test process; keep its files and evidence.
-            let remaining = '';
-            try { remaining = execFileSync('ps', ['-p', String(pid), '-o', 'command='], { encoding: 'utf8' }); } catch { /* Exited. */ }
-            if (ownedArgument.test(remaining) && remaining.includes('--extensionDevelopmentPath=' + owner.driver)) {
-                try { process.kill(pid, 'SIGKILL'); } catch (error) { if (error.code !== 'ESRCH') throw error; }
-            }
-        }
-    }
+    require('../../test/utils/native-processes.cjs').stopOwnedProcesses(owner);
 }

@@ -28,6 +28,12 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  insertToc: '插入目录',
+  refreshToc: '刷新目录',
+  tocContents: '目录',
+  tocPending: '保存或刷新以生成目录。',
+
+  frontMatter: '文档元数据',
   closeOutline: '关闭大纲',
   openOutline: '打开大纲',
   openInTextEditor: '在文本编辑器中打开',
@@ -50,10 +56,14 @@ export const webviewMessages = {
   insertLink: '插入链接 (Ctrl+K)',
   insertImage: '插入图片 (Ctrl+Shift+I)',
   setImageDir: '设置图片目录',
+  openExtensionSettings: '打开 Binary Markdown 设置',
   insertTable: '插入表格 (Ctrl+T)',
   horizontalRule: '水平线 (Ctrl+Shift+-)',
   mermaidBlock: 'Mermaid 图表',
   mathBlock: '数学公式',
+  inlineMath: "行内公式",
+  editEquation: "编辑公式",
+  equationEditHint: "按 Enter 应用，按 Escape 取消",
   searchPlaceholder: '搜索...',
   replacePlaceholder: '替换...',
   searchPrev: '上一个 (Shift+Enter)',

@@ -45,7 +45,7 @@ function renderReleaseNotes(markdown, sourceCommit) {
     assert.match(sourceCommit, /^[0-9a-f]{40}$/);
     return markdown.replace(/\]\((?![a-z][a-z\d+.-]*:|#)([^\s)]+)\)/gi, (_, target) => {
         const [file, anchor] = target.split('#');
-        const relative = path.posix.normalize(path.posix.join('docs/releases', file));
+        const relative = path.posix.normalize(path.posix.join('release-notes', file));
         assert.ok(!relative.startsWith('../') && !path.posix.isAbsolute(relative));
         return '](https://github.com/BinaryOutlook/binary-markdown/blob/' + sourceCommit + '/' +
             relative.split('/').map(encodeURIComponent).join('/') + (anchor ? '#' + anchor : '') + ')';

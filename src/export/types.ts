@@ -13,6 +13,7 @@ export interface SavedExportDocument {
     version: number;
     theme: string;
     fontSize: number;
+    mathBackslashDelimiters?: boolean;
 }
 
 export interface PreparedExportDocument {

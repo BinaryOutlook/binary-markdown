@@ -1,3 +1,4 @@
+import { assertFreshToc } from '../shared/document-aux';
 import * as vscode from 'vscode';
 import { ExportWebviewChannel } from './webview-rpc';
 import { discoverTool } from './tools';
@@ -16,7 +17,7 @@ function exportAvailabilityError(): string | undefined {
     const messages = getExportMessages();
     if (vscode.env.remoteName) { return messages.unsupportedRemote; }
     if (vscode.env.uiKind !== vscode.UIKind.Desktop ||
-        (process.platform !== 'darwin' && process.platform !== 'linux')) { return messages.unsupportedHost; }
+        !['darwin', 'linux', 'win32'].includes(process.platform)) { return messages.unsupportedHost; }
     if (!vscode.workspace.isTrusted) { return messages.trustRequired; }
     return undefined;
 }
@@ -92,7 +93,7 @@ export class ExportController implements vscode.Disposable {
     }
 
     async captureForSave(): Promise<string> {
-        const snapshot = await this.channel.request('captureExportSnapshot');
+        const snapshot = await this.channel.request('captureExportSnapshot', { refreshToc: true });
         if (typeof snapshot.content !== 'string') { throw new Error('Invalid editor snapshot.'); }
         return snapshot.content;
     }
@@ -143,18 +144,23 @@ export class ExportController implements vscode.Disposable {
                     throw new Error(messages.saveRequired);
                 }
                 const raw = this.document.getText();
+                assertFreshToc(raw);
                 const version = this.document.version;
                 const snapshot = await this.channel.request('captureExportSnapshot', {}, abort.signal);
                 if (typeof snapshot.content !== 'string' || normalize(snapshot.content) !== normalize(this.displayContent(raw)) ||
                     this.document.version !== version || this.document.isDirty) {
                     throw new Error(messages.saveRequired);
                 }
-                const config = vscode.workspace.getConfiguration('binary-markdown');
+                const config = vscode.workspace.getConfiguration('binary-markdown', this.document.uri);
+                const codeOptions = Object.freeze({
+                    showCodeLanguage: config.get<boolean>('export.showCodeLanguage', true)
+                });
                 const source: SavedExportDocument = Object.freeze({
                     sourcePath: this.document.uri.fsPath, markdown: raw, version,
                     theme: format === 'pdf' && config.get<boolean>('export.pdfWhiteBackground', true)
                         ? 'github' : config.get<string>('theme', 'github'),
-                    fontSize: config.get<number>('fontSize', 16)
+                    fontSize: config.get<number>('fontSize', 16),
+                    mathBackslashDelimiters: config.get<boolean>('math.backslashDelimiters', true)
                 });
                 let executable = '';
                 if (format !== 'html') {
@@ -186,9 +192,9 @@ export class ExportController implements vscode.Disposable {
                 let bytes: Buffer;
                 if (format === 'html' || format === 'pdf') {
                     const html = await prepareStandaloneHtml(source, prepared, this.context.extensionPath, operations);
-                    bytes = format === 'html' ? Buffer.from(html, 'utf8') : await convertPdf(html, executable, operations);
+                    bytes = format === 'html' ? Buffer.from(html, 'utf8') : await convertPdf(html, executable, operations, codeOptions);
                 } else {
-                    bytes = await convertPandoc(format, source, prepared, executable, operations);
+                    bytes = await convertPandoc(format, source, prepared, executable, operations, codeOptions);
                 }
                 checkCancelled(abort.signal);
                 validateArtifact(format, bytes);

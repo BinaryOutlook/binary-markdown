@@ -4,6 +4,8 @@
 const vscode = require('vscode');
 const fs = require('node:fs');
 const path = require('node:path');
+const { sameDirectory } = require('./directory-identity.cjs');
+const { replaceFile } = require('./replace-file.cjs');
 const sentinelName = '.binary-markdown-native-export.json';
 const inside = (base, target) => {
     const relative = path.relative(base, target);
@@ -11,16 +13,16 @@ const inside = (base, target) => {
 };
 
 exports.activate = async function activate(context) {
-    if (!['darwin', 'linux'].includes(process.platform) || vscode.env.uiKind !== vscode.UIKind.Desktop || vscode.env.remoteName) return;
+    if (!['darwin', 'linux', 'win32'].includes(process.platform) || vscode.env.uiKind !== vscode.UIKind.Desktop || vscode.env.remoteName) return;
     const folders = vscode.workspace.workspaceFolders || [];
     if (folders.length !== 1 || folders[0].uri.scheme !== 'file') return;
     const workspace = fs.realpathSync(folders[0].uri.fsPath);
     const sentinelPath = path.join(workspace, sentinelName);
     if (!fs.existsSync(sentinelPath)) return;
     const owner = JSON.parse(fs.readFileSync(sentinelPath, 'utf8'));
-    if (owner.kind !== 'binary-markdown-native-export-v1' || owner.workspace !== workspace || !owner.token) return;
+    if (owner.kind !== 'binary-markdown-native-export-v1' || !sameDirectory(owner.workspace, workspace) || !owner.token) return;
     const rootOwner = JSON.parse(fs.readFileSync(path.join(owner.base, sentinelName), 'utf8'));
-    if (rootOwner.token !== owner.token || rootOwner.profile !== owner.profile || fs.realpathSync(owner.workspace) !== workspace) return;
+    if (rootOwner.token !== owner.token || rootOwner.profile !== owner.profile) return;
     const profileOwner = JSON.parse(fs.readFileSync(path.join(owner.profile, sentinelName), 'utf8'));
     if (profileOwner.token !== owner.token || profileOwner.base !== owner.base) return;
     // A driver accidentally loaded in the user's normal profile must do nothing.
@@ -43,7 +45,7 @@ exports.activate = async function activate(context) {
     const respond = value => {
         const temporary = path.join(workspace, 'response.json.tmp');
         fs.writeFileSync(temporary, JSON.stringify({ ...identity(), ...value }, null, 2));
-        fs.renameSync(temporary, path.join(workspace, 'response.json'));
+        replaceFile(temporary, path.join(workspace, 'response.json'));
     };
     const localFile = (name, suffix) => {
         const file = path.resolve(workspace, name);
@@ -83,6 +85,7 @@ exports.activate = async function activate(context) {
                     'export.pandocPath': value => typeof value === 'string',
                     'export.browserPath': value => typeof value === 'string',
                     'export.pdfWhiteBackground': value => typeof value === 'boolean',
+                    'math.backslashDelimiters': value => typeof value === 'boolean',
                     toolbarMode: value => ['simple', 'full'].includes(value),
                     language: value => ['en', 'zh-CN'].includes(value),
                     theme: value => ['github', 'night'].includes(value)
@@ -91,6 +94,12 @@ exports.activate = async function activate(context) {
                     throw new Error('The driver only changes bounded export/appearance test settings in its isolated profile.');
                 }
                 await vscode.workspace.getConfiguration('binary-markdown').update(request.key, request.value, vscode.ConfigurationTarget.Global);
+                break;
+            }
+            case 'autoSave': {
+                if (!['off', 'afterDelay'].includes(request.value)) throw new Error('Invalid isolated Auto Save mode.');
+                await vscode.workspace.getConfiguration('files').update('autoSaveDelay', 200, vscode.ConfigurationTarget.Global);
+                await vscode.workspace.getConfiguration('files').update('autoSave', request.value, vscode.ConfigurationTarget.Global);
                 break;
             }
             case 'untitled': {

@@ -2,6 +2,17 @@
 
 This directory preserves superseded project materials for reference and inspiration. It is excluded from VSIX packages. The current installation, settings, and contribution instructions are in the root README and `docs/`.
 
+## Binary Markdown development records
+
+- [Export development history](development/export.md): original plans, milestones,
+  decisions and the earlier handoff. Preserved prompts are historical material.
+- [0.2.0 transition](development/0.2.0-transition.md): recorded maintainer choices
+  and the completed policy implementation map.
+
+Use the [documentation index](../docs/README.md) for maintained instructions,
+[reports](../reports/README.md) for dated observations and evidence, and
+[release notes](../release-notes/README.md) for version announcements.
+
 ## Upstream Any Markdown materials
 
 `upstream-any-markdown/` preserves the presentation immediately before Binary Markdown's full naming realignment:

@@ -36,21 +36,28 @@ async function setup(t) {
     const incoming = event();
     const posts = [];
     const notices = [];
+    const commands = [];
     const renderConfigs = [];
     const locales = [];
     let cachedLocale = 'ja'; // A locale cached before the current configuration.
     const timers = new Map();
     let nextTimer = 0;
-    const flushTimers = async () => {
+    const acknowledgeRender = async () => {
+        const generation = renderConfigs.at(-1).renderGeneration;
+        await Promise.all(incoming.fire({ type: 'renderLoaded', generation }));
+        await Promise.all(incoming.fire({ type: 'renderReady', generation }));
+    };
+    const flushTimers = async (acknowledge = true) => {
         for (const [id, callback] of timers) {
             timers.delete(id);
             await callback();
+            if (acknowledge) await acknowledgeRender();
         }
     };
     const config = { theme: 'github', language: 'en' };
     const state = {
         text: '# OLD-EDITOR\n', disk: '# OLD-EDITOR\n', captureCalls: 0, saveCalls: 0,
-        captures: async () => '# OLD-EDITOR\n', beforeWrite: async () => {}, failedWrite: false,
+        captures: async () => '# OLD-EDITOR\n', beforeWrite: async () => {}, beforeRead: async () => {}, failedWrite: false,
         controller: undefined, exports: []
     };
     const file = value => ({ scheme: 'file', fsPath: value, toString: () => 'file://' + value });
@@ -75,6 +82,7 @@ async function setup(t) {
         }
     };
     const vscode = {
+        commands: { executeCommand: async (...args) => { commands.push(args); } },
         EndOfLine: { LF: 1, CRLF: 2 }, env: { language: 'en' },
         Uri: { file, joinPath: (base, ...parts) => file(path.join(base.fsPath, ...parts)) },
         Range: class { constructor(...values) { this.values = values; } },
@@ -89,7 +97,7 @@ async function setup(t) {
             onWillSaveTextDocument: willSave.listen,
             onDidSaveTextDocument: didSave.listen,
             createFileSystemWatcher: () => ({ onDidChange: watcher.listen, dispose: () => {} }),
-            fs: { readFile: async () => Buffer.from(state.disk) },
+            fs: { readFile: async () => { const bytes = Buffer.from(state.disk); await state.beforeRead(); return bytes; } },
             applyEdit: async edit => {
                 for (const text of edit.edits) { state.text = text; document.version++; document.isDirty = true; }
                 changes.fire({ document, contentChanges: [{ text: state.text }] });
@@ -133,9 +141,10 @@ async function setup(t) {
     );
     const provider = new compiled.exports.BinaryMarkdownEditorProvider({ extensionUri: file('/extension-fixture'), workspaceState: {}, globalState: {} });
     await provider.resolveCustomTextEditor(document, panel, {});
+    await acknowledgeRender();
     t.after(() => disposed.fire());
     return {
-        state, document, panel, provider, config, posts, notices, renderConfigs, locales, disposed, flushTimers,
+        state, document, panel, provider, config, posts, notices, commands, renderConfigs, locales, disposed, flushTimers,
         configChanged: keys => configChanges.fire({ affectsConfiguration: query => keys.some(key => key === query || key.startsWith(query + '.')) }),
         externalChange: async content => { state.disk = content; watcher.fire(document.uri); await flushTimers(); },
         send: message => Promise.all(incoming.fire(message))
@@ -147,6 +156,51 @@ test('export commands target the active custom editor for each format', async t 
     for (const format of ['html', 'pdf', 'docx', 'epub']) { h.provider.requestExport(format); }
     assert.deepEqual(h.state.exports, ['html', 'pdf', 'docx', 'epub']);
     assert.deepEqual(h.notices, []);
+});
+
+test('native save refreshes TOC in the same disk write and repeated save is unchanged', async t => {
+    const h = await setup(t);
+    h.state.captures = async () => h.state.text;
+    h.state.text = '---\ntitle: "Report" # keep\n---\n\n[TOC]\n\n# Changed heading\n';
+    h.document.isDirty = true;
+    await h.document.save();
+    assert.match(h.state.disk, /\[Changed heading\]\(#changed-heading\)/);
+    assert.match(h.state.disk, /title: "Report" # keep/);
+    const saved = h.state.disk;
+    await h.document.save();
+    assert.equal(h.state.disk, saved);
+});
+
+test('keyboard save refreshes explicit snapshot before the disk write', async t => {
+    const h = await setup(t);
+    await h.send({ type: 'save', content: '[TOC]\n\n# Latest source\n', revision: 3 });
+    assert.match(h.state.disk, /\[Latest source\]\(#latest-source\)/);
+    assert.equal(h.state.captureCalls, 0);
+    assert.ok(h.posts.some(p => p.type === 'saveResult' && p.revision === 3 && p.success));
+});
+
+test('TOC insertion targets only the active custom editor', async t => {
+    const h = await setup(t);
+    assert.equal(h.provider.insertToc(), true);
+    assert.ok(h.posts.some(p => p.type === 'insertToc'));
+    h.panel.active = false;
+    assert.equal(h.provider.insertToc(), false);
+});
+
+test('the production settings bridge opens only this extension settings without changing the document', async t => {
+    const h = await setup(t);
+    const window = {};
+    const messages = [];
+    new Function('window', 'acquireVsCodeApi', fs.readFileSync(path.join(__dirname, '../../src/shared/vscode-host-bridge.js'), 'utf8'))(
+        window, () => ({ postMessage: message => messages.push(message) })
+    );
+    window.hostBridge.openSettings();
+    assert.deepEqual(messages, [{ type: 'openExtensionSettings' }]);
+    await h.send(messages[0]);
+    const manifest = require('../../package.json');
+    assert.deepEqual(h.commands, [['workbench.action.openSettings', '@ext:' + manifest.publisher + '.' + manifest.name]]);
+    assert.equal(h.state.saveCalls, 0);
+    assert.equal(h.document.getText(), '# OLD-EDITOR\n');
 });
 
 test('export command refuses a cached panel that is no longer active', async t => {
@@ -233,6 +287,39 @@ test('external file synchronization bypasses stale webview capture before saving
     assert.equal(h.posts.find(message => message.type === 'update').content, '# EXTERNAL-EDITOR-REVISION\n');
 });
 
+test('a delayed notification for our own save cannot overwrite a later edit', async t => {
+    const h = await setup(t);
+    await h.document.save();
+    const saved = h.state.disk;
+    h.state.text = '# TYPED-AFTER-SAVE\n';
+    h.document.isDirty = true;
+    h.document.version++;
+    await h.externalChange(saved);
+    assert.equal(h.document.getText(), '# TYPED-AFTER-SAVE\n');
+    assert.equal(h.document.isDirty, true);
+    assert.equal(h.state.disk, saved);
+    assert.equal(h.state.saveCalls, 1);
+    assert.ok(!h.posts.some(message => message.type === 'update'));
+});
+
+test('a disk read started before a newer save cannot replay stale contents', async t => {
+    const h = await setup(t);
+    const reading = deferred();
+    const release = deferred();
+    h.state.beforeRead = async () => { reading.resolve(); await release.promise; };
+    const external = h.externalChange('# OLD-DISK-READ\n');
+    await reading.promise;
+    h.state.text = '# NEWLY-SAVED\n';
+    h.document.isDirty = true;
+    h.state.captures = async () => h.state.text;
+    await h.document.save();
+    release.resolve();
+    await external;
+    assert.equal(h.document.getText(), '# NEWLY-SAVED\n');
+    assert.equal(h.state.disk, '# NEWLY-SAVED\n');
+    assert.equal(h.state.saveCalls, 1);
+});
+
 test('keyboard save carries explicit content without recapturing the webview', async t => {
     const h = await setup(t);
     await h.send({ type: 'save', content: '# KEYBOARD-SAVED\n', revision: 7 });
@@ -304,6 +391,33 @@ test('closing an editor cancels a queued configuration replacement', async t => 
     await h.flushTimers();
     assert.equal(h.renderConfigs.length, 1);
     assert.equal(h.posts.length, postCount);
+});
+
+test('settings wait for the active render handshake and ignore stale acknowledgements', async t => {
+    const h = await setup(t);
+    const initial = h.renderConfigs.at(-1).renderGeneration;
+    h.config.toolbarMode = 'full';
+    h.configChanged(['binary-markdown.toolbarMode']);
+    await h.flushTimers(false);
+    const pending = h.renderConfigs.at(-1).renderGeneration;
+    h.config.language = 'zh-CN';
+    h.configChanged(['binary-markdown.language']);
+    await h.flushTimers(false);
+    assert.equal(h.renderConfigs.length, 2, 'A loaded but hidden frame must not be replaced again');
+    await h.send({ type: 'renderLoaded', generation: pending });
+    assert.deepEqual(h.posts.at(-1), { type: 'renderProbe', generation: pending });
+    await h.send({ type: 'renderReady', generation: initial });
+    assert.equal(h.renderConfigs.length, 2);
+    await h.send({ type: 'renderReady', generation: pending });
+    assert.equal(h.renderConfigs.length, 3);
+    assert.equal(h.renderConfigs.at(-1).webviewMessages.locale, 'zh-CN');
+    assert.equal(h.renderConfigs.at(-1).toolbarMode, 'full');
+    h.config.theme = 'night';
+    h.configChanged(['binary-markdown.theme']);
+    await h.flushTimers(false);
+    h.disposed.fire();
+    await h.send({ type: 'renderReady', generation: h.renderConfigs.at(-1).renderGeneration });
+    assert.equal(h.renderConfigs.length, 3, 'A disposed editor must not resume queued work');
 });
 
 test('disposing a panel releases an outstanding native-save wait', async t => {

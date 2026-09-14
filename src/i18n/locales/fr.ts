@@ -28,6 +28,12 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  insertToc: 'Insérer une table des matières',
+  refreshToc: 'Actualiser la table des matières',
+  tocContents: 'Sommaire',
+  tocPending: 'Enregistrez ou actualisez pour générer le sommaire.',
+
+  frontMatter: 'Métadonnées',
   closeOutline: 'Fermer le plan',
   openOutline: 'Ouvrir le plan',
   openInTextEditor: 'Ouvrir dans l\'éditeur de texte',
@@ -50,10 +56,14 @@ export const webviewMessages = {
   insertLink: 'Insérer un lien (Ctrl+K)',
   insertImage: 'Insérer une image (Ctrl+Shift+I)',
   setImageDir: 'Définir le répertoire d\'images',
+  openExtensionSettings: 'Ouvrir les paramètres de Binary Markdown',
   insertTable: 'Insérer un tableau (Ctrl+T)',
   horizontalRule: 'Ligne horizontale (Ctrl+Shift+-)',
   mermaidBlock: 'Diagramme Mermaid',
   mathBlock: 'Bloc mathématique',
+  inlineMath: "Équation en ligne",
+  editEquation: "Modifier l’équation",
+  equationEditHint: "Entrée pour appliquer ; Échap pour annuler",
   searchPlaceholder: 'Rechercher...',
   replacePlaceholder: 'Remplacer...',
   searchPrev: 'Précédent (Shift+Entrée)',

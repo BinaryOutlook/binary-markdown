@@ -3,8 +3,8 @@ import * as path from 'path';
 import * as os from 'os';
 
 /**
- * Electron 用 HTML 生成
- * webviewContent.ts と同等のHTMLを生成するが、VSCode API 不使用
+ * Generates HTML for Electron.
+ * Produces HTML equivalent to webviewContent.ts without using the VS Code API.
  */
 
 interface ElectronEditorConfig {
@@ -17,14 +17,14 @@ interface ElectronEditorConfig {
 }
 
 function getResourcePath(relativePath: string): string {
-    // 開発時: プロジェクトルートから相対パス (electron/ の親 = binary-markdown/)
+    // Development: resolve relative to the project root (the parent of electron/).
     const devPath = path.join(__dirname, '..', '..', relativePath);
     if (fs.existsSync(devPath)) {
         console.log(`[html-generator] Found (dev): ${relativePath} → ${devPath}`);
         return devPath;
     }
 
-    // パッケージ時: extraResources からの短縮パス
+    // Packaged app: use the shorter path under extraResources.
     // extraResources: src/webview/ → webview/, vendor/ → vendor/
     const resPath = process.resourcesPath || '';
     const prodPath = path.join(resPath, relativePath);
@@ -33,7 +33,7 @@ function getResourcePath(relativePath: string): string {
         return prodPath;
     }
 
-    // extraResources の短縮パス (src/webview/editor.js → webview/editor.js)
+    // Shorter extraResources path (src/webview/editor.js → webview/editor.js).
     const shortPath = relativePath.replace(/^src\/webview\//, 'webview/');
     const prodShortPath = path.join(resPath, shortPath);
     if (fs.existsSync(prodShortPath)) {
@@ -59,6 +59,7 @@ export function generateEditorHtml(
     config: ElectronEditorConfig
 ): string {
     const stylesPath = getResourcePath('src/webview/styles.css');
+    const auxScript = fs.readFileSync(getResourcePath('src/shared/document-aux.js'), 'utf8');
     const editorScriptPath = getResourcePath('src/webview/editor.js');
     const vendorDir = getResourcePath('vendor');
 
@@ -70,7 +71,9 @@ export function generateEditorHtml(
     const styles = fs.readFileSync(stylesPath, 'utf8')
         .replace('__FONT_SIZE__', String(config.fontSize));
 
-    const editorScript = fs.readFileSync(editorScriptPath, 'utf8')
+    const mathScript = fs.readFileSync(getResourcePath('src/shared/math-syntax.js'), 'utf8');
+    const editorScript = (mathScript + '\n' + fs.readFileSync(editorScriptPath, 'utf8'))
+        .replace('__MATH_BACKSLASH__', 'true')
         .replace('__DEBUG_MODE__', String(config.enableDebugLogging))
         .replace('__I18N__', JSON.stringify(config.webviewMessages))
         .replace('__DOCUMENT_BASE_URI__', config.documentBaseUri)
@@ -98,6 +101,7 @@ export function generateEditorHtml(
     <link rel="stylesheet" href="${vendorFileUri('katex.min.css')}">
     <script src="${vendorFileUri('katex.min.js')}"></script>
     <script>
+        ${auxScript}
         ${editorScript}
     </script>
 </body>

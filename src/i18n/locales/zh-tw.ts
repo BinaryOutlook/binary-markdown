@@ -28,6 +28,12 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  insertToc: '插入目錄',
+  refreshToc: '重新整理目錄',
+  tocContents: '目錄',
+  tocPending: '儲存或重新整理以產生目錄。',
+
+  frontMatter: '文件中繼資料',
   closeOutline: '關閉大綱',
   openOutline: '開啟大綱',
   openInTextEditor: '在文字編輯器中開啟',
@@ -50,10 +56,14 @@ export const webviewMessages = {
   insertLink: '插入連結 (Ctrl+K)',
   insertImage: '插入圖片 (Ctrl+Shift+I)',
   setImageDir: '設定圖片目錄',
+  openExtensionSettings: '開啟 Binary Markdown 設定',
   insertTable: '插入表格 (Ctrl+T)',
   horizontalRule: '水平線 (Ctrl+Shift+-)',
   mermaidBlock: 'Mermaid 圖表',
   mathBlock: '數學公式',
+  inlineMath: "行內公式",
+  editEquation: "編輯公式",
+  equationEditHint: "按 Enter 套用，按 Escape 取消",
   searchPlaceholder: '搜尋...',
   replacePlaceholder: '取代...',
   searchPrev: '上一個 (Shift+Enter)',

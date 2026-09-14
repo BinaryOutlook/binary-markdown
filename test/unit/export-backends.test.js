@@ -4,6 +4,7 @@ const os = require('node:os');
 const path = require('node:path');
 const { inflateRawSync } = require('node:zlib');
 const test = require('node:test');
+const { JSDOM } = require('jsdom');
 const { discoverTool, runTool } = require('../../out/export/tools');
 const { preparePandocMarkdown, convertPandoc } = require('../../out/export/pandoc');
 const { convertPdf } = require('../../out/export/pdf');
@@ -14,11 +15,7 @@ async function temporary(t) {
     return directory;
 }
 
-async function executable(directory, source, name = 'test executable') {
-    const file = path.join(directory, name);
-    await fs.writeFile(file, `#!${process.execPath}\n${source}\n`, { mode: 0o700 });
-    return file;
-}
+const { toolFixture: executable } = require('../utils/tool-fixture.cjs');
 
 function operations(loadResource = async () => { throw new Error('Unavailable test image'); }) {
     const controller = new AbortController();
@@ -52,11 +49,12 @@ function archiveEntries(bytes) {
 
 test('tool invocation preserves arguments and does not execute shell metacharacters', async t => {
     const directory = await temporary(t);
-    const file = await executable(directory, 'process.stdout.write(JSON.stringify(process.argv.slice(2)));');
+    const file = await executable(directory, 'echo');
     const args = ['a space', '; touch should-not-exist', '$(touch should-not-exist)', '`touch should-not-exist`'];
     const result = await runTool(file, args, { cwd: directory });
     assert.deepEqual(JSON.parse(result.stdout.toString()), args);
-    assert.deepEqual(await fs.readdir(directory), ['test executable']);
+    assert.deepEqual((await fs.readdir(directory)).sort(), process.platform === 'win32'
+        ? ['test executable.exe', 'test executable.exe.fixture'] : ['test executable']);
 });
 
 test('invalid explicit tool paths fail visibly without selecting an installed fallback', async t => {
@@ -71,10 +69,7 @@ test('invalid explicit tool paths fail visibly without selecting an installed fa
 
 test('Pandoc discovery rejects an executable that lacks required conversion capabilities', async t => {
     const directory = await temporary(t);
-    const file = await executable(directory, `
-        const argument = process.argv[2];
-        process.stdout.write(argument === '--version' ? 'pandoc 3.8.3\\n' : argument === '--list-input-formats' ? 'commonmark_x\\njson\\n' : 'html\\n');
-    `);
+    const file = await executable(directory, 'incomplete-pandoc');
     const result = await discoverTool('pandoc', file);
     assert.equal(result.available, false);
     assert.match(result.error, /DOCX, and EPUB support/);
@@ -83,11 +78,7 @@ test('Pandoc discovery rejects an executable that lacks required conversion capa
 test('process cancellation terminates an uncooperative worker and retains cancellation identity', async t => {
     const directory = await temporary(t);
     const pidFile = path.join(directory, 'pid');
-    const file = await executable(directory, `
-        require('node:fs').writeFileSync(process.argv[2], String(process.pid));
-        process.on('SIGTERM', () => {});
-        setInterval(() => {}, 1000);
-    `);
+    const file = await executable(directory, 'hang');
     const controller = new AbortController();
     const pending = runTool(file, [pidFile], { signal: controller.signal });
     while (!(await fs.stat(pidFile).catch(() => undefined))) {
@@ -101,7 +92,7 @@ test('process cancellation terminates an uncooperative worker and retains cancel
 
 test('probe timeouts terminate broken executables instead of hanging discovery', async t => {
     const directory = await temporary(t);
-    const file = await executable(directory, 'setInterval(() => {}, 1000);');
+    const file = await executable(directory, 'hang');
     await assert.rejects(runTool(file, [], { timeoutMs: 30 }), /capability check/);
 });
 
@@ -116,14 +107,19 @@ test('temporary Markdown normalization preserves YAML and fenced directive examp
     assert.equal(preparePandocMarkdown(directives), frontMatter);
 });
 
+test('Pandoc receives generated links without managed comments, preserving code examples', () => {
+    const { refreshTocs, START } = require('../../src/shared/document-aux');
+    const source = refreshTocs('[TOC]\n\n# Heading\n') + '\n```html\n' + START + '\n```\n';
+    const prepared = preparePandocMarkdown(source);
+    assert.ok(prepared.includes('[Heading](#heading)'));
+    assert.equal(prepared.split(START).length - 1, 1);
+    assert.ok(prepared.includes('```html\n' + START));
+});
+
 test('failed Pandoc conversion removes its owned intermediate directory', async t => {
     const directory = await temporary(t);
     const receipt = path.join(directory, 'worker-directory');
-    const file = await executable(directory, `
-        require('node:fs').writeFileSync(${JSON.stringify(receipt)}, process.cwd());
-        process.stderr.write('Controlled converter failure');
-        process.exitCode = 4;
-    `);
+    const file = await executable(directory, 'fail-pandoc', receipt);
     const saved = { sourcePath: path.join(directory, 'report.md'), markdown: '# Report', version: 1, theme: 'github', fontSize: 16 };
     await assert.rejects(convertPandoc('docx', saved, { html: '', theme: 'github', fontSize: 16, diagrams: [], warnings: [] }, file, operations()), /Controlled converter failure/);
     const workerDirectory = await fs.readFile(receipt, 'utf8');
@@ -131,6 +127,42 @@ test('failed Pandoc conversion removes its owned intermediate directory', async 
 });
 
 const realTools = process.env.EXPORT_REAL_TOOLS === '1';
+
+test('real Pandoc exports all supported equation delimiters as native math without changing source', { skip: !realTools }, async t => {
+    const directory = await temporary(t);
+    const status = await discoverTool('pandoc', process.env.EXPORT_PANDOC_PATH || '');
+    assert.equal(status.available, true, status.error);
+    const source = [
+        '# Equation compatibility', '',
+        'Inline $a^2$ and \\(b^3\\).', '',
+        '$$', '\\begin{aligned}', 'x&=1\\\\', 'y&=2', '\\end{aligned}', '$$', '',
+        '\\[', '\\begin{pmatrix}', '1&2\\\\', '3&4', '\\end{pmatrix}', '\\]', '',
+        '$$c^2$$', '', '\\[d^3\\]', '',
+        '```math', '\\begin{gathered}', 'e=1\\\\', 'f=2', '\\end{gathered}', '```', '',
+        '| Cost |', '| --- |', '| \\(O(V^3)\\) |', '',
+        '> \\[', '> g^2', '> \\]', '',
+        '- Parent', '  - Child', '', '    \\[', '    h^3', '    \\]', '',
+        '`\\(literal-code\\)`', '', '```text', '\\[literal-fence\\]', '```', '',
+        'EQUATION-LAST-MARKER', ''
+    ].join('\n');
+    const sourcePath = path.join(directory, 'equations.md');
+    await fs.writeFile(sourcePath, source);
+    const saved = { sourcePath, markdown: source, version: 1, theme: 'github', fontSize: 16 };
+    const prepared = { html: '', theme: 'github', fontSize: 16, diagrams: [], warnings: [] };
+    for (const format of ['docx', 'epub']) {
+        const ops = operations();
+        const entries = archiveEntries(await convertPandoc(format, saved, prepared, status.path, ops));
+        const content = [...entries].filter(([name]) => /(?:document\.xml|\.xhtml)$/.test(name)).map(([, value]) => value.toString('utf8')).join('\n');
+        const math = content.match(format === 'docx' ? /<m:oMath[ >]/g : /<math[ >]/g) || [];
+        assert.equal(math.length, 10, `${format} contains ten native equations`);
+        assert.match(content, /EQUATION-LAST-MARKER/);
+        assert.match(content, /\\\(literal-code\\\)/);
+        assert.match(content, /\\\[literal-fence\\\]/);
+        assert.deepEqual(ops.warnings, []);
+    }
+    assert.equal(await fs.readFile(sourcePath, 'utf8'), source);
+    assert.equal(saved.markdown, source);
+});
 
 test('real DOCX pages do not acquire editor background or text colours', { skip: !realTools }, async t => {
     const directory = await temporary(t);
@@ -150,6 +182,162 @@ test('real DOCX pages do not acquire editor background or text colours', { skip:
         if (reference) assert.deepEqual(appearance, reference, theme + ' DOCX appearance matches the light export');
         else reference = appearance;
     }
+});
+
+const wordNamespace = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
+function xmlDocument(bytes) {
+    return new JSDOM(bytes.toString('utf8'), { contentType: 'text/xml' }).window.document;
+}
+function wordElements(parent, name) { return [...parent.getElementsByTagNameNS(wordNamespace, name)]; }
+function wordValue(element, name = 'val') { return element?.getAttributeNS(wordNamespace, name); }
+function wordText(element) {
+    return [...element.getElementsByTagName('*')].map(child => {
+        if (child.namespaceURI !== wordNamespace) return '';
+        if (child.localName === 't') return child.textContent;
+        if (child.localName === 'br') return '\n';
+        if (child.localName === 'tab') return '\t';
+        return '';
+    }).join('');
+}
+
+test('DOCX puts declared-language labels after intact code blocks, including nested blocks; EPUB stays unchanged', async t => {
+    const directory = await temporary(t);
+    const receipt = path.join(directory, 'writer.json');
+    const code = (language, text) => ({ t: 'CodeBlock', c: [['anchor', language, [['data-example', 'kept']]], text] });
+    const examples = [
+        code(['js'], 'const x = "<&>";\n\n\tconsole.log(x);'),
+        code([], 'no declared language'),
+        code(['numberLines', 'cpp'], 'return 0;'),
+        code(['mydsl'], 'emit result'),
+        code(['numberLines'], 'control class only'),
+        code(['__proto__'], 'unknown language')
+    ];
+    const ast = { 'pandoc-api-version': [1, 23, 1, 1], meta: {}, blocks: [
+        ...examples.slice(0, 2), { t: 'BlockQuote', c: examples.slice(2, 4) },
+        { t: 'BulletList', c: [[...examples.slice(4)]] },
+        { t: 'Para', c: [{ t: 'Code', c: [['', [], []], 'inline code'] }] }
+    ] };
+    const file = await executable(directory, 'ast-pandoc', receipt, ast);
+    const saved = { sourcePath: path.join(directory, 'source.md'), markdown: 'fixture', version: 1, theme: 'github', fontSize: 16 };
+    function collect(value, predicate, result = []) {
+        if (!value || typeof value !== 'object') return result;
+        if (predicate(value)) result.push(value);
+        for (const child of Object.values(value)) collect(child, predicate, result);
+        return result;
+    }
+    for (const [format, showCodeLanguage] of [['docx', undefined], ['docx', true], ['docx', false], ['epub', true], ['epub', false]]) {
+        await convertPandoc(format, saved, { html: '', theme: 'github', fontSize: 16, diagrams: [], warnings: [] }, file, operations(), { showCodeLanguage });
+        const output = JSON.parse(await fs.readFile(receipt, 'utf8'));
+        assert.ok(output.args.includes('--sandbox'));
+        assert.deepEqual(collect(output.ast, value => value.t === 'CodeBlock'), examples);
+        const labelled = collect(output.ast, value => value.t === 'Div' && value.c[1][0]?.t === 'CodeBlock');
+        if (format === 'epub') {
+            assert.deepEqual(output.ast.blocks, ast.blocks);
+            assert.ok(!output.args.some(arg => arg.startsWith('--reference-doc=')));
+            continue;
+        }
+        const reference = output.args.find(arg => arg.startsWith('--reference-doc='))?.slice('--reference-doc='.length);
+        assert.equal(reference, path.resolve(__dirname, '../../media/export-reference.docx'));
+        await fs.access(reference);
+        if (showCodeLanguage === false) {
+            assert.deepEqual(output.ast.blocks, ast.blocks, 'disabling labels preserves original blocks and nesting');
+            continue;
+        }
+        const shapes = labelled.map(value => {
+            const [attributes, paragraphs] = value.c[1][1].c;
+            assert.deepEqual(attributes, ['', [], [['custom-style', 'Code Language']]]);
+            const raw = paragraphs[0].c[1];
+            assert.equal(raw.t, 'RawInline');
+            assert.equal(raw.c[0], 'openxml');
+            return xmlDocument(Buffer.from(raw.c[1]));
+        });
+        assert.deepEqual(shapes.map(wordText), ['JavaScript', 'C++', 'mydsl', '__proto__']);
+        const ids = shapes.map(shape => shape.getElementsByTagNameNS('urn:schemas-microsoft-com:vml', 'shape')[0].getAttribute('id'));
+        assert.equal(new Set(ids).size, shapes.length, 'each native shape has a distinct ID');
+    }
+});
+
+test('bundled Word styles provide a shaded code container and a right-aligned footer without altering inline code', async () => {
+    const entries = archiveEntries(await fs.readFile(path.join(__dirname, '../../media/export-reference.docx')));
+    const styles = wordElements(xmlDocument(entries.get('word/styles.xml')), 'style');
+    const style = id => styles.find(element => wordValue(element, 'styleId') === id);
+    const code = style('SourceCode');
+    const label = style('CodeLanguage');
+    const badge = style('CodeLanguageBadge');
+    assert.equal(wordValue(wordElements(code, 'shd')[0], 'fill'), 'F6F8FA');
+    assert.equal(wordElements(code, 'pBdr')[0].children.length, 5);
+    assert.equal(wordValue(wordElements(code, 'between')[0]), 'single', 'adjacent unlabeled blocks remain visually separated');
+    assert.equal(wordElements(code, 'keepNext').length, 1, 'code end stays with its footer');
+    assert.equal(wordValue(wordElements(code, 'keepLines')[0]), '0', 'long code can span pages');
+    assert.equal(wordValue(wordElements(code, 'wordWrap')[0]), 'off', 'character-level wrapping is retained');
+    assert.equal(wordValue(wordElements(label, 'jc')[0]), 'right');
+    assert.equal(wordValue(wordElements(label, 'keepNext')[0]), '0', 'footer ends the paragraph grouping');
+    assert.equal(wordValue(wordElements(label, 'sz')[0]), '18');
+    assert.equal(wordValue(badge, 'type'), 'character');
+    assert.equal(wordElements(badge, 'i').length, 1, 'language is italic');
+    assert.equal(wordElements(badge, 'iCs').length, 1, 'complex-script language names are also italic');
+    assert.equal(wordElements(badge, 'bdr').length, 0, 'native shape provides the outline, without a rectangle around its text');
+    assert.equal(wordValue(wordElements(badge, 'sz')[0]), '18', 'text inside the shape retains the small label size');
+    assert.equal(wordElements(label, 'bdr').length, 0, 'list indentation does not inherit the text border');
+    assert.equal(wordElements(label, 'pBdr').length, 0, 'border fits the text instead of spanning the paragraph');
+    assert.equal(wordElements(style('VerbatimChar'), 'shd').length, 0);
+    assert.equal(wordElements(style('VerbatimChar'), 'pBdr').length, 0);
+    assert.equal(wordElements(style('VerbatimChar'), 'bdr').length, 0);
+});
+
+test('real Pandoc exports editable code with bottom language labels, safe unknown names, nested blocks and native highlighting', { skip: !realTools }, async t => {
+    const directory = await temporary(t);
+    const status = await discoverTool('pandoc', process.env.EXPORT_PANDOC_PATH || '');
+    assert.equal(status.available, true, status.error);
+    const python = 'def greet(name):\n    # 中文 <&>\n\n    return "Hello, " + name';
+    const long = Array.from({ length: 140 }, (_, index) => `console.log("CODE_LINE_${String(index).padStart(3, '0')}");`).join('\n');
+    const markdown = [
+        'Inline `count = 0` stays in this paragraph.', '',
+        '```python', python, '```', '',
+        '```', 'unlabeled code', '```', '',
+        '```mydsl<&', 'emit "result"', '```', '',
+        '- List item', '', '  ```cpp', '  return 0;', '  ```', '',
+        '> ```text', '> quoted text', '> ```', '',
+        '```js', long, '```', '', 'END_OF_CODE_TEST'
+    ].join('\n');
+    const saved = { sourcePath: path.join(directory, 'source.md'), markdown, version: 1, theme: 'github', fontSize: 16 };
+    const ops = operations();
+    const bytes = await convertPandoc('docx', saved, { html: '', theme: 'github', fontSize: 16, diagrams: [], warnings: [] }, status.path, ops);
+    const entries = archiveEntries(bytes);
+    const document = xmlDocument(entries.get('word/document.xml'));
+    const paragraphs = wordElements(document, 'p');
+    const style = paragraph => wordValue(wordElements(paragraph, 'pStyle')[0]);
+    const blocks = paragraphs.filter(paragraph => style(paragraph) === 'SourceCode');
+    assert.deepEqual(blocks.map(wordText), [python, 'unlabeled code', 'emit "result"', 'return 0;', 'quoted text', long]);
+    const labels = paragraphs.filter(paragraph => style(paragraph) === 'CodeLanguage');
+    assert.deepEqual(labels.map(label => wordText(label).trim()), ['Python', 'mydsl<&', 'C++', 'Plain text', 'JavaScript']);
+    for (const label of labels) {
+        assert.equal(style(label.previousElementSibling), 'SourceCode', 'label immediately follows complete code');
+        assert.equal(wordValue(wordElements(label, 'rStyle')[0]), 'CodeLanguageBadge', 'only label text receives the badge style');
+        const firstRun = wordElements(label, 'r')[0];
+        assert.equal(wordText(firstRun), ' ');
+        assert.equal(wordElements(firstRun, 'rStyle').length, 0, 'list continuation spacing stays outside the badge');
+        const shape = label.getElementsByTagNameNS('urn:schemas-microsoft-com:vml', 'shape')[0];
+        assert.ok(shape, 'language is editable text inside a native shape');
+        assert.equal(wordElements(shape, 'txbxContent').length, 1);
+    }
+    assert.ok(wordElements(blocks[0], 'rStyle').some(element => wordValue(element) === 'KeywordTok'));
+    const inline = paragraphs.find(paragraph => wordText(paragraph).startsWith('Inline '));
+    assert.notEqual(style(inline), 'SourceCode');
+    assert.equal(wordValue(wordElements(inline, 'rStyle')[0]), 'VerbatimChar');
+    assert.ok(paragraphs.some(paragraph => wordText(paragraph) === 'END_OF_CODE_TEST'));
+    assert.deepEqual(ops.warnings, []);
+    const hidden = archiveEntries(await convertPandoc('docx', saved, { html: '', theme: 'github', fontSize: 16, diagrams: [], warnings: [] },
+        status.path, operations(), { showCodeLanguage: false }));
+    const hiddenParagraphs = wordElements(xmlDocument(hidden.get('word/document.xml')), 'p');
+    assert.equal(hiddenParagraphs.filter(paragraph => style(paragraph) === 'CodeLanguage').length, 0);
+    assert.deepEqual(hiddenParagraphs.filter(paragraph => style(paragraph) === 'SourceCode').map(wordText), blocks.map(wordText),
+        'hidden badges preserve every styled code block');
+    assert.ok(wordElements(hiddenParagraphs.find(paragraph => style(paragraph) === 'SourceCode'), 'rStyle')
+        .some(element => wordValue(element) === 'KeywordTok'), 'hiding badges keeps highlighting');
+    const epub = archiveEntries(await convertPandoc('epub', saved, { html: '', theme: 'github', fontSize: 16, diagrams: [], warnings: [] }, status.path, operations()));
+    const html = [...epub].filter(([name]) => name.endsWith('.xhtml')).map(([, contents]) => contents.toString()).join('\n');
+    assert.doesNotMatch(html, /Code Language|CodeLanguage/);
 });
 
 test('real Pandoc exports structured content, native math and original assets without active raw HTML', { skip: !realTools }, async t => {
@@ -244,6 +432,35 @@ test('real headless browser produces complete, offline PDF with oversized conten
     assert.deepEqual(ops.stages, ['rendering', 'converting']);
 });
 
+test('real PDF adds declared-language badges after complete code and hides them without losing code', { skip: !realTools }, async t => {
+    const directory = await temporary(t);
+    const status = await discoverTool('browser', process.env.EXPORT_BROWSER_PATH || '');
+    assert.equal(status.available, true, status.error);
+    const long = Array.from({ length: 140 }, (_, i) => 'CODE_MARKER_' + String(i).padStart(3, '0')).join('\n');
+    const html = '<!doctype html><html><head><style>body{font:14px sans-serif}pre{font:12px monospace;padding:8px;background:#f6f8fa;border:1px solid #d0d7de}</style></head><body>' +
+        '<p>Inline <code>value = 1</code></p><pre data-lang="js"><code>FIRST_CODE</code></pre>' +
+        '<ul><li>Nested<pre data-lang="mydsl&lt;&amp;"><code>NESTED_CODE</code></pre></li></ul>' +
+        '<pre data-lang=""><code>UNLABELED_CODE</code></pre>' +
+        '<pre data-lang="rust"><code>' + long + '</code></pre><p>END_OF_PDF</p></body></html>';
+    for (const showCodeLanguage of [undefined, false]) {
+        const ops = operations();
+        const bytes = await convertPdf(html, status.path, ops, { showCodeLanguage });
+        const file = path.join(directory, showCodeLanguage === false ? 'hidden.pdf' : 'shown.pdf');
+        await fs.writeFile(file, bytes);
+        const text = (await runTool(process.env.EXPORT_PDFTOTEXT_PATH || 'pdftotext', [file, '-'])).stdout.toString();
+        for (const marker of ['FIRST_CODE', 'NESTED_CODE', 'UNLABELED_CODE', 'END_OF_PDF', 'value = 1']) assert.ok(text.includes(marker));
+        for (let i = 0; i < 140; i++) assert.equal(text.split('CODE_MARKER_' + String(i).padStart(3, '0')).length, 2);
+        if (showCodeLanguage === false) {
+            assert.doesNotMatch(text, /JavaScript|mydsl|Rust/);
+        } else {
+            assert.match(text, /FIRST_CODE\s+JavaScript/);
+            assert.match(text, /NESTED_CODE\s+mydsl<&/);
+            assert.match(text.split('\f').find(page => page.includes('CODE_MARKER_139')), /Rust/);
+        }
+        assert.deepEqual(ops.warnings, []);
+    }
+});
+
 test('real browser cancellation closes the worker and returns cancellation instead of a PDF', { skip: !realTools }, async () => {
     const status = await discoverTool('browser', process.env.EXPORT_BROWSER_PATH || '');
     assert.equal(status.available, true, status.error);
@@ -254,4 +471,29 @@ test('real browser cancellation closes the worker and returns cancellation inste
     };
     await assert.rejects(convertPdf('<!doctype html><html><body><p>Cancel this export.</p></body></html>', status.path, ops), { name: 'AbortError' });
     assert.deepEqual(ops.stages, ['rendering', 'converting']);
+});
+
+test('real exports retain TOC destinations for equation headings and following headings', { skip: !realTools }, async t => {
+    const { refreshTocs, scan } = require('../../src/shared/document-aux');
+    const directory = await temporary(t);
+    const status = await discoverTool('pandoc', process.env.EXPORT_PANDOC_PATH || '');
+    assert.equal(status.available, true, status.error);
+    const source = refreshTocs('---\ntitle: Integrated report\n---\n\n[TOC]\n\n# Cost $x^2$\n\n## Complexity \\(O(V^3)\\)\n\n# Following heading\n\n```python\nprint("kept")\n```\n');
+    const saved = { sourcePath: path.join(directory, 'integrated.md'), markdown: source, version: 1, theme: 'github', fontSize: 16 };
+    const prepared = { html: '', theme: 'github', fontSize: 16, diagrams: [], warnings: [] };
+    for (const format of ['docx', 'epub']) {
+        const entries = archiveEntries(await convertPandoc(format, saved, prepared, status.path, operations()));
+        if (format === 'docx') {
+            const xml = xmlDocument(entries.get('word/document.xml'));
+            const targets = new Set(wordElements(xml, 'bookmarkStart').map(element => wordValue(element, 'name')));
+            const links = wordElements(xml, 'hyperlink').map(element => wordValue(element, 'anchor')).filter(Boolean);
+            assert.equal(links.length, scan(source).headings.length);
+            for (const link of links) assert.ok(targets.has(link), 'DOCX TOC target exists: ' + link);
+            assert.match(wordText(xml), /Python/);
+        } else {
+            const content = [...entries].filter(([name]) => name.endsWith('.xhtml')).map(([, bytes]) => bytes.toString()).join('\n');
+            for (const heading of scan(source).headings) assert.ok(content.includes('id="' + heading.id + '"'), 'EPUB TOC target exists: ' + heading.id);
+        }
+    }
+    assert.equal(saved.markdown, source);
 });

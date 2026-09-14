@@ -2,7 +2,7 @@
   "name": "binary-markdown",
   "displayName": "Binary Markdown Editor",
   "description": "Binary Markdown: an open-source visual Markdown editor with reliable code copying and a persistent outline.",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "publisher": "BinaryOutlook",
   "icon": "media/icon.png",
   "license": "AGPL-3.0-or-later",
@@ -225,6 +225,17 @@
           "default": "",
           "scope": "machine",
           "description": "%config.export.browserPath.description%"
+        },
+        "binary-markdown.math.backslashDelimiters": {
+          "type": "boolean",
+          "default": true,
+          "description": "%config.math.backslashDelimiters.description%"
+        },
+        "binary-markdown.export.showCodeLanguage": {
+          "type": "boolean",
+          "default": true,
+          "scope": "resource",
+          "description": "%config.export.showCodeLanguage.description%"
         }
       }
     },
@@ -299,10 +310,12 @@
     "compile": "tsc -p ./ && node build-locales.js && node scripts/copy-webview.js && node scripts/copy-vendor.js",
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
-    "test": "npm run test:outline-state && npm run test:identity && npm run test:build-info && npm run test:release && npm run test:localization && npm run test:export && npm run test:e2e",
+    "test:document-aux": "node --test test/unit/document-aux.test.js",
+    "test": "npm run test:math && npm run test:document-aux && npm run test:outline-state && npm run test:identity && npm run test:build-info && npm run test:release && npm run test:localization && npm run test:export && npm run test:e2e",
     "lint": "eslint src --ext ts",
     "package": "node scripts/package-vsix.js",
     "test:build": "node test/build-standalone.js",
+    "test:math": "node --test test/unit/math-syntax.test.js",
     "test:outline-state": "node --test test/unit/outline-state.test.js",
     "test:e2e": "npm run test:build && playwright test",
     "test:e2e:ui": "npm run test:build && playwright test --ui",

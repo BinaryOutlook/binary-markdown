@@ -39,13 +39,13 @@ const fs = __importStar(require("fs"));
 const path = __importStar(require("path"));
 const os = __importStar(require("os"));
 function getResourcePath(relativePath) {
-    // 開発時: プロジェクトルートから相対パス (electron/ の親 = binary-markdown/)
+    // Development: resolve relative to the project root (the parent of electron/).
     const devPath = path.join(__dirname, '..', '..', relativePath);
     if (fs.existsSync(devPath)) {
         console.log(`[html-generator] Found (dev): ${relativePath} → ${devPath}`);
         return devPath;
     }
-    // パッケージ時: extraResources からの短縮パス
+    // Packaged app: use the shorter path under extraResources.
     // extraResources: src/webview/ → webview/, vendor/ → vendor/
     const resPath = process.resourcesPath || '';
     const prodPath = path.join(resPath, relativePath);
@@ -53,7 +53,7 @@ function getResourcePath(relativePath) {
         console.log(`[html-generator] Found (prod): ${relativePath} → ${prodPath}`);
         return prodPath;
     }
-    // extraResources の短縮パス (src/webview/editor.js → webview/editor.js)
+    // Shorter extraResources path (src/webview/editor.js → webview/editor.js).
     const shortPath = relativePath.replace(/^src\/webview\//, 'webview/');
     const prodShortPath = path.join(resPath, shortPath);
     if (fs.existsSync(prodShortPath)) {

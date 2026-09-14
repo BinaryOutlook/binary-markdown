@@ -210,6 +210,7 @@ body {
     white-space: nowrap;
 }
 .sidebar-footer .sidebar-status-imagedir .imagedir-source {
+    flex: 1;
     opacity: 0.6;
     font-size: 10px;
     white-space: nowrap;
@@ -226,19 +227,27 @@ body {
     text-overflow: ellipsis;
     white-space: nowrap;
 }
-.sidebar-footer .sidebar-status-imagedir .imagedir-settings-btn {
+.sidebar-footer .sidebar-footer-action {
     background: none;
     border: none;
     color: var(--text-color);
     cursor: pointer;
     padding: 2px;
+    width: 22px;
+    height: 22px;
     opacity: 0.6;
     flex-shrink: 0;
     display: flex;
     align-items: center;
+    justify-content: center;
 }
-.sidebar-footer .sidebar-status-imagedir .imagedir-settings-btn:hover {
+.sidebar-footer .sidebar-footer-action:hover,
+.sidebar-footer .sidebar-footer-action:focus-visible {
     opacity: 1;
+}
+.sidebar-footer .sidebar-footer-action:focus-visible {
+    outline: 2px solid var(--link-color);
+    outline-offset: 1px;
 }
 
 .editor-container { flex: 1; display: flex; flex-direction: column; min-width: 0; }
@@ -764,6 +773,14 @@ body {
 }
 
 /* KaTeX math block styles */
+.editor .math-inline { cursor: pointer; border-radius: 3px; }
+.editor .math-inline:focus { outline: 2px solid var(--link-color); outline-offset: 2px; }
+.math-inline-input {
+    position: fixed; z-index: 10000; width: min(480px, calc(100vw - 24px));
+    padding: 10px; border: 1px solid var(--border-color); border-radius: 6px;
+    color: var(--text-color); background: var(--bg-color); font-family: var(--font-mono);
+    font-size: 16px; box-shadow: 0 4px 16px #0003;
+}
 .editor .math-wrapper {
     margin: 1em 0;
     border-radius: 6px;
@@ -1080,3 +1097,16 @@ body {
 .export-spinner { display: inline-block; flex-shrink: 0; width: 13px; height: 13px; border: 2px solid var(--border-color); border-top-color: var(--link-color); border-radius: 50%; animation: export-active 0.9s linear infinite; }
 @keyframes export-active { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .export-spinner { animation: none; border-style: dotted; } }
+
+/* Metadata is source text, separate from the editable prose. */
+.document-aux { border: 1px solid var(--border-color); border-radius: 6px; margin: 1em 0; padding: 12px 16px; }
+.front-matter summary { cursor: pointer; color: var(--text-color); font-size: .9em; }
+.front-matter-source { box-sizing: border-box; display: block; width: 100%; margin-top: 12px; padding: 12px; resize: vertical; font: .85em/1.6 var(--font-mono); background: var(--code-bg); color: var(--text-color); border: 1px solid var(--border-color); border-radius: 4px; }
+.front-matter-source:focus-visible { outline: 2px solid var(--link-color); outline-offset: 2px; }
+
+.toc-heading { display: flex; align-items: center; gap: 8px; }
+.toc-refresh { padding: 2px 6px; border: 0; border-radius: 4px; background: transparent; color: var(--link-color); cursor: pointer; font: 20px/1.2 system-ui, sans-serif; }
+.toc-refresh:hover { background: var(--code-bg); }
+.toc-refresh:focus-visible { outline: 2px solid var(--link-color); }
+.toc-block ul { margin: .5em 0 0; padding-left: 1.3em; }
+.toc-block a { cursor: pointer; }

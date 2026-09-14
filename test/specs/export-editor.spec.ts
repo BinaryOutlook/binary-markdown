@@ -1,3 +1,4 @@
+import { refreshTocs } from '../../src/shared/document-aux';
 import { test, expect, Page } from '@playwright/test';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -240,19 +241,20 @@ test.describe('Export document-only rendering', () => {
         });
     }
 
-    test('discloses dollar math, TOC and footnotes retained as visible renderer source', async ({ page }) => {
+    test('renders math and a saved TOC while disclosing literal footnotes', async ({ page }) => {
         const source = '# Literal notation\n\nInline $x^2$ and $y$.\n\n$$\nE = mc^2\n$$\n\n[TOC]\n\nText with a footnote.[^note]\n\n[^note]: Footnote body.\n';
         await setMarkdown(page, source);
         const originalHtml = await page.locator('#editor').innerHTML();
-        const rendered = await prepare(page, source);
-        expect(rendered.html).toContain('$x^2$');
-        expect(rendered.html).toContain('$y$');
-        expect(rendered.html).toContain('$$');
-        expect(rendered.html).toContain('[TOC]');
+        const rendered = await prepare(page, refreshTocs(source));
+        expect(rendered.html).not.toContain('$x^2$');
+        expect(rendered.html).not.toContain('$y$');
+        expect(rendered.html).not.toContain('$$');
+        expect(rendered.html).toContain('toc-block');
+        expect(rendered.html).not.toContain('[TOC]');
         expect(rendered.html).toContain('[^note]');
-        expect(rendered.html).not.toContain('katex');
+        expect(rendered.html).toContain('katex');
         expect(rendered.warnings.map((warning: { code: string }) => warning.code)).toEqual([
-            'renderer-math-source', 'renderer-toc-source', 'renderer-footnote-source'
+            'renderer-footnote-source'
         ]);
         expect(await page.locator('#editor').innerHTML()).toBe(originalHtml);
         await sendHost(page, { type: 'captureExportSnapshot', requestId: 'literal-source-unchanged' });

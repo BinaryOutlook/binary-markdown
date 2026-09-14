@@ -8,6 +8,11 @@
     };
     
     const host = window.hostBridge;
+    const mathSyntax = window.BinaryMath;
+    const mathBackslashDelimiters = __MATH_BACKSLASH__;
+    var finishInlineMathEdit = null;
+    const documentAux = window.documentAux;
+    let frontMatterOpen = false;
     const i18n = __I18N__;
     logger.log('[Binary Markdown] i18n loaded:', i18n.livePreviewMode ? 'OK' : 'EMPTY', '- Sample:', i18n.bold || '(none)');
     const editor = document.getElementById('editor');
@@ -152,6 +157,7 @@
     let saveTimeout = null;
     let syncTimeout = null;
     let pendingSync = false;
+    let visualSourceCurrent = true;
     let hasUserEdited = false; // Flag to track if user has made any edits
     let clientRevision = 0;
     let syncGeneration = 0;
@@ -159,7 +165,8 @@
 
     // Capturing export eligibility must never normalize an untouched document.
     function readCurrentMarkdown() {
-        return isSourceMode ? sourceEditor.value : (hasUserEdited ? htmlToMarkdown() : markdown);
+        if (finishInlineMathEdit) finishInlineMathEdit(true, false);
+        return isSourceMode ? sourceEditor.value : (hasUserEdited && !visualSourceCurrent ? htmlToMarkdown() : markdown);
     }
 
     function cancelScheduledSync() {
@@ -172,6 +179,7 @@
     }
 
     function saveCurrentDocument() {
+        try { refreshManagedTocs(false); } catch (error) { showExternalChangeToast(error.message); return; }
         const content = readCurrentMarkdown();
         cancelScheduledSync();
         markdown = content;
@@ -1362,12 +1370,13 @@
 
     // ========== MARKDOWN TO HTML ==========
 
-    function parseMarkdownLine(text) {
+    function parseMarkdownLine(text, allowMath = true) {
+        const parseLineInline = value => parseInline(value, allowMath);
         // Heading
         const headingMatch = text.match(REGEX.heading);
         if (headingMatch) {
             const level = headingMatch[1].length;
-            const content = parseInline(headingMatch[2]);
+            const content = parseLineInline(headingMatch[2]);
             return { tag: 'h' + level, html: content, consumed: true };
         }
 
@@ -1381,7 +1390,7 @@
         if (taskMatch) {
             const indent = taskMatch[1].length;
             const checked = taskMatch[2].toLowerCase() === 'x' ? 'checked' : '';
-            const taskContent = parseInline(taskMatch[3]);
+            const taskContent = parseLineInline(taskMatch[3]);
             // Use <br> for empty task items to make them visible and editable
             return { tag: 'li', listType: 'ul', html: '<input type="checkbox"' + (checked ? ' checked' : '') + '>' + (taskContent || '<br>'), consumed: true, indent: indent };
         }
@@ -1390,7 +1399,7 @@
         const ulMatch = text.match(REGEX.ul);
         if (ulMatch) {
             const indent = ulMatch[1].length;
-            const content = parseInline(ulMatch[2]);
+            const content = parseLineInline(ulMatch[2]);
             // Use <br> for empty list items to make them visible and editable
             return { tag: 'li', listType: 'ul', html: content || '<br>', consumed: true, indent: indent };
         }
@@ -1399,7 +1408,7 @@
         const olMatch = text.match(REGEX.ol);
         if (olMatch) {
             const indent = olMatch[1].length;
-            const content = parseInline(olMatch[3]);
+            const content = parseLineInline(olMatch[3]);
             // Use <br> for empty list items to make them visible and editable
             return { tag: 'li', listType: 'ol', html: content || '<br>', consumed: true, indent: indent };
         }
@@ -1407,7 +1416,7 @@
         // Blockquote
         const quoteMatch = text.match(REGEX.quote);
         if (quoteMatch) {
-            return { tag: 'blockquote', html: parseInline(quoteMatch[1]), consumed: true };
+            return { tag: 'blockquote', html: parseLineInline(quoteMatch[1]), consumed: true };
         }
 
         // Code block start (3+ backticks or tildes)
@@ -1419,12 +1428,18 @@
         }
 
         // Regular paragraph
-        return { tag: 'p', html: parseInline(text), consumed: false };
+        return { tag: 'p', html: parseLineInline(text), consumed: false };
     }
 
-    function parseInline(text) {
+    function parseInline(text, allowMath = true) {
         if (!text) return '';
-        
+        const equations = allowMath ? mathSyntax.inline(text, mathBackslashDelimiters) : [];
+        let mathMarker = '\x00BMATH';
+        while (text.includes(mathMarker)) mathMarker += 'X';
+        for (let i = equations.length - 1; i >= 0; i--) {
+            const equation = equations[i];
+            text = text.slice(0, equation.start) + mathMarker + i + '\x00' + text.slice(equation.end);
+        }
         let html = escapeHtml(text);
         
         // Restore <br> tags that were escaped (used in table cells for line breaks)
@@ -1479,6 +1494,9 @@
         for (const { placeholder, html: replacement } of placeholders) {
             html = html.replace(placeholder, replacement);
         }
+        equations.forEach((equation, i) => {
+            html = html.replace(mathMarker + i + '\x00', () => inlineMathHtml(equation));
+        });
         
         return html;
     }
@@ -1560,7 +1578,9 @@
         const html = markdownToHtmlFragment(markdownToRender);
         logger.log('[Binary Markdown] renderFromMarkdown: html length:', html.length, 'first 100 chars:', html.substring(0, 100));
         editor.innerHTML = html || '<p><br></p>';
+        visualSourceCurrent = true;
         setupInteractiveElements();
+        assignHeadingAnchors(editor, markdown);
         updatePlaceholder();
     }
 
@@ -1591,10 +1611,7 @@
 
     function stripExportMetadata(source) {
         let text = source.replace(/^\uFEFF/, '').replace(/\r\n?/g, '\n');
-        const frontMatter = text.match(/^---\n([\s\S]*?)\n(?:---|\.\.\.)(?:\n|$)/);
-        if (frontMatter && /^\s*[\w-]+\s*:/m.test(frontMatter[1])) {
-            text = text.slice(frontMatter[0].length);
-        }
+        text = documentAux.splitFrontMatter(text).body;
         // Only a trailing app directive block outside a code fence is metadata.
         const directiveStart = text.lastIndexOf('\n---\n');
         if (directiveStart >= 0 && /^(?:(?:IMAGE_DIR:\s*[^\n]+|FORCE_RELATIVE_PATH:\s*(?:true|false))\n?)+\s*$/i.test(text.slice(directiveStart + 5))) {
@@ -1690,14 +1707,17 @@
         const template = document.createElement('template');
         const normalizedSource = stripExportMetadata(source);
         template.innerHTML = markdownToHtmlFragment(normalizedSource);
+        assignHeadingAnchors(template.content, normalizedSource);
+        template.content.querySelectorAll('.toc-refresh').forEach(button => button.remove());
+        template.content.querySelectorAll('[data-toc-source]').forEach(block => block.removeAttribute('data-toc-source'));
         sanitizeExportTree(template.content, warnings);
         // These are diagnostics about the current rendered output, not a new
         // Markdown parser. Literal notation stays exactly as the user sees it.
         const diagnosticTree = template.content.cloneNode(true);
-        diagnosticTree.querySelectorAll('pre,code,.math-wrapper,.mermaid-wrapper').forEach(element => element.remove());
+        diagnosticTree.querySelectorAll('pre,code,.math-wrapper,.math-inline,.mermaid-wrapper').forEach(element => element.remove());
         const visibleSource = (diagnosticTree.textContent || '').replace(/\\\$/g, '');
         if (/\$\$[\s\S]*?\$\$|\$(?!\$)(?=\S)[^$\n]*?[^\s$]\$(?![\d$])/.test(visibleSource)) {
-            exportWarning(warnings, 'renderer-math-source', 'The current displayed renderer leaves dollar-delimited mathematics ($...$ and $$...$$) as visible source. HTML/PDF preserve that behavior; use a fenced math block for rendered equations.');
+            exportWarning(warnings, 'renderer-math-source', 'Unrecognized equation delimiters remain visible source in the exported document.');
         }
         if (/\[TOC\]/i.test(visibleSource)) {
             exportWarning(warnings, 'renderer-toc-source', 'A literal [TOC] marker remains visible. HTML/PDF do not generate a table of contents from that marker in the current renderer.');
@@ -1726,6 +1746,20 @@
         document.body.appendChild(container);
         try {
             container.querySelectorAll('pre:not([data-lang="math"]):not([data-lang="mermaid"])').forEach(applyHighlighting);
+            for (const span of container.querySelectorAll('.math-inline')) {
+                checkExportCancellation(signal);
+                const output = document.createElement('span');
+                try {
+                    renderInlineMath(span, true);
+                    output.className = 'math-inline-display';
+                    output.innerHTML = span.innerHTML;
+                } catch (error) {
+                    output.className = 'export-warning';
+                    output.textContent = inlineMathMarkdown(span);
+                    exportWarning(warnings, 'math-fallback', 'An inline equation could not be rendered; its source is preserved.');
+                }
+                span.replaceWith(output);
+            }
             for (const wrapper of Array.from(container.querySelectorAll('.math-wrapper'))) {
                 checkExportCancellation(signal);
                 const code = wrapper.querySelector('pre code');
@@ -2139,15 +2173,178 @@
     }
 
     // Convert markdown to HTML fragment (reusable for both full render and partial paste)
+    function renderFrontMatter(raw) {
+        return '<div class="document-aux front-matter" contenteditable="false"><details' + (frontMatterOpen ? ' open' : '') + '>' +
+            '<summary>' + escapeHtml(i18n.frontMatter || 'Front matter') + '</summary>' +
+            '<textarea class="front-matter-source" aria-label="' + (i18n.frontMatter || 'Front matter').replace(/"/g, '&quot;') +
+            '" spellcheck="false" rows="7">' + escapeHtml(raw) + '</textarea></details></div>';
+    }
+
+    function renderTocBlock(raw) {
+        const label = i18n.tocContents || 'Contents';
+        const refreshLabel = i18n.refreshToc || 'Refresh table of contents';
+        let list = '<ul>';
+        for (const line of raw.split('\n')) {
+            const item = /^( *)- \[(.*)\]\(#(.*)\)$/.exec(line);
+            if (!item) continue;
+            const text = item[2].replace(/\\([\\[\]`*_~])/g, '$1');
+            list += '<li style="margin-left:' + (item[1].length / 2) + 'em"><a href="#' +
+                encodeURIComponent(item[3]) + '">' + escapeHtml(text) + '</a></li>';
+        }
+        list += '</ul>';
+        if (/^\[toc\]$/i.test(raw)) list += '<p class="toc-pending">' + escapeHtml(i18n.tocPending || 'Save or refresh to generate contents.') + '</p>';
+        return '<div class="document-aux toc-block" contenteditable="false" data-toc-source="' + encodeURIComponent(raw) + '">' +
+            '<div class="toc-heading"><strong>' + escapeHtml(label) + '</strong><button class="toc-refresh" type="button" aria-label="' +
+            refreshLabel.replace(/"/g, '&quot;') + '" title="' + refreshLabel.replace(/"/g, '&quot;') + '">↻</button></div>' + list + '</div>';
+    }
+
+    function assignHeadingAnchors(root, source) {
+        if (!root.querySelector('.toc-block')) return;
+        let headings;
+        try { headings = documentAux.scan(source).headings; }
+        catch (_) { return; } // Keep malformed source editable; save/export report it.
+        const nodes = Array.from(root.querySelectorAll('h1,h2,h3,h4,h5,h6')).filter(h => !h.closest('.document-aux'));
+        nodes.forEach((node, index) => { if (headings[index]) node.id = headings[index].id; });
+    }
+
+    function refreshManagedTocs(notify) {
+        const current = readCurrentMarkdown();
+        const next = documentAux.refreshTocs(current);
+        if (next === current) return false;
+        cancelScheduledSync();
+        markdown = current;
+        undoManager.saveSnapshot();
+        if (isSourceMode) {
+            const start = sourceEditor.selectionStart, end = sourceEditor.selectionEnd;
+            sourceEditor.value = next;
+            // Keep selection on the same source text when the generated list grows.
+            let prefix = 0, suffix = 0;
+            while (prefix < current.length && prefix < next.length && current[prefix] === next[prefix]) prefix++;
+            while (suffix < current.length - prefix && suffix < next.length - prefix && current[current.length - 1 - suffix] === next[next.length - 1 - suffix]) suffix++;
+            const map = offset => offset <= prefix ? offset : offset >= current.length - suffix ? offset + next.length - current.length : prefix;
+            if (sourceEditor.setSelectionRange) sourceEditor.setSelectionRange(map(start), map(end));
+        } else {
+            const parsed = documentAux.scan(next);
+            const replacements = parsed.tocs;
+            if (editor.querySelectorAll('.toc-block').length !== replacements.length) {
+                markdown = next;
+                const cursor = saveCursorState();
+                renderFromMarkdown();
+                if (cursor) restoreCursorState(cursor);
+            }
+            editor.querySelectorAll('.toc-block').forEach((block, index) => {
+                if (!replacements[index]) return;
+                const holder = document.createElement('template');
+                holder.innerHTML = renderTocBlock(replacements[index].source);
+                block.replaceWith(holder.content.firstElementChild);
+            });
+            setupDocumentAux();
+        }
+        markdown = next;
+        markAsEdited();
+        visualSourceCurrent = true;
+        updateOutline();
+        updateWordCount();
+        if (notify) notifyChangeImmediate();
+        return true;
+    }
+
+    function insertManagedToc() {
+        try {
+            const current = readCurrentMarkdown();
+            const parsed = documentAux.scan(current);
+            if (parsed.tocs.length || parsed.markers.length) { refreshManagedTocs(true); return; }
+            const raw = documentAux.generateToc(parsed.headings);
+            markdown = current;
+            undoManager.saveSnapshot();
+            cancelScheduledSync();
+            if (isSourceMode) {
+                const at = Math.max(sourceEditor.selectionStart || 0, parsed.front.raw.length);
+                sourceEditor.value = current.slice(0, at) + '\n\n' + raw + '\n\n' + current.slice(at);
+                markdown = sourceEditor.value;
+                markAsEdited();
+                notifyChangeImmediate();
+            } else {
+                const holder = document.createElement('template');
+                holder.innerHTML = renderTocBlock(raw);
+                const block = holder.content.firstElementChild;
+                const line = getCurrentLine();
+                if (line && line.parentNode === editor && !line.classList.contains('front-matter')) {
+                    if (line.tagName === 'P' && !line.textContent.trim()) line.replaceWith(block);
+                    else line.after(block);
+                } else {
+                    const metadata = editor.querySelector(':scope > .front-matter');
+                    if (metadata) metadata.after(block); else editor.prepend(block);
+                }
+                if (!block.nextSibling) { const p = document.createElement('p'); p.innerHTML = '<br>'; block.after(p); }
+                setupDocumentAux();
+                syncMarkdownSync();
+                updateOutline();
+            }
+        } catch (error) { showExternalChangeToast(error.message); }
+    }
+
+    function setupDocumentAux() {
+        editor.querySelectorAll('.toc-block').forEach(block => {
+            if (block.dataset.auxSetup) return;
+            block.dataset.auxSetup = 'true';
+            block.querySelector('.toc-refresh').addEventListener('click', e => {
+                e.preventDefault(); e.stopPropagation();
+                try { refreshManagedTocs(true); } catch (error) { showExternalChangeToast(error.message); }
+            });
+            block.querySelectorAll('a').forEach(a => a.addEventListener('click', e => {
+                e.preventDefault(); e.stopPropagation();
+                const id = decodeURIComponent(a.getAttribute('href').slice(1));
+                const target = Array.from(editor.querySelectorAll('h1,h2,h3,h4,h5,h6')).find(h => h.id === id);
+                if (target) target.scrollIntoView({ block: 'start', behavior: 'smooth' });
+            }));
+        });
+        editor.querySelectorAll('.front-matter').forEach(block => {
+            if (block.dataset.auxSetup) return;
+            block.dataset.auxSetup = 'true';
+            const details = block.querySelector('details');
+            const input = block.querySelector('textarea');
+            details.addEventListener('toggle', () => { frontMatterOpen = details.open; });
+            input.addEventListener('beforeinput', () => { undoManager.saveSnapshotDebounced(); });
+            input.addEventListener('input', e => {
+                e.stopPropagation();
+                markActivelyEditing();
+                syncMarkdownSync();
+            });
+            input.addEventListener('keydown', e => {
+                e.stopPropagation();
+                if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') { e.preventDefault(); saveCurrentDocument(); }
+                if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+                    e.preventDefault();
+                    if (e.shiftKey) undoManager.redo(); else undoManager.undo();
+                }
+            });
+        });
+    }
+
     function markdownToHtmlFragment(markdownText) {
         // Normalize line endings: \r\n → \n, lone \r → \n
-        const lines = markdownText.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
-        let html = '';
+        const front = documentAux.splitFrontMatter(markdownText.replace(/\r\n?/g, '\n'));
+        let body = front.body;
+        const tocSlots = [];
+        try {
+            const parsed = documentAux.scan(body);
+            for (const block of [...parsed.tocs, ...parsed.markers].sort((a, b) => b.start - a.start)) {
+                const raw = body.slice(block.start, block.end);
+                const slot = tocSlots.length;
+                tocSlots.push(raw);
+                body = body.slice(0, block.start) + '\x00BMTOC' + slot + '\x00' + body.slice(block.end);
+            }
+        } catch (_) { /* Preserve incomplete markers as editable source. */ }
+        const lines = body.split('\n');
+        let html = front.raw ? renderFrontMatter(front.raw) : '';
         let inCodeBlock = false;
         let codeContent = '';
         let codeLang = '';
         let codeFenceLength = 0; // Track the length of the opening fence
         let codeFenceChar = ''; // Track the fence character (backtick or tilde)
+        let codeStart = 0;
+        const metadataEnd = lines[0] === '---' ? lines.findIndex((line, i) => i > 0 && /^(---|\.\.\.)$/.test(line)) : -1;
         let inTable = false;
         let tableRows = [];
         let inBlockquote = false;
@@ -2281,6 +2478,9 @@
 
         function renderBlockquote(lines) {
             if (lines.length === 0) return '';
+            if (lines.some((line, index) => /^\s*(?:`{3,}|~{3,})/.test(line) || mathSyntax.display(lines, index, mathBackslashDelimiters))) {
+                return '<blockquote>' + markdownToHtmlFragment(lines.join('\n')) + '</blockquote>';
+            }
             // Join blockquote lines with actual newlines (like code blocks)
             // CSS white-space: pre-wrap will display them as line breaks
             // Empty lines need to be preserved - use a space or <br> to ensure they render
@@ -2294,6 +2494,13 @@
 
         for (let i = 0; i < lines.length; i++) {
             const line = lines[i];
+            const tocSlot = /^\x00BMTOC(\d+)\x00$/.exec(line);
+            if (tocSlot && tocSlots[Number(tocSlot[1])] !== undefined) {
+                if (inBlockquote) { html += renderBlockquote(blockquoteLines); inBlockquote = false; blockquoteLines = []; }
+                if (inTable) { html += renderTable(tableRows); inTable = false; tableRows = []; }
+                html += closeAllLists() + renderTocBlock(tocSlots[Number(tocSlot[1])]);
+                continue;
+            }
 
             // Handle code blocks (\`\`\`+ or ~~~+)
             // Match opening/closing fence: 3+ backticks or tildes
@@ -2341,10 +2548,8 @@
                                 '<div class="mermaid-diagram"></div>' +
                                 '</div>';
                         } else if (codeLang === 'math') {
-                            html += '<div class="math-wrapper" data-mode="display" contenteditable="false">' +
-                                '<pre data-lang="math" contenteditable="true"><code' + trailingAttr + '>' + codeHtml + '</code></pre>' +
-                                '<div class="math-display"></div>' +
-                                '</div>';
+                            html += mathBlockHtml({ tex: trimmedContent, raw: lines.slice(codeStart, i + 1).join('\n'),
+                                open: lines[codeStart], close: line, singleLine: false });
                         } else {
                             html += '<pre data-lang="' + escapeHtml(codeLang) + '" data-mode="display"><code contenteditable="false"' + trailingAttr + '>' + codeHtml + '</code></pre>';
                         }
@@ -2374,6 +2579,7 @@
                     // Close any open lists before starting code block
                     html += closeAllLists();
                     inCodeBlock = true;
+                    codeStart = i;
                     codeFenceLength = fenceLen;
                     codeFenceChar = fenceCharacter;
                     codeLang = (fenceMatch[2] || '').trim();
@@ -2383,6 +2589,17 @@
 
             if (inCodeBlock) {
                 codeContent += line + '\n';
+                continue;
+            }
+
+            const equation = i > metadataEnd ? mathSyntax.display(lines, i, mathBackslashDelimiters) : null;
+            if (equation && (equation.indent.length < 4 || listStack.length)) {
+                if (inBlockquote) { html += renderBlockquote(blockquoteLines); inBlockquote = false; blockquoteLines = []; }
+                if (inTable) { html += renderTable(tableRows); inTable = false; tableRows = []; }
+                if (!equation.indent.length) html += closeAllLists();
+                else html += closeListsToLevel(Math.floor(equation.indent.length / 2));
+                html += mathBlockHtml(equation);
+                i = equation.end - 1;
                 continue;
             }
 
@@ -2420,7 +2637,7 @@
                 blockquoteLines = [];
             }
 
-            const parsed = parseMarkdownLine(line);
+            const parsed = parseMarkdownLine(line, i > metadataEnd && (!/^(?: {4}|\t)/.test(line) || listStack.length > 0));
 
             // Handle list grouping with nesting
             if (parsed.listType) {
@@ -2477,6 +2694,11 @@
                     for (let j = i + 1; j < lines.length; j++) {
                         const nextLine = lines[j];
                         if (nextLine.trim() !== '') {
+                            if (/^ +/.test(nextLine) && mathSyntax.display(lines, j, mathBackslashDelimiters)) {
+                                nextListItem = true;
+                                nextListIndent = /^ */.exec(nextLine)[0].length;
+                                break;
+                            }
                             // Found next non-empty line - check if it's a list item
                             const ulMatch = nextLine.match(/^(\s*)[-*+] /);
                             const olMatch = nextLine.match(/^(\s*)\d+\. /);
@@ -2534,6 +2756,8 @@
     }
 
     function setupInteractiveElements() {
+        setupInlineMath();
+        setupDocumentAux();
         // Make checkboxes work
         editor.querySelectorAll('input[type="checkbox"]').forEach(cb => {
             cb.addEventListener('change', () => {
@@ -2544,6 +2768,7 @@
 
         // Handle link clicks
         editor.querySelectorAll('a').forEach(a => {
+            if (a.closest('.toc-block')) return;
             a.addEventListener('click', e => {
                 e.preventDefault();
                 host.openLink(a.getAttribute('href'));
@@ -2952,6 +3177,128 @@
     
     // ========== KATEX MATH BLOCK FUNCTIONALITY ==========
 
+    function inlineMathHtml(equation) {
+        return '<span class="math-inline" contenteditable="false" tabindex="0" role="button"' +
+            ' aria-label="' + escapeHtml(i18n.editEquation || 'Edit equation') + '"' +
+            ' data-math-raw="' + escapeHtml(encodeURIComponent(equation.raw)) + '"' +
+            ' data-math-tex="' + escapeHtml(encodeURIComponent(equation.tex)) + '"' +
+            ' data-math-open="' + escapeHtml(equation.open) + '" data-math-close="' + escapeHtml(equation.close) + '">' +
+            escapeHtml(equation.raw) + '</span>';
+    }
+
+    function inlineMathMarkdown(span) {
+        return decodeURIComponent(span.dataset.mathRaw || '');
+    }
+
+    function renderInlineMath(span, strict = false) {
+        span.innerHTML = katex.renderToString(decodeURIComponent(span.dataset.mathTex), {
+            displayMode: false, throwOnError: strict, trust: false, output: 'html'
+        });
+    }
+
+    function setupInlineMath() {
+        const spans = editor.querySelectorAll('.math-inline');
+        if (!spans.length) return;
+        waitForKatex(() => spans.forEach(span => {
+            if (span.dataset.mathSetup) return;
+            span.dataset.mathSetup = 'true';
+            renderInlineMath(span);
+        }));
+    }
+
+    function editInlineMath(span) {
+        if (finishInlineMathEdit) finishInlineMathEdit(true, false);
+        const input = document.createElement('input');
+        input.className = 'math-inline-input';
+        input.setAttribute('aria-label', i18n.editEquation || 'Edit equation');
+        input.title = i18n.equationEditHint || 'Enter to apply; Escape to cancel';
+        input.spellcheck = false;
+        const original = decodeURIComponent(span.dataset.mathTex);
+        input.value = original;
+        const rect = span.getBoundingClientRect();
+        const inputWidth = Math.min(480, window.innerWidth - 16);
+        input.style.left = Math.max(8, Math.min(rect.left, window.innerWidth - inputWidth - 8)) + 'px';
+        input.style.top = Math.max(8, Math.min(rect.bottom + 4, window.innerHeight - 50)) + 'px';
+        document.body.appendChild(input);
+        const finish = (apply, focus) => {
+            if (finishInlineMathEdit !== finish) return;
+            finishInlineMathEdit = null;
+            const value = input.value;
+            input.remove();
+            if (!span.isConnected) return;
+            if (apply && value !== original) {
+                markdown = readCurrentMarkdown();
+                undoManager.saveSnapshot();
+                if (value.trim()) {
+                    span.dataset.mathTex = encodeURIComponent(value);
+                    span.dataset.mathRaw = encodeURIComponent(span.dataset.mathOpen + value + span.dataset.mathClose);
+                    renderInlineMath(span);
+                } else {
+                    // Empty inline delimiters are ambiguous with display math.
+                    const placeholder = document.createTextNode('');
+                    span.replaceWith(placeholder);
+                    span = placeholder;
+                }
+                syncMarkdownSync();
+            }
+            if (focus) {
+                editor.focus();
+                const range = document.createRange();
+                range.setStartAfter(span); range.collapse(true);
+                const selection = window.getSelection(); selection.removeAllRanges(); selection.addRange(range);
+            }
+        };
+        finishInlineMathEdit = finish;
+        input.addEventListener('blur', () => finish(true, false));
+        input.addEventListener('keydown', event => {
+            event.stopPropagation();
+            if (event.isComposing) return;
+            if (event.key === 'Enter' || event.key === 'Escape') {
+                event.preventDefault(); finish(event.key === 'Enter', true);
+            } else if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 's') {
+                event.preventDefault(); finish(true, false); saveCurrentDocument();
+            }
+        });
+        input.focus(); input.select();
+    }
+
+    editor.addEventListener('click', event => {
+        const span = event.target.closest && event.target.closest('.math-inline');
+        if (!span) return;
+        event.preventDefault(); event.stopImmediatePropagation();
+        editInlineMath(span);
+    }, true);
+    editor.addEventListener('keydown', event => {
+        if (event.target.classList.contains('math-inline') && (event.key === 'Enter' || event.key === ' ')) {
+            event.preventDefault(); event.stopImmediatePropagation();
+            editInlineMath(event.target);
+        }
+    }, true);
+
+    function mathBlockHtml(block) {
+        const trailing = block.tex.endsWith('\n');
+        const code = block.tex ? escapeHtml(block.tex).replace(/\n/g, '<br>') + (trailing ? '<br>' : '') : '<br>';
+        return '<div class="math-wrapper" data-mode="display" contenteditable="false"' +
+            ' data-math-original="' + escapeHtml(encodeURIComponent(block.raw)) + '"' +
+            ' data-math-initial="' + escapeHtml(encodeURIComponent(block.tex)) + '"' +
+            ' data-math-open="' + escapeHtml(block.open) + '" data-math-close="' + escapeHtml(block.close) + '"' +
+            ' data-math-single="' + Boolean(block.singleLine) + '">' +
+            '<pre data-lang="math" contenteditable="true"><code' + (trailing ? ' data-trailing-br="true"' : '') + '>' + code + '</code></pre>' +
+            '<div class="math-display"></div></div>';
+    }
+
+    function mathBlockMarkdown(wrapper) {
+        const code = wrapper.querySelector('pre code');
+        const tex = code && code.innerHTML !== '<br>' ? stripTrailingNewlines(getCodePlainText(code), code, wrapper) : '';
+        if (wrapper.hasAttribute('data-math-original') && tex === decodeURIComponent(wrapper.dataset.mathInitial)) {
+            return decodeURIComponent(wrapper.dataset.mathOriginal) + '\n';
+        }
+        const open = wrapper.dataset.mathOpen || '```math';
+        const close = wrapper.dataset.mathClose || '```';
+        if (wrapper.dataset.mathSingle === 'true' && !tex.includes('\n')) return open + tex + close + '\n';
+        return open + '\n' + tex + '\n' + close + '\n';
+    }
+
     function waitForKatex(callback, maxAttempts) {
         maxAttempts = maxAttempts || 50;
         var attempts = 0;
@@ -2982,16 +3329,14 @@
         }
 
         try {
-            var lines = texCode.split('\n').filter(function(l) { return l.trim() !== ''; });
-            var html = '';
-            for (var i = 0; i < lines.length; i++) {
-                html += katex.renderToString(lines[i].trim(), {
-                    displayMode: true,
-                    throwOnError: Boolean(strict),
-                    output: 'html'
-                });
-            }
-            displayDiv.innerHTML = html;
+            // Newlines are TeX whitespace. Environments such as aligned and
+            // matrices must reach KaTeX as one expression, including their rows.
+            displayDiv.innerHTML = katex.renderToString(texCode, {
+                displayMode: true,
+                throwOnError: Boolean(strict),
+                trust: false,
+                output: 'html'
+            });
         } catch (err) {
             displayDiv.innerHTML = '<div class="math-error">Error: ' +
                 escapeHtml(err.message || 'Invalid LaTeX') + '</div>';
@@ -4310,6 +4655,7 @@
     });
 
     editor.addEventListener('click', function(e) {
+        if (e.target.closest && e.target.closest('.front-matter')) return;
         const cell = e.target.closest ? e.target.closest('th, td') : null;
         if (cell && editor.contains(cell)) {
             activeTableCell = cell;
@@ -4809,7 +5155,7 @@
         // Code block: \`\`\` + enter
         // Support both <p> and <div> tags (div is created when pressing Enter after header)
         if (/^\`\`\`/.test(text) && trigger === 'enter' && node.tagName && (node.tagName.toUpperCase() === 'P' || node.tagName.toUpperCase() === 'DIV')) {
-            // 言語タグを抽出（\`\`\`javascript → javascript）
+            // Extract the language tag from the opening code fence.
             const langMatch = text.match(/^\`\`\`(\w*)/);
             const lang = langMatch ? langMatch[1].trim() : '';
             
@@ -5027,6 +5373,22 @@
         if (checkOffset < 0) return false;
         
         const beforeCursor = text.substring(0, checkOffset);
+
+        const equation = mathSyntax.inline(beforeCursor, mathBackslashDelimiters)[0];
+        if (equation) {
+            const template = document.createElement('template');
+            template.innerHTML = inlineMathHtml(equation);
+            const span = template.content.firstElementChild;
+            const replacement = document.createRange();
+            replacement.setStart(node, equation.start); replacement.setEnd(node, equation.end);
+            replacement.deleteContents(); replacement.insertNode(span);
+            const after = span.nextSibling;
+            if (after && after.nodeType === 3) range.setStart(after, Math.min(after.textContent.length, offset - equation.end));
+            else range.setStartAfter(span);
+            range.collapse(true); sel.removeAllRanges(); sel.addRange(range);
+            setupInlineMath(); syncMarkdown();
+            return true;
+        }
 
         // Inline code \`text\` + space/enter (FIRST - to protect content from other formatting)
         // Must be processed before bold/italic/strikethrough to prevent `**text**` from becoming bold
@@ -5644,16 +6006,22 @@
             return node.textContent;
         }
         if (node.nodeType !== 1) return '';
+        if (node.classList.contains('math-inline')) return inlineMathMarkdown(node);
 
         const tag = node.tagName.toLowerCase();
 
+        if (node.classList.contains('toc-block')) return decodeURIComponent(node.dataset.tocSource) + '\n';
+        if (node.classList.contains('front-matter')) {
+            const raw = node.querySelector('textarea').value;
+            return raw && node.nextSibling && !raw.endsWith('\n') ? raw + '\n' : raw;
+        }
         switch (tag) {
-            case 'h1': return '# ' + mdGetTextContent(node) + '\n';
-            case 'h2': return '## ' + mdGetTextContent(node) + '\n';
-            case 'h3': return '### ' + mdGetTextContent(node) + '\n';
-            case 'h4': return '#### ' + mdGetTextContent(node) + '\n';
-            case 'h5': return '##### ' + mdGetTextContent(node) + '\n';
-            case 'h6': return '###### ' + mdGetTextContent(node) + '\n';
+            case 'h1': return '# ' + mdGetInlineMarkdown(node) + '\n';
+            case 'h2': return '## ' + mdGetInlineMarkdown(node) + '\n';
+            case 'h3': return '### ' + mdGetInlineMarkdown(node) + '\n';
+            case 'h4': return '#### ' + mdGetInlineMarkdown(node) + '\n';
+            case 'h5': return '##### ' + mdGetInlineMarkdown(node) + '\n';
+            case 'h6': return '###### ' + mdGetInlineMarkdown(node) + '\n';
             case 'p': 
                 const pContent = mdGetInlineMarkdown(node);
                 // If p only contains <br> or is empty, it's a blank line marker
@@ -5663,6 +6031,7 @@
                 // Use single newline for regular paragraphs
                 return pContent + '\n';
             case 'div': 
+                if (node.classList.contains('math-wrapper')) return mathBlockMarkdown(node);
                 // Check if this is a mermaid wrapper
                 if (node.classList.contains('mermaid-wrapper') || node.classList.contains('math-wrapper')) {
                     const wrapperLang = node.classList.contains('mermaid-wrapper') ? 'mermaid' : 'math';
@@ -5818,7 +6187,9 @@
         for (const child of li.childNodes) {
             if (child.nodeType === 1) {
                 const childTag = child.tagName.toLowerCase();
-                if (childTag === 'ul' || childTag === 'ol') {
+                if (child.classList.contains('math-wrapper')) {
+                    nestedContent += mathBlockMarkdown(child).replace(/\n$/, '').split('\n').map(line => indent + '  ' + line).join('\n') + '\n';
+                } else if (childTag === 'ul' || childTag === 'ol') {
                     // Nested list - process with increased indent
                     nestedContent += mdProcessNode(child, indent + '  ');
                 }
@@ -5893,6 +6264,10 @@
         if (node.nodeType !== 1) {
             return result;
         }
+        if (node.classList.contains('math-inline')) {
+            return [{ char: inlineMathMarkdown(node), styles: new Set(currentStyles), isMath: true }];
+        }
+        if (node.classList.contains('math-wrapper')) return [];
         
         const tag = node.tagName.toLowerCase();
         
@@ -5989,6 +6364,7 @@
         for (const c of chars) {
             // Check if this character can be merged with current group
             const canMerge = currentGroup && 
+                !c.isMath && !currentGroup.isMath &&
                 !c.isImage && !currentGroup.isImage &&
                 !c.isLink && !currentGroup.isLink &&
                 !c.isCode && !currentGroup.isCode &&
@@ -6009,7 +6385,8 @@
                     isImage: c.isImage,
                     src: c.src,
                     alt: c.alt,
-                    isCode: c.isCode
+                    isCode: c.isCode,
+                    isMath: c.isMath
                 };
             }
         }
@@ -6054,6 +6431,7 @@
      * @returns {string} - Markdown formatted string
      */
     function applyMarkdownStyle(group) {
+        if (group.isMath) return applyInlineStyles(group.text, group.styles);
         // Handle special cases first
         if (group.isImage) {
             return '![' + group.alt + '](' + group.src + ')';
@@ -6136,6 +6514,14 @@
         let currentLine = '';
         
         function processBlockquoteContent(node) {
+            if (node.nodeType === 1 && node.classList.contains('math-inline')) {
+                currentLine += inlineMathMarkdown(node); return;
+            }
+            if (node.nodeType === 1 && node.classList.contains('math-wrapper')) {
+                if (currentLine) { lines.push(currentLine); currentLine = ''; }
+                lines.push(...mathBlockMarkdown(node).replace(/\n$/, '').split('\n'));
+                return;
+            }
             if (node.nodeType === 3) {
                 // Text node - check for newline characters
                 const text = node.textContent || '';
@@ -6250,6 +6636,7 @@
                 return escapePipeInCell(node.textContent);
             }
             if (node.nodeType !== 1) return '';
+            if (node.classList.contains('math-inline')) return escapePipeInCell(inlineMathMarkdown(node));
             
             const tag = node.tagName.toLowerCase();
             
@@ -6390,8 +6777,27 @@
 
     // Key input handler
     editor.addEventListener('keydown', function(e) {
+        if (e.target.closest && e.target.closest('.front-matter')) return;
         logger.log('Editor keydown:', e.key);
         if (isSourceMode) return;
+
+        if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
+            const line = getCurrentLine();
+            const delimiter = line && line.tagName === 'P' ? line.textContent.trim() : '';
+            if (delimiter === '$$' || (mathBackslashDelimiters && delimiter === '\\[')) {
+                e.preventDefault();
+                undoManager.saveSnapshot();
+                const close = delimiter === '$$' ? '$$' : '\\]';
+                const template = document.createElement('template');
+                template.innerHTML = mathBlockHtml({ open: delimiter, close, tex: '', raw: delimiter + '\n\n' + close });
+                const wrapper = template.content.firstElementChild;
+                line.replaceWith(wrapper);
+                setupMathBlocks();
+                enterSpecialWrapperEditMode(wrapper, 'start');
+                syncMarkdown();
+                return;
+            }
+        }
 
         // Mark as actively editing for non-navigation keys
         if (!e.key.startsWith('Arrow') && !['Shift', 'Control', 'Alt', 'Meta', 'CapsLock', 'Escape', 'Tab'].includes(e.key)) {
@@ -10829,6 +11235,7 @@
 
     // BeforeInput handler - handle triple-click selection replacement
     editor.addEventListener('beforeinput', function(e) {
+        if (e.target.closest && e.target.closest('.front-matter')) return;
         if (isSourceMode) return;
         
         const sel = window.getSelection();
@@ -10978,6 +11385,7 @@
 
     // Input handler - debounced sync for performance
     editor.addEventListener('input', function(e) {
+        if (e.target.closest && e.target.closest('.front-matter')) return;
         if (isSourceMode) return;
         markActivelyEditing();
         markAsEdited(); // User has made an edit
@@ -11556,8 +11964,22 @@
                 convertToSpecialBlock(preM, action);
                 var wrapperM = nextSibM ? nextSibM.previousSibling : parentElM.lastChild;
                 if (wrapperM && isSpecialWrapper(wrapperM)) {
+                    if (action === 'math') {
+                        wrapperM.dataset.mathOpen = '$$';
+                        wrapperM.dataset.mathClose = '$$';
+                        syncMarkdown();
+                    }
                     enterSpecialWrapperEditMode(wrapperM, 'start');
                 }
+                break;
+            }
+            case 'inlineMath': {
+                const tex = window.getSelection().toString() || 'x';
+                const equation = { open: '$', close: '$', tex, raw: '$' + tex + '$' };
+                document.execCommand('insertHTML', false, inlineMathHtml(equation));
+                const span = editor.querySelector('.math-inline:not([data-math-setup])');
+                setupInlineMath(); syncMarkdownSync();
+                if (span) editInlineMath(span);
                 break;
             }
             case 'link':
@@ -11566,6 +11988,9 @@
                 break;
             case 'image':
                 host.requestInsertImage();
+                break;
+            case 'toc':
+                insertManagedToc();
                 break;
             case 'table':
                 var tableHtml = '<table><tr><th>Header 1</th><th>Header 2</th></tr><tr><td>Cell</td><td>Cell</td></tr></table>';
@@ -11598,6 +12023,7 @@
         { group: 'inline', action: 'italic',        i18nKey: 'italic',        icon: 'italic' },
         { group: 'inline', action: 'strikethrough', i18nKey: 'strikethrough', icon: 'strikethrough' },
         { group: 'inline', action: 'code',          i18nKey: 'inlineCode',    icon: 'code' },
+        { group: 'inline', action: 'inlineMath',    i18nKey: 'inlineMath',    icon: 'math' },
         // Group: Headings
         { group: 'headings', action: 'heading1', i18nKey: 'heading1', icon: 'heading1' },
         { group: 'headings', action: 'heading2', i18nKey: 'heading2', icon: 'heading2' },
@@ -11618,6 +12044,7 @@
         // Group: Insert
         { group: 'insert', action: 'link',  i18nKey: 'insertLink',  icon: 'link' },
         { group: 'insert', action: 'image', i18nKey: 'insertImage', icon: 'image' },
+        { group: 'insert', action: 'toc', i18nKey: 'insertToc', icon: 'ul' },
         { group: 'insert', action: 'table', i18nKey: 'insertTable', icon: 'table' },
     ];
 
@@ -11985,6 +12412,12 @@
             host.requestSetImageDir();
         });
     }
+    const extensionSettingsBtn = document.getElementById('extensionSettingsBtn');
+    if (extensionSettingsBtn && typeof host.openSettings === 'function') {
+        extensionSettingsBtn.addEventListener('click', function() {
+            host.openSettings();
+        });
+    }
 
     // Sidebar resize functionality
     let isResizing = false;
@@ -12018,6 +12451,7 @@
     });
 
     function toggleSourceMode() {
+        if (finishInlineMathEdit) finishInlineMathEdit(true, false);
         isSourceMode = !isSourceMode;
         if (isSourceMode) {
             sourceEditor.value = markdown;
@@ -12059,6 +12493,7 @@
     
     // Mark document as edited by user
     function markAsEdited() {
+        visualSourceCurrent = false;
         clientRevision++;
         if (!hasUserEdited) {
             hasUserEdited = true;
@@ -12119,11 +12554,12 @@
     }
 
     function updateOutline() {
+        assignHeadingAnchors(editor, readCurrentMarkdown());
         const headings = editor.querySelectorAll('h1, h2, h3, h4, h5, h6');
         const headingsArray = Array.from(headings);
         outline.innerHTML = headingsArray.map((h, i) => {
             const level = h.tagName[1];
-            return '<a class="outline-item" data-level="' + level + '" data-index="' + i + '">' + h.textContent + '</a>';
+            return '<a class="outline-item" data-level="' + level + '" data-index="' + i + '">' + escapeHtml(h.textContent) + '</a>';
         }).join('');
 
         outline.querySelectorAll('.outline-item').forEach(item => {
@@ -12144,7 +12580,10 @@
     }
 
     function updateWordCount() {
-        const text = editor.textContent || '';
+        const plain = editor.cloneNode(true);
+        plain.querySelectorAll('.math-inline').forEach(span => { span.textContent = inlineMathMarkdown(span); });
+        plain.querySelectorAll('.math-display,.mermaid-diagram,.document-aux').forEach(display => display.remove());
+        const text = plain.textContent || '';
         const words = text.trim().split(/\s+/).filter(w => w.length > 0).length;
         const chars = text.length;
         const lines = markdown.split('\n').length;
@@ -13077,6 +13516,10 @@
         }
         if (message.type === 'captureExportSnapshot') {
             if (typeof host.respondExport === 'function') {
+                if (message.refreshToc) {
+                    try { refreshManagedTocs(false); }
+                    catch (error) { host.respondExport({ type: 'exportError', requestId: message.requestId, error: error.message }); return; }
+                }
                 host.respondExport({
                     type: 'exportSnapshot', requestId: message.requestId,
                     content: readCurrentMarkdown(),
@@ -13093,6 +13536,7 @@
             if (!isSourceMode) undoManager.redo();
             return;
         }
+        if (message.type === 'insertToc') { insertManagedToc(); return; }
         if (message.type === 'toggleSourceMode') {
             toggleSourceMode();
             return;
@@ -13130,7 +13574,7 @@
         } else if (message.type === 'setImageDir') {
             // Update currentImageDir and currentForceRelativePath from extension
             currentImageDir = message.dirPath;
-            // forceRelativePath: true/false で設定、null でクリア
+            // Set forceRelativePath with true or false; clear it with null.
             if (message.forceRelativePath === null) {
                 currentForceRelativePath = null;
             } else if (message.forceRelativePath !== undefined) {
@@ -13479,6 +13923,7 @@
 
     // Copy handler - convert selection to Markdown and set to clipboard
     editor.addEventListener('copy', function(e) {
+        if (e.target.closest && e.target.closest('.front-matter')) return;
         if (isSourceMode) return;
         
         const sel = window.getSelection();
@@ -13806,6 +14251,7 @@
 
     // Cut handler - same as copy but also delete selection
     editor.addEventListener('cut', function(e) {
+        if (e.target.closest && e.target.closest('.front-matter')) return;
         if (isSourceMode) return;
         
         const sel = window.getSelection();
@@ -13843,6 +14289,7 @@
 
     // Paste handler - insert Markdown into source, then re-render
     editor.addEventListener('paste', function(e) {
+        if (e.target.closest && e.target.closest('.front-matter')) return;
         if (isSourceMode) return;
 
         undoManager.saveSnapshot();

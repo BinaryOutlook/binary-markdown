@@ -1,12 +1,12 @@
 'use strict';
 
 /**
- * VSCode / Electron 共通のエディタボディHTML生成
+ * Generates the editor body HTML shared by VS Code and Electron.
  *
- * @param {Record<string, string>} messages - i18n メッセージ
+ * @param {Record<string, string>} messages - Localized interface messages.
  * @param {string} platform - process.platform ('darwin' | 'win32' | 'linux')
- * @param {{ outlineOpen?: boolean, exportEnabled?: boolean }} [options] - editor UI state
- * @returns {string} <div class="container">...</div> の HTML文字列
+ * @param {{ outlineOpen?: boolean, exportEnabled?: boolean, settingsEnabled?: boolean }} [options] - editor UI state
+ * @returns {string} HTML for <div class="container">...</div>.
  */
 function generateEditorBodyHtml(messages, platform, options) {
     const msg = messages || {};
@@ -15,6 +15,7 @@ function generateEditorBodyHtml(messages, platform, options) {
     const outlineOpen = !options || options.outlineOpen !== false;
     const sidebarClass = outlineOpen ? 'sidebar' : 'sidebar hidden';
     const openButtonClass = outlineOpen ? 'menu-btn hidden' : 'menu-btn';
+    const settingsButton = options && options.settingsEnabled ? `<button type="button" class="sidebar-footer-action" id="extensionSettingsBtn" title="${m('openExtensionSettings')}" aria-label="${m('openExtensionSettings')}"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg></button>` : '';
     const exportEnabled = Boolean(options && options.exportEnabled);
     const exportButton = exportEnabled ? `<button type="button" data-action="export" id="exportButton" title="Export" aria-label="Export" aria-haspopup="menu" aria-expanded="false" aria-controls="exportMenu"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 4 6 6-6 6"/><path d="M21 10H11a8 8 0 0 0-8 8v2"/></svg></button>` : '';
     const exportPanels = exportEnabled ? `
@@ -48,9 +49,10 @@ function generateEditorBodyHtml(messages, platform, options) {
                     <div class="imagedir-header">
                         <span class="imagedir-label">${m('imageDirLabel')}</span>
                         <span class="imagedir-source" id="imageDirSource"></span>
-                        <button class="imagedir-settings-btn" id="imageDirSettingsBtn" title="${m('setImageDir')}">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+                        <button type="button" class="imagedir-settings-btn sidebar-footer-action" id="imageDirSettingsBtn" title="${m('setImageDir')}" aria-label="${m('setImageDir')}">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
                         </button>
+                        ${settingsButton}
                     </div>
                     <div class="imagedir-info">
                         <span class="imagedir-path" id="imageDirPath"></span>
@@ -90,6 +92,7 @@ function generateEditorBodyHtml(messages, platform, options) {
                         <button data-action="codeblock" title="${m('codeBlock')}"></button>
                         <button data-action="mermaid" title="${m('mermaidBlock')}"></button>
                         <button data-action="math" title="${m('mathBlock')}"></button>
+                        <button data-action="inlineMath" title="${m('inlineMath')}">𝑥</button>
                         <button data-action="hr" title="${m('horizontalRule')}"></button>
                     </div>
                     <div class="toolbar-group" data-group="insert">

@@ -31,6 +31,11 @@ export interface Messages {
 }
 
 export interface WebviewMessages {
+  frontMatter: string;
+  insertToc: string;
+  refreshToc: string;
+  tocContents: string;
+  tocPending: string;
   closeOutline: string;
   openOutline: string;
   openInTextEditor: string;
@@ -53,10 +58,14 @@ export interface WebviewMessages {
   insertLink: string;
   insertImage: string;
   setImageDir: string;
+  openExtensionSettings: string;
   insertTable: string;
   horizontalRule: string;
   mermaidBlock: string;
   mathBlock: string;
+  inlineMath: string;
+  editEquation: string;
+  equationEditHint: string;
   searchPlaceholder: string;
   replacePlaceholder: string;
   searchPrev: string;
@@ -134,8 +143,8 @@ function resolveLocale(lang: string): string {
 
 /**
  * Resolve effective language from configured language and system language
- * @param configLang - 設定値 ('default' or 具体的なロケール)
- * @param systemLang - システム言語 (VSCode: vscode.env.language, Electron: app.getLocale())
+ * @param configLang - Configured value ('default' or a specific locale).
+ * @param systemLang - System language (VS Code: vscode.env.language; Electron: app.getLocale()).
  */
 function resolveEffectiveLanguage(configLang: string, systemLang: string): string {
   if (!configLang || configLang === 'default') {
@@ -174,8 +183,8 @@ function loadLocale(locale: string): { messages: Messages; webviewMessages: Webv
 
 /**
  * Initialize locale (called on activation and settings change)
- * @param configLang - 設定値 ('default' or 具体的なロケール)
- * @param systemLang - システム言語 (VSCode: vscode.env.language, Electron: app.getLocale())
+ * @param configLang - Configured value ('default' or a specific locale).
+ * @param systemLang - System language (VS Code: vscode.env.language; Electron: app.getLocale()).
  */
 export function initLocale(configLang: string, systemLang: string): void {
   const lang = resolveEffectiveLanguage(configLang, systemLang);

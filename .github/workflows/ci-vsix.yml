@@ -34,6 +34,8 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run lint
+      - name: Check documentation links and public text
+        run: node scripts/check-docs.cjs
       - name: Audit runtime and build dependencies
         run: npm audit
       - name: Package the clean source revision once
@@ -61,15 +63,20 @@ jobs:
         include:
           - {label: ubuntu, os: ubuntu-24.04, code: latest, browserSuite: true}
           - {label: macos, os: macos-15, code: latest, browserSuite: true}
+          - {label: windows, os: windows-2025, code: latest, browserSuite: true}
           - {label: vscode-minimum, os: ubuntu-24.04, code: '1.85.0', browserSuite: false}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 40
     env:
       CI: '1'
-      TMPDIR: /tmp
+      PYTHONUTF8: '1'
       EXPORT_REAL_TOOLS: '1'
       VALIDATION_CODE_VERSION: ${{ matrix.code }}
     steps:
+      - name: Select the platform temporary directory
+        env:
+          VALIDATION_TMPDIR: ${{ runner.os == 'Windows' && runner.temp || '/tmp' }}
+        run: printf 'TMPDIR=%s\n' "$VALIDATION_TMPDIR" >> "$GITHUB_ENV"
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ needs.package.outputs.source }}
@@ -84,31 +91,61 @@ jobs:
           name: ${{ needs.package.outputs.artifact }}
           path: dist
       - name: Verify downloaded candidate
-        run: |
-          (cd dist && shasum -a 256 --check *.vsix.sha256)
-          printf 'EXPORT_VSIX_PATH=%s/dist/%s-%s.vsix\n' "$GITHUB_WORKSPACE" "$(node -p 'require("./package.json").name')" "$(node -p 'require("./package.json").version')" >> "$GITHUB_ENV"
+        env:
+          VALIDATION_SOURCE: ${{ needs.package.outputs.source }}
+        run: node .github/scripts/verify-candidate.cjs
       - name: Compile checkout for archive parity checks
         run: npm run compile
       - name: Provision actual export engines and isolated VS Code
+        if: runner.os != 'Windows'
         run: bash .github/scripts/provision-validation.sh
+      - name: Provision Windows export engines and isolated VS Code
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: ./.github/scripts/provision-validation.ps1
       - name: Frozen source contract
-        run: python3 test/fixtures/exports/verify-fixtures.py
+        run: node -e "require('node:child_process').execFileSync(process.env.VALIDATION_PYTHON, ['test/fixtures/exports/verify-fixtures.py'], {stdio:'inherit'})"
       - name: Units, real converters and archive parity
+        if: runner.os != 'Windows'
         run: |
           mkdir -p ci-results
           node --test test/unit/*.test.js | tee ci-results/unit-tests.txt
+      # Git Bash enables backup/restore privileges for administrator tokens,
+      # allowing its children to bypass the denied-directory test's ACL.
+      - name: Units, real converters and archive parity (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force ci-results | Out-Null
+          node --test test/unit/*.test.js | Tee-Object -FilePath ci-results/unit-tests.txt
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Installed VSIX user flows and artifact integrity
+        if: runner.os != 'Windows'
         run: |
           if [[ "$RUNNER_OS" == Linux ]]; then
             xvfb-run --auto-servernum --server-args='-screen 0 1920x1080x24 -nolisten tcp' node .github/scripts/native-check.cjs | tee ci-results/native-tests.txt
           else
             node .github/scripts/native-check.cjs | tee ci-results/native-tests.txt
           fi
+      - name: Installed VSIX user flows and artifact integrity (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          node .github/scripts/native-check.cjs | Tee-Object -FilePath ci-results/native-tests.txt
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Browser regressions with no retries
-        if: matrix.browserSuite
+        if: matrix.browserSuite && runner.os != 'Windows'
         run: |
           npm run test:build
           npx playwright test --workers=2 --retries=0 | tee ci-results/browser-tests.txt
+      - name: Browser regressions with no retries (Windows)
+        if: matrix.browserSuite && runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          npm.cmd run test:build
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          npx.cmd playwright test --workers=2 --retries=0 | Tee-Object -FilePath ci-results/browser-tests.txt
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Collect browser traces
         if: always()
         run: |

@@ -50,11 +50,11 @@ test('cancellation creates no output and an unwritable directory has no fallback
     const controller = new AbortController();
     controller.abort();
     await assert.rejects(finalizeExport(source, 'pdf', Buffer.from('pdf'), controller.signal), { name: 'AbortError' });
-    await fs.chmod(dir, 0o500);
+    const restore = require('../utils/deny-directory-writes.cjs').denyDirectoryWrites(dir);
     try {
-        await assert.rejects(finalizeExport(source, 'pdf', Buffer.from('pdf'), new AbortController().signal), { code: 'EACCES' });
+        await assert.rejects(finalizeExport(source, 'pdf', Buffer.from('pdf'), new AbortController().signal), error => ['EACCES', 'EPERM'].includes(error.code));
     } finally {
-        await fs.chmod(dir, 0o700);
+        restore();
     }
     assert.deepEqual(await fs.readdir(dir), [path.basename(source)]);
 });

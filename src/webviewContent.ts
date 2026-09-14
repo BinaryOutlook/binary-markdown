@@ -24,6 +24,8 @@ interface EditorConfig {
     webviewMessages?: WebviewMessages;
     enableDebugLogging?: boolean;
     outlineOpen?: boolean;
+    mathBackslashDelimiters?: boolean;
+    renderGeneration?: number;
 }
 
 export function getWebviewContent(
@@ -58,7 +60,8 @@ export function getWebviewContent(
         documentBaseUri: config?.documentBaseUri ?? '',
         webviewMessages: config?.webviewMessages,
         enableDebugLogging: config?.enableDebugLogging ?? false,
-        outlineOpen: config?.outlineOpen ?? true
+        outlineOpen: config?.outlineOpen ?? true,
+        mathBackslashDelimiters: config?.mathBackslashDelimiters ?? true
     };
     
     const nonce = getNonce();
@@ -72,6 +75,7 @@ export function getWebviewContent(
     // Load external CSS and JS files
     const stylesPath = path.join(__dirname, 'webview', 'styles.css');
     const editorScriptPath = path.join(__dirname, 'webview', 'editor.js');
+    const auxScript = fs.readFileSync(path.join(__dirname, 'shared', 'document-aux.js'), 'utf8');
     const exportScript = fs.readFileSync(path.join(__dirname, 'webview', 'export-ui.js'), 'utf8');
     
     const styles = fs.readFileSync(stylesPath, 'utf8')
@@ -91,7 +95,9 @@ export function getWebviewContent(
     const katexJsUri = vendorUri('katex.min.js');
     const katexCssUri = vendorUri('katex.min.css');
 
-    const editorScript = fs.readFileSync(editorScriptPath, 'utf8')
+    const mathScript = fs.readFileSync(path.join(__dirname, 'shared', 'math-syntax.js'), 'utf8');
+    const editorScript = (mathScript + '\n' + fs.readFileSync(editorScriptPath, 'utf8'))
+        .replace('__MATH_BACKSLASH__', String(safeConfig.mathBackslashDelimiters))
         .replace('__DEBUG_MODE__', String(safeConfig.enableDebugLogging ?? false))
         .replace('__I18N__', JSON.stringify(msg))
         .replace('__DOCUMENT_BASE_URI__', safeConfig.documentBaseUri || '')
@@ -112,7 +118,7 @@ export function getWebviewContent(
     </style>
 </head>
 <body>
-    ${generateEditorBodyHtml(msg, process.platform, { outlineOpen: safeConfig.outlineOpen, exportEnabled: true })}
+    ${generateEditorBodyHtml(msg, process.platform, { outlineOpen: safeConfig.outlineOpen, exportEnabled: true, settingsEnabled: true })}
 
     <script src="${turndownUri}"></script>
     <script src="${turndownGfmUri}"></script>
@@ -123,11 +129,24 @@ export function getWebviewContent(
         ${hostBridgeScript}
     </script>
     <script nonce="${nonce}">
+        ${auxScript}
         ${editorScript}
     </script>
     <script nonce="${nonce}">
         window.exportMessages = ${JSON.stringify(getExportMessages())};
         ${exportScript}
+    </script>
+    <script nonce="${nonce}">
+        (() => {
+            const generation = ${Number.isSafeInteger(config?.renderGeneration) ? config.renderGeneration : 'null'};
+            if (generation === null) return;
+            window.addEventListener('message', event => {
+                if (event.data?.type === 'renderProbe' && event.data.generation === generation) {
+                    window.hostBridge.reportRenderState('renderReady', generation);
+                }
+            });
+            window.hostBridge.reportRenderState('renderLoaded', generation);
+        })();
     </script>
 </body>
 </html>`;

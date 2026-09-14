@@ -23,9 +23,11 @@
   "config.export.pdfWhiteBackground.description": "Exporte les PDF sur une page blanche avec le thème clair de GitHub pour un texte et des diagrammes lisibles. Désactivez cette option pour appliquer le thème actuel de l’éditeur à toute la page, marges comprises. Les autres formats d’exportation ne sont pas concernés.",
   "config.export.pandocPath.description": "Chemin de l’exécutable Pandoc pour exporter en DOCX et EPUB. Laissez vide pour détecter une installation. L’installation est manuelle ; un chemin explicite invalide produit une erreur sans sélectionner un autre outil.",
   "config.export.browserPath.description": "Chemin de l’exécutable Chrome, Chromium ou Edge pour exporter un PDF sans fenêtre. Laissez vide pour détecter un navigateur installé. Aucun navigateur n’est téléchargé automatiquement.",
+  "config.export.showCodeLanguage.description": "Affiche le langage déclaré dans une étiquette encadrée en italique sous chaque bloc de code lors des exports DOCX et PDF. Désactiver cette option conserve la mise en forme des blocs de code.",
   "command.exportToHtml.title": "Exporter en HTML",
   "command.exportToPdf.title": "Exporter en PDF",
   "command.exportToDocx.title": "Exporter vers Word",
   "command.exportToEpub.title": "Exporter en EPUB",
-  "command.copyBuildInformation.title": "Copier les informations de compilation"
+  "command.copyBuildInformation.title": "Copier les informations de compilation",
+  "config.math.backslashDelimiters.description": "Reconnaît les délimiteurs d’équations \\( ... \\) et \\[ ... \\] dans l’éditeur et les exports. Désactivez cette option pour les traiter comme des échappements Markdown ordinaires."
 }

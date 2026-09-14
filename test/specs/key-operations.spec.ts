@@ -588,7 +588,10 @@ test.describe('インライン書式変換', () => {
 
     test('変換後カーソルは要素の外', async ({ page }) => {
         await editor.type('**太字** ');
-        await editor.type('続きのテキスト');
+        expect(await editor.getCursorElementTag()).toBe('p');
+        // Continue at the conversion's caret. editor.type() clicks the editor
+        // again, which can reposition the caret inside the formatted text.
+        await page.keyboard.type('続きのテキスト', { delay: 50 });
         
         const html = await editor.getHtml();
         // 太字の外に続きのテキストがあることを確認

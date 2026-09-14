@@ -28,6 +28,12 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  insertToc: 'Insertar índice',
+  refreshToc: 'Actualizar índice',
+  tocContents: 'Índice',
+  tocPending: 'Guarda o actualiza para generar el índice.',
+
+  frontMatter: 'Metadatos',
   closeOutline: 'Cerrar esquema',
   openOutline: 'Abrir esquema',
   openInTextEditor: 'Abrir en editor de texto',
@@ -50,10 +56,14 @@ export const webviewMessages = {
   insertLink: 'Insertar enlace (Ctrl+K)',
   insertImage: 'Insertar imagen (Ctrl+Shift+I)',
   setImageDir: 'Establecer directorio de imágenes',
+  openExtensionSettings: 'Abrir ajustes de Binary Markdown',
   insertTable: 'Insertar tabla (Ctrl+T)',
   horizontalRule: 'Línea horizontal (Ctrl+Shift+-)',
   mermaidBlock: 'Diagrama Mermaid',
   mathBlock: 'Bloque matemático',
+  inlineMath: "Ecuación en línea",
+  editEquation: "Editar ecuación",
+  equationEditHint: "Enter para aplicar; Escape para cancelar",
   searchPlaceholder: 'Buscar...',
   replacePlaceholder: 'Reemplazar...',
   searchPrev: 'Anterior (Shift+Enter)',

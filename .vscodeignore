@@ -23,6 +23,8 @@ samples/**
 images/**
 images2/**
 docs/**
+reports/**
+release-notes/**
 .cursor/**
 .kiro/**
 *.png

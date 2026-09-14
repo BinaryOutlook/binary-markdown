@@ -1,0 +1,14 @@
+# Frozen fixture hashes and candidate parity must use the same bytes on every OS.
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.icns binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.docx binary
+*.pdf binary
+*.epub binary
