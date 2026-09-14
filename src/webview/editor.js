@@ -2171,6 +2171,7 @@
     }
 
     function assignHeadingAnchors(root, source) {
+        if (!root.querySelector('.toc-block')) return;
         let headings;
         try { headings = documentAux.scan(source).headings; }
         catch (_) { return; } // Keep malformed source editable; save/export report it.
@@ -2230,7 +2231,7 @@
             undoManager.saveSnapshot();
             cancelScheduledSync();
             if (isSourceMode) {
-                const at = sourceEditor.selectionStart || 0;
+                const at = Math.max(sourceEditor.selectionStart || 0, parsed.front.raw.length);
                 sourceEditor.value = current.slice(0, at) + '\n\n' + raw + '\n\n' + current.slice(at);
                 markdown = sourceEditor.value;
                 markAsEdited();
@@ -5825,7 +5826,8 @@
 
         if (node.classList.contains('toc-block')) return decodeURIComponent(node.dataset.tocSource) + '\n';
         if (node.classList.contains('front-matter')) {
-            return node.querySelector('textarea').value;
+            const raw = node.querySelector('textarea').value;
+            return raw && node.nextSibling && !raw.endsWith('\n') ? raw + '\n' : raw;
         }
         switch (tag) {
             case 'h1': return '# ' + mdGetTextContent(node) + '\n';

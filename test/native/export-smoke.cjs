@@ -350,9 +350,10 @@ async function run(settings, owner) {
         if (groups.includes('document-aux')) {
             const aux = require('../../src/shared/document-aux');
             for (const mode of ['visual', 'source']) for (const save of ['native', 'keyboard']) {
-                const file = `aux-${mode}-${save}.md`;
+                const file = `aux-${Date.now()}-${mode}-${save}.md`;
                 const metadata = '---\ntitle: "Native report" # preserve\ntags: [test, report]\n---\n';
-                write(file, metadata + '\n[TOC]\n\n# Introduction\n\n# Results\n\nNATIVE-AUX-END\n');
+                const paragraphs = mode === 'visual' && save === 'native' ? ('A paragraph describing the project and its evaluation with enough detail to exercise pagination.\n\n').repeat(55) : '';
+                write(file, metadata + '\n[TOC]\n\n# Introduction\n\n' + paragraphs + '# Results\n\nNATIVE-AUX-END\n');
                 const connection = await h.open(file);
                 try {
                     await h.until(() => connection.evaluate(`!!document.querySelector('.front-matter-source') && !!document.querySelector('.toc-refresh')`));
@@ -362,11 +363,12 @@ async function run(settings, owner) {
                     await connection.evaluate(`document.querySelector('.toc-refresh').click()`);
                     await h.driver({ action: 'save' });
                     await h.until(() => aux.refreshTocs(read(file).toString()) === read(file).toString());
+                    await h.workbench(page => page.bringToFront());
                     if (mode === 'source') {
                         await h.sourceMode(connection);
-                        await connection.evaluate(`const e=document.getElementById('sourceEditor'); const at=e.value.lastIndexOf('# Results')+2;e.focus();e.setSelectionRange(at, at+7)`);
+                        await connection.evaluate(`(()=>{const e=document.getElementById('sourceEditor'); const at=e.value.lastIndexOf('# Results')+2;e.focus();e.setSelectionRange(at, at+7)})()`);
                     } else {
-                        await connection.evaluate(`const e=document.querySelectorAll('#editor > h1')[1];e.focus();const r=document.createRange();r.selectNodeContents(e);const s=getSelection();s.removeAllRanges();s.addRange(r)`);
+                        await connection.evaluate(`(()=>{const e=document.querySelectorAll('#editor > h1')[1];document.getElementById('editor').focus();const r=document.createRange();r.selectNodeContents(e);const s=getSelection();s.removeAllRanges();s.addRange(r)})()`);
                     }
                     await connection.send('Input.insertText', { text: 'Evaluation' });
                     if (save === 'native') await h.driver({ action: 'save' });
@@ -392,12 +394,13 @@ async function run(settings, owner) {
             }
         }
         if (groups.includes('document-aux')) {
-            const file = 'aux-auto-save.md';
+            const file = 'aux-auto-save-' + Date.now() + '.md';
             write(file, '[TOC]\n\n# Original\n');
             const connection = await h.open(file);
             try {
                 await h.driver({ action: 'autoSave', value: 'afterDelay' });
-                await connection.evaluate(`const e=document.querySelector('#editor > h1');e.focus();const r=document.createRange();r.selectNodeContents(e);const s=getSelection();s.removeAllRanges();s.addRange(r)`);
+                await h.workbench(page => page.bringToFront());
+                await connection.evaluate(`(()=>{const e=document.querySelector('#editor > h1');document.getElementById('editor').focus();const r=document.createRange();r.selectNodeContents(e);const s=getSelection();s.removeAllRanges();s.addRange(r)})()`);
                 await connection.send('Input.insertText', { text: 'Auto Save heading' });
                 await h.until(() => read(file).toString().includes('[Auto Save heading](#auto-save-heading)'));
                 record('document-aux-auto-save', { currentTocSaved: true });

@@ -44,6 +44,44 @@ test('explicit metadata editing has document undo and survives a body edit', asy
     expect(await markdown(page)).toContain('title: After');
 });
 
+test('editing metadata without a final newline keeps the body outside its closing delimiter', async ({ page }) => {
+    await setMarkdown(page, '---\ntitle: Before\n---\n\n# Body\n');
+    await page.locator('.front-matter summary').click();
+    await page.locator('.front-matter-source').fill('---\ntitle: After\n---');
+    await save(page);
+    const source = (await messages(page, 'save')).at(-1).content;
+    expect(source).toMatch(/^---\ntitle: After\n---\n/);
+    await setMarkdown(page, source);
+    await expect(page.locator('.front-matter')).toHaveCount(1);
+    await expect(page.locator('#editor > h1')).toHaveText('Body');
+});
+
+test('source-mode insertion at the start places the TOC after metadata', async ({ page }) => {
+    const front = '---\ntitle: Keep first\n---\n';
+    await setMarkdown(page, front + '\n# Body\n');
+    await host(page, { type: 'toggleSourceMode' });
+    await page.locator('#sourceEditor').evaluate((input: HTMLTextAreaElement) => {
+        input.selectionStart = 0;
+        input.selectionEnd = 0;
+    });
+    await host(page, { type: 'insertToc' });
+    const source = await page.locator('#sourceEditor').evaluate((input: HTMLTextAreaElement) => input.value);
+    expect(source.startsWith(front)).toBe(true);
+    expect(source).toContain('[Body](#body)');
+    await host(page, { type: 'toggleSourceMode' });
+    await expect(page.locator('.front-matter')).toHaveCount(1);
+    await expect(page.locator('.toc-block')).toHaveCount(1);
+});
+
+test('a TOC marker typed in a visual paragraph becomes a managed block on save', async ({ page }) => {
+    await setMarkdown(page, '# Body\n\nInsert here\n');
+    await page.locator('#editor > p').filter({ hasText: 'Insert here' }).fill('[TOC]');
+    await expect(page.locator('.toc-block')).toHaveCount(0);
+    await save(page);
+    await expect(page.locator('.toc-block a')).toHaveText(['Body']);
+    expect((await messages(page, 'save')).at(-1).content).toContain('[Body](#body)');
+});
+
 test('metadata is excluded from export body, while ordinary rules remain visible', async ({ page }) => {
     const source = '---\ntitle: Hidden title\n---\n\n# Visible\n';
     await setMarkdown(page, source);
