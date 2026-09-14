@@ -69,8 +69,8 @@ async function ensureValidation(branch, source, client = { api, pages, pause }) 
         return names.every(name => artifacts.some(artifact => artifact.name === name && !artifact.expired));
     };
     if (!run || (run.status === 'completed' && run.conclusion === 'success' && !artifactsAvailable(run))) {
-        // GITHUB_TOKEN pushes do not start push CI. An explicit dispatch keeps
-        // bot PRs and the resulting main commit on the full validation path.
+        // GITHUB_TOKEN merges do not start push CI. An explicit dispatch keeps
+        // the resulting main commit on the full validation path.
         const requestId = `release-${process.env.GITHUB_RUN_ID}-${Date.now()}`;
         client.api('actions/workflows/ci-vsix.yml/dispatches', { ref: branch,
             inputs: { request_id: requestId, expected_source: source } });
@@ -99,6 +99,58 @@ async function ensureValidation(branch, source, client = { api, pages, pause }) 
     return run.id;
 }
 
+function assertVersionPull(pull, expected) {
+    assert.match(expected.branch, /^codex\/auto-release-\d+\.\d+\.\d+-[0-9a-f]{12}$/);
+    assert.equal(pull.number, expected.number);
+    assert.equal(pull.state, 'open');
+    assert.equal(pull.user.login, 'github-actions[bot]', 'Only the scheduler\'s own version PR can run unattended');
+    assert.equal(pull.head.repo.full_name, REPOSITORY);
+    assert.equal(pull.base.repo.full_name, REPOSITORY);
+    assert.equal(pull.head.ref, expected.branch);
+    assert.equal(pull.head.sha, expected.source, 'The version PR was changed after its contents were verified');
+    assert.equal(pull.base.ref, 'main');
+    assert.equal(pull.base.sha, expected.base, 'main moved after the version PR was prepared');
+}
+
+async function ensurePullValidation(expected, client = { api, pages, pause }) {
+    // workflow_dispatch checks do not satisfy PR protection. Approve the
+    // regular PR workflow only after checking this exact generated version PR.
+    const verifyPull = () => assertVersionPull(client.api(`pulls/${expected.number}`), expected);
+    verifyPull();
+    const discoveryDeadline = Date.now() + 5 * 60000;
+    let run;
+    while (Date.now() < discoveryDeadline) {
+        run = client.api(`actions/runs?event=pull_request&head_sha=${expected.source}&per_page=100`).workflow_runs.find(candidate =>
+            candidate.path === '.github/workflows/ci-vsix.yml' && candidate.head_branch === expected.branch &&
+            candidate.head_sha === expected.source && candidate.head_repository?.full_name === REPOSITORY &&
+            candidate.pull_requests.some(pull => pull.number === expected.number));
+        if (run) break;
+        await client.pause(10000);
+    }
+    assert.ok(run, 'The version PR validation run did not appear; inspect the PR workflow approval state');
+    console.log(`Waiting for version PR validation: https://github.com/${REPOSITORY}/actions/runs/${run.id}`);
+    const deadline = Date.now() + 60 * 60000;
+    let approved = false;
+    while (true) {
+        if (run.conclusion === 'action_required' || run.status === 'action_required' || run.status === 'waiting') {
+            if (!approved) {
+                verifyPull();
+                client.api(`actions/runs/${run.id}/approve`, undefined, 'POST');
+                approved = true;
+            }
+        } else if (run.status === 'completed') break;
+        assert.ok(Date.now() < deadline, 'Version PR validation did not finish within one hour');
+        await client.pause(30000);
+        run = client.api(`actions/runs/${run.id}`);
+    }
+    assert.equal(run.head_sha, expected.source);
+    assert.equal(run.event, 'pull_request');
+    assert.equal(run.conclusion, 'success', 'The version PR failed validation; inspect the failure instead of automatically retrying');
+    verifyValidationJobs(client.pages(`actions/runs/${run.id}/attempts/${run.run_attempt}/jobs?per_page=100`, 'jobs'));
+    verifyPull();
+    return run.id;
+}
+
 async function preparePatch(plan, config) {
     assertMain(plan.source);
     const fromVersion = JSON.parse(fileAt(plan.source, 'package.json')).version;
@@ -124,7 +176,7 @@ async function preparePatch(plan, config) {
     if (!pull) pull = api('pulls', { title: message, head: branch, base: 'main',
         body: `Prepare patch version **${plan.version}** after at least ${plan.minimumDays} days since the last official VSIX publication.\n\nThis bot PR updates only version metadata, the changelog and release notes. The automatic release workflow runs the full VSIX validation on this commit before merging, then validates the resulting main commit before publication.\n\nSource before the version bump: ${plan.source}.` });
     console.log('Prepared version PR: ' + pull.html_url);
-    await ensureValidation(branch, head);
+    await ensurePullValidation({ number: pull.number, branch, source: head, base: plan.source });
     assertMain(plan.source);
     assertSameReleasePlan(plan, inspect(config));
     const freshPull = api(`pulls/${pull.number}`);
@@ -164,4 +216,4 @@ if (require.main === module) main(process.argv[2] || 'check').catch(error => {
     if (error.stderr) console.error(String(error.stderr));
     process.exitCode = 1;
 });
-module.exports = { main, inspect, onlyVersionChanged, ensureValidation };
+module.exports = { main, inspect, onlyVersionChanged, ensureValidation, ensurePullValidation, assertVersionPull };

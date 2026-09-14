@@ -68,7 +68,10 @@ be published manually to establish a baseline.
   changes wait for a maintainer to choose the version and add release notes.
 - A patch bump becomes a bot PR containing the four manifests/lockfiles,
   changelog, notes and notes index. It passes full CI before merging through
-  existing branch protection. The resulting `main` commit passes full CI again.
+  existing branch protection. Before allowing that PR's CI to run, the scheduler
+  verifies its bot author, repository, exact generated commit and unchanged base.
+  It approves only that workflow run, never a code-review approval. The resulting
+  `main` commit passes full CI again.
   Application changes continue to enter `main` through normal maintainer review.
 - Successful validation artifacts are reused while available. Expired or
   missing artifacts require a new full run. Failed tests stop the release;
@@ -88,9 +91,14 @@ use **Prepare VSIX release draft** and publish after review.
 The setup uses the short-lived `GITHUB_TOKEN`. Repository Actions settings must
 allow GitHub Actions to create pull requests; the default token permission stays
 read-only, and this workflow requests only contents, pull-request and Actions
-write permissions. Bot pushes do not start push CI automatically, so the workflow
-explicitly dispatches **Validate VSIX**, bound to the expected commit. This
-avoids a separate stored personal token. PR-only `main`, required **VSIX validation**,
+write permissions. GitHub uses one setting for creating PRs and approving PR
+reviews; this workflow never submits approving reviews. Bot-created PR workflow
+runs require approval, and manually dispatched checks do not satisfy PR branch
+protection. The scheduler therefore approves the ordinary PR validation run only
+for its own verified version PR. Bot merges do not start push CI automatically,
+so it explicitly dispatches full **Validate VSIX** on the resulting `main`, bound
+to the expected commit. This avoids a separate stored personal token.
+PR-only `main`, required **VSIX validation**,
 up-to-date branches and the force-push/deletion restrictions remain in effect.
 
 To pause automatic publication, set `enabled` to `false` in the policy file
