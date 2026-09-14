@@ -82,7 +82,7 @@
                     raw: lines.slice(index, end + 1).map(line => line.startsWith(indent) ? line.slice(indent.length) : line).join('\n'), singleLine: false };
             }
             // An incomplete block must not absorb another Markdown section.
-            if (/^\s*(?:`{3,}|~{3,}|#{1,6} |\$\$\s*$|\\\[\s*$)/.test(line)) return null;
+            if (line === '\u0000' || /^\s*(?:`{3,}|~{3,}|#{1,6} |\$\$\s*$|\\\[\s*$)/.test(line)) return null;
             body.push(line.startsWith(indent) ? line.slice(indent.length) : line);
         }
         return null;
@@ -92,7 +92,7 @@
     function normalizeForPandoc(source, backslash = true) {
         if (!backslash) return source;
         const lines = source.split('\n');
-        let fence = null, frontMatter = false;
+        let fence = null, frontMatter = false, quoteScope = '', listIndents = [];
         for (let i = 0; i < lines.length; i++) {
             if (i === 0 && /^\uFEFF?---\s*$/.test(lines[i])) { frontMatter = true; continue; }
             if (frontMatter) {
@@ -102,13 +102,24 @@
             const quote = /^(?: {0,3}> ?)+/.exec(lines[i]);
             const prefix = quote ? quote[0] : '';
             const content = lines[i].slice(prefix.length);
-            const marker = /^ {0,3}(`{3,}|~{3,})(.*)$/.exec(content);
+            // A list's content indentation is not an indented code block.
+            // Keep real code (four more spaces) protected inside the list too.
+            if (prefix !== quoteScope && !fence) { listIndents = []; quoteScope = prefix; }
+            const indentation = /^ */.exec(content)[0].length;
+            const list = /^( *)(?:[-+*]|\d+[.)]) +/.exec(content);
+            if (!fence && content.trim()) {
+                while (listIndents.length && indentation < listIndents[listIndents.length - 1]) listIndents.pop();
+                if (list) listIndents.push(list[0].length);
+            }
+            const baseIndent = listIndents[listIndents.length - 1] || 0;
+            const relative = content.slice(list ? list[0].length : Math.min(indentation, baseIndent));
+            const marker = /^ {0,3}(`{3,}|~{3,})(.*)$/.exec(relative);
             if (fence) {
                 if (marker && marker[1][0] === fence[0] && marker[1].length >= fence.length && !marker[2].trim()) fence = null;
                 continue;
             }
             if (marker) { fence = marker[1]; continue; }
-            if (/^ {4}|^\t|^ {0,3}\[[^\]]+\]:/.test(content)) continue;
+            if (/^ {4}|^\t|^ {0,3}\[[^\]]+\]:/.test(relative)) continue;
             const blockLines = prefix ? lines.slice(i).map(line => line.startsWith(prefix) ? line.slice(prefix.length) : '\u0000') : lines;
             const blockIndex = prefix ? 0 : i;
             const block = display(blockLines, blockIndex, true);

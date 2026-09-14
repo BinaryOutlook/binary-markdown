@@ -132,6 +132,42 @@ test('failed Pandoc conversion removes its owned intermediate directory', async 
 
 const realTools = process.env.EXPORT_REAL_TOOLS === '1';
 
+test('real Pandoc exports all supported equation delimiters as native math without changing source', { skip: !realTools }, async t => {
+    const directory = await temporary(t);
+    const status = await discoverTool('pandoc', process.env.EXPORT_PANDOC_PATH || '');
+    assert.equal(status.available, true, status.error);
+    const source = [
+        '# Equation compatibility', '',
+        'Inline $a^2$ and \\(b^3\\).', '',
+        '$$', '\\begin{aligned}', 'x&=1\\\\', 'y&=2', '\\end{aligned}', '$$', '',
+        '\\[', '\\begin{pmatrix}', '1&2\\\\', '3&4', '\\end{pmatrix}', '\\]', '',
+        '$$c^2$$', '', '\\[d^3\\]', '',
+        '```math', '\\begin{gathered}', 'e=1\\\\', 'f=2', '\\end{gathered}', '```', '',
+        '| Cost |', '| --- |', '| \\(O(V^3)\\) |', '',
+        '> \\[', '> g^2', '> \\]', '',
+        '- Parent', '  - Child', '', '    \\[', '    h^3', '    \\]', '',
+        '`\\(literal-code\\)`', '', '```text', '\\[literal-fence\\]', '```', '',
+        'EQUATION-LAST-MARKER', ''
+    ].join('\n');
+    const sourcePath = path.join(directory, 'equations.md');
+    await fs.writeFile(sourcePath, source);
+    const saved = { sourcePath, markdown: source, version: 1, theme: 'github', fontSize: 16 };
+    const prepared = { html: '', theme: 'github', fontSize: 16, diagrams: [], warnings: [] };
+    for (const format of ['docx', 'epub']) {
+        const ops = operations();
+        const entries = archiveEntries(await convertPandoc(format, saved, prepared, status.path, ops));
+        const content = [...entries].filter(([name]) => /(?:document\.xml|\.xhtml)$/.test(name)).map(([, value]) => value.toString('utf8')).join('\n');
+        const math = content.match(format === 'docx' ? /<m:oMath[ >]/g : /<math[ >]/g) || [];
+        assert.equal(math.length, 10, `${format} contains ten native equations`);
+        assert.match(content, /EQUATION-LAST-MARKER/);
+        assert.match(content, /\\\(literal-code\\\)/);
+        assert.match(content, /\\\[literal-fence\\\]/);
+        assert.deepEqual(ops.warnings, []);
+    }
+    assert.equal(await fs.readFile(sourcePath, 'utf8'), source);
+    assert.equal(saved.markdown, source);
+});
+
 test('real DOCX pages do not acquire editor background or text colours', { skip: !realTools }, async t => {
     const directory = await temporary(t);
     const status = await discoverTool('pandoc', process.env.EXPORT_PANDOC_PATH || '');

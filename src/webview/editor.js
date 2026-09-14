@@ -2311,7 +2311,7 @@
 
         function renderBlockquote(lines) {
             if (lines.length === 0) return '';
-            if (lines.some((_, index) => mathSyntax.display(lines, index, mathBackslashDelimiters))) {
+            if (lines.some((line, index) => /^\s*(?:`{3,}|~{3,})/.test(line) || mathSyntax.display(lines, index, mathBackslashDelimiters))) {
                 return '<blockquote>' + markdownToHtmlFragment(lines.join('\n')) + '</blockquote>';
             }
             // Join blockquote lines with actual newlines (like code blocks)
@@ -2423,6 +2423,7 @@
                 if (inBlockquote) { html += renderBlockquote(blockquoteLines); inBlockquote = false; blockquoteLines = []; }
                 if (inTable) { html += renderTable(tableRows); inTable = false; tableRows = []; }
                 if (!equation.indent.length) html += closeAllLists();
+                else html += closeListsToLevel(Math.floor(equation.indent.length / 2));
                 html += mathBlockHtml(equation);
                 i = equation.end - 1;
                 continue;
@@ -2519,6 +2520,11 @@
                     for (let j = i + 1; j < lines.length; j++) {
                         const nextLine = lines[j];
                         if (nextLine.trim() !== '') {
+                            if (/^ +/.test(nextLine) && mathSyntax.display(lines, j, mathBackslashDelimiters)) {
+                                nextListItem = true;
+                                nextListIndent = /^ */.exec(nextLine)[0].length;
+                                break;
+                            }
                             // Found next non-empty line - check if it's a list item
                             const ulMatch = nextLine.match(/^(\s*)[-*+] /);
                             const olMatch = nextLine.match(/^(\s*)\d+\. /);
@@ -3034,7 +3040,8 @@
         const original = decodeURIComponent(span.dataset.mathTex);
         input.value = original;
         const rect = span.getBoundingClientRect();
-        input.style.left = Math.max(8, Math.min(rect.left, window.innerWidth - 300)) + 'px';
+        const inputWidth = Math.min(480, window.innerWidth - 16);
+        input.style.left = Math.max(8, Math.min(rect.left, window.innerWidth - inputWidth - 8)) + 'px';
         input.style.top = Math.max(8, Math.min(rect.bottom + 4, window.innerHeight - 50)) + 'px';
         document.body.appendChild(input);
         const finish = (apply, focus) => {
@@ -3046,9 +3053,16 @@
             if (apply && value !== original) {
                 markdown = readCurrentMarkdown();
                 undoManager.saveSnapshot();
-                span.dataset.mathTex = encodeURIComponent(value);
-                span.dataset.mathRaw = encodeURIComponent(span.dataset.mathOpen + value + span.dataset.mathClose);
-                renderInlineMath(span);
+                if (value.trim()) {
+                    span.dataset.mathTex = encodeURIComponent(value);
+                    span.dataset.mathRaw = encodeURIComponent(span.dataset.mathOpen + value + span.dataset.mathClose);
+                    renderInlineMath(span);
+                } else {
+                    // Empty inline delimiters are ambiguous with display math.
+                    const placeholder = document.createTextNode('');
+                    span.replaceWith(placeholder);
+                    span = placeholder;
+                }
                 syncMarkdownSync();
             }
             if (focus) {
@@ -5991,7 +6005,9 @@
         for (const child of li.childNodes) {
             if (child.nodeType === 1) {
                 const childTag = child.tagName.toLowerCase();
-                if (childTag === 'ul' || childTag === 'ol') {
+                if (child.classList.contains('math-wrapper')) {
+                    nestedContent += mathBlockMarkdown(child).replace(/\n$/, '').split('\n').map(line => indent + '  ' + line).join('\n') + '\n';
+                } else if (childTag === 'ul' || childTag === 'ol') {
                     // Nested list - process with increased indent
                     nestedContent += mdProcessNode(child, indent + '  ');
                 }
@@ -6019,9 +6035,6 @@
         }
 
         result += nestedContent;
-        for (const equation of li.querySelectorAll(':scope > .math-wrapper')) {
-            result += mathBlockMarkdown(equation).replace(/\n$/, '').split('\n').map(line => indent + '  ' + line).join('\n') + '\n';
-        }
         logger.log('mdProcessListItem result:', result.substring(0, 100));
         return result;
     }

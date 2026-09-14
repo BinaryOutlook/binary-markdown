@@ -115,3 +115,63 @@ test('typed inline math converts after a space and remains editable', async ({ p
     await expect(page.locator('#editor .math-inline .katex')).toHaveCount(1);
     expect(await page.evaluate(() => (window as any).__testApi.getMarkdown())).toContain('Before $x^2$');
 });
+
+test('nested display equations retain their position before and after sublists', async ({ page }) => {
+    const source = '- Parent\n  $$\n  x^2\n  $$\n  - Child\n    \\[\n    y^3\n    \\]\n  $$\n  z^4\n  $$\n';
+    await setMarkdown(page, source);
+    await expect(page.locator('#editor .math-wrapper .katex')).toHaveCount(3);
+    expect(await page.evaluate(() => (window as any).__testApi.getMarkdown())).toBe(source);
+    await setMarkdown(page, '- Parent\n\n  $$\n  x^2\n  $$\n');
+    await expect(page.locator('#editor li > .math-wrapper .katex')).toHaveCount(1);
+});
+
+test('math-looking text inside quoted fences remains code', async ({ page }) => {
+    await setMarkdown(page, '> ```text\n> $x$ and \\(y\\)\n> ```\n');
+    await expect(page.locator('#editor .math-inline')).toHaveCount(0);
+    await expect(page.locator('#editor blockquote pre')).toHaveCount(1);
+});
+
+test('Insert Equation creates dollars and Insert Inline Equation edits selected text', async ({ page }) => {
+    await setMarkdown(page, 'Before\n');
+    await page.locator('#editor p').first().click();
+    const modifier = process.platform === 'darwin' ? 'Meta' : 'Control';
+    await page.keyboard.press(`${modifier}+/`);
+    await page.locator('.command-palette-item[data-action="math"]').click();
+    await page.locator('#editor .math-wrapper code').fill('a^2');
+    expect(await page.evaluate(() => (window as any).__testApi.getMarkdown())).toContain('$$\na^2\n$$');
+
+    await setMarkdown(page, 'x^2\n');
+    await page.locator('#editor p').first().evaluate(el => {
+        const r = document.createRange(); r.selectNodeContents(el);
+        const s = window.getSelection()!; s.removeAllRanges(); s.addRange(r);
+    });
+    await page.keyboard.press(`${modifier}+/`);
+    await page.locator('.command-palette-item[data-action="inlineMath"]').click();
+    await expect(page.locator('.math-inline-input')).toHaveValue('x^2');
+    await page.locator('.math-inline-input').fill('y^3');
+    await page.locator('.math-inline-input').press('Enter');
+    expect(await page.evaluate(() => (window as any).__testApi.getMarkdown())).toBe('$y^3$\n');
+});
+
+test('typing a display opener followed by Enter creates an editable block', async ({ page }) => {
+    for (const opener of ['$$', '\\[']) {
+        await setMarkdown(page, '\n');
+        await page.locator('#editor p').first().click();
+        await page.keyboard.type(opener);
+        await page.keyboard.press('Enter');
+        await expect(page.locator('#editor .math-wrapper')).toHaveCount(1);
+        await page.keyboard.type('x^2');
+        expect(await page.evaluate(() => (window as any).__testApi.getMarkdown())).toContain(opener + '\nx^2\n' + (opener === '$$' ? '$$' : '\\]'));
+    }
+});
+
+test('clearing an inline equation removes it and undo restores its source', async ({ page }) => {
+    await setMarkdown(page, 'Before $x$ after\n');
+    await page.locator('#editor .math-inline').click();
+    await page.locator('.math-inline-input').fill('');
+    await page.locator('.math-inline-input').press('Enter');
+    await expect(page.locator('#editor .math-inline')).toHaveCount(0);
+    expect(await page.evaluate(() => (window as any).__testApi.getMarkdown())).toBe('Before  after\n');
+    await page.keyboard.press('Control+z');
+    expect(await page.evaluate(() => (window as any).__testApi.getMarkdown())).toBe('Before $x$ after\n');
+});

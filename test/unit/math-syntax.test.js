@@ -51,3 +51,15 @@ test('Pandoc normalization preserves code examples, metadata and equation conten
         '$$\n\\text{\\(unchanged\\)}\n$$\n\n\\(unfinished';
     assert.equal(math.normalizeForPandoc(input), input);
 });
+
+test('nested list math is normalized while indented code stays literal', () => {
+    const source = '- Parent\n  - Child\n\n    \\[\n    x^2\n    \\]\n\n    Inline \\(y^3\\).\n\n        \\(code\\)\n';
+    assert.equal(math.normalizeForPandoc(source), source.replace('\\[', '$$$$').replace('\\]', '$$$$').replace('\\(y^3\\)', '$y^3$'));
+    const fenced = '- Parent\n  ```text\n  \\(code\\)\n  ```\n  Inline \\(x\\)\n';
+    assert.equal(math.normalizeForPandoc(fenced), fenced.replace('\\(x\\)', '$x$'));
+});
+
+test('an unmatched quoted delimiter cannot consume unrelated content', () => {
+    const source = '> \\[\n> unfinished\n\nOutside \\(y\\).\n\n> \\]';
+    assert.equal(math.normalizeForPandoc(source), source.replace('\\(y\\)', '$y$'));
+});
