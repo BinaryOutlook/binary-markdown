@@ -664,6 +664,17 @@ async function cancellationCases(h, owner, record) {
         await h.sourceMode(connection);
         await connection.send('Input.insertText', { text: 'EDIT-WHILE-EXPORT-WAITS' });
         assert.ok(await connection.evaluate('document.getElementById("sourceEditor").value.includes("EDIT-WHILE-EXPORT-WAITS")'));
+        // The server can receive the request before older VS Code delivers the
+        // running status to the webview. A programmatic click on a still-hidden
+        // Cancel button is ignored by export-ui's running-state guard.
+        await h.until(() => connection.evaluate(`(() => {
+            const button = document.getElementById('exportCancel');
+            return document.getElementById('exportStatus').dataset.state === 'running' && !button.hidden && !button.disabled;
+        })()`), 'visible export cancellation control');
+        record('resource-cancel-requested', await connection.evaluate(`({
+            status: document.getElementById('exportStatus').dataset.state,
+            buttonVisible: !document.getElementById('exportCancel').hidden
+        })`));
         await connection.evaluate('document.getElementById("exportCancel").click()');
         assert.equal((await h.terminal(connection)).state, 'cancelled'); await h.until(() => closed);
         assert.equal(fs.readFileSync(path.join(owner.workspace, file), 'utf8'), source);

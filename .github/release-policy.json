@@ -1,0 +1,5 @@
+{
+  "enabled": true,
+  "minimumDays": 3,
+  "branch": "main"
+}
