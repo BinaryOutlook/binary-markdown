@@ -2982,16 +2982,14 @@
         }
 
         try {
-            var lines = texCode.split('\n').filter(function(l) { return l.trim() !== ''; });
-            var html = '';
-            for (var i = 0; i < lines.length; i++) {
-                html += katex.renderToString(lines[i].trim(), {
-                    displayMode: true,
-                    throwOnError: Boolean(strict),
-                    output: 'html'
-                });
-            }
-            displayDiv.innerHTML = html;
+            // Newlines are TeX whitespace. Environments such as aligned and
+            // matrices must reach KaTeX as one expression, including their rows.
+            displayDiv.innerHTML = katex.renderToString(texCode, {
+                displayMode: true,
+                throwOnError: Boolean(strict),
+                trust: false,
+                output: 'html'
+            });
         } catch (err) {
             displayDiv.innerHTML = '<div class="math-error">Error: ' +
                 escapeHtml(err.message || 'Invalid LaTeX') + '</div>';
