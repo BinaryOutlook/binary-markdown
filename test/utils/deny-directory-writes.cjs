@@ -28,9 +28,25 @@ function denyDirectoryWrites(directory) {
         restore();
         throw error;
     }
-    restore();
-    fs.rmSync(probe, { recursive: true, force: true });
-    throw new Error('The Windows permission fixture still allows directory creation');
+    // Keep diagnostics to access masks and inheritance flags, without printing
+    // usernames, SIDs, machine names or the generated fixture path.
+    let state;
+    try {
+        state = execFileSync('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command',
+            '$a = Get-Acl -LiteralPath $env:BINARY_TEST_ACL_DIRECTORY; ' +
+            '$rules = @($a.GetAccessRules($true, $true, [System.Security.Principal.SecurityIdentifier]) | ForEach-Object { ' +
+            '[pscustomobject]@{ Everyone = ($_.IdentityReference.Value -eq "S-1-1-0"); ' +
+            'Type = [string]$_.AccessControlType; Rights = [string]$_.FileSystemRights; ' +
+            'Inherited = $_.IsInherited; Inheritance = [string]$_.InheritanceFlags; Propagation = [string]$_.PropagationFlags } }); ' +
+            'ConvertTo-Json -Compress -InputObject $rules'], {
+            encoding: 'utf8', timeout: 10000, stdio: ['ignore', 'pipe', 'pipe'],
+            env: { ...process.env, BINARY_TEST_ACL_DIRECTORY: directory }
+        }).trim();
+    } finally {
+        restore();
+        fs.rmSync(probe, { recursive: true, force: true });
+    }
+    throw new Error('The Windows permission fixture still allows directory creation; ACL=' + state);
 }
 
 module.exports = { denyDirectoryWrites };
