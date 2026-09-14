@@ -4,6 +4,13 @@ async function setMarkdown(page: Page, markdown: string) {
     await page.evaluate(md => (window as any).__testApi.setMarkdown(md), markdown);
 }
 
+async function pressInlineEquationKey(page: Page, key: string) {
+    await expect(page.locator('.math-inline-input')).toBeFocused();
+    // These keys remove the input. Send once to the focused page so locator
+    // actionability retries cannot try to reuse an input the action just closed.
+    await page.keyboard.press(key);
+}
+
 test.beforeEach(async ({ page }) => {
     await page.goto('/standalone-editor.html');
     await page.waitForFunction(() => (window as any).__testApi?.ready);
@@ -87,17 +94,17 @@ test('inline source editor applies, cancels, saves and undoes without changing d
     await setMarkdown(page, 'Before \\(x^2\\) after\n');
     await page.locator('#editor .math-inline').click();
     await page.locator('.math-inline-input').fill('y^3');
-    await page.locator('.math-inline-input').press('Enter');
+    await pressInlineEquationKey(page, 'Enter');
     await expect.poll(() => page.evaluate(() => (window as any).__testApi.getMarkdown())).toBe('Before \\(y^3\\) after\n');
     await page.keyboard.press('Control+z');
     await expect.poll(() => page.evaluate(() => (window as any).__testApi.getMarkdown())).toBe('Before \\(x^2\\) after\n');
     await page.locator('#editor .math-inline').click();
     await page.locator('.math-inline-input').fill('cancelled');
-    await page.locator('.math-inline-input').press('Escape');
+    await pressInlineEquationKey(page, 'Escape');
     expect(await page.evaluate(() => (window as any).__testApi.getMarkdown())).toBe('Before \\(x^2\\) after\n');
     await page.locator('#editor .math-inline').click();
     await page.locator('.math-inline-input').fill('z^4');
-    await page.locator('.math-inline-input').press('Control+s');
+    await pressInlineEquationKey(page, 'Control+s');
     const saved = await page.evaluate(() => (window as any).__testApi.messages.filter((m: any) => m.type === 'save').at(-1));
     expect(saved.content).toBe('Before \\(z^4\\) after\n');
 });
@@ -149,7 +156,7 @@ test('Insert Equation creates dollars and Insert Inline Equation edits selected 
     await page.locator('.command-palette-item[data-action="inlineMath"]').click();
     await expect(page.locator('.math-inline-input')).toHaveValue('x^2');
     await page.locator('.math-inline-input').fill('y^3');
-    await page.locator('.math-inline-input').press('Enter');
+    await pressInlineEquationKey(page, 'Enter');
     expect(await page.evaluate(() => (window as any).__testApi.getMarkdown())).toBe('$y^3$\n');
 });
 
@@ -169,7 +176,7 @@ test('clearing an inline equation removes it and undo restores its source', asyn
     await setMarkdown(page, 'Before $x$ after\n');
     await page.locator('#editor .math-inline').click();
     await page.locator('.math-inline-input').fill('');
-    await page.locator('.math-inline-input').press('Enter');
+    await pressInlineEquationKey(page, 'Enter');
     await expect(page.locator('#editor .math-inline')).toHaveCount(0);
     expect(await page.evaluate(() => (window as any).__testApi.getMarkdown())).toBe('Before  after\n');
     await page.keyboard.press('Control+z');
@@ -205,7 +212,7 @@ test('an inline input ignores composing Enter and exports invalid TeX as visible
     await page.locator('.math-inline-input').dispatchEvent('keydown', { key: 'Enter', isComposing: true });
     await expect(page.locator('.math-inline-input')).toBeVisible();
     await page.locator('.math-inline-input').fill('\\invalidcommand');
-    await page.locator('.math-inline-input').press('Enter');
+    await pressInlineEquationKey(page, 'Enter');
     await page.evaluate(() => (window as any).__hostMessageHandler({
         type: 'prepareExport', requestId: 'invalid-inline', markdown: '$\\invalidcommand$\n'
     }));
@@ -222,7 +229,7 @@ test('saving an open equation edit refreshes TOC and preserves YAML and code', a
     await setMarkdown(page, front + '\n[TOC]\n\n# Cost $x^2$\n\n```python\nprint("kept")\n```\n');
     await page.locator('#editor h1 .math-inline').click();
     await page.locator('.math-inline-input').fill('y^3');
-    await page.locator('.math-inline-input').press('Control+s');
+    await pressInlineEquationKey(page, 'Control+s');
     const saves = () => page.evaluate(() => (window as any).__testApi.messages.filter((m: any) => m.type === 'save'));
     await expect.poll(async () => (await saves()).length).toBe(1);
     const saved = (await saves())[0].content;
