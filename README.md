@@ -34,7 +34,7 @@ The extension is optional: installing it does not change your default Markdown e
 
 The extension ID is `BinaryOutlook.binary-markdown`. It has separate commands, settings, and editor registration from Any Markdown. Read the [migration guide](docs/migration.md) if you used an earlier test build.
 
-The package declares VS Code 1.85.0 or later. Validation targets local desktop VS Code on macOS ARM64 and Ubuntu x86-64; see the [candidate validation record](docs/validation/0.2.0.md) for actual results. Other editors and platforms need their own compatibility checks.
+The package declares VS Code 1.85.0 or later. Validation targets local desktop VS Code on Windows x86-64, macOS ARM64 and Ubuntu x86-64; see the [candidate validation record](docs/validation/0.2.0.md) for actual results. The [Windows validation guide](docs/validation/windows.md) describes the added checks; historical release records apply only to the platforms they list. Other editors and platforms need their own compatibility checks.
 
 ## Features
 
@@ -103,9 +103,9 @@ The [editor guide](docs/editor-guide.md) covers formatting, keyboard operations,
 
 ## Experimental export
 
-Export supports **HTML, PDF, Word (.docx), and EPUB** in **local desktop VS Code on macOS and Linux**. HTML/PDF follow supported editor rendering; DOCX/EPUB prioritize editable content and structure. See [candidate validation](docs/validation/0.2.0.md) and the [export validation history](docs/export-validation.md) for tested systems and limitations.
+Export supports **HTML, PDF, Word (.docx), and EPUB** in **local desktop VS Code on macOS, Linux and Windows**. HTML/PDF follow supported editor rendering; DOCX/EPUB prioritize editable content and structure. See [candidate validation](docs/validation/0.2.0.md) and the [export validation history](docs/export-validation.md) for tested systems and limitations.
 
-**Remote-SSH export is not yet supported.** The menu explains this restriction and marks every format unavailable. To export now, open a local copy of the Markdown file and its referenced assets in desktop VS Code on macOS or Linux. Installing Pandoc or a browser does not enable export in a remote window.
+**Remote-SSH export is not yet supported.** The menu explains this restriction and marks every format unavailable. To export now, open a local copy of the Markdown file and its referenced assets in desktop VS Code on macOS, Linux or Windows. Installing Pandoc or a browser does not enable export in a remote window.
 
 Save the named Markdown file, then select the sharing-arrow button immediately to the right of the VS Code-logo toolbar button. Choose a format from its dropdown. Unsaved work produces a save-and-retry message; export does not save automatically. The job shows its actual stage, supports cancellation, and reports the saved path and any fallback warnings.
 
@@ -119,10 +119,10 @@ Install Pandoc using its [official instructions](https://pandoc.org/installing.h
 
 Open VS Code Settings and search for `binary-markdown.export`. Leave the following **machine-specific** settings empty for automatic detection, or supply an absolute executable path:
 
-| Setting | Example macOS executable path | Example Linux executable path |
-| --- | --- | --- |
-| `binary-markdown.export.pandocPath` | `/opt/homebrew/bin/pandoc` | `/usr/bin/pandoc` or an absolute user-space installation path |
-| `binary-markdown.export.browserPath` | `/Applications/Google Chrome.app/Contents/MacOS/Google Chrome` | `/usr/bin/google-chrome` |
+| Setting | Example macOS executable path | Example Linux executable path | Example Windows executable path |
+| --- | --- | --- | --- |
+| `binary-markdown.export.pandocPath` | `/opt/homebrew/bin/pandoc` | `/usr/bin/pandoc` or an absolute user-space installation path | `C:\Program Files\Pandoc\pandoc.exe` |
+| `binary-markdown.export.browserPath` | `/Applications/Google Chrome.app/Contents/MacOS/Google Chrome` | `/usr/bin/google-chrome` | `C:\Program Files\Google\Chrome\Application\chrome.exe` |
 
 An invalid manual path is reported instead of silently selecting a different tool. Reopen the export menu after installing a tool to rescan. The initial workflow requires a trusted workspace; remote hosts, browser VS Code and Electron-app export are deferred.
 

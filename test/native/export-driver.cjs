@@ -11,7 +11,7 @@ const inside = (base, target) => {
 };
 
 exports.activate = async function activate(context) {
-    if (!['darwin', 'linux'].includes(process.platform) || vscode.env.uiKind !== vscode.UIKind.Desktop || vscode.env.remoteName) return;
+    if (!['darwin', 'linux', 'win32'].includes(process.platform) || vscode.env.uiKind !== vscode.UIKind.Desktop || vscode.env.remoteName) return;
     const folders = vscode.workspace.workspaceFolders || [];
     if (folders.length !== 1 || folders[0].uri.scheme !== 'file') return;
     const workspace = fs.realpathSync(folders[0].uri.fsPath);

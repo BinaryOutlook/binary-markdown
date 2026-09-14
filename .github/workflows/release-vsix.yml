@@ -75,7 +75,7 @@ jobs:
           version=$(node -p 'require("./package.json").version')
           tag="v$version"
           test -f "docs/releases/$version.md"
-          for lane in ubuntu macos vscode-minimum; do
+          for lane in ubuntu macos windows vscode-minimum; do
             test -f "validation-evidence/validation-$lane-$SOURCE-$ATTEMPT/artifact-audit.json"
           done
           set +e

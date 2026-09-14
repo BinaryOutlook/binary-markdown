@@ -1,12 +1,12 @@
 # Installed-VSIX export smoke tests
 
-This harness exercises installed local desktop VS Code on macOS or Linux: toolbar, actual save lifecycle, installed converters, cancellation and output filenames. It complements the artifact inspection tools in this directory; passing it does not certify visual fidelity or environments absent from its receipts. Follow [0.2.0 integration validation](../../docs/validation/0.2.0.md) for current package evidence; the [export-branch record](../../docs/export-validation.md) preserves earlier Ubuntu x86-64/macOS ARM64 observations.
+This harness exercises installed local desktop VS Code on macOS, Linux or Windows: toolbar, actual save lifecycle, installed converters, cancellation and output filenames. It complements the artifact inspection tools in this directory; passing it does not certify visual fidelity or environments absent from its receipts. Follow [0.2.0 integration validation](../../docs/validation/0.2.0.md) for current package evidence; the [export-branch record](../../docs/export-validation.md) preserves earlier Ubuntu x86-64/macOS ARM64 observations.
 
 The consolidated `--suite all` run passed on 2026-09-09 in a fresh isolated installation: **39 scenario receipts plus a final frozen-input check**. That run used VS Code 1.136.0, Node 20.20.0, Pandoc 3.8.3 and Google Chrome 152.0.7977.65. The VSIX was 4,187,330 bytes, SHA-256 `958ba238a2b064888c9b5e76631c2aa884004e4769ade61c72523168c4808438`. Re-run after changing the implementation or environment; this is a dated receipt, not a compatibility guarantee.
 
 ## Prerequisites
 
-- Use the Node version in `.node-version`, local desktop VS Code on macOS or Linux and the VS Code `code` CLI. Supply `--code /path/to/code` when it is not on PATH. Run as an ordinary user, not root.
+- Use the Node version in `.node-version`, local desktop VS Code on macOS, Linux or Windows and the VS Code `code` CLI. Supply `--code /path/to/code` when it is not on PATH. On Windows, pass the isolated archive’s absolute `Code.exe` path; the harness uses its packaged CLI without a command-shell wrapper. Run as an ordinary user, not root.
 - Run `npm ci`, `npm run package` and `python3 test/fixtures/exports/verify-fixtures.py` from the checkout.
 - Install Pandoc and Chrome/Chromium/Edge yourself before the full four-format run. No command here downloads native engines. Optional `--pandoc /path/to/pandoc` and `--browser /path/to/browser` select manual executable paths; empty defaults exercise automatic discovery.
 - Close the earlier test window before starting another session on the same port. Normal VS Code windows can remain open. Linux needs a local desktop display or an explicitly provisioned Xvfb display; SSH alone is not a display. This tests a local extension host, not VS Code Remote-SSH.

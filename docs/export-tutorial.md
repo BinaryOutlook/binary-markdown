@@ -7,10 +7,9 @@ HTML needs no additional converter.
 ## Before you begin
 
 - [Install Binary Markdown](../README.md#install) in local desktop VS Code on
-  macOS or Linux. Export is experimental; the
+  macOS, Linux or Windows. Export is experimental; the
   [validation record](validation/0.2.0.md) identifies tested environments.
-- Use a local folder you can write to and a workspace you trust. Windows,
-  Remote-SSH, other remote windows, and browser VS Code are outside export scope.
+- Use a local folder you can write to and a workspace you trust. Remote-SSH, other remote windows, and browser VS Code are outside export scope.
 
 ## Create and save a document
 

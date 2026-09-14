@@ -5,8 +5,7 @@ configure the required tools, and resolve common failures.
 
 ## Before you begin
 
-Export is experimental in local desktop VS Code on macOS and Linux. Windows,
-remote extension hosts (including Remote-SSH), and browser VS Code are outside
+Export is experimental in local desktop VS Code on macOS, Linux and Windows. Remote extension hosts (including Remote-SSH), and browser VS Code are outside
 the current export scope. In a remote window, open a local copy of the Markdown
 file and its referenced assets in a supported desktop environment. Installing
 conversion tools does not remove a host restriction.
@@ -35,7 +34,7 @@ an active job.
 ## Tools and settings
 
 | Format | Required external tool | Executable setting |
-| --- | --- | --- |
+| --- | --- | --- | --- |
 | HTML | None | None |
 | PDF | Installed Chrome, Chromium, or Microsoft Edge | `binary-markdown.export.browserPath` |
 | Word (.docx) and EPUB | Installed Pandoc | `binary-markdown.export.pandocPath` |
@@ -51,10 +50,10 @@ an active job.
 Both executable settings have machine scope. Example paths depend on where you
 installed the tools:
 
-| Tool | macOS example | Linux example |
-| --- | --- | --- |
-| Pandoc | `/opt/homebrew/bin/pandoc` | `/usr/bin/pandoc` |
-| Google Chrome | `/Applications/Google Chrome.app/Contents/MacOS/Google Chrome` | `/usr/bin/google-chrome` |
+| Tool | macOS example | Linux example | Windows example |
+| --- | --- | --- | --- |
+| Pandoc | `/opt/homebrew/bin/pandoc` | `/usr/bin/pandoc` | `C:\Program Files\Pandoc\pandoc.exe` |
+| Google Chrome | `/Applications/Google Chrome.app/Contents/MacOS/Google Chrome` | `/usr/bin/google-chrome` | `C:\Program Files\Google\Chrome\Application\chrome.exe` |
 
 An invalid manual path is reported without silently selecting another tool.
 Use your actual installation path, including a user-space path where appropriate.
