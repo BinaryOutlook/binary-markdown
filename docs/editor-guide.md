@@ -155,20 +155,28 @@ graph TD
 
 ### KaTeX Math Equations
 
-Code blocks with language `math` are rendered as mathematical equations using KaTeX:
+Use `$x^2$` or `\(x^2\)` for an inline equation. Use a standalone `$$…$$` or `\[…\]` block for a display equation. Existing fenced `math` blocks are also supported.
 
-```math
-E = mc^2
-\int_0^\infty e^{-x} dx = 1
-\sum_{n=1}^{\infty} \frac{1}{n^2} = \frac{\pi^2}{6}
+```text
+The cost is $O(V^3)$.
+
+$$
+\begin{aligned}
+E &= mc^2 \\
+a^2 + b^2 &= c^2
+\end{aligned}
+$$
 ```
 
-- Each line is rendered as an independent display-mode equation
-- Click on the rendered equation to edit the LaTeX source
-- Equations re-render automatically (500ms debounce) while editing
-- Invalid LaTeX is shown as a red error message (does not break the layout)
-- Empty blocks show "Empty expression"
-- Navigate in/out with arrow keys, just like code blocks and Mermaid diagrams
+- **Insert Equation** creates a display block using `$$`. **Insert Inline Equation** wraps the selection in `$…$` and opens its source input. Both actions are available in the toolbar and action palette.
+- Type `$$` and press Enter to create a display block. Complete an inline expression and type a space to render it.
+- Click a display equation to edit its TeX source. Click an inline equation, or focus it and press Enter, to edit it; Enter applies, Escape cancels, and clearing the input removes the equation.
+- Saving retains the original equation delimiters, including imported backslash delimiters and old fences. Backslash recognition is enabled by default; disable `binary-markdown.math.backslashDelimiters` for documents that use these sequences literally.
+- Each display block is one complete TeX expression. Physical newlines are whitespace. To retain separate rows in an old fence, use `gathered` or `aligned` with explicit `\\` row breaks, as in the example above.
+- Code examples, link destinations, escaped delimiters, unmatched delimiters and common currency forms stay literal. Inline dollar math requires non-whitespace next to both delimiters and no digit immediately after the closing delimiter.
+- KaTeX renders supported TeX commands; this is not full MathJax or LaTeX support. Invalid expressions show an error and retain editable source. Empty display blocks show "Empty expression".
+
+HTML and PDF embed KaTeX rendering. DOCX and EPUB use Pandoc's native math conversion, which has its own command support. Backslash delimiters are normalized in an export-only copy; the Markdown file is never rewritten for conversion.
 
 ---
 

@@ -49,6 +49,7 @@ Inherited from Any Markdown:
 
 Changes developed in this fork:
 
+- Inline and display equations with dollar or backslash delimiters, source-preserving editing, and complete multiline TeX rendering in existing `math` fences. See the [equation guide](docs/editor-guide.md#katex-math-equations).
 - Code-block copying preserves rendered line breaks, indentation, and meaningful blank lines.
 - Outline visibility can be remembered per file or globally, with a configurable initial state.
 - Opening the outline does not mark the Markdown document as edited.
