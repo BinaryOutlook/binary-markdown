@@ -10,6 +10,7 @@
     const host = window.hostBridge;
     const mathSyntax = window.BinaryMath;
     const mathBackslashDelimiters = __MATH_BACKSLASH__;
+    var finishInlineMathEdit = null;
     const i18n = __I18N__;
     logger.log('[Binary Markdown] i18n loaded:', i18n.livePreviewMode ? 'OK' : 'EMPTY', '- Sample:', i18n.bold || '(none)');
     const editor = document.getElementById('editor');
@@ -161,6 +162,7 @@
 
     // Capturing export eligibility must never normalize an untouched document.
     function readCurrentMarkdown() {
+        if (finishInlineMathEdit) finishInlineMathEdit(true, false);
         return isSourceMode ? sourceEditor.value : (hasUserEdited ? htmlToMarkdown() : markdown);
     }
 
@@ -1364,12 +1366,13 @@
 
     // ========== MARKDOWN TO HTML ==========
 
-    function parseMarkdownLine(text) {
+    function parseMarkdownLine(text, allowMath = true) {
+        const parseLineInline = value => parseInline(value, allowMath);
         // Heading
         const headingMatch = text.match(REGEX.heading);
         if (headingMatch) {
             const level = headingMatch[1].length;
-            const content = parseInline(headingMatch[2]);
+            const content = parseLineInline(headingMatch[2]);
             return { tag: 'h' + level, html: content, consumed: true };
         }
 
@@ -1383,7 +1386,7 @@
         if (taskMatch) {
             const indent = taskMatch[1].length;
             const checked = taskMatch[2].toLowerCase() === 'x' ? 'checked' : '';
-            const taskContent = parseInline(taskMatch[3]);
+            const taskContent = parseLineInline(taskMatch[3]);
             // Use <br> for empty task items to make them visible and editable
             return { tag: 'li', listType: 'ul', html: '<input type="checkbox"' + (checked ? ' checked' : '') + '>' + (taskContent || '<br>'), consumed: true, indent: indent };
         }
@@ -1392,7 +1395,7 @@
         const ulMatch = text.match(REGEX.ul);
         if (ulMatch) {
             const indent = ulMatch[1].length;
-            const content = parseInline(ulMatch[2]);
+            const content = parseLineInline(ulMatch[2]);
             // Use <br> for empty list items to make them visible and editable
             return { tag: 'li', listType: 'ul', html: content || '<br>', consumed: true, indent: indent };
         }
@@ -1401,7 +1404,7 @@
         const olMatch = text.match(REGEX.ol);
         if (olMatch) {
             const indent = olMatch[1].length;
-            const content = parseInline(olMatch[3]);
+            const content = parseLineInline(olMatch[3]);
             // Use <br> for empty list items to make them visible and editable
             return { tag: 'li', listType: 'ol', html: content || '<br>', consumed: true, indent: indent };
         }
@@ -1409,7 +1412,7 @@
         // Blockquote
         const quoteMatch = text.match(REGEX.quote);
         if (quoteMatch) {
-            return { tag: 'blockquote', html: parseInline(quoteMatch[1]), consumed: true };
+            return { tag: 'blockquote', html: parseLineInline(quoteMatch[1]), consumed: true };
         }
 
         // Code block start (3+ backticks or tildes)
@@ -1421,12 +1424,18 @@
         }
 
         // Regular paragraph
-        return { tag: 'p', html: parseInline(text), consumed: false };
+        return { tag: 'p', html: parseLineInline(text), consumed: false };
     }
 
-    function parseInline(text) {
+    function parseInline(text, allowMath = true) {
         if (!text) return '';
-        
+        const equations = allowMath ? mathSyntax.inline(text, mathBackslashDelimiters) : [];
+        let mathMarker = '\x00BMATH';
+        while (text.includes(mathMarker)) mathMarker += 'X';
+        for (let i = equations.length - 1; i >= 0; i--) {
+            const equation = equations[i];
+            text = text.slice(0, equation.start) + mathMarker + i + '\x00' + text.slice(equation.end);
+        }
         let html = escapeHtml(text);
         
         // Restore <br> tags that were escaped (used in table cells for line breaks)
@@ -1481,6 +1490,9 @@
         for (const { placeholder, html: replacement } of placeholders) {
             html = html.replace(placeholder, replacement);
         }
+        equations.forEach((equation, i) => {
+            html = html.replace(mathMarker + i + '\x00', () => inlineMathHtml(equation));
+        });
         
         return html;
     }
@@ -1696,10 +1708,10 @@
         // These are diagnostics about the current rendered output, not a new
         // Markdown parser. Literal notation stays exactly as the user sees it.
         const diagnosticTree = template.content.cloneNode(true);
-        diagnosticTree.querySelectorAll('pre,code,.math-wrapper,.mermaid-wrapper').forEach(element => element.remove());
+        diagnosticTree.querySelectorAll('pre,code,.math-wrapper,.math-inline,.mermaid-wrapper').forEach(element => element.remove());
         const visibleSource = (diagnosticTree.textContent || '').replace(/\\\$/g, '');
         if (/\$\$[\s\S]*?\$\$|\$(?!\$)(?=\S)[^$\n]*?[^\s$]\$(?![\d$])/.test(visibleSource)) {
-            exportWarning(warnings, 'renderer-math-source', 'The current displayed renderer leaves dollar-delimited mathematics ($...$ and $$...$$) as visible source. HTML/PDF preserve that behavior; use a fenced math block for rendered equations.');
+            exportWarning(warnings, 'renderer-math-source', 'Unrecognized equation delimiters remain visible source in the exported document.');
         }
         if (/\[TOC\]/i.test(visibleSource)) {
             exportWarning(warnings, 'renderer-toc-source', 'A literal [TOC] marker remains visible. HTML/PDF do not generate a table of contents from that marker in the current renderer.');
@@ -1728,6 +1740,20 @@
         document.body.appendChild(container);
         try {
             container.querySelectorAll('pre:not([data-lang="math"]):not([data-lang="mermaid"])').forEach(applyHighlighting);
+            for (const span of container.querySelectorAll('.math-inline')) {
+                checkExportCancellation(signal);
+                const output = document.createElement('span');
+                try {
+                    renderInlineMath(span, true);
+                    output.className = 'math-inline-display';
+                    output.innerHTML = span.innerHTML;
+                } catch (error) {
+                    output.className = 'export-warning';
+                    output.textContent = inlineMathMarkdown(span);
+                    exportWarning(warnings, 'math-fallback', 'An inline equation could not be rendered; its source is preserved.');
+                }
+                span.replaceWith(output);
+            }
             for (const wrapper of Array.from(container.querySelectorAll('.math-wrapper'))) {
                 checkExportCancellation(signal);
                 const code = wrapper.querySelector('pre code');
@@ -2151,6 +2177,7 @@
         let codeFenceLength = 0; // Track the length of the opening fence
         let codeFenceChar = ''; // Track the fence character (backtick or tilde)
         let codeStart = 0;
+        const metadataEnd = lines[0] === '---' ? lines.findIndex((line, i) => i > 0 && /^(---|\.\.\.)$/.test(line)) : -1;
         let inTable = false;
         let tableRows = [];
         let inBlockquote = false;
@@ -2391,7 +2418,7 @@
                 continue;
             }
 
-            const equation = mathSyntax.display(lines, i, mathBackslashDelimiters);
+            const equation = i > metadataEnd ? mathSyntax.display(lines, i, mathBackslashDelimiters) : null;
             if (equation && (equation.indent.length < 4 || listStack.length)) {
                 if (inBlockquote) { html += renderBlockquote(blockquoteLines); inBlockquote = false; blockquoteLines = []; }
                 if (inTable) { html += renderTable(tableRows); inTable = false; tableRows = []; }
@@ -2435,7 +2462,7 @@
                 blockquoteLines = [];
             }
 
-            const parsed = parseMarkdownLine(line);
+            const parsed = parseMarkdownLine(line, i > metadataEnd && (!/^(?: {4}|\t)/.test(line) || listStack.length > 0));
 
             // Handle list grouping with nesting
             if (parsed.listType) {
@@ -2549,6 +2576,7 @@
     }
 
     function setupInteractiveElements() {
+        setupInlineMath();
         // Make checkboxes work
         editor.querySelectorAll('input[type="checkbox"]').forEach(cb => {
             cb.addEventListener('change', () => {
@@ -2966,6 +2994,96 @@
     }
     
     // ========== KATEX MATH BLOCK FUNCTIONALITY ==========
+
+    function inlineMathHtml(equation) {
+        return '<span class="math-inline" contenteditable="false" tabindex="0" role="button"' +
+            ' aria-label="' + escapeHtml(i18n.editEquation || 'Edit equation') + '"' +
+            ' data-math-raw="' + escapeHtml(encodeURIComponent(equation.raw)) + '"' +
+            ' data-math-tex="' + escapeHtml(encodeURIComponent(equation.tex)) + '"' +
+            ' data-math-open="' + escapeHtml(equation.open) + '" data-math-close="' + escapeHtml(equation.close) + '">' +
+            escapeHtml(equation.raw) + '</span>';
+    }
+
+    function inlineMathMarkdown(span) {
+        return decodeURIComponent(span.dataset.mathRaw || '');
+    }
+
+    function renderInlineMath(span, strict = false) {
+        span.innerHTML = katex.renderToString(decodeURIComponent(span.dataset.mathTex), {
+            displayMode: false, throwOnError: strict, trust: false, output: 'html'
+        });
+    }
+
+    function setupInlineMath() {
+        const spans = editor.querySelectorAll('.math-inline');
+        if (!spans.length) return;
+        waitForKatex(() => spans.forEach(span => {
+            if (span.dataset.mathSetup) return;
+            span.dataset.mathSetup = 'true';
+            renderInlineMath(span);
+        }));
+    }
+
+    function editInlineMath(span) {
+        if (finishInlineMathEdit) finishInlineMathEdit(true, false);
+        const input = document.createElement('input');
+        input.className = 'math-inline-input';
+        input.setAttribute('aria-label', i18n.editEquation || 'Edit equation');
+        input.title = i18n.equationEditHint || 'Enter to apply; Escape to cancel';
+        input.spellcheck = false;
+        const original = decodeURIComponent(span.dataset.mathTex);
+        input.value = original;
+        const rect = span.getBoundingClientRect();
+        input.style.left = Math.max(8, Math.min(rect.left, window.innerWidth - 300)) + 'px';
+        input.style.top = Math.max(8, Math.min(rect.bottom + 4, window.innerHeight - 50)) + 'px';
+        document.body.appendChild(input);
+        const finish = (apply, focus) => {
+            if (finishInlineMathEdit !== finish) return;
+            finishInlineMathEdit = null;
+            const value = input.value;
+            input.remove();
+            if (!span.isConnected) return;
+            if (apply && value !== original) {
+                markdown = readCurrentMarkdown();
+                undoManager.saveSnapshot();
+                span.dataset.mathTex = encodeURIComponent(value);
+                span.dataset.mathRaw = encodeURIComponent(span.dataset.mathOpen + value + span.dataset.mathClose);
+                renderInlineMath(span);
+                syncMarkdownSync();
+            }
+            if (focus) {
+                editor.focus();
+                const range = document.createRange();
+                range.setStartAfter(span); range.collapse(true);
+                const selection = window.getSelection(); selection.removeAllRanges(); selection.addRange(range);
+            }
+        };
+        finishInlineMathEdit = finish;
+        input.addEventListener('blur', () => finish(true, false));
+        input.addEventListener('keydown', event => {
+            event.stopPropagation();
+            if (event.isComposing) return;
+            if (event.key === 'Enter' || event.key === 'Escape') {
+                event.preventDefault(); finish(event.key === 'Enter', true);
+            } else if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 's') {
+                event.preventDefault(); finish(true, false); saveCurrentDocument();
+            }
+        });
+        input.focus(); input.select();
+    }
+
+    editor.addEventListener('click', event => {
+        const span = event.target.closest && event.target.closest('.math-inline');
+        if (!span) return;
+        event.preventDefault(); event.stopImmediatePropagation();
+        editInlineMath(span);
+    }, true);
+    editor.addEventListener('keydown', event => {
+        if (event.target.classList.contains('math-inline') && (event.key === 'Enter' || event.key === ' ')) {
+            event.preventDefault(); event.stopImmediatePropagation();
+            editInlineMath(event.target);
+        }
+    }, true);
 
     function mathBlockHtml(block) {
         const trailing = block.tex.endsWith('\n');
@@ -5065,6 +5183,22 @@
         
         const beforeCursor = text.substring(0, checkOffset);
 
+        const equation = mathSyntax.inline(beforeCursor, mathBackslashDelimiters)[0];
+        if (equation) {
+            const template = document.createElement('template');
+            template.innerHTML = inlineMathHtml(equation);
+            const span = template.content.firstElementChild;
+            const replacement = document.createRange();
+            replacement.setStart(node, equation.start); replacement.setEnd(node, equation.end);
+            replacement.deleteContents(); replacement.insertNode(span);
+            const after = span.nextSibling;
+            if (after && after.nodeType === 3) range.setStart(after, Math.min(after.textContent.length, offset - equation.end));
+            else range.setStartAfter(span);
+            range.collapse(true); sel.removeAllRanges(); sel.addRange(range);
+            setupInlineMath(); syncMarkdown();
+            return true;
+        }
+
         // Inline code \`text\` + space/enter (FIRST - to protect content from other formatting)
         // Must be processed before bold/italic/strikethrough to prevent `**text**` from becoming bold
         const codeMatch = beforeCursor.match(/\`([^\`]+)\`/);
@@ -5681,16 +5815,17 @@
             return node.textContent;
         }
         if (node.nodeType !== 1) return '';
+        if (node.classList.contains('math-inline')) return inlineMathMarkdown(node);
 
         const tag = node.tagName.toLowerCase();
 
         switch (tag) {
-            case 'h1': return '# ' + mdGetTextContent(node) + '\n';
-            case 'h2': return '## ' + mdGetTextContent(node) + '\n';
-            case 'h3': return '### ' + mdGetTextContent(node) + '\n';
-            case 'h4': return '#### ' + mdGetTextContent(node) + '\n';
-            case 'h5': return '##### ' + mdGetTextContent(node) + '\n';
-            case 'h6': return '###### ' + mdGetTextContent(node) + '\n';
+            case 'h1': return '# ' + mdGetInlineMarkdown(node) + '\n';
+            case 'h2': return '## ' + mdGetInlineMarkdown(node) + '\n';
+            case 'h3': return '### ' + mdGetInlineMarkdown(node) + '\n';
+            case 'h4': return '#### ' + mdGetInlineMarkdown(node) + '\n';
+            case 'h5': return '##### ' + mdGetInlineMarkdown(node) + '\n';
+            case 'h6': return '###### ' + mdGetInlineMarkdown(node) + '\n';
             case 'p': 
                 const pContent = mdGetInlineMarkdown(node);
                 // If p only contains <br> or is empty, it's a blank line marker
@@ -5884,6 +6019,9 @@
         }
 
         result += nestedContent;
+        for (const equation of li.querySelectorAll(':scope > .math-wrapper')) {
+            result += mathBlockMarkdown(equation).replace(/\n$/, '').split('\n').map(line => indent + '  ' + line).join('\n') + '\n';
+        }
         logger.log('mdProcessListItem result:', result.substring(0, 100));
         return result;
     }
@@ -5931,6 +6069,10 @@
         if (node.nodeType !== 1) {
             return result;
         }
+        if (node.classList.contains('math-inline')) {
+            return [{ char: inlineMathMarkdown(node), styles: new Set(currentStyles), isMath: true }];
+        }
+        if (node.classList.contains('math-wrapper')) return [];
         
         const tag = node.tagName.toLowerCase();
         
@@ -6027,6 +6169,7 @@
         for (const c of chars) {
             // Check if this character can be merged with current group
             const canMerge = currentGroup && 
+                !c.isMath && !currentGroup.isMath &&
                 !c.isImage && !currentGroup.isImage &&
                 !c.isLink && !currentGroup.isLink &&
                 !c.isCode && !currentGroup.isCode &&
@@ -6047,7 +6190,8 @@
                     isImage: c.isImage,
                     src: c.src,
                     alt: c.alt,
-                    isCode: c.isCode
+                    isCode: c.isCode,
+                    isMath: c.isMath
                 };
             }
         }
@@ -6092,6 +6236,7 @@
      * @returns {string} - Markdown formatted string
      */
     function applyMarkdownStyle(group) {
+        if (group.isMath) return applyInlineStyles(group.text, group.styles);
         // Handle special cases first
         if (group.isImage) {
             return '![' + group.alt + '](' + group.src + ')';
@@ -6174,6 +6319,9 @@
         let currentLine = '';
         
         function processBlockquoteContent(node) {
+            if (node.nodeType === 1 && node.classList.contains('math-inline')) {
+                currentLine += inlineMathMarkdown(node); return;
+            }
             if (node.nodeType === 1 && node.classList.contains('math-wrapper')) {
                 if (currentLine) { lines.push(currentLine); currentLine = ''; }
                 lines.push(...mathBlockMarkdown(node).replace(/\n$/, '').split('\n'));
@@ -6293,6 +6441,7 @@
                 return escapePipeInCell(node.textContent);
             }
             if (node.nodeType !== 1) return '';
+            if (node.classList.contains('math-inline')) return escapePipeInCell(inlineMathMarkdown(node));
             
             const tag = node.tagName.toLowerCase();
             
@@ -11626,6 +11775,15 @@
                 }
                 break;
             }
+            case 'inlineMath': {
+                const tex = window.getSelection().toString() || 'x';
+                const equation = { open: '$', close: '$', tex, raw: '$' + tex + '$' };
+                document.execCommand('insertHTML', false, inlineMathHtml(equation));
+                const span = editor.querySelector('.math-inline:not([data-math-setup])');
+                setupInlineMath(); syncMarkdownSync();
+                if (span) editInlineMath(span);
+                break;
+            }
             case 'link':
                 var linkText = window.getSelection().toString() || '';
                 host.requestInsertLink(linkText);
@@ -11664,6 +11822,7 @@
         { group: 'inline', action: 'italic',        i18nKey: 'italic',        icon: 'italic' },
         { group: 'inline', action: 'strikethrough', i18nKey: 'strikethrough', icon: 'strikethrough' },
         { group: 'inline', action: 'code',          i18nKey: 'inlineCode',    icon: 'code' },
+        { group: 'inline', action: 'inlineMath',    i18nKey: 'inlineMath',    icon: 'math' },
         // Group: Headings
         { group: 'headings', action: 'heading1', i18nKey: 'heading1', icon: 'heading1' },
         { group: 'headings', action: 'heading2', i18nKey: 'heading2', icon: 'heading2' },
@@ -12084,6 +12243,7 @@
     });
 
     function toggleSourceMode() {
+        if (finishInlineMathEdit) finishInlineMathEdit(true, false);
         isSourceMode = !isSourceMode;
         if (isSourceMode) {
             sourceEditor.value = markdown;
@@ -12210,7 +12370,10 @@
     }
 
     function updateWordCount() {
-        const text = editor.textContent || '';
+        const plain = editor.cloneNode(true);
+        plain.querySelectorAll('.math-inline').forEach(span => { span.textContent = inlineMathMarkdown(span); });
+        plain.querySelectorAll('.math-display,.mermaid-diagram').forEach(display => display.remove());
+        const text = plain.textContent || '';
         const words = text.trim().split(/\s+/).filter(w => w.length > 0).length;
         const chars = text.length;
         const lines = markdown.split('\n').length;

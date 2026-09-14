@@ -240,19 +240,19 @@ test.describe('Export document-only rendering', () => {
         });
     }
 
-    test('renders display math while disclosing remaining literal syntax', async ({ page }) => {
+    test('renders inline and display math while disclosing remaining literal syntax', async ({ page }) => {
         const source = '# Literal notation\n\nInline $x^2$ and $y$.\n\n$$\nE = mc^2\n$$\n\n[TOC]\n\nText with a footnote.[^note]\n\n[^note]: Footnote body.\n';
         await setMarkdown(page, source);
         const originalHtml = await page.locator('#editor').innerHTML();
         const rendered = await prepare(page, source);
-        expect(rendered.html).toContain('$x^2$');
-        expect(rendered.html).toContain('$y$');
+        expect(rendered.html).not.toContain('$x^2$');
+        expect(rendered.html).not.toContain('$y$');
         expect(rendered.html).not.toContain('$$');
         expect(rendered.html).toContain('[TOC]');
         expect(rendered.html).toContain('[^note]');
         expect(rendered.html).toContain('katex');
         expect(rendered.warnings.map((warning: { code: string }) => warning.code)).toEqual([
-            'renderer-math-source', 'renderer-toc-source', 'renderer-footnote-source'
+            'renderer-toc-source', 'renderer-footnote-source'
         ]);
         expect(await page.locator('#editor').innerHTML()).toBe(originalHtml);
         await sendHost(page, { type: 'captureExportSnapshot', requestId: 'literal-source-unchanged' });

@@ -73,3 +73,45 @@ test('ordinary fences and unmatched delimiters remain source', async ({ page }) 
     await expect(page.locator('#editor .math-wrapper')).toHaveCount(0);
     await expect(page.locator('#editor h1')).toHaveText('Following heading');
 });
+
+test('inline equations render in prose, headings, lists, quotes and table cells', async ({ page }) => {
+    const source = '# Cost $x^2$\n\nA \\(y^3\\) value.\n\n- $z^4$\n\n> \\(a^2\\)\n\n| Cost |\n| --- |\n| \\(O(V^3)\\) |\n';
+    await setMarkdown(page, source);
+    await expect(page.locator('#editor .math-inline .katex')).toHaveCount(5);
+    const saved = await page.evaluate(() => (window as any).__testApi.getMarkdown());
+    for (const expression of ['$x^2$', '\\(y^3\\)', '$z^4$', '\\(a^2\\)', '\\(O(V^3)\\)']) expect(saved).toContain(expression);
+    expect(saved).not.toContain('katex');
+});
+
+test('inline source editor applies, cancels, saves and undoes without changing delimiters', async ({ page }) => {
+    await setMarkdown(page, 'Before \\(x^2\\) after\n');
+    await page.locator('#editor .math-inline').click();
+    await page.locator('.math-inline-input').fill('y^3');
+    await page.locator('.math-inline-input').press('Enter');
+    await expect.poll(() => page.evaluate(() => (window as any).__testApi.getMarkdown())).toBe('Before \\(y^3\\) after\n');
+    await page.keyboard.press('Control+z');
+    await expect.poll(() => page.evaluate(() => (window as any).__testApi.getMarkdown())).toBe('Before \\(x^2\\) after\n');
+    await page.locator('#editor .math-inline').click();
+    await page.locator('.math-inline-input').fill('cancelled');
+    await page.locator('.math-inline-input').press('Escape');
+    expect(await page.evaluate(() => (window as any).__testApi.getMarkdown())).toBe('Before \\(x^2\\) after\n');
+    await page.locator('#editor .math-inline').click();
+    await page.locator('.math-inline-input').fill('z^4');
+    await page.locator('.math-inline-input').press('Control+s');
+    const saved = await page.evaluate(() => (window as any).__testApi.messages.filter((m: any) => m.type === 'save').at(-1));
+    expect(saved.content).toBe('Before \\(z^4\\) after\n');
+});
+
+test('inline notation in code, destinations, currency and front matter stays literal', async ({ page }) => {
+    await setMarkdown(page, '---\ntitle: $x$\n---\n\n$5 and $10. \\$x\\$ and $ spaced $.\n`\\(code\\)` [link](path/\\(name\\))\n\n```text\n$x$\n```\n');
+    await expect(page.locator('#editor .math-inline')).toHaveCount(0);
+});
+
+test('typed inline math converts after a space and remains editable', async ({ page }) => {
+    await setMarkdown(page, 'Before\n');
+    await page.locator('#editor p').first().click();
+    await page.keyboard.press('End');
+    await page.keyboard.type(' $x^2$ ');
+    await expect(page.locator('#editor .math-inline .katex')).toHaveCount(1);
+    expect(await page.evaluate(() => (window as any).__testApi.getMarkdown())).toContain('Before $x^2$');
+});
