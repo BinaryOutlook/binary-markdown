@@ -910,6 +910,10 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
                     }
                     break;
 
+                case 'openExtensionSettings':
+                    await vscode.commands.executeCommand('workbench.action.openSettings', '@ext:BinaryOutlook.binary-markdown');
+                    break;
+
                 case 'setImageDir':
                     // Set IMAGE_DIR and FORCE_RELATIVE_PATH directives via toolbar button
                     const inputDir = await vscode.window.showInputBox({

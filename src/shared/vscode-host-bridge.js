@@ -58,6 +58,9 @@
         requestSetImageDir: function() {
             api.postMessage({ type: 'setImageDir' });
         },
+        openSettings: function() {
+            api.postMessage({ type: 'openExtensionSettings' });
+        },
         saveImageAndInsert: function(dataUrl, fileName) {
             api.postMessage({ type: 'saveImageAndInsert', dataUrl: dataUrl, fileName: fileName });
         },

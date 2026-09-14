@@ -230,6 +230,12 @@
           "type": "boolean",
           "default": true,
           "description": "%config.math.backslashDelimiters.description%"
+        },
+        "binary-markdown.export.showCodeLanguage": {
+          "type": "boolean",
+          "default": true,
+          "scope": "resource",
+          "description": "%config.export.showCodeLanguage.description%"
         }
       }
     },

@@ -117,7 +117,7 @@ export function getWebviewContent(
     </style>
 </head>
 <body>
-    ${generateEditorBodyHtml(msg, process.platform, { outlineOpen: safeConfig.outlineOpen, exportEnabled: true })}
+    ${generateEditorBodyHtml(msg, process.platform, { outlineOpen: safeConfig.outlineOpen, exportEnabled: true, settingsEnabled: true })}
 
     <script src="${turndownUri}"></script>
     <script src="${turndownGfmUri}"></script>

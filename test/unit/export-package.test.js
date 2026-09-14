@@ -59,9 +59,10 @@ test('packaged VSIX contains an isolated export runtime, UI, guidance and locali
         'LICENSE.txt', 'NOTICE', 'LICENSES/AnyMarkdown-MIT.txt', 'ACKNOWLEDGMENTS.md',
         'out/export/controller.js', 'out/export/html.js', 'out/export/resources.js',
         'out/export/output.js', 'out/export/validate.js', 'out/export/webview-rpc.js',
-        'out/export/pandoc.js', 'out/export/pdf.js', 'out/export/tools.js',
+        'out/export/pandoc.js', 'out/export/pdf.js', 'out/export/code-language.js', 'out/export/tools.js',
         'out/export/messages.js', 'out/webview/editor.js', 'out/webview/styles.css',
-        'out/shared/document-aux.js', 'out/shared/editor-body-html.js', 'out/shared/host-bridge.js', 'media/export-help.md',
+        'out/shared/document-aux.js', 'out/shared/math-syntax.js',
+        'out/shared/editor-body-html.js', 'out/shared/host-bridge.js', 'out/shared/vscode-host-bridge.js', 'out/export/language-tab.js', 'media/export-help.md', 'media/export-reference.docx',
         'vendor/playwright-core/package.json', 'vendor/playwright-core/LICENSE',
         'vendor/playwright-core/NOTICE', 'vendor/katex.min.css', 'vendor/mermaid.min.js'
     ];
@@ -95,6 +96,11 @@ test('packaged VSIX contains an isolated export runtime, UI, guidance and locali
     for (const setting of settings) assert.equal(properties[setting].scope, 'machine');
     assert.equal(properties['binary-markdown.export.pdfWhiteBackground'].default, true);
     settings.push('binary-markdown.export.pdfWhiteBackground');
+    const codeLanguageSetting = 'binary-markdown.export.showCodeLanguage';
+    assert.equal(properties[codeLanguageSetting].type, 'boolean');
+    assert.equal(properties[codeLanguageSetting].default, true);
+    assert.equal(properties[codeLanguageSetting].scope, 'resource');
+    settings.push(codeLanguageSetting);
     for (const locale of ['', '.es', '.fr', '.ja', '.ko', '.zh-cn', '.zh-tw']) {
         const dictionary = JSON.parse(entries.get('extension/package.nls' + locale + '.json').toString('utf8'));
         for (const setting of settings) {
@@ -109,6 +115,7 @@ test('packaged VSIX contains an isolated export runtime, UI, guidance and locali
     assert.match(entries.get('extension/out/webview/editor.js').toString('utf8'), /captureExportSnapshot/);
     assert.match(entries.get('extension/out/webview/editor.js').toString('utf8'), /validateExportImage/);
     assert.match(entries.get('extension/media/export-help.md').toString('utf8'), /Pandoc/);
+    assert.ok(entries.get('extension/media/export-reference.docx').equals(await fs.readFile(path.join(__dirname, '../../media/export-reference.docx'))), 'Word reference matches the source asset');
     for (const file of required.filter(name => name.startsWith('out/'))) {
         assert.ok(entries.get('extension/' + file).equals(await fs.readFile(path.join(__dirname, '../..', file))), file + ' differs from the current compiled build; package it again');
     }
@@ -133,4 +140,32 @@ test('packaged VSIX contains an isolated export runtime, UI, guidance and locali
     `], { cwd: directory, env: { ...process.env, NODE_PATH: '' }, encoding: 'utf8' });
     assert.equal(check.status, 0, check.stderr);
     assert.equal(JSON.parse(check.stdout).playwright, '1.58.1');
+
+    if (process.env.EXPORT_REAL_TOOLS === '1') {
+        const converted = spawnSync(process.execPath, ['-e', `
+            const fs = require('node:fs');
+            const path = require('node:path');
+            const root = path.resolve('extension');
+            const { discoverTool } = require(path.join(root, 'out/export/tools'));
+            const { convertPandoc } = require(path.join(root, 'out/export/pandoc'));
+            const { validateArtifact } = require(path.join(root, 'out/export/validate'));
+            (async () => {
+                const status = await discoverTool('pandoc', process.env.EXPORT_PANDOC_PATH || '');
+                if (!status.available) throw new Error(status.error);
+                const markdown = ['\`\`\`python', 'print("PACKAGED_CODE")', '\`\`\`'].join('\\n');
+                const saved = { sourcePath: path.resolve('proof.md'), markdown, version: 1, theme: 'github', fontSize: 16 };
+                const prepared = { html: '', theme: 'github', fontSize: 16, diagrams: [], warnings: [] };
+                const ops = { signal: new AbortController().signal, warnings: [], report() {}, loadResource: async () => { throw new Error('No external assets'); } };
+                const bytes = await convertPandoc('docx', saved, prepared, status.path, ops);
+                validateArtifact('docx', bytes);
+                fs.writeFileSync('packaged-proof.docx', bytes);
+            })().catch(error => { console.error(error); process.exitCode = 1; });
+        `], { cwd: directory, env: { ...process.env, NODE_PATH: '' }, encoding: 'utf8' });
+        assert.equal(converted.status, 0, converted.stderr);
+        const docx = unpack(await fs.readFile(path.join(directory, 'packaged-proof.docx')));
+        assert.match(docx.get('word/document.xml').toString(), /PACKAGED_CODE/);
+        assert.match(docx.get('word/document.xml').toString(), /w:pStyle w:val="CodeLanguage"/);
+        assert.match(docx.get('word/document.xml').toString(), /w:rStyle w:val="CodeLanguageBadge"/);
+        assert.match(docx.get('word/styles.xml').toString(), /w:jc w:val="right"/);
+    }
 });

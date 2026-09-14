@@ -56,6 +56,7 @@ export const webviewMessages = {
   insertLink: '插入链接 (Ctrl+K)',
   insertImage: '插入图片 (Ctrl+Shift+I)',
   setImageDir: '设置图片目录',
+  openExtensionSettings: '打开 Binary Markdown 设置',
   insertTable: '插入表格 (Ctrl+T)',
   horizontalRule: '水平线 (Ctrl+Shift+-)',
   mermaidBlock: 'Mermaid 图表',

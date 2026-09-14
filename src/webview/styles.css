@@ -210,6 +210,7 @@ body {
     white-space: nowrap;
 }
 .sidebar-footer .sidebar-status-imagedir .imagedir-source {
+    flex: 1;
     opacity: 0.6;
     font-size: 10px;
     white-space: nowrap;
@@ -226,19 +227,27 @@ body {
     text-overflow: ellipsis;
     white-space: nowrap;
 }
-.sidebar-footer .sidebar-status-imagedir .imagedir-settings-btn {
+.sidebar-footer .sidebar-footer-action {
     background: none;
     border: none;
     color: var(--text-color);
     cursor: pointer;
     padding: 2px;
+    width: 22px;
+    height: 22px;
     opacity: 0.6;
     flex-shrink: 0;
     display: flex;
     align-items: center;
+    justify-content: center;
 }
-.sidebar-footer .sidebar-status-imagedir .imagedir-settings-btn:hover {
+.sidebar-footer .sidebar-footer-action:hover,
+.sidebar-footer .sidebar-footer-action:focus-visible {
     opacity: 1;
+}
+.sidebar-footer .sidebar-footer-action:focus-visible {
+    outline: 2px solid var(--link-color);
+    outline-offset: 1px;
 }
 
 .editor-container { flex: 1; display: flex; flex-direction: column; min-width: 0; }

@@ -65,6 +65,9 @@
         requestSetImageDir: function() {
             window.__testApi.messages.push({ type: 'setImageDir' });
         },
+        openSettings: function() {
+            window.__testApi.messages.push({ type: 'openExtensionSettings' });
+        },
         saveImageAndInsert: function(dataUrl, fileName) {
             window.__testApi.messages.push({ type: 'saveImageAndInsert', dataUrl: dataUrl, fileName: fileName });
         },

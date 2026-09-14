@@ -56,6 +56,7 @@ export const webviewMessages = {
   insertLink: 'リンク挿入 (Ctrl+K)',
   insertImage: '画像挿入 (Ctrl+Shift+I)',
   setImageDir: '画像ディレクトリ設定',
+  openExtensionSettings: 'Binary Markdown の設定を開く',
   insertTable: 'テーブル挿入 (Ctrl+T)',
   horizontalRule: '水平線 (Ctrl+Shift+-)',
   mermaidBlock: 'Mermaidダイアグラム',

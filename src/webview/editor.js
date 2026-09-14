@@ -12412,6 +12412,12 @@
             host.requestSetImageDir();
         });
     }
+    const extensionSettingsBtn = document.getElementById('extensionSettingsBtn');
+    if (extensionSettingsBtn && typeof host.openSettings === 'function') {
+        extensionSettingsBtn.addEventListener('click', function() {
+            host.openSettings();
+        });
+    }
 
     // Sidebar resize functionality
     let isResizing = false;

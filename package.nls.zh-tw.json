@@ -23,6 +23,7 @@
   "config.export.pdfWhiteBackground.description": "使用白色頁面和 GitHub 淺色外觀匯出 PDF，確保文字和圖表清晰可讀。關閉後，目前編輯器主題將覆蓋整頁（包括頁邊距）。不影響其他匯出格式。",
   "config.export.pandocPath.description": "用於DOCX和EPUB匯出的Pandoc執行檔路徑。留空以偵測已安裝的工具。請自行安裝；手動路徑無效時會回報錯誤，不會改用其他工具。",
   "config.export.browserPath.description": "用於無視窗PDF匯出的Chrome、Chromium或Edge執行檔路徑。留空以偵測已安裝的瀏覽器。不會自動下載瀏覽器。",
+  "config.export.showCodeLanguage.description": "在匯出的DOCX和PDF中，於每個程式碼區塊下方以帶框線的斜體標籤顯示已指定的程式語言。關閉後仍保留程式碼區塊格式。",
   "command.exportToHtml.title": "匯出為HTML",
   "command.exportToPdf.title": "匯出為PDF",
   "command.exportToDocx.title": "匯出為Word",

@@ -6,10 +6,25 @@ import * as os from 'os';
 import * as path from 'path';
 import { checkCancelled, ExportOperations, PreparedExportDocument, SavedExportDocument } from './types';
 import { runTool } from './tools';
+import { codeLanguageLabel } from './code-language';
+import { docxLanguageTab } from './language-tab';
 
 type Json = null | boolean | number | string | Json[] | { [key: string]: Json };
 interface AstNode { t: string; c?: Json; }
 const emptyAttributes: Json = ['', [], []];
+
+function withDocxLanguageLabel(block: Json, classes: Json[], id: number): Json {
+    const label = codeLanguageLabel(classes);
+    if (!label) { return block; }
+    // Keep the code itself intact for Pandoc highlighting and exact copy/paste.
+    // The reference paragraph places an inline native shape below the code, aligned right.
+    // Only extension-generated, escaped OpenXML enters this branch.
+    return { t: 'Div', c: [emptyAttributes, [block, {
+        t: 'Div', c: [['', [], [['custom-style', 'Code Language']]], [
+            { t: 'Para', c: [{ t: 'Space' }, { t: 'RawInline', c: ['openxml', docxLanguageTab(label, id)] }] }
+        ]]
+    }]] };
+}
 
 function node(value: Json): AstNode | undefined {
     return value && !Array.isArray(value) && typeof value === 'object' && typeof value.t === 'string'
@@ -80,7 +95,7 @@ function warn(operations: ExportOperations, code: string, message: string): void
 
 export async function convertPandoc(
     format: 'docx' | 'epub', document: SavedExportDocument, prepared: PreparedExportDocument,
-    executable: string, operations: ExportOperations
+    executable: string, operations: ExportOperations, options: { showCodeLanguage?: boolean } = {}
 ): Promise<Buffer> {
     checkCancelled(operations.signal);
     const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'binary-markdown-pandoc-'));
@@ -136,6 +151,7 @@ export async function convertPandoc(
         const diagramMap = new Map(prepared.diagrams.map(diagram => [diagram.source.trim(), diagram.svg]));
         const imageCache = new Map<string, Promise<string>>();
         let tocInserted = false;
+        let languageTabId = 0;
         operations.report('resources');
         const imageData = async (reference: string): Promise<string> => {
             let result = imageCache.get(reference);
@@ -191,6 +207,7 @@ export async function convertPandoc(
                         { t: 'CodeBlock', c: [emptyAttributes, source] }
                     ]] };
                 }
+                if (format === 'docx' && options.showCodeLanguage !== false) { return withDocxLanguageLabel(value, classes, ++languageTabId); }
             }
             if (item?.t === 'RawBlock' || item?.t === 'RawInline') {
                 warn(operations, 'raw-content-fallback', `Raw ${String(content[0])} content is included as readable source because ${format.toUpperCase()} cannot preserve its displayed behavior reliably.`);
@@ -216,7 +233,10 @@ export async function convertPandoc(
         checkCancelled(operations.signal);
         operations.report('converting');
         const outputFile = path.join(directory, `document.${format}`);
-        const write = await runTool(executable, [...commonArguments, '--from=json', `--to=${format === 'epub' ? 'epub3' : 'docx'}`, ...(format === 'epub' ? ['--mathml'] : []), '--standalone', `--output=${outputFile}`], {
+        const writerArguments = format === 'docx'
+            ? [`--reference-doc=${path.resolve(__dirname, '../../media/export-reference.docx')}`]
+            : ['--mathml'];
+        const write = await runTool(executable, [...commonArguments, '--from=json', `--to=${format === 'epub' ? 'epub3' : 'docx'}`, ...writerArguments, '--standalone', `--output=${outputFile}`], {
             input: JSON.stringify(normalized), cwd: directory, signal: operations.signal
         });
         if (write.stderr) { warn(operations, 'pandoc-writer', write.stderr); }

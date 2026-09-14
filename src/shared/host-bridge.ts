@@ -27,6 +27,7 @@ export interface HostBridge {
     requestInsertLink(text: string): void;
     requestInsertImage(): void;
     requestSetImageDir(): void;
+    openSettings?(): void;
     saveImageAndInsert(dataUrl: string, fileName?: string): void;
     readAndInsertImage(filePath: string): void;
     openInTextEditor(): void;

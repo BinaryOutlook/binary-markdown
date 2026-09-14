@@ -56,6 +56,7 @@ export const webviewMessages = {
   insertLink: 'Insérer un lien (Ctrl+K)',
   insertImage: 'Insérer une image (Ctrl+Shift+I)',
   setImageDir: 'Définir le répertoire d\'images',
+  openExtensionSettings: 'Ouvrir les paramètres de Binary Markdown',
   insertTable: 'Insérer un tableau (Ctrl+T)',
   horizontalRule: 'Ligne horizontale (Ctrl+Shift+-)',
   mermaidBlock: 'Diagramme Mermaid',
