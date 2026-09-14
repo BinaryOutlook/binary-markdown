@@ -1,15 +1,15 @@
 /**
- * webview/shared ファイルを out/ にコピーするクロスプラットフォームスクリプト
- * mkdir -p / cp の代替 (Windows対応)
+ * Cross-platform script that copies webview/shared files to out/.
+ * Replaces mkdir -p and cp for Windows compatibility.
  *
- * 使用方法: node scripts/copy-webview.js
+ * Usage: node scripts/copy-webview.js
  */
 const fs = require('fs');
 const path = require('path');
 
 const ROOT = path.join(__dirname, '..');
 
-// ディレクトリ作成
+// Create the directories.
 fs.mkdirSync(path.join(ROOT, 'out', 'webview'), { recursive: true });
 fs.mkdirSync(path.join(ROOT, 'out', 'shared'), { recursive: true });
 

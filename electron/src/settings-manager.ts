@@ -3,7 +3,7 @@ import { BrowserWindow } from 'electron';
 import * as path from 'path';
 
 /**
- * Electron Settings — electron-store ベース
+ * Electron settings backed by electron-store.
  */
 
 export interface ElectronSettings {

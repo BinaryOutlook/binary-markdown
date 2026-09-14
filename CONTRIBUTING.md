@@ -33,6 +33,23 @@ If the downloader does not support your OS, set `PLAYWRIGHT_CHROMIUM_EXECUTABLE_
 
 The identity tests check registration consistency and separation from the archived upstream manifest. This helps prevent a rename from breaking commands, shortcuts, settings, or coexistence with the original extension.
 
+## Documentation language
+
+Use English for maintained project documentation, developer comments, and new test
+descriptions. Keep terminology consistent with the code and use exact interface
+labels in user instructions. Explain non-obvious behavior and constraints rather
+than restating the implementation.
+
+Interface translations, language names, and multilingual test inputs and expected
+results retain their original languages. Preserve upstream archives, third-party
+notices, and historical validation evidence; explain them in English when needed.
+Translate existing developer prose incrementally without changing executable
+behavior or test data.
+
+Follow the [documentation standard](docs/documentation-standard.md) for structure,
+writing conventions, and the review checklist. Existing documentation is being
+aligned incrementally, starting with the [export subsystem](docs/export-subsystem.md).
+
 ## Settings translations
 
 VS Code localizes settings descriptions and option explanations through `%key%` references in `package.json`. Keep English text in `package.nls.json` and the six other translations in `package.nls.<locale>.json` (`ja`, `zh-cn`, `zh-tw`, `ko`, `es`, and `fr`). These files are included directly in the VSIX; they are separate from the editor's runtime dictionaries in `src/i18n/locales/`.

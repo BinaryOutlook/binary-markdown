@@ -1,13 +1,13 @@
 /**
- * HostBridge — editor.js とホスト環境(VSCode / Electron / テスト)間の通信インターフェース
+ * HostBridge: communication between editor.js and its host (VS Code, Electron, or tests).
  *
- * editor.js は window.hostBridge を通じてホスト側と通信する。
- * 各ホスト環境が HostBridge を実装し、editor.js の前に <script> で注入する。
+ * editor.js communicates with the host through window.hostBridge.
+ * Each host implements HostBridge and injects it in a <script> before editor.js.
  */
 
-/** editor.js → ホスト (送信) */
+/** Outgoing messages: editor.js → host. */
 export interface HostBridge {
-    // ドキュメント操作
+    // Document operations.
     syncContent(markdown: string): void;
     save(content?: string, revision?: number): void;
     requestExport?(format: 'html' | 'pdf' | 'docx' | 'epub'): void;
@@ -16,13 +16,13 @@ export interface HostBridge {
     openExportSettings?(tool?: 'pandoc' | 'browser'): void;
     respondExport?(payload: ExportWebviewResponse): void;
 
-    // フォーカス/編集状態
+    // Focus and editing state.
     reportEditingState(editing: boolean): void;
     reportFocus(): void;
     reportBlur(): void;
     reportOutlineState(open: boolean): void;
 
-    // ホスト側 UI が必要な操作
+    // Operations that require host interface support.
     openLink(href: string): void;
     requestInsertLink(text: string): void;
     requestInsertImage(): void;
@@ -32,7 +32,7 @@ export interface HostBridge {
     openInTextEditor(): void;
     sendToChat(startLine: number, endLine: number, selectedMarkdown: string): void;
 
-    // ホストからのメッセージ受信
+    // Receive messages from the host.
     onMessage(handler: (message: HostMessage) => void): void;
 }
 
@@ -43,7 +43,7 @@ export type ExportWebviewResponse =
     | { type: 'exportPrepared'; requestId: string; html: string; warnings: ExportWarning[]; diagrams?: Array<{ source: string; svg: string }>; theme: string; fontSize: number }
     | { type: 'exportError'; requestId: string; error: string };
 
-/** ホスト → editor.js (受信メッセージ型) */
+/** Incoming message types: host → editor.js. */
 export type HostMessage =
     | { type: 'validateExportImage'; requestId: string; dataUri: string }
     | { type: 'documentSaved'; content: string }
@@ -63,7 +63,7 @@ export type HostMessage =
     | { type: 'imageDirInfo'; fileImageDir: string; defaultImageDir: string }
     | { type: 'imageDirStatus'; displayPath: string; source: 'file' | 'settings' | 'default' };
 
-/** window にグローバルとして注入される */
+/** Injected as a global property on window. */
 declare global {
     interface Window {
         hostBridge: HostBridge;

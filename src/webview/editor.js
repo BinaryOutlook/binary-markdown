@@ -4809,7 +4809,7 @@
         // Code block: \`\`\` + enter
         // Support both <p> and <div> tags (div is created when pressing Enter after header)
         if (/^\`\`\`/.test(text) && trigger === 'enter' && node.tagName && (node.tagName.toUpperCase() === 'P' || node.tagName.toUpperCase() === 'DIV')) {
-            // 言語タグを抽出（\`\`\`javascript → javascript）
+            // Extract the language tag from the opening code fence.
             const langMatch = text.match(/^\`\`\`(\w*)/);
             const lang = langMatch ? langMatch[1].trim() : '';
             
@@ -13130,7 +13130,7 @@
         } else if (message.type === 'setImageDir') {
             // Update currentImageDir and currentForceRelativePath from extension
             currentImageDir = message.dirPath;
-            // forceRelativePath: true/false で設定、null でクリア
+            // Set forceRelativePath with true or false; clear it with null.
             if (message.forceRelativePath === null) {
                 currentForceRelativePath = null;
             } else if (message.forceRelativePath !== undefined) {

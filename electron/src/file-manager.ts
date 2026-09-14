@@ -4,8 +4,8 @@ import { BrowserWindow, dialog, shell } from 'electron';
 import * as chokidar from 'chokidar';
 
 /**
- * Electron 用ファイル管理
- * editorProvider.ts のファイルI/O機能を Electron 向けに移植
+ * File management for Electron.
+ * Adapts the file I/O functionality in editorProvider.ts for Electron.
  */
 
 export class FileManager {
@@ -14,7 +14,7 @@ export class FileManager {
     private lastContent: string = '';
     private isDirty = false;
     private isExternalUpdate = false;
-    private imageDir: string | null = null; // ファイル単位のIMAGE_DIR (ツールバーから設定)
+    private imageDir: string | null = null; // Per-file IMAGE_DIR set from the toolbar.
 
     constructor(
         private win: BrowserWindow,
@@ -39,20 +39,20 @@ export class FileManager {
     }
 
     /**
-     * 画像保存ディレクトリを取得
-     * 優先順位: 1. ファイル単位のIMAGE_DIR, 2. 設定のimageDefaultDir, 3. ドキュメントと同じディレクトリ
+     * Returns the image save directory.
+     * Priority: 1. Per-file IMAGE_DIR, 2. imageDefaultDir setting, 3. Document directory.
      */
     private resolveImageDir(): { imageDir: string; useAbsolute: boolean } {
         const docDir = this.getDocumentDir();
 
-        // 1. ファイル単位のIMAGE_DIR
+        // 1. Per-file IMAGE_DIR.
         if (this.imageDir) {
             const isAbs = path.isAbsolute(this.imageDir);
             const resolved = isAbs ? this.imageDir : path.resolve(docDir, this.imageDir);
             return { imageDir: resolved, useAbsolute: isAbs };
         }
 
-        // 2. 設定のimageDefaultDir
+        // 2. imageDefaultDir setting.
         const settings = this.getSettings?.();
         const defaultDir = settings?.imageDefaultDir || '';
         if (defaultDir) {
@@ -61,7 +61,7 @@ export class FileManager {
             return { imageDir: resolved, useAbsolute: isAbs };
         }
 
-        // 3. ドキュメントと同じディレクトリ
+        // 3. Document directory.
         return { imageDir: docDir, useAbsolute: false };
     }
 

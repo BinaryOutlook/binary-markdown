@@ -1,12 +1,12 @@
 'use strict';
 
 /**
- * VSCode / Electron 共通のエディタボディHTML生成
+ * Generates the editor body HTML shared by VS Code and Electron.
  *
- * @param {Record<string, string>} messages - i18n メッセージ
+ * @param {Record<string, string>} messages - Localized interface messages.
  * @param {string} platform - process.platform ('darwin' | 'win32' | 'linux')
  * @param {{ outlineOpen?: boolean, exportEnabled?: boolean }} [options] - editor UI state
- * @returns {string} <div class="container">...</div> の HTML文字列
+ * @returns {string} HTML for <div class="container">...</div>.
  */
 function generateEditorBodyHtml(messages, platform, options) {
     const msg = messages || {};

@@ -21,17 +21,17 @@ const { OutlineStateStore } = require('./shared/outline-state-store') as {
 };
 
 // ============================================
-// DocumentParser: IMAGE_DIR ディレクティブの解析
+// DocumentParser: IMAGE_DIR directive parsing.
 // ============================================
 
 /**
- * ドキュメントからIMAGE_DIRディレクティブを抽出
- * フォーマット: ドキュメント末尾に
+ * Extracts the IMAGE_DIR directive from a document.
+ * Expected format at the end of the document:
  * ---
  * IMAGE_DIR: <dir_path>
  * FORCE_RELATIVE_PATH: <true|false>
  * 
- * 単独でも、他のディレクティブと組み合わせても動作
+ * Supports standalone directives and blocks containing other directives.
  */
 function extractImageDir(content: string): string | null {
     // Pattern: matches IMAGE_DIR in a directive block (may have other directives before/after)
@@ -44,9 +44,9 @@ function extractImageDir(content: string): string | null {
 }
 
 /**
- * IMAGE_DIRディレクティブを挿入または更新
- * 既存のディレクティブブロックがあれば更新、なければ新規作成
- * FORCE_RELATIVE_PATHと同じブロックにまとめる
+ * Inserts or updates the IMAGE_DIR directive.
+ * Replaces an existing directive block or creates one if absent.
+ * Keeps IMAGE_DIR and FORCE_RELATIVE_PATH in the same block.
  */
 function insertOrUpdateImageDir(content: string, dirPath: string): string {
     const existingImageDir = extractImageDir(content);
@@ -65,19 +65,19 @@ function insertOrUpdateImageDir(content: string, dirPath: string): string {
 }
 
 /**
- * IMAGE_DIRディレクティブが存在するか確認
+ * Checks whether the document contains an IMAGE_DIR directive.
  */
 function hasImageDir(content: string): boolean {
     return extractImageDir(content) !== null;
 }
 
 /**
- * ドキュメントからFORCE_RELATIVE_PATHディレクティブを抽出
- * フォーマット: ドキュメント末尾に
+ * Extracts the FORCE_RELATIVE_PATH directive from a document.
+ * Expected format at the end of the document:
  * ---
  * FORCE_RELATIVE_PATH: true/false
  * 
- * 単独でも、他のディレクティブと組み合わせても動作
+ * Supports standalone directives and blocks containing other directives.
  */
 function extractForceRelativePath(content: string): boolean | null {
     const pattern = /\n---\n(?:[\s\S]*?\n)?FORCE_RELATIVE_PATH:\s*(true|false)/i;
@@ -89,7 +89,7 @@ function extractForceRelativePath(content: string): boolean | null {
 }
 
 /**
- * すべてのディレクティブブロックを削除
+ * Removes recognized trailing image directive blocks.
  */
 function removeAllDirectives(content: string): string {
     // Remove standalone directive blocks
@@ -103,59 +103,59 @@ function removeAllDirectives(content: string): string {
 }
 
 // ============================================
-// PathResolver: パス解決ロジック
+// PathResolver: path resolution.
 // ============================================
 
 const path = require('path');
 const fs = require('fs');
 
 /**
- * 設定パスを絶対パスに解決
- * @param configPath 設定されたパス（絶対または相対）
- * @param documentPath ドキュメントの絶対パス
- * @returns 解決された絶対パス
+ * Resolves a configured path to an absolute path.
+ * @param configPath - Configured absolute or relative path.
+ * @param documentPath - Absolute path to the document.
+ * @returns The resolved absolute path.
  */
 function resolveToAbsolute(configPath: string, documentPath: string): string {
     if (!configPath || configPath === '') {
-        // 空の場合はドキュメントと同じディレクトリ
+        // An empty setting uses the document directory.
         return path.dirname(documentPath);
     }
     
     if (path.isAbsolute(configPath)) {
-        // 絶対パスはそのまま使用
+        // Use an absolute path as supplied.
         return configPath;
     }
     
-    // 相対パスはドキュメントの場所を基準に解決
+    // Resolve relative paths against the document directory.
     const docDir = path.dirname(documentPath);
     return path.resolve(docDir, configPath);
 }
 
 /**
- * 画像の絶対パスからMarkdown用のパスを生成
- * @param imagePath 画像の絶対パス
- * @param documentPath ドキュメントの絶対パス
- * @param useAbsolute 絶対パスを使用するかどうか
- * @param forceRelative 強制的に相対パスを使用するかどうか
- * @returns Markdown用のパス（絶対または相対）
+ * Converts an absolute image path to a path for Markdown.
+ * @param imagePath - Absolute path to the image.
+ * @param documentPath - Absolute path to the document.
+ * @param useAbsolute - Whether to use an absolute path.
+ * @param forceRelative - Whether to force a relative path.
+ * @returns An absolute or relative path for Markdown.
  */
 function toMarkdownPath(imagePath: string, documentPath: string, useAbsolute: boolean, forceRelative: boolean = false): string {
-    // forceRelative が true なら、常に相対パスを使用
+    // forceRelative overrides the absolute-path preference.
     if (forceRelative || !useAbsolute) {
         const docDir = path.dirname(documentPath);
         let relativePath = path.relative(docDir, imagePath);
-        // Windowsのバックスラッシュをスラッシュに変換
+        // Convert Windows backslashes to forward slashes.
         relativePath = relativePath.replace(/\\/g, '/');
         return relativePath;
     }
     
-    // 絶対パス設定の場合: 絶対パスをそのまま使用
-    // Windowsのバックスラッシュをスラッシュに変換
+    // Use the absolute path when configured to do so.
+    // Convert Windows backslashes to forward slashes.
     return imagePath.replace(/\\/g, '/');
 }
 
 /**
- * ディレクトリが存在しない場合は作成
+ * Creates the directory if it does not exist.
  */
 function ensureDirectoryExists(dirPath: string): void {
     if (!fs.existsSync(dirPath)) {
@@ -164,23 +164,23 @@ function ensureDirectoryExists(dirPath: string): void {
 }
 
 /**
- * ユニークなファイル名を生成（タイムスタンプ形式）
- * 同一タイムスタンプのファイルが存在する場合は連番を付与
- * @param dir ディレクトリパス
- * @param extension 拡張子（ドットなし）
- * @returns ユニークなファイル名
+ * Generates a unique filename using a timestamp.
+ * Adds a numeric suffix if a file with the same timestamp already exists.
+ * @param dir - Directory path.
+ * @param extension - File extension without the leading dot.
+ * @returns A unique filename.
  */
 function generateUniqueFileName(dir: string, extension: string): string {
     const timestamp = Date.now();
     const baseName = `${timestamp}.${extension}`;
     const basePath = path.join(dir, baseName);
     
-    // ファイルが存在しなければそのまま返す
+    // Use the name directly if the file does not exist.
     if (!fs.existsSync(basePath)) {
         return baseName;
     }
     
-    // 同一タイムスタンプのファイルが存在する場合は連番を付与
+    // Add a numeric suffix when the timestamp is already in use.
     let counter = 1;
     while (true) {
         const counterStr = counter.toString().padStart(4, '0');
@@ -194,14 +194,14 @@ function generateUniqueFileName(dir: string, extension: string): string {
 }
 
 // ============================================
-// ImageDirectoryManager: 画像保存ディレクトリの管理
+// ImageDirectoryManager: image save directory management.
 // ============================================
 
 /**
- * パスの末尾スラッシュを正規化（削除）
+ * Normalizes a path by removing trailing separators.
  */
 function normalizeTrailingSlash(p: string): string {
-    // ルートパス（/ や C:\）は除外
+    // Preserve root paths such as / and C:\.
     if (p === '/' || /^[A-Za-z]:\\?$/.test(p)) {
         return p;
     }
@@ -209,22 +209,22 @@ function normalizeTrailingSlash(p: string): string {
 }
 
 class ImageDirectoryManager {
-    // ファイルURIをキーとしたIMAGE_DIRのマップ
+    // Per-file IMAGE_DIR values keyed by document URI.
     private fileImageDirs: Map<string, string> = new Map();
-    // 最後に検出されたIMAGE_DIR（変更検出用）
+    // Last detected IMAGE_DIR values for change detection.
     private lastDetectedDirs: Map<string, string> = new Map();
-    // 設定されたパスが絶対パスかどうかを記録
+    // Records whether the configured path is absolute.
     private useAbsolutePath: Map<string, boolean> = new Map();
     
     /**
-     * 現在有効な画像保存ディレクトリを取得
-     * 優先順位: 1. ファイル単位のIMAGE_DIR, 2. ドキュメント内のIMAGE_DIRディレクティブ, 3. VS Code設定のimageDefaultDir, 4. ドキュメントと同じディレクトリ
+     * Returns the effective image save directory.
+     * Priority: 1. Per-file IMAGE_DIR, 2. Document IMAGE_DIR directive, 3. VS Code imageDefaultDir setting, 4. Document directory.
      */
     getImageDirectory(documentUri: vscode.Uri, documentContent: string): string {
         const documentPath = documentUri.fsPath;
         const uriKey = documentUri.toString();
         
-        // 1. ファイル単位のIMAGE_DIRをチェック
+        // 1. Check the per-file IMAGE_DIR.
         const fileImageDir = this.fileImageDirs.get(uriKey);
         if (fileImageDir) {
             const normalized = normalizeTrailingSlash(fileImageDir);
@@ -232,7 +232,7 @@ class ImageDirectoryManager {
             return resolveToAbsolute(normalized, documentPath);
         }
         
-        // 2. ドキュメント内のIMAGE_DIRディレクティブをチェック
+        // 2. Check the document's IMAGE_DIR directive.
         const docImageDir = extractImageDir(documentContent);
         if (docImageDir) {
             const normalized = normalizeTrailingSlash(docImageDir);
@@ -240,7 +240,7 @@ class ImageDirectoryManager {
             return resolveToAbsolute(normalized, documentPath);
         }
         
-        // 3. VS Code設定のimageDefaultDirをチェック
+        // 3. Check the VS Code imageDefaultDir setting.
         const config = vscode.workspace.getConfiguration('binary-markdown');
         const defaultDir = config.get<string>('imageDefaultDir', '');
         if (defaultDir) {
@@ -249,44 +249,44 @@ class ImageDirectoryManager {
             return resolveToAbsolute(normalized, documentPath);
         }
         
-        // 4. デフォルト: ドキュメントと同じディレクトリ（相対パス扱い）
+        // 4. Default to the document directory, using relative image paths.
         this.useAbsolutePath.set(uriKey, false);
         return path.dirname(documentPath);
     }
     
     /**
-     * 設定されたパスが絶対パスかどうかを取得
-     * getImageDirectory() を先に呼び出す必要がある
+     * Returns whether the configured image directory uses an absolute path.
+     * Call getImageDirectory() first to populate this state.
      */
     shouldUseAbsolutePath(documentUri: vscode.Uri): boolean {
         return this.useAbsolutePath.get(documentUri.toString()) || false;
     }
     
     /**
-     * 相対パスを強制するかどうかを取得
-     * 優先順位: 1. ドキュメント内のFORCE_RELATIVE_PATHディレクティブ, 2. VS Code設定のforceRelativeImagePath
+     * Returns whether image paths must be relative.
+     * Priority: 1. Document FORCE_RELATIVE_PATH directive, 2. VS Code forceRelativeImagePath setting.
      */
     shouldForceRelativePath(documentUri: vscode.Uri, documentContent: string): boolean {
-        // 1. ドキュメント内のディレクティブをチェック
+        // 1. Check the document directive.
         const docForceRelative = extractForceRelativePath(documentContent);
         if (docForceRelative !== null) {
             return docForceRelative;
         }
         
-        // 2. VS Code設定をチェック
+        // 2. Check the VS Code setting.
         const config = vscode.workspace.getConfiguration('binary-markdown');
         return config.get<boolean>('forceRelativeImagePath', false);
     }
     
     /**
-     * ファイル単位のIMAGE_DIRを設定
+     * Sets the per-file IMAGE_DIR.
      */
     setFileImageDir(documentUri: vscode.Uri, dirPath: string): void {
         this.fileImageDirs.set(documentUri.toString(), dirPath);
     }
     
     /**
-     * ファイル単位のIMAGE_DIRを取得
+     * Returns the per-file IMAGE_DIR.
      */
     getFileImageDir(uriKey: string): string | undefined {
         const dir = this.fileImageDirs.get(uriKey);
@@ -294,21 +294,21 @@ class ImageDirectoryManager {
     }
 
     /**
-     * ファイル単位のIMAGE_DIRをクリア
+     * Clears the per-file IMAGE_DIR.
      */
     clearFileImageDir(documentUri: vscode.Uri): void {
         this.fileImageDirs.delete(documentUri.toString());
     }
     
     /**
-     * IMAGE_DIRの変更を検出して警告を表示
+     * Detects IMAGE_DIR changes so the caller can display a warning.
      */
     checkAndWarnIfChanged(documentUri: vscode.Uri, documentContent: string): boolean {
         const uriKey = documentUri.toString();
         const currentDir = extractImageDir(documentContent);
         const lastDir = this.lastDetectedDirs.get(uriKey);
         
-        // 初回は記録のみ
+        // On first inspection, only record the current value.
         if (lastDir === undefined) {
             if (currentDir) {
                 this.lastDetectedDirs.set(uriKey, currentDir);
@@ -316,17 +316,17 @@ class ImageDirectoryManager {
             return false;
         }
         
-        // 変更を検出
+        // Detect a change.
         if (currentDir !== lastDir) {
             this.lastDetectedDirs.set(uriKey, currentDir || '');
-            return true; // 変更あり
+            return true; // The value changed.
         }
         
         return false;
     }
     
     /**
-     * 初期化時にIMAGE_DIRを記録
+     * Records the initial IMAGE_DIR for the document.
      */
     initializeForDocument(documentUri: vscode.Uri, documentContent: string): void {
         const currentDir = extractImageDir(documentContent);
@@ -336,7 +336,7 @@ class ImageDirectoryManager {
     }
 }
 
-// グローバルインスタンス
+// Shared instance.
 const imageDirectoryManager = new ImageDirectoryManager();
 
 export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProvider {
@@ -911,17 +911,17 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
                     });
                     if (inputDir !== undefined) {
                         if (inputDir === '') {
-                            // 空文字の場合: IMAGE_DIR と FORCE_RELATIVE_PATH 両方をクリア
+                            // An empty string clears both IMAGE_DIR and FORCE_RELATIVE_PATH.
                             imageDirectoryManager.setFileImageDir(document.uri, '');
                             webviewPanel.webview.postMessage({
                                 type: 'setImageDir',
                                 dirPath: '',
-                                forceRelativePath: null  // null でクリア
+                                forceRelativePath: null  // null clears the directive.
                             });
                             vscode.window.showInformationMessage(t('imageDirCleared'));
                             sendImageDirStatus();
                         } else {
-                            // パスが入力された場合: FORCE_RELATIVE_PATH の設定を確認
+                            // When a path is supplied, check the FORCE_RELATIVE_PATH preference.
                             const forceRelativeChoice = await vscode.window.showQuickPick(
                                 [
                                     { label: 'No', description: t('forceRelativeNo'), value: false },
