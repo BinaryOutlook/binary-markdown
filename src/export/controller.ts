@@ -1,3 +1,4 @@
+import { assertFreshToc } from '../shared/document-aux';
 import * as vscode from 'vscode';
 import { ExportWebviewChannel } from './webview-rpc';
 import { discoverTool } from './tools';
@@ -92,7 +93,7 @@ export class ExportController implements vscode.Disposable {
     }
 
     async captureForSave(): Promise<string> {
-        const snapshot = await this.channel.request('captureExportSnapshot');
+        const snapshot = await this.channel.request('captureExportSnapshot', { refreshToc: true });
         if (typeof snapshot.content !== 'string') { throw new Error('Invalid editor snapshot.'); }
         return snapshot.content;
     }
@@ -143,6 +144,7 @@ export class ExportController implements vscode.Disposable {
                     throw new Error(messages.saveRequired);
                 }
                 const raw = this.document.getText();
+                assertFreshToc(raw);
                 const version = this.document.version;
                 const snapshot = await this.channel.request('captureExportSnapshot', {}, abort.signal);
                 if (typeof snapshot.content !== 'string' || normalize(snapshot.content) !== normalize(this.displayContent(raw)) ||

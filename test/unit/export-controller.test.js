@@ -138,6 +138,26 @@ async function harness(t, options = {}) {
     };
 }
 
+test('clean saved files with a stale TOC cannot export or silently rewrite the source', async t => {
+    const { refreshTocs } = require('../../src/shared/document-aux');
+    const stale = refreshTocs('[TOC]\n\n# Original\n').replace('# Original', '# Renamed');
+    const h = await harness(t, { source: stale });
+    await h.controller.export('html');
+    assert.equal(h.calls.render, 0);
+    assert.equal(h.calls.converter, 0);
+    assert.equal(h.calls.save, 0);
+    assert.equal(await fs.readFile(h.sourcePath, 'utf8'), stale);
+    assert.ok(h.notifications.some(n => n.kind === 'error' && /out of date/.test(n.args[0])));
+});
+
+test('saved refreshed TOC passes export freshness validation', async t => {
+    const { refreshTocs } = require('../../src/shared/document-aux');
+    const h = await harness(t, { source: refreshTocs('[TOC]\n\n# Current\n') });
+    await h.controller.export('html');
+    assert.equal(h.calls.render, 1);
+    assert.equal(h.notifications.some(n => n.kind === 'error'), false);
+});
+
 async function assertSourceIntact(h) {
     assert.equal(h.calls.save, 0);
     assert.equal(h.calls.applyEdit, 0);

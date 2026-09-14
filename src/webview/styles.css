@@ -1086,3 +1086,10 @@ body {
 .front-matter summary { cursor: pointer; color: var(--text-color); font-size: .9em; }
 .front-matter-source { box-sizing: border-box; display: block; width: 100%; margin-top: 12px; padding: 12px; resize: vertical; font: .85em/1.6 var(--font-mono); background: var(--code-bg); color: var(--text-color); border: 1px solid var(--border-color); border-radius: 4px; }
 .front-matter-source:focus-visible { outline: 2px solid var(--link-color); outline-offset: 2px; }
+
+.toc-heading { display: flex; align-items: center; gap: 8px; }
+.toc-refresh { padding: 2px 6px; border: 0; border-radius: 4px; background: transparent; color: var(--link-color); cursor: pointer; font: 20px/1.2 system-ui, sans-serif; }
+.toc-refresh:hover { background: var(--code-bg); }
+.toc-refresh:focus-visible { outline: 2px solid var(--link-color); }
+.toc-block ul { margin: .5em 0 0; padding-left: 1.3em; }
+.toc-block a { cursor: pointer; }

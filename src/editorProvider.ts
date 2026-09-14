@@ -1,3 +1,4 @@
+import { refreshTocs } from './shared/document-aux';
 import * as vscode from 'vscode';
 import { getWebviewContent } from './webviewContent';
 import { EditQueue } from './export/edit-queue';
@@ -345,6 +346,12 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
     // Track the currently active webview panel for undo/redo command forwarding
     private activeWebviewPanel: vscode.WebviewPanel | undefined;
     private readonly exportControllers = new Map<vscode.WebviewPanel, ExportController>();
+
+    public insertToc(): boolean {
+        if (!this.activeWebviewPanel?.active) { return false; }
+        void this.activeWebviewPanel.webview.postMessage({ type: 'insertToc' });
+        return true;
+    }
 
     public requestExport(format: ExportFormat): void {
         const panel = this.activeWebviewPanel;
@@ -720,7 +727,7 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
             void promise.catch(() => undefined); // A save may happen without any export waiter.
             const preparation = (async () => {
                 await editQueue.flush();
-                const content = normalizeEol(restoreImagePaths(await exportController.captureForSave()));
+                const content = normalizeEol(refreshTocs(restoreImagePaths(await exportController.captureForSave())));
                 return content === document.getText() ? [] : [vscode.TextEdit.replace(
                     new vscode.Range(0, 0, document.lineCount, 0), content)];
             })();
@@ -751,7 +758,7 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
                     saveQueue = saveQueue.catch(() => undefined).then(async () => {
                         let success = false;
                         try {
-                            if (content !== undefined) { editQueue.schedule(content); }
+                            if (content !== undefined) { editQueue.schedule(refreshTocs(content)); }
                             await editQueue.flush();
                             success = await saveWithoutSnapshot();
                         } catch (error) {

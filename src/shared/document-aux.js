@@ -76,7 +76,7 @@
             if (/^\[toc\]$/i.test(line.text)) { markers.push({ start: line.start, end: line.start + line.text.length }); continue; }
             // Match the visual editor's ATX heading grammar. Excludes fences,
             // front matter, generated contents, quoted and indented examples.
-            const heading = /^(#{1,6})\s+(.+)$/.exec(line.text);
+            const heading = /^(#{1,6}) (.*)$/.exec(line.text);
             if (!heading) continue;
             const label = headingText(heading[2]);
             const base = headingSlug(label);
