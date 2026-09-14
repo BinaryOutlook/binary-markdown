@@ -2,8 +2,8 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const electron_1 = require("electron");
 /**
- * Preload script: contextBridge で window.hostBridge を公開
- * editor.js が期待する HostBridge インターフェースをそのまま提供
+ * Preload script: exposes window.hostBridge through contextBridge.
+ * Provides the HostBridge interface expected by editor.js.
  */
 electron_1.contextBridge.exposeInMainWorld('hostBridge', {
     syncContent: (markdown) => electron_1.ipcRenderer.send('sync-content', markdown),

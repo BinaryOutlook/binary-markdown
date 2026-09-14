@@ -1,5 +1,5 @@
 /**
- * VSCode SettingsProvider — vscode.workspace.getConfiguration をラップ
+ * VS Code SettingsProvider: wraps vscode.workspace.getConfiguration.
  */
 import * as vscode from 'vscode';
 import { EditorSettings, SettingsProvider, DEFAULT_SETTINGS } from './settings-provider';
@@ -35,7 +35,7 @@ export class VSCodeSettingsProvider implements SettingsProvider {
     }
 
     /**
-     * VSCode のシステム言語を返す
+     * Returns the VS Code interface language.
      */
     getSystemLanguage(): string {
         return vscode.env.language;

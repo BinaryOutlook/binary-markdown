@@ -1,14 +1,14 @@
 /**
- * VSCode HostBridge — acquireVsCodeApi() をラップし、
- * editor.js が使う window.hostBridge インターフェースを提供する。
+ * VS Code HostBridge: wraps acquireVsCodeApi() and
+ * provides the window.hostBridge interface used by editor.js.
  *
- * webviewContent.ts により editor.js の前に注入される。
+ * Injected before editor.js by webviewContent.ts.
  */
 (function() {
     const api = acquireVsCodeApi();
 
     window.hostBridge = {
-        // ドキュメント操作
+        // Document operations.
         syncContent: function(markdown) {
             api.postMessage({ type: 'edit', content: markdown });
         },
@@ -31,7 +31,7 @@
             api.postMessage(payload);
         },
 
-        // フォーカス/編集状態
+        // Focus and editing state.
         reportEditingState: function(editing) {
             api.postMessage({ type: 'editingStateChanged', editing: editing });
         },
@@ -45,7 +45,7 @@
             api.postMessage({ type: 'outlineStateChanged', open: open });
         },
 
-        // ホスト側 UI が必要な操作
+        // Operations that require host interface support.
         openLink: function(href) {
             api.postMessage({ type: 'openLink', href: href });
         },
@@ -74,7 +74,7 @@
             api.postMessage({ type: 'sendToChat', startLine: startLine, endLine: endLine, selectedMarkdown: selectedMarkdown });
         },
 
-        // ホストからのメッセージ受信
+        // Receive messages from the host.
         onMessage: function(handler) {
             window.addEventListener('message', function(e) {
                 handler(e.data);
