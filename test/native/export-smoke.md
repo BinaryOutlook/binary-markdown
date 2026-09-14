@@ -11,6 +11,8 @@ The consolidated `--suite all` run passed on 2026-09-09 in a fresh isolated inst
 - Install Pandoc and Chrome/Chromium/Edge yourself before the full four-format run. No command here downloads native engines. Optional `--pandoc /path/to/pandoc` and `--browser /path/to/browser` select manual executable paths; empty defaults exercise automatic discovery.
 - Close the earlier test window before starting another session on the same port. Normal VS Code windows can remain open. Linux needs a local desktop display or an explicitly provisioned Xvfb display; SSH alone is not a display. This tests a local extension host, not VS Code Remote-SSH.
 
+Frozen fixture files remain byte-identical throughout the run. When a fixture contains an unexpanded TOC, the format/offline suites open a derived copy beside it, refresh through the installed editor and save before exporting. The harness compares the saved copy against the exact expected TOC-only change, records original/saved hashes, and checks that conversion leaves the saved copy unchanged.
+
 ## Create and run an isolated test installation
 
 Run these commands from the checkout. The defaults use `.vscode-test/export-native-repro` and debugging port `9327`:

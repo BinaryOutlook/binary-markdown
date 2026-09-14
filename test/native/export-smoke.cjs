@@ -278,6 +278,28 @@ function harness(settings, owner) {
     return { until, driver, connect, open, reset, terminal, output, exportFile, workbench, sourceMode, diagnose };
 }
 
+// Keep frozen inputs byte-identical. Exercise TOC save preparation on a derived
+// copy in the same directory, so image paths and all original content are retained.
+async function openExportFixture(h, owner, file) {
+    const { refreshTocs } = require('../../src/shared/document-aux');
+    const original = fs.readFileSync(path.join(owner.workspace, file));
+    const expected = refreshTocs(original.toString('utf8'));
+    const sourceFile = expected === original.toString('utf8') ? file : 'prepared-' + file;
+    if (sourceFile !== file) fs.writeFileSync(path.join(owner.workspace, sourceFile), original);
+    const connection = await h.open(sourceFile);
+    try {
+        if (sourceFile !== file) {
+            await h.until(() => connection.evaluate('!!document.querySelector(".toc-refresh")'));
+            await connection.evaluate('document.querySelector(".toc-refresh").click()');
+            await h.driver({ action: 'save' });
+            await h.until(() => fs.readFileSync(path.join(owner.workspace, sourceFile), 'utf8') === expected,
+                'derived fixture saved with only generated TOC changes');
+        }
+        assert.ok(fs.readFileSync(path.join(owner.workspace, file)).equals(original), 'Frozen source stays unchanged');
+        return { connection, sourceFile, original: Buffer.from(expected), inputSha256: hash(original) };
+    } catch (error) { connection.close(); throw error; }
+}
+
 async function run(settings, owner) {
     receipt(owner); // All mutation is after workspace/profile/installed-extension verification.
     assertSupportedHost();
@@ -312,14 +334,13 @@ async function run(settings, owner) {
         await h.driver({ action: 'config', key: 'export.pandocPath', value: settings.pandoc });
         await h.driver({ action: 'config', key: 'export.browserPath', value: settings.browser });
         if (groups.includes('formats')) for (const file of ['basic.md', 'fallbacks.md', 'pagination.md', 'w30-report.md']) {
-            const connection = await h.open(file);
-            const original = read(file);
+            const { connection, sourceFile, original, inputSha256 } = await openExportFixture(h, owner, file);
             try {
                 await h.until(() => connection.evaluate('document.getElementById("editor").innerText.length > 50'));
                 for (const format of ['html', 'pdf', 'docx', 'epub']) {
-                    const result = await h.exportFile(connection, file, format);
-                    assert.ok(read(file).equals(original));
-                    record('format', { file, format, ...result });
+                    const result = await h.exportFile(connection, sourceFile, format);
+                    assert.ok(read(sourceFile).equals(original));
+                    record('format', { file, sourceFile, inputSha256, savedSha256: hash(original), format, ...result });
                     if (format === 'html') htmlExports.push({ file, outputPath: result.outputPath });
                 }
             } finally { connection.close(); }
@@ -751,8 +772,11 @@ async function immutableCase(h, owner, record) {
 async function offlineCases(h, owner, settings, outputs, record) {
     // A focused offline run first creates its own installed-VSIX HTML outputs.
     if (!outputs.length) for (const file of ['basic.md', 'fallbacks.md', 'pagination.md', 'w30-report.md']) {
-        const connection = await h.open(file);
-        try { outputs.push({ file, outputPath: (await h.exportFile(connection, file, 'html')).outputPath }); }
+        const { connection, sourceFile, original } = await openExportFixture(h, owner, file);
+        try {
+            outputs.push({ file, outputPath: (await h.exportFile(connection, sourceFile, 'html')).outputPath });
+            assert.ok(fs.readFileSync(path.join(owner.workspace, sourceFile)).equals(original));
+        }
         finally { connection.close(); }
     }
     const { discoverTool } = require(path.join(receipt(owner).extensionPath, 'out/export/tools.js'));
