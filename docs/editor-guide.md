@@ -215,14 +215,14 @@ FORCE_RELATIVE_PATH: true
 
 `forceRelativeImagePath` allows you to separate the **image save location** from the **path written in Markdown**.
 
-**Use case**: When you want to save images to a specific absolute path (e.g., `/Users/shared/images/`) but reference them using relative paths from the Markdown file, set this to `true`.
+**Use case**: When you want to save images to a specific absolute path (e.g., `/work/project/images/`) but reference them using relative paths from the Markdown file, set this to `true`.
 
 > **Note**: `forceRelativeImagePath` only takes effect when `imageDefaultDir` is an absolute path. When using relative paths, the setting is ignored as paths are always relative.
 
 | imageDefaultDir | forceRelativeImagePath | Image Save Location | Path in Markdown |
 | --- | --- | --- | --- |
-| Absolute (e.g., `/Users/shared/images`) | `false` | Specified absolute path | Absolute path |
-| Absolute (e.g., `/Users/shared/images`) | `true` | Specified absolute path | Relative path from Markdown file |
+| Absolute (e.g., `/work/project/images`) | `false` | Specified absolute path | Absolute path |
+| Absolute (e.g., `/work/project/images`) | `true` | Specified absolute path | Relative path from Markdown file |
 | Relative (e.g., `./images`) | `false` | Relative to Markdown file | Relative path |
 | Relative (e.g., `./images`) | `true` | Relative to Markdown file | Relative path (setting ignored) |
 

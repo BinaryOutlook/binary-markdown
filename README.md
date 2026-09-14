@@ -20,7 +20,10 @@ We will make a reasonable effort to reproduce and diagnose reported problems. We
 
 Access to the source is central to this project. Building your own version is an intended way to use Binary Markdown.
 
-Read the [build guide](docs/building.md), [release and support policy](docs/releases-and-support.md), and [roadmap](docs/roadmap.md).
+Start with the [documentation index](docs/README.md) for editor guides, export,
+building and validation. The [reports index](reports/README.md) separates dated
+findings from current instructions; [release notes](release-notes/README.md)
+describe individual versions.
 
 ## Install
 
@@ -34,7 +37,7 @@ The extension is optional: installing it does not change your default Markdown e
 
 The extension ID is `BinaryOutlook.binary-markdown`. It has separate commands, settings, and editor registration from Any Markdown. Read the [migration guide](docs/migration.md) if you used an earlier test build.
 
-The package declares VS Code 1.85.0 or later. Validation targets local desktop VS Code on Windows x86-64, macOS ARM64 and Ubuntu x86-64; see the [candidate validation record](docs/validation/0.2.0.md) for actual results. The [Windows validation guide](docs/validation/windows.md) describes the added checks; historical release records apply only to the platforms they list. Other editors and platforms need their own compatibility checks.
+The package declares VS Code 1.85.0 or later. Validation targets local desktop VS Code on Windows x86-64, macOS ARM64 and Ubuntu x86-64; see the [candidate validation record](reports/validation/0.2.0.md) for actual results. The [Windows validation guide](docs/testing/windows.md) describes the added checks; historical release records apply only to the platforms they list. Other editors and platforms need their own compatibility checks.
 
 ## Features
 
@@ -103,7 +106,7 @@ The [editor guide](docs/editor-guide.md) covers formatting, keyboard operations,
 
 ## Experimental export
 
-Export supports **HTML, PDF, Word (.docx), and EPUB** in **local desktop VS Code on macOS, Linux and Windows**. HTML/PDF follow supported editor rendering; DOCX/EPUB prioritize editable content and structure. See [candidate validation](docs/validation/0.2.0.md) and the [export validation history](docs/export-validation.md) for tested systems and limitations.
+Export supports **HTML, PDF, Word (.docx), and EPUB** in **local desktop VS Code on macOS, Linux and Windows**. HTML/PDF follow supported editor rendering; DOCX/EPUB prioritize editable content and structure. See [candidate validation](reports/validation/0.2.0.md) and the [export validation history](reports/validation/2026-09-10-export.md) for tested systems and limitations.
 
 **Remote-SSH export is not yet supported.** The menu explains this restriction and marks every format unavailable. To export now, open a local copy of the Markdown file and its referenced assets in desktop VS Code on macOS, Linux or Windows. Installing Pandoc or a browser does not enable export in a remote window.
 

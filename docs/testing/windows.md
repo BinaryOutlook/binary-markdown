@@ -1,6 +1,6 @@
 # Windows validation
 
-Windows validation runs from the integration branch's code alongside Ubuntu,
+The Windows lane validates the same candidate source and VSIX as Ubuntu,
 macOS and the minimum supported VS Code version. Historical release receipts
 remain evidence only for their recorded platforms; adding this workflow does
 not retroactively validate an earlier Windows release.
@@ -46,13 +46,9 @@ checkout bytes consistent for frozen fixtures and shared-candidate comparisons.
 
 ## Evidence boundary
 
-Local development checks on 2026-09-14 passed compilation, lint (with existing
-integration-branch warnings), 207 unit/real-converter/package checks without
-skips, and the full installed-VSIX harness on macOS ARM64. The native artifact
-gate accepted 16 outputs with 2,260 markers accounted for, and the additional
-CRLF/Unicode/absolute-path scenario passed for all four formats. These used a
-development VSIX, not a clean release candidate. Windows execution remains
-pending the first authorized GitHub run of this branch.
+Keep dated observations in [validation reports](../../reports/README.md#validation).
+The [initial local preparation record](../../reports/validation/2026-09-14-windows-preparation.md)
+describes its own evidence and the Windows checks that were still pending.
 
 Local platform-shim tests verify discovery and host-selection logic. Only a
 successful GitHub Windows job verifies Windows execution. Record its run URL,

@@ -10,7 +10,7 @@ defines the acceptance criteria.
 
 | Changed area | Relevant checks |
 | --- | --- |
-| Documentation only | Check links and anchors, compare instructions with source, and preserve requirement text and historical results. Preview changed pages. |
+| Documentation only | Run `node scripts/check-docs.cjs`, compare instructions with source, and preserve requirement IDs and historical results. Preview changed pages and inspect images/metadata before publication. |
 | Save capture, queue, or host messages | Export unit tests, focused editor tests, and native save/selection/immutable-capture cases in both editor modes. |
 | Renderer, resources, or export menu | Export unit/browser tests, native affected-format runs, offline HTML checks, and representative artifact inspection. |
 | PDF or Pandoc backend | Real-tool checks, installed-VSIX conversions, artifact inspection, and affected target-reader review. |
@@ -76,8 +76,8 @@ unavailable checks. For native runs, retain the package hash, host and tool
 versions, frozen-input hashes, output identities, and representative viewer
 observations. Link receipts rather than copying large generated artifacts into Git.
 
-Keep new observations distinct from the dated [export-branch record](export-validation.md)
-and [0.2.0 integration record](validation/0.2.0.md). Preserve earlier failures and
+Keep new observations distinct from the dated [export-branch record](../reports/validation/2026-09-10-export.md)
+and [0.2.0 integration record](../reports/validation/0.2.0.md). Preserve earlier failures and
 their later corrections. A required check that could not run remains unverified.
 Do not weaken assertions or change frozen fixtures to fit an implementation.
 

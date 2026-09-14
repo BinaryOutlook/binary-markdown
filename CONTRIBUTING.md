@@ -2,7 +2,7 @@
 
 Contributions to code, tests, documentation, translations, and accessibility are welcome. New contributions are provided under the project's [GNU AGPL version 3 or later](LICENSE) (`AGPL-3.0-or-later`), except where a separately licensed file or fixture explicitly states otherwise. Contributors retain their copyright. Preserve existing upstream and third-party notices; see [NOTICE](NOTICE).
 
-See [building](docs/building.md) for complete setup and source identity, and [releases and support](docs/releases-and-support.md) for development-build reports and release promotion.
+Use the [documentation index](docs/README.md) to find maintained guides. See [building](docs/building.md) for complete setup and source identity, and [releases and support](docs/releases-and-support.md) for development-build reports and release promotion.
 
 ## Development
 
@@ -50,6 +50,12 @@ Follow the [documentation standard](docs/documentation-standard.md) for structur
 writing conventions, and the review checklist. Existing documentation is being
 aligned incrementally, starting with the [export subsystem](docs/export-subsystem.md).
 
+Keep maintained guidance in `docs/`, dated observations in `reports/`,
+version announcements in `release-notes/`, and completed plans in `archive/`.
+Reusable test inputs belong beside their tests. Update the relevant index and
+links when adding or moving a page. Screen reports and images for secrets,
+personal paths, account names and machine identifiers before including them.
+
 ## Settings translations
 
 VS Code localizes settings descriptions and option explanations through `%key%` references in `package.json`. Keep English text in `package.nls.json` and the six other translations in `package.nls.<locale>.json` (`ja`, `zh-cn`, `zh-tw`, `ko`, `es`, and `fr`). These files are included directly in the VSIX; they are separate from the editor's runtime dictionaries in `src/i18n/locales/`.
@@ -62,7 +68,7 @@ Install an official VS Code language pack in the test extension directory and la
 
 ```sh
 code --user-data-dir /tmp/binary-markdown-test --extensions-dir .vscode-test/manual/extensions --install-extension MS-CEINTL.vscode-language-pack-ja
-code --new-window --user-data-dir /tmp/binary-markdown-test --extensions-dir .vscode-test/manual/extensions --locale ja docs/copy-paste-test.md
+code --new-window --user-data-dir /tmp/binary-markdown-test --extensions-dir .vscode-test/manual/extensions --locale ja test/fixtures/manual/copy-paste.md
 ```
 
 Close the test instance before relaunching it with a different `--locale`. Use this launch flag for isolated checks because **Configure Display Language** writes a shared startup preference even with a separate user-data directory. Only trust the generated test fixture or this checkout when testing an extension disabled in Restricted Mode.
@@ -73,7 +79,7 @@ Close the test instance before relaunching it with a different `--locale`. Use t
 npm run package
 ```
 
-Install the resulting `dist/binary-markdown-0.2.0.vsix` through **Extensions → … → Install from VSIX…**. Close old editor tabs and reload the window after updating. Use [the manual fixture](docs/copy-paste-test.md) to verify copying and outline state.
+Install the resulting `dist/binary-markdown-0.2.0.vsix` through **Extensions → … → Install from VSIX…**. Close old editor tabs and reload the window after updating. Use [the manual fixture](test/fixtures/manual/copy-paste.md) to verify copying and outline state.
 
 Packaged documentation links target the identified source commit. The VSIX and its sidecar record local-change state; **Copy Build Information** adds the running host environment. A clean source stamp does not itself mean that a package is an official release.
 
@@ -81,7 +87,7 @@ For an isolated local environment on macOS/Linux:
 
 ```sh
 code --user-data-dir /tmp/binary-markdown-test --extensions-dir .vscode-test/manual/extensions --install-extension dist/binary-markdown-0.2.0.vsix --force
-code --new-window --user-data-dir /tmp/binary-markdown-test --extensions-dir .vscode-test/manual/extensions docs/copy-paste-test.md
+code --new-window --user-data-dir /tmp/binary-markdown-test --extensions-dir .vscode-test/manual/extensions test/fixtures/manual/copy-paste.md
 ```
 
 The short user-data path avoids macOS's Unix-socket path limit. It is temporary and may be removed by OS cleanup; reuse it during a trial to retain test settings. On Windows, use a short writable temporary directory for `--user-data-dir`. Remove the obsolete `BinaryOutlook.any-markdown` test extension if it is still present in this isolated extension directory.

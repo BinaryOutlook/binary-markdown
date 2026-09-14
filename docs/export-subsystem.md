@@ -1,6 +1,7 @@
 # Export subsystem
 
-Reference · Documentation reviewed 2026-09-14 at `0a7641a` (package 0.2.0).
+Reference · Maintained with the source in this checkout. Dated validation
+records identify their own tested revisions and environments.
 
 This is the authoritative reference for Binary Markdown's experimental export
 contract: scope, format support, functional and non-functional requirements,
@@ -10,7 +11,7 @@ validation records identify the packages and environments actually tested.
 
 The specification originated in this fork's export workstream at commit
 `5488f37` on 2026-09-09. Its original plan and decisions are preserved in the
-[development history](export-development-history.md). This documentation revision
+[development history](../archive/development/export.md). This documentation revision
 preserves all 43 FRs, 15 NFRs, and 15 acceptance criteria without changing their
 table entries.
 
@@ -23,8 +24,8 @@ table entries.
 | Look up supported content and requirements | [Format support](#rendering-and-format-support), [functional requirements](#functional-requirements), and [non-functional requirements](#non-functional-requirements) |
 | Understand implementation boundaries | [How export works](export-architecture.md) |
 | Validate an export change | [Contributor verification guide](export-verification.md) |
-| Inspect dated results | [Export-branch evidence](export-validation.md), [0.2.0 integration evidence](validation/0.2.0.md), and [PDF appearance evidence](export-page-background-2026-09-12.md) |
-| Understand earlier decisions and milestones | [Development history](export-development-history.md) |
+| Inspect dated results | [Export-branch evidence](../reports/validation/2026-09-10-export.md), [0.2.0 integration evidence](../reports/validation/0.2.0.md), and [PDF appearance evidence](../reports/investigations/2026-09-12-export-page-background.md) |
+| Understand earlier decisions and milestones | [Development history](../archive/development/export.md) |
 
 This is the first area applying the [documentation standard](documentation-standard.md).
 Contributor workflow is described in [CONTRIBUTING.md](../CONTRIBUTING.md).
@@ -37,7 +38,7 @@ The following decisions define the export MVP.
 
 | Area | Confirmed decision |
 | --- | --- |
-| Required host | Local desktop VS Code on macOS, with subsequent Ubuntu x86-64 validation. Experimental local Linux export is enabled, with evidence scoped to the tested Ubuntu environment. Keep shared editor/Electron builds compatible; other environments require their own acceptance. |
+| Required host | Local desktop VS Code on macOS ARM64, Ubuntu x86-64 and Windows x86-64. All three require validation of the same candidate. Experimental local Linux export is enabled; other distributions and architectures require their own evidence. Keep shared editor/Electron builds compatible. |
 | Formats | Standalone HTML, rendered PDF, Word `.docx`, and EPUB. All four are required by the MVP contract. |
 | HTML/PDF fidelity | Reuse supported displayed rendering. HTML retains current appearance; PDF defaults to a white page with GitHub light appearance, with an option to retain the current theme across the whole page. Keep the existing renderer. |
 | DOCX/EPUB fidelity | Prioritize editable text and document structure; disclose styling/layout differences. |
@@ -69,7 +70,7 @@ All FRs and NFRs below have **Must** priority within the current MVP. **User** i
 
 Render the entire captured document, including when the editor is in source mode. Reuse the production renderer with a document-only boundary; copying the live editor's visible viewport or a stale hidden preview is insufficient. Remove controls, caret/selection markup, hidden editors, host bridges, scroll-height restrictions, and active document-supplied scripts. Wait for actual math, diagram, font, and image readiness before capturing output.
 
-The [fixed fixtures](../test/fixtures/exports/README.md) exercise the following support boundary. Implemented behavior and representative checks do not establish compatibility with every document or target viewer; dated observations are recorded in [export-validation.md](export-validation.md) and [0.2.0 integration validation](validation/0.2.0.md).
+The [fixed fixtures](../test/fixtures/exports/README.md) exercise the following support boundary. Implemented behavior and representative checks do not establish compatibility with every document or target viewer; dated observations are recorded in [export-validation.md](../reports/validation/2026-09-10-export.md) and [0.2.0 integration validation](../reports/validation/0.2.0.md).
 
 | Content | HTML/PDF target | DOCX/EPUB target |
 | --- | --- | --- |
@@ -140,7 +141,7 @@ Large blank regions are acceptable. Advanced pagination optimization is deferred
 | FR-EXP-042 | `binary-markdown.export.pdfWhiteBackground` shall default to `true`. PDF shall use a white page and a coherent GitHub light appearance for text, code, math and generated diagram labels, while retaining the captured base font size. This setting shall not change the editor or other export formats. | User, 2026-09-12 | AC-15 |
 | FR-EXP-043 | With the white-background option disabled, PDF shall paint the captured theme background across the entire A4 page, including margins and the unused part of the final page, while retaining 16 mm content margins. | User, 2026-09-12 | AC-15 |
 
-The effective appearance is captured once with the saved revision, before dependency discovery and asynchronous rendering. Offscreen Mermaid rendering uses that palette and restores the live renderer configuration after completion, failure or cancellation. Explicit colours inside source images and diagram node styles remain authored content; white mode is not image recolouring. DOCX keeps Pandoc's page styling: the investigated defect does not require DOCX page-background rewriting. See [the bug record](export-page-background-2026-09-12.md) and [issue #6](https://github.com/BinaryOutlook/binary-markdown/issues/6).
+The effective appearance is captured once with the saved revision, before dependency discovery and asynchronous rendering. Offscreen Mermaid rendering uses that palette and restores the live renderer configuration after completion, failure or cancellation. Explicit colours inside source images and diagram node styles remain authored content; white mode is not image recolouring. DOCX keeps Pandoc's page styling: the investigated defect does not require DOCX page-background rewriting. See [the bug record](../reports/investigations/2026-09-12-export-page-background.md) and [issue #6](https://github.com/BinaryOutlook/binary-markdown/issues/6).
 
 ### Dependency configuration
 
@@ -197,7 +198,7 @@ There are **no export-duration, throughput, or response-time targets** in this s
 | NFR-EXP-005 | **Output integrity:** Only a completed, structurally valid artifact shall be exposed as a successful export. | Derived | AC-07, AC-09, AC-11 |
 | NFR-EXP-006 | **Dependency isolation:** Failure or absence of a format-specific dependency shall not prevent export through an otherwise available backend. | User/Derived | AC-05 |
 | NFR-EXP-007 | **Resource lifecycle:** Finished, cancelled, or failed jobs shall not leave owned rendering/conversion workers running or abandoned partial output files. | Derived | AC-11 |
-| NFR-EXP-008 | **Host compatibility:** The packaged subsystem shall operate in the declared local macOS and Ubuntu x86-64 VS Code environments using only its shipped assets and explicitly installed dependencies. Other Linux distributions and architectures require separate evidence. | User, including subsequent Ubuntu validation request | AC-14 |
+| NFR-EXP-008 | **Host compatibility:** The packaged subsystem shall operate in the declared local macOS ARM64, Ubuntu x86-64 and Windows x86-64 VS Code environments using only its shipped assets and explicitly installed dependencies. Other distributions and architectures require separate evidence. | User, including Ubuntu and Windows validation requests | AC-14 |
 | NFR-EXP-009 | **Accessibility:** The export control, format menu, progress information, and cancellation action shall be usable by keyboard and expose meaningful accessible names/state. | Derived | AC-01, AC-10, AC-11 |
 | NFR-EXP-010 | **Localization:** Export UI and settings shall follow the application's existing separation of runtime UI language and native VS Code settings localization. | Derived | AC-01, AC-05 |
 | NFR-EXP-011 | **Privacy:** Conversion shall occur locally without uploading the Markdown document to a conversion service. | User/Derived | AC-12 |
@@ -225,7 +226,7 @@ Passing W-30 requires readable/structurally valid artifacts, preserved supported
 
 The selected input is [w30-report.md](../test/fixtures/exports/w30-report.md), an original synthetic engineering report frozen as `exports-v1` with the other inputs/assets in [manifest.json](../test/fixtures/exports/manifest.json). Its 12,438 whitespace-delimited words, 84,675 UTF-8 bytes, 24 scenario cards and oversized appendices are workload descriptors. The [fixture README](../test/fixtures/exports/README.md) records provenance and content expectations; the public NIST reference supplies a complexity example without copied report content.
 
-The recorded reference-layout calibration is **35 pages**. The original macOS native W-30 PDF is **51 pages**, and the subsequent Ubuntu native PDF is **54 pages** under captured editor appearance. These are different layout observations on the frozen workload: the latter provides capacity/content evidence and is not a failure to hit an exact page-count target. Preserve the frozen input and verify content, pagination and fallbacks; do not shorten it to force a count. See [export-validation.md](export-validation.md) for the dated calibration, artifact, and inspection record. W-30 has been exported through all four native paths and its exact artifacts re-audited; human product acceptance remains separate.
+The [historical workload record](../reports/validation/2026-09-10-export.md) records the original **35-page** reference-layout calibration. The original macOS native W-30 PDF is **51 pages**, and the subsequent Ubuntu native PDF is **54 pages** under captured editor appearance. These are different layout observations on the frozen workload: the latter provides capacity/content evidence and is not a failure to hit an exact page-count target. Preserve the frozen input and verify content, pagination and fallbacks; do not shorten it to force a count. See the [export validation report](../reports/validation/2026-09-10-export.md) for the dated calibration, artifact, and inspection record. W-30 has been exported through all four native paths and its exact artifacts re-audited; human product acceptance remains separate.
 
 ## Acceptance criteria and milestone mapping
 
@@ -244,14 +245,19 @@ The recorded reference-layout calibration is **35 pages**. The original macOS na
 | AC-11 | Cancel during resource preparation and backend conversion, and induce a failed write/worker failure. Verify the reported outcome, cleanup, source/existing-output preservation, and absence of success for partial files. | D2–D5 |
 | AC-12 | Inspect resource requests and exercise document text resembling commands/active content. Verify only needed referenced resources are retrieved, no document upload occurs, and content is not treated as executable instructions. | D2, D3, D4, D5 |
 | AC-13 | Run fixed W-30 input through all four formats, inspect supported content/fallbacks and representative output pages, and observe valid progress and continued editor usability. Record the workload/environment, without pass/fail timing thresholds. | D0 fixture; D5 verification |
-| AC-14 | Install the actual VSIX in isolated local macOS and Ubuntu x86-64 VS Code profiles, independently of any development server, record resolved external tools and host architecture/runtime, and reproduce the native entry/save/export flows. Missing-dependency cases remain part of this check. SSH may orchestrate the Ubuntu desktop process; VS Code Remote-SSH remains outside scope. | D2 early smoke; D5 final; subsequent Ubuntu extension |
+| AC-14 | Install the same actual VSIX in isolated local macOS ARM64, Ubuntu x86-64 and Windows x86-64 VS Code profiles, independently of any development server, record resolved external tools and host architecture/runtime, and reproduce the native entry/save/export flows. Missing-dependency cases remain part of this check. SSH may orchestrate the Ubuntu desktop process; VS Code Remote-SSH remains outside scope. | D2 early smoke; D5 final; subsequent Ubuntu and Windows extensions |
 | AC-15 | Verify default/explicit-white and theme-retaining PDF modes across all seven themes. Rasterize multi-page A4 output and check every page edge, margins and final blank area; check readable light text, code, math and Mermaid labels. Confirm captured settings survive later changes and cancellation, setting changes leave the editor intact, translations resolve, and HTML/DOCX/EPUB appearance is unaffected by the PDF setting. Compare DOCX page/style XML across themes. | D4, D5 |
 
 These criteria are specification targets, not executed results. Record unavailable target viewers or required host checks as unverified. Existing regression failures must be distinguished from new ones; disabling assertions or replacing expected output with the implementation's own output does not establish acceptance.
 
 ## Deferred scope
 
-Deferred work includes Windows, untested Linux distributions/architectures and remote-host acceptance, browser-only VS Code, Electron export integration, unsaved/untitled export, batch export, destination/name customization, templates and styling controls beyond the PDF white-background setting, image compression/storage optimization, advanced pagination, native runtime bundles/downloaders, typeset PDF, additional Pandoc writers, whole-document image export, arbitrary filters/custom commands, and a full renderer/parser replacement.
+The configured Windows lane extends the current acceptance requirement, not the
+coverage of earlier releases. Its [initial preparation report](../reports/validation/2026-09-14-windows-preparation.md)
+records local results and pending Windows execution. Use the current candidate's
+workflow outcome before claiming that this obligation has passed.
+
+Deferred work includes Windows ARM64, untested Linux distributions/architectures and remote-host acceptance, browser-only VS Code, Electron export integration, unsaved/untitled export, batch export, destination/name customization, templates and styling controls beyond the PDF background and code-language settings, image compression/storage optimization, advanced pagination, native runtime bundles/downloaders, typeset PDF, additional Pandoc writers, whole-document image export, arbitrary filters/custom commands, and a full renderer/parser replacement.
 
 Potential later paths include Electron's built-in PDF API, managed native-tool installation, additional Pandoc profiles or PDF engines, and richer print layout. They should be selected from user feedback and concrete failed cases, with their own requirements and acceptance evidence. No current MVP acceptance depends on delivering them.
 
@@ -282,20 +288,20 @@ Existing links into the original handoff remain available here.
 | <a id="shared-contracts"></a>Shared contracts | [Read the section](export-architecture.md#shared-contracts) |
 | <a id="dependency-and-resource-handling"></a>Dependency and resource handling | [Read the section](export-architecture.md#dependency-and-resource-handling) |
 | <a id="repository-map-and-integration-pitfalls"></a>Repository map and integration pitfalls | [Read the section](export-architecture.md#repository-map-and-integration-pitfalls) |
-| <a id="delivery-backlog"></a>Delivery backlog | [Read the section](export-development-history.md#delivery-backlog) |
-| <a id="ticket-boundaries-and-implementation-notes"></a>Ticket boundaries and implementation notes | [Read the section](export-development-history.md#ticket-boundaries-and-implementation-notes) |
-| <a id="verification-and-handback"></a>Verification and handback | [Read the section](export-development-history.md#verification-and-handback) |
-| <a id="definition-of-ready-for-review"></a>Definition of ready for review | [Read the section](export-development-history.md#definition-of-ready-for-review) |
-| <a id="agile-and-human-ai-working-agreement"></a>Agile and human-AI working agreement | [Read the section](export-development-history.md#agile-and-human-ai-working-agreement) |
-| <a id="flexibility-and-escalation"></a>Flexibility and escalation | [Read the section](export-development-history.md#flexibility-and-escalation) |
-| <a id="resumable-status-record"></a>Resumable status record | [Read the section](export-development-history.md#resumable-status-record) |
-| <a id="decision-log"></a>Decision log | [Read the section](export-development-history.md#decision-log) |
-| <a id="reconnaissance-and-remaining-risks"></a>Reconnaissance and remaining risks | [Read the section](export-development-history.md#reconnaissance-and-remaining-risks) |
-| <a id="feasibility-and-rival-approaches"></a>Feasibility and rival approaches | [Read the section](export-development-history.md#feasibility-and-rival-approaches) |
-| <a id="historical-probes"></a>Historical probes | [Read the section](export-development-history.md#historical-probes) |
-| <a id="dependency-size-tradeoff"></a>Dependency size tradeoff | [Read the section](export-development-history.md#dependency-size-tradeoff) |
-| <a id="risks-to-resolve-through-the-milestones"></a>Risks to resolve through the milestones | [Read the section](export-development-history.md#risks-to-resolve-through-the-milestones) |
-| <a id="delegation-prompt"></a>Delegation prompt | [Read the section](export-development-history.md#delegation-prompt) |
+| <a id="delivery-backlog"></a>Delivery backlog | [Read the section](../archive/development/export.md#delivery-backlog) |
+| <a id="ticket-boundaries-and-implementation-notes"></a>Ticket boundaries and implementation notes | [Read the section](../archive/development/export.md#ticket-boundaries-and-implementation-notes) |
+| <a id="verification-and-handback"></a>Verification and handback | [Read the section](../archive/development/export.md#verification-and-handback) |
+| <a id="definition-of-ready-for-review"></a>Definition of ready for review | [Read the section](../archive/development/export.md#definition-of-ready-for-review) |
+| <a id="agile-and-human-ai-working-agreement"></a>Agile and human-AI working agreement | [Read the section](../archive/development/export.md#agile-and-human-ai-working-agreement) |
+| <a id="flexibility-and-escalation"></a>Flexibility and escalation | [Read the section](../archive/development/export.md#flexibility-and-escalation) |
+| <a id="resumable-status-record"></a>Resumable status record | [Read the section](../archive/development/export.md#resumable-status-record) |
+| <a id="decision-log"></a>Decision log | [Read the section](../archive/development/export.md#decision-log) |
+| <a id="reconnaissance-and-remaining-risks"></a>Reconnaissance and remaining risks | [Read the section](../archive/development/export.md#reconnaissance-and-remaining-risks) |
+| <a id="feasibility-and-rival-approaches"></a>Feasibility and rival approaches | [Read the section](../archive/development/export.md#feasibility-and-rival-approaches) |
+| <a id="historical-probes"></a>Historical probes | [Read the section](../archive/development/export.md#historical-probes) |
+| <a id="dependency-size-tradeoff"></a>Dependency size tradeoff | [Read the section](../archive/development/export.md#dependency-size-tradeoff) |
+| <a id="risks-to-resolve-through-the-milestones"></a>Risks to resolve through the milestones | [Read the section](../archive/development/export.md#risks-to-resolve-through-the-milestones) |
+| <a id="delegation-prompt"></a>Delegation prompt | [Read the section](../archive/development/export.md#delegation-prompt) |
 
 ## Development addendum: front matter and TOC (v0.2-YAML_AUX)
 

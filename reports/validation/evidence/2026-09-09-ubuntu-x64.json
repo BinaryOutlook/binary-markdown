@@ -100,9 +100,9 @@
     "complete": 1
   },
   "nativeReports": {
-    "ubuntu": "native-1788894953191.json",
+    "ubuntu": "native-receipt.json",
     "ubuntuSha256": "07b19b0a7284c3d15bbd7f2ac13482848356d5998dc2e8d2cd04d8a83923aeea",
-    "macOS": "native-1788894778807.json",
+    "macOS": "native-receipt.json",
     "macOSSha256": "194ff00989a1c39db475595571c5b230593477f39610ad546f2ec27e5dc6e81c"
   },
   "artifactAudit": {

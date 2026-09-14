@@ -71,7 +71,7 @@ This is a default-presentation gap we can address through the existing Pandoc ba
 - Reconstructed each block from Word text, break and tab elements and compared it with the captured code string. All four match exactly.
 - Opened the baseline in Microsoft Word for macOS and confirmed the missing visual containers and labels. Code is monospaced; known languages have coloured tokens. The long line wraps in this example.
 
-At the reproduction baseline, ordinary code blocks passed through unchanged in [the code-block transform](../src/export/pandoc.ts); the special code-block branch handled Mermaid. The writer received no `--reference-doc` or explicit highlighting-theme option. The styled editor HTML is not used as DOCX layout input.
+At the reproduction baseline, ordinary code blocks passed through unchanged in [the code-block transform](../../src/export/pandoc.ts); the special code-block branch handled Mermaid. The writer received no `--reference-doc` or explicit highlighting-theme option. The styled editor HTML is not used as DOCX layout input.
 
 The generated default `SourceCode` style inherits from `Normal`, links to `VerbatimChar`, and has no paragraph border or shading. The inherited character style specifies Consolas, 11 pt. Its `wordWrap="off"` property is **not evidence that all wrapping is disabled**: WordprocessingML uses that value to permit character-level line breaking. The prototype retains it.
 

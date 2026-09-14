@@ -2,7 +2,7 @@
 
 The 0.2.0 source uses **GNU Affero General Public License, version 3 or any later version** (`AGPL-3.0-or-later`), as stated in [LICENSE](../LICENSE) and [NOTICE](../NOTICE). New contributions use those terms unless a file explicitly states a separate license; contributors retain copyright. The policy records the maintainer's wish to keep source access and modification rights central to the project. It is not a claim that every dependency has the same license.
 
-The first export-branch license preparation used `AGPL-3.0-only` at `f2a73a5`. The correction to the selected **or-later** policy is commit `5e65a3a`; [Decision 001](decisions/001-agpl-transition.md) records the distinction. Version 0.2.0 is the intended first release with the corrected policy. Until its release is published, this describes the candidate source and does not announce a release.
+The first export-branch license preparation used `AGPL-3.0-only` at `f2a73a5`. The correction to the selected **or-later** policy is commit `5e65a3a`; [Decision 001](decisions/001-agpl-transition.md) records the distinction. The version-specific [0.2.0 notes](../release-notes/0.2.0.md) record that transition. The [release page](https://github.com/BinaryOutlook/binary-markdown/releases) identifies published source and artifacts; this guide describes the terms in the selected checkout.
 
 ## Existing grants and dependencies
 

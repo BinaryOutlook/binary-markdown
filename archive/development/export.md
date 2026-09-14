@@ -8,16 +8,15 @@ were previously part of `docs/export-subsystem.md` version 1.5. Branch names,
 tool versions, pending-review statements, and instructions below describe that
 development period. The copied prompt is historical material, not a current task.
 
-For the maintained contract, use the [export reference](export-subsystem.md).
-For new checks, use [Validate an export change](export-verification.md). The
-[dated export evidence](export-validation.md) and [0.2.0 integration record](validation/0.2.0.md)
+For the maintained contract, use the [export reference](../../docs/export-subsystem.md).
+For new checks, use [Validate an export change](../../docs/export-verification.md). The
+[dated export evidence](../../reports/validation/2026-09-10-export.md) and [0.2.0 integration record](../../reports/validation/0.2.0.md)
 identify their own tested revisions. This reorganization does not rerun those
 tests or make a new release-status claim.
 
 The original specification was introduced in commit `5488f37` on 2026-09-09
-under the Git author name `Binary_Donan`. That establishes the file's origin
-in this fork's export workstream; Git metadata does not establish sole manual
-authorship of its prose.
+in this fork's export workstream. The commit records the file's origin;
+Git metadata does not establish sole manual authorship of its prose.
 
 The original heading and introductory status are retained below for context.
 
@@ -27,7 +26,7 @@ The 2026-09-12 PDF changes were merged into the main revision `0a7641a` used as
 this documentation branch's base. The following decision and updated D2 guidance
 come from that revision. Earlier sections below retain their original context.
 The maintained requirements now include FR-EXP-042–043 and AC-15; see the
-[PDF appearance investigation and evidence](export-page-background-2026-09-12.md).
+[PDF appearance investigation and evidence](../../reports/investigations/2026-09-12-export-page-background.md).
 
 | Date | Decision and reason | Affected scope / evidence |
 | --- | --- | --- |
@@ -41,9 +40,9 @@ Version 1.5 · Updated 2026-09-10 · **Status: D0–D5 implemented; converging i
 
 This is the authoritative task brief for Binary Markdown's experimental export subsystem. It consolidates the export reconnaissance, clarification answers, functional and non-functional requirements, implementation plan, and human–AI working agreement. A developer can work from this file without reconstructing the conversation. Keep subsequent scope decisions, milestone status, and evidence references here.
 
-The planning checkout was inspected at `main`, commit `9ff6ce04fa10cc5424783b016330bc4644d3529f`; implementation began from documentation commit `5488f37`. The current implementation/evidence record is below, with supporting detail in [export-validation.md](export-validation.md). Refresh the checkout and evidence when resuming. Historical conversion probes below remain separate from current implementation, acceptance and release state.
+The planning checkout was inspected at `main`, commit `9ff6ce04fa10cc5424783b016330bc4644d3529f`; implementation began from documentation commit `5488f37`. The current implementation/evidence record is below, with supporting detail in [export-validation.md](../../reports/validation/2026-09-10-export.md). Refresh the checkout and evidence when resuming. Historical conversion probes below remain separate from current implementation, acceptance and release state.
 
-Repository conventions: [CONTRIBUTING.md](../CONTRIBUTING.md). This file contains the complete export contract and relevant findings from the earlier feature comparison; no separate planning document is required.
+Repository conventions: [CONTRIBUTING.md](../../CONTRIBUTING.md). This file contains the complete export contract and relevant findings from the earlier feature comparison; no separate planning document is required.
 
 ## Delivery backlog
 
@@ -66,7 +65,7 @@ D2 is the first useful end-to-end checkpoint: a user can export HTML from an ins
 
 ### Ticket boundaries and implementation notes
 
-- **D0:** preserve the selected [fixture set](../test/fixtures/exports/README.md), its provenance and frozen manifest. W-30 is selected and calibrated; subsequent artifact inspection must use those inputs without silently revising their expected content.
+- **D0:** preserve the selected [fixture set](../../test/fixtures/exports/README.md), its provenance and frozen manifest. W-30 is selected and calibrated; subsequent artifact inspection must use those inputs without silently revising their expected content.
 - **D1:** test pending webview changes, queued host edits, save followed immediately by export, both editor modes, document switching and stale/closed-document responses. Preserve source, selection and undo state. Export itself must not trigger saving.
 - **D2:** split UI, coordinator/finalization and resource preparation into smaller tickets if necessary. Render all content from the captured revision, use current appearance in both modes, and inspect representative light/dark output. Exercise collision races, fallback/warnings and cancellation through the shared path.
 - **D3:** add every new native settings translation and runtime message where appropriate. Test usable discovery, explicit invalid paths, missing Pandoc, spaces/Unicode, real conversions and unsupported content. Do not claim Word/EPUB fidelity from exit status alone.
@@ -79,7 +78,7 @@ Keep one integration owner for commands, host bridges, settings and packaging. T
 
 Use layered evidence: focused unit/contract tests for state and naming; production-renderer tests for preparation; real backend conversions for format behavior; native installed-VSIX checks for host integration. A standalone browser fixture cannot prove that VS Code saved the intended revision.
 
-Current repository commands are listed below; consult [CONTRIBUTING.md](../CONTRIBUTING.md) and package scripts for changes when resuming. Use the repository's declared Node version. Run `npm ci` when preparing the implementation environment.
+Current repository commands are listed below; consult [CONTRIBUTING.md](../../CONTRIBUTING.md) and package scripts for changes when resuming. Use the repository's declared Node version. Run `npm ci` when preparing the implementation environment.
 
 ```sh
 npm run compile
@@ -136,7 +135,7 @@ For an ad hoc request, record: requested behavior, affected FR/NFR/AC IDs, effec
 
 ### Resumable status record
 
-Update this table at each milestone or meaningful interruption. Distinguish implemented/tested work from completed acceptance, and identify remaining observations explicitly. Track human acceptance, merge and release separately. Supporting receipts and the per-AC checklist belong in [export-validation.md](export-validation.md); this document retains the authoritative requirements and decisions.
+Update this table at each milestone or meaningful interruption. Distinguish implemented/tested work from completed acceptance, and identify remaining observations explicitly. Track human acceptance, merge and release separately. Supporting receipts and the per-AC checklist belong in [export-validation.md](../../reports/validation/2026-09-10-export.md); this document retains the authoritative requirements and decisions.
 
 | Milestone | Current state | Evidence / next action |
 | --- | --- | --- |
@@ -147,9 +146,9 @@ Update this table at each milestone or meaningful interruption. Distinguish impl
 | D4 | Implemented; tested | Installed browser PDF conversion, offline preparation, readiness, fragmentation/scaling and cancellation are implemented and tested. Native W-30 PDFs are 51 pages in the original macOS record and 54 pages in the subsequent Ubuntu record; complete content and representative pagination inspection remain the fidelity criteria. |
 | D5 | Engineering handback complete; ready for review | All 16 native fixture outputs and four immediate-save combinations passed. Native dependency, naming, dirty/untitled, wrong-tab, immutable-capture, cancellation and failure cases passed; corrected artifacts and offline HTML were re-audited. AC-01–14 are accounted for in the validation record. The latest native harness passed 43 scenarios plus unchanged frozen inputs on each tested host. Human acceptance, merge and release remain unrecorded. |
 
-The original macOS full regression run recorded **684 browser tests passed, 4 skipped and the unchanged Perplexity-color failure**, plus **84 unit tests passed and 1 package test skipped** without `EXPORT_VSIX_PATH`. Compile passed; lint reported 0 errors and 8 existing warnings. After the test-harness script-preservation fix and additional blockquote coverage, **23 focused export browser tests passed**. These runs establish the stated test evidence, not a green full-suite result or blanket acceptance of AC-01–14. The final explicit export run passed **74/74 with no skips**, including real Pandoc, installed Chrome and packaged-runtime checks. See [export-validation.md](export-validation.md) for package/native receipts and limitations.
+The original macOS full regression run recorded **684 browser tests passed, 4 skipped and the unchanged Perplexity-color failure**, plus **84 unit tests passed and 1 package test skipped** without `EXPORT_VSIX_PATH`. Compile passed; lint reported 0 errors and 8 existing warnings. After the test-harness script-preservation fix and additional blockquote coverage, **23 focused export browser tests passed**. These runs establish the stated test evidence, not a green full-suite result or blanket acceptance of AC-01–14. The final explicit export run passed **74/74 with no skips**, including real Pandoc, installed Chrome and packaged-runtime checks. See [export-validation.md](../../reports/validation/2026-09-10-export.md) for package/native receipts and limitations.
 
-Export-branch handback before v0.2 convergence (2026-09-10): the reported regression blockers are resolved. The same AGPL VSIX from `8514de9` passed 43 native scenarios plus unchanged inputs on each host, with an additional 16-format run after the development server stopped. Both macOS ARM64 and Ubuntu x86-64 full browser suites passed **691/691 with no failures, skips or retries**, and both unit suites passed **100/100**, including real engines and packaged-runtime checks. Each host's 16 artifacts passed 2,260 marker checks; fourteen PDF pages were inspected across the hosts. The last code-adjacent commit, `54caee9`, only makes the PDF test inspection tool portable. See [the current validation record](export-validation.md#merge-blocker-fixes-and-revalidation--2026-09-10) and [dated evidence](export-evidence/2026-09-10-merge-readiness.json) for hashes, diagnosis, skip disposition and remaining viewer/platform limits. That receipt did not establish hosted CI, acceptance, merge or release. The combined 0.2.0 package, corrected license policy, dependency updates and new CI have their own [validation record](validation/0.2.0.md).
+Export-branch handback before v0.2 convergence (2026-09-10): the reported regression blockers are resolved. The same AGPL VSIX from `8514de9` passed 43 native scenarios plus unchanged inputs on each host, with an additional 16-format run after the development server stopped. Both macOS ARM64 and Ubuntu x86-64 full browser suites passed **691/691 with no failures, skips or retries**, and both unit suites passed **100/100**, including real engines and packaged-runtime checks. Each host's 16 artifacts passed 2,260 marker checks; fourteen PDF pages were inspected across the hosts. The last code-adjacent commit, `54caee9`, only makes the PDF test inspection tool portable. See [the current validation record](../../reports/validation/2026-09-10-export.md#merge-blocker-fixes-and-revalidation--2026-09-10) and [dated evidence](../../reports/validation/evidence/2026-09-10-merge-readiness.json) for hashes, diagnosis, skip disposition and remaining viewer/platform limits. That receipt did not establish hosted CI, acceptance, merge or release. The combined 0.2.0 package, corrected license policy, dependency updates and new CI have their own [validation record](../../reports/validation/0.2.0.md).
 
 For later work, leave the current ticket, files/commit, checks run and outcomes, next action, and any blocker here. Link detailed logs/artifacts as evidence when needed; keep the task's requirements and decisions in this file. No second competing specification or separate mandatory status document is needed.
 
@@ -169,7 +168,7 @@ For later work, leave the current ticket, files/commit, checks run and outcomes,
 | 2026-09-09 | Only the newest dependency-status refresh may update the menu; disposal invalidates pending results. | Review reproduced older successful probes replacing a newer invalid-path result. Regression tests cover overlapping refresh and disposal; per-job tool validation remains independent. |
 | 2026-09-10 | Transition to AGPL-3.0-only in a separate first commit while retaining upstream/prior MIT and third-party notices. | Explicit user direction for future commits; `f2a73a5`. Licence/package metadata and shipped notice bytes verified; frozen MIT fixture bytes preserved. |
 | 2026-09-10 | Correct the four reported browser tests, restore three skips and replace absent sample fixtures with an independently authored pair. Fix the BR sentinel content bug, explicit export UI readiness and Chrome worker cleanup exposed by these checks. | User-authorized merge-blocker remediation; `3914cbe` through `54caee9`. No FR/NFR/AC scope changed. Full suites, same-package native runs and artifact checks are recorded in the current validation section. |
-| 2026-09-10 | Converge export, release identity, documentation and VSIX automation in an isolated integration branch; align the license to the selected AGPL-3.0-or-later policy. | Maintainer-authorized 0.2.0 integration. Preserve export FR/NFR and frozen inputs; see [Decision 001](decisions/001-agpl-transition.md) and the [combined validation record](validation/0.2.0.md). Final main PR and release publication remain review boundaries. |
+| 2026-09-10 | Converge export, release identity, documentation and VSIX automation in an isolated integration branch; align the license to the selected AGPL-3.0-or-later policy. | Maintainer-authorized 0.2.0 integration. Preserve export FR/NFR and frozen inputs; see [Decision 001](../../docs/decisions/001-agpl-transition.md) and the [combined validation record](../../reports/validation/0.2.0.md). Final main PR and release publication remain review boundaries. |
 
 Append later decisions with date, reason, alternatives where relevant, affected IDs, user authorization or within-scope rationale, and evidence/commit. Rejected implementation experiments need only a short note when the lesson affects future work.
 
@@ -242,8 +241,8 @@ Read the repository's applicable instructions and CONTRIBUTING.md. Treat the
 FRs, NFRs, confirmed scope, naming rules and acceptance criteria in that document
 as the current contract. Pin the starting revision from codex/0.2.0-integration
 during release preparation, or main after integration. Use an isolated feature
-worktree and focused commits. Read the resumable status, docs/validation/0.2.0.md
-and the dated docs/export-validation.md first: D0–D4 are implemented
+worktree and focused commits. Read the resumable status, reports/validation/0.2.0.md
+and the dated reports/validation/2026-09-10-export.md first: D0–D4 are implemented
 and tested; D5 engineering handback is complete and human acceptance is pending. Preserve the frozen fixtures,
 refresh evidence affected by new changes, and complete remaining native edge,
 artifact/viewer and package checks as small, reviewable increments.

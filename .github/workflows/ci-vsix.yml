@@ -34,6 +34,8 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run lint
+      - name: Check documentation links and public text
+        run: node scripts/check-docs.cjs
       - name: Audit runtime and build dependencies
         run: npm audit
       - name: Package the clean source revision once

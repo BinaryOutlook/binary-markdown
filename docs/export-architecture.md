@@ -1,6 +1,7 @@
 # How export works
 
-Explanation · Reviewed against source at `0a7641a` (package 0.2.0) on 2026-09-14.
+Explanation · Maintained with the source in this checkout. Recorded test results
+are indexed separately in [reports](../reports/README.md).
 
 Binary Markdown uses a shared export lifecycle and two conversion routes. HTML
 retains the supported editor appearance. PDF uses its captured white/theme mode.
@@ -126,8 +127,29 @@ These pointers describe the implemented integration; recheck them after rebasing
 | VSIX packaging | [.vscodeignore](../.vscodeignore), [package-vsix.js](../scripts/package-vsix.js), [copy-vendor.js](../scripts/copy-vendor.js), [copy-webview.js](../scripts/copy-webview.js) | The packager uses `--no-dependencies` and excludes `node_modules/**`. A manifest dependency alone does not ship runtime code; bundle/copy required modules, assets, fonts and licenses explicitly. Test the installed package early. |
 | Shared desktop build | [tsconfig.json](../tsconfig.json), [electron/tsconfig.json](../electron/tsconfig.json), [desktop HTML generator](../electron/src/html-generator.ts) | The extension and Electron app have separate TypeScript roots and explicit asset copies. Shared changes must keep builds compatible; Electron export is deferred. |
 
+## Code presentation in DOCX and PDF
+
+DOCX uses the bundled [reference document](../media/export-reference.docx) and
+the existing Pandoc JSON transformation. The reference adds code paragraph and
+language styles; a native Word shape supplies the attached label while preserving
+editable code and language text. The reproducible asset builder is
+[build-docx-reference.py](../scripts/build-docx-reference.py). Normal compilation
+uses the checked-in asset and does not require that Python builder.
+
+Direct PDF uses the shared [language mapping](../src/export/code-language.ts)
+and [language-tab renderer](../src/export/language-tab.ts). Labels enter as text,
+and code nodes are retained intact. The job captures the document-scoped
+`binary-markdown.export.showCodeLanguage` setting once. HTML/EPUB, inline code,
+math and Mermaid retain their existing conversion routes.
+
+Keeping a DOCX label with its code can move a long block to the next page;
+long blocks remain splittable. Current user-facing behavior is described in
+[export help](../media/export-help.md#code-language-tabs). The
+[dated investigation](../reports/investigations/2026-09-14-docx-code-blocks.md)
+records compared approaches and reader-specific evidence.
+
 ## Verify a change
 
 Use [Validate an export change](export-verification.md) to choose checks for the
 affected boundary. Earlier design choices and investigation results are retained
-in the [development history](export-development-history.md#decision-log).
+in the [development history](../archive/development/export.md#decision-log).

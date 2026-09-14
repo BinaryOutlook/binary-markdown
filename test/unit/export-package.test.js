@@ -68,7 +68,7 @@ test('packaged VSIX contains an isolated export runtime, UI, guidance and locali
     ];
     for (const name of required) assert.ok(entries.has('extension/' + name), 'Packaged ' + name);
     for (const name of entries.keys()) {
-        assert.doesNotMatch(name, /(?:^|\/)(?:node_modules|\.local-browsers|ms-playwright)\/|^extension\/(?:test|electron)\//);
+        assert.doesNotMatch(name, /(?:^|\/)(?:node_modules|\.local-browsers|ms-playwright)\/|^extension\/(?:test|electron|docs|reports|release-notes|archive)\//);
         assert.doesNotMatch(name, /\.app\/|\.(?:exe|dll|dylib|node|so)$|\/(?:pandoc|chrome|chromium|headless_shell)$/i);
     }
     const manifest = JSON.parse(entries.get('extension/package.json').toString('utf8'));

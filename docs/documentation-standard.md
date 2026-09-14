@@ -5,7 +5,7 @@ Status: **Adopted incrementally, starting with export documentation** · 2026-09
 This standard describes how contributors write and maintain Binary Markdown's
 documentation. English is the maintainer's chosen documentation language. The
 [export subsystem](export-subsystem.md) is the first alignment area. Other existing
-files are being aligned incrementally; automated documentation checks remain proposed.
+files are being aligned incrementally. Start at the [documentation index](README.md).
 
 ## Recommended approach
 
@@ -62,6 +62,37 @@ alternatives, and consequences. Preserve superseded decisions and link to their
 replacements. Keep plans and dated validation records distinct from current guides;
 preserve requirement IDs and evidence links when reorganizing them.
 
+## Where material belongs
+
+| Location | Purpose | Maintenance |
+| --- | --- | --- |
+| `docs/` | Current tutorials, how-to guides, reference, explanations and project policy | Update with behavior changes; index in `docs/README.md` |
+| `docs/decisions/` | Continuing design rationale | Record status and link superseding decisions; preserve earlier decisions |
+| `reports/` | Dated investigations, comparisons and validation outcomes | Identify revision/environment and limitations; index in `reports/README.md` |
+| `release-notes/` | Announcements associated with one version | Preserve that version's scope; the release page establishes publication |
+| `archive/` | Completed plans, superseded handoffs and inherited material | Label as historical and link to current guidance |
+| `test/fixtures/` and `test/native/` | Reusable test inputs and harness procedures | Keep executable assumptions beside the tests; put results in reports |
+
+Evergreen means maintained and applicable, not undated. Migration instructions
+and accepted decisions can refer to earlier versions. Separate procedures from
+one-time outcomes when a page contains both. Use one authoritative explanation
+of a behavior and link it from reports; do not duplicate the current guide.
+The packaged export help remains in `media/export-help.md`, where the extension
+loads it. The documentation index links there without maintaining another copy.
+
+Use `YYYY-MM-DD-topic.md` for dated reports and version names for release records.
+Preserve source and artifact hashes, requirement IDs, observations and attribution.
+Do not convert a historical failure, skip or unknown result into a pass while
+editing. When removing sensitive fields, explain the redaction and retain the
+remaining evidence's original scope.
+
+Screen public material for credentials, personal documents, email/account names,
+machine names/addresses, and home or temporary-profile paths. Prefer synthetic
+examples. Inspect images and embedded metadata as well as text; retain only
+necessary, sanitized evidence. Public project links and required third-party
+attribution remain provenance. Store large generated artifacts and raw logs in
+ignored output directories or reviewed CI artifacts rather than documentation.
+
 ## Write verifiable instructions
 
 For a how-to guide, start with the outcome and prerequisites, then provide ordered
@@ -107,10 +138,13 @@ support commitments, intended behavior, and design rationale that code cannot
 establish. Validate important beginner instructions through a reader walkthrough;
 use representative document-reader checks for export appearance claims.
 
-Introduce Markdown lint, local link and anchor checks, and manifest/reference
-consistency checks incrementally. Define exceptions for frozen fixtures and
-archives. Network link failures should be assessed separately from deterministic
-local checks. These checks are not yet installed by adopting this standard.
+Run `node scripts/check-docs.cjs` to check local links/anchors, JSON evidence and
+common private-data patterns in maintained pages and curated records. The
+candidate-build job runs this offline check. It excludes frozen upstream archives
+and does not replace manual review of prose, screenshots or image metadata.
+Suspected private values are reported by location and category, without printing
+the value. Markdown lint and manifest/reference consistency checks can be added
+incrementally; external link availability is separate from the local check.
 
 ## Adoption
 

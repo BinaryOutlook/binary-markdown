@@ -34,7 +34,7 @@ an active job.
 ## Tools and settings
 
 | Format | Required external tool | Executable setting |
-| --- | --- | --- | --- |
+| --- | --- | --- |
 | HTML | None | None |
 | PDF | Installed Chrome, Chromium, or Microsoft Edge | `binary-markdown.export.browserPath` |
 | Word (.docx) and EPUB | Installed Pandoc | `binary-markdown.export.pandocPath` |
@@ -75,7 +75,20 @@ colors are preserved.
 
 ## Code language tabs
 
-`binary-markdown.export.showCodeLanguage` (default `true`) controls language tabs in DOCX and direct PDF exports. Disable it to keep code styling without labels. The setting is captured once per export.
+`binary-markdown.export.showCodeLanguage` (default `true`) controls language tabs
+in DOCX and direct PDF exports. Change it in User, Workspace or folder Settings.
+Disable it to keep code styling without labels. The setting is captured once per
+export, so changing it during a job affects the next export.
+
+DOCX code remains editable and uses a light background, border and a language
+tab attached below the block. Common language aliases use readable names;
+unknown names remain literal text, and unlabeled blocks receive no invented
+label. PDF tabs use the export appearance. HTML, EPUB and inline code keep their
+existing behavior.
+
+Long code blocks can span pages. In DOCX, keeping the label attached can move a
+long block to a fresh page and leave space on the previous page. Reader-specific
+pagination and final visual appearance require inspection in your target reader.
 
 ## Output and progress
 

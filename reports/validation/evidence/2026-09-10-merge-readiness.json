@@ -137,14 +137,14 @@
           }
         ],
         "report": {
-          "path": ".vscode-test/export-merge-mac/evidence/native-1788972845255.json",
+          "path": ".vscode-test/export-merge-mac/evidence/native-receipt.json",
           "sha256": "ce9aa982508fefd4a922b093f3812c1512668b971af4906d729c72a144ea4f59"
         },
         "without_development_server": {
           "format_exports": 16,
           "frozen_input_check": true,
           "report": {
-            "path": ".vscode-test/export-merge-mac/evidence/native-1788973309033.json",
+            "path": ".vscode-test/export-merge-mac/evidence/native-receipt.json",
             "sha256": "75f0235a8e33fe6932b77c9038f193ba729dcdfbb160ef9d9ffb547c29f25232"
           }
         }
@@ -574,14 +574,14 @@
           }
         ],
         "report": {
-          "path": ".vscode-test/failure-analysis-2026-09-10/ubuntu-native-evidence/native-1788972972335.json",
+          "path": ".vscode-test/failure-analysis-2026-09-10/ubuntu-native-evidence/native-receipt.json",
           "sha256": "cb83f5ab473fc18ff23b0c9d815582cf99d1f5a0b3a215affb368fdc620cda30"
         },
         "without_development_server": {
           "format_exports": 16,
           "frozen_input_check": true,
           "report": {
-            "path": ".vscode-test/failure-analysis-2026-09-10/ubuntu-native-evidence/evidence/native-1788973306930.json",
+            "path": ".vscode-test/failure-analysis-2026-09-10/ubuntu-native-evidence/evidence/native-receipt.json",
             "sha256": "5f6de8c923c6a65965a07f427d427855121c98149672e5650adea79407586c36"
           }
         }

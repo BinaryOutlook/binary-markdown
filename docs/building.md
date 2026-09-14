@@ -62,7 +62,7 @@ CI=1 npx playwright test --workers=2 --retries=0
 
 Set `EXPORT_PANDOC_PATH`, `EXPORT_BROWSER_PATH` and `EXPORT_PDFTOTEXT_PATH` when tools are outside normal discovery. Set `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` for browser tests to use an installed Chromium-family browser, or install Playwright's test browser with `npx playwright install chromium`. Run with the browser sandbox enabled as an ordinary user. These test variables are separate from the extension's machine settings.
 
-`--release` requires a clean, identified Git checkout. Package **before** `test:build`, which rewrites the tracked standalone test HTML; back up and restore that generated file before another clean-source package. Do not discard unrelated edits. Successful package/units/browser tests still need the installed-VSIX harness and artifact/reader review described in [validation](validation/0.2.0.md).
+`--release` requires a clean, identified Git checkout. Package **before** `test:build`, which rewrites the tracked standalone test HTML; back up and restore that generated file before another clean-source package. Do not discard unrelated edits. Successful package/units/browser tests still need the installed-VSIX harness and artifact/reader review described in [validation](../reports/validation/0.2.0.md).
 
 Normal development can use `npm test`; converter and archive tests deliberately skip when their explicit prerequisites are absent. A release candidate must run those gates with the variables above so they are exercised. `npm run watch` watches TypeScript only: use full compilation after editing webview JavaScript, CSS, shared modules or translations.
 
