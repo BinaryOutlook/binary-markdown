@@ -70,7 +70,9 @@ export function generateEditorHtml(
     const styles = fs.readFileSync(stylesPath, 'utf8')
         .replace('__FONT_SIZE__', String(config.fontSize));
 
-    const editorScript = fs.readFileSync(editorScriptPath, 'utf8')
+    const mathScript = fs.readFileSync(getResourcePath('src/shared/math-syntax.js'), 'utf8');
+    const editorScript = (mathScript + '\n' + fs.readFileSync(editorScriptPath, 'utf8'))
+        .replace('__MATH_BACKSLASH__', 'true')
         .replace('__DEBUG_MODE__', String(config.enableDebugLogging))
         .replace('__I18N__', JSON.stringify(config.webviewMessages))
         .replace('__DOCUMENT_BASE_URI__', config.documentBaseUri)

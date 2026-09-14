@@ -293,7 +293,7 @@ async function run(settings, owner) {
         fs.writeFileSync(report, JSON.stringify({ harness: harnessIdentity(), host: receipt(owner), packageSha256: hash(fs.readFileSync(settings.package)), receipts }, null, 2));
         console.log(name, JSON.stringify(details));
     };
-    const available = ['identity', 'formats', 'saves', 'edges', 'ui', 'pdf-background', 'selection', 'immutable', 'offline'];
+    const available = ['identity', 'formats', 'saves', 'edges', 'ui', 'equations', 'pdf-background', 'selection', 'immutable', 'offline'];
     const groups = settings.suite === 'all' ? available : [settings.suite];
     assert.ok(groups.every(value => available.includes(value)), 'Suite must be all, ' + available.join(', '));
     const htmlExports = [];
@@ -392,6 +392,7 @@ async function run(settings, owner) {
         // Restore real discovery before the remaining scenarios after the controlled worker.
         await h.driver({ action: 'config', key: 'export.pandocPath', value: settings.pandoc });
         if (groups.includes('ui')) await appearanceCases(h, owner, record);
+        if (groups.includes('equations')) await equationCases(h, owner, record);
         if (groups.includes('pdf-background')) await pdfBackgroundCases(h, owner, record);
         if (groups.includes('selection')) await selectionCase(h, owner, record);
         if (groups.includes('immutable')) await immutableCase(h, owner, record);
@@ -410,6 +411,73 @@ async function run(settings, owner) {
         for (const [key, value] of [['theme', 'github'], ['language', 'en'], ['toolbarMode', 'full']]) await h.driver({ action: 'config', key, value });
     }
     console.log('Evidence:', report);
+}
+
+async function equationCases(h, owner, record) {
+    const file = 'equations.md';
+    const source = [
+        '# Equation compatibility', '', 'Inline $a^2$ and \\(b^3\\).', '',
+        '$$', '\\begin{aligned}', 'x&=1\\\\', 'y&=2', '\\end{aligned}', '$$', '',
+        '\\[', '\\begin{pmatrix}', '1&2\\\\', '3&4', '\\end{pmatrix}', '\\]', '',
+        '$$c^2$$', '', '\\[d^3\\]', '',
+        '```math', '\\begin{gathered}', 'e=1\\\\', 'f=2', '\\end{gathered}', '```', '',
+        '| Cost |', '| --- |', '| \\(O(V^3)\\) |', '',
+        '> \\[', '> g^2', '> \\]', '',
+        '- Parent', '  - Child', '    \\[', '    h^3', '    \\]', '',
+        '`\\(literal-code\\)`', '', '```text', '\\[literal-fence\\]', '```', '',
+        'EQUATION-LAST-MARKER', ''
+    ].join('\n');
+    const filePath = path.join(owner.workspace, file);
+    await h.driver({ action: 'close' });
+    fs.writeFileSync(filePath, source);
+    let connection = await h.open(file);
+    try {
+        await h.until(() => connection.evaluate('document.querySelectorAll("#editor .katex").length === 10'));
+        assert.equal(await connection.evaluate('document.querySelectorAll("#editor .katex-error, #editor .math-error").length'), 0);
+        await h.sourceMode(connection);
+        assert.equal(await connection.evaluate('document.getElementById("sourceEditor").value'), source);
+        await connection.evaluate('document.querySelector(\'[data-action="source"]\').click()');
+        await h.until(() => connection.evaluate('document.querySelectorAll("#editor .katex").length === 10'));
+        await connection.evaluate(`Array.from(document.querySelectorAll('#editor .math-inline')).find(span => span.dataset.mathOpen !== '$').click(); document.querySelector('.math-inline-input').value='b^4'`);
+        // Native Save must flush the active equation source input too.
+        await h.driver({ action: 'save' });
+        await h.until(() => fs.readFileSync(filePath, 'utf8').includes('\\(b^4\\)'));
+        const saved = fs.readFileSync(filePath, 'utf8');
+        assert.ok(saved.includes('\\[') && saved.includes('```math'));
+        assert.ok(!saved.includes('katex'));
+        for (const format of ['html', 'pdf', 'docx', 'epub']) {
+            const result = await h.exportFile(connection, file, format);
+            if (format === 'html') {
+                const html = fs.readFileSync(result.outputPath, 'utf8');
+                assert.equal((html.match(/class="katex"/g) || []).length, 10);
+                assert.doesNotMatch(html, /<input\b[^>]*math-inline-input/);
+            } else if (format === 'pdf') {
+                const text = execFileSync(process.env.EXPORT_PDFTOTEXT_PATH || 'pdftotext', [result.outputPath, '-'], { encoding: 'utf8' });
+                assert.match(text, /EQUATION-LAST-MARKER/);
+                assert.doesNotMatch(text, /begin\{aligned\}|begin\{pmatrix\}/);
+            } else {
+                const content = execFileSync('unzip', ['-p', result.outputPath, format === 'docx' ? 'word/document.xml' : '*.xhtml'], { encoding: 'utf8' });
+                const equations = content.match(format === 'docx' ? /<m:oMath[ >]/g : /<math[ >]/g) || [];
+                assert.equal(equations.length, 10, format + ' native equations');
+            }
+            assert.equal(fs.readFileSync(filePath, 'utf8'), saved);
+            record('equations-export', { format, equations: 10, sourceUnchanged: true, outputPath: result.outputPath });
+        }
+        await h.workbench(page => page.screenshot({ path: path.join(owner.base, 'evidence', 'equations.png') }));
+        connection.close(); connection = null;
+        await h.driver({ action: 'close' });
+        await h.driver({ action: 'config', key: 'math.backslashDelimiters', value: false });
+        connection = await h.open(file);
+        await h.until(() => connection.evaluate('document.querySelectorAll("#editor .katex").length === 4'));
+        assert.equal(fs.readFileSync(filePath, 'utf8'), saved);
+        const literal = await h.exportFile(connection, file, 'docx');
+        const xml = execFileSync('unzip', ['-p', literal.outputPath, 'word/document.xml'], { encoding: 'utf8' });
+        assert.equal((xml.match(/<m:oMath[ >]/g) || []).length, 4);
+        record('equations-backslash-disabled', { equations: 4, sourceUnchanged: true });
+    } finally {
+        if (connection) connection.close();
+        await h.driver({ action: 'config', key: 'math.backslashDelimiters', value: true });
+    }
 }
 
 async function pdfBackgroundCases(h, owner, record) {

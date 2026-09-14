@@ -27,5 +27,6 @@
   "command.exportToPdf.title": "PDFに書き出し",
   "command.exportToDocx.title": "Wordに書き出し",
   "command.exportToEpub.title": "EPUBに書き出し",
-  "command.copyBuildInformation.title": "ビルド情報をコピー"
+  "command.copyBuildInformation.title": "ビルド情報をコピー",
+  "config.math.backslashDelimiters.description": "エディターとエクスポートで数式の区切り \\( ... \\) と \\[ ... \\] を認識します。無効にすると通常の Markdown エスケープとして扱います。"
 }

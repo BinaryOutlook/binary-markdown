@@ -121,7 +121,7 @@ The [fixed fixtures](../test/fixtures/exports/README.md) exercise the following 
 | Content | HTML/PDF target | DOCX/EPUB target |
 | --- | --- | --- |
 | Headings, prose, lists, links, tables, code | Supported displayed content and captured appearance; PDF uses the selected white/theme mode and adapts for print. | Editable text and structural equivalents. |
-| Mathematics | Supported fenced `math` blocks render with KaTeX styles/fonts. Dollar-delimited `$...$` and `$$...$$` remain visible source, matching the existing renderer, with a warning. | Pandoc produces native DOCX Office Math and EPUB MathML for supported equations; unsupported expressions require declared fallbacks. |
+| Mathematics | Inline `$...$` / `\(...\)`, display `$$...$$` / `\[...\]`, and fenced `math` blocks render with KaTeX styles/fonts. Backslash recognition follows the editor setting. Each display block is one complete TeX expression. | Pandoc produces native DOCX Office Math and EPUB MathML for supported equations. Enabled backslash delimiters are normalized in an export-only copy; TeX commands and source files are preserved. Unsupported expressions require declared fallbacks. |
 | Mermaid/diagrams | Wait for diagram rendering; retain vector form where practical. | Package target-compatible assets; do not silently leave supported diagrams as code. |
 | Images and fonts | Resolve and embed needed assets; standalone HTML works after relocation offline. | Package compatible media; preserve source resolution without deliberate downsampling. |
 | Raw HTML, editor extensions, unsupported constructs | Follow declared renderer support and remove editor-only machinery. | Explicit target-specific behavior; visible fallback/warning for known incompatible content. |

@@ -154,7 +154,8 @@ export class ExportController implements vscode.Disposable {
                     sourcePath: this.document.uri.fsPath, markdown: raw, version,
                     theme: format === 'pdf' && config.get<boolean>('export.pdfWhiteBackground', true)
                         ? 'github' : config.get<string>('theme', 'github'),
-                    fontSize: config.get<number>('fontSize', 16)
+                    fontSize: config.get<number>('fontSize', 16),
+                    mathBackslashDelimiters: config.get<boolean>('math.backslashDelimiters', true)
                 });
                 let executable = '';
                 if (format !== 'html') {

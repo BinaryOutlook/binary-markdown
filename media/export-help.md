@@ -29,9 +29,9 @@ The editor displays the actual stage and an indeterminate activity indicator whi
 
 ## Initial format limitations
 
-- HTML and PDF reuse supported editor rendering. HTML retains the editor theme; PDF uses the white/theme setting above. Fenced `math` blocks render with KaTeX. Dollar-delimited math (`$...$` / `$$...$$`), `[TOC]` and footnotes remain visible source with warnings, matching the current renderer. Invalid supported math/diagrams receive source fallbacks.
+- HTML and PDF reuse supported editor rendering. HTML retains the editor theme; PDF uses the white/theme setting above. Inline `$...$` / `\(...\)`, display `$$...$$` / `\[...\]`, and fenced `math` blocks render with KaTeX. Backslash recognition follows `binary-markdown.math.backslashDelimiters` (enabled by default). `[TOC]` and footnotes remain visible source with warnings. Invalid supported math/diagrams receive source fallbacks.
 - PDF uses simple pagination. Generous blank areas are acceptable; oversized text and tables split, while graphics scale to fit.
-- DOCX and EPUB prioritize editable structure and native math. Their layout differs from browser output. Raw HTML is exported as readable source when its behavior cannot be preserved.
+- DOCX and EPUB prioritize editable structure and native math. Enabled backslash equation delimiters are converted to dollars in an export-only copy held in memory; the source file is preserved, and temporary conversion files are removed when the job ends. TeX command support and layout can differ from KaTeX. Raw HTML is exported as readable source when its behavior cannot be preserved.
 - Supported images retain source resolution. Unsupported image formats, unreadable resources and unrepresentable diagrams receive visible fallbacks.
 - Only needed referenced resources may be fetched. Conversion remains local. Standalone HTML embeds supported resources for offline viewing.
 - Interface and settings labels are localized; detailed conversion/resource diagnostics and fallback explanations currently remain English.

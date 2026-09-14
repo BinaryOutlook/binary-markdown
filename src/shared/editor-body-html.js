@@ -90,6 +90,7 @@ function generateEditorBodyHtml(messages, platform, options) {
                         <button data-action="codeblock" title="${m('codeBlock')}"></button>
                         <button data-action="mermaid" title="${m('mermaidBlock')}"></button>
                         <button data-action="math" title="${m('mathBlock')}"></button>
+                        <button data-action="inlineMath" title="${m('inlineMath')}">𝑥</button>
                         <button data-action="hr" title="${m('horizontalRule')}"></button>
                     </div>
                     <div class="toolbar-group" data-group="insert">

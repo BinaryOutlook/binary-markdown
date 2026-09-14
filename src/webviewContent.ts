@@ -24,6 +24,7 @@ interface EditorConfig {
     webviewMessages?: WebviewMessages;
     enableDebugLogging?: boolean;
     outlineOpen?: boolean;
+    mathBackslashDelimiters?: boolean;
 }
 
 export function getWebviewContent(
@@ -58,7 +59,8 @@ export function getWebviewContent(
         documentBaseUri: config?.documentBaseUri ?? '',
         webviewMessages: config?.webviewMessages,
         enableDebugLogging: config?.enableDebugLogging ?? false,
-        outlineOpen: config?.outlineOpen ?? true
+        outlineOpen: config?.outlineOpen ?? true,
+        mathBackslashDelimiters: config?.mathBackslashDelimiters ?? true
     };
     
     const nonce = getNonce();
@@ -91,7 +93,9 @@ export function getWebviewContent(
     const katexJsUri = vendorUri('katex.min.js');
     const katexCssUri = vendorUri('katex.min.css');
 
-    const editorScript = fs.readFileSync(editorScriptPath, 'utf8')
+    const mathScript = fs.readFileSync(path.join(__dirname, 'shared', 'math-syntax.js'), 'utf8');
+    const editorScript = (mathScript + '\n' + fs.readFileSync(editorScriptPath, 'utf8'))
+        .replace('__MATH_BACKSLASH__', String(safeConfig.mathBackslashDelimiters))
         .replace('__DEBUG_MODE__', String(safeConfig.enableDebugLogging ?? false))
         .replace('__I18N__', JSON.stringify(msg))
         .replace('__DOCUMENT_BASE_URI__', safeConfig.documentBaseUri || '')

@@ -27,5 +27,6 @@
   "command.exportToPdf.title": "PDF로 내보내기",
   "command.exportToDocx.title": "Word로 내보내기",
   "command.exportToEpub.title": "EPUB로 내보내기",
-  "command.copyBuildInformation.title": "빌드 정보 복사"
+  "command.copyBuildInformation.title": "빌드 정보 복사",
+  "config.math.backslashDelimiters.description": "편집기와 내보내기에서 수식 구분자 \\( ... \\) 및 \\[ ... \\]를 인식합니다. 비활성화하면 일반 Markdown 이스케이프로 처리합니다."
 }

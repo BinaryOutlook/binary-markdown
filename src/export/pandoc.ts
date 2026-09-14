@@ -1,3 +1,5 @@
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { normalizeForPandoc } = require('../shared/math-syntax');
 import * as fs from 'fs/promises';
 import * as os from 'os';
 import * as path from 'path';
@@ -81,7 +83,7 @@ export async function convertPandoc(
         operations.report('converting');
         const commonArguments = ['--sandbox', `--data-dir=${dataDirectory}`];
         const read = await runTool(executable, [...commonArguments, '--from=commonmark_x+tex_math_gfm-smart', '--to=json'], {
-            input: preparePandocMarkdown(document.markdown), cwd: directory, signal: operations.signal
+            input: normalizeForPandoc(preparePandocMarkdown(document.markdown), document.mathBackslashDelimiters !== false), cwd: directory, signal: operations.signal
         });
         if (read.stderr) { warn(operations, 'pandoc-reader', read.stderr); }
         const ast = JSON.parse(read.stdout.toString('utf8')) as Record<string, Json>;

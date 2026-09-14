@@ -225,6 +225,11 @@
           "default": "",
           "scope": "machine",
           "description": "%config.export.browserPath.description%"
+        },
+        "binary-markdown.math.backslashDelimiters": {
+          "type": "boolean",
+          "default": true,
+          "description": "%config.math.backslashDelimiters.description%"
         }
       }
     },
@@ -299,10 +304,11 @@
     "compile": "tsc -p ./ && node build-locales.js && node scripts/copy-webview.js && node scripts/copy-vendor.js",
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
-    "test": "npm run test:outline-state && npm run test:identity && npm run test:build-info && npm run test:release && npm run test:localization && npm run test:export && npm run test:e2e",
+    "test": "npm run test:math && npm run test:outline-state && npm run test:identity && npm run test:build-info && npm run test:release && npm run test:localization && npm run test:export && npm run test:e2e",
     "lint": "eslint src --ext ts",
     "package": "node scripts/package-vsix.js",
     "test:build": "node test/build-standalone.js",
+    "test:math": "node --test test/unit/math-syntax.test.js",
     "test:outline-state": "node --test test/unit/outline-state.test.js",
     "test:e2e": "npm run test:build && playwright test",
     "test:e2e:ui": "npm run test:build && playwright test --ui",

@@ -27,5 +27,6 @@
   "command.exportToPdf.title": "Exporter en PDF",
   "command.exportToDocx.title": "Exporter vers Word",
   "command.exportToEpub.title": "Exporter en EPUB",
-  "command.copyBuildInformation.title": "Copier les informations de compilation"
+  "command.copyBuildInformation.title": "Copier les informations de compilation",
+  "config.math.backslashDelimiters.description": "Reconnaît les délimiteurs d’équations \\( ... \\) et \\[ ... \\] dans l’éditeur et les exports. Désactivez cette option pour les traiter comme des échappements Markdown ordinaires."
 }

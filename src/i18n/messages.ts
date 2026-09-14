@@ -57,6 +57,9 @@ export interface WebviewMessages {
   horizontalRule: string;
   mermaidBlock: string;
   mathBlock: string;
+  inlineMath: string;
+  editEquation: string;
+  equationEditHint: string;
   searchPlaceholder: string;
   replacePlaceholder: string;
   searchPrev: string;
