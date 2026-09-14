@@ -17,7 +17,7 @@ function exportAvailabilityError(): string | undefined {
     const messages = getExportMessages();
     if (vscode.env.remoteName) { return messages.unsupportedRemote; }
     if (vscode.env.uiKind !== vscode.UIKind.Desktop ||
-        (process.platform !== 'darwin' && process.platform !== 'linux')) { return messages.unsupportedHost; }
+        !['darwin', 'linux', 'win32'].includes(process.platform)) { return messages.unsupportedHost; }
     if (!vscode.workspace.isTrusted) { return messages.trustRequired; }
     return undefined;
 }

@@ -84,10 +84,22 @@ function expandPath(value: string): string {
 }
 
 function candidates(kind: ToolStatus['kind']): string[] {
-    const names = kind === 'pandoc' ? ['pandoc'] : ['google-chrome', 'chromium', 'chromium-browser', 'microsoft-edge', 'chrome'];
+    const windows = process.platform === 'win32';
+    const names = windows ? (kind === 'pandoc' ? ['pandoc.exe'] : ['chrome.exe', 'msedge.exe', 'chromium.exe'])
+        : kind === 'pandoc' ? ['pandoc'] : ['google-chrome', 'chromium', 'chromium-browser', 'microsoft-edge', 'chrome'];
     const directories = (process.env.PATH || '').split(path.delimiter).filter(Boolean);
     const paths = directories.flatMap(directory => names.map(name => path.resolve(directory, name)));
-    if (kind === 'pandoc') {
+    if (windows) {
+        const roots = [process.env.LOCALAPPDATA, process.env.ProgramFiles, process.env['ProgramFiles(x86)']].filter((value): value is string => !!value);
+        for (const root of roots) {
+            if (kind === 'pandoc') { paths.push(path.join(root, 'Pandoc', 'pandoc.exe')); }
+            else {
+                paths.push(path.join(root, 'Google', 'Chrome', 'Application', 'chrome.exe'),
+                    path.join(root, 'Microsoft', 'Edge', 'Application', 'msedge.exe'),
+                    path.join(root, 'Chromium', 'Application', 'chrome.exe'));
+            }
+        }
+    } else if (kind === 'pandoc') {
         paths.push('/opt/homebrew/bin/pandoc', '/usr/local/bin/pandoc', '/usr/bin/pandoc');
     } else {
         for (const root of ['/Applications', path.join(os.homedir(), 'Applications')]) {
@@ -104,6 +116,24 @@ function candidates(kind: ToolStatus['kind']): string[] {
 async function probe(kind: ToolStatus['kind'], executable: string, signal?: AbortSignal): Promise<ToolStatus> {
     await fs.access(executable, constants.X_OK);
     if (!(await fs.stat(executable)).isFile()) { throw new Error('The configured path is not an executable file.'); }
+    if (kind === 'browser' && process.platform === 'win32') {
+        // Windows GUI browsers do not reliably print --version to stdout.
+        // Probe the same sandboxed runtime used by PDF export instead.
+        const runtime = require(path.resolve(__dirname, '../../vendor/playwright-core')) as typeof import('playwright-core');
+        let browser: import('playwright-core').Browser | undefined;
+        const abort = (): void => { void browser?.close().catch(() => undefined); };
+        signal?.addEventListener('abort', abort, { once: true });
+        try {
+            if (signal) { checkCancelled(signal); }
+            browser = await runtime.chromium.launch({ executablePath: executable, headless: true, chromiumSandbox: true,
+                timeout: 10000, args: ['--disable-updater-scheduler', '--disable-background-networking', '--host-resolver-rules=MAP * ~NOTFOUND'] });
+            if (signal) { checkCancelled(signal); }
+            return { kind, available: true, path: executable, version: 'Chromium ' + browser.version() };
+        } finally {
+            signal?.removeEventListener('abort', abort);
+            await browser?.close().catch(() => undefined);
+        }
+    }
     const result = await runTool(executable, ['--version'], { signal, timeoutMs: 10000 });
     const version = result.stdout.toString('utf8').split(/\r?\n/)[0].trim();
     if (kind === 'pandoc') {

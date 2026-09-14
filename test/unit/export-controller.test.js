@@ -217,7 +217,7 @@ test('PDF receives the same captured language setting as DOCX, including its ena
     }
 });
 
-for (const platform of ['darwin', 'linux']) for (const [name, options] of [
+for (const platform of ['darwin', 'linux', 'win32']) for (const [name, options] of [
     ['dirty document', { document: { isDirty: true } }],
     ['untitled document', { document: { isUntitled: true } }],
     ['non-file document', { document: { uri: { scheme: 'untitled', fsPath: 'untitled:Untitled-1' } } }],
@@ -426,7 +426,7 @@ test('invalid converted HTML is a failure and cannot produce a success file', as
     await assertSourceIntact(h);
 });
 
-for (const platform of ['darwin', 'linux']) {
+for (const platform of ['darwin', 'linux', 'win32']) {
     test(platform + ' local desktop capabilities agree with successful saved HTML export', async t => {
         const h = await harness(t, { platform });
         const capabilities = await h.controller.getCapabilities();
@@ -508,15 +508,18 @@ for (const [name, options] of [
     ['untrusted workspace', { trusted: false }],
     ['remote extension host', { remote: 'ssh-remote' }],
     ['web VS Code', { web: true }],
-    ['unsupported local platform', { platform: 'win32' }],
+    ['unsupported local platform', { platform: 'freebsd' }],
     ['Linux untrusted workspace', { platform: 'linux', trusted: false }],
     ['Linux Remote-SSH window', { platform: 'linux', remote: 'ssh-remote' }],
-    ['Linux web VS Code', { platform: 'linux', web: true }]
+    ['Linux web VS Code', { platform: 'linux', web: true }],
+    ['Windows untrusted workspace', { platform: 'win32', trusted: false }],
+    ['Windows Remote-SSH window', { platform: 'win32', remote: 'ssh-remote' }],
+    ['Windows web VS Code', { platform: 'win32', web: true }]
 ]) {
     test('controller rejects ' + name + ' before tool discovery or source capture', async t => {
         const h = await harness(t, options);
         const capabilities = await h.controller.getCapabilities();
-        const reason = options.trusted === false ? /Trust this workspace/ : options.remote ? /not yet supported in remote windows, including Remote-SSH/ : /local desktop VS Code on macOS or Linux/;
+        const reason = options.trusted === false ? /Trust this workspace/ : options.remote ? /not yet supported in remote windows, including Remote-SSH/ : /local desktop VS Code on macOS, Linux or Windows/;
         for (const status of Object.values(capabilities)) {
             assert.equal(status.available, false);
             assert.match(status.error, reason);

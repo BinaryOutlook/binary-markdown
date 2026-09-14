@@ -13,6 +13,14 @@ export function resourceUrl(reference: string, base: string): URL {
     // Markdown references have URL query/fragment semantics. Bare percent signs
     // are also common in local filenames; preserve them without double-decoding.
     const escapedReference = reference.replace(/%(?![\da-f]{2})/gi, '%25');
+    // Drive letters are filesystem roots, not URL schemes. Keep Markdown's
+    // query/fragment semantics, including percent-escaped filename characters.
+    if (/^[a-z]:[\\/]/i.test(reference)) {
+        return new URL('file:///' + escapedReference.replace(/\\/g, '/'));
+    }
+    if (reference.startsWith('\\\\')) {
+        return new URL('file:' + escapedReference.replace(/\\/g, '/'));
+    }
     if (/^(https?:|data:|file:)/i.test(reference)) {
         return new URL(reference.startsWith('data:') ? reference : escapedReference);
     }

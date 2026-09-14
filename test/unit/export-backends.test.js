@@ -15,11 +15,7 @@ async function temporary(t) {
     return directory;
 }
 
-async function executable(directory, source, name = 'test executable') {
-    const file = path.join(directory, name);
-    await fs.writeFile(file, `#!${process.execPath}\n${source}\n`, { mode: 0o700 });
-    return file;
-}
+const { toolFixture: executable } = require('../utils/tool-fixture.cjs');
 
 function operations(loadResource = async () => { throw new Error('Unavailable test image'); }) {
     const controller = new AbortController();
@@ -53,11 +49,12 @@ function archiveEntries(bytes) {
 
 test('tool invocation preserves arguments and does not execute shell metacharacters', async t => {
     const directory = await temporary(t);
-    const file = await executable(directory, 'process.stdout.write(JSON.stringify(process.argv.slice(2)));');
+    const file = await executable(directory, 'echo');
     const args = ['a space', '; touch should-not-exist', '$(touch should-not-exist)', '`touch should-not-exist`'];
     const result = await runTool(file, args, { cwd: directory });
     assert.deepEqual(JSON.parse(result.stdout.toString()), args);
-    assert.deepEqual(await fs.readdir(directory), ['test executable']);
+    assert.deepEqual((await fs.readdir(directory)).sort(), process.platform === 'win32'
+        ? ['test executable.exe', 'test executable.exe.fixture'] : ['test executable']);
 });
 
 test('invalid explicit tool paths fail visibly without selecting an installed fallback', async t => {
@@ -72,10 +69,7 @@ test('invalid explicit tool paths fail visibly without selecting an installed fa
 
 test('Pandoc discovery rejects an executable that lacks required conversion capabilities', async t => {
     const directory = await temporary(t);
-    const file = await executable(directory, `
-        const argument = process.argv[2];
-        process.stdout.write(argument === '--version' ? 'pandoc 3.8.3\\n' : argument === '--list-input-formats' ? 'commonmark_x\\njson\\n' : 'html\\n');
-    `);
+    const file = await executable(directory, 'incomplete-pandoc');
     const result = await discoverTool('pandoc', file);
     assert.equal(result.available, false);
     assert.match(result.error, /DOCX, and EPUB support/);
@@ -84,11 +78,7 @@ test('Pandoc discovery rejects an executable that lacks required conversion capa
 test('process cancellation terminates an uncooperative worker and retains cancellation identity', async t => {
     const directory = await temporary(t);
     const pidFile = path.join(directory, 'pid');
-    const file = await executable(directory, `
-        require('node:fs').writeFileSync(process.argv[2], String(process.pid));
-        process.on('SIGTERM', () => {});
-        setInterval(() => {}, 1000);
-    `);
+    const file = await executable(directory, 'hang');
     const controller = new AbortController();
     const pending = runTool(file, [pidFile], { signal: controller.signal });
     while (!(await fs.stat(pidFile).catch(() => undefined))) {
@@ -102,7 +92,7 @@ test('process cancellation terminates an uncooperative worker and retains cancel
 
 test('probe timeouts terminate broken executables instead of hanging discovery', async t => {
     const directory = await temporary(t);
-    const file = await executable(directory, 'setInterval(() => {}, 1000);');
+    const file = await executable(directory, 'hang');
     await assert.rejects(runTool(file, [], { timeoutMs: 30 }), /capability check/);
 });
 
@@ -129,11 +119,7 @@ test('Pandoc receives generated links without managed comments, preserving code 
 test('failed Pandoc conversion removes its owned intermediate directory', async t => {
     const directory = await temporary(t);
     const receipt = path.join(directory, 'worker-directory');
-    const file = await executable(directory, `
-        require('node:fs').writeFileSync(${JSON.stringify(receipt)}, process.cwd());
-        process.stderr.write('Controlled converter failure');
-        process.exitCode = 4;
-    `);
+    const file = await executable(directory, 'fail-pandoc', receipt);
     const saved = { sourcePath: path.join(directory, 'report.md'), markdown: '# Report', version: 1, theme: 'github', fontSize: 16 };
     await assert.rejects(convertPandoc('docx', saved, { html: '', theme: 'github', fontSize: 16, diagrams: [], warnings: [] }, file, operations()), /Controlled converter failure/);
     const workerDirectory = await fs.readFile(receipt, 'utf8');
@@ -231,16 +217,7 @@ test('DOCX puts declared-language labels after intact code blocks, including nes
         { t: 'BulletList', c: [[...examples.slice(4)]] },
         { t: 'Para', c: [{ t: 'Code', c: [['', [], []], 'inline code'] }] }
     ] };
-    const file = await executable(directory, `
-        const fs = require('node:fs');
-        const args = process.argv.slice(2);
-        const input = fs.readFileSync(0, 'utf8');
-        if (args.includes('--to=json')) process.stdout.write(${JSON.stringify(JSON.stringify(ast))});
-        else {
-            fs.writeFileSync(${JSON.stringify(receipt)}, JSON.stringify({ args, ast: JSON.parse(input) }));
-            fs.writeFileSync(args.find(arg => arg.startsWith('--output=')).slice(9), Buffer.from([0x50,0x4b,0x03,0x04]));
-        }
-    `);
+    const file = await executable(directory, 'ast-pandoc', receipt, ast);
     const saved = { sourcePath: path.join(directory, 'source.md'), markdown: 'fixture', version: 1, theme: 'github', fontSize: 16 };
     function collect(value, predicate, result = []) {
         if (!value || typeof value !== 'object') return result;
