@@ -70,10 +70,13 @@ jobs:
     env:
       CI: '1'
       PYTHONUTF8: '1'
-      TMPDIR: ${{ matrix.label == 'windows' && runner.temp || '/tmp' }}
       EXPORT_REAL_TOOLS: '1'
       VALIDATION_CODE_VERSION: ${{ matrix.code }}
     steps:
+      - name: Select the platform temporary directory
+        env:
+          VALIDATION_TMPDIR: ${{ runner.os == 'Windows' && runner.temp || '/tmp' }}
+        run: printf 'TMPDIR=%s\n' "$VALIDATION_TMPDIR" >> "$GITHUB_ENV"
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ needs.package.outputs.source }}
