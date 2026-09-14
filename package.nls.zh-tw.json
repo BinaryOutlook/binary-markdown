@@ -27,5 +27,6 @@
   "command.exportToPdf.title": "匯出為PDF",
   "command.exportToDocx.title": "匯出為Word",
   "command.exportToEpub.title": "匯出為EPUB",
-  "command.copyBuildInformation.title": "複製建置資訊"
+  "command.copyBuildInformation.title": "複製建置資訊",
+  "config.math.backslashDelimiters.description": "在編輯器和匯出中辨識公式分隔符 \\( ... \\) 和 \\[ ... \\]。停用後將其視為一般 Markdown 跳脫字元。"
 }

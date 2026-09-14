@@ -8,6 +8,8 @@
     };
     
     const host = window.hostBridge;
+    const mathSyntax = window.BinaryMath;
+    const mathBackslashDelimiters = __MATH_BACKSLASH__;
     const i18n = __I18N__;
     logger.log('[Binary Markdown] i18n loaded:', i18n.livePreviewMode ? 'OK' : 'EMPTY', '- Sample:', i18n.bold || '(none)');
     const editor = document.getElementById('editor');
@@ -2148,6 +2150,7 @@
         let codeLang = '';
         let codeFenceLength = 0; // Track the length of the opening fence
         let codeFenceChar = ''; // Track the fence character (backtick or tilde)
+        let codeStart = 0;
         let inTable = false;
         let tableRows = [];
         let inBlockquote = false;
@@ -2281,6 +2284,9 @@
 
         function renderBlockquote(lines) {
             if (lines.length === 0) return '';
+            if (lines.some((_, index) => mathSyntax.display(lines, index, mathBackslashDelimiters))) {
+                return '<blockquote>' + markdownToHtmlFragment(lines.join('\n')) + '</blockquote>';
+            }
             // Join blockquote lines with actual newlines (like code blocks)
             // CSS white-space: pre-wrap will display them as line breaks
             // Empty lines need to be preserved - use a space or <br> to ensure they render
@@ -2341,10 +2347,8 @@
                                 '<div class="mermaid-diagram"></div>' +
                                 '</div>';
                         } else if (codeLang === 'math') {
-                            html += '<div class="math-wrapper" data-mode="display" contenteditable="false">' +
-                                '<pre data-lang="math" contenteditable="true"><code' + trailingAttr + '>' + codeHtml + '</code></pre>' +
-                                '<div class="math-display"></div>' +
-                                '</div>';
+                            html += mathBlockHtml({ tex: trimmedContent, raw: lines.slice(codeStart, i + 1).join('\n'),
+                                open: lines[codeStart], close: line, singleLine: false });
                         } else {
                             html += '<pre data-lang="' + escapeHtml(codeLang) + '" data-mode="display"><code contenteditable="false"' + trailingAttr + '>' + codeHtml + '</code></pre>';
                         }
@@ -2374,6 +2378,7 @@
                     // Close any open lists before starting code block
                     html += closeAllLists();
                     inCodeBlock = true;
+                    codeStart = i;
                     codeFenceLength = fenceLen;
                     codeFenceChar = fenceCharacter;
                     codeLang = (fenceMatch[2] || '').trim();
@@ -2383,6 +2388,16 @@
 
             if (inCodeBlock) {
                 codeContent += line + '\n';
+                continue;
+            }
+
+            const equation = mathSyntax.display(lines, i, mathBackslashDelimiters);
+            if (equation && (equation.indent.length < 4 || listStack.length)) {
+                if (inBlockquote) { html += renderBlockquote(blockquoteLines); inBlockquote = false; blockquoteLines = []; }
+                if (inTable) { html += renderTable(tableRows); inTable = false; tableRows = []; }
+                if (!equation.indent.length) html += closeAllLists();
+                html += mathBlockHtml(equation);
+                i = equation.end - 1;
                 continue;
             }
 
@@ -2951,6 +2966,30 @@
     }
     
     // ========== KATEX MATH BLOCK FUNCTIONALITY ==========
+
+    function mathBlockHtml(block) {
+        const trailing = block.tex.endsWith('\n');
+        const code = block.tex ? escapeHtml(block.tex).replace(/\n/g, '<br>') + (trailing ? '<br>' : '') : '<br>';
+        return '<div class="math-wrapper" data-mode="display" contenteditable="false"' +
+            ' data-math-original="' + escapeHtml(encodeURIComponent(block.raw)) + '"' +
+            ' data-math-initial="' + escapeHtml(encodeURIComponent(block.tex)) + '"' +
+            ' data-math-open="' + escapeHtml(block.open) + '" data-math-close="' + escapeHtml(block.close) + '"' +
+            ' data-math-single="' + Boolean(block.singleLine) + '">' +
+            '<pre data-lang="math" contenteditable="true"><code' + (trailing ? ' data-trailing-br="true"' : '') + '>' + code + '</code></pre>' +
+            '<div class="math-display"></div></div>';
+    }
+
+    function mathBlockMarkdown(wrapper) {
+        const code = wrapper.querySelector('pre code');
+        const tex = code && code.innerHTML !== '<br>' ? stripTrailingNewlines(getCodePlainText(code), code, wrapper) : '';
+        if (wrapper.hasAttribute('data-math-original') && tex === decodeURIComponent(wrapper.dataset.mathInitial)) {
+            return decodeURIComponent(wrapper.dataset.mathOriginal) + '\n';
+        }
+        const open = wrapper.dataset.mathOpen || '```math';
+        const close = wrapper.dataset.mathClose || '```';
+        if (wrapper.dataset.mathSingle === 'true' && !tex.includes('\n')) return open + tex + close + '\n';
+        return open + '\n' + tex + '\n' + close + '\n';
+    }
 
     function waitForKatex(callback, maxAttempts) {
         maxAttempts = maxAttempts || 50;
@@ -5661,6 +5700,7 @@
                 // Use single newline for regular paragraphs
                 return pContent + '\n';
             case 'div': 
+                if (node.classList.contains('math-wrapper')) return mathBlockMarkdown(node);
                 // Check if this is a mermaid wrapper
                 if (node.classList.contains('mermaid-wrapper') || node.classList.contains('math-wrapper')) {
                     const wrapperLang = node.classList.contains('mermaid-wrapper') ? 'mermaid' : 'math';
@@ -6134,6 +6174,11 @@
         let currentLine = '';
         
         function processBlockquoteContent(node) {
+            if (node.nodeType === 1 && node.classList.contains('math-wrapper')) {
+                if (currentLine) { lines.push(currentLine); currentLine = ''; }
+                lines.push(...mathBlockMarkdown(node).replace(/\n$/, '').split('\n'));
+                return;
+            }
             if (node.nodeType === 3) {
                 // Text node - check for newline characters
                 const text = node.textContent || '';
@@ -6390,6 +6435,24 @@
     editor.addEventListener('keydown', function(e) {
         logger.log('Editor keydown:', e.key);
         if (isSourceMode) return;
+
+        if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
+            const line = getCurrentLine();
+            const delimiter = line && line.tagName === 'P' ? line.textContent.trim() : '';
+            if (delimiter === '$$' || (mathBackslashDelimiters && delimiter === '\\[')) {
+                e.preventDefault();
+                undoManager.saveSnapshot();
+                const close = delimiter === '$$' ? '$$' : '\\]';
+                const template = document.createElement('template');
+                template.innerHTML = mathBlockHtml({ open: delimiter, close, tex: '', raw: delimiter + '\n\n' + close });
+                const wrapper = template.content.firstElementChild;
+                line.replaceWith(wrapper);
+                setupMathBlocks();
+                enterSpecialWrapperEditMode(wrapper, 'start');
+                syncMarkdown();
+                return;
+            }
+        }
 
         // Mark as actively editing for non-navigation keys
         if (!e.key.startsWith('Arrow') && !['Shift', 'Control', 'Alt', 'Meta', 'CapsLock', 'Escape', 'Tab'].includes(e.key)) {
@@ -11554,6 +11617,11 @@
                 convertToSpecialBlock(preM, action);
                 var wrapperM = nextSibM ? nextSibM.previousSibling : parentElM.lastChild;
                 if (wrapperM && isSpecialWrapper(wrapperM)) {
+                    if (action === 'math') {
+                        wrapperM.dataset.mathOpen = '$$';
+                        wrapperM.dataset.mathClose = '$$';
+                        syncMarkdown();
+                    }
                     enterSpecialWrapperEditMode(wrapperM, 'start');
                 }
                 break;

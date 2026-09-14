@@ -27,5 +27,6 @@
   "command.exportToPdf.title": "Export to PDF",
   "command.exportToDocx.title": "Export to Word",
   "command.exportToEpub.title": "Export to EPUB",
-  "command.copyBuildInformation.title": "Copy Build Information"
+  "command.copyBuildInformation.title": "Copy Build Information",
+  "config.math.backslashDelimiters.description": "Recognize backslash equation delimiters \\( ... \\) and \\[ ... \\] in the editor and exports. Disable to treat them as ordinary Markdown escapes."
 }

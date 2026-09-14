@@ -472,7 +472,8 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
                         documentBaseUri: documentBaseUri,
                         webviewMessages: getWebviewMessages(),
                         enableDebugLogging: config.get<boolean>('enableDebugLogging', false),
-                        outlineOpen
+                        outlineOpen,
+                        mathBackslashDelimiters: config.get<boolean>('math.backslashDelimiters', true)
                     }
                 );
             } catch (error) {
@@ -640,7 +641,7 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
             const exportChanged = e.affectsConfiguration('binary-markdown.export');
             if (exportChanged) { exportController.refreshCapabilities(); }
             const editorSettings = ['theme', 'fontSize', 'imageDefaultDir', 'forceRelativeImagePath', 'language',
-                'toolbarMode', 'outlineStateScope', 'outlineDefaultOpen', 'enableDebugLogging'];
+                'toolbarMode', 'outlineStateScope', 'outlineDefaultOpen', 'enableDebugLogging', 'math.backslashDelimiters'];
             const editorChanged = editorSettings.some(key => e.affectsConfiguration('binary-markdown.' + key));
             if (e.affectsConfiguration('binary-markdown') && (!exportChanged || editorChanged)) {
                 clearTimeout(configurationRefresh);

@@ -225,6 +225,11 @@
           "default": "",
           "scope": "machine",
           "description": "%config.export.browserPath.description%"
+        },
+        "binary-markdown.math.backslashDelimiters": {
+          "type": "boolean",
+          "default": true,
+          "description": "%config.math.backslashDelimiters.description%"
         }
       }
     },

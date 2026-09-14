@@ -40,3 +40,36 @@ test('physical newlines no longer create separate equations', async ({ page }) =
     await expect(page.locator('#editor .katex')).toHaveCount(1);
     await expect(page.locator('#editor .katex-error,.math-error')).toHaveCount(0);
 });
+
+for (const markdown of [
+    '$$\n\\begin{aligned}\nx&=1\\\\\ny&=2\n\\end{aligned}\n$$\n',
+    '\\[\nx^2\n\n\\]\n',
+    '$$x^2$$\n',
+    '\\[x^2\\]\n',
+    '~~~~math\nx^2\n~~~~\n',
+    '> $$\n> x^2\n> $$\n'
+]) {
+    test('display syntax survives serialization: ' + JSON.stringify(markdown), async ({ page }) => {
+        await setMarkdown(page, markdown);
+        await expect(page.locator('#editor .katex')).toHaveCount(1);
+        expect(await page.evaluate(() => (window as any).__testApi.getMarkdown())).toBe(markdown);
+        await page.locator('#editor').evaluate(el => {
+            const p = document.createElement('p'); p.textContent = 'Unrelated edit'; el.append(p);
+            (window as any).__testApi.syncMarkdown();
+        });
+        expect(await page.evaluate(() => (window as any).__testApi.getMarkdown())).toContain(markdown);
+    });
+}
+
+test('display edits preserve the backslash delimiters', async ({ page }) => {
+    await setMarkdown(page, '\\[\nx^2\n\\]\n');
+    await page.locator('#editor .math-wrapper').click();
+    await page.locator('#editor .math-wrapper code').fill('y^3');
+    await expect.poll(() => page.evaluate(() => (window as any).__testApi.getMarkdown())).toBe('\\[\ny^3\n\\]\n');
+});
+
+test('ordinary fences and unmatched delimiters remain source', async ({ page }) => {
+    await setMarkdown(page, '```markdown\n$$\nx^2\n$$\n```\n\n$$\nunfinished\n# Following heading\n');
+    await expect(page.locator('#editor .math-wrapper')).toHaveCount(0);
+    await expect(page.locator('#editor h1')).toHaveText('Following heading');
+});
