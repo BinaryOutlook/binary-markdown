@@ -72,6 +72,7 @@ export function getWebviewContent(
     // Load external CSS and JS files
     const stylesPath = path.join(__dirname, 'webview', 'styles.css');
     const editorScriptPath = path.join(__dirname, 'webview', 'editor.js');
+    const auxScript = fs.readFileSync(path.join(__dirname, 'shared', 'document-aux.js'), 'utf8');
     const exportScript = fs.readFileSync(path.join(__dirname, 'webview', 'export-ui.js'), 'utf8');
     
     const styles = fs.readFileSync(stylesPath, 'utf8')
@@ -123,6 +124,7 @@ export function getWebviewContent(
         ${hostBridgeScript}
     </script>
     <script nonce="${nonce}">
+        ${auxScript}
         ${editorScript}
     </script>
     <script nonce="${nonce}">

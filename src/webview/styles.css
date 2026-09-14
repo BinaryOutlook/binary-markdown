@@ -1080,3 +1080,9 @@ body {
 .export-spinner { display: inline-block; flex-shrink: 0; width: 13px; height: 13px; border: 2px solid var(--border-color); border-top-color: var(--link-color); border-radius: 50%; animation: export-active 0.9s linear infinite; }
 @keyframes export-active { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .export-spinner { animation: none; border-style: dotted; } }
+
+/* Metadata is source text, separate from the editable prose. */
+.document-aux { border: 1px solid var(--border-color); border-radius: 6px; margin: 1em 0; padding: 12px 16px; }
+.front-matter summary { cursor: pointer; color: var(--text-color); font-size: .9em; }
+.front-matter-source { box-sizing: border-box; display: block; width: 100%; margin-top: 12px; padding: 12px; resize: vertical; font: .85em/1.6 var(--font-mono); background: var(--code-bg); color: var(--text-color); border: 1px solid var(--border-color); border-radius: 4px; }
+.front-matter-source:focus-visible { outline: 2px solid var(--link-color); outline-offset: 2px; }

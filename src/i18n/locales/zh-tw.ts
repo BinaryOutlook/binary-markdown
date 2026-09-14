@@ -28,6 +28,7 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  frontMatter: '文件中繼資料',
   closeOutline: '關閉大綱',
   openOutline: '開啟大綱',
   openInTextEditor: '在文字編輯器中開啟',

@@ -28,6 +28,7 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  frontMatter: 'Metadatos',
   closeOutline: 'Cerrar esquema',
   openOutline: 'Abrir esquema',
   openInTextEditor: 'Abrir en editor de texto',

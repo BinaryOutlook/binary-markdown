@@ -28,6 +28,7 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  frontMatter: '文档元数据',
   closeOutline: '关闭大纲',
   openOutline: '打开大纲',
   openInTextEditor: '在文本编辑器中打开',

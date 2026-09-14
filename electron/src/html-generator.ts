@@ -59,6 +59,7 @@ export function generateEditorHtml(
     config: ElectronEditorConfig
 ): string {
     const stylesPath = getResourcePath('src/webview/styles.css');
+    const auxScript = fs.readFileSync(getResourcePath('src/shared/document-aux.js'), 'utf8');
     const editorScriptPath = getResourcePath('src/webview/editor.js');
     const vendorDir = getResourcePath('vendor');
 
@@ -98,6 +99,7 @@ export function generateEditorHtml(
     <link rel="stylesheet" href="${vendorFileUri('katex.min.css')}">
     <script src="${vendorFileUri('katex.min.js')}"></script>
     <script>
+        ${auxScript}
         ${editorScript}
     </script>
 </body>

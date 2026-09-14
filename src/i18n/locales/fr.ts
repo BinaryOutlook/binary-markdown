@@ -28,6 +28,7 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  frontMatter: 'Métadonnées',
   closeOutline: 'Fermer le plan',
   openOutline: 'Ouvrir le plan',
   openInTextEditor: 'Ouvrir dans l\'éditeur de texte',

@@ -28,6 +28,7 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  frontMatter: 'Front matter',
   closeOutline: 'Close Outline',
   openOutline: 'Open Outline',
   openInTextEditor: 'Open in Text Editor',

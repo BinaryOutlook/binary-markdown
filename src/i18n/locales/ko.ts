@@ -28,6 +28,7 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  frontMatter: '프런트 매터',
   closeOutline: '개요 닫기',
   openOutline: '개요 열기',
   openInTextEditor: '텍스트 편집기에서 열기',

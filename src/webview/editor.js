@@ -8,6 +8,8 @@
     };
     
     const host = window.hostBridge;
+    const documentAux = window.documentAux;
+    let frontMatterOpen = false;
     const i18n = __I18N__;
     logger.log('[Binary Markdown] i18n loaded:', i18n.livePreviewMode ? 'OK' : 'EMPTY', '- Sample:', i18n.bold || '(none)');
     const editor = document.getElementById('editor');
@@ -1591,10 +1593,7 @@
 
     function stripExportMetadata(source) {
         let text = source.replace(/^\uFEFF/, '').replace(/\r\n?/g, '\n');
-        const frontMatter = text.match(/^---\n([\s\S]*?)\n(?:---|\.\.\.)(?:\n|$)/);
-        if (frontMatter && /^\s*[\w-]+\s*:/m.test(frontMatter[1])) {
-            text = text.slice(frontMatter[0].length);
-        }
+        text = documentAux.splitFrontMatter(text).body;
         // Only a trailing app directive block outside a code fence is metadata.
         const directiveStart = text.lastIndexOf('\n---\n');
         if (directiveStart >= 0 && /^(?:(?:IMAGE_DIR:\s*[^\n]+|FORCE_RELATIVE_PATH:\s*(?:true|false))\n?)+\s*$/i.test(text.slice(directiveStart + 5))) {
@@ -2139,10 +2138,42 @@
     }
 
     // Convert markdown to HTML fragment (reusable for both full render and partial paste)
+    function renderFrontMatter(raw) {
+        return '<div class="document-aux front-matter" contenteditable="false"><details' + (frontMatterOpen ? ' open' : '') + '>' +
+            '<summary>' + escapeHtml(i18n.frontMatter || 'Front matter') + '</summary>' +
+            '<textarea class="front-matter-source" aria-label="' + (i18n.frontMatter || 'Front matter').replace(/"/g, '&quot;') +
+            '" spellcheck="false" rows="7">' + escapeHtml(raw) + '</textarea></details></div>';
+    }
+
+    function setupDocumentAux() {
+        editor.querySelectorAll('.front-matter').forEach(block => {
+            if (block.dataset.auxSetup) return;
+            block.dataset.auxSetup = 'true';
+            const details = block.querySelector('details');
+            const input = block.querySelector('textarea');
+            details.addEventListener('toggle', () => { frontMatterOpen = details.open; });
+            input.addEventListener('beforeinput', () => { undoManager.saveSnapshotDebounced(); });
+            input.addEventListener('input', e => {
+                e.stopPropagation();
+                markActivelyEditing();
+                syncMarkdownSync();
+            });
+            input.addEventListener('keydown', e => {
+                e.stopPropagation();
+                if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') { e.preventDefault(); saveCurrentDocument(); }
+                if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+                    e.preventDefault();
+                    if (e.shiftKey) undoManager.redo(); else undoManager.undo();
+                }
+            });
+        });
+    }
+
     function markdownToHtmlFragment(markdownText) {
         // Normalize line endings: \r\n → \n, lone \r → \n
-        const lines = markdownText.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
-        let html = '';
+        const front = documentAux.splitFrontMatter(markdownText.replace(/\r\n?/g, '\n'));
+        const lines = front.body.split('\n');
+        let html = front.raw ? renderFrontMatter(front.raw) : '';
         let inCodeBlock = false;
         let codeContent = '';
         let codeLang = '';
@@ -2534,6 +2565,7 @@
     }
 
     function setupInteractiveElements() {
+        setupDocumentAux();
         // Make checkboxes work
         editor.querySelectorAll('input[type="checkbox"]').forEach(cb => {
             cb.addEventListener('change', () => {
@@ -4310,6 +4342,7 @@
     });
 
     editor.addEventListener('click', function(e) {
+        if (e.target.closest && e.target.closest('.front-matter')) return;
         const cell = e.target.closest ? e.target.closest('th, td') : null;
         if (cell && editor.contains(cell)) {
             activeTableCell = cell;
@@ -5647,6 +5680,9 @@
 
         const tag = node.tagName.toLowerCase();
 
+        if (node.classList.contains('front-matter')) {
+            return node.querySelector('textarea').value;
+        }
         switch (tag) {
             case 'h1': return '# ' + mdGetTextContent(node) + '\n';
             case 'h2': return '## ' + mdGetTextContent(node) + '\n';
@@ -6390,6 +6426,7 @@
 
     // Key input handler
     editor.addEventListener('keydown', function(e) {
+        if (e.target.closest && e.target.closest('.front-matter')) return;
         logger.log('Editor keydown:', e.key);
         if (isSourceMode) return;
 
@@ -10829,6 +10866,7 @@
 
     // BeforeInput handler - handle triple-click selection replacement
     editor.addEventListener('beforeinput', function(e) {
+        if (e.target.closest && e.target.closest('.front-matter')) return;
         if (isSourceMode) return;
         
         const sel = window.getSelection();
@@ -10978,6 +11016,7 @@
 
     // Input handler - debounced sync for performance
     editor.addEventListener('input', function(e) {
+        if (e.target.closest && e.target.closest('.front-matter')) return;
         if (isSourceMode) return;
         markActivelyEditing();
         markAsEdited(); // User has made an edit
@@ -12144,7 +12183,9 @@
     }
 
     function updateWordCount() {
-        const text = editor.textContent || '';
+        const prose = editor.cloneNode(true);
+        prose.querySelectorAll('.document-aux').forEach(block => block.remove());
+        const text = prose.textContent || '';
         const words = text.trim().split(/\s+/).filter(w => w.length > 0).length;
         const chars = text.length;
         const lines = markdown.split('\n').length;
@@ -13479,6 +13520,7 @@
 
     // Copy handler - convert selection to Markdown and set to clipboard
     editor.addEventListener('copy', function(e) {
+        if (e.target.closest && e.target.closest('.front-matter')) return;
         if (isSourceMode) return;
         
         const sel = window.getSelection();
@@ -13806,6 +13848,7 @@
 
     // Cut handler - same as copy but also delete selection
     editor.addEventListener('cut', function(e) {
+        if (e.target.closest && e.target.closest('.front-matter')) return;
         if (isSourceMode) return;
         
         const sel = window.getSelection();
@@ -13843,6 +13886,7 @@
 
     // Paste handler - insert Markdown into source, then re-render
     editor.addEventListener('paste', function(e) {
+        if (e.target.closest && e.target.closest('.front-matter')) return;
         if (isSourceMode) return;
 
         undoManager.saveSnapshot();

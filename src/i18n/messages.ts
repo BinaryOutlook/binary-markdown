@@ -31,6 +31,7 @@ export interface Messages {
 }
 
 export interface WebviewMessages {
+  frontMatter: string;
   closeOutline: string;
   openOutline: string;
   openInTextEditor: string;
