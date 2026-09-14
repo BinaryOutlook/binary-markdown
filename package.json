@@ -2,7 +2,7 @@
   "name": "binary-markdown",
   "displayName": "Binary Markdown Editor",
   "description": "Binary Markdown: an open-source visual Markdown editor with reliable code copying and a persistent outline.",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "publisher": "BinaryOutlook",
   "icon": "media/icon.png",
   "license": "AGPL-3.0-or-later",

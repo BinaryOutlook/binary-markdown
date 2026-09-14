@@ -1,12 +1,17 @@
 # Binary Markdown changelog
 
-## Unreleased
+## 0.2.1
+
+Integrate editor and export improvements with Windows validation. See the
+[version notes](release-notes/0.2.1.md) for platform scope and known limitations.
 
 - Edit inline and display equations while preserving their source delimiters; render multiline expressions and retain native math in DOCX/EPUB.
 - Preserve YAML front matter in a collapsible source editor and refresh managed tables of contents on save, with linked heading destinations in exports.
 - Style editable DOCX code blocks and add optional language tabs to DOCX/PDF exports, with a dedicated extension settings shortcut.
 - Add an export tutorial and separate the export contract, architecture, verification guide and development history.
-
+- Enable local Windows exports and require the same packaged VSIX to pass Windows, macOS, Ubuntu and minimum-VS-Code validation.
+- Preserve edits made after a save when file-watcher notifications arrive late, and serialize webview replacements during rapid settings changes.
+- Keep maintained guides in `docs/`, dated evidence in `reports/`, version notes in `release-notes/`, and completed plans in `archive/`; screen public documentation and check local links.
 - Default PDF export to a white page with readable GitHub light appearance; disable `binary-markdown.export.pdfWhiteBackground` to retain the editor theme.
 - Fill themed PDF pages through every margin and the unused final-page area while keeping the existing text margins.
 - Capture export appearance before asynchronous rendering so generated diagrams follow the selected PDF appearance without changing the editor. DOCX retains its existing white-page styling.

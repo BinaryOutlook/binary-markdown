@@ -1,5 +1,9 @@
 # Moving to Binary Markdown
 
+## Updating to 0.2.1
+
+Version 0.2.1 retains the extension identity, command/settings IDs and stored outline preferences from 0.2.0. Install the new VSIX, then reopen editor tabs or reload VS Code. No preference migration is required. The [version notes](../release-notes/0.2.1.md) describe the added Windows validation and editor/export changes.
+
 ## Updating 0.1.0 to 0.2.0
 
 Version 0.2.0 keeps `BinaryOutlook.binary-markdown`, its command/settings IDs and outline storage keys. Installing the new VSIX updates the existing extension; no preference migration is required. Reopen existing editor tabs or reload VS Code after installation. The new icon and license do not create a new extension. To return to 0.1.0, install that published VSIX.

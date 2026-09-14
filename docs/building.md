@@ -31,11 +31,12 @@ The lockfile pins dependency versions. Compilation includes TypeScript, translat
 
 ## Inspect and install the output
 
-`npm run package` writes three files to `dist/`: `<name>-<version>.vsix`, the matching `.vsix.sha256`, and `.vsix.build-info.json`. For version 0.2.0, verify from inside `dist` so the checksum's filename resolves correctly:
+`npm run package` writes three files to `dist/`: `<name>-<version>.vsix`, the matching `.vsix.sha256`, and `.vsix.build-info.json`. Read the version from the selected checkout, then verify from inside `dist` so the checksum's filename resolves correctly:
 
 ```sh
+binary_version=$(node -p 'require("./package.json").version')
 cd dist
-shasum -a 256 --check binary-markdown-0.2.0.vsix.sha256
+shasum -a 256 --check "binary-markdown-$binary_version.vsix.sha256"
 cd ..
 ```
 
@@ -55,7 +56,8 @@ npm run lint
 npm audit
 npm run package -- --release
 python3 test/fixtures/exports/verify-fixtures.py
-EXPORT_REAL_TOOLS=1 EXPORT_VSIX_PATH=dist/binary-markdown-0.2.0.vsix node --test test/unit/*.test.js
+binary_version=$(node -p 'require("./package.json").version')
+EXPORT_REAL_TOOLS=1 EXPORT_VSIX_PATH="dist/binary-markdown-$binary_version.vsix" node --test test/unit/*.test.js
 npm run test:build
 CI=1 npx playwright test --workers=2 --retries=0
 ```

@@ -79,14 +79,15 @@ Close the test instance before relaunching it with a different `--locale`. Use t
 npm run package
 ```
 
-Install the resulting `dist/binary-markdown-0.2.0.vsix` through **Extensions → … → Install from VSIX…**. Close old editor tabs and reload the window after updating. Use [the manual fixture](test/fixtures/manual/copy-paste.md) to verify copying and outline state.
+Install the resulting `dist/binary-markdown-<version>.vsix` through **Extensions → … → Install from VSIX…**, using the version in `package.json`. Close old editor tabs and reload the window after updating. Use [the manual fixture](test/fixtures/manual/copy-paste.md) to verify copying and outline state.
 
 Packaged documentation links target the identified source commit. The VSIX and its sidecar record local-change state; **Copy Build Information** adds the running host environment. A clean source stamp does not itself mean that a package is an official release.
 
 For an isolated local environment on macOS/Linux:
 
 ```sh
-code --user-data-dir /tmp/binary-markdown-test --extensions-dir .vscode-test/manual/extensions --install-extension dist/binary-markdown-0.2.0.vsix --force
+binary_version=$(node -p 'require("./package.json").version')
+code --user-data-dir /tmp/binary-markdown-test --extensions-dir .vscode-test/manual/extensions --install-extension "dist/binary-markdown-$binary_version.vsix" --force
 code --new-window --user-data-dir /tmp/binary-markdown-test --extensions-dir .vscode-test/manual/extensions test/fixtures/manual/copy-paste.md
 ```
 
