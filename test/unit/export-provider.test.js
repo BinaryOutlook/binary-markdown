@@ -42,10 +42,16 @@ async function setup(t) {
     let cachedLocale = 'ja'; // A locale cached before the current configuration.
     const timers = new Map();
     let nextTimer = 0;
-    const flushTimers = async () => {
+    const acknowledgeRender = async () => {
+        const generation = renderConfigs.at(-1).renderGeneration;
+        await Promise.all(incoming.fire({ type: 'renderLoaded', generation }));
+        await Promise.all(incoming.fire({ type: 'renderReady', generation }));
+    };
+    const flushTimers = async (acknowledge = true) => {
         for (const [id, callback] of timers) {
             timers.delete(id);
             await callback();
+            if (acknowledge) await acknowledgeRender();
         }
     };
     const config = { theme: 'github', language: 'en' };
@@ -135,6 +141,7 @@ async function setup(t) {
     );
     const provider = new compiled.exports.BinaryMarkdownEditorProvider({ extensionUri: file('/extension-fixture'), workspaceState: {}, globalState: {} });
     await provider.resolveCustomTextEditor(document, panel, {});
+    await acknowledgeRender();
     t.after(() => disposed.fire());
     return {
         state, document, panel, provider, config, posts, notices, commands, renderConfigs, locales, disposed, flushTimers,
@@ -351,6 +358,33 @@ test('closing an editor cancels a queued configuration replacement', async t => 
     await h.flushTimers();
     assert.equal(h.renderConfigs.length, 1);
     assert.equal(h.posts.length, postCount);
+});
+
+test('settings wait for the active render handshake and ignore stale acknowledgements', async t => {
+    const h = await setup(t);
+    const initial = h.renderConfigs.at(-1).renderGeneration;
+    h.config.toolbarMode = 'full';
+    h.configChanged(['binary-markdown.toolbarMode']);
+    await h.flushTimers(false);
+    const pending = h.renderConfigs.at(-1).renderGeneration;
+    h.config.language = 'zh-CN';
+    h.configChanged(['binary-markdown.language']);
+    await h.flushTimers(false);
+    assert.equal(h.renderConfigs.length, 2, 'A loaded but hidden frame must not be replaced again');
+    await h.send({ type: 'renderLoaded', generation: pending });
+    assert.deepEqual(h.posts.at(-1), { type: 'renderProbe', generation: pending });
+    await h.send({ type: 'renderReady', generation: initial });
+    assert.equal(h.renderConfigs.length, 2);
+    await h.send({ type: 'renderReady', generation: pending });
+    assert.equal(h.renderConfigs.length, 3);
+    assert.equal(h.renderConfigs.at(-1).webviewMessages.locale, 'zh-CN');
+    assert.equal(h.renderConfigs.at(-1).toolbarMode, 'full');
+    h.config.theme = 'night';
+    h.configChanged(['binary-markdown.theme']);
+    await h.flushTimers(false);
+    h.disposed.fire();
+    await h.send({ type: 'renderReady', generation: h.renderConfigs.at(-1).renderGeneration });
+    assert.equal(h.renderConfigs.length, 3, 'A disposed editor must not resume queued work');
 });
 
 test('disposing a panel releases an outstanding native-save wait', async t => {

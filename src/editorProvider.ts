@@ -453,7 +453,16 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
         // Remember the original line ending style to preserve on save
         const originalEol = document.eol;
 
+        let disposed = false;
+        let renderGeneration = 0;
+        let pendingRender: number | undefined;
+        let renderQueued = false;
         const updateWebview = () => {
+            if (disposed) { return; }
+            // VS Code swaps an active and a pending iframe. A second HTML
+            // replacement before that swap can strand the new frame hidden.
+            if (pendingRender !== undefined) { renderQueued = true; return; }
+            pendingRender = ++renderGeneration;
             try {
                 const config = vscode.workspace.getConfiguration('binary-markdown');
                 // Use the same settings snapshot for labels and layout. A locale
@@ -476,6 +485,7 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
                         theme: config.get<string>('theme', 'github'),
                         fontSize: config.get<number>('fontSize', 16),
                         toolbarMode: config.get<string>('toolbarMode', 'full'),
+                        renderGeneration,
                         documentBaseUri: documentBaseUri,
                         webviewMessages: getWebviewMessages(),
                         enableDebugLogging: config.get<boolean>('enableDebugLogging', false),
@@ -484,6 +494,8 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
                     }
                 );
             } catch (error) {
+                pendingRender = undefined;
+                renderQueued = false;
                 console.error('[Binary Markdown] Error updating webview:', error);
                 // Show a minimal error page instead of crashing
                 webviewPanel.webview.html = `<!DOCTYPE html>
@@ -676,7 +688,6 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
         });
         let saveQueue: Promise<void> = Promise.resolve();
         let ownSaveDepth = 0;
-        let disposed = false;
         interface PendingNativeSave { promise: Promise<void>; resolve(): void; reject(error: unknown): void; }
         let nativeSave: PendingNativeSave | undefined;
         const finishNativeSave = (pending: PendingNativeSave, error?: unknown) => {
@@ -748,6 +759,23 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
         webviewPanel.webview.onDidReceiveMessage(async message => {
             if (exportController.handleMessage(message)) { return; }
             switch (message.type) {
+                case 'renderLoaded':
+                    if (!disposed && pendingRender !== undefined && message.generation === pendingRender) {
+                        // VS Code queues host messages until its pending frame
+                        // becomes active; the round trip confirms the swap.
+                        void Promise.resolve(webviewPanel.webview.postMessage({
+                            type: 'renderProbe', generation: pendingRender
+                        })).catch(() => undefined);
+                    }
+                    break;
+
+                case 'renderReady':
+                    if (!disposed && pendingRender !== undefined && message.generation === pendingRender) {
+                        pendingRender = undefined;
+                        if (renderQueued) { renderQueued = false; updateWebview(); }
+                    }
+                    break;
+
                 case 'edit':
                     // Restore original line endings if document uses CRLF
                     if (typeof message.content === 'string') { editQueue.schedule(normalizeEol(restoreImagePaths(message.content))); }
@@ -995,6 +1023,8 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
                 this.activeWebviewPanel = undefined;
             }
             disposed = true;
+            pendingRender = undefined;
+            renderQueued = false;
             clearTimeout(configurationRefresh);
             configurationRefresh = undefined;
             if (nativeSave) { finishNativeSave(nativeSave, new Error('The document editor was closed.')); }

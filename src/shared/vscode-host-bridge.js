@@ -8,6 +8,9 @@
     const api = acquireVsCodeApi();
 
     window.hostBridge = {
+        reportRenderState: function(type, generation) {
+            api.postMessage({ type: type, generation: generation });
+        },
         // Document operations.
         syncContent: function(markdown) {
             api.postMessage({ type: 'edit', content: markdown });

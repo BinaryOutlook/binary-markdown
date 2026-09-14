@@ -25,6 +25,7 @@ interface EditorConfig {
     enableDebugLogging?: boolean;
     outlineOpen?: boolean;
     mathBackslashDelimiters?: boolean;
+    renderGeneration?: number;
 }
 
 export function getWebviewContent(
@@ -134,6 +135,18 @@ export function getWebviewContent(
     <script nonce="${nonce}">
         window.exportMessages = ${JSON.stringify(getExportMessages())};
         ${exportScript}
+    </script>
+    <script nonce="${nonce}">
+        (() => {
+            const generation = ${Number.isSafeInteger(config?.renderGeneration) ? config.renderGeneration : 'null'};
+            if (generation === null) return;
+            window.addEventListener('message', event => {
+                if (event.data?.type === 'renderProbe' && event.data.generation === generation) {
+                    window.hostBridge.reportRenderState('renderReady', generation);
+                }
+            });
+            window.hostBridge.reportRenderState('renderLoaded', generation);
+        })();
     </script>
 </body>
 </html>`;
