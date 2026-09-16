@@ -118,7 +118,9 @@ function candidates(kind: ToolStatus['kind']): string[] {
 const windowsBrowserProbes = new Map<string, Promise<string>>();
 
 function probeWindowsBrowser(executable: string): Promise<string> {
-    const key = executable.toLowerCase();
+    // Windows also supports case-sensitive directories. Do not conflate paths
+    // that may name different executables in one of those directories.
+    const key = executable;
     const pending = windowsBrowserProbes.get(key);
     if (pending) { return pending; }
     const probe = (async () => {

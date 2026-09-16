@@ -91,7 +91,7 @@ test('overlapping Windows capability checks share one browser launch until it is
     await started.promise;
     finishLaunch.resolve();
     await new Promise(resolve => setImmediate(resolve));
-    pending.push(tools.discoverTool('browser', executable.toUpperCase()));
+    pending.push(tools.discoverTool('browser', executable));
     await new Promise(resolve => setImmediate(resolve));
     finishClose.resolve();
     const statuses = await Promise.all(pending);
@@ -147,7 +147,7 @@ test('different Windows browser paths are probed independently', async () => {
         launches.push(options.executablePath);
         return { version: () => '145.0.0.0', close: async () => {} };
     } });
-    const paths = [String.raw`C:\Chrome\chrome.exe`, String.raw`C:\Edge\msedge.exe`];
+    const paths = [String.raw`C:\Chrome\chrome.exe`, String.raw`C:\Chrome\Chrome.exe`, String.raw`C:\Edge\msedge.exe`];
     const statuses = await Promise.all(paths.map(executable => tools.discoverTool('browser', executable)));
     assert.deepEqual(launches, paths);
     assert.deepEqual(statuses.map(status => status.path), paths);
