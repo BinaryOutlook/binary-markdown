@@ -53,6 +53,7 @@ export const webviewMessages = {
   blockquote: '인용 (Ctrl+Shift+Q)',
   inlineCode: '인라인 코드 (Ctrl+`)',
   codeBlock: '코드 블록 (Ctrl+Shift+K)',
+  deleteCodeBlock: '코드 블록 삭제',
   insertLink: '링크 삽입 (Ctrl+K)',
   insertImage: '이미지 삽입 (Ctrl+Shift+I)',
   setImageDir: '이미지 디렉토리 설정',

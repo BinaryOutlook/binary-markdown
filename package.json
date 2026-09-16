@@ -204,6 +204,27 @@
           "default": true,
           "description": "%config.outlineDefaultOpen.description%"
         },
+        "binary-markdown.outlineActiveColor": {
+          "type": "string",
+          "enum": [
+            "theme",
+            "blue",
+            "green",
+            "orange",
+            "red",
+            "purple"
+          ],
+          "enumDescriptions": [
+            "%config.outlineActiveColor.theme%",
+            "%config.outlineActiveColor.blue%",
+            "%config.outlineActiveColor.green%",
+            "%config.outlineActiveColor.orange%",
+            "%config.outlineActiveColor.red%",
+            "%config.outlineActiveColor.purple%"
+          ],
+          "default": "theme",
+          "description": "%config.outlineActiveColor.description%"
+        },
         "binary-markdown.enableDebugLogging": {
           "type": "boolean",
           "default": false,

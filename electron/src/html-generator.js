@@ -76,7 +76,8 @@ function generateEditorHtml(content, config) {
     const editorScriptPath = getResourcePath('src/webview/editor.js');
     const vendorDir = getResourcePath('vendor');
     const styles = fs.readFileSync(stylesPath, 'utf8')
-        .replace('__FONT_SIZE__', String(config.fontSize));
+        .replace('__FONT_SIZE__', String(config.fontSize))
+        .replace('__OUTLINE_ACTIVE_COLOR__', 'var(--link-color)');
     const editorScript = fs.readFileSync(editorScriptPath, 'utf8')
         .replace('__DEBUG_MODE__', String(config.enableDebugLogging))
         .replace('__I18N__', JSON.stringify(config.webviewMessages))

@@ -55,6 +55,7 @@ export interface WebviewMessages {
   blockquote: string;
   inlineCode: string;
   codeBlock: string;
+  deleteCodeBlock: string;
   insertLink: string;
   insertImage: string;
   setImageDir: string;

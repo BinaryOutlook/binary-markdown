@@ -492,6 +492,7 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
                         webviewMessages: getWebviewMessages(),
                         enableDebugLogging: config.get<boolean>('enableDebugLogging', false),
                         outlineOpen,
+                        outlineActiveColor: config.get<string>('outlineActiveColor', 'theme'),
                         mathBackslashDelimiters: config.get<boolean>('math.backslashDelimiters', true)
                     }
                 );
@@ -668,7 +669,7 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
             const exportChanged = e.affectsConfiguration('binary-markdown.export');
             if (exportChanged) { exportController.refreshCapabilities(); }
             const editorSettings = ['theme', 'fontSize', 'imageDefaultDir', 'forceRelativeImagePath', 'language',
-                'toolbarMode', 'outlineStateScope', 'outlineDefaultOpen', 'enableDebugLogging', 'math.backslashDelimiters'];
+                'toolbarMode', 'outlineStateScope', 'outlineDefaultOpen', 'outlineActiveColor', 'enableDebugLogging', 'math.backslashDelimiters'];
             const editorChanged = editorSettings.some(key => e.affectsConfiguration('binary-markdown.' + key));
             if (e.affectsConfiguration('binary-markdown') && (!exportChanged || editorChanged)) {
                 clearTimeout(configurationRefresh);

@@ -24,8 +24,29 @@ interface EditorConfig {
     webviewMessages?: WebviewMessages;
     enableDebugLogging?: boolean;
     outlineOpen?: boolean;
+    outlineActiveColor?: string;
     mathBackslashDelimiters?: boolean;
     renderGeneration?: number;
+}
+
+function normalizeOutlineActiveColor(value: string | undefined): string {
+    const color = (value || '').trim();
+    const presets: Record<string, string> = {
+        theme: 'var(--link-color)',
+        blue: '#3b82f6',
+        green: '#22c55e',
+        orange: '#f59e0b',
+        red: '#ef4444',
+        purple: '#a855f7'
+    };
+    if (!color) { return presets.theme; }
+    if (presets[color]) { return presets[color]; }
+    // Preserve custom colors saved by earlier builds while keeping arbitrary
+    // CSS out of the generated stylesheet.
+    if (/^(?:#[0-9a-f]{3,8}|[a-z]+|(?:rgb|hsl)a?\([\d\s.,%+-]+\))$/i.test(color)) {
+        return color;
+    }
+    return 'var(--link-color)';
 }
 
 export function getWebviewContent(
@@ -61,6 +82,7 @@ export function getWebviewContent(
         webviewMessages: config?.webviewMessages,
         enableDebugLogging: config?.enableDebugLogging ?? false,
         outlineOpen: config?.outlineOpen ?? true,
+        outlineActiveColor: config?.outlineActiveColor ?? 'theme',
         mathBackslashDelimiters: config?.mathBackslashDelimiters ?? true
     };
     
@@ -79,7 +101,8 @@ export function getWebviewContent(
     const exportScript = fs.readFileSync(path.join(__dirname, 'webview', 'export-ui.js'), 'utf8');
     
     const styles = fs.readFileSync(stylesPath, 'utf8')
-        .replace('__FONT_SIZE__', String(safeConfig.fontSize));
+        .replace('__FONT_SIZE__', String(safeConfig.fontSize))
+        .replace('__OUTLINE_ACTIVE_COLOR__', normalizeOutlineActiveColor(safeConfig.outlineActiveColor));
     
     const hostBridgePath = path.join(__dirname, 'shared', 'vscode-host-bridge.js');
     const hostBridgeScript = fs.readFileSync(hostBridgePath, 'utf8');

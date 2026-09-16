@@ -71,6 +71,7 @@ Open **Settings** (`Cmd+,` on macOS or `Ctrl+,` on Windows/Linux) and search for
 | --- | --- | --- |
 | `binary-markdown.outlineDefaultOpen` | `true` | Start with the outline open when no remembered state exists. |
 | `binary-markdown.outlineStateScope` | `file` | Remember each file separately, or choose `global` to share visibility across files and workspaces. |
+| `binary-markdown.outlineActiveColor` | `theme` | Choose the outline highlight color: theme, blue, green, orange, red, or purple. |
 | `binary-markdown.toolbarMode` | `simple` | Use the compact toolbar or choose `full`. |
 | `binary-markdown.theme` | `things` | Choose `github`, `sepia`, `night`, `dark`, `minimal`, `perplexity`, or `things`. |
 | `binary-markdown.fontSize` | `16` | Editor font size in pixels. |
