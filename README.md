@@ -6,7 +6,9 @@
 
 An open-source visual Markdown editor for VS Code, independently maintained by BinaryOutlook. Edit Markdown in a rendered view, switch to source when needed, copy multiline code accurately, and keep the outline the way you prefer.
 
-Binary Markdown builds on [Any Markdown by raggbal and contributors](https://github.com/raggbal/any-markdown), licensed under MIT. The visual editor and most existing features come from that project. BinaryOutlook maintains this fork's changes, releases, and support. See [Acknowledgments](ACKNOWLEDGMENTS.md) and the [changelog](CHANGELOG.md) for provenance.
+Binary Markdown builds on [Any Markdown by raggbal and contributors](https://github.com/raggbal/any-markdown), licensed under MIT. The visual editor and most existing features come from that project. BinaryOutlook maintains this project's changes, releases, and support. See [Acknowledgments](ACKNOWLEDGMENTS.md) and the [changelog](CHANGELOG.md) for provenance.
+
+Development now continues in this standalone repository. The [original fork](https://github.com/BinaryOutlook/binary-markdown-fork) retains earlier reviews and releases, with **v0.2.1** as its final product release. Original Git history, upstream attribution, and applicable license notices are preserved. See the [repository transition guide](docs/repository-transition.md) for historical links and contributor instructions.
 
 ## Open source, releases and support
 
@@ -50,7 +52,7 @@ Inherited from Any Markdown:
 - An action palette, keyboard shortcuts, multiple themes, and seven interface languages.
 - Synchronization with external file changes, including changes made by coding tools.
 
-Changes developed in this fork:
+Changes developed for Binary Markdown:
 
 - Inline and display equations with dollar or backslash delimiters, source-preserving editing, and complete multiline TeX rendering in existing `math` fences. See the [equation guide](docs/editor-guide.md#katex-math-equations).
 - Code-block copying preserves rendered line breaks, indentation, and meaningful blank lines.
@@ -61,7 +63,7 @@ Changes developed in this fork:
 - Protected YAML front matter and a generated TOC refreshed on save or with its refresh button; see the [front matter and TOC guide](docs/yaml-toc.md).
 - A source-stamped VSIX and **Copy Build Information** command for reproducible bug reports.
 
-The first two changes were also proposed upstream as [PR #8](https://github.com/raggbal/any-markdown/pull/8) and [PR #9](https://github.com/raggbal/any-markdown/pull/9). This fork's release decisions are independent of those PRs.
+The code-copy and outline-state improvements were also proposed upstream as [PR #8](https://github.com/raggbal/any-markdown/pull/8) and [PR #9](https://github.com/raggbal/any-markdown/pull/9). Binary Markdown's release decisions are independent of those PRs.
 
 ## Configure the editor
 
@@ -149,10 +151,10 @@ npm run package
 
 The package command compiles the extension and writes `dist/<name>-<version>.vsix`, a SHA-256 checksum, and build information. It links installed documentation to the source commit. See [building](docs/building.md) for historical revisions, isolated installation and verification, and [CONTRIBUTING.md](CONTRIBUTING.md) for tests and focused PRs.
 
-Bug reports, translations, accessibility work and compatibility testing are welcome in [this fork's issue tracker](https://github.com/BinaryOutlook/binary-markdown/issues). Reports from identifiable older development commits are welcome too.
+Bug reports, translations, accessibility work and compatibility testing are welcome in [the Binary Markdown issue tracker](https://github.com/BinaryOutlook/binary-markdown/issues). Reports from identifiable older development commits are welcome too.
 
 ## Project history and license
 
-The [reference archive](archive/README.md) preserves superseded README, website, screenshots, and upstream release notes for historical reference. Archived instructions describe the original project and should not be used to install this fork.
+The [reference archive](archive/README.md) preserves superseded README, website, screenshots, and upstream release notes for historical reference. Archived instructions describe the original project and should not be used to install Binary Markdown.
 
 For the 0.2.0 transition, Binary Markdown is licensed under [GNU AGPL version 3 or later](LICENSE) (`AGPL-3.0-or-later`). Earlier MIT releases retain their original terms. The [retained MIT notice](LICENSES/AnyMarkdown-MIT.txt) covers inherited upstream code and prior MIT contributions; third-party components retain their own licences. See [NOTICE](NOTICE) and the [licensing guide](docs/licensing.md) for scope, retained grants and matching source. Project and dependency licence notices are included in packaged builds. The Electron desktop sources are retained under the Binary Markdown name; desktop installers and their compatibility are a separate release effort.

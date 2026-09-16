@@ -1,5 +1,9 @@
 # Moving to Binary Markdown
 
+## Repository transition
+
+Binary Markdown development now continues in a standalone repository. The extension remains `BinaryOutlook.binary-markdown`: the repository move does not require reinstalling it, migrating settings, or changing editor associations. See the [repository transition guide](repository-transition.md) for historical releases, reviews, and Git remote instructions.
+
 ## Updating to 0.2.1
 
 Version 0.2.1 retains the extension identity, command/settings IDs and stored outline preferences from 0.2.0. Install the new VSIX, then reopen editor tabs or reload VS Code. No preference migration is required. The [version notes](../release-notes/0.2.1.md) describe the added Windows validation and editor/export changes.

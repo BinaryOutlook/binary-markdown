@@ -7,6 +7,7 @@ For available packages and their tested scope, use [GitHub Releases](https://git
 | You want to… | Start with | Then read |
 | --- | --- | --- |
 | Install or update the extension | [Installation](../README.md#install) | [Migration](migration.md) |
+| Find the original fork or update Git remotes | [Repository transition](repository-transition.md) | [Historical releases](https://github.com/BinaryOutlook/binary-markdown-fork/releases) |
 | Write and format Markdown | [Editor guide](editor-guide.md) | [Front matter and table of contents](yaml-toc.md) |
 | Export a document | [First HTML export](export-tutorial.md) | [Export help and settings](../media/export-help.md) |
 | Build or contribute | [Build from source](building.md) | [Contributing](../CONTRIBUTING.md), [documentation standard](documentation-standard.md) |

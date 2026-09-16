@@ -12,6 +12,11 @@ Access to the source is central to this project. Building your own version is an
 
 ## Distribution and cost
 
+The [repository transition](repository-transition.md) preserves the original fork
+and its release records. Releases through 0.2.1 are also mirrored here with
+byte-identical uploaded assets. Their notes link to the original publication
+dates; the successor's release records have new GitHub IDs and timestamps.
+
 The editor and all its features remain available in the free, open-source edition. Voluntary donations or paid support may sustain development; they do not unlock features. Future licensing arrangements depend on the rights the project holds and do not remove this commitment.
 
 [GitHub Releases](https://github.com/BinaryOutlook/binary-markdown/releases) is the initial official download channel. Marketplace and Open VSX publication are future work. Source builds and VSIX installation do not require Marketplace credentials. [Build instructions](building.md) cover `main`, release tags and historical commits.
