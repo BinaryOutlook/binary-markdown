@@ -28,6 +28,19 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  tableControls: "Table controls",
+  tableMenu: "Table…",
+  tablePlacement: "Table toolbar position",
+  tablePositionAuto: "Automatic (recommended)",
+  tablePositionTopBar: "Always in top bar",
+  tablePositionFixed: "Choose a fixed position…",
+  tablePositionTopLeft: "Top left",
+  tablePositionTopRight: "Top right",
+  tablePositionBottomLeft: "Bottom left",
+  tablePositionBottomRight: "Bottom right",
+  tablePositionLeft: "Left side (vertical)",
+  tablePositionRight: "Right side (vertical)",
+
   insertToc: 'Insert table of contents',
   refreshToc: 'Refresh table of contents',
   tocContents: 'Contents',

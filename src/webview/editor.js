@@ -1577,6 +1577,7 @@
     }
 
     function renderFromMarkdown() {
+        if (tableControls) tableControls.clear();
         // Remove IMAGE_DIR and FORCE_RELATIVE_PATH directives before rendering (they're stored in variables)
         let markdownToRender = removeDirectivesFromMarkdown(markdown);
         logger.log('[Binary Markdown] renderFromMarkdown: markdown length:', markdown.length, 'after directive removal:', markdownToRender.length);
@@ -4032,59 +4033,19 @@
 
     // ========== TABLE FUNCTIONALITY ==========
 
-    // Table floating toolbar
-    let tableToolbar = null;
     let activeTableCell = null;
     let activeTable = null;
-
-    function createTableToolbar() {
-        if (tableToolbar) return;
-
-        tableToolbar = document.createElement('div');
-        tableToolbar.className = 'table-toolbar';
-
-        var tableToolbarItems = [
-            { action: 'add-col-left', title: i18n.addColLeft, text: '←Col' },
-            { action: 'add-col-right', title: i18n.addColRight, text: 'Col→' },
-            { action: 'del-col', title: i18n.deleteCol },
-            null,
-            { action: 'add-row-above', title: i18n.addRowAbove, text: '↑Row' },
-            { action: 'add-row-below', title: i18n.addRowBelow, text: 'Row↓' },
-            { action: 'del-row', title: i18n.deleteRow },
-            null,
-            { action: 'align-left', title: i18n.alignLeft },
-            { action: 'align-center', title: i18n.alignCenter },
-            { action: 'align-right', title: i18n.alignRight },
-        ];
-        tableToolbarItems.forEach(function(item) {
-            if (!item) {
-                var sep = document.createElement('span');
-                sep.className = 'separator';
-                tableToolbar.appendChild(sep);
-            } else {
-                var btn = document.createElement('button');
-                btn.dataset.action = item.action;
-                btn.title = item.title || '';
-                if (item.text) {
-                    btn.textContent = item.text;
-                    btn.classList.add('text-btn');
-                } else {
-                    btn.innerHTML = LUCIDE_ICONS[item.action] || item.action;
-                }
-                tableToolbar.appendChild(btn);
-            }
-        });
-
-        tableToolbar.addEventListener('mousedown', function(e) {
-            e.preventDefault(); // Prevent losing focus from table
-        });
-
-        tableToolbar.addEventListener('click', function(e) {
-            const btn = e.target.closest('button');
-            if (!btn) return;
-
-            const action = btn.dataset.action;
-            switch(action) {
+    var tableControls = window.BinaryTableToolbar.create({
+        editor, header: toolbar, messages: i18n, icons: LUCIDE_ICONS,
+        isSourceMode: () => isSourceMode,
+        onContext(cell) { activeTableCell = cell; activeTable = cell?.closest('table') || null; },
+        onLayout: updateToolbarScrollButtons,
+        onPreference(value) { host.setTableToolbarPosition?.(value); },
+        onAction(action) {
+            if (!activeTableCell || !editor.contains(activeTableCell)) return;
+            markdown = readCommittedMarkdown();
+            undoManager.saveSnapshot();
+            switch (action) {
                 case 'add-col-left': insertTableColumnLeft(); break;
                 case 'add-col-right': insertTableColumnRight(); break;
                 case 'del-col': deleteTableColumn(); break;
@@ -4095,74 +4056,16 @@
                 case 'align-center': setColumnAlignment('center'); break;
                 case 'align-right': setColumnAlignment('right'); break;
             }
-        });
-
-        document.body.appendChild(tableToolbar);
-    }
-
+            showTableToolbar(activeTable);
+        }
+    });
     function showTableToolbar(table) {
-        if (!tableToolbar) createTableToolbar();
-        
-        const rect = table.getBoundingClientRect();
-        const toolbarHeight = 40;
-        const topOffset = toolbar ? toolbar.offsetHeight : 50; // Dynamic toolbar height
-        
-        // Calculate ideal position (above table)
-        let top = rect.top - toolbarHeight;
-        
-        // If table top is above the header toolbar area, stick to below the header
-        // But only if table is still partially visible
-        if (top < topOffset && rect.bottom > topOffset + toolbarHeight) {
-            top = topOffset;
-        }
-        
-        // If table is completely above viewport (below header), hide toolbar
-        if (rect.bottom < topOffset + toolbarHeight) {
-            hideTableToolbar();
-            return;
-        }
-        
-        // If table is completely below viewport, hide toolbar
-        if (rect.top > window.innerHeight) {
-            hideTableToolbar();
-            return;
-        }
-        
-        tableToolbar.style.top = top + 'px';
-        tableToolbar.style.left = rect.left + 'px';
-        tableToolbar.classList.add('visible');
         activeTable = table;
+        tableControls.show(table, activeTableCell);
     }
-
     function hideTableToolbar() {
-        if (tableToolbar) {
-            tableToolbar.classList.remove('visible');
-        }
-        activeTable = null;
+        tableControls?.clear();
     }
-
-    // Update table toolbar position on scroll
-    // Listen on window and use capture to catch all scroll events
-    window.addEventListener('scroll', function(e) {
-        // Check if focus is currently in a table cell
-        const sel = window.getSelection();
-        logger.log('scroll - sel:', sel, 'rangeCount:', sel?.rangeCount);
-        if (sel && sel.rangeCount > 0) {
-            const node = sel.anchorNode;
-            const startEl = node?.nodeType === 3 ? node.parentElement : node;
-            const cell = startEl?.closest ? startEl.closest('th, td') : null;
-            logger.log('scroll - node:', node, 'startEl:', startEl, 'cell:', cell);
-            if (cell && editor.contains(cell)) {
-                const table = cell.closest('table');
-                logger.log('scroll - found table:', table);
-                if (table) {
-                    activeTable = table;
-                    activeTableCell = cell;
-                    showTableToolbar(table);
-                }
-            }
-        }
-    }, true);
 
     function deleteTableColumn() {
         if (!activeTableCell || !activeTable) return;
@@ -4704,22 +4607,6 @@
     });
 
 
-
-    editor.addEventListener('focusout', function(e) {
-        // Delay hiding to allow button clicks
-        setTimeout(() => {
-            const sel = window.getSelection();
-            if (sel && sel.rangeCount > 0) {
-                const node = sel.anchorNode;
-                const startEl = node?.nodeType === 3 ? node.parentElement : node;
-                const cell = startEl?.closest('th, td');
-                if (cell && editor.contains(cell)) {
-                    return; // Still in a cell, don't hide
-                }
-            }
-            hideTableToolbar();
-        }, 200);
-    });
 
     // Detect markdown table pattern: | col1 | col2 |
     function checkTablePattern(text) {
@@ -11793,6 +11680,7 @@
     // Save the editor selection before toolbar buttons steal focus
     let savedToolbarRange = null;
     toolbar.addEventListener('mousedown', function(e) {
+        if (tableControls.owns(e.target)) return;
         const btn = e.target.closest('button');
         if (!btn) return;
         const sel = window.getSelection();
@@ -11804,6 +11692,7 @@
     });
 
     toolbar.addEventListener('click', function(e) {
+        if (tableControls.owns(e.target)) return;
         const btn = e.target.closest('button');
         if (!btn) return;
 
@@ -12456,6 +12345,7 @@
     });
 
     function toggleSourceMode() {
+        hideTableToolbar();
         if (finishInlineMathEdit) finishInlineMathEdit(true, false);
         isSourceMode = !isSourceMode;
         if (isSourceMode) {
@@ -13455,6 +13345,10 @@
 
     // Handle messages from host (VSCode / Electron / test)
     host.onMessage(function(message) {
+        if (message.type === 'tableToolbarPosition') {
+            tableControls.setPreference(message.value);
+            return;
+        }
         if (message.type === 'validateExportImage') {
             if (typeof host.respondExport !== 'function') return;
             const image = new Image();

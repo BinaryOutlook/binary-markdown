@@ -25,7 +25,7 @@ function event() {
         listeners
     };
 }
-async function setup(t) {
+async function setup(t, initialConfig = {}) {
     const changes = event();
     const configChanges = event();
     const willSave = event();
@@ -54,7 +54,9 @@ async function setup(t) {
             if (acknowledge) await acknowledgeRender();
         }
     };
-    const config = { theme: 'github', language: 'en' };
+    const config = { theme: 'github', language: 'en', ...initialConfig };
+    const workspaceConfig = {};
+    const configUpdates = [];
     const state = {
         text: '# OLD-EDITOR\n', disk: '# OLD-EDITOR\n', captureCalls: 0, saveCalls: 0,
         captures: async () => '# OLD-EDITOR\n', beforeWrite: async () => {}, beforeRead: async () => {}, failedWrite: false,
@@ -84,13 +86,23 @@ async function setup(t) {
     const vscode = {
         commands: { executeCommand: async (...args) => { commands.push(args); } },
         EndOfLine: { LF: 1, CRLF: 2 }, env: { language: 'en' },
+        ConfigurationTarget: { Global: 1, Workspace: 2 },
         Uri: { file, joinPath: (base, ...parts) => file(path.join(base.fsPath, ...parts)) },
         Range: class { constructor(...values) { this.values = values; } },
         RelativePattern: class {},
         WorkspaceEdit: class { constructor() { this.edits = []; } replace(_uri, _range, text) { this.edits.push(text); } },
         TextEdit: { replace: (range, newText) => ({ range, newText }) },
         workspace: {
-            getConfiguration: () => ({ get: (key, fallback) => key in config ? config[key] : fallback }),
+            getConfiguration: () => ({
+                get: (key, fallback) => key in config ? config[key] : fallback,
+                inspect: key => ({ workspaceValue: workspaceConfig[key], globalValue: config[key] }),
+                update: async (key, value, target) => {
+                    configUpdates.push({ key, value, target });
+                    config[key] = value;
+                    if (target === 2) workspaceConfig[key] = value;
+                    configChanges.fire({ affectsConfiguration: query => query === 'binary-markdown' || query === 'binary-markdown.' + key });
+                }
+            }),
             getWorkspaceFolder: () => undefined,
             onDidChangeTextDocument: changes.listen,
             onDidChangeConfiguration: configChanges.listen,
@@ -144,7 +156,7 @@ async function setup(t) {
     await acknowledgeRender();
     t.after(() => disposed.fire());
     return {
-        state, document, panel, provider, config, posts, notices, commands, renderConfigs, locales, disposed, flushTimers,
+        state, document, panel, provider, config, workspaceConfig, configUpdates, posts, notices, commands, renderConfigs, locales, disposed, flushTimers,
         configChanged: keys => configChanges.fire({ affectsConfiguration: query => keys.some(key => key === query || key.startsWith(query + '.')) }),
         externalChange: async content => { state.disk = content; watcher.fire(document.uri); await flushTimers(); },
         send: message => Promise.all(incoming.fire(message))
@@ -439,4 +451,57 @@ test('disposing a panel releases an outstanding native-save wait', async t => {
     h.disposed.fire();
     await assert.rejects(waiting, /document editor was closed/);
     await assert.rejects(h.state.controller.waitForSave(), /document editor was closed/);
+});
+
+test('Automatic is used only when no valid table preference is configured', async t => {
+    for (const value of [undefined, 'top-left', 'top-bar', 'left', 'invalid']) {
+        const h = await setup(t, { tableToolbarPosition: value });
+        assert.equal(h.renderConfigs[0].tableToolbarPosition, [undefined, 'invalid'].includes(value) ? 'auto' : value);
+        assert.deepEqual(h.configUpdates, [], 'Opening an editor never writes a preference');
+    }
+});
+
+test('table placement changes reach the existing editor without saving, capturing or rebuilding', async t => {
+    const h = await setup(t);
+    for (const value of ['top-left', 'left', 'auto', 'top-bar']) {
+        h.config.tableToolbarPosition = value;
+        h.configChanged(['binary-markdown.tableToolbarPosition']);
+        await h.flushTimers();
+        assert.deepEqual(h.posts.at(-1), { type: 'tableToolbarPosition', value });
+    }
+    assert.equal(h.renderConfigs.length, 1);
+    assert.equal(h.state.captureCalls, 0);
+    assert.equal(h.state.saveCalls, 0);
+    assert.equal(h.document.isDirty, false);
+    assert.equal(h.document.getText(), '# OLD-EDITOR\n');
+});
+
+test('table position picker persists the existing workspace scope or defaults to user scope', async t => {
+    for (const workspace of [false, true]) {
+        const h = await setup(t);
+        if (workspace) h.workspaceConfig.tableToolbarPosition = 'top-left';
+        await h.send({ type: 'setTableToolbarPosition', value: 'right' });
+        await h.flushTimers();
+        assert.deepEqual(h.configUpdates, [{ key: 'tableToolbarPosition', value: 'right', target: workspace ? 2 : 1 }]);
+        assert.deepEqual(h.posts.at(-1), { type: 'tableToolbarPosition', value: 'right' });
+        await h.send({ type: 'setTableToolbarPosition', value: '<invalid>' });
+        assert.equal(h.configUpdates.length, 1);
+        assert.equal(h.renderConfigs.length, 1);
+        assert.equal(h.document.isDirty, false);
+    }
+});
+
+test('combined table, export and appearance settings retain each required update', async t => {
+    const h = await setup(t);
+    h.config.tableToolbarPosition = 'bottom-right';
+    h.configChanged(['binary-markdown.tableToolbarPosition', 'binary-markdown.export.browserPath']);
+    await h.flushTimers();
+    assert.equal(h.renderConfigs.length, 1);
+    assert.equal(h.state.controller.refreshes, 1);
+    h.config.theme = 'night';
+    h.configChanged(['binary-markdown.tableToolbarPosition', 'binary-markdown.theme']);
+    await h.flushTimers();
+    assert.equal(h.renderConfigs.length, 2);
+    assert.equal(h.renderConfigs.at(-1).theme, 'night');
+    assert.equal(h.renderConfigs.at(-1).tableToolbarPosition, 'bottom-right');
 });

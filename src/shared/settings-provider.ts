@@ -1,3 +1,4 @@
+import { TableToolbarPosition } from './table-placement';
 /**
  * SettingsProvider: an abstraction for reading editor settings and observing changes.
  *
@@ -9,6 +10,7 @@ export interface EditorSettings {
     theme: 'github' | 'sepia' | 'night' | 'dark' | 'minimal' | 'perplexity';
     fontSize: number;
     toolbarMode: 'full' | 'simple';
+    tableToolbarPosition: TableToolbarPosition;
     language: 'default' | 'en' | 'ja' | 'zh-TW' | 'zh-CN' | 'ko' | 'es' | 'fr';
     imageDefaultDir: string;
     forceRelativeImagePath: boolean;
@@ -19,6 +21,7 @@ export const DEFAULT_SETTINGS: EditorSettings = {
     theme: 'github',
     fontSize: 16,
     toolbarMode: 'simple',
+    tableToolbarPosition: 'auto',
     language: 'default',
     imageDefaultDir: '',
     forceRelativeImagePath: false,

@@ -29,5 +29,14 @@
   "command.exportToDocx.title": "Wordに書き出し",
   "command.exportToEpub.title": "EPUBに書き出し",
   "command.copyBuildInformation.title": "ビルド情報をコピー",
-  "config.math.backslashDelimiters.description": "エディターとエクスポートで数式の区切り \\( ... \\) と \\[ ... \\] を認識します。無効にすると通常の Markdown エスケープとして扱います。"
+  "config.math.backslashDelimiters.description": "エディターとエクスポートで数式の区切り \\( ... \\) と \\[ ... \\] を認識します。無効にすると通常の Markdown エスケープとして扱います。",
+  "config.tableToolbarPosition.description": "表の操作ボタンの位置を選択します。自動では内容を避け、必要に応じて上部バーを使用します。固定位置は維持され、空間が不足するとスクロールできます。",
+  "config.tableToolbarPosition.auto": "自動（推奨）",
+  "config.tableToolbarPosition.topLeft": "左上",
+  "config.tableToolbarPosition.topRight": "右上",
+  "config.tableToolbarPosition.bottomLeft": "左下",
+  "config.tableToolbarPosition.bottomRight": "右下",
+  "config.tableToolbarPosition.left": "左側（縦）",
+  "config.tableToolbarPosition.right": "右側（縦）",
+  "config.tableToolbarPosition.topBar": "常に上部バー"
 }

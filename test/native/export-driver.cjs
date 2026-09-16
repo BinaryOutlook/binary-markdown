@@ -39,7 +39,7 @@ exports.activate = async function activate(context) {
         platform: process.platform, arch: process.arch, nodeVersion: process.version,
         uiKind: vscode.env.uiKind, remoteName: vscode.env.remoteName ?? null,
         trusted: vscode.workspace.isTrusted,
-        appearance: Object.fromEntries(['language', 'toolbarMode', 'theme', 'export.pdfWhiteBackground'].map(key =>
+        appearance: Object.fromEntries(['language', 'toolbarMode', 'tableToolbarPosition', 'theme', 'export.pdfWhiteBackground'].map(key =>
             [key, vscode.workspace.getConfiguration('binary-markdown').get(key)]))
     });
     const respond = value => {
@@ -87,6 +87,7 @@ exports.activate = async function activate(context) {
                     'export.pdfWhiteBackground': value => typeof value === 'boolean',
                     'math.backslashDelimiters': value => typeof value === 'boolean',
                     toolbarMode: value => ['simple', 'full'].includes(value),
+                    tableToolbarPosition: value => ['auto', 'top-left', 'top-right', 'bottom-left', 'bottom-right', 'left', 'right', 'top-bar'].includes(value),
                     language: value => ['en', 'zh-CN'].includes(value),
                     theme: value => ['github', 'night'].includes(value)
                 };

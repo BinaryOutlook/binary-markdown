@@ -38,7 +38,8 @@
         "to": "webview",
         "filter": [
           "editor.js",
-          "styles.css"
+          "styles.css",
+          "table-toolbar.js"
         ]
       },
       {
@@ -56,7 +57,10 @@
         "from": "../out/shared",
         "to": "out/shared",
         "filter": [
-          "editor-body-html.js"
+          "editor-body-html.js",
+          "table-placement.js",
+          "document-aux.js",
+          "math-syntax.js"
         ]
       },
       {

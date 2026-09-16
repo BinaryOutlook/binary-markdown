@@ -28,6 +28,19 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  tableControls: "表の操作",
+  tableMenu: "表…",
+  tablePlacement: "表ツールバーの位置",
+  tablePositionAuto: "自動（推奨）",
+  tablePositionTopBar: "常に上部バー",
+  tablePositionFixed: "固定位置を選択…",
+  tablePositionTopLeft: "左上",
+  tablePositionTopRight: "右上",
+  tablePositionBottomLeft: "左下",
+  tablePositionBottomRight: "右下",
+  tablePositionLeft: "左側（縦）",
+  tablePositionRight: "右側（縦）",
+
   insertToc: '目次を挿入',
   refreshToc: '目次を更新',
   tocContents: '目次',

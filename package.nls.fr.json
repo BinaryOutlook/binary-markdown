@@ -29,5 +29,14 @@
   "command.exportToDocx.title": "Exporter vers Word",
   "command.exportToEpub.title": "Exporter en EPUB",
   "command.copyBuildInformation.title": "Copier les informations de compilation",
-  "config.math.backslashDelimiters.description": "Reconnaît les délimiteurs d’équations \\( ... \\) et \\[ ... \\] dans l’éditeur et les exports. Désactivez cette option pour les traiter comme des échappements Markdown ordinaires."
+  "config.math.backslashDelimiters.description": "Reconnaît les délimiteurs d’équations \\( ... \\) et \\[ ... \\] dans l’éditeur et les exports. Désactivez cette option pour les traiter comme des échappements Markdown ordinaires.",
+  "config.tableToolbarPosition.description": "Choisissez la position des outils de tableau. Le mode automatique évite le contenu et utilise la barre supérieure si nécessaire. Les positions fixes sont conservées et permettent le défilement si l’espace manque.",
+  "config.tableToolbarPosition.auto": "Automatique (recommandé)",
+  "config.tableToolbarPosition.topLeft": "En haut à gauche",
+  "config.tableToolbarPosition.topRight": "En haut à droite",
+  "config.tableToolbarPosition.bottomLeft": "En bas à gauche",
+  "config.tableToolbarPosition.bottomRight": "En bas à droite",
+  "config.tableToolbarPosition.left": "Côté gauche (vertical)",
+  "config.tableToolbarPosition.right": "Côté droit (vertical)",
+  "config.tableToolbarPosition.topBar": "Toujours dans la barre supérieure"
 }

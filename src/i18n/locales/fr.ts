@@ -28,6 +28,19 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  tableControls: "Outils de tableau",
+  tableMenu: "Tableau…",
+  tablePlacement: "Position des outils de tableau",
+  tablePositionAuto: "Automatique (recommandé)",
+  tablePositionTopBar: "Toujours dans la barre supérieure",
+  tablePositionFixed: "Choisir une position fixe…",
+  tablePositionTopLeft: "En haut à gauche",
+  tablePositionTopRight: "En haut à droite",
+  tablePositionBottomLeft: "En bas à gauche",
+  tablePositionBottomRight: "En bas à droite",
+  tablePositionLeft: "Côté gauche (vertical)",
+  tablePositionRight: "Côté droit (vertical)",
+
   insertToc: 'Insérer une table des matières',
   refreshToc: 'Actualiser la table des matières',
   tocContents: 'Sommaire',

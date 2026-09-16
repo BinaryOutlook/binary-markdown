@@ -933,6 +933,7 @@ body {
 .table-toolbar button:hover {
     background: var(--selection-bg);
 }
+.table-toolbar button:disabled { opacity: .4; cursor: default; background: transparent; }
 .table-toolbar button svg {
     width: 14px;
     height: 14px;
@@ -950,6 +951,34 @@ body {
     height: 18px;
     background: var(--border-color);
     margin: 0 4px;
+}
+.table-toolbar { width: max-content; overflow: auto; }
+.table-toolbar button { flex-shrink: 0; }
+.table-toolbar .separator { flex-shrink: 0; }
+.table-toolbar[data-vertical="true"] { flex-direction: column; }
+.table-toolbar[data-vertical="true"] .separator { width: 18px; height: 1px; margin: 4px 0; }
+.table-toolbar[data-docked="true"] { position: static; box-shadow: none; }
+.table-toolbar-measure {
+    position: fixed !important; left: -10000px !important; top: 0 !important;
+    visibility: hidden !important; pointer-events: none !important;
+}
+.table-toolbar-dock { display: flex; align-items: center; flex-shrink: 0; margin: 0 6px; min-width: 0; }
+.table-toolbar-dock[hidden], .table-toolbar-toggle[hidden], .table-placement-menu[hidden] { display: none !important; }
+.toolbar .table-toolbar-toggle { min-width: 0; width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.toolbar { flex-shrink: 0; overflow-x: auto; }
+.table-placement-menu {
+    position: fixed; z-index: 1002; padding: 4px; overflow: auto; width: max-content;
+    background: var(--toolbar-bg); color: var(--text-color);
+    border: 1px solid var(--border-color); border-radius: 6px; box-shadow: 0 2px 8px #0003;
+}
+.table-placement-menu button {
+    display: block; width: 100%; text-align: left; padding: 8px 12px;
+    background: none; color: inherit; border: none; cursor: pointer;
+}
+.table-placement-menu button[aria-checked="true"]::before { content: '✓ '; }
+.table-placement-menu button:hover { background: var(--selection-bg); }
+.table-toolbar button:focus-visible, .table-toolbar-toggle:focus-visible, .table-placement-menu button:focus-visible {
+    outline: 2px solid var(--link-color); outline-offset: -2px;
 }
 .editor li:has(> input[type="checkbox"]) {
     list-style: none;

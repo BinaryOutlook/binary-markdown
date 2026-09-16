@@ -29,5 +29,14 @@
   "command.exportToDocx.title": "Word로 내보내기",
   "command.exportToEpub.title": "EPUB로 내보내기",
   "command.copyBuildInformation.title": "빌드 정보 복사",
-  "config.math.backslashDelimiters.description": "편집기와 내보내기에서 수식 구분자 \\( ... \\) 및 \\[ ... \\]를 인식합니다. 비활성화하면 일반 Markdown 이스케이프로 처리합니다."
+  "config.math.backslashDelimiters.description": "편집기와 내보내기에서 수식 구분자 \\( ... \\) 및 \\[ ... \\]를 인식합니다. 비활성화하면 일반 Markdown 이스케이프로 처리합니다.",
+  "config.tableToolbarPosition.description": "표 도구의 위치를 선택합니다. 자동 모드는 내용을 가리지 않고 필요하면 상단 표시줄을 사용합니다. 고정 위치는 유지되며 공간이 부족하면 스크롤할 수 있습니다.",
+  "config.tableToolbarPosition.auto": "자동(권장)",
+  "config.tableToolbarPosition.topLeft": "왼쪽 위",
+  "config.tableToolbarPosition.topRight": "오른쪽 위",
+  "config.tableToolbarPosition.bottomLeft": "왼쪽 아래",
+  "config.tableToolbarPosition.bottomRight": "오른쪽 아래",
+  "config.tableToolbarPosition.left": "왼쪽(세로)",
+  "config.tableToolbarPosition.right": "오른쪽(세로)",
+  "config.tableToolbarPosition.topBar": "항상 상단 표시줄"
 }

@@ -18,6 +18,9 @@ async function setup(page: Page, exportEnabled = true) {
     await page.addStyleTag({ content: fs.readFileSync(path.join(root, 'src/webview/styles.css'), 'utf8').replace('__FONT_SIZE__', '16') });
     await page.addScriptTag({ content: fs.readFileSync(path.join(root, 'src/shared/test-host-bridge.js'), 'utf8') });
     await page.addScriptTag({ content: fs.readFileSync(path.join(root, 'src/shared/math-syntax.js'), 'utf8') });
+    for (const file of ['src/shared/table-placement.js', 'src/webview/table-toolbar.js']) {
+        await page.addScriptTag({ content: fs.readFileSync(path.join(root, file), 'utf8') });
+    }
     const editor = fs.readFileSync(path.join(root, 'src/webview/editor.js'), 'utf8')
         .replace('__MATH_BACKSLASH__', 'true')
         .replace('__DEBUG_MODE__', 'false').replace('__I18N__', '{}')

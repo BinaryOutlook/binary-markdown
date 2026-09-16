@@ -18,6 +18,7 @@ export class VSCodeSettingsProvider implements SettingsProvider {
             theme: this.get('theme'),
             fontSize: this.get('fontSize'),
             toolbarMode: this.get('toolbarMode'),
+            tableToolbarPosition: this.get('tableToolbarPosition'),
             language: this.get('language'),
             imageDefaultDir: this.get('imageDefaultDir'),
             forceRelativeImagePath: this.get('forceRelativeImagePath'),

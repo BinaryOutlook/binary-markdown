@@ -28,6 +28,19 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  tableControls: "표 도구",
+  tableMenu: "표…",
+  tablePlacement: "표 도구 모음 위치",
+  tablePositionAuto: "자동(권장)",
+  tablePositionTopBar: "항상 상단 표시줄",
+  tablePositionFixed: "고정 위치 선택…",
+  tablePositionTopLeft: "왼쪽 위",
+  tablePositionTopRight: "오른쪽 위",
+  tablePositionBottomLeft: "왼쪽 아래",
+  tablePositionBottomRight: "오른쪽 아래",
+  tablePositionLeft: "왼쪽(세로)",
+  tablePositionRight: "오른쪽(세로)",
+
   insertToc: '목차 삽입',
   refreshToc: '목차 새로 고침',
   tocContents: '목차',
