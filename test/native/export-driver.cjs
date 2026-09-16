@@ -68,7 +68,9 @@ exports.activate = async function activate(context) {
                     linkClipboardBefore = await vscode.env.clipboard.readText();
                 } else if (request.phase === 'verify') {
                     if (linkClipboardBefore === undefined) throw new Error('Clipboard snapshot required');
-                    linkClipboardMatches = await vscode.env.clipboard.readText() === path.join(workspace, 'Link targets', 'Missing folder');
+                    // Compare with the fixture writer's exact spelling. VS Code's fsPath
+                    // can lowercase a Windows drive letter in the canonical workspace.
+                    linkClipboardMatches = await vscode.env.clipboard.readText() === path.join(owner.workspace, 'Link targets', 'Missing folder');
                 } else if (request.phase === 'restore' && linkClipboardBefore !== undefined) {
                     await vscode.env.clipboard.writeText(linkClipboardBefore);
                     linkClipboardBefore = undefined;
