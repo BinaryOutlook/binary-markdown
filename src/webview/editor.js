@@ -6516,6 +6516,7 @@
         // IMPORTANT: Preserve empty lines as "> " in markdown
         // Handle both <br> elements AND actual newline characters in text
         let lines = [];
+        const codeLines = new Set();
         let currentLine = '';
         
         function processBlockquoteContent(node) {
@@ -6525,6 +6526,16 @@
             if (node.nodeType === 1 && node.classList.contains('math-wrapper')) {
                 if (currentLine) { lines.push(currentLine); currentLine = ''; }
                 lines.push(...mathBlockMarkdown(node).replace(/\n$/, '').split('\n'));
+                return;
+            }
+            if (node.nodeType === 1 && (node.tagName === 'PRE' || node.classList.contains('mermaid-wrapper'))) {
+                if (currentLine) { lines.push(currentLine); currentLine = ''; }
+                // Serialize the block, not its toolbar/inline code children.
+                // Code whitespace must survive the quote's prose normalization.
+                for (const line of mdProcessNode(node).replace(/\n$/, '').split('\n')) {
+                    codeLines.add(lines.length);
+                    lines.push(line);
+                }
                 return;
             }
             if (node.nodeType === 3) {
@@ -6593,7 +6604,7 @@
         }
         
         // Build markdown with > prefix for each line (including empty lines)
-        return lines.map(line => '> ' + line.trim()).join('\n') + '\n';
+        return lines.map((line, index) => '> ' + (codeLines.has(index) ? line : line.trim())).join('\n') + '\n';
     }
 
     function mdProcessTable(table) {
