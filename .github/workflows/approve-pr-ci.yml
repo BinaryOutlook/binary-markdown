@@ -1,0 +1,39 @@
+name: Start PR CI automatically
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened]
+  workflow_run:
+    workflows: [Validate VSIX]
+    types: [completed]
+  workflow_dispatch:
+
+# This controller authorizes CI execution only. It cannot write repository
+# contents, submit approving PR reviews, or merge pull requests.
+permissions:
+  actions: write
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: approve-pr-ci-${{ github.event.pull_request.number || github.event.workflow_run.id || github.run_id }}
+  cancel-in-progress: false
+
+jobs:
+  approve:
+    if: >-
+      github.repository == 'BinaryOutlook/binary-markdown' &&
+      (github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'action_required')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      # Pin the checkout to the revision defining this trusted workflow.
+      # Never check out a PR head/merge ref or execute contributor code here.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.workflow_sha }}
+          persist-credentials: false
+      - name: Authorize pending validation runs
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node .github/scripts/approve-pr-ci.cjs
