@@ -113,26 +113,54 @@ function candidates(kind: ToolStatus['kind']): string[] {
     return [...new Set(paths)];
 }
 
+// All editors share the extension host. Coalesce only overlapping Windows
+// probes, including cleanup; later requests must recheck the executable.
+const windowsBrowserProbes = new Map<string, Promise<string>>();
+
+function probeWindowsBrowser(executable: string): Promise<string> {
+    const key = executable.toLowerCase();
+    const pending = windowsBrowserProbes.get(key);
+    if (pending) { return pending; }
+    const probe = (async () => {
+        const runtime = require(path.resolve(__dirname, '../../vendor/playwright-core')) as typeof import('playwright-core');
+        let browser: import('playwright-core').Browser | undefined;
+        try {
+            browser = await runtime.chromium.launch({ executablePath: executable, headless: true, chromiumSandbox: true,
+                timeout: 10000, args: ['--disable-updater-scheduler', '--disable-background-networking', '--host-resolver-rules=MAP * ~NOTFOUND'] });
+            return 'Chromium ' + browser.version();
+        } finally {
+            await browser?.close().catch(() => undefined);
+        }
+    })().finally(() => { windowsBrowserProbes.delete(key); });
+    windowsBrowserProbes.set(key, probe);
+    return probe;
+}
+
+/** Each caller can stop waiting without closing another editor's shared probe. */
+function waitForBrowserProbe(probe: Promise<string>, signal?: AbortSignal): Promise<string> {
+    if (!signal) { return probe; }
+    return new Promise((resolve, reject) => {
+        const abort = (): void => {
+            try { checkCancelled(signal); } catch (error) { reject(error); }
+        };
+        signal.addEventListener('abort', abort, { once: true });
+        if (signal.aborted) { abort(); }
+        // The bounded launch owns its cleanup even if every waiter cancels.
+        // Handle both outcomes so cancellation cannot leave a rejected promise.
+        void probe.then(resolve, reject).finally(() => signal.removeEventListener('abort', abort));
+    });
+}
+
 async function probe(kind: ToolStatus['kind'], executable: string, signal?: AbortSignal): Promise<ToolStatus> {
     await fs.access(executable, constants.X_OK);
     if (!(await fs.stat(executable)).isFile()) { throw new Error('The configured path is not an executable file.'); }
+    if (signal) { checkCancelled(signal); }
     if (kind === 'browser' && process.platform === 'win32') {
         // Windows GUI browsers do not reliably print --version to stdout.
         // Probe the same sandboxed runtime used by PDF export instead.
-        const runtime = require(path.resolve(__dirname, '../../vendor/playwright-core')) as typeof import('playwright-core');
-        let browser: import('playwright-core').Browser | undefined;
-        const abort = (): void => { void browser?.close().catch(() => undefined); };
-        signal?.addEventListener('abort', abort, { once: true });
-        try {
-            if (signal) { checkCancelled(signal); }
-            browser = await runtime.chromium.launch({ executablePath: executable, headless: true, chromiumSandbox: true,
-                timeout: 10000, args: ['--disable-updater-scheduler', '--disable-background-networking', '--host-resolver-rules=MAP * ~NOTFOUND'] });
-            if (signal) { checkCancelled(signal); }
-            return { kind, available: true, path: executable, version: 'Chromium ' + browser.version() };
-        } finally {
-            signal?.removeEventListener('abort', abort);
-            await browser?.close().catch(() => undefined);
-        }
+        const version = await waitForBrowserProbe(probeWindowsBrowser(executable), signal);
+        if (signal) { checkCancelled(signal); }
+        return { kind, available: true, path: executable, version };
     }
     const result = await runTool(executable, ['--version'], { signal, timeoutMs: 10000 });
     const version = result.stdout.toString('utf8').split(/\r?\n/)[0].trim();
