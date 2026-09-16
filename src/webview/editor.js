@@ -2349,6 +2349,7 @@
         let codeLang = '';
         let codeFenceLength = 0; // Track the length of the opening fence
         let codeFenceChar = ''; // Track the fence character (backtick or tilde)
+        let codeFenceIndent = 0;
         let codeStart = 0;
         const metadataEnd = lines[0] === '---' ? lines.findIndex((line, i) => i > 0 && /^(---|\.\.\.)$/.test(line)) : -1;
         let inTable = false;
@@ -2358,6 +2359,13 @@
         
         // Stack to track list nesting: [{type: 'ul'|'ol', indent: number}]
         let listStack = [];
+
+        function appendCodeLine(line) {
+            // Remove only the opening fence's indentation, preserving tabs and
+            // deeper code indentation (including on invalid closing fences).
+            const indent = Math.min(codeFenceIndent, /^ */.exec(line)[0].length);
+            codeContent += line.slice(indent) + '\n';
+        }
 
         function closeListsToLevel(targetIndent) {
             let result = '';
@@ -2510,9 +2518,9 @@
 
             // Handle code blocks (\`\`\`+ or ~~~+)
             // Match opening/closing fence: 3+ backticks or tildes
-            const fenceMatch = line.match(/^(\`{3,}|~{3,})(.*)?$/);
+            const fenceMatch = line.match(/^( {0,3})(\`{3,}|~{3,})(.*)?$/);
             if (fenceMatch) {
-                const fenceStr = fenceMatch[1];
+                const fenceStr = fenceMatch[2];
                 const fenceLen = fenceStr.length;
                 const fenceCharacter = fenceStr[0];
                 
@@ -2521,7 +2529,7 @@
                     // - Same character type as opening
                     // - At least as many characters as opening fence
                     // - No language specifier (just fence or whitespace after)
-                    const afterFence = fenceMatch[2] || '';
+                    const afterFence = fenceMatch[3] || '';
                     if (fenceCharacter === codeFenceChar && fenceLen >= codeFenceLength && afterFence.trim() === '') {
                         // Valid closing fence
                         // The line processing loop appends '\n' to every line, so the
@@ -2567,7 +2575,7 @@
                         continue;
                     } else {
                         // Not a valid closing fence, treat as code content
-                        codeContent += line + '\n';
+                        appendCodeLine(line);
                         continue;
                     }
                 } else {
@@ -2588,13 +2596,14 @@
                     codeStart = i;
                     codeFenceLength = fenceLen;
                     codeFenceChar = fenceCharacter;
-                    codeLang = (fenceMatch[2] || '').trim();
+                    codeFenceIndent = fenceMatch[1].length;
+                    codeLang = (fenceMatch[3] || '').trim();
                     continue;
                 }
             }
 
             if (inCodeBlock) {
-                codeContent += line + '\n';
+                appendCodeLine(line);
                 continue;
             }
 
@@ -3534,6 +3543,14 @@
     function enterEditMode(pre) {
         const code = pre.querySelector('code');
         if (!code) return;
+
+        // Nested contenteditable elements can share the outer editor's focus.
+        // Restore inactive blocks here; click propagation/focusout is not enough.
+        editor.querySelectorAll('pre[data-mode="edit"]').forEach(other => {
+            if (other !== pre && !other.closest('.mermaid-wrapper, .math-wrapper')) {
+                enterDisplayMode(other);
+            }
+        });
 
         logger.log('enterEditMode');
 
@@ -6523,6 +6540,7 @@
         // IMPORTANT: Preserve empty lines as "> " in markdown
         // Handle both <br> elements AND actual newline characters in text
         let lines = [];
+        const codeLines = new Set();
         let currentLine = '';
         
         function processBlockquoteContent(node) {
@@ -6532,6 +6550,16 @@
             if (node.nodeType === 1 && node.classList.contains('math-wrapper')) {
                 if (currentLine) { lines.push(currentLine); currentLine = ''; }
                 lines.push(...mathBlockMarkdown(node).replace(/\n$/, '').split('\n'));
+                return;
+            }
+            if (node.nodeType === 1 && (node.tagName === 'PRE' || node.classList.contains('mermaid-wrapper'))) {
+                if (currentLine) { lines.push(currentLine); currentLine = ''; }
+                // Serialize the block, not its toolbar/inline code children.
+                // Code whitespace must survive the quote's prose normalization.
+                for (const line of mdProcessNode(node).replace(/\n$/, '').split('\n')) {
+                    codeLines.add(lines.length);
+                    lines.push(line);
+                }
                 return;
             }
             if (node.nodeType === 3) {
@@ -6600,7 +6628,7 @@
         }
         
         // Build markdown with > prefix for each line (including empty lines)
-        return lines.map(line => '> ' + line.trim()).join('\n') + '\n';
+        return lines.map((line, index) => '> ' + (codeLines.has(index) ? line : line.trim())).join('\n') + '\n';
     }
 
     function mdProcessTable(table) {
@@ -12463,7 +12491,10 @@
     });
 
     function toggleSourceMode() {
-        if (finishInlineMathEdit) finishInlineMathEdit(true, false);
+        // Read while the current mode still owns the latest edits. The host
+        // command can arrive before blur or the delayed visual sync runs.
+        markdown = readCurrentMarkdown();
+        cancelScheduledSync();
         isSourceMode = !isSourceMode;
         if (isSourceMode) {
             sourceEditor.value = markdown;
@@ -12475,6 +12506,7 @@
             sourceEditor.style.display = 'none';
             editor.style.display = 'block';
         }
+        notifyChangeImmediate();
     }
 
     // Immediate notification - called after debounce in debouncedSync
