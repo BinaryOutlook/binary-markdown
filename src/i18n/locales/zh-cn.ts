@@ -1,5 +1,11 @@
 // Simplified Chinese messages
 export const messages = {
+  copyLinkAddress: '复制链接地址',
+  linkUnavailable: '无法在当前工作区中打开此链接。',
+  linkNotFound: '找不到链接指向的文件或文件夹。',
+  linkNoPermissions: '没有权限访问链接指向的文件或文件夹。',
+  linkOpenFailed: '无法打开链接指向的文件或文件夹。',
+  linkCopyFailed: '无法复制链接地址。',
   openMarkdownFirst: '请先打开 Markdown 文件。',
   numberOfRows: '行数',
   numberOfColumns: '列数',

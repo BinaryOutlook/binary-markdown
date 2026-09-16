@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Fix absolute local file and folder links discovered in 0.2.1; show link destinations on hover and offer to copy unavailable targets. Planned for 0.2.2.
 - Check `main` daily for automatic VSIX publication after at least three days since the previous official release. Preserve manual releases, validate bot version bumps through PRs, and reuse the exact tested package and source.
 - Keep inline equation edits open and cancellable while delayed outline updates or document synchronization run.
 

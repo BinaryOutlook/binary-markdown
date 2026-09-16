@@ -1,5 +1,11 @@
 // French messages
 export const messages = {
+  copyLinkAddress: 'Copier l’adresse du lien',
+  linkUnavailable: 'Ce lien ne peut pas être ouvert dans l’espace de travail actuel.',
+  linkNotFound: 'Le fichier ou le dossier lié est introuvable.',
+  linkNoPermissions: 'L’accès au fichier ou au dossier lié a été refusé.',
+  linkOpenFailed: 'Le fichier ou le dossier lié n’a pas pu être ouvert.',
+  linkCopyFailed: 'L’adresse du lien n’a pas pu être copiée.',
   openMarkdownFirst: 'Veuillez d\'abord ouvrir un fichier Markdown.',
   numberOfRows: 'Nombre de lignes',
   numberOfColumns: 'Nombre de colonnes',

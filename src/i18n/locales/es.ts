@@ -1,5 +1,11 @@
 // Spanish messages
 export const messages = {
+  copyLinkAddress: 'Copiar dirección del enlace',
+  linkUnavailable: 'Este enlace no se puede abrir en el espacio de trabajo actual.',
+  linkNotFound: 'No se encontró el archivo o la carpeta del enlace.',
+  linkNoPermissions: 'Se denegó el permiso para acceder al archivo o la carpeta del enlace.',
+  linkOpenFailed: 'No se pudo abrir el archivo o la carpeta del enlace.',
+  linkCopyFailed: 'No se pudo copiar la dirección del enlace.',
   openMarkdownFirst: 'Por favor, abra primero un archivo Markdown.',
   numberOfRows: 'Número de filas',
   numberOfColumns: 'Número de columnas',

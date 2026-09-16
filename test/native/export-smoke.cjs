@@ -327,7 +327,7 @@ async function run(settings, owner) {
         fs.writeFileSync(report, JSON.stringify({ harness: harnessIdentity(), host: receipt(owner), packageSha256: hash(fs.readFileSync(settings.package)), receipts }, null, 2));
         console.log(name, JSON.stringify(details));
     };
-    const available = ['identity', 'filesystem', 'formats', 'saves', 'edges', 'ui', 'equations', 'pdf-background', 'selection', 'immutable', 'offline', 'document-aux'];
+    const available = ['identity', 'filesystem', 'formats', 'saves', 'edges', 'ui', 'equations', 'pdf-background', 'selection', 'immutable', 'offline', 'document-aux', 'links'];
     const groups = settings.suite === 'all' ? available : [settings.suite];
     assert.ok(groups.every(value => available.includes(value)), 'Suite must be all, ' + available.join(', '));
     const htmlExports = [];
@@ -503,6 +503,7 @@ async function run(settings, owner) {
         await h.driver({ action: 'config', key: 'export.pandocPath', value: settings.pandoc });
         if (groups.includes('ui')) await appearanceCases(h, owner, record);
         if (groups.includes('equations')) await equationCases(h, owner, record);
+        if (groups.includes('links')) await linkCases(h, owner, record);
         if (groups.includes('pdf-background')) await pdfBackgroundCases(h, owner, record);
         if (groups.includes('selection')) await selectionCase(h, owner, record);
         if (groups.includes('immutable')) await immutableCase(h, owner, record);
@@ -521,6 +522,57 @@ async function run(settings, owner) {
         for (const [key, value] of [['theme', 'github'], ['language', 'en'], ['toolbarMode', 'full']]) await h.driver({ action: 'config', key, value });
     }
     console.log('Evidence:', report);
+}
+
+async function linkCases(h, owner, record) {
+    const folder = path.join(owner.workspace, 'Link targets', 'Folder with spaces');
+    const target = path.join(owner.workspace, 'Link targets', 'URI target %.txt');
+    const missing = path.join(owner.workspace, 'Link targets', 'Missing folder');
+    fs.mkdirSync(folder, { recursive: true });
+    fs.writeFileSync(target, 'LINK-TARGET-MARKER\n');
+    const source = '# Links\n\n' + [
+        ['absolute-folder', folder], ['relative-folder', 'Link targets/Folder with spaces'],
+        ['absolute-file', target], ['file-uri', pathToFileURL(target).href], ['missing', missing]
+    ].map(([label, href]) => `[${label}](${href})`).join('\n\n') + '\n';
+    const file = path.join(owner.workspace, 'links.md');
+    fs.writeFileSync(file, source);
+    const click = async label => {
+        const connection = await h.open('links.md');
+        try {
+            return await connection.evaluate(`(() => {
+                const a = Array.from(document.querySelectorAll('#editor a')).find(a => a.textContent === ${JSON.stringify(label)});
+                const tooltipMatches = a.title === a.getAttribute('href');
+                a.click(); return tooltipMatches;
+            })()`);
+        } finally { connection.close(); }
+    };
+    for (const label of ['absolute-folder', 'relative-folder']) {
+        assert.equal(await click(label), true);
+        await h.until(() => h.workbench(async page =>
+            (await page.locator('.explorer-viewlet .monaco-list-row[aria-selected="true"]').allTextContents())
+                .some(text => text.includes('Folder with spaces'))), 'linked directory selected in Explorer');
+    }
+    for (const label of ['absolute-file', 'file-uri']) {
+        assert.equal(await click(label), true);
+        await h.until(async () => (await h.driver({ action: 'inspect' })).documents.some(document =>
+            samePath(document.path, target) && document.text === 'LINK-TARGET-MARKER\n'), 'linked file opened');
+        await h.driver({ action: 'close' });
+    }
+    await h.driver({ action: 'linkClipboard', phase: 'snapshot' });
+    try {
+        assert.equal(await click('missing'), true);
+        await h.workbench(async page => {
+            const copy = page.getByRole('button', { name: 'Copy link address', exact: true });
+            await copy.waitFor({ state: 'visible' });
+            assert.ok((await page.locator('body').innerText()).includes('The linked file or folder could not be found.'));
+            await copy.click();
+        });
+        await h.until(async () => (await h.driver({ action: 'linkClipboard', phase: 'verify' })).linkClipboardMatches, 'original link address copied');
+    } finally { await h.driver({ action: 'linkClipboard', phase: 'restore' }); }
+    assert.equal(fs.readFileSync(file, 'utf8'), source);
+    assert.ok(!(await h.driver({ action: 'inspect' })).documents.some(document => samePath(document.path, file) && document.dirty));
+    record('local-links', { absoluteFolder: true, relativeFolder: true, absoluteFile: true, fileUri: true,
+        hoverDestinations: true, unavailableTargetCopied: true, clipboardRestored: true, sourceUnchanged: true });
 }
 
 async function equationCases(h, owner, record) {
