@@ -232,7 +232,9 @@ console.log('Generated:', outputPath);
 
 // Production layout for contextual toolbar geometry and focus regressions.
 const { generateEditorBodyHtml } = require('../src/shared/editor-body-html');
-const styles = fs.readFileSync(path.join(__dirname, '../src/webview/styles.css'), 'utf8').replace('__FONT_SIZE__', '16');
+const styles = fs.readFileSync(path.join(__dirname, '../src/webview/styles.css'), 'utf8')
+    .replace('__FONT_SIZE__', '16')
+    .replace('__OUTLINE_ACTIVE_COLOR__', 'var(--link-color)');
 fs.writeFileSync(path.join(__dirname, 'html/production-editor.html'), `<!doctype html>
 <html lang="en" data-theme="things" data-toolbar-mode="simple"><head><meta charset="utf-8"><style>${styles}</style></head>
 <body>${generateEditorBodyHtml({}, process.platform, { exportEnabled: true, settingsEnabled: true })}

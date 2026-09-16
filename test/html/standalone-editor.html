@@ -180,6 +180,10 @@
     };
 
     window.hostBridge = {
+        setTableToolbarPosition: function(value) {
+            window.__testApi.messages.push({ type: 'setTableToolbarPosition', value: value });
+            window.__hostMessageHandler({ type: 'tableToolbarPosition', value: value });
+        },
         // Document operations.
         syncContent: function(markdown) {
             window.__testApi.messages.push({ type: 'edit', content: markdown });
@@ -255,7 +259,425 @@
 
     </script>
     <script>
-    /* Shared equation boundaries for the editor and export-only normalization. */
+    (function(root) {
+    'use strict';
+    const positions = Object.freeze(['auto', 'top-left', 'top-right', 'bottom-left', 'bottom-right', 'left', 'right', 'top-bar']);
+    const normalize = value => positions.includes(value) ? value : 'auto';
+    const box = (x, y, width, height) => ({ left: x, top: y, right: x + width, bottom: y + height, width, height });
+    const overlaps = (a, b, gap = 0) => a.left < b.right + gap && a.right > b.left - gap && a.top < b.bottom + gap && a.bottom > b.top - gap;
+    const fits = (a, b, gap = 0) => a.left >= b.left + gap && a.right <= b.right - gap && a.top >= b.top + gap && a.bottom <= b.bottom - gap;
+    const clamp = (n, low, high) => Math.max(low, Math.min(n, Math.max(low, high)));
+
+    // Pure viewport geometry. No DOM, document mutation, or preference writes.
+    function choose(input) {
+        const { table, bounds, horizontal, vertical } = input;
+        const preference = normalize(input.preference);
+        const gap = 6;
+        const visible = overlaps(table, bounds);
+        if (preference === 'top-bar' || (!visible && preference === 'auto')) return { placement: 'top-bar' };
+        if (!visible || bounds.width <= 0 || bounds.height <= 0) return { placement: 'hidden' };
+        const visibleTop = Math.max(table.top, bounds.top);
+        const visibleBottom = Math.min(table.bottom, bounds.bottom);
+        const candidates = positions.slice(1, 7).map(placement => {
+            const side = placement === 'left' || placement === 'right';
+            const size = side ? vertical : horizontal;
+            let x = placement.endsWith('right') ? table.right - size.width : table.left;
+            let y = placement.startsWith('bottom') ? table.bottom + gap : table.top - size.height - gap;
+            if (side) {
+                x = placement === 'left' ? table.left - size.width - gap : table.right + gap;
+                y = (visibleTop + visibleBottom - size.height) / 2;
+            }
+            return { placement, vertical: side, ...box(x, y, size.width, size.height) };
+        });
+        if (preference !== 'auto') {
+            const candidate = candidates.find(item => item.placement === preference);
+            const width = Math.min(candidate.width, Math.max(1, bounds.width - gap * 2));
+            const height = Math.min(candidate.height, Math.max(1, bounds.height - gap * 2));
+            return { ...candidate, ...box(clamp(candidate.left, bounds.left + gap, bounds.right - width - gap),
+                clamp(candidate.top, bounds.top + gap, bounds.bottom - height - gap), width, height) };
+        }
+        const obstacles = [table, ...(input.obstacles || [])];
+        const safe = candidates.filter(candidate => fits(candidate, bounds, gap) && !obstacles.some(obstacle => overlaps(candidate, obstacle, 2)));
+        const current = safe.find(candidate => candidate.placement === input.current);
+        if (current) return current;
+        // Returning from docking needs extra clearance, preventing boundary oscillation.
+        const eligible = input.current === 'top-bar' ? safe.filter(candidate => input.allowUndock !== false &&
+            fits(candidate, bounds, 16) && !(input.obstacles || []).some(obstacle => overlaps(candidate, obstacle, 10))) : safe;
+        const preferSide = visibleBottom - visibleTop >= vertical.height + gap * 2;
+        const cell = input.cell || table;
+        const distance = candidate => Math.abs((candidate.left + candidate.right - cell.left - cell.right) / 2) +
+            Math.abs((candidate.top + candidate.bottom - cell.top - cell.bottom) / 2);
+        eligible.sort((a, b) => Number(b.vertical === preferSide) - Number(a.vertical === preferSide) || distance(a) - distance(b));
+        return eligible[0] || { placement: 'top-bar' };
+    }
+    const api = { positions, normalize, box, overlaps, fits, choose };
+    if (typeof module !== 'undefined' && module.exports) module.exports = api;
+    else root.BinaryTablePlacement = api;
+})(typeof window === 'undefined' ? globalThis : window);
+
+(function() {
+    'use strict';
+    const geometry = window.BinaryTablePlacement;
+    window.BinaryTableToolbar = { create };
+
+    function create(options) {
+        const { editor, header, messages, icons } = options;
+        const wrapper = document.getElementById('editorWrapper') || editor.parentElement;
+        const label = (key, fallback) => messages[key] || fallback;
+        let preference = geometry.normalize(document.documentElement.dataset.tableToolbarPosition);
+        let table = null, cell = null, savedRange = null, current = null;
+        let frame = 0, settleTimer = 0, settled = true, pointerDown = false, hovering = false, disposed = false;
+        let menuOpen = false;
+        const listeners = [];
+        const listen = (node, type, handler, capture = false) => {
+            node.addEventListener(type, handler, capture);
+            listeners.push(() => node.removeEventListener(type, handler, capture));
+        };
+        const controls = document.createElement('div');
+        controls.className = 'table-toolbar';
+        controls.setAttribute('role', 'toolbar');
+        controls.setAttribute('aria-label', label('tableControls', 'Table controls'));
+        const items = [
+            ['add-col-left', 'addColLeft', 'Insert column left', '←Col'],
+            ['add-col-right', 'addColRight', 'Insert column right', 'Col→'],
+            ['del-col', 'deleteCol', 'Delete column'], null,
+            ['add-row-above', 'addRowAbove', 'Insert row above', '↑Row'],
+            ['add-row-below', 'addRowBelow', 'Insert row below', 'Row↓'],
+            ['del-row', 'deleteRow', 'Delete row'], null,
+            ['align-left', 'alignLeft', 'Align left'], ['align-center', 'alignCenter', 'Align center'],
+            ['align-right', 'alignRight', 'Align right'], null,
+            ['placement', 'tablePlacement', 'Table toolbar position', '⋯'],
+        ];
+        for (const item of items) {
+            if (!item) {
+                const separator = document.createElement('span');
+                separator.className = 'separator';
+                separator.setAttribute('aria-hidden', 'true');
+                controls.appendChild(separator);
+                continue;
+            }
+            const [action, key, fallback, text] = item;
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.dataset.action = action;
+            button.title = label(key, fallback);
+            button.setAttribute('aria-label', button.title);
+            button.tabIndex = -1;
+            if (text) { button.textContent = text; button.className = 'text-btn'; }
+            else button.innerHTML = icons[action];
+            if (action === 'placement') { button.setAttribute('aria-haspopup', 'menu'); button.setAttribute('aria-expanded', 'false'); }
+            controls.appendChild(button);
+        }
+        controls.querySelector('button').tabIndex = 0;
+        document.body.appendChild(controls);
+        const dock = document.createElement('div');
+        dock.className = 'table-toolbar-dock';
+        dock.hidden = true;
+        header.insertBefore(dock, header.querySelector('.toolbar-fixed--right'));
+        const toggle = document.createElement('button');
+        toggle.type = 'button';
+        toggle.className = 'table-toolbar-toggle';
+        toggle.textContent = label('tableMenu', 'Table…');
+        toggle.setAttribute('aria-label', label('tableControls', 'Table controls'));
+        toggle.setAttribute('aria-haspopup', 'menu');
+        toggle.setAttribute('aria-expanded', 'false');
+        dock.appendChild(toggle);
+        const picker = document.createElement('div');
+        picker.className = 'table-placement-menu';
+        picker.setAttribute('role', 'menu');
+        picker.setAttribute('aria-label', label('tablePlacement', 'Table toolbar position'));
+        picker.hidden = true;
+        document.body.appendChild(picker);
+        const sizes = [false, true].map(vertical => {
+            const clone = controls.cloneNode(true);
+            clone.className = 'table-toolbar visible table-toolbar-measure';
+            clone.dataset.vertical = String(vertical);
+            clone.setAttribute('aria-hidden', 'true');
+            clone.inert = true;
+            document.body.appendChild(clone);
+            return clone;
+        });
+        const resize = new ResizeObserver(() => schedule());
+        for (const element of new Set([editor, wrapper, header])) resize.observe(element);
+        const mutations = new MutationObserver(() => schedule());
+        mutations.observe(editor, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['style', 'class'] });
+
+        function owns(node) { return controls.contains(node) || dock.contains(node) || picker.contains(node); }
+        function valid() { return table && cell && editor.contains(table) && table.contains(cell) && !options.isSourceMode(); }
+        function closeMenus() {
+            picker.hidden = true;
+            menuOpen = false;
+            if (current === 'top-bar' && !toggle.hidden) controls.classList.remove('visible');
+            toggle.setAttribute('aria-expanded', 'false');
+            controls.querySelector('[data-action="placement"]').setAttribute('aria-expanded', 'false');
+        }
+        function hide() {
+            closeMenus();
+            controls.classList.remove('visible');
+            dock.hidden = true;
+        }
+        function clear() {
+            if (table) resize.unobserve(table);
+            table = cell = savedRange = current = null;
+            hovering = false;
+            options.onContext(null);
+            hide();
+        }
+        function show(nextTable, nextCell) {
+            if (!nextCell || !nextTable?.contains(nextCell)) return clear();
+            if (table !== nextTable) {
+                if (table) resize.unobserve(table);
+                table = nextTable;
+                resize.observe(table);
+                current = null;
+                closeMenus();
+            }
+            cell = nextCell;
+            const headerRow = cell.parentElement === table.rows[0];
+            controls.querySelector('[data-action="add-row-above"]').disabled = headerRow;
+            controls.querySelector('[data-action="del-row"]').disabled = headerRow;
+            controls.querySelector('[data-action="del-col"]').disabled = table.rows[0].cells.length <= 1;
+            const selection = window.getSelection();
+            if (selection.rangeCount && cell.contains(selection.anchorNode)) savedRange = selection.getRangeAt(0).cloneRange();
+            schedule();
+        }
+        function restore() {
+            if (!valid()) return;
+            editor.focus({ preventScroll: true });
+            const range = savedRange && cell.contains(savedRange.startContainer) ? savedRange : document.createRange();
+            if (range !== savedRange) { range.selectNodeContents(cell); range.collapse(false); }
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+        }
+        function schedule() {
+            if (disposed || !table) return;
+            settled = false;
+            clearTimeout(settleTimer);
+            settleTimer = setTimeout(() => { settled = true; request(); }, 200);
+            request();
+        }
+        function request() {
+            if (!frame && !disposed) frame = requestAnimationFrame(() => { frame = 0; render(); });
+        }
+        function obstacles(bounds) {
+            const result = [];
+            // Walk visible neighbors at each ancestor level, including text next
+            // to a nested table in a list or quotation. Never scan the whole document.
+            for (let block = table; block !== editor && editor.contains(block); block = block.parentElement) {
+                for (const direction of ['previousSibling', 'nextSibling']) {
+                    for (let node = block[direction]; node; node = node[direction]) {
+                        let rect;
+                        if (node.nodeType === 1) rect = node.getBoundingClientRect();
+                        else if (node.nodeType === 3 && node.textContent.trim()) {
+                            const range = document.createRange();
+                            range.selectNodeContents(node);
+                            rect = range.getBoundingClientRect();
+                        }
+                        if (!rect?.width || !rect.height) continue;
+                        if (direction === 'previousSibling' && rect.bottom < bounds.top) break;
+                        if (direction === 'nextSibling' && rect.top > bounds.bottom) break;
+                        result.push(rect);
+                    }
+                }
+            }
+            const search = document.getElementById('searchReplaceBox');
+            if (search?.getClientRects().length) result.push(search.getBoundingClientRect());
+            return result;
+        }
+        function placeMenu(node, anchor) {
+            const rect = anchor.getBoundingClientRect();
+            node.style.maxWidth = Math.max(1, innerWidth - 12) + 'px';
+            node.style.maxHeight = Math.max(1, innerHeight - 12) + 'px';
+            const size = node.getBoundingClientRect();
+            node.style.left = Math.max(6, Math.min(rect.left, innerWidth - size.width - 6)) + 'px';
+            node.style.top = Math.max(6, Math.min(rect.bottom + 4, innerHeight - size.height - 6)) + 'px';
+        }
+        function render() {
+            if (!valid()) return clear();
+            const palette = document.querySelector('.command-palette');
+            if (palette?.getClientRects().length) return hide();
+            const rect = wrapper.getBoundingClientRect();
+            const top = Math.max(0, rect.top, header.getBoundingClientRect().bottom);
+            const bounds = geometry.box(Math.max(0, rect.left), top,
+                Math.max(0, Math.min(innerWidth, rect.left + wrapper.clientWidth) - Math.max(0, rect.left)),
+                Math.max(0, Math.min(innerHeight, rect.top + wrapper.clientHeight) - top));
+            if (pointerDown || hovering || owns(document.activeElement) || !picker.hidden) {
+                // Keep the chosen placement stable during interaction, but never
+                // strand a focused menu outside a pane that has just shrunk.
+                if (controls.dataset.docked !== 'true' && controls.classList.contains('visible')) {
+                    controls.style.maxWidth = Math.max(1, bounds.width - 12) + 'px';
+                    controls.style.maxHeight = Math.max(1, bounds.height - 12) + 'px';
+                    const size = controls.getBoundingClientRect();
+                    controls.style.left = Math.max(bounds.left + 6, Math.min(size.left, bounds.right - size.width - 6)) + 'px';
+                    controls.style.top = Math.max(bounds.top + 6, Math.min(size.top, bounds.bottom - size.height - 6)) + 'px';
+                }
+                if (!picker.hidden) placeMenu(picker, controls.querySelector('[data-action="placement"]'));
+                return;
+            }
+            const horizontal = sizes[0].getBoundingClientRect(), vertical = sizes[1].getBoundingClientRect();
+            const next = geometry.choose({ preference, table: table.getBoundingClientRect(), cell: cell.getBoundingClientRect(), bounds,
+                horizontal, vertical, obstacles: obstacles(bounds), current, allowUndock: settled });
+            current = next.placement;
+            if (current === 'hidden') return hide();
+            controls.dataset.placement = current;
+            controls.dataset.vertical = String(Boolean(next.vertical));
+            controls.setAttribute('aria-orientation', next.vertical ? 'vertical' : 'horizontal');
+            controls.setAttribute('role', 'toolbar');
+            controls.querySelectorAll('button').forEach(button => button.removeAttribute('role'));
+            controls.classList.add('visible');
+            controls.style.maxWidth = '';
+            controls.style.maxHeight = '';
+            if (current === 'top-bar') {
+                const fixed = [...header.querySelectorAll('.toolbar-fixed')].reduce((total, node) => total + node.getBoundingClientRect().width, 0);
+                const reserve = document.documentElement.dataset.toolbarMode === 'simple' ? 12 : 296;
+                const available = Math.max(28, header.clientWidth - fixed - reserve);
+                dock.hidden = false;
+                dock.style.maxWidth = available + 'px';
+                const compact = horizontal.width > available;
+                toggle.hidden = !compact;
+                if (compact) {
+                    document.body.appendChild(controls);
+                    controls.dataset.docked = 'false';
+                    controls.classList.toggle('visible', menuOpen);
+                    controls.dataset.vertical = 'true';
+                    controls.setAttribute('role', 'menu');
+                    controls.setAttribute('aria-orientation', 'vertical');
+                    controls.querySelectorAll('button').forEach(button => button.setAttribute('role', 'menuitem'));
+                    if (menuOpen) placeMenu(controls, toggle);
+                } else {
+                    dock.appendChild(controls);
+                    controls.dataset.docked = 'true';
+                }
+            } else {
+                dock.hidden = true;
+                document.body.appendChild(controls);
+                controls.dataset.docked = 'false';
+                controls.style.left = next.left + 'px';
+                controls.style.top = next.top + 'px';
+                controls.style.maxWidth = next.width + 'px';
+                controls.style.maxHeight = next.height + 'px';
+            }
+            options.onLayout();
+        }
+
+        const positionLabels = {
+            auto: label('tablePositionAuto', 'Automatic (recommended)'), 'top-bar': label('tablePositionTopBar', 'Always in top bar'),
+            'top-left': label('tablePositionTopLeft', 'Top left'), 'top-right': label('tablePositionTopRight', 'Top right'),
+            'bottom-left': label('tablePositionBottomLeft', 'Bottom left'), 'bottom-right': label('tablePositionBottomRight', 'Bottom right'),
+            left: label('tablePositionLeft', 'Left side (vertical)'), right: label('tablePositionRight', 'Right side (vertical)'),
+        };
+        function openPicker(fixed = false) {
+            picker.replaceChildren();
+            for (const value of fixed ? geometry.positions.slice(1, 7) : ['auto', 'top-bar', 'fixed']) {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.dataset.position = value;
+                button.textContent = value === 'fixed' ? label('tablePositionFixed', 'Choose a fixed position…') : positionLabels[value];
+                button.setAttribute('role', value === 'fixed' ? 'menuitem' : 'menuitemradio');
+                if (value !== 'fixed') button.setAttribute('aria-checked', String(value === preference));
+                button.tabIndex = -1;
+                picker.appendChild(button);
+            }
+            picker.hidden = false;
+            controls.querySelector('[data-action="placement"]').setAttribute('aria-expanded', 'true');
+            placeMenu(picker, controls.querySelector('[data-action="placement"]'));
+            picker.firstElementChild.tabIndex = 0;
+            picker.firstElementChild.focus({ preventScroll: true });
+        }
+        for (const node of [controls, dock, picker]) {
+            listen(node, 'mousedown', event => { event.preventDefault(); event.stopPropagation(); });
+            listen(node, 'click', event => event.stopPropagation());
+        }
+        listen(controls, 'click', event => {
+            const button = event.target.closest('button');
+            if (!button || button.disabled || !valid()) return;
+            if (button.dataset.action === 'placement') return openPicker();
+            closeMenus();
+            restore();
+            options.onAction(button.dataset.action);
+            schedule();
+        });
+        listen(picker, 'click', event => {
+            const value = event.target.closest('button')?.dataset.position;
+            if (!value) return;
+            if (value === 'fixed') return openPicker(true);
+            closeMenus();
+            restore();
+            options.onPreference(value);
+        });
+        listen(toggle, 'click', () => {
+            if (!valid()) return;
+            menuOpen = !menuOpen;
+            toggle.setAttribute('aria-expanded', String(menuOpen));
+            controls.classList.toggle('visible', menuOpen);
+            if (menuOpen) { placeMenu(controls, toggle); controls.querySelector('button').focus({ preventScroll: true }); }
+        });
+        function keyboard(event) {
+            const container = picker.contains(event.target) ? picker : controls;
+            if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); closeMenus(); restore(); hovering = false; schedule(); return; }
+            const vertical = container === picker || controls.dataset.vertical === 'true';
+            const nextKey = vertical ? 'ArrowDown' : 'ArrowRight', previousKey = vertical ? 'ArrowUp' : 'ArrowLeft';
+            if (![nextKey, previousKey, 'Home', 'End'].includes(event.key)) return;
+            const buttons = [...container.querySelectorAll('button:not(:disabled)')];
+            const index = buttons.indexOf(document.activeElement);
+            const next = event.key === 'Home' ? 0 : event.key === 'End' ? buttons.length - 1 :
+                (index + (event.key === nextKey ? 1 : -1) + buttons.length) % buttons.length;
+            event.preventDefault(); event.stopPropagation();
+            buttons.forEach((button, i) => { button.tabIndex = i === next ? 0 : -1; });
+            buttons[next].focus({ preventScroll: true });
+        }
+        listen(controls, 'keydown', keyboard);
+        listen(picker, 'keydown', keyboard);
+        for (const node of [controls, dock, picker]) listen(node, 'focusout', () => queueMicrotask(() => {
+            if (!owns(document.activeElement)) { closeMenus(); schedule(); }
+        }));
+        listen(document, 'keydown', event => {
+            if (event.altKey && event.key === 'F10' && valid()) {
+                event.preventDefault();
+                (dock.hidden || toggle.hidden ? controls.querySelector('button') : toggle).focus({ preventScroll: true });
+            }
+        });
+        listen(controls, 'pointerenter', () => { hovering = true; });
+        listen(controls, 'pointerleave', () => { hovering = false; schedule(); });
+        listen(document, 'pointerdown', event => {
+            pointerDown = owns(event.target);
+            if (!pointerDown) { closeMenus(); if (!editor.contains(event.target) && !header.contains(event.target)) clear(); }
+        }, true);
+        listen(document, 'pointerup', () => { pointerDown = false; schedule(); }, true);
+        listen(document, 'selectionchange', () => {
+            if (owns(document.activeElement) || pointerDown) return;
+            const node = window.getSelection()?.anchorNode;
+            const selected = (node?.nodeType === 3 ? node.parentElement : node)?.closest?.('td, th');
+            if (selected && editor.contains(selected) && !options.isSourceMode()) {
+                options.onContext(selected);
+                show(selected.closest('table'), selected);
+            } else clear();
+        });
+        listen(document, 'focusin', event => {
+            if (owns(event.target)) return;
+            if (!editor.contains(event.target) && !header.contains(event.target)) clear();
+            else schedule();
+        });
+        listen(window, 'scroll', event => { if (!owns(event.target)) schedule(); }, true);
+        listen(window, 'resize', schedule);
+        listen(editor, 'load', schedule, true);
+        function dispose() {
+            disposed = true;
+            cancelAnimationFrame(frame); clearTimeout(settleTimer);
+            resize.disconnect(); mutations.disconnect(); listeners.forEach(remove => remove());
+            [controls, dock, picker, ...sizes].forEach(node => node.remove());
+        }
+        listen(window, 'pagehide', dispose);
+        return { show, clear, schedule, dispose, owns, setPreference(value) {
+            preference = geometry.normalize(value);
+            document.documentElement.dataset.tableToolbarPosition = preference;
+            current = null; hovering = false; closeMenus(); schedule();
+        } };
+    }
+})();
+
+/* Shared equation boundaries for the editor and export-only normalization. */
 (function(root, factory) {
     const api = factory();
     if (typeof module === 'object' && module.exports) module.exports = api;
@@ -747,6 +1169,7 @@
     // These have a browser sentinel \n at the end that must be stripped
     // by htmlToMarkdown (in edit mode) or by enterDisplayMode (on mode transition).
     const codeBlocksWithSentinel = new WeakSet();
+    const initializedLinks = new WeakSet();
     const NAVIGATION_FLAG_RESET_DELAY = 200; // Must be > focusout handler delay (100ms)
     function resetNavigationFlag() {
         setTimeout(() => { isNavigatingIntoBlock = false; }, NAVIGATION_FLAG_RESET_DELAY);
@@ -2114,6 +2537,7 @@
     }
 
     function renderFromMarkdown() {
+        if (tableControls) tableControls.clear();
         // Remove IMAGE_DIR and FORCE_RELATIVE_PATH directives before rendering (they're stored in variables)
         let markdownToRender = removeDirectivesFromMarkdown(markdown);
         logger.log('[Binary Markdown] renderFromMarkdown: markdown length:', markdown.length, 'after directive removal:', markdownToRender.length);
@@ -2885,6 +3309,7 @@
         let codeLang = '';
         let codeFenceLength = 0; // Track the length of the opening fence
         let codeFenceChar = ''; // Track the fence character (backtick or tilde)
+        let codeFenceIndent = 0;
         let codeStart = 0;
         const metadataEnd = lines[0] === '---' ? lines.findIndex((line, i) => i > 0 && /^(---|\.\.\.)$/.test(line)) : -1;
         let inTable = false;
@@ -2894,6 +3319,13 @@
         
         // Stack to track list nesting: [{type: 'ul'|'ol', indent: number}]
         let listStack = [];
+
+        function appendCodeLine(line) {
+            // Remove only the opening fence's indentation, preserving tabs and
+            // deeper code indentation (including on invalid closing fences).
+            const indent = Math.min(codeFenceIndent, /^ */.exec(line)[0].length);
+            codeContent += line.slice(indent) + '\n';
+        }
 
         function closeListsToLevel(targetIndent) {
             let result = '';
@@ -3046,9 +3478,9 @@
 
             // Handle code blocks (\`\`\`+ or ~~~+)
             // Match opening/closing fence: 3+ backticks or tildes
-            const fenceMatch = line.match(/^(\`{3,}|~{3,})(.*)?$/);
+            const fenceMatch = line.match(/^( {0,3})(\`{3,}|~{3,})(.*)?$/);
             if (fenceMatch) {
-                const fenceStr = fenceMatch[1];
+                const fenceStr = fenceMatch[2];
                 const fenceLen = fenceStr.length;
                 const fenceCharacter = fenceStr[0];
                 
@@ -3057,7 +3489,7 @@
                     // - Same character type as opening
                     // - At least as many characters as opening fence
                     // - No language specifier (just fence or whitespace after)
-                    const afterFence = fenceMatch[2] || '';
+                    const afterFence = fenceMatch[3] || '';
                     if (fenceCharacter === codeFenceChar && fenceLen >= codeFenceLength && afterFence.trim() === '') {
                         // Valid closing fence
                         // The line processing loop appends '\n' to every line, so the
@@ -3103,7 +3535,7 @@
                         continue;
                     } else {
                         // Not a valid closing fence, treat as code content
-                        codeContent += line + '\n';
+                        appendCodeLine(line);
                         continue;
                     }
                 } else {
@@ -3124,13 +3556,14 @@
                     codeStart = i;
                     codeFenceLength = fenceLen;
                     codeFenceChar = fenceCharacter;
-                    codeLang = (fenceMatch[2] || '').trim();
+                    codeFenceIndent = fenceMatch[1].length;
+                    codeLang = (fenceMatch[3] || '').trim();
                     continue;
                 }
             }
 
             if (inCodeBlock) {
-                codeContent += line + '\n';
+                appendCodeLine(line);
                 continue;
             }
 
@@ -3297,6 +3730,18 @@
         return html;
     }
 
+    function setupLink(a) {
+        if (a.closest('.toc-block')) return;
+        // DOM-only details; keep this shared by rendered, inserted, and pasted links.
+        if (!a.hasAttribute('title')) a.title = a.getAttribute('href') || '';
+        if (initializedLinks.has(a)) return;
+        initializedLinks.add(a);
+        a.addEventListener('click', e => {
+            e.preventDefault();
+            host.openLink(a.getAttribute('href'));
+        });
+    }
+
     function setupInteractiveElements() {
         setupInlineMath();
         setupDocumentAux();
@@ -3309,13 +3754,7 @@
         });
 
         // Handle link clicks
-        editor.querySelectorAll('a').forEach(a => {
-            if (a.closest('.toc-block')) return;
-            a.addEventListener('click', e => {
-                e.preventDefault();
-                host.openLink(a.getAttribute('href'));
-            });
-        });
+        editor.querySelectorAll('a').forEach(setupLink);
 
         // Make table cells editable
         editor.querySelectorAll('th, td').forEach(cell => {
@@ -4121,6 +4560,14 @@
         const code = pre.querySelector('code');
         if (!code) return;
 
+        // Nested contenteditable elements can share the outer editor's focus.
+        // Restore inactive blocks here; click propagation/focusout is not enough.
+        editor.querySelectorAll('pre[data-mode="edit"]').forEach(other => {
+            if (other !== pre && !other.closest('.mermaid-wrapper, .math-wrapper')) {
+                enterDisplayMode(other);
+            }
+        });
+
         logger.log('enterEditMode');
 
         // Get plain text content, converting <br> to newlines.
@@ -4625,59 +5072,19 @@
 
     // ========== TABLE FUNCTIONALITY ==========
 
-    // Table floating toolbar
-    let tableToolbar = null;
     let activeTableCell = null;
     let activeTable = null;
-
-    function createTableToolbar() {
-        if (tableToolbar) return;
-
-        tableToolbar = document.createElement('div');
-        tableToolbar.className = 'table-toolbar';
-
-        var tableToolbarItems = [
-            { action: 'add-col-left', title: i18n.addColLeft, text: '←Col' },
-            { action: 'add-col-right', title: i18n.addColRight, text: 'Col→' },
-            { action: 'del-col', title: i18n.deleteCol },
-            null,
-            { action: 'add-row-above', title: i18n.addRowAbove, text: '↑Row' },
-            { action: 'add-row-below', title: i18n.addRowBelow, text: 'Row↓' },
-            { action: 'del-row', title: i18n.deleteRow },
-            null,
-            { action: 'align-left', title: i18n.alignLeft },
-            { action: 'align-center', title: i18n.alignCenter },
-            { action: 'align-right', title: i18n.alignRight },
-        ];
-        tableToolbarItems.forEach(function(item) {
-            if (!item) {
-                var sep = document.createElement('span');
-                sep.className = 'separator';
-                tableToolbar.appendChild(sep);
-            } else {
-                var btn = document.createElement('button');
-                btn.dataset.action = item.action;
-                btn.title = item.title || '';
-                if (item.text) {
-                    btn.textContent = item.text;
-                    btn.classList.add('text-btn');
-                } else {
-                    btn.innerHTML = LUCIDE_ICONS[item.action] || item.action;
-                }
-                tableToolbar.appendChild(btn);
-            }
-        });
-
-        tableToolbar.addEventListener('mousedown', function(e) {
-            e.preventDefault(); // Prevent losing focus from table
-        });
-
-        tableToolbar.addEventListener('click', function(e) {
-            const btn = e.target.closest('button');
-            if (!btn) return;
-
-            const action = btn.dataset.action;
-            switch(action) {
+    var tableControls = window.BinaryTableToolbar.create({
+        editor, header: toolbar, messages: i18n, icons: LUCIDE_ICONS,
+        isSourceMode: () => isSourceMode,
+        onContext(cell) { activeTableCell = cell; activeTable = cell?.closest('table') || null; },
+        onLayout: updateToolbarScrollButtons,
+        onPreference(value) { host.setTableToolbarPosition?.(value); },
+        onAction(action) {
+            if (!activeTableCell || !editor.contains(activeTableCell)) return;
+            markdown = readCommittedMarkdown();
+            undoManager.saveSnapshot();
+            switch (action) {
                 case 'add-col-left': insertTableColumnLeft(); break;
                 case 'add-col-right': insertTableColumnRight(); break;
                 case 'del-col': deleteTableColumn(); break;
@@ -4688,74 +5095,16 @@
                 case 'align-center': setColumnAlignment('center'); break;
                 case 'align-right': setColumnAlignment('right'); break;
             }
-        });
-
-        document.body.appendChild(tableToolbar);
-    }
-
+            showTableToolbar(activeTable);
+        }
+    });
     function showTableToolbar(table) {
-        if (!tableToolbar) createTableToolbar();
-        
-        const rect = table.getBoundingClientRect();
-        const toolbarHeight = 40;
-        const topOffset = toolbar ? toolbar.offsetHeight : 50; // Dynamic toolbar height
-        
-        // Calculate ideal position (above table)
-        let top = rect.top - toolbarHeight;
-        
-        // If table top is above the header toolbar area, stick to below the header
-        // But only if table is still partially visible
-        if (top < topOffset && rect.bottom > topOffset + toolbarHeight) {
-            top = topOffset;
-        }
-        
-        // If table is completely above viewport (below header), hide toolbar
-        if (rect.bottom < topOffset + toolbarHeight) {
-            hideTableToolbar();
-            return;
-        }
-        
-        // If table is completely below viewport, hide toolbar
-        if (rect.top > window.innerHeight) {
-            hideTableToolbar();
-            return;
-        }
-        
-        tableToolbar.style.top = top + 'px';
-        tableToolbar.style.left = rect.left + 'px';
-        tableToolbar.classList.add('visible');
         activeTable = table;
+        tableControls.show(table, activeTableCell);
     }
-
     function hideTableToolbar() {
-        if (tableToolbar) {
-            tableToolbar.classList.remove('visible');
-        }
-        activeTable = null;
+        tableControls?.clear();
     }
-
-    // Update table toolbar position on scroll
-    // Listen on window and use capture to catch all scroll events
-    window.addEventListener('scroll', function(e) {
-        // Check if focus is currently in a table cell
-        const sel = window.getSelection();
-        logger.log('scroll - sel:', sel, 'rangeCount:', sel?.rangeCount);
-        if (sel && sel.rangeCount > 0) {
-            const node = sel.anchorNode;
-            const startEl = node?.nodeType === 3 ? node.parentElement : node;
-            const cell = startEl?.closest ? startEl.closest('th, td') : null;
-            logger.log('scroll - node:', node, 'startEl:', startEl, 'cell:', cell);
-            if (cell && editor.contains(cell)) {
-                const table = cell.closest('table');
-                logger.log('scroll - found table:', table);
-                if (table) {
-                    activeTable = table;
-                    activeTableCell = cell;
-                    showTableToolbar(table);
-                }
-            }
-        }
-    }, true);
 
     function deleteTableColumn() {
         if (!activeTableCell || !activeTable) return;
@@ -5297,22 +5646,6 @@
     });
 
 
-
-    editor.addEventListener('focusout', function(e) {
-        // Delay hiding to allow button clicks
-        setTimeout(() => {
-            const sel = window.getSelection();
-            if (sel && sel.rangeCount > 0) {
-                const node = sel.anchorNode;
-                const startEl = node?.nodeType === 3 ? node.parentElement : node;
-                const cell = startEl?.closest('th, td');
-                if (cell && editor.contains(cell)) {
-                    return; // Still in a cell, don't hide
-                }
-            }
-            hideTableToolbar();
-        }, 200);
-    });
 
     // Detect markdown table pattern: | col1 | col2 |
     function checkTablePattern(text) {
@@ -7109,6 +7442,7 @@
         // IMPORTANT: Preserve empty lines as "> " in markdown
         // Handle both <br> elements AND actual newline characters in text
         let lines = [];
+        const codeLines = new Set();
         let currentLine = '';
         
         function processBlockquoteContent(node) {
@@ -7118,6 +7452,16 @@
             if (node.nodeType === 1 && node.classList.contains('math-wrapper')) {
                 if (currentLine) { lines.push(currentLine); currentLine = ''; }
                 lines.push(...mathBlockMarkdown(node).replace(/\n$/, '').split('\n'));
+                return;
+            }
+            if (node.nodeType === 1 && (node.tagName === 'PRE' || node.classList.contains('mermaid-wrapper'))) {
+                if (currentLine) { lines.push(currentLine); currentLine = ''; }
+                // Serialize the block, not its toolbar/inline code children.
+                // Code whitespace must survive the quote's prose normalization.
+                for (const line of mdProcessNode(node).replace(/\n$/, '').split('\n')) {
+                    codeLines.add(lines.length);
+                    lines.push(line);
+                }
                 return;
             }
             if (node.nodeType === 3) {
@@ -7186,7 +7530,7 @@
         }
         
         // Build markdown with > prefix for each line (including empty lines)
-        return lines.map(line => '> ' + line.trim()).join('\n') + '\n';
+        return lines.map((line, index) => '> ' + (codeLines.has(index) ? line : line.trim())).join('\n') + '\n';
     }
 
     function mdProcessTable(table) {
@@ -12386,6 +12730,7 @@
     // Save the editor selection before toolbar buttons steal focus
     let savedToolbarRange = null;
     toolbar.addEventListener('mousedown', function(e) {
+        if (tableControls.owns(e.target)) return;
         const btn = e.target.closest('button');
         if (!btn) return;
         const sel = window.getSelection();
@@ -12397,6 +12742,7 @@
     });
 
     toolbar.addEventListener('click', function(e) {
+        if (tableControls.owns(e.target)) return;
         const btn = e.target.closest('button');
         if (!btn) return;
 
@@ -13049,7 +13395,11 @@
     });
 
     function toggleSourceMode() {
-        if (finishInlineMathEdit) finishInlineMathEdit(true, false);
+        hideTableToolbar();
+        // Read while the current mode still owns the latest edits. The host
+        // command can arrive before blur or the delayed visual sync runs.
+        markdown = readCurrentMarkdown();
+        cancelScheduledSync();
         isSourceMode = !isSourceMode;
         if (isSourceMode) {
             sourceEditor.value = markdown;
@@ -13063,6 +13413,7 @@
             editor.style.display = 'block';
             updateOutline();
         }
+        notifyChangeImmediate();
     }
 
     // Immediate notification - called after debounce in debouncedSync
@@ -14113,6 +14464,7 @@
         const a = document.createElement('a');
         a.href = '#';
         a.textContent = selectedText;
+        setupLink(a);
         
         range.deleteContents();
         range.insertNode(a);
@@ -14129,6 +14481,10 @@
 
     // Handle messages from host (VSCode / Electron / test)
     host.onMessage(function(message) {
+        if (message.type === 'tableToolbarPosition') {
+            tableControls.setPreference(message.value);
+            return;
+        }
         if (message.type === 'validateExportImage') {
             if (typeof host.respondExport !== 'function') return;
             const image = new Image();
@@ -14300,6 +14656,7 @@
             const a = document.createElement('a');
             a.href = message.url;
             a.textContent = message.text;
+            setupLink(a);
             
             const sel = window.getSelection();
             if (sel && sel.rangeCount) {
@@ -15414,6 +15771,7 @@
                     const a = document.createElement('a');
                     a.href = plainText;
                     a.textContent = selectedText;
+                    setupLink(a);
                     range.deleteContents();
                     range.insertNode(a);
 
@@ -15432,6 +15790,7 @@
                     const a = document.createElement('a');
                     a.href = plainText;
                     a.textContent = plainText;
+                    setupLink(a);
                     range.deleteContents();
                     range.insertNode(a);
 
