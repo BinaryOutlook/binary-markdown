@@ -2348,6 +2348,7 @@
         let codeLang = '';
         let codeFenceLength = 0; // Track the length of the opening fence
         let codeFenceChar = ''; // Track the fence character (backtick or tilde)
+        let codeFenceIndent = 0;
         let codeStart = 0;
         const metadataEnd = lines[0] === '---' ? lines.findIndex((line, i) => i > 0 && /^(---|\.\.\.)$/.test(line)) : -1;
         let inTable = false;
@@ -2357,6 +2358,13 @@
         
         // Stack to track list nesting: [{type: 'ul'|'ol', indent: number}]
         let listStack = [];
+
+        function appendCodeLine(line) {
+            // Remove only the opening fence's indentation, preserving tabs and
+            // deeper code indentation (including on invalid closing fences).
+            const indent = Math.min(codeFenceIndent, /^ */.exec(line)[0].length);
+            codeContent += line.slice(indent) + '\n';
+        }
 
         function closeListsToLevel(targetIndent) {
             let result = '';
@@ -2509,9 +2517,9 @@
 
             // Handle code blocks (\`\`\`+ or ~~~+)
             // Match opening/closing fence: 3+ backticks or tildes
-            const fenceMatch = line.match(/^(\`{3,}|~{3,})(.*)?$/);
+            const fenceMatch = line.match(/^( {0,3})(\`{3,}|~{3,})(.*)?$/);
             if (fenceMatch) {
-                const fenceStr = fenceMatch[1];
+                const fenceStr = fenceMatch[2];
                 const fenceLen = fenceStr.length;
                 const fenceCharacter = fenceStr[0];
                 
@@ -2520,7 +2528,7 @@
                     // - Same character type as opening
                     // - At least as many characters as opening fence
                     // - No language specifier (just fence or whitespace after)
-                    const afterFence = fenceMatch[2] || '';
+                    const afterFence = fenceMatch[3] || '';
                     if (fenceCharacter === codeFenceChar && fenceLen >= codeFenceLength && afterFence.trim() === '') {
                         // Valid closing fence
                         // The line processing loop appends '\n' to every line, so the
@@ -2566,7 +2574,7 @@
                         continue;
                     } else {
                         // Not a valid closing fence, treat as code content
-                        codeContent += line + '\n';
+                        appendCodeLine(line);
                         continue;
                     }
                 } else {
@@ -2587,13 +2595,14 @@
                     codeStart = i;
                     codeFenceLength = fenceLen;
                     codeFenceChar = fenceCharacter;
-                    codeLang = (fenceMatch[2] || '').trim();
+                    codeFenceIndent = fenceMatch[1].length;
+                    codeLang = (fenceMatch[3] || '').trim();
                     continue;
                 }
             }
 
             if (inCodeBlock) {
-                codeContent += line + '\n';
+                appendCodeLine(line);
                 continue;
             }
 
