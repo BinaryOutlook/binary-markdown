@@ -3537,6 +3537,14 @@
         const code = pre.querySelector('code');
         if (!code) return;
 
+        // Nested contenteditable elements can share the outer editor's focus.
+        // Restore inactive blocks here; click propagation/focusout is not enough.
+        editor.querySelectorAll('pre[data-mode="edit"]').forEach(other => {
+            if (other !== pre && !other.closest('.mermaid-wrapper, .math-wrapper')) {
+                enterDisplayMode(other);
+            }
+        });
+
         logger.log('enterEditMode');
 
         // Get plain text content, converting <br> to newlines.
