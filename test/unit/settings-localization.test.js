@@ -25,7 +25,7 @@ test('every settings description and option explanation uses a manifest translat
     for (const text of settingsStrings()) {
         assert.match(text, /^%[\w.]+%$/, `Hard-coded or missing settings text: ${text}`);
     }
-    for (const setting of ['language', 'toolbarMode', 'tableToolbarPosition', 'outlineStateScope']) {
+    for (const setting of ['language', 'toolbarMode', 'tableToolbarPosition', 'outlineStateScope', 'outlineActiveColor']) {
         const schema = properties[`binary-markdown.${setting}`];
         assert.equal(schema.enumDescriptions?.length, schema.enum.length, `${setting}: explain every option`);
     }

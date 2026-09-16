@@ -72,6 +72,7 @@ export const webviewMessages = {
   blockquote: 'Citation (Ctrl+Shift+Q)',
   inlineCode: 'Code en ligne (Ctrl+`)',
   codeBlock: 'Bloc de code (Ctrl+Shift+K)',
+  deleteCodeBlock: 'Supprimer le bloc de code',
   insertLink: 'Insérer un lien (Ctrl+K)',
   insertImage: 'Insérer une image (Ctrl+Shift+I)',
   setImageDir: 'Définir le répertoire d\'images',

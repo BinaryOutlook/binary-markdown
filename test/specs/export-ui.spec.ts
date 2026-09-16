@@ -15,7 +15,8 @@ type UiWindow = Window & {
 async function setup(page: Page, exportEnabled = true) {
     await page.goto('/standalone-editor.html');
     await page.setContent('<!DOCTYPE html><html data-theme="github" data-toolbar-mode="full"><head></head><body>' + generateEditorBodyHtml({ setImageDir: 'Set Image Directory', openExtensionSettings: 'Open Binary Markdown Settings' }, 'darwin', { exportEnabled, settingsEnabled: true }) + '</body></html>');
-    await page.addStyleTag({ content: fs.readFileSync(path.join(root, 'src/webview/styles.css'), 'utf8').replace('__FONT_SIZE__', '16') });
+    await page.addStyleTag({ content: fs.readFileSync(path.join(root, 'src/webview/styles.css'), 'utf8')
+        .replace('__FONT_SIZE__', '16').replace('__OUTLINE_ACTIVE_COLOR__', 'var(--link-color)') });
     await page.addScriptTag({ content: fs.readFileSync(path.join(root, 'src/shared/test-host-bridge.js'), 'utf8') });
     await page.addScriptTag({ content: fs.readFileSync(path.join(root, 'src/shared/math-syntax.js'), 'utf8') });
     for (const file of ['src/shared/table-placement.js', 'src/webview/table-toolbar.js']) {

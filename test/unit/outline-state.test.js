@@ -97,3 +97,12 @@ test('extension settings preserve the existing open default unless configured ot
     assert.equal(defaultOpenSetting.type, 'boolean');
     assert.equal(defaultOpenSetting.default, true);
 });
+
+test('extension settings offer named outline highlight colors', () => {
+    const properties = extensionManifest.contributes.configuration.properties;
+    const colorSetting = properties['binary-markdown.outlineActiveColor'];
+
+    assert.deepEqual(colorSetting.enum, ['theme', 'blue', 'green', 'orange', 'red', 'purple']);
+    assert.equal(colorSetting.enumDescriptions.length, colorSetting.enum.length);
+    assert.equal(colorSetting.default, 'theme');
+});

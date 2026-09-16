@@ -22,6 +22,13 @@
     const statusImageDir = document.getElementById('statusImageDir');
     const sidebar = document.getElementById('sidebar');
     const toolbar = document.getElementById('toolbar');
+    const editorWrapper = document.getElementById('editorWrapper');
+
+    // Reading-position outline state. The active section is the last heading
+    // that has crossed the reading line 30% down the visible editor viewport.
+    let outlineHeadings = [];
+    let activeOutlineIndex = -1;
+    let outlineScrollFrame = null;
 
     // Lucide Icons (inline SVG) - unified icon set for all toolbars
     const LUCIDE_ICONS = {
@@ -3458,6 +3465,7 @@
         });
         
         const copyBtn = document.createElement('button');
+        copyBtn.type = 'button';
         copyBtn.className = 'code-copy-btn';
         copyBtn.textContent = i18n.copy || 'Copy';
         copyBtn.setAttribute('contenteditable', 'false');
@@ -3472,6 +3480,7 @@
         
         // Expand/collapse button
         const expandBtn = document.createElement('button');
+        expandBtn.type = 'button';
         expandBtn.className = 'code-expand-btn';
         expandBtn.textContent = '⤢';
         expandBtn.title = i18n.expandCodeBlock || 'Expand';
@@ -3505,10 +3514,30 @@
                 pre.style.marginLeft = '';
             }
         });
+
+        // Delete the complete fenced block without requiring a text selection.
+        const deleteBtn = document.createElement('button');
+        deleteBtn.type = 'button';
+        deleteBtn.className = 'code-delete-btn';
+        deleteBtn.title = i18n.deleteCodeBlock || 'Delete code block';
+        deleteBtn.setAttribute('aria-label', deleteBtn.title);
+        deleteBtn.setAttribute('contenteditable', 'false');
+        deleteBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>';
+        deleteBtn.addEventListener('mousedown', (e) => {
+            // Keep the current block from losing its selection before the
+            // click handler captures the undo snapshot.
+            e.preventDefault();
+        });
+        deleteBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            deleteCodeBlock(pre);
+        });
         
         header.appendChild(expandBtn);
         header.appendChild(langTag);
         header.appendChild(copyBtn);
+        header.appendChild(deleteBtn);
         pre.insertBefore(header, pre.firstChild);
         
         // Apply syntax highlighting for display mode
@@ -3538,6 +3567,40 @@
                 }
             }, 100);
         });
+    }
+
+    function deleteCodeBlock(pre) {
+        if (!pre || !editor.contains(pre)) return;
+
+        // Commit any in-progress edit before capturing the pre-delete state so
+        // Undo restores exactly what the user saw, including their latest text.
+        if (pre.getAttribute('data-mode') === 'edit') {
+            enterDisplayMode(pre);
+        }
+        markdown = htmlToMarkdown();
+        undoManager.saveSnapshot();
+
+        const nextBlock = pre.nextElementSibling;
+        const previousBlock = pre.previousElementSibling;
+        pre.remove();
+
+        let focusTarget = nextBlock || previousBlock;
+        if (!editor.children.length) {
+            focusTarget = document.createElement('p');
+            focusTarget.innerHTML = '<br>';
+            editor.appendChild(focusTarget);
+        }
+
+        syncMarkdownSync();
+        updateOutline();
+        updateWordCount();
+
+        if (focusTarget && /^(P|H[1-6]|DIV|BLOCKQUOTE|LI)$/.test(focusTarget.tagName)) {
+            if (focusTarget === nextBlock) setCursorToFirstTextNode(focusTarget);
+            else setCursorToEnd(focusTarget);
+        } else {
+            editor.focus({ preventScroll: true });
+        }
     }
     
     // Enter edit mode - remove highlighting, make editable
@@ -12390,11 +12453,13 @@
             sourceEditor.value = markdown;
             sourceEditor.style.display = 'block';
             editor.style.display = 'none';
+            updateActiveOutlineItem();
         } else {
             markdown = sourceEditor.value;
             renderFromMarkdown();
             sourceEditor.style.display = 'none';
             editor.style.display = 'block';
+            updateOutline();
         }
         notifyChangeImmediate();
     }
@@ -12491,16 +12556,21 @@
         assignHeadingAnchors(editor, readCommittedMarkdown());
         const headings = editor.querySelectorAll('h1, h2, h3, h4, h5, h6');
         const headingsArray = Array.from(headings);
+        outlineHeadings = headingsArray;
         outline.innerHTML = headingsArray.map((h, i) => {
             const level = h.tagName[1];
             return '<a class="outline-item" data-level="' + level + '" data-index="' + i + '">' + escapeHtml(h.textContent) + '</a>';
         }).join('');
+        // The links were recreated, so reapply the active state even if the
+        // numerical heading index did not change.
+        activeOutlineIndex = -1;
 
         outline.querySelectorAll('.outline-item').forEach(item => {
             item.addEventListener('click', () => {
                 const idx = parseInt(item.dataset.index);
                 if (headingsArray[idx]) {
-                    const wrapper = editor.closest('.editor-wrapper');
+                    setActiveOutlineItem(idx, false);
+                    const wrapper = editorWrapper || editor.closest('.editor-wrapper');
                     if (wrapper) {
                         const wrapperRect = wrapper.getBoundingClientRect();
                         const headingRect = headingsArray[idx].getBoundingClientRect();
@@ -12511,7 +12581,81 @@
                 }
             });
         });
+
+        updateActiveOutlineItem();
     }
+
+    function setActiveOutlineItem(index, ensureVisible = true) {
+        const items = outline.querySelectorAll('.outline-item');
+        if (!items.length) {
+            activeOutlineIndex = -1;
+            return;
+        }
+
+        const boundedIndex = Math.max(0, Math.min(index, items.length - 1));
+        if (activeOutlineIndex !== boundedIndex) {
+            items.forEach((item, itemIndex) => {
+                const active = itemIndex === boundedIndex;
+                item.classList.toggle('is-active', active);
+                if (active) item.setAttribute('aria-current', 'location');
+                else item.removeAttribute('aria-current');
+            });
+            activeOutlineIndex = boundedIndex;
+        }
+
+        if (!ensureVisible) return;
+        const activeItem = items[boundedIndex];
+        const outlineRect = outline.getBoundingClientRect();
+        const itemRect = activeItem.getBoundingClientRect();
+        const margin = 8;
+        if (itemRect.top < outlineRect.top + margin) {
+            outline.scrollTop -= outlineRect.top + margin - itemRect.top;
+        } else if (itemRect.bottom > outlineRect.bottom - margin) {
+            outline.scrollTop += itemRect.bottom - (outlineRect.bottom - margin);
+        }
+    }
+
+    function updateActiveOutlineItem() {
+        if (!outlineHeadings.length || isSourceMode) {
+            activeOutlineIndex = -1;
+            outline.querySelectorAll('.outline-item').forEach(item => {
+                item.classList.remove('is-active');
+                item.removeAttribute('aria-current');
+            });
+            return;
+        }
+
+        const wrapper = editorWrapper || editor.closest('.editor-wrapper');
+        if (!wrapper) {
+            setActiveOutlineItem(0);
+            return;
+        }
+
+        const wrapperRect = wrapper.getBoundingClientRect();
+        const readingLine = wrapperRect.top + wrapper.clientHeight * 0.3;
+        let activeIndex = 0;
+        for (let index = 0; index < outlineHeadings.length; index++) {
+            if (outlineHeadings[index].getBoundingClientRect().top <= readingLine + 1) {
+                activeIndex = index;
+            } else {
+                break;
+            }
+        }
+        setActiveOutlineItem(activeIndex);
+    }
+
+    function scheduleActiveOutlineUpdate() {
+        if (outlineScrollFrame !== null) return;
+        outlineScrollFrame = requestAnimationFrame(() => {
+            outlineScrollFrame = null;
+            updateActiveOutlineItem();
+        });
+    }
+
+    if (editorWrapper) {
+        editorWrapper.addEventListener('scroll', scheduleActiveOutlineUpdate, { passive: true });
+    }
+    window.addEventListener('resize', scheduleActiveOutlineUpdate);
 
     function updateWordCount() {
         const plain = editor.cloneNode(true);
@@ -15338,6 +15482,8 @@
         window.__testApi.setupInteractiveElements = setupInteractiveElements;
         window.__testApi.renderFromMarkdown = renderFromMarkdown;
         window.__testApi.htmlToMarkdown = htmlToMarkdown;
+        window.__testApi.updateOutline = updateOutline;
+        window.__testApi.updateActiveOutlineItem = updateActiveOutlineItem;
         window.__testApi.ready = true;
         
         // Table operation functions for testing

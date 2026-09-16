@@ -72,6 +72,7 @@ export const webviewMessages = {
   blockquote: '引用 (Ctrl+Shift+Q)',
   inlineCode: '行内代码 (Ctrl+`)',
   codeBlock: '代码块 (Ctrl+Shift+K)',
+  deleteCodeBlock: '删除代码块',
   insertLink: '插入链接 (Ctrl+K)',
   insertImage: '插入图片 (Ctrl+Shift+I)',
   setImageDir: '设置图片目录',

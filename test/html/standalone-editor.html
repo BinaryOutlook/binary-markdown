@@ -34,6 +34,16 @@
             outline: none;
             white-space: pre-wrap;
         }
+        .editor-wrapper {
+            height: 420px;
+            overflow: auto;
+            position: relative;
+        }
+        .outline-item.is-active {
+            color: var(--link-color);
+            background: var(--selection-bg);
+            font-weight: 600;
+        }
         .editor h1, .editor h2, .editor h3, .editor h4, .editor h5, .editor h6 {
             color: var(--heading-color);
             margin: 0.5em 0;
@@ -86,7 +96,7 @@
             color: var(--blockquote-color);
             cursor: pointer;
         }
-        .code-copy-btn, .code-expand-btn {
+        .code-copy-btn, .code-expand-btn, .code-delete-btn {
             background: none;
             border: none;
             cursor: pointer;
@@ -145,18 +155,20 @@
         <input id="searchWholeWord" type="checkbox">
         <input id="searchRegex" type="checkbox">
     </div>
-    <div class="editor" id="editor" contenteditable="true" spellcheck="false"></div>
+    <div class="editor-wrapper" id="editorWrapper">
+        <div class="editor" id="editor" contenteditable="true" spellcheck="false"></div>
+    </div>
     
     <script src="vendor/turndown.js"></script>
     <script src="vendor/turndown-plugin-gfm.js"></script>
     <script src="vendor/mermaid.min.js"></script>
     <script>
     /**
- * Test HostBridge — テスト環境用のモック実装。
+ * Test HostBridge: mock implementation for the test environment.
  *
- * test/build-standalone.js により editor.js の前に注入される。
- * window.__testApi.messages に送信メッセージを記録する。
- * window.__hostMessageHandler でホスト→エディタのメッセージを送信できる。
+ * Injected before editor.js by test/build-standalone.js.
+ * Records outgoing messages in window.__testApi.messages.
+ * Use window.__hostMessageHandler to send messages from the host to the editor.
  */
 (function() {
     window.__testApi = {
@@ -168,15 +180,30 @@
     };
 
     window.hostBridge = {
-        // ドキュメント操作
+        // Document operations.
         syncContent: function(markdown) {
             window.__testApi.messages.push({ type: 'edit', content: markdown });
         },
-        save: function() {
-            window.__testApi.messages.push({ type: 'save' });
+        save: function(content, revision) {
+            window.__testApi.messages.push({ type: 'save', content: content, revision: revision });
+        },
+        requestExport: function(format) {
+            window.__testApi.messages.push({ type: 'export', format: format });
+        },
+        requestExportCapabilities: function() {
+            window.__testApi.messages.push({ type: 'exportCapabilities' });
+        },
+        cancelExport: function() {
+            window.__testApi.messages.push({ type: 'cancelExport' });
+        },
+        openExportSettings: function(tool) {
+            window.__testApi.messages.push({ type: 'exportSettings', tool: tool });
+        },
+        respondExport: function(payload) {
+            window.__testApi.messages.push(payload);
         },
 
-        // フォーカス/編集状態
+        // Focus and editing state.
         reportEditingState: function(editing) {
             window.__testApi.messages.push({ type: 'editingStateChanged', editing: editing });
         },
@@ -190,7 +217,7 @@
             window.__testApi.messages.push({ type: 'outlineStateChanged', open: open });
         },
 
-        // ホスト側 UI が必要な操作
+        // Operations that require host interface support.
         openLink: function(href) {
             window.__testApi.messages.push({ type: 'openLink', href: href });
         },
@@ -202,6 +229,9 @@
         },
         requestSetImageDir: function() {
             window.__testApi.messages.push({ type: 'setImageDir' });
+        },
+        openSettings: function() {
+            window.__testApi.messages.push({ type: 'openExtensionSettings' });
         },
         saveImageAndInsert: function(dataUrl, fileName) {
             window.__testApi.messages.push({ type: 'saveImageAndInsert', dataUrl: dataUrl, fileName: fileName });
@@ -216,7 +246,7 @@
             window.__testApi.messages.push({ type: 'sendToChat', startLine: startLine, endLine: endLine, selectedMarkdown: selectedMarkdown });
         },
 
-        // ホストからのメッセージ受信
+        // Receive messages from the host.
         onMessage: function(handler) {
             window.__hostMessageHandler = handler;
         }
@@ -225,7 +255,280 @@
 
     </script>
     <script>
-    (function() {
+    /* Shared equation boundaries for the editor and export-only normalization. */
+(function(root, factory) {
+    const api = factory();
+    if (typeof module === 'object' && module.exports) module.exports = api;
+    else root.BinaryMath = api;
+})(typeof globalThis === 'object' ? globalThis : this, function() {
+    function escaped(text, index) {
+        let count = 0;
+        while (index > 0 && text[--index] === '\\') count++;
+        return count % 2 === 1;
+    }
+
+    // Code spans and link/image destinations are never equation input.
+    function protectedEnd(text, index) {
+        if (text[index] === '`' && !escaped(text, index)) {
+            const run = /^`+/.exec(text.slice(index))[0];
+            let end = index + run.length;
+            while ((end = text.indexOf(run, end)) !== -1) {
+                if (text[end - 1] !== '`' && text[end + run.length] !== '`') return end + run.length;
+                end += run.length;
+            }
+            return index + run.length;
+        }
+        if (text[index] === ']' && text[index + 1] === '(' && !escaped(text, index)) {
+            let depth = 1;
+            for (let end = index + 2; end < text.length; end++) {
+                if (escaped(text, end)) continue;
+                if (text[end] === '(') depth++;
+                if (text[end] === ')' && --depth === 0) return end + 1;
+            }
+            return text.length;
+        }
+        if (text[index] === '<' && /^<(?:[a-z][\w+.-]*:|\/?[a-z][\w-]*(?:\s|>))/i.test(text.slice(index))) {
+            const end = text.indexOf('>', index + 1);
+            if (end !== -1) return end + 1;
+        }
+        return index;
+    }
+
+    function inline(text, backslash = true) {
+        const tokens = [];
+        for (let i = 0; i < text.length; i++) {
+            const skip = protectedEnd(text, i);
+            if (skip > i) { i = skip - 1; continue; }
+            if (escaped(text, i)) continue;
+            let open, close;
+            if (backslash && text.startsWith('\\(', i)) { open = '\\('; close = '\\)'; }
+            else if (text[i] === '$' && text[i - 1] !== '$' && text[i + 1] !== '$' && /\S/.test(text[i + 1] || '')) {
+                open = close = '$';
+            } else continue;
+            for (let end = i + open.length; end < text.length; end++) {
+                if (text[end] === '\n' || text[end] === '\r') break;
+                if (!text.startsWith(close, end) || escaped(text, end)) continue;
+                if (close === '$' && (end === i + 1 || /\s/.test(text[end - 1]) || /[\d$]/.test(text[end + 1] || '') || text[end - 1] === '$')) continue;
+                const tex = text.slice(i + open.length, end);
+                if (!tex.trim()) break;
+                tokens.push({ start: i, end: end + close.length, open, close, tex, raw: text.slice(i, end + close.length) });
+                i = end + close.length - 1;
+                break;
+            }
+        }
+        return tokens;
+    }
+
+    // Display delimiters must occupy a standalone block, including the closer.
+    function display(lines, index, backslash = true) {
+        const match = /^( *)(\$\$|\\\[)(.*)$/.exec(lines[index]);
+        if (!match || (match[2] === '\\[' && !backslash)) return null;
+        const indent = match[1], open = match[2], close = open === '$$' ? '$$' : '\\]';
+        const rest = match[3];
+        const oneLineEnd = rest.lastIndexOf(close);
+        if (oneLineEnd >= 0 && !escaped(rest, oneLineEnd) && !rest.slice(oneLineEnd + close.length).trim()) {
+            const tex = rest.slice(0, oneLineEnd);
+            return { start: index, end: index + 1, open, close, tex, indent, raw: lines[index].slice(indent.length), singleLine: true };
+        }
+        if (rest.trim()) return null;
+        const body = [];
+        for (let end = index + 1; end < lines.length; end++) {
+            const line = lines[end];
+            if (line.trim() === close) {
+                return { start: index, end: end + 1, open, close, tex: body.join('\n'), indent,
+                    raw: lines.slice(index, end + 1).map(line => line.startsWith(indent) ? line.slice(indent.length) : line).join('\n'), singleLine: false };
+            }
+            // An incomplete block must not absorb another Markdown section.
+            if (line === '\u0000' || /^\s*(?:`{3,}|~{3,}|#{1,6} |\$\$\s*$|\\\[\s*$)/.test(line)) return null;
+            body.push(line.startsWith(indent) ? line.slice(indent.length) : line);
+        }
+        return null;
+    }
+
+    // Change only equation delimiters in an export copy, retaining TeX commands.
+    function normalizeForPandoc(source, backslash = true) {
+        if (!backslash) return source;
+        const lines = source.split('\n');
+        let fence = null, frontMatter = false, quoteScope = '', listIndents = [];
+        for (let i = 0; i < lines.length; i++) {
+            if (i === 0 && /^\uFEFF?---\s*$/.test(lines[i])) { frontMatter = true; continue; }
+            if (frontMatter) {
+                if (/^(?:---|\.\.\.)\s*$/.test(lines[i])) frontMatter = false;
+                continue;
+            }
+            const quote = /^(?: {0,3}> ?)+/.exec(lines[i]);
+            const prefix = quote ? quote[0] : '';
+            const content = lines[i].slice(prefix.length);
+            // A list's content indentation is not an indented code block.
+            // Keep real code (four more spaces) protected inside the list too.
+            if (prefix !== quoteScope && !fence) { listIndents = []; quoteScope = prefix; }
+            const indentation = /^ */.exec(content)[0].length;
+            const list = /^( *)(?:[-+*]|\d+[.)]) +/.exec(content);
+            if (!fence && content.trim()) {
+                while (listIndents.length && indentation < listIndents[listIndents.length - 1]) listIndents.pop();
+                if (list) listIndents.push(list[0].length);
+            }
+            const baseIndent = listIndents[listIndents.length - 1] || 0;
+            const relative = content.slice(list ? list[0].length : Math.min(indentation, baseIndent));
+            const marker = /^ {0,3}(`{3,}|~{3,})(.*)$/.exec(relative);
+            if (fence) {
+                if (marker && marker[1][0] === fence[0] && marker[1].length >= fence.length && !marker[2].trim()) fence = null;
+                continue;
+            }
+            if (marker) { fence = marker[1]; continue; }
+            if (/^ {4}|^\t|^ {0,3}\[[^\]]+\]:/.test(relative)) continue;
+            const blockLines = prefix ? lines.slice(i).map(line => line.startsWith(prefix) ? line.slice(prefix.length) : '\u0000') : lines;
+            const blockIndex = prefix ? 0 : i;
+            const block = display(blockLines, blockIndex, true);
+            if (block) {
+                const last = i + block.end - blockIndex - 1;
+                if (block.open === '\\[') {
+                    lines[i] = lines[i].replace('\\[', () => '$$');
+                    const end = lines[last].lastIndexOf('\\]');
+                    lines[last] = lines[last].slice(0, end) + '$$' + lines[last].slice(end + 2);
+                }
+                i = last;
+                continue;
+            }
+            const tokens = inline(content, true).filter(token => token.open === '\\(');
+            let normalized = content;
+            for (const token of tokens.reverse()) {
+                // Trimming boundary whitespace affects only temporary delimiters.
+                const tex = token.tex.trim();
+                normalized = normalized.slice(0, token.start) + '$' + tex + '$' + normalized.slice(token.end);
+            }
+            lines[i] = prefix + normalized;
+        }
+        return lines.join('\n');
+    }
+    return { inline, display, normalizeForPandoc };
+});
+
+/* Shared source operations. No DOM, YAML reformatting or export dependencies. */
+(function(root, factory) {
+    const api = factory();
+    if (typeof module === 'object' && module.exports) module.exports = api;
+    else root.documentAux = api;
+})(typeof globalThis === 'object' ? globalThis : this, function() {
+    const START = '<!-- binary-markdown:toc:start -->';
+    const END = '<!-- binary-markdown:toc:end -->';
+
+    function sourceLines(source) {
+        const lines = [];
+        const pattern = /([^\r\n]*)(\r\n|\r|\n|$)/g;
+        let match;
+        while ((match = pattern.exec(source)) && match[0]) {
+            lines.push({ text: match[1], start: match.index, end: pattern.lastIndex });
+        }
+        return lines;
+    }
+
+    function splitFrontMatter(source) {
+        const lines = sourceLines(source);
+        if (!lines.length || lines[0].text.replace(/^\uFEFF/, '') !== '---') return { raw: '', body: source };
+        for (let i = 1; i < lines.length; i++) {
+            if (!/^(?:---|\.\.\.)[ \t]*$/.test(lines[i].text)) continue;
+            const content = source.slice(lines[0].end, lines[i].start);
+            // Preserve mapping-shaped metadata, including malformed YAML values.
+            // A plain paragraph between two thematic rules is not metadata.
+            if (!/^\s*[^\s#][^\r\n]*?:/m.test(content) && content.split(/\r?\n/).some(line => line.trim() && !/^\s*#/.test(line))) break;
+            return { raw: source.slice(0, lines[i].end), body: source.slice(lines[i].end) };
+        }
+        return { raw: '', body: source };
+    }
+
+    function headingText(source) {
+        return source
+            .replace(/!\[([^\]]*)\]\([^)]*\)/g, '$1')
+            .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
+            .replace(/(`+)([\s\S]*?)\1/g, '$2')
+            .replace(/\*\*\*([^*]+)\*\*\*|\*\*([^*]+)\*\*|\*([^*]+)\*/g, (_, a, b, c) => a || b || c)
+            .replace(/(^|[^\w])_{1,3}([^_]+)_{1,3}(?=[^\w]|$)/g, '$1$2')
+            .replace(/~~(.+?)~~/g, '$1')
+            .replace(/\\([\\`*_[\]{}()#+.!~>-])/g, '$1');
+    }
+
+    function headingSlug(label) {
+        return label.toLowerCase().trim().replace(/[^\p{L}\p{N}_\s-]/gu, '').replace(/\s+/g, '-') || 'section';
+    }
+
+    function scan(source) {
+        const front = splitFrontMatter(source);
+        const lines = sourceLines(source);
+        const headings = [], tocs = [], markers = [];
+        const used = new Set();
+        let fence, open;
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i];
+            if (line.start < front.raw.length) continue;
+            const match = /^ {0,3}(`{3,}|~{3,})(.*)$/.exec(line.text);
+            if (fence) {
+                if (match && match[1][0] === fence.char && match[1].length >= fence.length && !match[2].trim()) fence = undefined;
+                continue;
+            }
+            if (match) { fence = { char: match[1][0], length: match[1].length }; continue; }
+            if (line.text === START) {
+                if (open) throw new Error('Nested TOC markers. Repair the TOC boundaries in source mode before saving or exporting.');
+                open = line;
+                continue;
+            }
+            if (line.text === END) {
+                if (!open) throw new Error('Unmatched TOC end marker. Repair the TOC boundaries in source mode.');
+                tocs.push({ start: open.start, end: line.start + line.text.length, source: source.slice(open.start, line.start + line.text.length) });
+                open = undefined;
+                continue;
+            }
+            if (open) continue;
+            if (/^\[toc\]$/i.test(line.text)) { markers.push({ start: line.start, end: line.start + line.text.length }); continue; }
+            // Match the visual editor's ATX heading grammar. Excludes fences,
+            // front matter, generated contents, quoted and indented examples.
+            const heading = /^(#{1,6}) (.*)$/.exec(line.text);
+            if (!heading) continue;
+            const label = headingText(heading[2]);
+            const base = headingSlug(label);
+            let id = base, suffix = 1;
+            while (used.has(id)) id = base + '-' + suffix++;
+            used.add(id);
+            headings.push({ level: heading[1].length, label, id, start: line.start });
+        }
+        if (open) throw new Error('Unclosed TOC block. Restore its end marker in source mode before saving or exporting.');
+        return { front, headings, tocs, markers };
+    }
+
+    function generateToc(headings, eol = '\n') {
+        const lines = [START, '**Contents**', ''];
+        const levels = [];
+        for (const h of headings) {
+            while (levels.length && levels[levels.length - 1] >= h.level) levels.pop();
+            const depth = levels.length;
+            levels.push(h.level);
+            const label = h.label.replace(/[\\[\]`*_~]/g, '\\$&');
+            lines.push('  '.repeat(depth) + '- [' + label + '](#' + h.id + ')');
+        }
+        if (headings.length) lines.push('');
+        lines.push(END);
+        return lines.join(eol);
+    }
+
+    function refreshTocs(source) {
+        const parsed = scan(source);
+        if (!parsed.tocs.length && !parsed.markers.length) return source;
+        const eol = /\r\n/.test(source) ? '\r\n' : '\n';
+        const generated = generateToc(parsed.headings, eol);
+        for (const block of [...parsed.tocs, ...parsed.markers].sort((a, b) => b.start - a.start)) {
+            source = source.slice(0, block.start) + generated + source.slice(block.end);
+        }
+        return source;
+    }
+
+    function assertFreshToc(source) {
+        if (refreshTocs(source) !== source) throw new Error('The table of contents is out of date. Save the document to refresh it, then export again.');
+    }
+
+    return { START, END, sourceLines, splitFrontMatter, headingText, headingSlug, scan, generateToc, refreshTocs, assertFreshToc };
+});
+
+(function() {
     // Debug logging configuration
     const DEBUG_MODE = false;
     const logger = {
@@ -235,6 +538,11 @@
     };
     
     const host = window.hostBridge;
+    const mathSyntax = window.BinaryMath;
+    const mathBackslashDelimiters = true;
+    var finishInlineMathEdit = null;
+    const documentAux = window.documentAux;
+    let frontMatterOpen = false;
     const i18n = {};
     logger.log('[Binary Markdown] i18n loaded:', i18n.livePreviewMode ? 'OK' : 'EMPTY', '- Sample:', i18n.bold || '(none)');
     const editor = document.getElementById('editor');
@@ -244,6 +552,13 @@
     const statusImageDir = document.getElementById('statusImageDir');
     const sidebar = document.getElementById('sidebar');
     const toolbar = document.getElementById('toolbar');
+    const editorWrapper = document.getElementById('editorWrapper');
+
+    // Reading-position outline state. The active section is the last heading
+    // that has crossed the reading line 30% down the visible editor viewport.
+    let outlineHeadings = [];
+    let activeOutlineIndex = -1;
+    let outlineScrollFrame = null;
 
     // Lucide Icons (inline SVG) - unified icon set for all toolbars
     const LUCIDE_ICONS = {
@@ -379,7 +694,47 @@
     let saveTimeout = null;
     let syncTimeout = null;
     let pendingSync = false;
+    let visualSourceCurrent = true;
     let hasUserEdited = false; // Flag to track if user has made any edits
+    let clientRevision = 0;
+    let syncGeneration = 0;
+    let pendingSave = null;
+
+    // Background reads must leave an in-progress equation edit cancellable.
+    // Capturing export eligibility must never normalize an untouched document.
+    function readCommittedMarkdown() {
+        return isSourceMode ? sourceEditor.value : (hasUserEdited && !visualSourceCurrent ? htmlToMarkdown() : markdown);
+    }
+
+    function readCurrentMarkdown() {
+        if (finishInlineMathEdit) finishInlineMathEdit(true, false);
+        return readCommittedMarkdown();
+    }
+
+    function cancelScheduledSync() {
+        syncGeneration++;
+        clearTimeout(syncTimeout);
+        syncTimeout = null;
+        clearTimeout(saveTimeout);
+        saveTimeout = null;
+        pendingSync = false;
+    }
+
+    function saveCurrentDocument() {
+        try { refreshManagedTocs(false); } catch (error) { showExternalChangeToast(error.message); return; }
+        const content = readCurrentMarkdown();
+        cancelScheduledSync();
+        markdown = content;
+        if (typeof host.respondExport === 'function') {
+            pendingSave = { revision: clientRevision, content: content };
+            host.save(content, clientRevision);
+        } else {
+            // The Electron adapter keeps its existing save contract.
+            if (hasUserEdited) host.syncContent(content);
+            host.save();
+            hasUserEdited = false;
+        }
+    }
     let currentImageDir = null; // IMAGE_DIR directive value (preserved during sync)
     let currentForceRelativePath = null; // FORCE_RELATIVE_PATH directive value (preserved during sync)
     let imageDirDisplayPath = null; // Resolved display path from extension
@@ -654,6 +1009,7 @@
             _isUndoRedo = true;
             try {
                 clearTimeout(syncTimeout);
+                syncTimeout = null;
                 pendingSync = false;
                 redoStack.push(capture());
                 var state = undoStack.pop();
@@ -661,6 +1017,7 @@
                 renderFromMarkdown();
                 if (state.cursor) restoreCursorState(state.cursor);
                 hasUserEdited = true;
+                clientRevision++;
                 notifyChangeImmediate();
             } finally {
                 _isUndoRedo = false;
@@ -673,6 +1030,7 @@
             _isUndoRedo = true;
             try {
                 clearTimeout(syncTimeout);
+                syncTimeout = null;
                 pendingSync = false;
                 undoStack.push(capture());
                 var state = redoStack.pop();
@@ -680,6 +1038,7 @@
                 renderFromMarkdown();
                 if (state.cursor) restoreCursorState(state.cursor);
                 hasUserEdited = true;
+                clientRevision++;
                 notifyChangeImmediate();
             } finally {
                 _isUndoRedo = false;
@@ -716,11 +1075,16 @@
     function debouncedSync() {
         if (pendingSync) return; // Skip if already pending
         clearTimeout(syncTimeout);
+        syncTimeout = null;
+        const generation = syncGeneration;
         syncTimeout = setTimeout(() => {
+            syncTimeout = null;
+            if (generation !== syncGeneration) return;
             pendingSync = true;
             // Use requestIdleCallback to process during idle time, not blocking UI
             const doSync = () => {
-                markdown = htmlToMarkdown();
+                if (generation !== syncGeneration) return;
+                markdown = readCommittedMarkdown();
                 notifyChangeImmediate();
                 pendingSync = false;
             };
@@ -736,10 +1100,13 @@
     function syncMarkdownDeferred() {
         markAsEdited(); // Any sync implies user edit
         clearTimeout(syncTimeout);
+        syncTimeout = null;
         pendingSync = true;
+        const generation = syncGeneration;
         // Defer to next frame to not block current operation
         requestAnimationFrame(() => {
-            markdown = htmlToMarkdown();
+            if (generation !== syncGeneration) return;
+            markdown = readCommittedMarkdown();
             notifyChangeImmediate();
             pendingSync = false;
         });
@@ -1545,12 +1912,13 @@
 
     // ========== MARKDOWN TO HTML ==========
 
-    function parseMarkdownLine(text) {
+    function parseMarkdownLine(text, allowMath = true) {
+        const parseLineInline = value => parseInline(value, allowMath);
         // Heading
         const headingMatch = text.match(REGEX.heading);
         if (headingMatch) {
             const level = headingMatch[1].length;
-            const content = parseInline(headingMatch[2]);
+            const content = parseLineInline(headingMatch[2]);
             return { tag: 'h' + level, html: content, consumed: true };
         }
 
@@ -1564,7 +1932,7 @@
         if (taskMatch) {
             const indent = taskMatch[1].length;
             const checked = taskMatch[2].toLowerCase() === 'x' ? 'checked' : '';
-            const taskContent = parseInline(taskMatch[3]);
+            const taskContent = parseLineInline(taskMatch[3]);
             // Use <br> for empty task items to make them visible and editable
             return { tag: 'li', listType: 'ul', html: '<input type="checkbox"' + (checked ? ' checked' : '') + '>' + (taskContent || '<br>'), consumed: true, indent: indent };
         }
@@ -1573,7 +1941,7 @@
         const ulMatch = text.match(REGEX.ul);
         if (ulMatch) {
             const indent = ulMatch[1].length;
-            const content = parseInline(ulMatch[2]);
+            const content = parseLineInline(ulMatch[2]);
             // Use <br> for empty list items to make them visible and editable
             return { tag: 'li', listType: 'ul', html: content || '<br>', consumed: true, indent: indent };
         }
@@ -1582,7 +1950,7 @@
         const olMatch = text.match(REGEX.ol);
         if (olMatch) {
             const indent = olMatch[1].length;
-            const content = parseInline(olMatch[3]);
+            const content = parseLineInline(olMatch[3]);
             // Use <br> for empty list items to make them visible and editable
             return { tag: 'li', listType: 'ol', html: content || '<br>', consumed: true, indent: indent };
         }
@@ -1590,7 +1958,7 @@
         // Blockquote
         const quoteMatch = text.match(REGEX.quote);
         if (quoteMatch) {
-            return { tag: 'blockquote', html: parseInline(quoteMatch[1]), consumed: true };
+            return { tag: 'blockquote', html: parseLineInline(quoteMatch[1]), consumed: true };
         }
 
         // Code block start (3+ backticks or tildes)
@@ -1602,12 +1970,18 @@
         }
 
         // Regular paragraph
-        return { tag: 'p', html: parseInline(text), consumed: false };
+        return { tag: 'p', html: parseLineInline(text), consumed: false };
     }
 
-    function parseInline(text) {
+    function parseInline(text, allowMath = true) {
         if (!text) return '';
-        
+        const equations = allowMath ? mathSyntax.inline(text, mathBackslashDelimiters) : [];
+        let mathMarker = '\x00BMATH';
+        while (text.includes(mathMarker)) mathMarker += 'X';
+        for (let i = equations.length - 1; i >= 0; i--) {
+            const equation = equations[i];
+            text = text.slice(0, equation.start) + mathMarker + i + '\x00' + text.slice(equation.end);
+        }
         let html = escapeHtml(text);
         
         // Restore <br> tags that were escaped (used in table cells for line breaks)
@@ -1662,6 +2036,9 @@
         for (const { placeholder, html: replacement } of placeholders) {
             html = html.replace(placeholder, replacement);
         }
+        equations.forEach((equation, i) => {
+            html = html.replace(mathMarker + i + '\x00', () => inlineMathHtml(equation));
+        });
         
         return html;
     }
@@ -1743,8 +2120,276 @@
         const html = markdownToHtmlFragment(markdownToRender);
         logger.log('[Binary Markdown] renderFromMarkdown: html length:', html.length, 'first 100 chars:', html.substring(0, 100));
         editor.innerHTML = html || '<p><br></p>';
+        visualSourceCurrent = true;
         setupInteractiveElements();
+        assignHeadingAnchors(editor, markdown);
         updatePlaceholder();
+    }
+
+    // Export uses the same parser/highlighter on a separate document tree. It
+    // never calls renderFromMarkdown or attaches the live editor's listeners.
+    let exportRenderSequence = 0;
+    let exportRenderQueue = Promise.resolve();
+    const exportRenderRequests = new Map();
+
+    function checkExportCancellation(signal) {
+        if (signal.aborted) throw new Error('Export preparation was cancelled.');
+    }
+
+    function awaitExportReady(promise, signal) {
+        checkExportCancellation(signal);
+        return new Promise((resolve, reject) => {
+            const onAbort = () => reject(new Error('Export preparation was cancelled.'));
+            signal.addEventListener('abort', onAbort, { once: true });
+            Promise.resolve(promise).then(resolve, reject).finally(() => signal.removeEventListener('abort', onAbort));
+        });
+    }
+
+    function exportWarning(warnings, code, message) {
+        if (!warnings.some(warning => warning.code === code && warning.message === message)) {
+            warnings.push({ code: code, message: message });
+        }
+    }
+
+    function stripExportMetadata(source) {
+        let text = source.replace(/^\uFEFF/, '').replace(/\r\n?/g, '\n');
+        text = documentAux.splitFrontMatter(text).body;
+        // Only a trailing app directive block outside a code fence is metadata.
+        const directiveStart = text.lastIndexOf('\n---\n');
+        if (directiveStart >= 0 && /^(?:(?:IMAGE_DIR:\s*[^\n]+|FORCE_RELATIVE_PATH:\s*(?:true|false))\n?)+\s*$/i.test(text.slice(directiveStart + 5))) {
+            let fence = null;
+            for (const line of text.slice(0, directiveStart).split('\n')) {
+                const match = line.match(/^\s{0,3}(`{3,}|~{3,})(.*)$/);
+                if (!match) continue;
+                if (!fence) fence = { character: match[1][0], length: match[1].length };
+                else if (match[1][0] === fence.character && match[1].length >= fence.length && !match[2].trim()) fence = null;
+            }
+            if (!fence) text = text.slice(0, directiveStart);
+        }
+        return text;
+    }
+
+    function hasUnsafeExportStyle(value) {
+        const withoutLocalReferences = value.replace(/url\(\s*(['"]?)#[^)]+\)/gi, '');
+        return /(?:\\|@import|expression\s*\(|javascript\s*:|url\s*\()/i.test(withoutLocalReferences);
+    }
+
+    function sanitizeExportTree(root, warnings) {
+        const blocked = 'script,iframe,object,embed,link,meta,base,form,button,textarea,select,video,audio,canvas,template,animate,animateMotion,animateTransform,set';
+        root.querySelectorAll(blocked).forEach(element => {
+            const fallback = document.createElement('span');
+            fallback.className = 'export-warning';
+            fallback.textContent = '[Export omitted active ' + element.tagName.toLowerCase() + ' content]';
+            element.replaceWith(fallback);
+            exportWarning(warnings, 'active-content', 'Active document content was replaced with a visible fallback.');
+        });
+        root.querySelectorAll('*').forEach(element => {
+            Array.from(element.attributes).forEach(attribute => {
+                const name = attribute.name.toLowerCase();
+                const value = attribute.value;
+                if (name.startsWith('on') || /^(?:contenteditable|spellcheck|tabindex|draggable|srcdoc|srcset|action|formaction|ping|autofocus|nonce)$/.test(name)) {
+                    element.removeAttribute(attribute.name);
+                    if (name.startsWith('on') || /^(?:srcdoc|action|formaction|ping)$/.test(name)) {
+                        exportWarning(warnings, 'active-content', 'Active document content was replaced with a visible fallback.');
+                    }
+                } else if (/^(?:href|xlink:href|src)$/.test(name)) {
+                    const compact = value.replace(/[\u0000-\u0020\u007f]/g, '');
+                    const safeData = name === 'src' && /^data:image\/(?:png|jpeg|gif|webp|svg\+xml|avif|bmp);/i.test(compact);
+                    const scheme = compact.match(/^([a-z][a-z0-9+.-]*):/i);
+                    const safeScheme = !scheme || /^(?:https?|file|mailto|vscode-resource|vscode-webview)$/i.test(scheme[1]);
+                    if ((!safeScheme && !safeData) || (name !== 'src' && /^data:/i.test(compact)) ||
+                        (element.namespaceURI === 'http://www.w3.org/2000/svg' && /^(?:image|use)$/i.test(element.tagName) && !compact.startsWith('#'))) {
+                        element.removeAttribute(attribute.name);
+                        element.setAttribute('data-export-fallback', 'Unsafe resource or link removed');
+                        const note = document.createElement('span');
+                        note.className = 'export-warning';
+                        note.textContent = '[Unsafe resource or link disabled]';
+                        element.after(note);
+                        exportWarning(warnings, 'unsafe-reference', 'An unsafe resource or link was disabled.');
+                    }
+                } else if (name === 'style' && hasUnsafeExportStyle(value)) {
+                    element.removeAttribute(attribute.name);
+                    exportWarning(warnings, 'active-style', 'An active or external style was removed.');
+                }
+            });
+            if (element.tagName.toLowerCase() === 'style' && hasUnsafeExportStyle(element.textContent || '')) {
+                element.remove();
+                exportWarning(warnings, 'active-style', 'An active or external style was removed.');
+            }
+            if (element.tagName.toLowerCase() === 'input') {
+                if (element.getAttribute('type') === 'checkbox') element.setAttribute('disabled', '');
+                else element.remove();
+            }
+            if (element.tagName.toLowerCase() === 'a') {
+                element.removeAttribute('target');
+                element.setAttribute('rel', 'noreferrer noopener');
+            }
+        });
+    }
+
+    function createExportFallback(wrapper, label, source, warnings, code) {
+        const fallback = document.createElement('div');
+        fallback.className = 'export-fallback';
+        const note = document.createElement('p');
+        note.className = 'export-warning';
+        note.textContent = label;
+        const pre = document.createElement('pre');
+        const content = document.createElement('code');
+        content.textContent = source;
+        pre.appendChild(content);
+        fallback.append(note, pre);
+        wrapper.replaceWith(fallback);
+        exportWarning(warnings, code, label);
+    }
+
+    async function prepareExportDocument(source, appearance, signal) {
+        checkExportCancellation(signal);
+        const warnings = [];
+        const diagrams = [];
+        const template = document.createElement('template');
+        const normalizedSource = stripExportMetadata(source);
+        template.innerHTML = markdownToHtmlFragment(normalizedSource);
+        assignHeadingAnchors(template.content, normalizedSource);
+        template.content.querySelectorAll('.toc-refresh').forEach(button => button.remove());
+        template.content.querySelectorAll('[data-toc-source]').forEach(block => block.removeAttribute('data-toc-source'));
+        sanitizeExportTree(template.content, warnings);
+        // These are diagnostics about the current rendered output, not a new
+        // Markdown parser. Literal notation stays exactly as the user sees it.
+        const diagnosticTree = template.content.cloneNode(true);
+        diagnosticTree.querySelectorAll('pre,code,.math-wrapper,.math-inline,.mermaid-wrapper').forEach(element => element.remove());
+        const visibleSource = (diagnosticTree.textContent || '').replace(/\\\$/g, '');
+        if (/\$\$[\s\S]*?\$\$|\$(?!\$)(?=\S)[^$\n]*?[^\s$]\$(?![\d$])/.test(visibleSource)) {
+            exportWarning(warnings, 'renderer-math-source', 'Unrecognized equation delimiters remain visible source in the exported document.');
+        }
+        if (/\[TOC\]/i.test(visibleSource)) {
+            exportWarning(warnings, 'renderer-toc-source', 'A literal [TOC] marker remains visible. HTML/PDF do not generate a table of contents from that marker in the current renderer.');
+        }
+        if (/\[\^[^\]\n]+\]/.test(visibleSource)) {
+            exportWarning(warnings, 'renderer-footnote-source', 'Footnote markers and definitions remain visible source. HTML/PDF do not generate linked footnotes in the current renderer.');
+        }
+        const container = document.createElement('div');
+        container.className = 'editor export-preparation';
+        container.dataset.theme = appearance.theme;
+        container.setAttribute('aria-hidden', 'true');
+        container.setAttribute('inert', '');
+        container.style.cssText = 'position:fixed;left:-100000px;top:0;width:860px;max-height:none;overflow:visible;pointer-events:none;';
+        container.style.setProperty('--font-size', appearance.fontSize + 'px');
+        container.style.fontSize = 'var(--font-size)';
+        container.style.fontFamily = 'var(--font-family)';
+        container.style.color = 'var(--text-color)';
+        // Asset fetching/embedding belongs to the host so files are read once at
+        // original resolution. Do not trigger duplicate image loads in this tree.
+        const images = Array.from(template.content.querySelectorAll('img')).map(image => {
+            const original = image.getAttribute('src');
+            image.removeAttribute('src');
+            return { image: image, original: original };
+        });
+        container.appendChild(template.content);
+        document.body.appendChild(container);
+        try {
+            container.querySelectorAll('pre:not([data-lang="math"]):not([data-lang="mermaid"])').forEach(applyHighlighting);
+            for (const span of container.querySelectorAll('.math-inline')) {
+                checkExportCancellation(signal);
+                const output = document.createElement('span');
+                try {
+                    renderInlineMath(span, true);
+                    output.className = 'math-inline-display';
+                    output.innerHTML = span.innerHTML;
+                } catch (error) {
+                    output.className = 'export-warning';
+                    output.textContent = inlineMathMarkdown(span);
+                    exportWarning(warnings, 'math-fallback', 'An inline equation could not be rendered; its source is preserved.');
+                }
+                span.replaceWith(output);
+            }
+            for (const wrapper of Array.from(container.querySelectorAll('.math-wrapper'))) {
+                checkExportCancellation(signal);
+                const code = wrapper.querySelector('pre code');
+                const mathSource = code ? getCodePlainText(code).trim() : '';
+                if (typeof katex === 'undefined') {
+                    createExportFallback(wrapper, 'Math rendering is unavailable; the expression is preserved below.', mathSource, warnings, 'math-unavailable');
+                    continue;
+                }
+                renderMathBlock(wrapper, true);
+                const display = wrapper.querySelector('.math-display');
+                if (!display || !display.innerHTML || display.querySelector('.katex-error, .math-error')) {
+                    createExportFallback(wrapper, 'This mathematical expression could not be rendered; its source is preserved below.', mathSource, warnings, 'math-fallback');
+                } else {
+                    wrapper.replaceWith(display);
+                }
+            }
+            for (const wrapper of Array.from(container.querySelectorAll('.mermaid-wrapper'))) {
+                checkExportCancellation(signal);
+                const code = wrapper.querySelector('pre code');
+                const diagramSource = code ? getCodePlainText(code).trim() : '';
+                if (typeof mermaid === 'undefined') {
+                    createExportFallback(wrapper, 'Diagram rendering is unavailable; the diagram source is preserved below.', diagramSource, warnings, 'diagram-unavailable');
+                    continue;
+                }
+                initMermaid();
+                const previousConfig = mermaid.mermaidAPI.getConfig();
+                const id = 'binary-export-diagram-' + (++exportRenderSequence);
+                const measurement = document.createElement('div');
+                container.appendChild(measurement);
+                try {
+                    // Reuse the production Mermaid library with strict settings;
+                    // never run click handlers or document-provided directives.
+                    // Start with the captured palette. getConfig() includes
+                    // resolved themeVariables which would otherwise retain the
+                    // live editor's dark colours even when theme is changed.
+                    mermaid.initialize({
+                        theme: ['dark', 'night'].includes(appearance.theme) ? 'dark' : 'default',
+                        securityLevel: 'strict', startOnLoad: false, htmlLabels: false,
+                        secure: Array.from(new Set([...(previousConfig.secure || []), 'securityLevel', 'htmlLabels', 'flowchart'])),
+                        flowchart: { useMaxWidth: true, htmlLabels: false },
+                        sequence: { useMaxWidth: true }
+                    });
+                    const result = await awaitExportReady(mermaid.render(id, diagramSource, measurement), signal);
+                    checkExportCancellation(signal);
+                    const fragment = document.createElement('template');
+                    fragment.innerHTML = result.svg;
+                    sanitizeExportTree(fragment.content, warnings);
+                    const svg = fragment.content.querySelector('svg');
+                    if (!svg) throw new Error('The diagram renderer produced no SVG.');
+                    diagrams.push({ source: diagramSource, svg: svg.outerHTML });
+                    wrapper.replaceWith(svg);
+                } catch (error) {
+                    checkExportCancellation(signal);
+                    createExportFallback(wrapper, 'This diagram could not be rendered; its source is preserved below.', diagramSource, warnings, 'diagram-fallback');
+                } finally {
+                    mermaid.initialize(previousConfig);
+                    // Mermaid can leave its owned error container after rejection.
+                    const failedContainer = document.getElementById('d' + id);
+                    if (failedContainer && container.contains(failedContainer)) failedContainer.remove();
+                    measurement.remove();
+                }
+            }
+            if (document.fonts && document.fonts.ready) await awaitExportReady(document.fonts.ready, signal);
+            checkExportCancellation(signal);
+            sanitizeExportTree(container, warnings);
+            container.querySelectorAll('[data-mode], [data-trailing-br], [data-mermaid-setup], [data-math-setup]').forEach(element => {
+                element.removeAttribute('data-mode');
+                element.removeAttribute('data-trailing-br');
+                element.removeAttribute('data-mermaid-setup');
+                element.removeAttribute('data-math-setup');
+            });
+            // Move back to an inert document before restoring src: even an
+            // unattached HTMLImageElement in the live document starts fetching.
+            const output = document.createElement('template');
+            while (container.firstChild) output.content.appendChild(container.firstChild);
+            images.forEach(entry => {
+                if (entry.original !== null && output.content.contains(entry.image)) entry.image.setAttribute('src', entry.original);
+            });
+            return {
+                html: '<article class="editor export-document">' + output.innerHTML + '</article>',
+                warnings: warnings,
+                diagrams: diagrams,
+                theme: appearance.theme,
+                fontSize: appearance.fontSize
+            };
+        } finally {
+            container.remove();
+        }
     }
 
     // ========== CURSOR-PRESERVING DOM UPDATE ==========
@@ -2070,15 +2715,178 @@
     }
 
     // Convert markdown to HTML fragment (reusable for both full render and partial paste)
+    function renderFrontMatter(raw) {
+        return '<div class="document-aux front-matter" contenteditable="false"><details' + (frontMatterOpen ? ' open' : '') + '>' +
+            '<summary>' + escapeHtml(i18n.frontMatter || 'Front matter') + '</summary>' +
+            '<textarea class="front-matter-source" aria-label="' + (i18n.frontMatter || 'Front matter').replace(/"/g, '&quot;') +
+            '" spellcheck="false" rows="7">' + escapeHtml(raw) + '</textarea></details></div>';
+    }
+
+    function renderTocBlock(raw) {
+        const label = i18n.tocContents || 'Contents';
+        const refreshLabel = i18n.refreshToc || 'Refresh table of contents';
+        let list = '<ul>';
+        for (const line of raw.split('\n')) {
+            const item = /^( *)- \[(.*)\]\(#(.*)\)$/.exec(line);
+            if (!item) continue;
+            const text = item[2].replace(/\\([\\[\]`*_~])/g, '$1');
+            list += '<li style="margin-left:' + (item[1].length / 2) + 'em"><a href="#' +
+                encodeURIComponent(item[3]) + '">' + escapeHtml(text) + '</a></li>';
+        }
+        list += '</ul>';
+        if (/^\[toc\]$/i.test(raw)) list += '<p class="toc-pending">' + escapeHtml(i18n.tocPending || 'Save or refresh to generate contents.') + '</p>';
+        return '<div class="document-aux toc-block" contenteditable="false" data-toc-source="' + encodeURIComponent(raw) + '">' +
+            '<div class="toc-heading"><strong>' + escapeHtml(label) + '</strong><button class="toc-refresh" type="button" aria-label="' +
+            refreshLabel.replace(/"/g, '&quot;') + '" title="' + refreshLabel.replace(/"/g, '&quot;') + '">↻</button></div>' + list + '</div>';
+    }
+
+    function assignHeadingAnchors(root, source) {
+        if (!root.querySelector('.toc-block')) return;
+        let headings;
+        try { headings = documentAux.scan(source).headings; }
+        catch (_) { return; } // Keep malformed source editable; save/export report it.
+        const nodes = Array.from(root.querySelectorAll('h1,h2,h3,h4,h5,h6')).filter(h => !h.closest('.document-aux'));
+        nodes.forEach((node, index) => { if (headings[index]) node.id = headings[index].id; });
+    }
+
+    function refreshManagedTocs(notify) {
+        const current = readCurrentMarkdown();
+        const next = documentAux.refreshTocs(current);
+        if (next === current) return false;
+        cancelScheduledSync();
+        markdown = current;
+        undoManager.saveSnapshot();
+        if (isSourceMode) {
+            const start = sourceEditor.selectionStart, end = sourceEditor.selectionEnd;
+            sourceEditor.value = next;
+            // Keep selection on the same source text when the generated list grows.
+            let prefix = 0, suffix = 0;
+            while (prefix < current.length && prefix < next.length && current[prefix] === next[prefix]) prefix++;
+            while (suffix < current.length - prefix && suffix < next.length - prefix && current[current.length - 1 - suffix] === next[next.length - 1 - suffix]) suffix++;
+            const map = offset => offset <= prefix ? offset : offset >= current.length - suffix ? offset + next.length - current.length : prefix;
+            if (sourceEditor.setSelectionRange) sourceEditor.setSelectionRange(map(start), map(end));
+        } else {
+            const parsed = documentAux.scan(next);
+            const replacements = parsed.tocs;
+            if (editor.querySelectorAll('.toc-block').length !== replacements.length) {
+                markdown = next;
+                const cursor = saveCursorState();
+                renderFromMarkdown();
+                if (cursor) restoreCursorState(cursor);
+            }
+            editor.querySelectorAll('.toc-block').forEach((block, index) => {
+                if (!replacements[index]) return;
+                const holder = document.createElement('template');
+                holder.innerHTML = renderTocBlock(replacements[index].source);
+                block.replaceWith(holder.content.firstElementChild);
+            });
+            setupDocumentAux();
+        }
+        markdown = next;
+        markAsEdited();
+        visualSourceCurrent = true;
+        updateOutline();
+        updateWordCount();
+        if (notify) notifyChangeImmediate();
+        return true;
+    }
+
+    function insertManagedToc() {
+        try {
+            const current = readCurrentMarkdown();
+            const parsed = documentAux.scan(current);
+            if (parsed.tocs.length || parsed.markers.length) { refreshManagedTocs(true); return; }
+            const raw = documentAux.generateToc(parsed.headings);
+            markdown = current;
+            undoManager.saveSnapshot();
+            cancelScheduledSync();
+            if (isSourceMode) {
+                const at = Math.max(sourceEditor.selectionStart || 0, parsed.front.raw.length);
+                sourceEditor.value = current.slice(0, at) + '\n\n' + raw + '\n\n' + current.slice(at);
+                markdown = sourceEditor.value;
+                markAsEdited();
+                notifyChangeImmediate();
+            } else {
+                const holder = document.createElement('template');
+                holder.innerHTML = renderTocBlock(raw);
+                const block = holder.content.firstElementChild;
+                const line = getCurrentLine();
+                if (line && line.parentNode === editor && !line.classList.contains('front-matter')) {
+                    if (line.tagName === 'P' && !line.textContent.trim()) line.replaceWith(block);
+                    else line.after(block);
+                } else {
+                    const metadata = editor.querySelector(':scope > .front-matter');
+                    if (metadata) metadata.after(block); else editor.prepend(block);
+                }
+                if (!block.nextSibling) { const p = document.createElement('p'); p.innerHTML = '<br>'; block.after(p); }
+                setupDocumentAux();
+                syncMarkdownSync();
+                updateOutline();
+            }
+        } catch (error) { showExternalChangeToast(error.message); }
+    }
+
+    function setupDocumentAux() {
+        editor.querySelectorAll('.toc-block').forEach(block => {
+            if (block.dataset.auxSetup) return;
+            block.dataset.auxSetup = 'true';
+            block.querySelector('.toc-refresh').addEventListener('click', e => {
+                e.preventDefault(); e.stopPropagation();
+                try { refreshManagedTocs(true); } catch (error) { showExternalChangeToast(error.message); }
+            });
+            block.querySelectorAll('a').forEach(a => a.addEventListener('click', e => {
+                e.preventDefault(); e.stopPropagation();
+                const id = decodeURIComponent(a.getAttribute('href').slice(1));
+                const target = Array.from(editor.querySelectorAll('h1,h2,h3,h4,h5,h6')).find(h => h.id === id);
+                if (target) target.scrollIntoView({ block: 'start', behavior: 'smooth' });
+            }));
+        });
+        editor.querySelectorAll('.front-matter').forEach(block => {
+            if (block.dataset.auxSetup) return;
+            block.dataset.auxSetup = 'true';
+            const details = block.querySelector('details');
+            const input = block.querySelector('textarea');
+            details.addEventListener('toggle', () => { frontMatterOpen = details.open; });
+            input.addEventListener('beforeinput', () => { undoManager.saveSnapshotDebounced(); });
+            input.addEventListener('input', e => {
+                e.stopPropagation();
+                markActivelyEditing();
+                syncMarkdownSync();
+            });
+            input.addEventListener('keydown', e => {
+                e.stopPropagation();
+                if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') { e.preventDefault(); saveCurrentDocument(); }
+                if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+                    e.preventDefault();
+                    if (e.shiftKey) undoManager.redo(); else undoManager.undo();
+                }
+            });
+        });
+    }
+
     function markdownToHtmlFragment(markdownText) {
         // Normalize line endings: \r\n → \n, lone \r → \n
-        const lines = markdownText.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
-        let html = '';
+        const front = documentAux.splitFrontMatter(markdownText.replace(/\r\n?/g, '\n'));
+        let body = front.body;
+        const tocSlots = [];
+        try {
+            const parsed = documentAux.scan(body);
+            for (const block of [...parsed.tocs, ...parsed.markers].sort((a, b) => b.start - a.start)) {
+                const raw = body.slice(block.start, block.end);
+                const slot = tocSlots.length;
+                tocSlots.push(raw);
+                body = body.slice(0, block.start) + '\x00BMTOC' + slot + '\x00' + body.slice(block.end);
+            }
+        } catch (_) { /* Preserve incomplete markers as editable source. */ }
+        const lines = body.split('\n');
+        let html = front.raw ? renderFrontMatter(front.raw) : '';
         let inCodeBlock = false;
         let codeContent = '';
         let codeLang = '';
         let codeFenceLength = 0; // Track the length of the opening fence
         let codeFenceChar = ''; // Track the fence character (backtick or tilde)
+        let codeStart = 0;
+        const metadataEnd = lines[0] === '---' ? lines.findIndex((line, i) => i > 0 && /^(---|\.\.\.)$/.test(line)) : -1;
         let inTable = false;
         let tableRows = [];
         let inBlockquote = false;
@@ -2212,6 +3020,9 @@
 
         function renderBlockquote(lines) {
             if (lines.length === 0) return '';
+            if (lines.some((line, index) => /^\s*(?:`{3,}|~{3,})/.test(line) || mathSyntax.display(lines, index, mathBackslashDelimiters))) {
+                return '<blockquote>' + markdownToHtmlFragment(lines.join('\n')) + '</blockquote>';
+            }
             // Join blockquote lines with actual newlines (like code blocks)
             // CSS white-space: pre-wrap will display them as line breaks
             // Empty lines need to be preserved - use a space or <br> to ensure they render
@@ -2225,6 +3036,13 @@
 
         for (let i = 0; i < lines.length; i++) {
             const line = lines[i];
+            const tocSlot = /^\x00BMTOC(\d+)\x00$/.exec(line);
+            if (tocSlot && tocSlots[Number(tocSlot[1])] !== undefined) {
+                if (inBlockquote) { html += renderBlockquote(blockquoteLines); inBlockquote = false; blockquoteLines = []; }
+                if (inTable) { html += renderTable(tableRows); inTable = false; tableRows = []; }
+                html += closeAllLists() + renderTocBlock(tocSlots[Number(tocSlot[1])]);
+                continue;
+            }
 
             // Handle code blocks (\`\`\`+ or ~~~+)
             // Match opening/closing fence: 3+ backticks or tildes
@@ -2272,10 +3090,8 @@
                                 '<div class="mermaid-diagram"></div>' +
                                 '</div>';
                         } else if (codeLang === 'math') {
-                            html += '<div class="math-wrapper" data-mode="display" contenteditable="false">' +
-                                '<pre data-lang="math" contenteditable="true"><code' + trailingAttr + '>' + codeHtml + '</code></pre>' +
-                                '<div class="math-display"></div>' +
-                                '</div>';
+                            html += mathBlockHtml({ tex: trimmedContent, raw: lines.slice(codeStart, i + 1).join('\n'),
+                                open: lines[codeStart], close: line, singleLine: false });
                         } else {
                             html += '<pre data-lang="' + escapeHtml(codeLang) + '" data-mode="display"><code contenteditable="false"' + trailingAttr + '>' + codeHtml + '</code></pre>';
                         }
@@ -2305,6 +3121,7 @@
                     // Close any open lists before starting code block
                     html += closeAllLists();
                     inCodeBlock = true;
+                    codeStart = i;
                     codeFenceLength = fenceLen;
                     codeFenceChar = fenceCharacter;
                     codeLang = (fenceMatch[2] || '').trim();
@@ -2314,6 +3131,17 @@
 
             if (inCodeBlock) {
                 codeContent += line + '\n';
+                continue;
+            }
+
+            const equation = i > metadataEnd ? mathSyntax.display(lines, i, mathBackslashDelimiters) : null;
+            if (equation && (equation.indent.length < 4 || listStack.length)) {
+                if (inBlockquote) { html += renderBlockquote(blockquoteLines); inBlockquote = false; blockquoteLines = []; }
+                if (inTable) { html += renderTable(tableRows); inTable = false; tableRows = []; }
+                if (!equation.indent.length) html += closeAllLists();
+                else html += closeListsToLevel(Math.floor(equation.indent.length / 2));
+                html += mathBlockHtml(equation);
+                i = equation.end - 1;
                 continue;
             }
 
@@ -2351,7 +3179,7 @@
                 blockquoteLines = [];
             }
 
-            const parsed = parseMarkdownLine(line);
+            const parsed = parseMarkdownLine(line, i > metadataEnd && (!/^(?: {4}|\t)/.test(line) || listStack.length > 0));
 
             // Handle list grouping with nesting
             if (parsed.listType) {
@@ -2408,6 +3236,11 @@
                     for (let j = i + 1; j < lines.length; j++) {
                         const nextLine = lines[j];
                         if (nextLine.trim() !== '') {
+                            if (/^ +/.test(nextLine) && mathSyntax.display(lines, j, mathBackslashDelimiters)) {
+                                nextListItem = true;
+                                nextListIndent = /^ */.exec(nextLine)[0].length;
+                                break;
+                            }
                             // Found next non-empty line - check if it's a list item
                             const ulMatch = nextLine.match(/^(\s*)[-*+] /);
                             const olMatch = nextLine.match(/^(\s*)\d+\. /);
@@ -2465,6 +3298,8 @@
     }
 
     function setupInteractiveElements() {
+        setupInlineMath();
+        setupDocumentAux();
         // Make checkboxes work
         editor.querySelectorAll('input[type="checkbox"]').forEach(cb => {
             cb.addEventListener('change', () => {
@@ -2475,6 +3310,7 @@
 
         // Handle link clicks
         editor.querySelectorAll('a').forEach(a => {
+            if (a.closest('.toc-block')) return;
             a.addEventListener('click', e => {
                 e.preventDefault();
                 host.openLink(a.getAttribute('href'));
@@ -2883,6 +3719,128 @@
     
     // ========== KATEX MATH BLOCK FUNCTIONALITY ==========
 
+    function inlineMathHtml(equation) {
+        return '<span class="math-inline" contenteditable="false" tabindex="0" role="button"' +
+            ' aria-label="' + escapeHtml(i18n.editEquation || 'Edit equation') + '"' +
+            ' data-math-raw="' + escapeHtml(encodeURIComponent(equation.raw)) + '"' +
+            ' data-math-tex="' + escapeHtml(encodeURIComponent(equation.tex)) + '"' +
+            ' data-math-open="' + escapeHtml(equation.open) + '" data-math-close="' + escapeHtml(equation.close) + '">' +
+            escapeHtml(equation.raw) + '</span>';
+    }
+
+    function inlineMathMarkdown(span) {
+        return decodeURIComponent(span.dataset.mathRaw || '');
+    }
+
+    function renderInlineMath(span, strict = false) {
+        span.innerHTML = katex.renderToString(decodeURIComponent(span.dataset.mathTex), {
+            displayMode: false, throwOnError: strict, trust: false, output: 'html'
+        });
+    }
+
+    function setupInlineMath() {
+        const spans = editor.querySelectorAll('.math-inline');
+        if (!spans.length) return;
+        waitForKatex(() => spans.forEach(span => {
+            if (span.dataset.mathSetup) return;
+            span.dataset.mathSetup = 'true';
+            renderInlineMath(span);
+        }));
+    }
+
+    function editInlineMath(span) {
+        if (finishInlineMathEdit) finishInlineMathEdit(true, false);
+        const input = document.createElement('input');
+        input.className = 'math-inline-input';
+        input.setAttribute('aria-label', i18n.editEquation || 'Edit equation');
+        input.title = i18n.equationEditHint || 'Enter to apply; Escape to cancel';
+        input.spellcheck = false;
+        const original = decodeURIComponent(span.dataset.mathTex);
+        input.value = original;
+        const rect = span.getBoundingClientRect();
+        const inputWidth = Math.min(480, window.innerWidth - 16);
+        input.style.left = Math.max(8, Math.min(rect.left, window.innerWidth - inputWidth - 8)) + 'px';
+        input.style.top = Math.max(8, Math.min(rect.bottom + 4, window.innerHeight - 50)) + 'px';
+        document.body.appendChild(input);
+        const finish = (apply, focus) => {
+            if (finishInlineMathEdit !== finish) return;
+            finishInlineMathEdit = null;
+            const value = input.value;
+            input.remove();
+            if (!span.isConnected) return;
+            if (apply && value !== original) {
+                markdown = readCurrentMarkdown();
+                undoManager.saveSnapshot();
+                if (value.trim()) {
+                    span.dataset.mathTex = encodeURIComponent(value);
+                    span.dataset.mathRaw = encodeURIComponent(span.dataset.mathOpen + value + span.dataset.mathClose);
+                    renderInlineMath(span);
+                } else {
+                    // Empty inline delimiters are ambiguous with display math.
+                    const placeholder = document.createTextNode('');
+                    span.replaceWith(placeholder);
+                    span = placeholder;
+                }
+                syncMarkdownSync();
+            }
+            if (focus) {
+                editor.focus();
+                const range = document.createRange();
+                range.setStartAfter(span); range.collapse(true);
+                const selection = window.getSelection(); selection.removeAllRanges(); selection.addRange(range);
+            }
+        };
+        finishInlineMathEdit = finish;
+        input.addEventListener('blur', () => finish(true, false));
+        input.addEventListener('keydown', event => {
+            event.stopPropagation();
+            if (event.isComposing) return;
+            if (event.key === 'Enter' || event.key === 'Escape') {
+                event.preventDefault(); finish(event.key === 'Enter', true);
+            } else if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 's') {
+                event.preventDefault(); finish(true, false); saveCurrentDocument();
+            }
+        });
+        input.focus(); input.select();
+    }
+
+    editor.addEventListener('click', event => {
+        const span = event.target.closest && event.target.closest('.math-inline');
+        if (!span) return;
+        event.preventDefault(); event.stopImmediatePropagation();
+        editInlineMath(span);
+    }, true);
+    editor.addEventListener('keydown', event => {
+        if (event.target.classList.contains('math-inline') && (event.key === 'Enter' || event.key === ' ')) {
+            event.preventDefault(); event.stopImmediatePropagation();
+            editInlineMath(event.target);
+        }
+    }, true);
+
+    function mathBlockHtml(block) {
+        const trailing = block.tex.endsWith('\n');
+        const code = block.tex ? escapeHtml(block.tex).replace(/\n/g, '<br>') + (trailing ? '<br>' : '') : '<br>';
+        return '<div class="math-wrapper" data-mode="display" contenteditable="false"' +
+            ' data-math-original="' + escapeHtml(encodeURIComponent(block.raw)) + '"' +
+            ' data-math-initial="' + escapeHtml(encodeURIComponent(block.tex)) + '"' +
+            ' data-math-open="' + escapeHtml(block.open) + '" data-math-close="' + escapeHtml(block.close) + '"' +
+            ' data-math-single="' + Boolean(block.singleLine) + '">' +
+            '<pre data-lang="math" contenteditable="true"><code' + (trailing ? ' data-trailing-br="true"' : '') + '>' + code + '</code></pre>' +
+            '<div class="math-display"></div></div>';
+    }
+
+    function mathBlockMarkdown(wrapper) {
+        const code = wrapper.querySelector('pre code');
+        const tex = code && code.innerHTML !== '<br>' ? stripTrailingNewlines(getCodePlainText(code), code, wrapper) : '';
+        if (wrapper.hasAttribute('data-math-original') && tex === decodeURIComponent(wrapper.dataset.mathInitial)) {
+            return decodeURIComponent(wrapper.dataset.mathOriginal) + '\n';
+        }
+        const open = wrapper.dataset.mathOpen || '```math';
+        const close = wrapper.dataset.mathClose || '```';
+        if (wrapper.dataset.mathSingle === 'true' && !tex.includes('\n')) return open + tex + close + '\n';
+        return open + '\n' + tex + '\n' + close + '\n';
+    }
+
     function waitForKatex(callback, maxAttempts) {
         maxAttempts = maxAttempts || 50;
         var attempts = 0;
@@ -2899,7 +3857,7 @@
         check();
     }
 
-    function renderMathBlock(wrapper) {
+    function renderMathBlock(wrapper, strict) {
         var pre = wrapper.querySelector('pre[data-lang="math"]');
         var displayDiv = wrapper.querySelector('.math-display');
         if (!pre || !displayDiv) return;
@@ -2913,16 +3871,14 @@
         }
 
         try {
-            var lines = texCode.split('\n').filter(function(l) { return l.trim() !== ''; });
-            var html = '';
-            for (var i = 0; i < lines.length; i++) {
-                html += katex.renderToString(lines[i].trim(), {
-                    displayMode: true,
-                    throwOnError: false,
-                    output: 'html'
-                });
-            }
-            displayDiv.innerHTML = html;
+            // Newlines are TeX whitespace. Environments such as aligned and
+            // matrices must reach KaTeX as one expression, including their rows.
+            displayDiv.innerHTML = katex.renderToString(texCode, {
+                displayMode: true,
+                throwOnError: Boolean(strict),
+                trust: false,
+                output: 'html'
+            });
         } catch (err) {
             displayDiv.innerHTML = '<div class="math-error">Error: ' +
                 escapeHtml(err.message || 'Invalid LaTeX') + '</div>';
@@ -3022,6 +3978,7 @@
         });
         
         const copyBtn = document.createElement('button');
+        copyBtn.type = 'button';
         copyBtn.className = 'code-copy-btn';
         copyBtn.textContent = i18n.copy || 'Copy';
         copyBtn.setAttribute('contenteditable', 'false');
@@ -3036,6 +3993,7 @@
         
         // Expand/collapse button
         const expandBtn = document.createElement('button');
+        expandBtn.type = 'button';
         expandBtn.className = 'code-expand-btn';
         expandBtn.textContent = '⤢';
         expandBtn.title = i18n.expandCodeBlock || 'Expand';
@@ -3069,10 +4027,30 @@
                 pre.style.marginLeft = '';
             }
         });
+
+        // Delete the complete fenced block without requiring a text selection.
+        const deleteBtn = document.createElement('button');
+        deleteBtn.type = 'button';
+        deleteBtn.className = 'code-delete-btn';
+        deleteBtn.title = i18n.deleteCodeBlock || 'Delete code block';
+        deleteBtn.setAttribute('aria-label', deleteBtn.title);
+        deleteBtn.setAttribute('contenteditable', 'false');
+        deleteBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>';
+        deleteBtn.addEventListener('mousedown', (e) => {
+            // Keep the current block from losing its selection before the
+            // click handler captures the undo snapshot.
+            e.preventDefault();
+        });
+        deleteBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            deleteCodeBlock(pre);
+        });
         
         header.appendChild(expandBtn);
         header.appendChild(langTag);
         header.appendChild(copyBtn);
+        header.appendChild(deleteBtn);
         pre.insertBefore(header, pre.firstChild);
         
         // Apply syntax highlighting for display mode
@@ -3102,6 +4080,40 @@
                 }
             }, 100);
         });
+    }
+
+    function deleteCodeBlock(pre) {
+        if (!pre || !editor.contains(pre)) return;
+
+        // Commit any in-progress edit before capturing the pre-delete state so
+        // Undo restores exactly what the user saw, including their latest text.
+        if (pre.getAttribute('data-mode') === 'edit') {
+            enterDisplayMode(pre);
+        }
+        markdown = htmlToMarkdown();
+        undoManager.saveSnapshot();
+
+        const nextBlock = pre.nextElementSibling;
+        const previousBlock = pre.previousElementSibling;
+        pre.remove();
+
+        let focusTarget = nextBlock || previousBlock;
+        if (!editor.children.length) {
+            focusTarget = document.createElement('p');
+            focusTarget.innerHTML = '<br>';
+            editor.appendChild(focusTarget);
+        }
+
+        syncMarkdownSync();
+        updateOutline();
+        updateWordCount();
+
+        if (focusTarget && /^(P|H[1-6]|DIV|BLOCKQUOTE|LI)$/.test(focusTarget.tagName)) {
+            if (focusTarget === nextBlock) setCursorToFirstTextNode(focusTarget);
+            else setCursorToEnd(focusTarget);
+        } else {
+            editor.focus({ preventScroll: true });
+        }
     }
     
     // Enter edit mode - remove highlighting, make editable
@@ -4241,6 +5253,7 @@
     });
 
     editor.addEventListener('click', function(e) {
+        if (e.target.closest && e.target.closest('.front-matter')) return;
         const cell = e.target.closest ? e.target.closest('th, td') : null;
         if (cell && editor.contains(cell)) {
             activeTableCell = cell;
@@ -4740,7 +5753,7 @@
         // Code block: \`\`\` + enter
         // Support both <p> and <div> tags (div is created when pressing Enter after header)
         if (/^\`\`\`/.test(text) && trigger === 'enter' && node.tagName && (node.tagName.toUpperCase() === 'P' || node.tagName.toUpperCase() === 'DIV')) {
-            // 言語タグを抽出（\`\`\`javascript → javascript）
+            // Extract the language tag from the opening code fence.
             const langMatch = text.match(/^\`\`\`(\w*)/);
             const lang = langMatch ? langMatch[1].trim() : '';
             
@@ -4958,6 +5971,22 @@
         if (checkOffset < 0) return false;
         
         const beforeCursor = text.substring(0, checkOffset);
+
+        const equation = mathSyntax.inline(beforeCursor, mathBackslashDelimiters)[0];
+        if (equation) {
+            const template = document.createElement('template');
+            template.innerHTML = inlineMathHtml(equation);
+            const span = template.content.firstElementChild;
+            const replacement = document.createRange();
+            replacement.setStart(node, equation.start); replacement.setEnd(node, equation.end);
+            replacement.deleteContents(); replacement.insertNode(span);
+            const after = span.nextSibling;
+            if (after && after.nodeType === 3) range.setStart(after, Math.min(after.textContent.length, offset - equation.end));
+            else range.setStartAfter(span);
+            range.collapse(true); sel.removeAllRanges(); sel.addRange(range);
+            setupInlineMath(); syncMarkdown();
+            return true;
+        }
 
         // Inline code \`text\` + space/enter (FIRST - to protect content from other formatting)
         // Must be processed before bold/italic/strikethrough to prevent `**text**` from becoming bold
@@ -5490,9 +6519,12 @@
         markAsEdited(); // Any sync implies user edit
         // Cancel any pending sync from debouncedSync
         clearTimeout(syncTimeout);
+        syncTimeout = null;
         pendingSync = true;
+        const generation = syncGeneration;
         requestAnimationFrame(() => {
-            markdown = htmlToMarkdown();
+            if (generation !== syncGeneration) return;
+            markdown = readCommittedMarkdown();
             notifyChange();
             pendingSync = false;
             updatePlaceholder();
@@ -5572,16 +6604,22 @@
             return node.textContent;
         }
         if (node.nodeType !== 1) return '';
+        if (node.classList.contains('math-inline')) return inlineMathMarkdown(node);
 
         const tag = node.tagName.toLowerCase();
 
+        if (node.classList.contains('toc-block')) return decodeURIComponent(node.dataset.tocSource) + '\n';
+        if (node.classList.contains('front-matter')) {
+            const raw = node.querySelector('textarea').value;
+            return raw && node.nextSibling && !raw.endsWith('\n') ? raw + '\n' : raw;
+        }
         switch (tag) {
-            case 'h1': return '# ' + mdGetTextContent(node) + '\n';
-            case 'h2': return '## ' + mdGetTextContent(node) + '\n';
-            case 'h3': return '### ' + mdGetTextContent(node) + '\n';
-            case 'h4': return '#### ' + mdGetTextContent(node) + '\n';
-            case 'h5': return '##### ' + mdGetTextContent(node) + '\n';
-            case 'h6': return '###### ' + mdGetTextContent(node) + '\n';
+            case 'h1': return '# ' + mdGetInlineMarkdown(node) + '\n';
+            case 'h2': return '## ' + mdGetInlineMarkdown(node) + '\n';
+            case 'h3': return '### ' + mdGetInlineMarkdown(node) + '\n';
+            case 'h4': return '#### ' + mdGetInlineMarkdown(node) + '\n';
+            case 'h5': return '##### ' + mdGetInlineMarkdown(node) + '\n';
+            case 'h6': return '###### ' + mdGetInlineMarkdown(node) + '\n';
             case 'p': 
                 const pContent = mdGetInlineMarkdown(node);
                 // If p only contains <br> or is empty, it's a blank line marker
@@ -5591,6 +6629,7 @@
                 // Use single newline for regular paragraphs
                 return pContent + '\n';
             case 'div': 
+                if (node.classList.contains('math-wrapper')) return mathBlockMarkdown(node);
                 // Check if this is a mermaid wrapper
                 if (node.classList.contains('mermaid-wrapper') || node.classList.contains('math-wrapper')) {
                     const wrapperLang = node.classList.contains('mermaid-wrapper') ? 'mermaid' : 'math';
@@ -5746,7 +6785,9 @@
         for (const child of li.childNodes) {
             if (child.nodeType === 1) {
                 const childTag = child.tagName.toLowerCase();
-                if (childTag === 'ul' || childTag === 'ol') {
+                if (child.classList.contains('math-wrapper')) {
+                    nestedContent += mathBlockMarkdown(child).replace(/\n$/, '').split('\n').map(line => indent + '  ' + line).join('\n') + '\n';
+                } else if (childTag === 'ul' || childTag === 'ol') {
                     // Nested list - process with increased indent
                     nestedContent += mdProcessNode(child, indent + '  ');
                 }
@@ -5821,6 +6862,10 @@
         if (node.nodeType !== 1) {
             return result;
         }
+        if (node.classList.contains('math-inline')) {
+            return [{ char: inlineMathMarkdown(node), styles: new Set(currentStyles), isMath: true }];
+        }
+        if (node.classList.contains('math-wrapper')) return [];
         
         const tag = node.tagName.toLowerCase();
         
@@ -5917,6 +6962,7 @@
         for (const c of chars) {
             // Check if this character can be merged with current group
             const canMerge = currentGroup && 
+                !c.isMath && !currentGroup.isMath &&
                 !c.isImage && !currentGroup.isImage &&
                 !c.isLink && !currentGroup.isLink &&
                 !c.isCode && !currentGroup.isCode &&
@@ -5937,7 +6983,8 @@
                     isImage: c.isImage,
                     src: c.src,
                     alt: c.alt,
-                    isCode: c.isCode
+                    isCode: c.isCode,
+                    isMath: c.isMath
                 };
             }
         }
@@ -5982,6 +7029,7 @@
      * @returns {string} - Markdown formatted string
      */
     function applyMarkdownStyle(group) {
+        if (group.isMath) return applyInlineStyles(group.text, group.styles);
         // Handle special cases first
         if (group.isImage) {
             return '![' + group.alt + '](' + group.src + ')';
@@ -6064,6 +7112,14 @@
         let currentLine = '';
         
         function processBlockquoteContent(node) {
+            if (node.nodeType === 1 && node.classList.contains('math-inline')) {
+                currentLine += inlineMathMarkdown(node); return;
+            }
+            if (node.nodeType === 1 && node.classList.contains('math-wrapper')) {
+                if (currentLine) { lines.push(currentLine); currentLine = ''; }
+                lines.push(...mathBlockMarkdown(node).replace(/\n$/, '').split('\n'));
+                return;
+            }
             if (node.nodeType === 3) {
                 // Text node - check for newline characters
                 const text = node.textContent || '';
@@ -6178,6 +7234,7 @@
                 return escapePipeInCell(node.textContent);
             }
             if (node.nodeType !== 1) return '';
+            if (node.classList.contains('math-inline')) return escapePipeInCell(inlineMathMarkdown(node));
             
             const tag = node.tagName.toLowerCase();
             
@@ -6318,8 +7375,27 @@
 
     // Key input handler
     editor.addEventListener('keydown', function(e) {
+        if (e.target.closest && e.target.closest('.front-matter')) return;
         logger.log('Editor keydown:', e.key);
         if (isSourceMode) return;
+
+        if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
+            const line = getCurrentLine();
+            const delimiter = line && line.tagName === 'P' ? line.textContent.trim() : '';
+            if (delimiter === '$$' || (mathBackslashDelimiters && delimiter === '\\[')) {
+                e.preventDefault();
+                undoManager.saveSnapshot();
+                const close = delimiter === '$$' ? '$$' : '\\]';
+                const template = document.createElement('template');
+                template.innerHTML = mathBlockHtml({ open: delimiter, close, tex: '', raw: delimiter + '\n\n' + close });
+                const wrapper = template.content.firstElementChild;
+                line.replaceWith(wrapper);
+                setupMathBlocks();
+                enterSpecialWrapperEditMode(wrapper, 'start');
+                syncMarkdown();
+                return;
+            }
+        }
 
         // Mark as actively editing for non-navigation keys
         if (!e.key.startsWith('Arrow') && !['Shift', 'Control', 'Alt', 'Meta', 'CapsLock', 'Escape', 'Tab'].includes(e.key)) {
@@ -7214,7 +8290,9 @@
                     // The browser adds a sentinel \n only at the end; mid-content Enter
                     // does not produce a sentinel, so registering it would miscount lines.
                     const codeForSentinel = preElement.querySelector('code') || preElement;
-                    const textAfterInsert = codeForSentinel.textContent || '';
+                    // Chromium can represent the final line break and visibility
+                    // sentinel as BR nodes; textContent would omit both of them.
+                    const textAfterInsert = getCodePlainText(codeForSentinel);
                     if (textAfterInsert.endsWith('\n')) {
                         const sentinelTarget = preElement.closest('.mermaid-wrapper') || preElement.closest('.math-wrapper') || preElement;
                         codeBlocksWithSentinel.add(sentinelTarget);
@@ -10755,6 +11833,7 @@
 
     // BeforeInput handler - handle triple-click selection replacement
     editor.addEventListener('beforeinput', function(e) {
+        if (e.target.closest && e.target.closest('.front-matter')) return;
         if (isSourceMode) return;
         
         const sel = window.getSelection();
@@ -10904,6 +11983,7 @@
 
     // Input handler - debounced sync for performance
     editor.addEventListener('input', function(e) {
+        if (e.target.closest && e.target.closest('.front-matter')) return;
         if (isSourceMode) return;
         markActivelyEditing();
         markAsEdited(); // User has made an edit
@@ -11321,6 +12401,8 @@
         if (!btn) return;
 
         const action = btn.dataset.action;
+        if (btn.matches('[data-export-format], [data-export-action]') ||
+            (action && action.indexOf('export') === 0)) return;
 
         // View-only actions do not change Markdown content
         if (action !== 'source' && action !== 'openOutline') {
@@ -11480,8 +12562,22 @@
                 convertToSpecialBlock(preM, action);
                 var wrapperM = nextSibM ? nextSibM.previousSibling : parentElM.lastChild;
                 if (wrapperM && isSpecialWrapper(wrapperM)) {
+                    if (action === 'math') {
+                        wrapperM.dataset.mathOpen = '$$';
+                        wrapperM.dataset.mathClose = '$$';
+                        syncMarkdown();
+                    }
                     enterSpecialWrapperEditMode(wrapperM, 'start');
                 }
+                break;
+            }
+            case 'inlineMath': {
+                const tex = window.getSelection().toString() || 'x';
+                const equation = { open: '$', close: '$', tex, raw: '$' + tex + '$' };
+                document.execCommand('insertHTML', false, inlineMathHtml(equation));
+                const span = editor.querySelector('.math-inline:not([data-math-setup])');
+                setupInlineMath(); syncMarkdownSync();
+                if (span) editInlineMath(span);
                 break;
             }
             case 'link':
@@ -11490,6 +12586,9 @@
                 break;
             case 'image':
                 host.requestInsertImage();
+                break;
+            case 'toc':
+                insertManagedToc();
                 break;
             case 'table':
                 var tableHtml = '<table><tr><th>Header 1</th><th>Header 2</th></tr><tr><td>Cell</td><td>Cell</td></tr></table>';
@@ -11522,6 +12621,7 @@
         { group: 'inline', action: 'italic',        i18nKey: 'italic',        icon: 'italic' },
         { group: 'inline', action: 'strikethrough', i18nKey: 'strikethrough', icon: 'strikethrough' },
         { group: 'inline', action: 'code',          i18nKey: 'inlineCode',    icon: 'code' },
+        { group: 'inline', action: 'inlineMath',    i18nKey: 'inlineMath',    icon: 'math' },
         // Group: Headings
         { group: 'headings', action: 'heading1', i18nKey: 'heading1', icon: 'heading1' },
         { group: 'headings', action: 'heading2', i18nKey: 'heading2', icon: 'heading2' },
@@ -11542,6 +12642,7 @@
         // Group: Insert
         { group: 'insert', action: 'link',  i18nKey: 'insertLink',  icon: 'link' },
         { group: 'insert', action: 'image', i18nKey: 'insertImage', icon: 'image' },
+        { group: 'insert', action: 'toc', i18nKey: 'insertToc', icon: 'ul' },
         { group: 'insert', action: 'table', i18nKey: 'insertTable', icon: 'table' },
     ];
 
@@ -11909,6 +13010,12 @@
             host.requestSetImageDir();
         });
     }
+    const extensionSettingsBtn = document.getElementById('extensionSettingsBtn');
+    if (extensionSettingsBtn && typeof host.openSettings === 'function') {
+        extensionSettingsBtn.addEventListener('click', function() {
+            host.openSettings();
+        });
+    }
 
     // Sidebar resize functionality
     let isResizing = false;
@@ -11942,16 +13049,19 @@
     });
 
     function toggleSourceMode() {
+        if (finishInlineMathEdit) finishInlineMathEdit(true, false);
         isSourceMode = !isSourceMode;
         if (isSourceMode) {
             sourceEditor.value = markdown;
             sourceEditor.style.display = 'block';
             editor.style.display = 'none';
+            updateActiveOutlineItem();
         } else {
             markdown = sourceEditor.value;
             renderFromMarkdown();
             sourceEditor.style.display = 'none';
             editor.style.display = 'block';
+            updateOutline();
         }
     }
 
@@ -11970,7 +13080,10 @@
         // Only save if user has made edits (prevents saving on initial load)
         if (!hasUserEdited) return;
         clearTimeout(saveTimeout);
+        const generation = syncGeneration;
         saveTimeout = setTimeout(() => {
+            saveTimeout = null;
+            if (generation !== syncGeneration) return;
             host.syncContent(markdown);
             updateOutline();
             updateWordCount();
@@ -11980,6 +13093,8 @@
     
     // Mark document as edited by user
     function markAsEdited() {
+        visualSourceCurrent = false;
+        clientRevision++;
         if (!hasUserEdited) {
             hasUserEdited = true;
             logger.log('Document marked as edited by user');
@@ -12003,6 +13118,7 @@
             // Flush any pending sync before going idle
             if (pendingSync) {
                 clearTimeout(syncTimeout);
+                syncTimeout = null;
                 markdown = htmlToMarkdown();
                 notifyChangeImmediate();
                 pendingSync = false;
@@ -12038,18 +13154,24 @@
     }
 
     function updateOutline() {
+        assignHeadingAnchors(editor, readCommittedMarkdown());
         const headings = editor.querySelectorAll('h1, h2, h3, h4, h5, h6');
         const headingsArray = Array.from(headings);
+        outlineHeadings = headingsArray;
         outline.innerHTML = headingsArray.map((h, i) => {
             const level = h.tagName[1];
-            return '<a class="outline-item" data-level="' + level + '" data-index="' + i + '">' + h.textContent + '</a>';
+            return '<a class="outline-item" data-level="' + level + '" data-index="' + i + '">' + escapeHtml(h.textContent) + '</a>';
         }).join('');
+        // The links were recreated, so reapply the active state even if the
+        // numerical heading index did not change.
+        activeOutlineIndex = -1;
 
         outline.querySelectorAll('.outline-item').forEach(item => {
             item.addEventListener('click', () => {
                 const idx = parseInt(item.dataset.index);
                 if (headingsArray[idx]) {
-                    const wrapper = editor.closest('.editor-wrapper');
+                    setActiveOutlineItem(idx, false);
+                    const wrapper = editorWrapper || editor.closest('.editor-wrapper');
                     if (wrapper) {
                         const wrapperRect = wrapper.getBoundingClientRect();
                         const headingRect = headingsArray[idx].getBoundingClientRect();
@@ -12060,10 +13182,87 @@
                 }
             });
         });
+
+        updateActiveOutlineItem();
     }
 
+    function setActiveOutlineItem(index, ensureVisible = true) {
+        const items = outline.querySelectorAll('.outline-item');
+        if (!items.length) {
+            activeOutlineIndex = -1;
+            return;
+        }
+
+        const boundedIndex = Math.max(0, Math.min(index, items.length - 1));
+        if (activeOutlineIndex !== boundedIndex) {
+            items.forEach((item, itemIndex) => {
+                const active = itemIndex === boundedIndex;
+                item.classList.toggle('is-active', active);
+                if (active) item.setAttribute('aria-current', 'location');
+                else item.removeAttribute('aria-current');
+            });
+            activeOutlineIndex = boundedIndex;
+        }
+
+        if (!ensureVisible) return;
+        const activeItem = items[boundedIndex];
+        const outlineRect = outline.getBoundingClientRect();
+        const itemRect = activeItem.getBoundingClientRect();
+        const margin = 8;
+        if (itemRect.top < outlineRect.top + margin) {
+            outline.scrollTop -= outlineRect.top + margin - itemRect.top;
+        } else if (itemRect.bottom > outlineRect.bottom - margin) {
+            outline.scrollTop += itemRect.bottom - (outlineRect.bottom - margin);
+        }
+    }
+
+    function updateActiveOutlineItem() {
+        if (!outlineHeadings.length || isSourceMode) {
+            activeOutlineIndex = -1;
+            outline.querySelectorAll('.outline-item').forEach(item => {
+                item.classList.remove('is-active');
+                item.removeAttribute('aria-current');
+            });
+            return;
+        }
+
+        const wrapper = editorWrapper || editor.closest('.editor-wrapper');
+        if (!wrapper) {
+            setActiveOutlineItem(0);
+            return;
+        }
+
+        const wrapperRect = wrapper.getBoundingClientRect();
+        const readingLine = wrapperRect.top + wrapper.clientHeight * 0.3;
+        let activeIndex = 0;
+        for (let index = 0; index < outlineHeadings.length; index++) {
+            if (outlineHeadings[index].getBoundingClientRect().top <= readingLine + 1) {
+                activeIndex = index;
+            } else {
+                break;
+            }
+        }
+        setActiveOutlineItem(activeIndex);
+    }
+
+    function scheduleActiveOutlineUpdate() {
+        if (outlineScrollFrame !== null) return;
+        outlineScrollFrame = requestAnimationFrame(() => {
+            outlineScrollFrame = null;
+            updateActiveOutlineItem();
+        });
+    }
+
+    if (editorWrapper) {
+        editorWrapper.addEventListener('scroll', scheduleActiveOutlineUpdate, { passive: true });
+    }
+    window.addEventListener('resize', scheduleActiveOutlineUpdate);
+
     function updateWordCount() {
-        const text = editor.textContent || '';
+        const plain = editor.cloneNode(true);
+        plain.querySelectorAll('.math-inline').forEach(span => { span.textContent = inlineMathMarkdown(span); });
+        plain.querySelectorAll('.math-display,.mermaid-diagram,.document-aux').forEach(display => display.remove());
+        const text = plain.textContent || '';
         const words = text.trim().split(/\s+/).filter(w => w.length > 0).length;
         const chars = text.length;
         const lines = markdown.split('\n').length;
@@ -12159,14 +13358,7 @@
         if (isMod && e.key === 's') {
             e.preventDefault();
             e.stopPropagation();
-            // Flush pending sync before save, then reset edit flag
-            clearTimeout(syncTimeout);
-            if (hasUserEdited) {
-                markdown = htmlToMarkdown();
-                host.syncContent(markdown);
-            }
-            host.save();
-            hasUserEdited = false;
+            saveCurrentDocument();
             return;
         }
         
@@ -12937,6 +14129,84 @@
 
     // Handle messages from host (VSCode / Electron / test)
     host.onMessage(function(message) {
+        if (message.type === 'validateExportImage') {
+            if (typeof host.respondExport !== 'function') return;
+            const image = new Image();
+            const dataUri = message.dataUri;
+            if (typeof dataUri !== 'string' || !/^data:image\/(?:png|jpeg|gif|webp|svg\+xml)(?:;[a-z0-9=.+-]+)*,/i.test(dataUri)) {
+                host.respondExport({ type: 'exportImageValidated', requestId: message.requestId, valid: false });
+                return;
+            }
+            image.src = dataUri;
+            image.decode().then(() => {
+                host.respondExport({ type: 'exportImageValidated', requestId: message.requestId, valid: image.naturalWidth > 0 && image.naturalHeight > 0 });
+            }, () => {
+                host.respondExport({ type: 'exportImageValidated', requestId: message.requestId, valid: false });
+            }).finally(() => image.removeAttribute('src'));
+            return;
+        }
+        if (message.type === 'documentSaved') {
+            const normalizeSaved = value => value.replace(/^\uFEFF/, '').replace(/\r\n?/g, '\n');
+            if (typeof message.content === 'string' && normalizeSaved(readCurrentMarkdown()) === normalizeSaved(message.content)) {
+                markdown = normalizeSaved(message.content);
+                hasUserEdited = false;
+                pendingSave = null;
+                cancelScheduledSync();
+            }
+            return;
+        }
+        if (message.type === 'saveResult') {
+            if (pendingSave && message.revision === pendingSave.revision) {
+                if (message.success && message.revision === clientRevision) {
+                    markdown = pendingSave.content;
+                    hasUserEdited = false;
+                    cancelScheduledSync();
+                }
+                pendingSave = null;
+            }
+            return;
+        }
+        if (message.type === 'cancelExportPreparation') {
+            const controller = exportRenderRequests.get(message.requestId);
+            if (controller) controller.abort();
+            return;
+        }
+        if (message.type === 'prepareExport') {
+            if (typeof host.respondExport !== 'function') return;
+            // Capture before queuing so later editor settings cannot change an
+            // in-flight export. Optional fields support older host fixtures.
+            const appearance = {
+                theme: message.theme || document.documentElement.dataset.theme || 'github',
+                fontSize: message.fontSize || parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--font-size')) || 16
+            };
+            const controller = new AbortController();
+            exportRenderRequests.set(message.requestId, controller);
+            exportRenderQueue = exportRenderQueue.catch(() => {}).then(async () => {
+                try {
+                    const prepared = await prepareExportDocument(message.markdown, appearance, controller.signal);
+                    host.respondExport(Object.assign({ type: 'exportPrepared', requestId: message.requestId }, prepared));
+                } catch (error) {
+                    host.respondExport({ type: 'exportError', requestId: message.requestId, error: error.message || String(error) });
+                } finally {
+                    exportRenderRequests.delete(message.requestId);
+                }
+            });
+            return;
+        }
+        if (message.type === 'captureExportSnapshot') {
+            if (typeof host.respondExport === 'function') {
+                if (message.refreshToc) {
+                    try { refreshManagedTocs(false); }
+                    catch (error) { host.respondExport({ type: 'exportError', requestId: message.requestId, error: error.message }); return; }
+                }
+                host.respondExport({
+                    type: 'exportSnapshot', requestId: message.requestId,
+                    content: readCurrentMarkdown(),
+                    pending: Boolean(syncTimeout || saveTimeout || pendingSync || pendingSave || queuedExternalContent !== null)
+                });
+            }
+            return;
+        }
         if (message.type === 'performUndo') {
             if (!isSourceMode) undoManager.undo();
             return;
@@ -12945,6 +14215,7 @@
             if (!isSourceMode) undoManager.redo();
             return;
         }
+        if (message.type === 'insertToc') { insertManagedToc(); return; }
         if (message.type === 'toggleSourceMode') {
             toggleSourceMode();
             return;
@@ -12982,7 +14253,7 @@
         } else if (message.type === 'setImageDir') {
             // Update currentImageDir and currentForceRelativePath from extension
             currentImageDir = message.dirPath;
-            // forceRelativePath: true/false で設定、null でクリア
+            // Set forceRelativePath with true or false; clear it with null.
             if (message.forceRelativePath === null) {
                 currentForceRelativePath = null;
             } else if (message.forceRelativePath !== undefined) {
@@ -13331,6 +14602,7 @@
 
     // Copy handler - convert selection to Markdown and set to clipboard
     editor.addEventListener('copy', function(e) {
+        if (e.target.closest && e.target.closest('.front-matter')) return;
         if (isSourceMode) return;
         
         const sel = window.getSelection();
@@ -13658,6 +14930,7 @@
 
     // Cut handler - same as copy but also delete selection
     editor.addEventListener('cut', function(e) {
+        if (e.target.closest && e.target.closest('.front-matter')) return;
         if (isSourceMode) return;
         
         const sel = window.getSelection();
@@ -13695,6 +14968,7 @@
 
     // Paste handler - insert Markdown into source, then re-render
     editor.addEventListener('paste', function(e) {
+        if (e.target.closest && e.target.closest('.front-matter')) return;
         if (isSourceMode) return;
 
         undoManager.saveSnapshot();
@@ -14467,6 +15741,7 @@
         // Flush pending edits immediately on blur
         if (!isSourceMode && hasUserEdited) {
             clearTimeout(syncTimeout);
+            syncTimeout = null;
             markdown = htmlToMarkdown();
             host.syncContent(markdown);
         }
@@ -14505,6 +15780,7 @@
                 markdown = sourceEditor.value;
             } else {
                 clearTimeout(syncTimeout);
+                syncTimeout = null;
                 markdown = htmlToMarkdown();
             }
             host.syncContent(markdown);
@@ -14572,7 +15848,7 @@
             let pattern = searchTerm;
             if (!useRegex) {
                 // Escape special regex characters
-                pattern = pattern.replace(/[.*+?^${}()|[\]\\]/g, '\\__EDITOR_SCRIPT__');
+                pattern = pattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
             }
             if (wholeWord) {
                 pattern = '\\b' + pattern + '\\b';
@@ -14799,6 +16075,8 @@
         window.__testApi.setupInteractiveElements = setupInteractiveElements;
         window.__testApi.renderFromMarkdown = renderFromMarkdown;
         window.__testApi.htmlToMarkdown = htmlToMarkdown;
+        window.__testApi.updateOutline = updateOutline;
+        window.__testApi.updateActiveOutlineItem = updateActiveOutlineItem;
         window.__testApi.ready = true;
         
         // Table operation functions for testing

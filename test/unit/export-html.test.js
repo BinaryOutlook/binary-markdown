@@ -12,7 +12,7 @@ async function htmlFixture(t) {
     const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'binary-export-html-'));
     t.after(() => fs.rm(dir, { recursive: true, force: true }));
     await fs.mkdir(path.join(dir, 'out/webview'), { recursive: true });
-    await fs.writeFile(path.join(dir, 'out/webview/styles.css'), ':root{--font-size:__FONT_SIZE__px}');
+    await fs.writeFile(path.join(dir, 'out/webview/styles.css'), ':root{--font-size:__FONT_SIZE__px;--outline-active-color:__OUTLINE_ACTIVE_COLOR__}');
     const source = { sourcePath: path.join(dir, 'report.md'), markdown: '# Report', version: 1, theme: 'night', fontSize: 18 };
     return { dir, source };
 }
@@ -52,6 +52,8 @@ test('standalone HTML embeds referenced images, preserves appearance and declare
     assert.ok(html.includes('data:image/png;base64,' + bytes.toString('base64')));
     assert.ok(html.includes('data-theme="night"'));
     assert.ok(html.includes('--font-size:18px'));
+    assert.ok(html.includes('--outline-active-color:var(--link-color)'));
+    assert.ok(!html.includes('__OUTLINE_ACTIVE_COLOR__'));
     assert.ok(html.includes('Image unavailable: missing.png'));
     assert.ok(html.includes('START') && html.includes('END'));
     assert.equal(warnings.length, 1);

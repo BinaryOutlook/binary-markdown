@@ -88,6 +88,16 @@ const html = `<!DOCTYPE html>
             outline: none;
             white-space: pre-wrap;
         }
+        .editor-wrapper {
+            height: 420px;
+            overflow: auto;
+            position: relative;
+        }
+        .outline-item.is-active {
+            color: var(--link-color);
+            background: var(--selection-bg);
+            font-weight: 600;
+        }
         .editor h1, .editor h2, .editor h3, .editor h4, .editor h5, .editor h6 {
             color: var(--heading-color);
             margin: 0.5em 0;
@@ -140,7 +150,7 @@ const html = `<!DOCTYPE html>
             color: var(--blockquote-color);
             cursor: pointer;
         }
-        .code-copy-btn, .code-expand-btn {
+        .code-copy-btn, .code-expand-btn, .code-delete-btn {
             background: none;
             border: none;
             cursor: pointer;
@@ -199,7 +209,9 @@ const html = `<!DOCTYPE html>
         <input id="searchWholeWord" type="checkbox">
         <input id="searchRegex" type="checkbox">
     </div>
-    <div class="editor" id="editor" contenteditable="true" spellcheck="false"></div>
+    <div class="editor-wrapper" id="editorWrapper">
+        <div class="editor" id="editor" contenteditable="true" spellcheck="false"></div>
+    </div>
     
     <script src="vendor/turndown.js"></script>
     <script src="vendor/turndown-plugin-gfm.js"></script>

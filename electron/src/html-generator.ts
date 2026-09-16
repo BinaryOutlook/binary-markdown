@@ -71,7 +71,8 @@ export function generateEditorHtml(
     const { generateEditorBodyHtml } = require(sharedModulePath);
 
     const styles = fs.readFileSync(stylesPath, 'utf8')
-        .replace('__FONT_SIZE__', String(config.fontSize));
+        .replace('__FONT_SIZE__', String(config.fontSize))
+        .replace('__OUTLINE_ACTIVE_COLOR__', 'var(--link-color)');
 
     const mathScript = fs.readFileSync(getResourcePath('src/shared/math-syntax.js'), 'utf8');
     const editorScript = (fs.readFileSync(getResourcePath('src/shared/table-placement.js'), 'utf8') + '\n' + fs.readFileSync(getResourcePath('src/webview/table-toolbar.js'), 'utf8') + '\n' + mathScript + '\n' + fs.readFileSync(editorScriptPath, 'utf8'))
