@@ -9,7 +9,8 @@ const pause = milliseconds => new Promise(resolve => setTimeout(resolve, millise
 const defaultClient = { api, pages, pause, log: console.log };
 
 function matchesPull(run, pull, workflowId) {
-    return pull.state === 'open' && pull.base.repo.full_name === REPOSITORY &&
+    return pull.state === 'open' && Number.isSafeInteger(pull.head.repo?.id) &&
+        pull.base.repo.full_name === REPOSITORY &&
         run.repository?.full_name === REPOSITORY && run.workflow_id === workflowId &&
         run.path === WORKFLOW && run.event === 'pull_request' &&
         run.head_sha === pull.head.sha && run.head_branch === pull.head.ref &&
@@ -52,7 +53,7 @@ async function approvePull(number, workflowId, client, attempts = 1) {
         for (const run of runs.filter(needsApproval)) {
             if (await approveRun(run, pull, workflowId, client)) approved++;
         }
-        if (runs.length || attempt === attempts - 1) {
+        if (runs.length || pull.mergeable === false || attempt === attempts - 1) {
             if (!runs.length) client.log(`No CI run found yet for PR #${number}; the workflow_run event handles later arrivals.`);
             return approved;
         }

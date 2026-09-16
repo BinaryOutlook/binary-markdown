@@ -74,6 +74,14 @@ test('a closed PR or changed head immediately before approval cancels the write'
     }
 });
 
+test('closed PRs and deleted forks are left alone', async () => {
+    for (const changed of [pull({ state: 'closed' }), pull({ head: { sha: source, ref: 'feature', repo: null } })]) {
+        const state = setup({ pull: changed });
+        assert.equal(await approvePending('workflow_dispatch', {}, state.client), 0);
+        assert.deepEqual(state.writes, []);
+    }
+});
+
 test('failed tests, completed checks and deployment waits are never retried or approved', async () => {
     for (const change of [{ conclusion: 'failure' }, { conclusion: 'success' }, { conclusion: 'cancelled' },
         { status: 'waiting', conclusion: null }, { status: 'queued', conclusion: null },
@@ -88,6 +96,15 @@ test('the PR handler waits for a delayed workflow run', async () => {
     const state = setup({ lists: [[], [], [run()]] });
     assert.equal(await approvePending('pull_request_target', { number: 12 }, state.client), 1);
     assert.deepEqual(state.waits, [5000, 5000]);
+});
+
+test('missing CI has a bounded wait, and merge conflicts do not keep the controller waiting', async () => {
+    const absent = setup({ lists: Array.from({ length: 13 }, () => []) });
+    assert.equal(await approvePending('pull_request_target', { number: 12 }, absent.client), 0);
+    assert.equal(absent.waits.length, 12);
+    const conflict = setup({ pull: pull({ mergeable: false }), lists: [[]] });
+    assert.equal(await approvePending('pull_request_target', { number: 12 }, conflict.client), 0);
+    assert.deepEqual(conflict.waits, []);
 });
 
 test('workflow_run handles a late approval gate even when the run has no PR association', async () => {
