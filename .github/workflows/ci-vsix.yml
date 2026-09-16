@@ -78,10 +78,13 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - {label: ubuntu, os: ubuntu-24.04, code: latest, browserSuite: true}
-          - {label: macos, os: macos-15, code: latest, browserSuite: true}
-          - {label: windows, os: windows-2025, code: latest, browserSuite: true}
-          - {label: vscode-minimum, os: ubuntu-24.04, code: '1.85.0', browserSuite: false}
+          - {label: ubuntu, os: ubuntu-24.04, code: latest, browserSuite: true, browserWorkers: 2}
+          # macOS runners can drop rapid contenteditable key events when two
+          # browser contexts compete for the same constrained VM. A single
+          # worker keeps keyboard and composition tests deterministic.
+          - {label: macos, os: macos-15, code: latest, browserSuite: true, browserWorkers: 1}
+          - {label: windows, os: windows-2025, code: latest, browserSuite: true, browserWorkers: 2}
+          - {label: vscode-minimum, os: ubuntu-24.04, code: '1.85.0', browserSuite: false, browserWorkers: 1}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 40
     env:
@@ -154,14 +157,14 @@ jobs:
         if: matrix.browserSuite && runner.os != 'Windows'
         run: |
           npm run test:build
-          npx playwright test --workers=2 --retries=0 | tee ci-results/browser-tests.txt
+          npx playwright test --workers=${{ matrix.browserWorkers }} --retries=0 | tee ci-results/browser-tests.txt
       - name: Browser regressions with no retries (Windows)
         if: matrix.browserSuite && runner.os == 'Windows'
         shell: pwsh
         run: |
           npm.cmd run test:build
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          npx.cmd playwright test --workers=2 --retries=0 | Tee-Object -FilePath ci-results/browser-tests.txt
+          npx.cmd playwright test --workers=${{ matrix.browserWorkers }} --retries=0 | Tee-Object -FilePath ci-results/browser-tests.txt
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Collect browser traces
         if: always()
