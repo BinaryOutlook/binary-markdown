@@ -29,5 +29,14 @@
   "command.exportToDocx.title": "匯出為Word",
   "command.exportToEpub.title": "匯出為EPUB",
   "command.copyBuildInformation.title": "複製建置資訊",
-  "config.math.backslashDelimiters.description": "在編輯器和匯出中辨識公式分隔符 \\( ... \\) 和 \\[ ... \\]。停用後將其視為一般 Markdown 跳脫字元。"
+  "config.math.backslashDelimiters.description": "在編輯器和匯出中辨識公式分隔符 \\( ... \\) 和 \\[ ... \\]。停用後將其視為一般 Markdown 跳脫字元。",
+  "config.tableToolbarPosition.description": "選擇表格操作的位置。自動模式會避開既有內容，必要時使用頂端列。固定位置保持不變，空間不足時可捲動。",
+  "config.tableToolbarPosition.auto": "自動（建議）",
+  "config.tableToolbarPosition.topLeft": "左上角",
+  "config.tableToolbarPosition.topRight": "右上角",
+  "config.tableToolbarPosition.bottomLeft": "左下角",
+  "config.tableToolbarPosition.bottomRight": "右下角",
+  "config.tableToolbarPosition.left": "左側（垂直）",
+  "config.tableToolbarPosition.right": "右側（垂直）",
+  "config.tableToolbarPosition.topBar": "始終位於頂端列"
 }

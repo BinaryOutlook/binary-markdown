@@ -43,6 +43,7 @@ const testHostBridgeScript = fs.readFileSync(testHostBridgePath, 'utf-8');
 
 // プレースホルダーを置換
 editorScript = fs.readFileSync(path.join(__dirname, '../src/shared/math-syntax.js'), 'utf8') + '\n' + editorScript;
+editorScript = fs.readFileSync(path.join(__dirname, '../src/shared/table-placement.js'), 'utf8') + '\n' + fs.readFileSync(path.join(__dirname, '../src/webview/table-toolbar.js'), 'utf8') + '\n' + editorScript;
 editorScript = editorScript
     .replace('__MATH_BACKSLASH__', 'true')
     .replace('__DEBUG_MODE__', 'false')
@@ -216,3 +217,12 @@ fs.writeFileSync(outputPath, html
     .replace('__TEST_HOST_BRIDGE__', () => testHostBridgeScript)
     .replace('__EDITOR_SCRIPT__', () => editorScript));
 console.log('Generated:', outputPath);
+
+// Production layout for contextual toolbar geometry and focus regressions.
+const { generateEditorBodyHtml } = require('../src/shared/editor-body-html');
+const styles = fs.readFileSync(path.join(__dirname, '../src/webview/styles.css'), 'utf8').replace('__FONT_SIZE__', '16');
+fs.writeFileSync(path.join(__dirname, 'html/production-editor.html'), `<!doctype html>
+<html lang="en" data-theme="things" data-toolbar-mode="simple"><head><meta charset="utf-8"><style>${styles}</style></head>
+<body>${generateEditorBodyHtml({}, process.platform, { exportEnabled: true, settingsEnabled: true })}
+<script src="vendor/turndown.js"></script><script src="vendor/turndown-plugin-gfm.js"></script>
+<script>${testHostBridgeScript}</script><script>${editorScript}</script></body></html>`);

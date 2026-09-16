@@ -1,3 +1,4 @@
+import { normalize as normalizeTablePosition, positions as tablePositions } from './shared/table-placement';
 import { refreshTocs } from './shared/document-aux';
 import * as vscode from 'vscode';
 import { getWebviewContent } from './webviewContent';
@@ -488,6 +489,7 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
                         theme: config.get<string>('theme', 'github'),
                         fontSize: config.get<number>('fontSize', 16),
                         toolbarMode: config.get<string>('toolbarMode', 'full'),
+                        tableToolbarPosition: normalizeTablePosition(config.get('tableToolbarPosition')),
                         renderGeneration,
                         documentBaseUri: documentBaseUri,
                         webviewMessages: getWebviewMessages(),
@@ -666,6 +668,11 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
         let configurationRefresh: ReturnType<typeof setTimeout> | undefined;
         // Listen for configuration changes
         const changeConfigSubscription = vscode.workspace.onDidChangeConfiguration(e => {
+            const positionChanged = e.affectsConfiguration('binary-markdown.tableToolbarPosition');
+            if (positionChanged) {
+                void webviewPanel.webview.postMessage({ type: 'tableToolbarPosition', value:
+                    normalizeTablePosition(vscode.workspace.getConfiguration('binary-markdown').get('tableToolbarPosition')) });
+            }
             const exportChanged = e.affectsConfiguration('binary-markdown.export');
             // Presentation options are read by each export. Re-probing tools in
             // every open editor here launches a burst of browsers on Windows.
@@ -675,7 +682,7 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
             const editorSettings = ['theme', 'fontSize', 'imageDefaultDir', 'forceRelativeImagePath', 'language',
                 'toolbarMode', 'outlineStateScope', 'outlineDefaultOpen', 'enableDebugLogging', 'math.backslashDelimiters'];
             const editorChanged = editorSettings.some(key => e.affectsConfiguration('binary-markdown.' + key));
-            if (e.affectsConfiguration('binary-markdown') && (!exportChanged || editorChanged)) {
+            if (e.affectsConfiguration('binary-markdown') && (editorChanged || (!exportChanged && !positionChanged))) {
                 clearTimeout(configurationRefresh);
                 configurationRefresh = setTimeout(() => {
                     configurationRefresh = undefined;
@@ -774,6 +781,18 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
         webviewPanel.webview.onDidReceiveMessage(async message => {
             if (exportController.handleMessage(message)) { return; }
             switch (message.type) {
+                case 'setTableToolbarPosition': {
+                    if (!tablePositions.includes(message.value)) {
+                        break;
+                    }
+                    const config = vscode.workspace.getConfiguration('binary-markdown');
+                    const scope = config.inspect('tableToolbarPosition')?.workspaceValue !== undefined
+                        ? vscode.ConfigurationTarget.Workspace : vscode.ConfigurationTarget.Global;
+                    await config.update('tableToolbarPosition', message.value, scope);
+                    void webviewPanel.webview.postMessage({ type: 'tableToolbarPosition', value:
+                        normalizeTablePosition(config.get('tableToolbarPosition')) });
+                    break;
+                }
                 case 'renderLoaded':
                     if (!disposed && pendingRender !== undefined && message.generation === pendingRender) {
                         // VS Code queues host messages until its pending frame

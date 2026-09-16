@@ -37,6 +37,22 @@ export interface Messages {
 }
 
 export interface WebviewMessages {
+  tableControls: string;
+  tableMenu: string;
+  tablePlacement: string;
+  tablePositionAuto: string;
+  tablePositionTopBar: string;
+  tablePositionFixed: string;
+  tablePositionTopLeft: string;
+  tablePositionTopRight: string;
+  tablePositionBottomLeft: string;
+  tablePositionBottomRight: string;
+  tablePositionLeft: string;
+  tablePositionRight: string;
+  alignLeft: string;
+  alignCenter: string;
+  alignRight: string;
+
   frontMatter: string;
   insertToc: string;
   refreshToc: string;

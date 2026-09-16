@@ -34,6 +34,19 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  tableControls: "Controles de tabla",
+  tableMenu: "Tabla…",
+  tablePlacement: "Posición de la barra de tabla",
+  tablePositionAuto: "Automática (recomendada)",
+  tablePositionTopBar: "Siempre en la barra superior",
+  tablePositionFixed: "Elegir una posición fija…",
+  tablePositionTopLeft: "Arriba a la izquierda",
+  tablePositionTopRight: "Arriba a la derecha",
+  tablePositionBottomLeft: "Abajo a la izquierda",
+  tablePositionBottomRight: "Abajo a la derecha",
+  tablePositionLeft: "Lado izquierdo (vertical)",
+  tablePositionRight: "Lado derecho (vertical)",
+
   insertToc: 'Insertar índice',
   refreshToc: 'Actualizar índice',
   tocContents: 'Índice',

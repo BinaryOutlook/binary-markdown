@@ -34,6 +34,19 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  tableControls: "表格操作",
+  tableMenu: "表格…",
+  tablePlacement: "表格工具栏位置",
+  tablePositionAuto: "自动（推荐）",
+  tablePositionTopBar: "始终位于顶部栏",
+  tablePositionFixed: "选择固定位置…",
+  tablePositionTopLeft: "左上角",
+  tablePositionTopRight: "右上角",
+  tablePositionBottomLeft: "左下角",
+  tablePositionBottomRight: "右下角",
+  tablePositionLeft: "左侧（垂直）",
+  tablePositionRight: "右侧（垂直）",
+
   insertToc: '插入目录',
   refreshToc: '刷新目录',
   tocContents: '目录',

@@ -327,7 +327,7 @@ async function run(settings, owner) {
         fs.writeFileSync(report, JSON.stringify({ harness: harnessIdentity(), host: receipt(owner), packageSha256: hash(fs.readFileSync(settings.package)), receipts }, null, 2));
         console.log(name, JSON.stringify(details));
     };
-    const available = ['identity', 'filesystem', 'formats', 'saves', 'edges', 'ui', 'equations', 'pdf-background', 'selection', 'immutable', 'offline', 'document-aux', 'links', 'codeblocks'];
+    const available = ['identity', 'filesystem', 'formats', 'saves', 'edges', 'ui', 'equations', 'pdf-background', 'selection', 'immutable', 'offline', 'document-aux', 'links', 'codeblocks', 'table-placement'];
     const groups = settings.suite === 'all' ? available : [settings.suite];
     assert.ok(groups.every(value => available.includes(value)), 'Suite must be all, ' + available.join(', '));
     const htmlExports = [];
@@ -502,6 +502,7 @@ async function run(settings, owner) {
         // Restore real discovery before the remaining scenarios after the controlled worker.
         await h.driver({ action: 'config', key: 'export.pandocPath', value: settings.pandoc });
         if (groups.includes('ui')) await appearanceCases(h, owner, record);
+        if (groups.includes('table-placement')) await tablePlacementCase(h, owner, record);
         if (groups.includes('equations')) await equationCases(h, owner, record);
         if (groups.includes('links')) await linkCases(h, owner, record);
         if (groups.includes('codeblocks')) await codeblockCases(h, owner, record);
@@ -520,6 +521,7 @@ async function run(settings, owner) {
         await h.driver({ action: 'config', key: 'export.pandocPath', value: settings.pandoc });
         await h.driver({ action: 'config', key: 'export.browserPath', value: settings.browser });
         await h.driver({ action: 'config', key: 'export.pdfWhiteBackground', value: true });
+        await h.driver({ action: 'config', key: 'tableToolbarPosition', value: 'auto' });
         for (const [key, value] of [['theme', 'github'], ['language', 'en'], ['toolbarMode', 'full']]) await h.driver({ action: 'config', key, value });
     }
     console.log('Evidence:', report);
@@ -625,6 +627,47 @@ async function codeblockCases(h, owner, record) {
         assert.ok(await connection.evaluate('document.querySelectorAll("#editor > pre code .hljs-keyword").length > 0'));
         record('codeblocks', { indentedFences: true, inactiveHighlighting: true, readableQuote: true, hostSourceShortcut: true, savedCodePreserved: true, reopened: true });
     } finally { if (connection) connection.close(); }
+}
+
+async function tablePlacementCase(h, owner, record) {
+    const file = 'table-placement.md';
+    const source = '# Table controls\n\n| Item | State |\n| --- | --- |\n| One | Ready |\n| Two | Draft |\n';
+    fs.writeFileSync(path.join(owner.workspace, file), source);
+    assert.equal((await h.driver({ action: 'inspect' })).appearance.tableToolbarPosition, 'auto');
+    let connection = await h.open(file);
+    const controls = '.table-toolbar:not(.table-toolbar-measure)';
+    const selectCell = () => connection.evaluate(`const cell=document.querySelector('#editor td');cell.focus();const range=document.createRange();range.selectNodeContents(cell);range.collapse(true);getSelection().removeAllRanges();getSelection().addRange(range);cell.click()`);
+    try {
+        await selectCell();
+        await connection.evaluate('window.__tablePlacementProbe="retained"');
+        for (const value of ['top-left', 'right', 'top-bar', 'auto']) {
+            await h.driver({ action: 'config', key: 'tableToolbarPosition', value });
+            await h.until(() => connection.evaluate(`document.documentElement.dataset.tableToolbarPosition===${JSON.stringify(value)}`));
+            assert.equal(await connection.evaluate('window.__tablePlacementProbe'), 'retained', 'Placement updates preserve the live webview');
+            assert.equal(fs.readFileSync(path.join(owner.workspace, file), 'utf8'), source);
+            const state = await h.driver({ action: 'inspect' });
+            assert.equal(state.documents.find(document => path.basename(document.path) === file).dirty, false);
+        }
+        await h.driver({ action: 'config', key: 'tableToolbarPosition', value: 'top-bar' });
+        await h.until(() => connection.evaluate(`document.querySelector('${controls}').dataset.placement==='top-bar'`));
+        await connection.evaluate(`const toggle=document.querySelector('.table-toolbar-toggle');if(!toggle.hidden)toggle.click();document.querySelector('${controls} [data-action="placement"]').click();document.querySelector('[data-position="fixed"]').click();document.querySelector('[data-position="bottom-right"]').click()`);
+        await h.until(async () => (await h.driver({ action: 'inspect' })).appearance.tableToolbarPosition === 'bottom-right', 'Picker persisted through the real host bridge');
+        connection.close(); connection = null;
+        await h.driver({ action: 'close' });
+        connection = await h.open(file);
+        assert.equal(await connection.evaluate('document.documentElement.dataset.tableToolbarPosition'), 'bottom-right');
+        await selectCell();
+        await h.until(() => connection.evaluate(`document.querySelector('${controls}').classList.contains('visible')`));
+        await connection.evaluate(`document.querySelector('${controls} [data-action="add-row-below"]').click()`);
+        await h.until(() => connection.evaluate('document.querySelectorAll("#editor tr").length===4'));
+        await connection.evaluate(`document.querySelector('[data-action="undo"]').click()`);
+        await h.until(() => connection.evaluate('document.querySelectorAll("#editor tr").length===3'));
+        await h.driver({ action: 'save' });
+        record('table-placement', { liveConfiguration: true, explicitPreferenceRetained: true, pickerPersistedAcrossReopen: true, actionAndUndo: true });
+    } finally {
+        if (connection) connection.close();
+        await h.driver({ action: 'config', key: 'tableToolbarPosition', value: 'auto' });
+    }
 }
 
 async function equationCases(h, owner, record) {
