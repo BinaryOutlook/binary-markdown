@@ -554,6 +554,10 @@ async function codeblockCases(h, owner, record) {
         await connection.evaluate(`document.getElementById('sourceEditor').focus()`);
         await h.workbench(page => page.keyboard.press(process.platform === 'darwin' ? 'Meta+.' : 'Control+.'));
         await h.until(() => connection.evaluate('getComputedStyle(document.getElementById("sourceEditor")).display === "none"'));
+        // Finish the source round trip before the separate quoted-code save
+        // scenario. Save below is still immediate after the new paragraph edit.
+        await h.until(async () => (await h.driver({ action: 'inspect' })).documents.some(
+            document => document.path === filePath && document.text === captured), 'source round trip synchronized');
         await connection.evaluate(`(()=>{const p=Array.from(document.querySelectorAll('#editor > p')).find(p=>p.textContent==='After'); document.getElementById('editor').focus(); const r=document.createRange(); r.selectNodeContents(p); r.collapse(false); const s=getSelection(); s.removeAllRanges(); s.addRange(r)})()`);
         await connection.send('Input.insertText', { text: ' updated' });
         await h.driver({ action: 'save' });
