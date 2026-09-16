@@ -667,7 +667,11 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
         // Listen for configuration changes
         const changeConfigSubscription = vscode.workspace.onDidChangeConfiguration(e => {
             const exportChanged = e.affectsConfiguration('binary-markdown.export');
-            if (exportChanged) { exportController.refreshCapabilities(); }
+            // Presentation options are read by each export. Re-probing tools in
+            // every open editor here launches a burst of browsers on Windows.
+            const toolsChanged = ['pandocPath', 'browserPath'].some(key =>
+                e.affectsConfiguration('binary-markdown.export.' + key));
+            if (toolsChanged) { exportController.refreshCapabilities(); }
             const editorSettings = ['theme', 'fontSize', 'imageDefaultDir', 'forceRelativeImagePath', 'language',
                 'toolbarMode', 'outlineStateScope', 'outlineDefaultOpen', 'outlineActiveColor', 'enableDebugLogging', 'math.backslashDelimiters'];
             const editorChanged = editorSettings.some(key => e.affectsConfiguration('binary-markdown.' + key));

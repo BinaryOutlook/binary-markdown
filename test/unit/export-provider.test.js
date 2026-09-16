@@ -335,6 +335,17 @@ test('export-only settings refresh capabilities without recreating editor HTML',
     assert.equal(h.renderConfigs.length, 1);
 });
 
+test('PDF background and code-label changes do not launch tool probes in open editors', async t => {
+    const editors = await Promise.all(Array.from({ length: 12 }, () => setup(t)));
+    for (const h of editors) {
+        h.configChanged(['binary-markdown.export.pdfWhiteBackground']);
+        h.configChanged(['binary-markdown.export.showCodeLanguage']);
+        await h.flushTimers();
+        assert.equal(h.state.controller.refreshes, 0, 'Presentation settings do not change tool availability');
+        assert.equal(h.renderConfigs.length, 1, 'Export settings preserve the live editor');
+    }
+});
+
 test('new editors and appearance rebuilds use the current configured language', async t => {
     const h = await setup(t);
     assert.equal(h.renderConfigs[0].webviewMessages.locale, 'en');

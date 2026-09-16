@@ -1,6 +1,6 @@
 # Export page background: bug report and feasibility assessment
 
-Recorded: 2026-09-12. **Status: implemented and locally validated; tracked in [PR #7](https://github.com/BinaryOutlook/binary-markdown/pull/7).** DOCX did not exhibit the same page-background defect. The investigation below preserves the original baseline; the implementation follow-up records subsequent changes. This is not a release claim.
+Recorded: 2026-09-12. **Status: implemented and locally validated; tracked in [PR #7](https://github.com/BinaryOutlook/binary-markdown-fork/pull/7).** DOCX did not exhibit the same page-background defect. The investigation below preserves the original baseline; the implementation follow-up records subsequent changes. This is not a release claim.
 
 ## Report
 
@@ -128,7 +128,7 @@ Raw synthetic inputs, the generation/audit scripts, all nine PDFs, four DOCX fil
 
 ## Implementation follow-up
 
-The user authorized implementation and a reviewable PR on 2026-09-12. [Issue #6](https://github.com/BinaryOutlook/binary-markdown/issues/6) tracks the work on `codex/pdf-export-background`, which retains this report, its original evidence receipt and the roadmap update.
+The user authorized implementation and a reviewable PR on 2026-09-12. [Issue #6](https://github.com/BinaryOutlook/binary-markdown-fork/issues/6) tracks the work on `codex/pdf-export-background`, which retains this report, its original evidence receipt and the roadmap update.
 
 The PDF converter now paints `@page` with the captured theme background. The new `binary-markdown.export.pdfWhiteBackground` setting defaults to `true` and selects GitHub light appearance while keeping the captured base font size. Disabling it retains the editor theme across the page. The host sends frozen appearance to offscreen rendering, including Mermaid, and all seven native settings translations describe the behavior. Source images and explicit diagram node colours remain authored content. DOCX page styling is unchanged; regression coverage compares document, styles and settings XML across all seven editor themes.
 
@@ -146,7 +146,7 @@ The [post-fix receipt](../validation/evidence/2026-09-12-pdf-background-fix.json
 | Capture and editor state | Later setting changes, cancellation, Mermaid configuration restoration and PDF-setting changes without editor reload passed. |
 | DOCX parity | All seven themes produced matching document/styles/settings XML with no document page background or shading introduced. Earlier Word print-view observations remain in the baseline receipt. |
 
-[PR #7 checks](https://github.com/BinaryOutlook/binary-markdown/pull/7/checks) track the final merge candidate's Ubuntu, macOS and minimum-VS-Code validation. These local results do not claim a release, merge or untested viewer support.
+[PR #7 checks](https://github.com/BinaryOutlook/binary-markdown-fork/pull/7/checks) track the final merge candidate's Ubuntu, macOS and minimum-VS-Code validation. These local results do not claim a release, merge or untested viewer support.
 
 Representative first pages from the same night-theme editor, rendered from the final installed VSIX:
 
