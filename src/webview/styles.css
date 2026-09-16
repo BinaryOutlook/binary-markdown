@@ -629,6 +629,7 @@ body {
 }
 .editor pre code {
     display: block;
+    color: var(--code-text);
     padding: 0;
     margin: 0;
     background: transparent;
