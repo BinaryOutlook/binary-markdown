@@ -12456,7 +12456,10 @@
     });
 
     function toggleSourceMode() {
-        if (finishInlineMathEdit) finishInlineMathEdit(true, false);
+        // Read while the current mode still owns the latest edits. The host
+        // command can arrive before blur or the delayed visual sync runs.
+        markdown = readCurrentMarkdown();
+        cancelScheduledSync();
         isSourceMode = !isSourceMode;
         if (isSourceMode) {
             sourceEditor.value = markdown;
@@ -12468,6 +12471,7 @@
             sourceEditor.style.display = 'none';
             editor.style.display = 'block';
         }
+        notifyChangeImmediate();
     }
 
     // Immediate notification - called after debounce in debouncedSync
