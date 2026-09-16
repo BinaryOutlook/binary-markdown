@@ -327,7 +327,7 @@ async function run(settings, owner) {
         fs.writeFileSync(report, JSON.stringify({ harness: harnessIdentity(), host: receipt(owner), packageSha256: hash(fs.readFileSync(settings.package)), receipts }, null, 2));
         console.log(name, JSON.stringify(details));
     };
-    const available = ['identity', 'filesystem', 'formats', 'saves', 'edges', 'ui', 'equations', 'pdf-background', 'selection', 'immutable', 'offline', 'document-aux'];
+    const available = ['identity', 'filesystem', 'formats', 'saves', 'edges', 'ui', 'equations', 'pdf-background', 'selection', 'immutable', 'offline', 'document-aux', 'codeblocks'];
     const groups = settings.suite === 'all' ? available : [settings.suite];
     assert.ok(groups.every(value => available.includes(value)), 'Suite must be all, ' + available.join(', '));
     const htmlExports = [];
@@ -503,6 +503,7 @@ async function run(settings, owner) {
         await h.driver({ action: 'config', key: 'export.pandocPath', value: settings.pandoc });
         if (groups.includes('ui')) await appearanceCases(h, owner, record);
         if (groups.includes('equations')) await equationCases(h, owner, record);
+        if (groups.includes('codeblocks')) await codeblockCases(h, owner, record);
         if (groups.includes('pdf-background')) await pdfBackgroundCases(h, owner, record);
         if (groups.includes('selection')) await selectionCase(h, owner, record);
         if (groups.includes('immutable')) await immutableCase(h, owner, record);
@@ -521,6 +522,53 @@ async function run(settings, owner) {
         for (const [key, value] of [['theme', 'github'], ['language', 'en'], ['toolbarMode', 'full']]) await h.driver({ action: 'config', key, value });
     }
     console.log('Evidence:', report);
+}
+
+async function codeblockCases(h, owner, record) {
+    const file = 'codeblocks.md';
+    const quoted = '> ```\n> alpha\n>     beta  \n> \n> ```';
+    const source = '   ```javascript\n   const value = 1;\n   ```\n\n' + quoted + '\n\nAfter\n';
+    const filePath = path.join(owner.workspace, file);
+    await h.driver({ action: 'close' });
+    fs.writeFileSync(filePath, source);
+    let connection = await h.open(file);
+    try {
+        assert.equal(await connection.evaluate('document.querySelectorAll("#editor pre").length'), 2);
+        await connection.evaluate(`document.getElementById('editor').focus(); document.querySelector('#editor > pre code').click(); document.querySelector('#editor blockquote pre code').click()`);
+        assert.equal(await connection.evaluate('document.querySelector("#editor > pre").dataset.mode'), 'display');
+        assert.ok(await connection.evaluate('document.querySelectorAll("#editor > pre code .hljs-keyword").length > 0'));
+        assert.equal(await connection.evaluate(`getComputedStyle(document.querySelector('#editor blockquote code')).color === getComputedStyle(document.querySelector('#editor > pre code')).color`), true);
+
+        // Use the installed VS Code keybinding immediately after actual typing,
+        // without a toolbar click that could hide the pending-sync regression.
+        await h.workbench(async page => {
+            await page.bringToFront();
+            await connection.evaluate(`(()=>{const code=document.querySelector('#editor > pre code'); code.click(); const r=document.createRange(); r.selectNodeContents(code); r.collapse(false); const s=getSelection(); s.removeAllRanges(); s.addRange(r)})()`);
+            await page.keyboard.type(' // updated');
+            await page.keyboard.press(process.platform === 'darwin' ? 'Meta+.' : 'Control+.');
+        });
+        await h.until(() => connection.evaluate('getComputedStyle(document.getElementById("sourceEditor")).display !== "none"'), 'host source-mode shortcut');
+        const captured = await connection.evaluate('document.getElementById("sourceEditor").value');
+        assert.ok(captured.includes('const value = 1; // updated'));
+        assert.ok(captured.includes(quoted));
+        await connection.evaluate(`document.getElementById('sourceEditor').focus()`);
+        await h.workbench(page => page.keyboard.press(process.platform === 'darwin' ? 'Meta+.' : 'Control+.'));
+        await h.until(() => connection.evaluate('getComputedStyle(document.getElementById("sourceEditor")).display === "none"'));
+        await connection.evaluate(`(()=>{const p=Array.from(document.querySelectorAll('#editor > p')).find(p=>p.textContent==='After'); document.getElementById('editor').focus(); const r=document.createRange(); r.selectNodeContents(p); r.collapse(false); const s=getSelection(); s.removeAllRanges(); s.addRange(r)})()`);
+        await connection.send('Input.insertText', { text: ' updated' });
+        await h.driver({ action: 'save' });
+        await h.until(() => fs.readFileSync(filePath, 'utf8').includes('After updated'), 'code block file saved');
+        const saved = fs.readFileSync(filePath, 'utf8');
+        assert.ok(saved.includes(quoted));
+        assert.ok(saved.includes('const value = 1; // updated'));
+        assert.doesNotMatch(saved, /plaintextCopy|code-block-header|⤢/);
+        connection.close(); connection = null;
+        await h.driver({ action: 'close' });
+        connection = await h.open(file);
+        assert.equal(await connection.evaluate('document.querySelectorAll("#editor pre").length'), 2);
+        assert.ok(await connection.evaluate('document.querySelectorAll("#editor > pre code .hljs-keyword").length > 0'));
+        record('codeblocks', { indentedFences: true, inactiveHighlighting: true, readableQuote: true, hostSourceShortcut: true, savedCodePreserved: true, reopened: true });
+    } finally { if (connection) connection.close(); }
 }
 
 async function equationCases(h, owner, record) {
