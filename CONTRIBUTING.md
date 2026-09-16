@@ -97,7 +97,7 @@ The Electron app has its own package in `electron/`. Its identity has been align
 
 ## Pull requests and reports
 
-- Open a focused PR against this fork. Discuss larger behaviour changes in an issue first.
+- Open a focused PR against this repository. Discuss larger behaviour changes in an issue first.
 - Describe the problem, resulting behaviour, and checks performed. Include a small reproduction document when useful.
 - Preserve Markdown content and user settings. View-only actions should not edit documents.
 - Keep active product identifiers under `binary-markdown`; preserve original project names in attribution and historical material.
@@ -108,3 +108,16 @@ Reports from older development commits are welcome. Include the full commit ID, 
 Use small, focused commits after checked slices. Keep FR/NFR changes and acceptance evidence explicit; consult the [export outline](docs/export-subsystem.md) when adjusting the subsystem.
 
 BinaryOutlook currently handles reviews and releases. Changes may be developed and tested locally without publishing. Merging a PR does not itself publish a Marketplace extension.
+
+CI starts automatically for new and updated pull requests, including first-time
+contributors and drafts. The **Start PR CI automatically** workflow authorizes
+pending **Validate VSIX** runs; this grants permission to run tests, not approval
+of the proposed changes. The controller uses trusted repository code and never
+executes a contributor's branch with its Actions write permission.
+
+Merging into `main` requires **VSIX validation** to pass on an up-to-date branch,
+resolved review conversations, and at least one approving review. New changes
+dismiss stale approvals. The author cannot approve their own PR, so a maintainer's
+own PR also needs another eligible reviewer. CI does not submit reviews or merge
+pull requests. If an older PR is still awaiting CI permission, a maintainer can
+run **Start PR CI automatically** from Actions to authorize its current run.

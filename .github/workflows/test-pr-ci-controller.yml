@@ -1,0 +1,28 @@
+name: Test PR CI controller
+
+on:
+  push:
+    branches: [feat/automatic-pr-ci]
+
+permissions:
+  actions: write
+  contents: read
+  pull-requests: read
+
+jobs:
+  verify:
+    if: github.repository == 'BinaryOutlook/binary-markdown'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.workflow_sha }}
+          persist-credentials: false
+      - run: node --test test/unit/pr-ci-approval.test.js
+      - name: Verify CI authorization with the workflow token
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          node -e "require('./.github/scripts/approve-pr-ci.cjs').main('workflow_dispatch', {}).catch(error => {
+          console.error(error.message); if (error.stderr) console.error(String(error.stderr)); process.exitCode = 1; })"
