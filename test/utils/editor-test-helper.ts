@@ -4,6 +4,10 @@
 
 import { Page, expect } from '@playwright/test';
 
+// Home/End do not reliably move the caret in macOS contenteditable elements.
+export const lineStartKey = process.platform === 'darwin' ? 'Meta+ArrowLeft' : 'Home';
+export const lineEndKey = process.platform === 'darwin' ? 'Meta+ArrowRight' : 'End';
+
 export class EditorTestHelper {
     constructor(private page: Page) {}
 
@@ -107,14 +111,14 @@ export class EditorTestHelper {
      * カーソルを行頭に移動
      */
     async moveToLineStart() {
-        await this.press('Home');
+        await this.press(lineStartKey);
     }
 
     /**
      * カーソルを行末に移動
      */
     async moveToLineEnd() {
-        await this.press('End');
+        await this.press(lineEndKey);
     }
 
     /**

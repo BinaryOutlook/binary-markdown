@@ -80,7 +80,7 @@ test.describe('《コードブロック》Shift+Tab デインデント', () => {
         // cの先頭に移動: ArrowUp + Home
         await page.keyboard.press('ArrowUp');
         await page.waitForTimeout(100);
-        await page.keyboard.press('Home');
+        await editor.moveToLineStart();
         await page.waitForTimeout(100);
 
         // Shift+Tab
@@ -118,7 +118,7 @@ test.describe('《コードブロック》Shift+Tab デインデント', () => {
         // Move to c line: ArrowUp + Home
         await page.keyboard.press('ArrowUp');
         await page.waitForTimeout(100);
-        await page.keyboard.press('Home');
+        await editor.moveToLineStart();
         await page.waitForTimeout(100);
 
         // Shift+Tab
@@ -191,7 +191,7 @@ test.describe('《コードブロック》Shift+Tab デインデント', () => {
         await page.keyboard.type('b', { delay: 30 });
         await page.waitForTimeout(200);
 
-        await page.keyboard.press('Home');
+        await editor.moveToLineStart();
         await page.waitForTimeout(100);
 
         await page.keyboard.press('Shift+Tab');

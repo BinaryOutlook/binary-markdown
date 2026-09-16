@@ -3,7 +3,10 @@
  * Playwrightテスト用エディタヘルパー
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.EditorTestHelper = void 0;
+exports.EditorTestHelper = exports.lineEndKey = exports.lineStartKey = void 0;
+// Home/End do not reliably move the caret in macOS contenteditable elements.
+exports.lineStartKey = process.platform === 'darwin' ? 'Meta+ArrowLeft' : 'Home';
+exports.lineEndKey = process.platform === 'darwin' ? 'Meta+ArrowRight' : 'End';
 class EditorTestHelper {
     page;
     constructor(page) {
@@ -101,13 +104,13 @@ class EditorTestHelper {
      * カーソルを行頭に移動
      */
     async moveToLineStart() {
-        await this.press('Home');
+        await this.press(exports.lineStartKey);
     }
     /**
      * カーソルを行末に移動
      */
     async moveToLineEnd() {
-        await this.press('End');
+        await this.press(exports.lineEndKey);
     }
     /**
      * エディタ内容をクリア

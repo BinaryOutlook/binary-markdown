@@ -1,4 +1,5 @@
 import { test, expect, Page } from '@playwright/test';
+import { lineEndKey } from '../utils/editor-test-helper';
 
 async function setMarkdown(page: Page, markdown: string) {
     await page.evaluate(md => (window as any).__testApi.setMarkdown(md), markdown);
@@ -117,7 +118,7 @@ test('inline notation in code, destinations, currency and front matter stays lit
 test('typed inline math converts after a space and remains editable', async ({ page }) => {
     await setMarkdown(page, 'Before\n');
     await page.locator('#editor p').first().click();
-    await page.keyboard.press('End');
+    await page.keyboard.press(lineEndKey);
     await page.keyboard.type(' $x^2$ ');
     await expect(page.locator('#editor .math-inline .katex')).toHaveCount(1);
     expect(await page.evaluate(() => (window as any).__testApi.getMarkdown())).toContain('Before $x^2$');
