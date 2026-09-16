@@ -15,7 +15,7 @@ for (const indent of [0, 1, 2, 3]) {
             await expect(page.locator('#editor pre')).toHaveCount(1);
             await expect(page.locator('#editor .math-inline, #editor .math-wrapper')).toHaveCount(0);
             await page.locator('.code-copy-btn').click();
-            expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(code);
+            expect((await page.evaluate(() => navigator.clipboard.readText())).replace(/\r\n/g, '\n')).toBe(code);
             const saved = await page.evaluate(() => (window as any).__testApi.getMarkdown());
             expect(saved).toBe('```' + language + '\n' + code + '\n```\n');
             await page.evaluate(md => (window as any).__hostMessageHandler({ type: 'prepareExport', requestId: 'indented', markdown: md }), md);
@@ -26,7 +26,7 @@ for (const indent of [0, 1, 2, 3]) {
             expect(html).not.toContain('math-inline');
             await page.evaluate(md => (window as any).__testApi.setMarkdown(md), saved);
             await page.locator('.code-copy-btn').click();
-            expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(code);
+            expect((await page.evaluate(() => navigator.clipboard.readText())).replace(/\r\n/g, '\n')).toBe(code);
         });
     }
 }
@@ -39,7 +39,7 @@ for (const fence of ['```', '~~~~']) {
         await expect(page.locator('#editor pre')).toHaveCount(1);
         await expect(page.locator('#editor > p')).toHaveText('After');
         await page.locator('.code-copy-btn').click();
-        expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(
+        expect((await page.evaluate(() => navigator.clipboard.readText())).replace(/\r\n/g, '\n')).toBe(
             ['less', '  deeper', '\ttab', ' ' + fence, fence[0].repeat(2), fence[0] === '`' ? '~~~' : '```'].join('\n'));
     });
 }

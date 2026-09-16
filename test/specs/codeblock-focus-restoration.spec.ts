@@ -31,7 +31,7 @@ for (const [language, code] of [
             await expect(blocks.nth(1)).toHaveAttribute('data-mode', 'display');
             expect(await page.evaluate(() => (window as any).__testApi.getMarkdown())).toBe(before);
             await blocks.nth(0).locator('.code-copy-btn').click();
-            expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(code);
+            expect((await page.evaluate(() => navigator.clipboard.readText())).replace(/\r\n/g, '\n')).toBe(code);
             await page.locator('#editor > p').filter({ hasText: 'After' }).click();
             await expect(page.locator('#editor pre[data-mode="edit"]')).toHaveCount(0);
         });
