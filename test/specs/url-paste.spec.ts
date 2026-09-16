@@ -75,7 +75,7 @@ test.describe('URL ペースト自動リンク化', () => {
 
         // <a>タグが生成されていることを確認
         const html = await editor.getHtml();
-        expect(html).toContain('<a href="https://example.com">https://example.com</a>');
+        expect(html).toContain('<a href="https://example.com" title="https://example.com">https://example.com</a>');
 
         // Markdownが正しいことを確認
         const md = await editor.getMarkdown();
@@ -126,7 +126,7 @@ test.describe('URL ペースト自動リンク化', () => {
 
         // 選択テキストがリンクテキストになっていることを確認
         const html = await editor.getHtml();
-        expect(html).toContain('<a href="https://example.com">ここ</a>');
+        expect(html).toContain('<a href="https://example.com" title="https://example.com">ここ</a>');
         expect(html).toContain('クリック');
 
         // Markdownが正しいことを確認
@@ -177,7 +177,7 @@ test.describe('URL ペースト自動リンク化', () => {
         // 自動リンクにならず通常のブロックペーストになることを確認
         const html = await editor.getHtml();
         // 2行なのでブロックペーストとして処理される
-        expect(html).not.toContain('<a href="https://example.com">https://example.com</a>');
+        expect(html).not.toContain('<a href=');
     });
 
     test('テキスト中にURLをペースト → リンクが挿入される', async ({ page }) => {
@@ -201,7 +201,7 @@ test.describe('URL ペースト自動リンク化', () => {
 
         // テキストの中にリンクが挿入されていることを確認
         const html = await editor.getHtml();
-        expect(html).toContain('<a href="https://example.com">https://example.com</a>');
+        expect(html).toContain('<a href="https://example.com" title="https://example.com">https://example.com</a>');
     });
 
     test('行マタギの選択でURLをペースト → 通常のペースト動作', async ({ page }) => {

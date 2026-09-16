@@ -210,6 +210,7 @@
     // These have a browser sentinel \n at the end that must be stripped
     // by htmlToMarkdown (in edit mode) or by enterDisplayMode (on mode transition).
     const codeBlocksWithSentinel = new WeakSet();
+    const initializedLinks = new WeakSet();
     const NAVIGATION_FLAG_RESET_DELAY = 200; // Must be > focusout handler delay (100ms)
     function resetNavigationFlag() {
         setTimeout(() => { isNavigatingIntoBlock = false; }, NAVIGATION_FLAG_RESET_DELAY);
@@ -2760,6 +2761,18 @@
         return html;
     }
 
+    function setupLink(a) {
+        if (a.closest('.toc-block')) return;
+        // DOM-only details; keep this shared by rendered, inserted, and pasted links.
+        if (!a.hasAttribute('title')) a.title = a.getAttribute('href') || '';
+        if (initializedLinks.has(a)) return;
+        initializedLinks.add(a);
+        a.addEventListener('click', e => {
+            e.preventDefault();
+            host.openLink(a.getAttribute('href'));
+        });
+    }
+
     function setupInteractiveElements() {
         setupInlineMath();
         setupDocumentAux();
@@ -2772,13 +2785,7 @@
         });
 
         // Handle link clicks
-        editor.querySelectorAll('a').forEach(a => {
-            if (a.closest('.toc-block')) return;
-            a.addEventListener('click', e => {
-                e.preventDefault();
-                host.openLink(a.getAttribute('href'));
-            });
-        });
+        editor.querySelectorAll('a').forEach(setupLink);
 
         // Make table cells editable
         editor.querySelectorAll('th, td').forEach(cell => {
@@ -13439,6 +13446,7 @@
         const a = document.createElement('a');
         a.href = '#';
         a.textContent = selectedText;
+        setupLink(a);
         
         range.deleteContents();
         range.insertNode(a);
@@ -13626,6 +13634,7 @@
             const a = document.createElement('a');
             a.href = message.url;
             a.textContent = message.text;
+            setupLink(a);
             
             const sel = window.getSelection();
             if (sel && sel.rangeCount) {
@@ -14740,6 +14749,7 @@
                     const a = document.createElement('a');
                     a.href = plainText;
                     a.textContent = selectedText;
+                    setupLink(a);
                     range.deleteContents();
                     range.insertNode(a);
 
@@ -14758,6 +14768,7 @@
                     const a = document.createElement('a');
                     a.href = plainText;
                     a.textContent = plainText;
+                    setupLink(a);
                     range.deleteContents();
                     range.insertNode(a);
 

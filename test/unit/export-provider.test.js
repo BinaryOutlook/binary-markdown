@@ -58,7 +58,7 @@ async function setup(t) {
     const state = {
         text: '# OLD-EDITOR\n', disk: '# OLD-EDITOR\n', captureCalls: 0, saveCalls: 0,
         captures: async () => '# OLD-EDITOR\n', beforeWrite: async () => {}, beforeRead: async () => {}, failedWrite: false,
-        controller: undefined, exports: []
+        controller: undefined, exports: [], links: []
     };
     const file = value => ({ scheme: 'file', fsPath: value, toString: () => 'file://' + value });
     const document = {
@@ -125,6 +125,7 @@ async function setup(t) {
     }
     const mocks = {
         vscode,
+        './link-opener': { openLocalLink: async (href, uri) => { state.links.push({ href, uri }); } },
         './webviewContent': { getWebviewContent: (_webview, _uri, _content, options) => { renderConfigs.push(options); return '<p>Fixture editor</p>'; } },
         './export/controller': { ExportController: Controller },
         './i18n/messages': {
@@ -156,6 +157,18 @@ test('export commands target the active custom editor for each format', async t 
     for (const format of ['html', 'pdf', 'docx', 'epub']) { h.provider.requestExport(format); }
     assert.deepEqual(h.state.exports, ['html', 'pdf', 'docx', 'epub']);
     assert.deepEqual(h.notices, []);
+});
+
+test('link messages preserve local destinations and retain heading navigation', async t => {
+    const h = await setup(t);
+    const href = '/fixtures/03 Labs/Lab2';
+    await h.send({ type: 'openLink', href });
+    assert.deepEqual(h.state.links, [{ href, uri: h.document.uri }]);
+    await h.send({ type: 'openLink', href: '#heading' });
+    assert.ok(h.posts.some(p => p.type === 'scrollToAnchor' && p.anchor === 'heading'));
+    for (const href of [undefined, null, {}, '']) await h.send({ type: 'openLink', href });
+    assert.equal(h.state.links.length, 1);
+    assert.equal(h.state.saveCalls, 0);
 });
 
 test('native save refreshes TOC in the same disk write and repeated save is unchanged', async t => {

@@ -38,6 +38,8 @@ The dev-only `native-playwright` alias attaches with [`noDefaults`](https://play
 
 Use `--suite document-aux` for metadata preservation, manual TOC refresh, native/keyboard saves in both modes, repeated-save stability and real exports.
 
+Use `--suite links` for absolute and workspace-relative directory links, absolute files, encoded file URIs, destination tooltips, unavailable-target copying, and unchanged Markdown. The clipboard check restores its original contents and records only a comparison result. This suite is included in `--suite all`.
+
 Use `--suite formats`, `saves`, `edges`, `ui`, `equations`, `pdf-background`, `selection`, `immutable` or `offline` for a focused run. The package default is `dist/<package-name>-<package-version>.vsix` from the checkout's manifest. `--package dist/binary-markdown-0.2.0.vsix`, `--port 9327`, `--workdir ...`, `--code ...` and `--timeout 120000` are explicit options. Keep the initialization port on subsequent commands. The timeout is a test watchdog, not a product timing requirement; increase it for a complex report or slower machine. In an environment that sandboxes tool execution, native VS Code and browser/CDP access need the environment's explicit native-process permission.
 
 The `identity` suite, included in full runs, checks **Copy Build Information** against the installed source stamp and restores the previous clipboard. The historical 39-scenario receipt above predates repeated configuration cycles, build-information and equation coverage. Current suites cover:

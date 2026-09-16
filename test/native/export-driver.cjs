@@ -56,10 +56,25 @@ exports.activate = async function activate(context) {
     };
     let last = '';
     try { last = JSON.parse(fs.readFileSync(path.join(workspace, 'request.json'), 'utf8')).id; } catch { /* Fresh workspace. */ }
+    let linkClipboardBefore;
     const execute = async request => {
         if (request.token !== owner.token) throw new Error('Test workspace ownership token mismatch.');
         let buildInformation;
+        let linkClipboardMatches;
         switch (request.action) {
+            case 'linkClipboard': {
+                if (request.phase === 'snapshot') {
+                    if (linkClipboardBefore !== undefined) throw new Error('Clipboard snapshot already active');
+                    linkClipboardBefore = await vscode.env.clipboard.readText();
+                } else if (request.phase === 'verify') {
+                    if (linkClipboardBefore === undefined) throw new Error('Clipboard snapshot required');
+                    linkClipboardMatches = await vscode.env.clipboard.readText() === path.join(workspace, 'Link targets', 'Missing folder');
+                } else if (request.phase === 'restore' && linkClipboardBefore !== undefined) {
+                    await vscode.env.clipboard.writeText(linkClipboardBefore);
+                    linkClipboardBefore = undefined;
+                } else { throw new Error('Unsupported clipboard test phase'); }
+                break;
+            }
             case 'inspect': break;
             case 'buildInformation': {
                 const previous = await vscode.env.clipboard.readText();
@@ -110,7 +125,8 @@ exports.activate = async function activate(context) {
             case 'close': await vscode.commands.executeCommand('workbench.action.closeActiveEditor'); break;
             default: throw new Error('Unsupported test-driver action.');
         }
-        return { id: request.id, ok: true, documents: inspect(), ...(buildInformation ? { buildInformation } : {}) };
+        return { id: request.id, ok: true, documents: inspect(), ...(buildInformation ? { buildInformation } : {}),
+            ...(linkClipboardMatches !== undefined ? { linkClipboardMatches } : {}) };
     };
     const poll = async () => {
         let request;

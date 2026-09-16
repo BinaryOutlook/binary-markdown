@@ -1,5 +1,11 @@
 // Korean messages
 export const messages = {
+  copyLinkAddress: '링크 주소 복사',
+  linkUnavailable: '현재 작업 영역에서 이 링크를 열 수 없습니다.',
+  linkNotFound: '연결된 파일 또는 폴더를 찾을 수 없습니다.',
+  linkNoPermissions: '연결된 파일 또는 폴더에 접근할 권한이 없습니다.',
+  linkOpenFailed: '연결된 파일 또는 폴더를 열 수 없습니다.',
+  linkCopyFailed: '링크 주소를 복사할 수 없습니다.',
   openMarkdownFirst: '먼저 Markdown 파일을 열어주세요.',
   numberOfRows: '행 수',
   numberOfColumns: '열 수',

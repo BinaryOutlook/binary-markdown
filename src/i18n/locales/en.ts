@@ -1,5 +1,11 @@
 // English messages
 export const messages = {
+  copyLinkAddress: 'Copy link address',
+  linkUnavailable: 'This link cannot be opened in the current workspace.',
+  linkNotFound: 'The linked file or folder could not be found.',
+  linkNoPermissions: 'Permission was denied when accessing the linked file or folder.',
+  linkOpenFailed: 'The linked file or folder could not be opened.',
+  linkCopyFailed: 'The link address could not be copied.',
   openMarkdownFirst: 'Please open a markdown file first.',
   numberOfRows: 'Number of rows',
   numberOfColumns: 'Number of columns',

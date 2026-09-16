@@ -14,6 +14,12 @@ export interface Messages {
   ignore: string;
   enterUrl: string;
   enterLinkText: string;
+  copyLinkAddress: string;
+  linkUnavailable: string;
+  linkNotFound: string;
+  linkNoPermissions: string;
+  linkOpenFailed: string;
+  linkCopyFailed: string;
   enterImageDir: string;
   imageDirCleared: string;
   forceRelativeNo: string;

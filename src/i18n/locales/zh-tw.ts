@@ -1,5 +1,11 @@
 // Traditional Chinese messages
 export const messages = {
+  copyLinkAddress: '複製連結位址',
+  linkUnavailable: '無法在目前的工作區中開啟此連結。',
+  linkNotFound: '找不到連結指向的檔案或資料夾。',
+  linkNoPermissions: '沒有權限存取連結指向的檔案或資料夾。',
+  linkOpenFailed: '無法開啟連結指向的檔案或資料夾。',
+  linkCopyFailed: '無法複製連結位址。',
   openMarkdownFirst: '請先開啟 Markdown 檔案。',
   numberOfRows: '列數',
   numberOfColumns: '欄數',

@@ -1,5 +1,11 @@
 // Japanese messages
 export const messages = {
+  copyLinkAddress: 'リンクのアドレスをコピー',
+  linkUnavailable: '現在のワークスペースでは、このリンクを開けません。',
+  linkNotFound: 'リンク先のファイルまたはフォルダーが見つかりません。',
+  linkNoPermissions: 'リンク先のファイルまたはフォルダーにアクセスする権限がありません。',
+  linkOpenFailed: 'リンク先のファイルまたはフォルダーを開けませんでした。',
+  linkCopyFailed: 'リンクのアドレスをコピーできませんでした。',
   openMarkdownFirst: 'まずMarkdownファイルを開いてください。',
   numberOfRows: '行数',
   numberOfColumns: '列数',

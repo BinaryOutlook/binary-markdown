@@ -5,6 +5,7 @@ import { EditQueue } from './export/edit-queue';
 import { ExportController } from './export/controller';
 import { ExportFormat } from './export/types';
 import { t, getWebviewMessages, initLocale } from './i18n/messages';
+import { openLocalLink } from './link-opener';
 
 type OutlineStateScope = 'file' | 'global';
 
@@ -874,6 +875,7 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
                     break;
 
                 case 'openLink':
+                    if (typeof message.href !== 'string' || !message.href) { break; }
                     if (message.href.startsWith('http')) {
                         vscode.env.openExternal(vscode.Uri.parse(message.href));
                     } else if (message.href.startsWith('#')) {
@@ -883,12 +885,7 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
                             anchor: message.href.substring(1) // Remove the leading #
                         });
                     } else {
-                        // Handle internal links
-                        const workspaceFolder = vscode.workspace.getWorkspaceFolder(document.uri);
-                        if (workspaceFolder) {
-                            const linkUri = vscode.Uri.joinPath(workspaceFolder.uri, message.href);
-                            vscode.commands.executeCommand('vscode.open', linkUri);
-                        }
+                        await openLocalLink(message.href, document.uri);
                     }
                     break;
 
