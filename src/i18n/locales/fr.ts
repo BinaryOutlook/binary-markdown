@@ -1,5 +1,11 @@
 // French messages
 export const messages = {
+  copyLinkAddress: 'Copier l’adresse du lien',
+  linkUnavailable: 'Ce lien ne peut pas être ouvert dans l’espace de travail actuel.',
+  linkNotFound: 'Le fichier ou le dossier lié est introuvable.',
+  linkNoPermissions: 'L’accès au fichier ou au dossier lié a été refusé.',
+  linkOpenFailed: 'Le fichier ou le dossier lié n’a pas pu être ouvert.',
+  linkCopyFailed: 'L’adresse du lien n’a pas pu être copiée.',
   openMarkdownFirst: 'Veuillez d\'abord ouvrir un fichier Markdown.',
   numberOfRows: 'Nombre de lignes',
   numberOfColumns: 'Nombre de colonnes',
@@ -28,6 +34,19 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  tableControls: "Outils de tableau",
+  tableMenu: "Tableau…",
+  tablePlacement: "Position des outils de tableau",
+  tablePositionAuto: "Automatique (recommandé)",
+  tablePositionTopBar: "Toujours dans la barre supérieure",
+  tablePositionFixed: "Choisir une position fixe…",
+  tablePositionTopLeft: "En haut à gauche",
+  tablePositionTopRight: "En haut à droite",
+  tablePositionBottomLeft: "En bas à gauche",
+  tablePositionBottomRight: "En bas à droite",
+  tablePositionLeft: "Côté gauche (vertical)",
+  tablePositionRight: "Côté droit (vertical)",
+
   insertToc: 'Insérer une table des matières',
   refreshToc: 'Actualiser la table des matières',
   tocContents: 'Sommaire',
@@ -53,6 +72,7 @@ export const webviewMessages = {
   blockquote: 'Citation (Ctrl+Shift+Q)',
   inlineCode: 'Code en ligne (Ctrl+`)',
   codeBlock: 'Bloc de code (Ctrl+Shift+K)',
+  deleteCodeBlock: 'Supprimer le bloc de code',
   insertLink: 'Insérer un lien (Ctrl+K)',
   insertImage: 'Insérer une image (Ctrl+Shift+I)',
   setImageDir: 'Définir le répertoire d\'images',

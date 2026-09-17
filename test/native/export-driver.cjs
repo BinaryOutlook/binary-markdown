@@ -39,7 +39,7 @@ exports.activate = async function activate(context) {
         platform: process.platform, arch: process.arch, nodeVersion: process.version,
         uiKind: vscode.env.uiKind, remoteName: vscode.env.remoteName ?? null,
         trusted: vscode.workspace.isTrusted,
-        appearance: Object.fromEntries(['language', 'toolbarMode', 'theme', 'export.pdfWhiteBackground'].map(key =>
+        appearance: Object.fromEntries(['language', 'toolbarMode', 'tableToolbarPosition', 'theme', 'export.pdfWhiteBackground'].map(key =>
             [key, vscode.workspace.getConfiguration('binary-markdown').get(key)]))
     });
     const respond = value => {
@@ -56,10 +56,27 @@ exports.activate = async function activate(context) {
     };
     let last = '';
     try { last = JSON.parse(fs.readFileSync(path.join(workspace, 'request.json'), 'utf8')).id; } catch { /* Fresh workspace. */ }
+    let linkClipboardBefore;
     const execute = async request => {
         if (request.token !== owner.token) throw new Error('Test workspace ownership token mismatch.');
         let buildInformation;
+        let linkClipboardMatches;
         switch (request.action) {
+            case 'linkClipboard': {
+                if (request.phase === 'snapshot') {
+                    if (linkClipboardBefore !== undefined) throw new Error('Clipboard snapshot already active');
+                    linkClipboardBefore = await vscode.env.clipboard.readText();
+                } else if (request.phase === 'verify') {
+                    if (linkClipboardBefore === undefined) throw new Error('Clipboard snapshot required');
+                    // Compare with the fixture writer's exact spelling. VS Code's fsPath
+                    // can lowercase a Windows drive letter in the canonical workspace.
+                    linkClipboardMatches = await vscode.env.clipboard.readText() === path.join(owner.workspace, 'Link targets', 'Missing folder');
+                } else if (request.phase === 'restore' && linkClipboardBefore !== undefined) {
+                    await vscode.env.clipboard.writeText(linkClipboardBefore);
+                    linkClipboardBefore = undefined;
+                } else { throw new Error('Unsupported clipboard test phase'); }
+                break;
+            }
             case 'inspect': break;
             case 'buildInformation': {
                 const previous = await vscode.env.clipboard.readText();
@@ -87,6 +104,7 @@ exports.activate = async function activate(context) {
                     'export.pdfWhiteBackground': value => typeof value === 'boolean',
                     'math.backslashDelimiters': value => typeof value === 'boolean',
                     toolbarMode: value => ['simple', 'full'].includes(value),
+                    tableToolbarPosition: value => ['auto', 'top-left', 'top-right', 'bottom-left', 'bottom-right', 'left', 'right', 'top-bar'].includes(value),
                     language: value => ['en', 'zh-CN'].includes(value),
                     theme: value => ['github', 'night'].includes(value)
                 };
@@ -110,7 +128,8 @@ exports.activate = async function activate(context) {
             case 'close': await vscode.commands.executeCommand('workbench.action.closeActiveEditor'); break;
             default: throw new Error('Unsupported test-driver action.');
         }
-        return { id: request.id, ok: true, documents: inspect(), ...(buildInformation ? { buildInformation } : {}) };
+        return { id: request.id, ok: true, documents: inspect(), ...(buildInformation ? { buildInformation } : {}),
+            ...(linkClipboardMatches !== undefined ? { linkClipboardMatches } : {}) };
     };
     const poll = async () => {
         let request;

@@ -15,6 +15,10 @@
     };
 
     window.hostBridge = {
+        setTableToolbarPosition: function(value) {
+            window.__testApi.messages.push({ type: 'setTableToolbarPosition', value: value });
+            window.__hostMessageHandler({ type: 'tableToolbarPosition', value: value });
+        },
         // Document operations.
         syncContent: function(markdown) {
             window.__testApi.messages.push({ type: 'edit', content: markdown });

@@ -327,7 +327,7 @@ async function run(settings, owner) {
         fs.writeFileSync(report, JSON.stringify({ harness: harnessIdentity(), host: receipt(owner), packageSha256: hash(fs.readFileSync(settings.package)), receipts }, null, 2));
         console.log(name, JSON.stringify(details));
     };
-    const available = ['identity', 'filesystem', 'formats', 'saves', 'edges', 'ui', 'equations', 'pdf-background', 'selection', 'immutable', 'offline', 'document-aux'];
+    const available = ['identity', 'filesystem', 'formats', 'saves', 'edges', 'ui', 'equations', 'pdf-background', 'selection', 'immutable', 'offline', 'document-aux', 'links', 'codeblocks', 'table-placement'];
     const groups = settings.suite === 'all' ? available : [settings.suite];
     assert.ok(groups.every(value => available.includes(value)), 'Suite must be all, ' + available.join(', '));
     const htmlExports = [];
@@ -502,7 +502,10 @@ async function run(settings, owner) {
         // Restore real discovery before the remaining scenarios after the controlled worker.
         await h.driver({ action: 'config', key: 'export.pandocPath', value: settings.pandoc });
         if (groups.includes('ui')) await appearanceCases(h, owner, record);
+        if (groups.includes('table-placement')) await tablePlacementCase(h, owner, record);
         if (groups.includes('equations')) await equationCases(h, owner, record);
+        if (groups.includes('links')) await linkCases(h, owner, record);
+        if (groups.includes('codeblocks')) await codeblockCases(h, owner, record);
         if (groups.includes('pdf-background')) await pdfBackgroundCases(h, owner, record);
         if (groups.includes('selection')) await selectionCase(h, owner, record);
         if (groups.includes('immutable')) await immutableCase(h, owner, record);
@@ -518,9 +521,153 @@ async function run(settings, owner) {
         await h.driver({ action: 'config', key: 'export.pandocPath', value: settings.pandoc });
         await h.driver({ action: 'config', key: 'export.browserPath', value: settings.browser });
         await h.driver({ action: 'config', key: 'export.pdfWhiteBackground', value: true });
+        await h.driver({ action: 'config', key: 'tableToolbarPosition', value: 'auto' });
         for (const [key, value] of [['theme', 'github'], ['language', 'en'], ['toolbarMode', 'full']]) await h.driver({ action: 'config', key, value });
     }
     console.log('Evidence:', report);
+}
+
+async function linkCases(h, owner, record) {
+    const folder = path.join(owner.workspace, 'Link targets', 'Folder with spaces');
+    const target = path.join(owner.workspace, 'Link targets', 'URI target %.txt');
+    const missing = path.join(owner.workspace, 'Link targets', 'Missing folder');
+    fs.mkdirSync(folder, { recursive: true });
+    fs.writeFileSync(target, 'LINK-TARGET-MARKER\n');
+    const source = '# Links\n\n' + [
+        ['absolute-folder', folder], ['relative-folder', 'Link targets/Folder with spaces'],
+        ['absolute-file', target], ['file-uri', pathToFileURL(target).href], ['missing', missing]
+    ].map(([label, href]) => `[${label}](${href})`).join('\n\n') + '\n';
+    const file = path.join(owner.workspace, 'links.md');
+    fs.writeFileSync(file, source);
+    const click = async label => {
+        const connection = await h.open('links.md');
+        try {
+            return await connection.evaluate(`(() => {
+                const a = Array.from(document.querySelectorAll('#editor a')).find(a => a.textContent === ${JSON.stringify(label)});
+                const tooltipMatches = a.title === a.getAttribute('href');
+                a.click(); return tooltipMatches;
+            })()`);
+        } finally { connection.close(); }
+    };
+    for (const label of ['absolute-folder', 'relative-folder']) {
+        assert.equal(await click(label), true);
+        await h.until(() => h.workbench(async page =>
+            (await page.locator('.explorer-viewlet .monaco-list-row[aria-selected="true"]').allTextContents())
+                .some(text => text.includes('Folder with spaces'))), 'linked directory selected in Explorer');
+    }
+    for (const label of ['absolute-file', 'file-uri']) {
+        assert.equal(await click(label), true);
+        await h.until(async () => (await h.driver({ action: 'inspect' })).documents.some(document =>
+            samePath(document.path, target) && document.text === 'LINK-TARGET-MARKER\n'), 'linked file opened');
+        await h.driver({ action: 'close' });
+    }
+    await h.driver({ action: 'linkClipboard', phase: 'snapshot' });
+    try {
+        assert.equal(await click('missing'), true);
+        await h.workbench(async page => {
+            const copy = page.getByRole('button', { name: 'Copy link address', exact: true });
+            await copy.waitFor({ state: 'visible' });
+            assert.ok((await page.locator('body').innerText()).includes('The linked file or folder could not be found.'));
+            await copy.click();
+        });
+        await h.until(async () => (await h.driver({ action: 'linkClipboard', phase: 'verify' })).linkClipboardMatches, 'original link address copied');
+    } finally { await h.driver({ action: 'linkClipboard', phase: 'restore' }); }
+    assert.equal(fs.readFileSync(file, 'utf8'), source);
+    assert.ok(!(await h.driver({ action: 'inspect' })).documents.some(document => samePath(document.path, file) && document.dirty));
+    record('local-links', { absoluteFolder: true, relativeFolder: true, absoluteFile: true, fileUri: true,
+        hoverDestinations: true, unavailableTargetCopied: true, clipboardRestored: true, sourceUnchanged: true });
+}
+
+async function codeblockCases(h, owner, record) {
+    const file = 'codeblocks.md';
+    const quoted = '> ```\n> alpha\n>     beta  \n> \n> ```';
+    const source = '   ```javascript\n   const value = 1;\n   ```\n\n' + quoted + '\n\nAfter\n';
+    const filePath = path.join(owner.workspace, file);
+    await h.driver({ action: 'close' });
+    fs.writeFileSync(filePath, source);
+    let connection = await h.open(file);
+    try {
+        assert.equal(await connection.evaluate('document.querySelectorAll("#editor pre").length'), 2);
+        await connection.evaluate(`document.getElementById('editor').focus(); document.querySelector('#editor > pre code').click(); document.querySelector('#editor blockquote pre code').click()`);
+        assert.equal(await connection.evaluate('document.querySelector("#editor > pre").dataset.mode'), 'display');
+        assert.ok(await connection.evaluate('document.querySelectorAll("#editor > pre code .hljs-keyword").length > 0'));
+        assert.equal(await connection.evaluate(`getComputedStyle(document.querySelector('#editor blockquote code')).color === getComputedStyle(document.querySelector('#editor > pre code')).color`), true);
+
+        // Use the installed VS Code keybinding immediately after actual typing,
+        // without a toolbar click that could hide the pending-sync regression.
+        await h.workbench(async page => {
+            await page.bringToFront();
+            await connection.evaluate(`(()=>{const code=document.querySelector('#editor > pre code'); code.click(); const r=document.createRange(); r.selectNodeContents(code); r.collapse(false); const s=getSelection(); s.removeAllRanges(); s.addRange(r)})()`);
+            await page.keyboard.type(' // updated');
+            await page.keyboard.press(process.platform === 'darwin' ? 'Meta+.' : 'Control+.');
+        });
+        await h.until(() => connection.evaluate('getComputedStyle(document.getElementById("sourceEditor")).display !== "none"'), 'host source-mode shortcut');
+        const captured = await connection.evaluate('document.getElementById("sourceEditor").value');
+        assert.ok(captured.includes('const value = 1; // updated'));
+        assert.ok(captured.includes(quoted));
+        await connection.evaluate(`document.getElementById('sourceEditor').focus()`);
+        await h.workbench(page => page.keyboard.press(process.platform === 'darwin' ? 'Meta+.' : 'Control+.'));
+        await h.until(() => connection.evaluate('getComputedStyle(document.getElementById("sourceEditor")).display === "none"'));
+        // Finish the source round trip before the separate quoted-code save
+        // scenario. Save below is still immediate after the new paragraph edit.
+        await h.until(async () => (await h.driver({ action: 'inspect' })).documents.some(
+            document => samePath(document.path, filePath) && document.text === captured), 'source round trip synchronized');
+        await connection.evaluate(`(()=>{const p=Array.from(document.querySelectorAll('#editor > p')).find(p=>p.textContent==='After'); document.getElementById('editor').focus(); const r=document.createRange(); r.selectNodeContents(p); r.collapse(false); const s=getSelection(); s.removeAllRanges(); s.addRange(r)})()`);
+        await connection.send('Input.insertText', { text: ' updated' });
+        await h.driver({ action: 'save' });
+        await h.until(() => fs.readFileSync(filePath, 'utf8').includes('After updated'), 'code block file saved');
+        const saved = fs.readFileSync(filePath, 'utf8');
+        assert.ok(saved.includes(quoted));
+        assert.ok(saved.includes('const value = 1; // updated'));
+        assert.doesNotMatch(saved, /plaintextCopy|code-block-header|⤢/);
+        connection.close(); connection = null;
+        await h.driver({ action: 'close' });
+        connection = await h.open(file);
+        assert.equal(await connection.evaluate('document.querySelectorAll("#editor pre").length'), 2);
+        assert.ok(await connection.evaluate('document.querySelectorAll("#editor > pre code .hljs-keyword").length > 0'));
+        record('codeblocks', { indentedFences: true, inactiveHighlighting: true, readableQuote: true, hostSourceShortcut: true, savedCodePreserved: true, reopened: true });
+    } finally { if (connection) connection.close(); }
+}
+
+async function tablePlacementCase(h, owner, record) {
+    const file = 'table-placement.md';
+    const source = '# Table controls\n\n| Item | State |\n| --- | --- |\n| One | Ready |\n| Two | Draft |\n';
+    fs.writeFileSync(path.join(owner.workspace, file), source);
+    assert.equal((await h.driver({ action: 'inspect' })).appearance.tableToolbarPosition, 'auto');
+    let connection = await h.open(file);
+    const controls = '.table-toolbar:not(.table-toolbar-measure)';
+    const selectCell = () => connection.evaluate(`const cell=document.querySelector('#editor td');cell.focus();const range=document.createRange();range.selectNodeContents(cell);range.collapse(true);getSelection().removeAllRanges();getSelection().addRange(range);cell.click()`);
+    try {
+        await selectCell();
+        await connection.evaluate('window.__tablePlacementProbe="retained"');
+        for (const value of ['top-left', 'right', 'top-bar', 'auto']) {
+            await h.driver({ action: 'config', key: 'tableToolbarPosition', value });
+            await h.until(() => connection.evaluate(`document.documentElement.dataset.tableToolbarPosition===${JSON.stringify(value)}`));
+            assert.equal(await connection.evaluate('window.__tablePlacementProbe'), 'retained', 'Placement updates preserve the live webview');
+            assert.equal(fs.readFileSync(path.join(owner.workspace, file), 'utf8'), source);
+            const state = await h.driver({ action: 'inspect' });
+            assert.equal(state.documents.find(document => path.basename(document.path) === file).dirty, false);
+        }
+        await h.driver({ action: 'config', key: 'tableToolbarPosition', value: 'top-bar' });
+        await h.until(() => connection.evaluate(`document.querySelector('${controls}').dataset.placement==='top-bar'`));
+        await connection.evaluate(`const toggle=document.querySelector('.table-toolbar-toggle');if(!toggle.hidden)toggle.click();document.querySelector('${controls} [data-action="placement"]').click();document.querySelector('[data-position="fixed"]').click();document.querySelector('[data-position="bottom-right"]').click()`);
+        await h.until(async () => (await h.driver({ action: 'inspect' })).appearance.tableToolbarPosition === 'bottom-right', 'Picker persisted through the real host bridge');
+        connection.close(); connection = null;
+        await h.driver({ action: 'close' });
+        connection = await h.open(file);
+        assert.equal(await connection.evaluate('document.documentElement.dataset.tableToolbarPosition'), 'bottom-right');
+        await selectCell();
+        await h.until(() => connection.evaluate(`document.querySelector('${controls}').classList.contains('visible')`));
+        await connection.evaluate(`document.querySelector('${controls} [data-action="add-row-below"]').click()`);
+        await h.until(() => connection.evaluate('document.querySelectorAll("#editor tr").length===4'));
+        await connection.evaluate(`document.querySelector('[data-action="undo"]').click()`);
+        await h.until(() => connection.evaluate('document.querySelectorAll("#editor tr").length===3'));
+        await h.driver({ action: 'save' });
+        record('table-placement', { liveConfiguration: true, explicitPreferenceRetained: true, pickerPersistedAcrossReopen: true, actionAndUndo: true });
+    } finally {
+        if (connection) connection.close();
+        await h.driver({ action: 'config', key: 'tableToolbarPosition', value: 'auto' });
+    }
 }
 
 async function equationCases(h, owner, record) {

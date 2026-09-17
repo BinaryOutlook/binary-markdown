@@ -194,6 +194,38 @@ test.describe('《コードブロック》UI機能', () => {
         });
     });
 
+    test.describe('削除ボタン', () => {
+        test('コードブロック全体を削除し、前後の内容を保持する', async ({ page }) => {
+            await editor.setMarkdown('Before\n\n```javascript\nconst x = 1;\n```\n\nAfter');
+
+            const deleteBtn = page.locator('.code-delete-btn').first();
+            await expect(deleteBtn).toBeVisible();
+            await expect(deleteBtn).toHaveAttribute('title', 'Delete code block');
+
+            await deleteBtn.click();
+
+            await expect(page.locator('#editor pre')).toHaveCount(0);
+            const markdown = await editor.getMarkdown();
+            expect(markdown).toContain('Before');
+            expect(markdown).toContain('After');
+            expect(markdown).not.toContain('const x = 1;');
+        });
+
+        test('削除したコードブロックを元に戻せる', async ({ page }) => {
+            await editor.setMarkdown('Before\n\n```javascript\nconst x = 1;\n```\n\nAfter');
+
+            await page.locator('.code-delete-btn').first().click();
+            await expect(page.locator('#editor pre')).toHaveCount(0);
+
+            await page.keyboard.press('Control+z');
+
+            await expect(page.locator('#editor pre')).toHaveCount(1);
+            const markdown = await editor.getMarkdown();
+            expect(markdown).toContain('```javascript');
+            expect(markdown).toContain('const x = 1;');
+        });
+    });
+
     test.describe('シンタックスハイライト', () => {
         test('JavaScriptのキーワードがハイライトされる', async ({ page }) => {
             // パース済みHTMLを直接設定
@@ -308,7 +340,7 @@ test.describe('《コードブロック》UI機能', () => {
             expect(headerParent).toBe('pre');
         });
 
-        test('言語タグとコピーボタンが両方表示される', async ({ page }) => {
+        test('言語タグ、コピー、展開、削除ボタンが表示される', async ({ page }) => {
             // コードブロックを作成
             await editor.type('```javascript');
             await editor.press('Enter');
@@ -317,9 +349,13 @@ test.describe('《コードブロック》UI機能', () => {
             // 両方が表示されていることを確認
             const langTag = page.locator('.code-lang-tag').first();
             const copyBtn = page.locator('.code-copy-btn').first();
+            const expandBtn = page.locator('.code-expand-btn').first();
+            const deleteBtn = page.locator('.code-delete-btn').first();
             
             await expect(langTag).toBeVisible();
             await expect(copyBtn).toBeVisible();
+            await expect(expandBtn).toBeVisible();
+            await expect(deleteBtn).toBeVisible();
         });
     });
 });

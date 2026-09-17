@@ -19,6 +19,7 @@ playwright-report/
 ci-results/
 validation-evidence/
 test/html/vendor/
+test/html/production-editor.html
 
 # Temporary files
 *.log

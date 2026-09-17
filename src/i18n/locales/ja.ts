@@ -1,5 +1,11 @@
 // Japanese messages
 export const messages = {
+  copyLinkAddress: 'リンクのアドレスをコピー',
+  linkUnavailable: '現在のワークスペースでは、このリンクを開けません。',
+  linkNotFound: 'リンク先のファイルまたはフォルダーが見つかりません。',
+  linkNoPermissions: 'リンク先のファイルまたはフォルダーにアクセスする権限がありません。',
+  linkOpenFailed: 'リンク先のファイルまたはフォルダーを開けませんでした。',
+  linkCopyFailed: 'リンクのアドレスをコピーできませんでした。',
   openMarkdownFirst: 'まずMarkdownファイルを開いてください。',
   numberOfRows: '行数',
   numberOfColumns: '列数',
@@ -28,6 +34,19 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  tableControls: "表の操作",
+  tableMenu: "表…",
+  tablePlacement: "表ツールバーの位置",
+  tablePositionAuto: "自動（推奨）",
+  tablePositionTopBar: "常に上部バー",
+  tablePositionFixed: "固定位置を選択…",
+  tablePositionTopLeft: "左上",
+  tablePositionTopRight: "右上",
+  tablePositionBottomLeft: "左下",
+  tablePositionBottomRight: "右下",
+  tablePositionLeft: "左側（縦）",
+  tablePositionRight: "右側（縦）",
+
   insertToc: '目次を挿入',
   refreshToc: '目次を更新',
   tocContents: '目次',
@@ -53,6 +72,7 @@ export const webviewMessages = {
   blockquote: '引用 (Ctrl+Shift+Q)',
   inlineCode: 'インラインコード (Ctrl+`)',
   codeBlock: 'コードブロック (Ctrl+Shift+K)',
+  deleteCodeBlock: 'コードブロックを削除',
   insertLink: 'リンク挿入 (Ctrl+K)',
   insertImage: '画像挿入 (Ctrl+Shift+I)',
   setImageDir: '画像ディレクトリ設定',

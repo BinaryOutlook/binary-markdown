@@ -43,6 +43,7 @@ const testHostBridgeScript = fs.readFileSync(testHostBridgePath, 'utf-8');
 
 // プレースホルダーを置換
 editorScript = fs.readFileSync(path.join(__dirname, '../src/shared/math-syntax.js'), 'utf8') + '\n' + editorScript;
+editorScript = fs.readFileSync(path.join(__dirname, '../src/shared/table-placement.js'), 'utf8') + '\n' + fs.readFileSync(path.join(__dirname, '../src/webview/table-toolbar.js'), 'utf8') + '\n' + editorScript;
 editorScript = editorScript
     .replace('__MATH_BACKSLASH__', 'true')
     .replace('__DEBUG_MODE__', 'false')
@@ -86,6 +87,16 @@ const html = `<!DOCTYPE html>
             min-height: 400px;
             outline: none;
             white-space: pre-wrap;
+        }
+        .editor-wrapper {
+            height: 420px;
+            overflow: auto;
+            position: relative;
+        }
+        .outline-item.is-active {
+            color: var(--link-color);
+            background: var(--selection-bg);
+            font-weight: 600;
         }
         .editor h1, .editor h2, .editor h3, .editor h4, .editor h5, .editor h6 {
             color: var(--heading-color);
@@ -139,7 +150,7 @@ const html = `<!DOCTYPE html>
             color: var(--blockquote-color);
             cursor: pointer;
         }
-        .code-copy-btn, .code-expand-btn {
+        .code-copy-btn, .code-expand-btn, .code-delete-btn {
             background: none;
             border: none;
             cursor: pointer;
@@ -198,7 +209,9 @@ const html = `<!DOCTYPE html>
         <input id="searchWholeWord" type="checkbox">
         <input id="searchRegex" type="checkbox">
     </div>
-    <div class="editor" id="editor" contenteditable="true" spellcheck="false"></div>
+    <div class="editor-wrapper" id="editorWrapper">
+        <div class="editor" id="editor" contenteditable="true" spellcheck="false"></div>
+    </div>
     
     <script src="vendor/turndown.js"></script>
     <script src="vendor/turndown-plugin-gfm.js"></script>
@@ -216,3 +229,14 @@ fs.writeFileSync(outputPath, html
     .replace('__TEST_HOST_BRIDGE__', () => testHostBridgeScript)
     .replace('__EDITOR_SCRIPT__', () => editorScript));
 console.log('Generated:', outputPath);
+
+// Production layout for contextual toolbar geometry and focus regressions.
+const { generateEditorBodyHtml } = require('../src/shared/editor-body-html');
+const styles = fs.readFileSync(path.join(__dirname, '../src/webview/styles.css'), 'utf8')
+    .replace('__FONT_SIZE__', '16')
+    .replace('__OUTLINE_ACTIVE_COLOR__', 'var(--link-color)');
+fs.writeFileSync(path.join(__dirname, 'html/production-editor.html'), `<!doctype html>
+<html lang="en" data-theme="things" data-toolbar-mode="simple"><head><meta charset="utf-8"><style>${styles}</style></head>
+<body>${generateEditorBodyHtml({}, process.platform, { exportEnabled: true, settingsEnabled: true })}
+<script src="vendor/turndown.js"></script><script src="vendor/turndown-plugin-gfm.js"></script>
+<script>${testHostBridgeScript}</script><script>${editorScript}</script></body></html>`);

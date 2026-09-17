@@ -28,6 +28,7 @@ export interface HostBridge {
     requestInsertImage(): void;
     requestSetImageDir(): void;
     openSettings?(): void;
+    setTableToolbarPosition?(value: string): void;
     saveImageAndInsert(dataUrl: string, fileName?: string): void;
     readAndInsertImage(filePath: string): void;
     openInTextEditor(): void;
@@ -46,6 +47,7 @@ export type ExportWebviewResponse =
 
 /** Incoming message types: host → editor.js. */
 export type HostMessage =
+    | { type: 'tableToolbarPosition'; value: string }
     | { type: 'validateExportImage'; requestId: string; dataUri: string }
     | { type: 'documentSaved'; content: string }
     | { type: 'saveResult'; revision: number; success: boolean }

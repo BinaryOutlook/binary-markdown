@@ -86,6 +86,14 @@ To exit inline formatting, type the closing marker followed by Space:
 
 ### Table Operations
 
+Select a table cell to show its controls. **Automatic** is the default: the controls use an available corner or side, based on the visible table and surrounding content, and move into the top bar when there is no room. A narrow top bar shows a **Table…** button containing the same actions. The controls keep a usable position while you work and wait for scrolling or resizing to settle before leaving the top bar.
+
+Use **⋯** in the table controls to choose **Automatic**, **Always in top bar**, or **Choose a fixed position…**. Fixed positions include all four corners and the two vertical sides. You can also change `binary-markdown.tableToolbarPosition` in VS Code Settings, or **Table toolbar position** in desktop Preferences. Explicit choices are retained; only an unset preference uses the new default. The picker updates an existing workspace preference when present, otherwise your user preference.
+
+Fixed controls stay at the chosen anchor where possible, remain within the visible editor, and scroll when space is limited. They hide when their table is completely offscreen. Automatic and top-bar controls remain available for the selected table until you select another block or enter Source mode. Changing placement does not edit the Markdown or add an undo step.
+
+Press `Alt+F10` from a table cell to focus its controls. Use left/right arrows in a horizontal toolbar, up/down arrows in a vertical toolbar or menu, and `Home`/`End` to move to the first/last action. `Enter` or `Space` activates a control; `Escape` returns to the retained cell. Inserting above the header, deleting the header, and deleting the final column are disabled.
+
 | Key | Action |
 | --- | --- |
 | `Tab` | Move to next cell |

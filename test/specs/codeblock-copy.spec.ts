@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { lineEndKey } from '../utils/editor-test-helper';
 
 type CopyTestWindow = Window & {
     __testApi: {
@@ -86,7 +87,7 @@ test.describe('Code block copy preserves source text', () => {
         await block.locator('code').click();
         await expect(block).toHaveAttribute('data-mode', 'edit');
         // Entering edit mode places the caret at the start of the first line.
-        await page.keyboard.press('End');
+        await page.keyboard.press(lineEndKey);
         await page.keyboard.type(' updated');
         await block.locator('.code-copy-btn').click();
         await expect(block.locator('.code-copy-btn')).toHaveText('Copied!');

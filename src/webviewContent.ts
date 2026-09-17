@@ -1,3 +1,4 @@
+import { normalize as normalizeTablePosition } from './shared/table-placement';
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -20,12 +21,34 @@ interface EditorConfig {
     theme: string;
     fontSize: number;
     toolbarMode?: string;
+    tableToolbarPosition?: string;
     documentBaseUri?: string;
     webviewMessages?: WebviewMessages;
     enableDebugLogging?: boolean;
     outlineOpen?: boolean;
+    outlineActiveColor?: string;
     mathBackslashDelimiters?: boolean;
     renderGeneration?: number;
+}
+
+function normalizeOutlineActiveColor(value: string | undefined): string {
+    const color = (value || '').trim();
+    const presets: Record<string, string> = {
+        theme: 'var(--link-color)',
+        blue: '#3b82f6',
+        green: '#22c55e',
+        orange: '#f59e0b',
+        red: '#ef4444',
+        purple: '#a855f7'
+    };
+    if (!color) { return presets.theme; }
+    if (presets[color]) { return presets[color]; }
+    // Preserve custom colors saved by earlier builds while keeping arbitrary
+    // CSS out of the generated stylesheet.
+    if (/^(?:#[0-9a-f]{3,8}|[a-z]+|(?:rgb|hsl)a?\([\d\s.,%+-]+\))$/i.test(color)) {
+        return color;
+    }
+    return 'var(--link-color)';
 }
 
 export function getWebviewContent(
@@ -57,10 +80,12 @@ export function getWebviewContent(
         theme: config?.theme ?? 'github',
         fontSize: config?.fontSize ?? 16,
         toolbarMode: config?.toolbarMode ?? 'full',
+        tableToolbarPosition: normalizeTablePosition(config?.tableToolbarPosition),
         documentBaseUri: config?.documentBaseUri ?? '',
         webviewMessages: config?.webviewMessages,
         enableDebugLogging: config?.enableDebugLogging ?? false,
         outlineOpen: config?.outlineOpen ?? true,
+        outlineActiveColor: config?.outlineActiveColor ?? 'theme',
         mathBackslashDelimiters: config?.mathBackslashDelimiters ?? true
     };
     
@@ -79,7 +104,8 @@ export function getWebviewContent(
     const exportScript = fs.readFileSync(path.join(__dirname, 'webview', 'export-ui.js'), 'utf8');
     
     const styles = fs.readFileSync(stylesPath, 'utf8')
-        .replace('__FONT_SIZE__', String(safeConfig.fontSize));
+        .replace('__FONT_SIZE__', String(safeConfig.fontSize))
+        .replace('__OUTLINE_ACTIVE_COLOR__', normalizeOutlineActiveColor(safeConfig.outlineActiveColor));
     
     const hostBridgePath = path.join(__dirname, 'shared', 'vscode-host-bridge.js');
     const hostBridgeScript = fs.readFileSync(hostBridgePath, 'utf8');
@@ -96,7 +122,7 @@ export function getWebviewContent(
     const katexCssUri = vendorUri('katex.min.css');
 
     const mathScript = fs.readFileSync(path.join(__dirname, 'shared', 'math-syntax.js'), 'utf8');
-    const editorScript = (mathScript + '\n' + fs.readFileSync(editorScriptPath, 'utf8'))
+    const editorScript = (fs.readFileSync(path.join(__dirname, 'shared', 'table-placement.js'), 'utf8') + '\n' + fs.readFileSync(path.join(__dirname, 'webview', 'table-toolbar.js'), 'utf8') + '\n' + mathScript + '\n' + fs.readFileSync(editorScriptPath, 'utf8'))
         .replace('__MATH_BACKSLASH__', String(safeConfig.mathBackslashDelimiters))
         .replace('__DEBUG_MODE__', String(safeConfig.enableDebugLogging ?? false))
         .replace('__I18N__', JSON.stringify(msg))
@@ -104,7 +130,7 @@ export function getWebviewContent(
         .replace('__CONTENT__', `'${base64Content}'`);
 
     return `<!DOCTYPE html>
-<html lang="en" data-theme="${safeConfig.theme}" data-toolbar-mode="${safeConfig.toolbarMode}">
+<html lang="en" data-theme="${safeConfig.theme}" data-toolbar-mode="${safeConfig.toolbarMode}" data-table-toolbar-position="${safeConfig.tableToolbarPosition}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">

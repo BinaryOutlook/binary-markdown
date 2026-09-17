@@ -14,6 +14,12 @@ export interface Messages {
   ignore: string;
   enterUrl: string;
   enterLinkText: string;
+  copyLinkAddress: string;
+  linkUnavailable: string;
+  linkNotFound: string;
+  linkNoPermissions: string;
+  linkOpenFailed: string;
+  linkCopyFailed: string;
   enterImageDir: string;
   imageDirCleared: string;
   forceRelativeNo: string;
@@ -31,6 +37,22 @@ export interface Messages {
 }
 
 export interface WebviewMessages {
+  tableControls: string;
+  tableMenu: string;
+  tablePlacement: string;
+  tablePositionAuto: string;
+  tablePositionTopBar: string;
+  tablePositionFixed: string;
+  tablePositionTopLeft: string;
+  tablePositionTopRight: string;
+  tablePositionBottomLeft: string;
+  tablePositionBottomRight: string;
+  tablePositionLeft: string;
+  tablePositionRight: string;
+  alignLeft: string;
+  alignCenter: string;
+  alignRight: string;
+
   frontMatter: string;
   insertToc: string;
   refreshToc: string;
@@ -55,6 +77,7 @@ export interface WebviewMessages {
   blockquote: string;
   inlineCode: string;
   codeBlock: string;
+  deleteCodeBlock: string;
   insertLink: string;
   insertImage: string;
   setImageDir: string;

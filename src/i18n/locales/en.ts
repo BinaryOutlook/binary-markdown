@@ -1,5 +1,11 @@
 // English messages
 export const messages = {
+  copyLinkAddress: 'Copy link address',
+  linkUnavailable: 'This link cannot be opened in the current workspace.',
+  linkNotFound: 'The linked file or folder could not be found.',
+  linkNoPermissions: 'Permission was denied when accessing the linked file or folder.',
+  linkOpenFailed: 'The linked file or folder could not be opened.',
+  linkCopyFailed: 'The link address could not be copied.',
   openMarkdownFirst: 'Please open a markdown file first.',
   numberOfRows: 'Number of rows',
   numberOfColumns: 'Number of columns',
@@ -28,6 +34,19 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  tableControls: "Table controls",
+  tableMenu: "Table…",
+  tablePlacement: "Table toolbar position",
+  tablePositionAuto: "Automatic (recommended)",
+  tablePositionTopBar: "Always in top bar",
+  tablePositionFixed: "Choose a fixed position…",
+  tablePositionTopLeft: "Top left",
+  tablePositionTopRight: "Top right",
+  tablePositionBottomLeft: "Bottom left",
+  tablePositionBottomRight: "Bottom right",
+  tablePositionLeft: "Left side (vertical)",
+  tablePositionRight: "Right side (vertical)",
+
   insertToc: 'Insert table of contents',
   refreshToc: 'Refresh table of contents',
   tocContents: 'Contents',
@@ -53,6 +72,7 @@ export const webviewMessages = {
   blockquote: 'Blockquote (Ctrl+Shift+Q)',
   inlineCode: 'Inline Code (Ctrl+`)',
   codeBlock: 'Code Block (Ctrl+Shift+K)',
+  deleteCodeBlock: 'Delete code block',
   insertLink: 'Insert Link (Ctrl+K)',
   insertImage: 'Insert Image (Ctrl+Shift+I)',
   setImageDir: 'Set Image Directory',

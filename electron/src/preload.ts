@@ -5,6 +5,7 @@ import { contextBridge, ipcRenderer } from 'electron';
  * Provides the HostBridge interface expected by editor.js.
  */
 contextBridge.exposeInMainWorld('hostBridge', {
+    setTableToolbarPosition: (value: string) => ipcRenderer.send('settings-save', 'tableToolbarPosition', value),
     syncContent: (markdown: string) => ipcRenderer.send('sync-content', markdown),
     save: () => ipcRenderer.send('save'),
     reportEditingState: (editing: boolean) => ipcRenderer.send('editing-state', editing),

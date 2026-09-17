@@ -61,6 +61,9 @@
         requestSetImageDir: function() {
             api.postMessage({ type: 'setImageDir' });
         },
+        setTableToolbarPosition: function(value) {
+            api.postMessage({ type: 'setTableToolbarPosition', value: value });
+        },
         openSettings: function() {
             api.postMessage({ type: 'openExtensionSettings' });
         },

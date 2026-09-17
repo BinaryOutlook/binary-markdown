@@ -10,6 +10,7 @@ export interface ElectronSettings {
     theme: string;
     fontSize: number;
     toolbarMode: string;
+    tableToolbarPosition: string;
     language: string;
     imageDefaultDir: string;
     forceRelativeImagePath: boolean;
@@ -22,6 +23,7 @@ const DEFAULTS: ElectronSettings = {
     theme: 'things',
     fontSize: 16,
     toolbarMode: 'simple',
+    tableToolbarPosition: 'auto',
     language: 'default',
     imageDefaultDir: '',
     forceRelativeImagePath: false,
@@ -135,6 +137,13 @@ export class SettingsManager {
         <select id="toolbarMode" onchange="save('toolbarMode', this.value)">
             <option value="simple" ${settings.toolbarMode === 'simple' ? 'selected' : ''}>Simple</option>
             <option value="full" ${settings.toolbarMode === 'full' ? 'selected' : ''}>Full</option>
+        </select>
+    </div>
+    <div class="field">
+        <label>Table controls</label>
+        <select id="tableToolbarPosition" onchange="save('tableToolbarPosition', this.value)">
+            ${['auto', 'top-left', 'top-right', 'bottom-left', 'bottom-right', 'left', 'right', 'top-bar'].map(value =>
+                `<option value="${value}" ${settings.tableToolbarPosition === value ? 'selected' : ''}>${({ auto: 'Automatic (recommended)', 'top-bar': 'Always in top bar', 'top-left': 'Top left', 'top-right': 'Top right', 'bottom-left': 'Bottom left', 'bottom-right': 'Bottom right', left: 'Left side (vertical)', right: 'Right side (vertical)' } as Record<string, string>)[value]}</option>`).join('')}
         </select>
     </div>
     <div class="field">

@@ -1,5 +1,11 @@
 // Spanish messages
 export const messages = {
+  copyLinkAddress: 'Copiar dirección del enlace',
+  linkUnavailable: 'Este enlace no se puede abrir en el espacio de trabajo actual.',
+  linkNotFound: 'No se encontró el archivo o la carpeta del enlace.',
+  linkNoPermissions: 'Se denegó el permiso para acceder al archivo o la carpeta del enlace.',
+  linkOpenFailed: 'No se pudo abrir el archivo o la carpeta del enlace.',
+  linkCopyFailed: 'No se pudo copiar la dirección del enlace.',
   openMarkdownFirst: 'Por favor, abra primero un archivo Markdown.',
   numberOfRows: 'Número de filas',
   numberOfColumns: 'Número de columnas',
@@ -28,6 +34,19 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  tableControls: "Controles de tabla",
+  tableMenu: "Tabla…",
+  tablePlacement: "Posición de la barra de tabla",
+  tablePositionAuto: "Automática (recomendada)",
+  tablePositionTopBar: "Siempre en la barra superior",
+  tablePositionFixed: "Elegir una posición fija…",
+  tablePositionTopLeft: "Arriba a la izquierda",
+  tablePositionTopRight: "Arriba a la derecha",
+  tablePositionBottomLeft: "Abajo a la izquierda",
+  tablePositionBottomRight: "Abajo a la derecha",
+  tablePositionLeft: "Lado izquierdo (vertical)",
+  tablePositionRight: "Lado derecho (vertical)",
+
   insertToc: 'Insertar índice',
   refreshToc: 'Actualizar índice',
   tocContents: 'Índice',
@@ -53,6 +72,7 @@ export const webviewMessages = {
   blockquote: 'Cita (Ctrl+Shift+Q)',
   inlineCode: 'Código en línea (Ctrl+`)',
   codeBlock: 'Bloque de código (Ctrl+Shift+K)',
+  deleteCodeBlock: 'Eliminar bloque de código',
   insertLink: 'Insertar enlace (Ctrl+K)',
   insertImage: 'Insertar imagen (Ctrl+Shift+I)',
   setImageDir: 'Establecer directorio de imágenes',

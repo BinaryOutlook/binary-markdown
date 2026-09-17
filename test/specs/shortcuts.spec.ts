@@ -107,7 +107,7 @@ test.describe('インライン要素ショートカット', () => {
         await editor.type('テスト');
         // 全選択してから太字
         await page.keyboard.down('Shift');
-        await page.keyboard.press('Home');
+        await editor.moveToLineStart();
         await page.keyboard.up('Shift');
         await page.keyboard.press('Control+b');
         
@@ -118,7 +118,7 @@ test.describe('インライン要素ショートカット', () => {
     test('Ctrl+I → 《斜体》（選択テキスト）', async ({ page }) => {
         await editor.type('テスト');
         await page.keyboard.down('Shift');
-        await page.keyboard.press('Home');
+        await editor.moveToLineStart();
         await page.keyboard.up('Shift');
         await page.keyboard.press('Control+i');
         
@@ -129,7 +129,7 @@ test.describe('インライン要素ショートカット', () => {
     test('Ctrl+Shift+S → 《取り消し線》（選択テキスト）', async ({ page }) => {
         await editor.type('テスト');
         await page.keyboard.down('Shift');
-        await page.keyboard.press('Home');
+        await editor.moveToLineStart();
         await page.keyboard.up('Shift');
         await page.keyboard.press('Control+Shift+S');
         

@@ -59,7 +59,8 @@ export async function prepareStandaloneHtml(
         }
     });
     let styles = (await fs.readFile(path.join(extensionPath, 'out/webview/styles.css'), 'utf8'))
-        .replace(/__FONT_SIZE__/g, String(document.fontSize));
+        .replace(/__FONT_SIZE__/g, String(document.fontSize))
+        .replace(/__OUTLINE_ACTIVE_COLOR__/g, 'var(--link-color)');
     const embedCss = async (css: string, base: string) => replaceAsync(css, /url\(\s*(['"]?)(.*?)\1\s*\)/gi, async match => {
         if (match[2].startsWith('#') || match[2].startsWith('data:')) { return match[0]; }
         try {

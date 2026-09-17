@@ -1,5 +1,11 @@
 // Traditional Chinese messages
 export const messages = {
+  copyLinkAddress: '複製連結位址',
+  linkUnavailable: '無法在目前的工作區中開啟此連結。',
+  linkNotFound: '找不到連結指向的檔案或資料夾。',
+  linkNoPermissions: '沒有權限存取連結指向的檔案或資料夾。',
+  linkOpenFailed: '無法開啟連結指向的檔案或資料夾。',
+  linkCopyFailed: '無法複製連結位址。',
   openMarkdownFirst: '請先開啟 Markdown 檔案。',
   numberOfRows: '列數',
   numberOfColumns: '欄數',
@@ -28,6 +34,19 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  tableControls: "表格操作",
+  tableMenu: "表格…",
+  tablePlacement: "表格工具列位置",
+  tablePositionAuto: "自動（建議）",
+  tablePositionTopBar: "始終位於頂端列",
+  tablePositionFixed: "選擇固定位置…",
+  tablePositionTopLeft: "左上角",
+  tablePositionTopRight: "右上角",
+  tablePositionBottomLeft: "左下角",
+  tablePositionBottomRight: "右下角",
+  tablePositionLeft: "左側（垂直）",
+  tablePositionRight: "右側（垂直）",
+
   insertToc: '插入目錄',
   refreshToc: '重新整理目錄',
   tocContents: '目錄',
@@ -53,6 +72,7 @@ export const webviewMessages = {
   blockquote: '引用 (Ctrl+Shift+Q)',
   inlineCode: '行內程式碼 (Ctrl+`)',
   codeBlock: '程式碼區塊 (Ctrl+Shift+K)',
+  deleteCodeBlock: '刪除程式碼區塊',
   insertLink: '插入連結 (Ctrl+K)',
   insertImage: '插入圖片 (Ctrl+Shift+I)',
   setImageDir: '設定圖片目錄',

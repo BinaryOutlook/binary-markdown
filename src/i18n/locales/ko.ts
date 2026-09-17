@@ -1,5 +1,11 @@
 // Korean messages
 export const messages = {
+  copyLinkAddress: '링크 주소 복사',
+  linkUnavailable: '현재 작업 영역에서 이 링크를 열 수 없습니다.',
+  linkNotFound: '연결된 파일 또는 폴더를 찾을 수 없습니다.',
+  linkNoPermissions: '연결된 파일 또는 폴더에 접근할 권한이 없습니다.',
+  linkOpenFailed: '연결된 파일 또는 폴더를 열 수 없습니다.',
+  linkCopyFailed: '링크 주소를 복사할 수 없습니다.',
   openMarkdownFirst: '먼저 Markdown 파일을 열어주세요.',
   numberOfRows: '행 수',
   numberOfColumns: '열 수',
@@ -28,6 +34,19 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  tableControls: "표 도구",
+  tableMenu: "표…",
+  tablePlacement: "표 도구 모음 위치",
+  tablePositionAuto: "자동(권장)",
+  tablePositionTopBar: "항상 상단 표시줄",
+  tablePositionFixed: "고정 위치 선택…",
+  tablePositionTopLeft: "왼쪽 위",
+  tablePositionTopRight: "오른쪽 위",
+  tablePositionBottomLeft: "왼쪽 아래",
+  tablePositionBottomRight: "오른쪽 아래",
+  tablePositionLeft: "왼쪽(세로)",
+  tablePositionRight: "오른쪽(세로)",
+
   insertToc: '목차 삽입',
   refreshToc: '목차 새로 고침',
   tocContents: '목차',
@@ -53,6 +72,7 @@ export const webviewMessages = {
   blockquote: '인용 (Ctrl+Shift+Q)',
   inlineCode: '인라인 코드 (Ctrl+`)',
   codeBlock: '코드 블록 (Ctrl+Shift+K)',
+  deleteCodeBlock: '코드 블록 삭제',
   insertLink: '링크 삽입 (Ctrl+K)',
   insertImage: '이미지 삽입 (Ctrl+Shift+I)',
   setImageDir: '이미지 디렉토리 설정',

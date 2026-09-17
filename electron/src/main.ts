@@ -103,6 +103,7 @@ function createWindow(filePath?: string): BrowserWindow {
             theme: settings.theme,
             fontSize: settings.fontSize,
             toolbarMode: settings.toolbarMode,
+            tableToolbarPosition: settings.tableToolbarPosition,
             documentBaseUri: `file://${docDir}/`,
             webviewMessages: getI18nMessages(),
             enableDebugLogging: settings.enableDebugLogging,
@@ -285,6 +286,14 @@ ipcMain.on('blur', () => { /* no-op */ });
 
 // Settings IPC
 ipcMain.on('settings-save', async (_event, key: string, value: unknown) => {
+    if (key === 'tableToolbarPosition') {
+        if (!['auto', 'top-left', 'top-right', 'bottom-left', 'bottom-right', 'left', 'right', 'top-bar'].includes(value as string)) return;
+        settingsManager.set('tableToolbarPosition', value as string);
+        for (const [win] of windows) {
+            if (!win.isDestroyed()) win.webContents.send('host-message', { type: 'tableToolbarPosition', value });
+        }
+        return;
+    }
     settingsManager.set(key as any, value as any);
     // Reload all editor windows with new settings, preserving content
     for (const [win] of windows) {

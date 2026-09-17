@@ -1,5 +1,11 @@
 // Simplified Chinese messages
 export const messages = {
+  copyLinkAddress: '复制链接地址',
+  linkUnavailable: '无法在当前工作区中打开此链接。',
+  linkNotFound: '找不到链接指向的文件或文件夹。',
+  linkNoPermissions: '没有权限访问链接指向的文件或文件夹。',
+  linkOpenFailed: '无法打开链接指向的文件或文件夹。',
+  linkCopyFailed: '无法复制链接地址。',
   openMarkdownFirst: '请先打开 Markdown 文件。',
   numberOfRows: '行数',
   numberOfColumns: '列数',
@@ -28,6 +34,19 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  tableControls: "表格操作",
+  tableMenu: "表格…",
+  tablePlacement: "表格工具栏位置",
+  tablePositionAuto: "自动（推荐）",
+  tablePositionTopBar: "始终位于顶部栏",
+  tablePositionFixed: "选择固定位置…",
+  tablePositionTopLeft: "左上角",
+  tablePositionTopRight: "右上角",
+  tablePositionBottomLeft: "左下角",
+  tablePositionBottomRight: "右下角",
+  tablePositionLeft: "左侧（垂直）",
+  tablePositionRight: "右侧（垂直）",
+
   insertToc: '插入目录',
   refreshToc: '刷新目录',
   tocContents: '目录',
@@ -53,6 +72,7 @@ export const webviewMessages = {
   blockquote: '引用 (Ctrl+Shift+Q)',
   inlineCode: '行内代码 (Ctrl+`)',
   codeBlock: '代码块 (Ctrl+Shift+K)',
+  deleteCodeBlock: '删除代码块',
   insertLink: '插入链接 (Ctrl+K)',
   insertImage: '插入图片 (Ctrl+Shift+I)',
   setImageDir: '设置图片目录',

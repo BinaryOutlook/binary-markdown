@@ -11,6 +11,7 @@ interface ElectronEditorConfig {
     theme: string;
     fontSize: number;
     toolbarMode: string;
+    tableToolbarPosition?: string;
     documentBaseUri: string;
     webviewMessages: Record<string, string>;
     enableDebugLogging: boolean;
@@ -34,7 +35,7 @@ function getResourcePath(relativePath: string): string {
     }
 
     // Shorter extraResources path (src/webview/editor.js → webview/editor.js).
-    const shortPath = relativePath.replace(/^src\/webview\//, 'webview/');
+    const shortPath = relativePath.replace(/^src\/webview\//, 'webview/').replace(/^src\/shared\//, 'out/shared/');
     const prodShortPath = path.join(resPath, shortPath);
     if (fs.existsSync(prodShortPath)) {
         console.log(`[html-generator] Found (prod-short): ${relativePath} → ${prodShortPath}`);
@@ -58,6 +59,7 @@ export function generateEditorHtml(
     content: string,
     config: ElectronEditorConfig
 ): string {
+    const { normalize } = require(getResourcePath('src/shared/table-placement.js'));
     const stylesPath = getResourcePath('src/webview/styles.css');
     const auxScript = fs.readFileSync(getResourcePath('src/shared/document-aux.js'), 'utf8');
     const editorScriptPath = getResourcePath('src/webview/editor.js');
@@ -69,10 +71,11 @@ export function generateEditorHtml(
     const { generateEditorBodyHtml } = require(sharedModulePath);
 
     const styles = fs.readFileSync(stylesPath, 'utf8')
-        .replace('__FONT_SIZE__', String(config.fontSize));
+        .replace('__FONT_SIZE__', String(config.fontSize))
+        .replace('__OUTLINE_ACTIVE_COLOR__', 'var(--link-color)');
 
     const mathScript = fs.readFileSync(getResourcePath('src/shared/math-syntax.js'), 'utf8');
-    const editorScript = (mathScript + '\n' + fs.readFileSync(editorScriptPath, 'utf8'))
+    const editorScript = (fs.readFileSync(getResourcePath('src/shared/table-placement.js'), 'utf8') + '\n' + fs.readFileSync(getResourcePath('src/webview/table-toolbar.js'), 'utf8') + '\n' + mathScript + '\n' + fs.readFileSync(editorScriptPath, 'utf8'))
         .replace('__MATH_BACKSLASH__', 'true')
         .replace('__DEBUG_MODE__', String(config.enableDebugLogging))
         .replace('__I18N__', JSON.stringify(config.webviewMessages))
@@ -82,7 +85,7 @@ export function generateEditorHtml(
     const vendorFileUri = (file: string) => fileUri(path.join(vendorDir, file));
 
     return `<!DOCTYPE html>
-<html lang="en" data-theme="${config.theme}" data-toolbar-mode="${config.toolbarMode}">
+<html lang="en" data-theme="${config.theme}" data-toolbar-mode="${config.toolbarMode}" data-table-toolbar-position="${normalize(config.tableToolbarPosition)}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">

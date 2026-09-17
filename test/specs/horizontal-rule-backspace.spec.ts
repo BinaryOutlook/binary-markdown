@@ -46,7 +46,7 @@ test.describe('水平線直後のBackspace', () => {
         await page.waitForTimeout(100);
         
         // カーソルを段落の先頭に移動
-        await page.keyboard.press('Home');
+        await editor.moveToLineStart();
         await page.waitForTimeout(50);
         
         // Backspaceを押す
@@ -94,7 +94,7 @@ test.describe('水平線直後のBackspace', () => {
         await page.waitForTimeout(100);
         
         // 段落の先頭に移動
-        await page.keyboard.press('Home');
+        await editor.moveToLineStart();
         await page.waitForTimeout(50);
         
         // 新しい空の段落を作成（Enterで改行）

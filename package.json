@@ -204,6 +204,27 @@
           "default": true,
           "description": "%config.outlineDefaultOpen.description%"
         },
+        "binary-markdown.outlineActiveColor": {
+          "type": "string",
+          "enum": [
+            "theme",
+            "blue",
+            "green",
+            "orange",
+            "red",
+            "purple"
+          ],
+          "enumDescriptions": [
+            "%config.outlineActiveColor.theme%",
+            "%config.outlineActiveColor.blue%",
+            "%config.outlineActiveColor.green%",
+            "%config.outlineActiveColor.orange%",
+            "%config.outlineActiveColor.red%",
+            "%config.outlineActiveColor.purple%"
+          ],
+          "default": "theme",
+          "description": "%config.outlineActiveColor.description%"
+        },
         "binary-markdown.enableDebugLogging": {
           "type": "boolean",
           "default": false,
@@ -236,6 +257,32 @@
           "default": true,
           "scope": "resource",
           "description": "%config.export.showCodeLanguage.description%"
+        },
+        "binary-markdown.tableToolbarPosition": {
+          "type": "string",
+          "enum": [
+            "auto",
+            "top-left",
+            "top-right",
+            "bottom-left",
+            "bottom-right",
+            "left",
+            "right",
+            "top-bar"
+          ],
+          "default": "auto",
+          "scope": "window",
+          "description": "%config.tableToolbarPosition.description%",
+          "enumDescriptions": [
+            "%config.tableToolbarPosition.auto%",
+            "%config.tableToolbarPosition.topLeft%",
+            "%config.tableToolbarPosition.topRight%",
+            "%config.tableToolbarPosition.bottomLeft%",
+            "%config.tableToolbarPosition.bottomRight%",
+            "%config.tableToolbarPosition.left%",
+            "%config.tableToolbarPosition.right%",
+            "%config.tableToolbarPosition.topBar%"
+          ]
         }
       }
     },
@@ -311,7 +358,7 @@
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
     "test:document-aux": "node --test test/unit/document-aux.test.js",
-    "test": "npm run test:math && npm run test:document-aux && npm run test:outline-state && npm run test:identity && npm run test:build-info && npm run test:release && npm run test:localization && npm run test:export && npm run test:e2e",
+    "test": "npm run test:table-placement && npm run test:math && npm run test:document-aux && npm run test:outline-state && npm run test:identity && npm run test:build-info && npm run test:release && npm run test:localization && npm run test:export && npm run test:e2e",
     "lint": "eslint src --ext ts",
     "package": "node scripts/package-vsix.js",
     "test:build": "node test/build-standalone.js",
@@ -325,7 +372,8 @@
     "test:localization": "node --test test/unit/settings-localization.test.js",
     "test:export": "node --test test/unit/export-*.test.js",
     "test:build-info": "node --test test/unit/build-*.test.js",
-    "test:release": "node --test test/unit/release-*.test.js"
+    "test:release": "node --test test/unit/release-*.test.js",
+    "test:table-placement": "node --test test/unit/table-placement.test.js"
   },
   "devDependencies": {
     "@playwright/test": "^1.58.1",

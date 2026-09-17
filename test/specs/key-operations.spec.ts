@@ -39,7 +39,7 @@ test.describe('《段落》キー操作', () => {
 
     test('Tab → 4スペース挿入', async ({ page }) => {
         await editor.type('インデント前');
-        await editor.press('Home');
+        await editor.moveToLineStart();
         await editor.press('Tab');
         
         const text = await editor.getCursorText();
@@ -138,7 +138,7 @@ test.describe('《見出し》キー操作', () => {
     test('《見出し》先頭でBackspace → 《段落》変換', async ({ page }) => {
         await editor.type('# ');
         await editor.type('見出し');
-        await editor.press('Home');
+        await editor.moveToLineStart();
         await editor.press('Backspace');
         
         const html = await editor.getHtml();
@@ -467,7 +467,7 @@ test.describe('《引用》キー操作', () => {
     test('《引用》先頭でBackspace → 《段落》変換', async ({ page }) => {
         await editor.type('> ');
         await editor.type('引用');
-        await editor.press('Home');
+        await editor.moveToLineStart();
         await editor.press('Backspace');
         
         const html = await editor.getHtml();
@@ -925,7 +925,7 @@ test.describe('《テーブル》矢印キー詳細テスト', () => {
         await page.waitForTimeout(300);
         
         // セル末尾まで移動
-        await editor.press('End');
+        await editor.moveToLineEnd();
         await page.waitForTimeout(100);
         
         // 右キーで次のセルに移動
@@ -946,7 +946,7 @@ test.describe('《テーブル》矢印キー詳細テスト', () => {
         await page.waitForTimeout(100);
         
         // セル末尾に移動
-        await editor.press('End');
+        await editor.moveToLineEnd();
         await page.waitForTimeout(100);
         
         // 右キーで次の行の先頭に移動
@@ -966,7 +966,7 @@ test.describe('《テーブル》矢印キー詳細テスト', () => {
         await page.waitForTimeout(300);
         
         // セル末尾に移動
-        await editor.press('End');
+        await editor.moveToLineEnd();
         
         // 左キーで文字を移動
         await editor.press('ArrowLeft');
@@ -987,7 +987,7 @@ test.describe('《テーブル》矢印キー詳細テスト', () => {
         await page.waitForTimeout(100);
         
         // セル先頭に移動
-        await editor.press('Home');
+        await editor.moveToLineStart();
         await page.waitForTimeout(100);
         
         // 左キーで前のセルに移動
@@ -1008,7 +1008,7 @@ test.describe('《テーブル》矢印キー詳細テスト', () => {
         await page.waitForTimeout(100);
         
         // セル先頭に移動
-        await editor.press('Home');
+        await editor.moveToLineStart();
         await page.waitForTimeout(100);
         
         // 左キーで前の行の末尾に移動
@@ -1119,7 +1119,7 @@ test.describe('《テーブル》矢印キー詳細テスト', () => {
         await page.waitForTimeout(100);
         
         // 右に移動（C→D）
-        await editor.press('End');
+        await editor.moveToLineEnd();
         await editor.press('ArrowRight');
         await page.waitForTimeout(100);
         

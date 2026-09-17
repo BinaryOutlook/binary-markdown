@@ -22,6 +22,13 @@
     const statusImageDir = document.getElementById('statusImageDir');
     const sidebar = document.getElementById('sidebar');
     const toolbar = document.getElementById('toolbar');
+    const editorWrapper = document.getElementById('editorWrapper');
+
+    // Reading-position outline state. The active section is the last heading
+    // that has crossed the reading line 30% down the visible editor viewport.
+    let outlineHeadings = [];
+    let activeOutlineIndex = -1;
+    let outlineScrollFrame = null;
 
     // Lucide Icons (inline SVG) - unified icon set for all toolbars
     const LUCIDE_ICONS = {
@@ -210,6 +217,7 @@
     // These have a browser sentinel \n at the end that must be stripped
     // by htmlToMarkdown (in edit mode) or by enterDisplayMode (on mode transition).
     const codeBlocksWithSentinel = new WeakSet();
+    const initializedLinks = new WeakSet();
     const NAVIGATION_FLAG_RESET_DELAY = 200; // Must be > focusout handler delay (100ms)
     function resetNavigationFlag() {
         setTimeout(() => { isNavigatingIntoBlock = false; }, NAVIGATION_FLAG_RESET_DELAY);
@@ -1577,6 +1585,7 @@
     }
 
     function renderFromMarkdown() {
+        if (tableControls) tableControls.clear();
         // Remove IMAGE_DIR and FORCE_RELATIVE_PATH directives before rendering (they're stored in variables)
         let markdownToRender = removeDirectivesFromMarkdown(markdown);
         logger.log('[Binary Markdown] renderFromMarkdown: markdown length:', markdown.length, 'after directive removal:', markdownToRender.length);
@@ -2348,6 +2357,7 @@
         let codeLang = '';
         let codeFenceLength = 0; // Track the length of the opening fence
         let codeFenceChar = ''; // Track the fence character (backtick or tilde)
+        let codeFenceIndent = 0;
         let codeStart = 0;
         const metadataEnd = lines[0] === '---' ? lines.findIndex((line, i) => i > 0 && /^(---|\.\.\.)$/.test(line)) : -1;
         let inTable = false;
@@ -2357,6 +2367,13 @@
         
         // Stack to track list nesting: [{type: 'ul'|'ol', indent: number}]
         let listStack = [];
+
+        function appendCodeLine(line) {
+            // Remove only the opening fence's indentation, preserving tabs and
+            // deeper code indentation (including on invalid closing fences).
+            const indent = Math.min(codeFenceIndent, /^ */.exec(line)[0].length);
+            codeContent += line.slice(indent) + '\n';
+        }
 
         function closeListsToLevel(targetIndent) {
             let result = '';
@@ -2509,9 +2526,9 @@
 
             // Handle code blocks (\`\`\`+ or ~~~+)
             // Match opening/closing fence: 3+ backticks or tildes
-            const fenceMatch = line.match(/^(\`{3,}|~{3,})(.*)?$/);
+            const fenceMatch = line.match(/^( {0,3})(\`{3,}|~{3,})(.*)?$/);
             if (fenceMatch) {
-                const fenceStr = fenceMatch[1];
+                const fenceStr = fenceMatch[2];
                 const fenceLen = fenceStr.length;
                 const fenceCharacter = fenceStr[0];
                 
@@ -2520,7 +2537,7 @@
                     // - Same character type as opening
                     // - At least as many characters as opening fence
                     // - No language specifier (just fence or whitespace after)
-                    const afterFence = fenceMatch[2] || '';
+                    const afterFence = fenceMatch[3] || '';
                     if (fenceCharacter === codeFenceChar && fenceLen >= codeFenceLength && afterFence.trim() === '') {
                         // Valid closing fence
                         // The line processing loop appends '\n' to every line, so the
@@ -2566,7 +2583,7 @@
                         continue;
                     } else {
                         // Not a valid closing fence, treat as code content
-                        codeContent += line + '\n';
+                        appendCodeLine(line);
                         continue;
                     }
                 } else {
@@ -2587,13 +2604,14 @@
                     codeStart = i;
                     codeFenceLength = fenceLen;
                     codeFenceChar = fenceCharacter;
-                    codeLang = (fenceMatch[2] || '').trim();
+                    codeFenceIndent = fenceMatch[1].length;
+                    codeLang = (fenceMatch[3] || '').trim();
                     continue;
                 }
             }
 
             if (inCodeBlock) {
-                codeContent += line + '\n';
+                appendCodeLine(line);
                 continue;
             }
 
@@ -2760,6 +2778,18 @@
         return html;
     }
 
+    function setupLink(a) {
+        if (a.closest('.toc-block')) return;
+        // DOM-only details; keep this shared by rendered, inserted, and pasted links.
+        if (!a.hasAttribute('title')) a.title = a.getAttribute('href') || '';
+        if (initializedLinks.has(a)) return;
+        initializedLinks.add(a);
+        a.addEventListener('click', e => {
+            e.preventDefault();
+            host.openLink(a.getAttribute('href'));
+        });
+    }
+
     function setupInteractiveElements() {
         setupInlineMath();
         setupDocumentAux();
@@ -2772,13 +2802,7 @@
         });
 
         // Handle link clicks
-        editor.querySelectorAll('a').forEach(a => {
-            if (a.closest('.toc-block')) return;
-            a.addEventListener('click', e => {
-                e.preventDefault();
-                host.openLink(a.getAttribute('href'));
-            });
-        });
+        editor.querySelectorAll('a').forEach(setupLink);
 
         // Make table cells editable
         editor.querySelectorAll('th, td').forEach(cell => {
@@ -3441,6 +3465,7 @@
         });
         
         const copyBtn = document.createElement('button');
+        copyBtn.type = 'button';
         copyBtn.className = 'code-copy-btn';
         copyBtn.textContent = i18n.copy || 'Copy';
         copyBtn.setAttribute('contenteditable', 'false');
@@ -3455,6 +3480,7 @@
         
         // Expand/collapse button
         const expandBtn = document.createElement('button');
+        expandBtn.type = 'button';
         expandBtn.className = 'code-expand-btn';
         expandBtn.textContent = '⤢';
         expandBtn.title = i18n.expandCodeBlock || 'Expand';
@@ -3488,10 +3514,30 @@
                 pre.style.marginLeft = '';
             }
         });
+
+        // Delete the complete fenced block without requiring a text selection.
+        const deleteBtn = document.createElement('button');
+        deleteBtn.type = 'button';
+        deleteBtn.className = 'code-delete-btn';
+        deleteBtn.title = i18n.deleteCodeBlock || 'Delete code block';
+        deleteBtn.setAttribute('aria-label', deleteBtn.title);
+        deleteBtn.setAttribute('contenteditable', 'false');
+        deleteBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>';
+        deleteBtn.addEventListener('mousedown', (e) => {
+            // Keep the current block from losing its selection before the
+            // click handler captures the undo snapshot.
+            e.preventDefault();
+        });
+        deleteBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            deleteCodeBlock(pre);
+        });
         
         header.appendChild(expandBtn);
         header.appendChild(langTag);
         header.appendChild(copyBtn);
+        header.appendChild(deleteBtn);
         pre.insertBefore(header, pre.firstChild);
         
         // Apply syntax highlighting for display mode
@@ -3522,11 +3568,53 @@
             }, 100);
         });
     }
+
+    function deleteCodeBlock(pre) {
+        if (!pre || !editor.contains(pre)) return;
+
+        // Commit any in-progress edit before capturing the pre-delete state so
+        // Undo restores exactly what the user saw, including their latest text.
+        if (pre.getAttribute('data-mode') === 'edit') {
+            enterDisplayMode(pre);
+        }
+        markdown = htmlToMarkdown();
+        undoManager.saveSnapshot();
+
+        const nextBlock = pre.nextElementSibling;
+        const previousBlock = pre.previousElementSibling;
+        pre.remove();
+
+        let focusTarget = nextBlock || previousBlock;
+        if (!editor.children.length) {
+            focusTarget = document.createElement('p');
+            focusTarget.innerHTML = '<br>';
+            editor.appendChild(focusTarget);
+        }
+
+        syncMarkdownSync();
+        updateOutline();
+        updateWordCount();
+
+        if (focusTarget && /^(P|H[1-6]|DIV|BLOCKQUOTE|LI)$/.test(focusTarget.tagName)) {
+            if (focusTarget === nextBlock) setCursorToFirstTextNode(focusTarget);
+            else setCursorToEnd(focusTarget);
+        } else {
+            editor.focus({ preventScroll: true });
+        }
+    }
     
     // Enter edit mode - remove highlighting, make editable
     function enterEditMode(pre) {
         const code = pre.querySelector('code');
         if (!code) return;
+
+        // Nested contenteditable elements can share the outer editor's focus.
+        // Restore inactive blocks here; click propagation/focusout is not enough.
+        editor.querySelectorAll('pre[data-mode="edit"]').forEach(other => {
+            if (other !== pre && !other.closest('.mermaid-wrapper, .math-wrapper')) {
+                enterDisplayMode(other);
+            }
+        });
 
         logger.log('enterEditMode');
 
@@ -4032,59 +4120,19 @@
 
     // ========== TABLE FUNCTIONALITY ==========
 
-    // Table floating toolbar
-    let tableToolbar = null;
     let activeTableCell = null;
     let activeTable = null;
-
-    function createTableToolbar() {
-        if (tableToolbar) return;
-
-        tableToolbar = document.createElement('div');
-        tableToolbar.className = 'table-toolbar';
-
-        var tableToolbarItems = [
-            { action: 'add-col-left', title: i18n.addColLeft, text: '←Col' },
-            { action: 'add-col-right', title: i18n.addColRight, text: 'Col→' },
-            { action: 'del-col', title: i18n.deleteCol },
-            null,
-            { action: 'add-row-above', title: i18n.addRowAbove, text: '↑Row' },
-            { action: 'add-row-below', title: i18n.addRowBelow, text: 'Row↓' },
-            { action: 'del-row', title: i18n.deleteRow },
-            null,
-            { action: 'align-left', title: i18n.alignLeft },
-            { action: 'align-center', title: i18n.alignCenter },
-            { action: 'align-right', title: i18n.alignRight },
-        ];
-        tableToolbarItems.forEach(function(item) {
-            if (!item) {
-                var sep = document.createElement('span');
-                sep.className = 'separator';
-                tableToolbar.appendChild(sep);
-            } else {
-                var btn = document.createElement('button');
-                btn.dataset.action = item.action;
-                btn.title = item.title || '';
-                if (item.text) {
-                    btn.textContent = item.text;
-                    btn.classList.add('text-btn');
-                } else {
-                    btn.innerHTML = LUCIDE_ICONS[item.action] || item.action;
-                }
-                tableToolbar.appendChild(btn);
-            }
-        });
-
-        tableToolbar.addEventListener('mousedown', function(e) {
-            e.preventDefault(); // Prevent losing focus from table
-        });
-
-        tableToolbar.addEventListener('click', function(e) {
-            const btn = e.target.closest('button');
-            if (!btn) return;
-
-            const action = btn.dataset.action;
-            switch(action) {
+    var tableControls = window.BinaryTableToolbar.create({
+        editor, header: toolbar, messages: i18n, icons: LUCIDE_ICONS,
+        isSourceMode: () => isSourceMode,
+        onContext(cell) { activeTableCell = cell; activeTable = cell?.closest('table') || null; },
+        onLayout: updateToolbarScrollButtons,
+        onPreference(value) { host.setTableToolbarPosition?.(value); },
+        onAction(action) {
+            if (!activeTableCell || !editor.contains(activeTableCell)) return;
+            markdown = readCommittedMarkdown();
+            undoManager.saveSnapshot();
+            switch (action) {
                 case 'add-col-left': insertTableColumnLeft(); break;
                 case 'add-col-right': insertTableColumnRight(); break;
                 case 'del-col': deleteTableColumn(); break;
@@ -4095,74 +4143,16 @@
                 case 'align-center': setColumnAlignment('center'); break;
                 case 'align-right': setColumnAlignment('right'); break;
             }
-        });
-
-        document.body.appendChild(tableToolbar);
-    }
-
+            showTableToolbar(activeTable);
+        }
+    });
     function showTableToolbar(table) {
-        if (!tableToolbar) createTableToolbar();
-        
-        const rect = table.getBoundingClientRect();
-        const toolbarHeight = 40;
-        const topOffset = toolbar ? toolbar.offsetHeight : 50; // Dynamic toolbar height
-        
-        // Calculate ideal position (above table)
-        let top = rect.top - toolbarHeight;
-        
-        // If table top is above the header toolbar area, stick to below the header
-        // But only if table is still partially visible
-        if (top < topOffset && rect.bottom > topOffset + toolbarHeight) {
-            top = topOffset;
-        }
-        
-        // If table is completely above viewport (below header), hide toolbar
-        if (rect.bottom < topOffset + toolbarHeight) {
-            hideTableToolbar();
-            return;
-        }
-        
-        // If table is completely below viewport, hide toolbar
-        if (rect.top > window.innerHeight) {
-            hideTableToolbar();
-            return;
-        }
-        
-        tableToolbar.style.top = top + 'px';
-        tableToolbar.style.left = rect.left + 'px';
-        tableToolbar.classList.add('visible');
         activeTable = table;
+        tableControls.show(table, activeTableCell);
     }
-
     function hideTableToolbar() {
-        if (tableToolbar) {
-            tableToolbar.classList.remove('visible');
-        }
-        activeTable = null;
+        tableControls?.clear();
     }
-
-    // Update table toolbar position on scroll
-    // Listen on window and use capture to catch all scroll events
-    window.addEventListener('scroll', function(e) {
-        // Check if focus is currently in a table cell
-        const sel = window.getSelection();
-        logger.log('scroll - sel:', sel, 'rangeCount:', sel?.rangeCount);
-        if (sel && sel.rangeCount > 0) {
-            const node = sel.anchorNode;
-            const startEl = node?.nodeType === 3 ? node.parentElement : node;
-            const cell = startEl?.closest ? startEl.closest('th, td') : null;
-            logger.log('scroll - node:', node, 'startEl:', startEl, 'cell:', cell);
-            if (cell && editor.contains(cell)) {
-                const table = cell.closest('table');
-                logger.log('scroll - found table:', table);
-                if (table) {
-                    activeTable = table;
-                    activeTableCell = cell;
-                    showTableToolbar(table);
-                }
-            }
-        }
-    }, true);
 
     function deleteTableColumn() {
         if (!activeTableCell || !activeTable) return;
@@ -4704,22 +4694,6 @@
     });
 
 
-
-    editor.addEventListener('focusout', function(e) {
-        // Delay hiding to allow button clicks
-        setTimeout(() => {
-            const sel = window.getSelection();
-            if (sel && sel.rangeCount > 0) {
-                const node = sel.anchorNode;
-                const startEl = node?.nodeType === 3 ? node.parentElement : node;
-                const cell = startEl?.closest('th, td');
-                if (cell && editor.contains(cell)) {
-                    return; // Still in a cell, don't hide
-                }
-            }
-            hideTableToolbar();
-        }, 200);
-    });
 
     // Detect markdown table pattern: | col1 | col2 |
     function checkTablePattern(text) {
@@ -6516,6 +6490,7 @@
         // IMPORTANT: Preserve empty lines as "> " in markdown
         // Handle both <br> elements AND actual newline characters in text
         let lines = [];
+        const codeLines = new Set();
         let currentLine = '';
         
         function processBlockquoteContent(node) {
@@ -6525,6 +6500,16 @@
             if (node.nodeType === 1 && node.classList.contains('math-wrapper')) {
                 if (currentLine) { lines.push(currentLine); currentLine = ''; }
                 lines.push(...mathBlockMarkdown(node).replace(/\n$/, '').split('\n'));
+                return;
+            }
+            if (node.nodeType === 1 && (node.tagName === 'PRE' || node.classList.contains('mermaid-wrapper'))) {
+                if (currentLine) { lines.push(currentLine); currentLine = ''; }
+                // Serialize the block, not its toolbar/inline code children.
+                // Code whitespace must survive the quote's prose normalization.
+                for (const line of mdProcessNode(node).replace(/\n$/, '').split('\n')) {
+                    codeLines.add(lines.length);
+                    lines.push(line);
+                }
                 return;
             }
             if (node.nodeType === 3) {
@@ -6593,7 +6578,7 @@
         }
         
         // Build markdown with > prefix for each line (including empty lines)
-        return lines.map(line => '> ' + line.trim()).join('\n') + '\n';
+        return lines.map((line, index) => '> ' + (codeLines.has(index) ? line : line.trim())).join('\n') + '\n';
     }
 
     function mdProcessTable(table) {
@@ -11793,6 +11778,7 @@
     // Save the editor selection before toolbar buttons steal focus
     let savedToolbarRange = null;
     toolbar.addEventListener('mousedown', function(e) {
+        if (tableControls.owns(e.target)) return;
         const btn = e.target.closest('button');
         if (!btn) return;
         const sel = window.getSelection();
@@ -11804,6 +11790,7 @@
     });
 
     toolbar.addEventListener('click', function(e) {
+        if (tableControls.owns(e.target)) return;
         const btn = e.target.closest('button');
         if (!btn) return;
 
@@ -12456,18 +12443,25 @@
     });
 
     function toggleSourceMode() {
-        if (finishInlineMathEdit) finishInlineMathEdit(true, false);
+        hideTableToolbar();
+        // Read while the current mode still owns the latest edits. The host
+        // command can arrive before blur or the delayed visual sync runs.
+        markdown = readCurrentMarkdown();
+        cancelScheduledSync();
         isSourceMode = !isSourceMode;
         if (isSourceMode) {
             sourceEditor.value = markdown;
             sourceEditor.style.display = 'block';
             editor.style.display = 'none';
+            updateActiveOutlineItem();
         } else {
             markdown = sourceEditor.value;
             renderFromMarkdown();
             sourceEditor.style.display = 'none';
             editor.style.display = 'block';
+            updateOutline();
         }
+        notifyChangeImmediate();
     }
 
     // Immediate notification - called after debounce in debouncedSync
@@ -12562,16 +12556,21 @@
         assignHeadingAnchors(editor, readCommittedMarkdown());
         const headings = editor.querySelectorAll('h1, h2, h3, h4, h5, h6');
         const headingsArray = Array.from(headings);
+        outlineHeadings = headingsArray;
         outline.innerHTML = headingsArray.map((h, i) => {
             const level = h.tagName[1];
             return '<a class="outline-item" data-level="' + level + '" data-index="' + i + '">' + escapeHtml(h.textContent) + '</a>';
         }).join('');
+        // The links were recreated, so reapply the active state even if the
+        // numerical heading index did not change.
+        activeOutlineIndex = -1;
 
         outline.querySelectorAll('.outline-item').forEach(item => {
             item.addEventListener('click', () => {
                 const idx = parseInt(item.dataset.index);
                 if (headingsArray[idx]) {
-                    const wrapper = editor.closest('.editor-wrapper');
+                    setActiveOutlineItem(idx, false);
+                    const wrapper = editorWrapper || editor.closest('.editor-wrapper');
                     if (wrapper) {
                         const wrapperRect = wrapper.getBoundingClientRect();
                         const headingRect = headingsArray[idx].getBoundingClientRect();
@@ -12582,7 +12581,81 @@
                 }
             });
         });
+
+        updateActiveOutlineItem();
     }
+
+    function setActiveOutlineItem(index, ensureVisible = true) {
+        const items = outline.querySelectorAll('.outline-item');
+        if (!items.length) {
+            activeOutlineIndex = -1;
+            return;
+        }
+
+        const boundedIndex = Math.max(0, Math.min(index, items.length - 1));
+        if (activeOutlineIndex !== boundedIndex) {
+            items.forEach((item, itemIndex) => {
+                const active = itemIndex === boundedIndex;
+                item.classList.toggle('is-active', active);
+                if (active) item.setAttribute('aria-current', 'location');
+                else item.removeAttribute('aria-current');
+            });
+            activeOutlineIndex = boundedIndex;
+        }
+
+        if (!ensureVisible) return;
+        const activeItem = items[boundedIndex];
+        const outlineRect = outline.getBoundingClientRect();
+        const itemRect = activeItem.getBoundingClientRect();
+        const margin = 8;
+        if (itemRect.top < outlineRect.top + margin) {
+            outline.scrollTop -= outlineRect.top + margin - itemRect.top;
+        } else if (itemRect.bottom > outlineRect.bottom - margin) {
+            outline.scrollTop += itemRect.bottom - (outlineRect.bottom - margin);
+        }
+    }
+
+    function updateActiveOutlineItem() {
+        if (!outlineHeadings.length || isSourceMode) {
+            activeOutlineIndex = -1;
+            outline.querySelectorAll('.outline-item').forEach(item => {
+                item.classList.remove('is-active');
+                item.removeAttribute('aria-current');
+            });
+            return;
+        }
+
+        const wrapper = editorWrapper || editor.closest('.editor-wrapper');
+        if (!wrapper) {
+            setActiveOutlineItem(0);
+            return;
+        }
+
+        const wrapperRect = wrapper.getBoundingClientRect();
+        const readingLine = wrapperRect.top + wrapper.clientHeight * 0.3;
+        let activeIndex = 0;
+        for (let index = 0; index < outlineHeadings.length; index++) {
+            if (outlineHeadings[index].getBoundingClientRect().top <= readingLine + 1) {
+                activeIndex = index;
+            } else {
+                break;
+            }
+        }
+        setActiveOutlineItem(activeIndex);
+    }
+
+    function scheduleActiveOutlineUpdate() {
+        if (outlineScrollFrame !== null) return;
+        outlineScrollFrame = requestAnimationFrame(() => {
+            outlineScrollFrame = null;
+            updateActiveOutlineItem();
+        });
+    }
+
+    if (editorWrapper) {
+        editorWrapper.addEventListener('scroll', scheduleActiveOutlineUpdate, { passive: true });
+    }
+    window.addEventListener('resize', scheduleActiveOutlineUpdate);
 
     function updateWordCount() {
         const plain = editor.cloneNode(true);
@@ -13439,6 +13512,7 @@
         const a = document.createElement('a');
         a.href = '#';
         a.textContent = selectedText;
+        setupLink(a);
         
         range.deleteContents();
         range.insertNode(a);
@@ -13455,6 +13529,10 @@
 
     // Handle messages from host (VSCode / Electron / test)
     host.onMessage(function(message) {
+        if (message.type === 'tableToolbarPosition') {
+            tableControls.setPreference(message.value);
+            return;
+        }
         if (message.type === 'validateExportImage') {
             if (typeof host.respondExport !== 'function') return;
             const image = new Image();
@@ -13626,6 +13704,7 @@
             const a = document.createElement('a');
             a.href = message.url;
             a.textContent = message.text;
+            setupLink(a);
             
             const sel = window.getSelection();
             if (sel && sel.rangeCount) {
@@ -14740,6 +14819,7 @@
                     const a = document.createElement('a');
                     a.href = plainText;
                     a.textContent = selectedText;
+                    setupLink(a);
                     range.deleteContents();
                     range.insertNode(a);
 
@@ -14758,6 +14838,7 @@
                     const a = document.createElement('a');
                     a.href = plainText;
                     a.textContent = plainText;
+                    setupLink(a);
                     range.deleteContents();
                     range.insertNode(a);
 
@@ -15401,6 +15482,8 @@
         window.__testApi.setupInteractiveElements = setupInteractiveElements;
         window.__testApi.renderFromMarkdown = renderFromMarkdown;
         window.__testApi.htmlToMarkdown = htmlToMarkdown;
+        window.__testApi.updateOutline = updateOutline;
+        window.__testApi.updateActiveOutlineItem = updateActiveOutlineItem;
         window.__testApi.ready = true;
         
         // Table operation functions for testing
