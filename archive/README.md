@@ -4,14 +4,10 @@ This directory preserves superseded project materials for reference and inspirat
 
 ## Binary Markdown development records
 
-- [Export development history](development/export.md): original plans, milestones,
-  decisions and the earlier handoff. Preserved prompts are historical material.
-- [0.2.0 transition](development/0.2.0-transition.md): recorded maintainer choices
-  and the completed policy implementation map.
+- [Export development history](development/export.md): original plans, milestones, decisions and the earlier handoff. Preserved prompts are historical material.
+- [0.2.0 transition](development/0.2.0-transition.md): recorded maintainer choices and the completed policy implementation map.
 
-Use the [documentation index](../docs/README.md) for maintained instructions,
-[reports](../reports/README.md) for dated observations and evidence, and
-[release notes](../release-notes/README.md) for version announcements.
+Use the [documentation index](../docs/README.md) for maintained instructions, [reports](../reports/README.md) for dated observations and evidence, and [release notes](../release-notes/README.md) for version announcements.
 
 ## Upstream Any Markdown materials
 
@@ -24,6 +20,6 @@ Use the [documentation index](../docs/README.md) for maintained instructions,
 - `package.json`: the upstream manifest at commit `82487429`, retained for provenance and registration comparison tests.
 - `build.sh`: obsolete machine-specific build helper; retained as history, not as a supported command.
 
-Original branding, links, commands, release claims, and dates remain as historical evidence. They are not Binary Markdown release announcements or current setup instructions. See `SHA256SUMS` for the archived source-file checksums.
+Original branding, links, commands, release claims, and dates remain as historical evidence. They are not Binary Markdown release announcements or current setup instructions. Prose formatting may be normalized for readability; Git history preserves earlier versions without a separate documentation checksum inventory.
 
 The original project is [raggbal/any-markdown](https://github.com/raggbal/any-markdown). Credit and license obligations remain in effect.

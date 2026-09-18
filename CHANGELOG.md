@@ -7,9 +7,7 @@
 
 ## 0.3.0
 
-Preserve code-block content through source switching and quoted saves, add
-configurable table controls, and improve document navigation. See the
-[release notes](release-notes/0.3.0.md) for details and known limitations.
+Preserve code-block content through source switching and quoted saves, add configurable table controls, and improve document navigation. See the [release notes](release-notes/0.3.0.md) for details and known limitations.
 
 - Preserve pending edits when switching modes, render indented code fences, restore inactive highlighting, and keep quoted code readable.
 - Add automatic and configurable table-toolbar placement, with a compact menu for narrow panes.
@@ -19,8 +17,7 @@ configurable table controls, and improve document navigation. See the
 
 ## 0.2.1
 
-Integrate editor and export improvements with Windows validation. See the
-[version notes](release-notes/0.2.1.md) for platform scope and known limitations.
+Integrate editor and export improvements with Windows validation. See the [version notes](release-notes/0.2.1.md) for platform scope and known limitations.
 
 - Edit inline and display equations while preserving their source delimiters; render multiline expressions and retain native math in DOCX/EPUB.
 - Preserve YAML front matter in a collapsible source editor and refresh managed tables of contents on save, with linked heading destinations in exports.

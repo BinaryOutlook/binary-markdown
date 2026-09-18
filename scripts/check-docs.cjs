@@ -1,6 +1,6 @@
 'use strict';
 
-// Offline checks for the maintained documentation and curated reports. Frozen
+// Offline checks for the maintained documentation and curated reports. Inherited
 // upstream archives and test input documents are not rewritten or linted here.
 const fs = require('node:fs');
 const path = require('node:path');

@@ -1,9 +1,6 @@
 # Reports
 
-These records preserve observations about particular revisions and environments.
-Use the [documentation index](../docs/README.md) for current instructions.
-An earlier pass, failure or pending-review statement applies to the recorded
-work only; it is not a current release or support claim.
+These records preserve observations about particular revisions and environments. Use the [documentation index](../docs/README.md) for current instructions. An earlier pass, failure or pending-review statement applies to the recorded work only; it is not a current release or support claim.
 
 ## Investigations and comparisons
 
@@ -25,21 +22,10 @@ work only; it is not a current release or support claim.
 | 2026-09-09 export artifacts | [Artifact inspection](validation/2026-09-09-export-artifact-audit.md) | Identified package outputs and representative pages |
 | Version 0.1.0 work; original date unspecified | [Copy and outline results](validation/0.1.0-copy-paste.md) | Original combined build and later naming-migration checks |
 
-The reports link their compact JSON receipts and representative images in
-[validation/evidence](validation/evidence/). Artifact hashes and recorded outcomes
-are retained. Local temporary locations and timestamped receipt basenames have
-been generalized for privacy; they are not runnable paths to the original machines.
+The reports link their compact JSON receipts and representative images in [validation/evidence](validation/evidence/). Artifact hashes and recorded outcomes are retained. Local temporary locations and timestamped receipt basenames have been generalized for privacy; they are not runnable paths to the original machines.
 
 ## Add a report
 
-Use `YYYY-MM-DD-topic.md` for dated work, or a version for a release record.
-Include purpose, date, source revision, environment, observations, limitations
-and links to evidence. Label proposals and unknown results explicitly. Link new
-reports here and link reusable findings from the relevant maintained guide.
+Use `YYYY-MM-DD-topic.md` for dated work, or a version for a release record. Include purpose, date, source revision, environment, observations, limitations and links to evidence. Label proposals and unknown results explicitly. Link new reports here and link reusable findings from the relevant maintained guide.
 
-Keep secrets, personal documents, user/account identifiers, machine names,
-addresses and raw checkout/profile paths out of reports. Use synthetic examples
-and inspect image content and metadata before retaining an image. Project URLs,
-source and artifact hashes, and required attribution identify public project
-material and remain useful provenance. Large logs, traces and generated exports
-belong in ignored local output or reviewed CI/release artifacts.
+Keep secrets, personal documents, user/account identifiers, machine names, addresses and raw checkout/profile paths out of reports. Use synthetic examples and inspect image content and metadata before retaining an image. Project URLs, source and artifact hashes, and required attribution identify public project material and remain useful provenance. Large logs, traces and generated exports belong in ignored local output or reviewed CI/release artifacts.

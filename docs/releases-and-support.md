@@ -12,10 +12,7 @@ Access to the source is central to this project. Building your own version is an
 
 ## Distribution and cost
 
-The [repository transition](repository-transition.md) preserves the original fork
-and its release records. Releases through 0.2.1 are also mirrored here with
-byte-identical uploaded assets. Their notes link to the original publication
-dates; the successor's release records have new GitHub IDs and timestamps.
+The [repository transition](repository-transition.md) preserves the original fork and its release records. Releases through 0.2.1 are also mirrored here with byte-identical uploaded assets. Their notes link to the original publication dates; the successor's release records have new GitHub IDs and timestamps.
 
 The editor and all its features remain available in the free, open-source edition. Voluntary donations or paid support may sustain development; they do not unlock features. Future licensing arrangements depend on the rights the project holds and do not remove this commitment.
 
@@ -47,68 +44,22 @@ Expired candidates require a new full validation run, not a local substitute. Re
 
 ## Automatic VSIX releases
 
-The [automatic workflow](../.github/workflows/auto-release-vsix.yml) checks `main`
-daily at **01:17 UTC / 09:17 Singapore time**. Its
-[policy file](../.github/release-policy.json) enables publication and sets
-`minimumDays` to **3**. GitHub schedules can run late or be disabled after a long
-period of public-repository inactivity; see [scheduled workflow behavior](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule).
+The [automatic workflow](../.github/workflows/auto-release-vsix.yml) checks `main` daily at **01:17 UTC / 09:17 Singapore time**. Its [policy file](../.github/release-policy.json) enables publication and sets `minimumDays` to **3**. GitHub schedules can run late or be disabled after a long period of public-repository inactivity; see [scheduled workflow behavior](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule).
 
-The workflow measures complete 24-hour days from the most recent qualifying
-release's `published_at` time. A qualifying release is published, is not a
-prerelease, has a `vX.Y.Z` tag and contains the matching uploaded VSIX. A successful
-manual release resets the same timer. Drafts, failed publications, prereleases
-and Electron-only releases do not reset it.
+The workflow measures complete 24-hour days from the most recent qualifying release's `published_at` time. A qualifying release is published, is not a prerelease, has a `vX.Y.Z` tag and contains the matching uploaded VSIX. A successful manual release resets the same timer. Drafts, failed publications, prereleases and Electron-only releases do not reset it.
 
-Publication requires unreleased VSIX changes and full validation of the exact
-selected `main` commit. Documentation, test, release-bookkeeping and Electron-only
-changes do not by themselves produce a release. The first official release must
-be published manually to establish a baseline.
+Publication requires unreleased VSIX changes and full validation of the exact selected `main` commit. Documentation, test, release-bookkeeping and Electron-only changes do not by themselves produce a release. The first official release must be published manually to establish a baseline.
 
-- If `main` already has a newer, maintainer-selected version and matching
-  `release-notes/<version>.md`, the workflow uses that version.
-- Otherwise, it may increment only the patch integer: `0.2.9` becomes `0.2.10`.
-  Runtime commits must use `fix:`, `perf:`, `revert:` or `chore(deps):` titles;
-  scoped forms such as `fix(export):` are supported. Standard merge commits use
-  the recorded PR title. Features, breaking changes and unclassified runtime
-  changes wait for a maintainer to choose the version and add release notes.
-- A patch bump becomes a bot PR containing the four manifests/lockfiles,
-  changelog, notes and notes index. It passes full CI before merging through
-  existing branch protection. Before allowing that PR's CI to run, the scheduler
-  verifies its bot author, repository, exact generated commit and unchanged base.
-  It approves only that workflow run, never a code-review approval. The resulting
-  `main` commit passes full CI again.
-  Application changes continue to enter `main` through normal maintainer review.
-- Successful validation artifacts are reused while available. Expired or
-  missing artifacts require a new full run. Failed tests stop the release;
-  automation does not repeatedly rerun them to obtain a passing result.
-- Manual and automatic release workflows share one concurrency group. The
-  publisher verifies source, checksums and all four platform evidence archives,
-  uploads a draft, rechecks `main` and the publication timer, then publishes.
-  Existing tags/releases are never overwritten. An interrupted upload can leave
-  a draft: inspect it and finish the manual procedure before retrying that version.
+- If `main` already has a newer, maintainer-selected version and matching `release-notes/<version>.md`, the workflow uses that version.
+- Otherwise, it may increment only the patch integer: `0.2.9` becomes `0.2.10`. Runtime commits must use `fix:`, `perf:`, `revert:` or `chore(deps):` titles; scoped forms such as `fix(export):` are supported. Standard merge commits use the recorded PR title. Features, breaking changes and unclassified runtime changes wait for a maintainer to choose the version and add release notes.
+- A patch bump becomes a bot PR containing the four manifests/lockfiles, changelog, notes and notes index. It passes full CI before merging through existing branch protection. Before allowing that PR's CI to run, the scheduler verifies its bot author, repository, exact generated commit and unchanged base. It approves only that workflow run, never a code-review approval. The resulting `main` commit passes full CI again. Application changes continue to enter `main` through normal maintainer review.
+- Successful validation artifacts are reused while available. Expired or missing artifacts require a new full run. Failed tests stop the release; automation does not repeatedly rerun them to obtain a passing result.
+- Manual and automatic release workflows share one concurrency group. The publisher verifies source, checksums and all four platform evidence archives, uploads a draft, rechecks `main` and the publication timer, then publishes. Existing tags/releases are never overwritten. An interrupted upload can leave a draft: inspect it and finish the manual procedure before retrying that version.
 
-To inspect eligibility, open **Actions → Automatic VSIX release → Run workflow**,
-select `main` and leave **mode** as **check**. This performs no release, PR or
-version changes. Select **release** to exercise the same policy immediately;
-the three-day minimum still applies. For an urgent release before the interval,
-use **Prepare VSIX release draft** and publish after review.
+To inspect eligibility, open **Actions → Automatic VSIX release → Run workflow**, select `main` and leave **mode** as **check**. This performs no release, PR or version changes. Select **release** to exercise the same policy immediately; the three-day minimum still applies. For an urgent release before the interval, use **Prepare VSIX release draft** and publish after review.
 
-The setup uses the short-lived `GITHUB_TOKEN`. Repository Actions settings must
-allow GitHub Actions to create pull requests; the default token permission stays
-read-only, and this workflow requests only contents, pull-request and Actions
-write permissions. GitHub uses one setting for creating PRs and approving PR
-reviews; this workflow never submits approving reviews. Bot-created PR workflow
-runs require approval, and manually dispatched checks do not satisfy PR branch
-protection. The scheduler therefore approves the ordinary PR validation run only
-for its own verified version PR. Bot merges do not start push CI automatically,
-so it explicitly dispatches full **Validate VSIX** on the resulting `main`, bound
-to the expected commit. This avoids a separate stored personal token.
-PR-only `main`, required **VSIX validation**,
-up-to-date branches and the force-push/deletion restrictions remain in effect.
+The setup uses the short-lived `GITHUB_TOKEN`. Repository Actions settings must allow GitHub Actions to create pull requests; the default token permission stays read-only, and this workflow requests only contents, pull-request and Actions write permissions. GitHub uses one setting for creating PRs and approving PR reviews; this workflow never submits approving reviews. Bot-created PR workflow runs require approval, and manually dispatched checks do not satisfy PR branch protection. The scheduler therefore approves the ordinary PR validation run only for its own verified version PR. Bot merges do not start push CI automatically, so it explicitly dispatches full **Validate VSIX** on the resulting `main`, bound to the expected commit. This avoids a separate stored personal token. PR-only `main`, required **VSIX validation**, up-to-date branches and the force-push/deletion restrictions remain in effect.
 
-To pause automatic publication, set `enabled` to `false` in the policy file
-through a PR, or disable **Automatic VSIX release** in Actions. Changing
-`minimumDays` changes the interval for both scheduled and manually requested
-automatic runs. Published files remain available; corrections use a new version.
+To pause automatic publication, set `enabled` to `false` in the policy file through a PR, or disable **Automatic VSIX release** in Actions. Changing `minimumDays` changes the interval for both scheduled and manually requested automatic runs. Published files remain available; corrections use a new version.
 
 The inherited Electron auto-publisher is archived. Standalone installers require a separate validation and release decision; see the [roadmap](roadmap.md).

@@ -1,19 +1,10 @@
 # Export subsystem
 
-Reference · Maintained with the source in this checkout. Dated validation
-records identify their own tested revisions and environments.
+Reference · Maintained with the source in this checkout. Dated validation records identify their own tested revisions and environments.
 
-This is the authoritative reference for Binary Markdown's experimental export
-contract: scope, format support, functional and non-functional requirements,
-workload, and acceptance criteria. The requirements describe expected behavior;
-they do not certify that every case has passed in every environment. Dated
-validation records identify the packages and environments actually tested.
+This is the authoritative reference for Binary Markdown's experimental export contract: scope, format support, functional and non-functional requirements, workload, and acceptance criteria. The requirements describe expected behavior; they do not certify that every case has passed in every environment. Dated validation records identify the packages and environments actually tested.
 
-The specification originated in this fork's export workstream at commit
-`5488f37` on 2026-09-09. Its original plan and decisions are preserved in the
-[development history](../archive/development/export.md). This documentation revision
-preserves all 43 FRs, 15 NFRs, and 15 acceptance criteria without changing their
-table entries.
+The specification originated in this fork's export workstream at commit `5488f37` on 2026-09-09. Its original plan and decisions are preserved in the [development history](../archive/development/export.md). This documentation revision preserves all 43 FRs, 15 NFRs, and 15 acceptance criteria without changing their table entries.
 
 ## Reading guide
 
@@ -27,8 +18,7 @@ table entries.
 | Inspect dated results | [Export-branch evidence](../reports/validation/2026-09-10-export.md), [0.2.0 integration evidence](../reports/validation/0.2.0.md), and [PDF appearance evidence](../reports/investigations/2026-09-12-export-page-background.md) |
 | Understand earlier decisions and milestones | [Development history](../archive/development/export.md) |
 
-This is the first area applying the [documentation standard](documentation-standard.md).
-Contributor workflow is described in [CONTRIBUTING.md](../CONTRIBUTING.md).
+This is the first area applying the [documentation standard](documentation-standard.md). Contributor workflow is described in [CONTRIBUTING.md](../CONTRIBUTING.md).
 
 ## Outcome and confirmed scope
 
@@ -252,10 +242,7 @@ These criteria are specification targets, not executed results. Record unavailab
 
 ## Deferred scope
 
-The configured Windows lane extends the current acceptance requirement, not the
-coverage of earlier releases. Its [initial preparation report](../reports/validation/2026-09-14-windows-preparation.md)
-records local results and pending Windows execution. Use the current candidate's
-workflow outcome before claiming that this obligation has passed.
+The configured Windows lane extends the current acceptance requirement, not the coverage of earlier releases. Its [initial preparation report](../reports/validation/2026-09-14-windows-preparation.md) records local results and pending Windows execution. Use the current candidate's workflow outcome before claiming that this obligation has passed.
 
 Deferred work includes Windows ARM64, untested Linux distributions/architectures and remote-host acceptance, browser-only VS Code, Electron export integration, unsaved/untitled export, batch export, destination/name customization, templates and styling controls beyond the PDF background and code-language settings, image compression/storage optimization, advanced pagination, native runtime bundles/downloaders, typeset PDF, additional Pandoc writers, whole-document image export, arbitrary filters/custom commands, and a full renderer/parser replacement.
 
@@ -263,19 +250,11 @@ Potential later paths include Electron's built-in PDF API, managed native-tool i
 
 ## Changes to this contract
 
-Keep requirement IDs stable. For a proposed change, record the behavior, affected
-FR/NFR/AC IDs, evidence, alternatives, and effect on the support matrix. Update
-the requirement and its acceptance case together after the decision. Mark retired
-IDs superseded and retain their history rather than reusing their numbers.
+Keep requirement IDs stable. For a proposed change, record the behavior, affected FR/NFR/AC IDs, evidence, alternatives, and effect on the support matrix. Update the requirement and its acceptance case together after the decision. Mark retired IDs superseded and retain their history rather than reusing their numbers.
 
-Maintainer decisions are needed for changes to formats, supported hosts,
-saved-only behavior, naming, resource policy, fidelity promises, mandatory native
-dependencies, or acceptance criteria. Routine internal implementation choices
-can proceed within the existing contract. Record consequential design decisions
-with context, alternatives, and consequences; link the affected requirements.
+Maintainer decisions are needed for changes to formats, supported hosts, saved-only behavior, naming, resource policy, fidelity promises, mandatory native dependencies, or acceptance criteria. Routine internal implementation choices can proceed within the existing contract. Record consequential design decisions with context, alternatives, and consequences; link the affected requirements.
 
-Use the [verification guide](export-verification.md) for current contributor
-checks. Preserve dated test results and record new observations separately.
+Use the [verification guide](export-verification.md) for current contributor checks. Preserve dated test results and record new observations separately.
 
 ## Previous section links
 

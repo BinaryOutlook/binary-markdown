@@ -1,35 +1,16 @@
 # How export works
 
-Explanation · Maintained with the source in this checkout. Recorded test results
-are indexed separately in [reports](../reports/README.md).
+Explanation · Maintained with the source in this checkout. Recorded test results are indexed separately in [reports](../reports/README.md).
 
-Binary Markdown uses a shared export lifecycle and two conversion routes. HTML
-retains the supported editor appearance. PDF uses its captured white/theme mode.
-DOCX and EPUB prioritize editable
-document structure through Pandoc. The [export reference](export-subsystem.md)
-defines the requirements and format-support boundary; the
-[user guide](../media/export-help.md) explains how to export a document.
+Binary Markdown uses a shared export lifecycle and two conversion routes. HTML retains the supported editor appearance. PDF uses its captured white/theme mode. DOCX and EPUB prioritize editable document structure through Pandoc. The [export reference](export-subsystem.md) defines the requirements and format-support boundary; the [user guide](../media/export-help.md) explains how to export a document.
 
 ## Capture one saved revision
 
-Saving involves both the webview and the VS Code host. A clean document flag
-alone does not establish that the two agree. The
-[controller](../src/export/controller.ts) waits for the save barrier, checks the
-document's name and dirty state, requests the editor snapshot, and compares it
-with the captured document text while checking that the revision is unchanged.
-Export does not initiate a save. Later edits do not change the job's captured
-Markdown.
+Saving involves both the webview and the VS Code host. A clean document flag alone does not establish that the two agree. The [controller](../src/export/controller.ts) waits for the save barrier, checks the document's name and dirty state, requests the editor snapshot, and compares it with the captured document text while checking that the revision is unchanged. Export does not initiate a save. Later edits do not change the job's captured Markdown.
 
-For PDF, `binary-markdown.export.pdfWhiteBackground` defaults to `true`, selecting
-GitHub light appearance and a white page. Disabling it retains the editor theme
-across the whole page. The controller captures the effective theme and base font
-size before tool discovery, then passes them to offscreen rendering. This does
-not change the live editor or the appearance of other export formats. See the
-[PDF appearance requirements](export-subsystem.md#pdf-page-appearance).
+For PDF, `binary-markdown.export.pdfWhiteBackground` defaults to `true`, selecting GitHub light appearance and a white page. Disabling it retains the editor theme across the whole page. The controller captures the effective theme and base font size before tool discovery, then passes them to offscreen rendering. This does not change the live editor or the appearance of other export formats. See the [PDF appearance requirements](export-subsystem.md#pdf-page-appearance).
 
-The controller also checks the local desktop host and workspace trust. Non-HTML
-formats probe their required executable for each job. Menu capability labels can
-be refreshed independently and are not a substitute for these job checks.
+The controller also checks the local desktop host and workspace trust. Non-HTML formats probe their required executable for each job. Menu capability labels can be refreshed independently and are not a substitute for these job checks.
 
 ## Conversion routes
 
@@ -50,17 +31,9 @@ flowchart TD
     Finish --> Result["Output location and warnings"]
 ```
 
-HTML requires no additional native converter. PDF uses an installed browser as
-its production layout engine, running without a visible browser window. DOCX
-and EPUB use temporary Markdown/JSON and prepared assets; they do not use the
-styled HTML as their document-layout input. The common webview preparation step
-still supplies rendered diagrams and diagnostics for those formats.
+HTML requires no additional native converter. PDF uses an installed browser as its production layout engine, running without a visible browser window. DOCX and EPUB use temporary Markdown/JSON and prepared assets; they do not use the styled HTML as their document-layout input. The common webview preparation step still supplies rendered diagrams and diagnostics for those formats.
 
-Separate adapters keep a missing format-specific tool from disabling otherwise
-available formats. The extension's PDF path uses its shipped browser-control
-library, not VS Code's internal Electron APIs. Electron application export remains
-deferred. Changes to a backend still share source capture, cancellation, resource
-handling, output validation, and finalization.
+Separate adapters keep a missing format-specific tool from disabling otherwise available formats. The extension's PDF path uses its shipped browser-control library, not VS Code's internal Electron APIs. Electron application export remains deferred. Changes to a backend still share source capture, cancellation, resource handling, output validation, and finalization.
 
 ## Shared contracts
 
@@ -78,13 +51,7 @@ Keep source capture, export preparation, backend invocation, and output finaliza
 
 ## Rendering readiness
 
-Render the complete captured document in both visual and source mode. The live
-viewport or a stale hidden preview cannot establish complete output. Preparation
-removes editor controls and host machinery, strips recognized image directives
-from temporary input, and waits for supported math, diagrams, images, and fonts.
-The source Markdown remains unchanged. Incompatible content receives the declared
-fallback and warning treatment in the
-[format-support matrix](export-subsystem.md#rendering-and-format-support).
+Render the complete captured document in both visual and source mode. The live viewport or a stale hidden preview cannot establish complete output. Preparation removes editor controls and host machinery, strips recognized image directives from temporary input, and waits for supported math, diagrams, images, and fonts. The source Markdown remains unchanged. Incompatible content receives the declared fallback and warning treatment in the [format-support matrix](export-subsystem.md#rendering-and-format-support).
 
 ## Dependency and resource handling
 
@@ -106,11 +73,7 @@ For example, if `report.pdf` is occupied and the completed export's SHA-256 ends
 
 Repeated exports need not produce identical bytes: document containers and engines can introduce metadata differences. Identical-file reuse is conditional on the actual completed bytes, not on an assumption that unchanged Markdown always produces the same hash.
 
-The [finalizer](../src/export/output.ts) writes complete bytes to a temporary
-file beside the source and claims a destination with a hard link. An occupied
-name triggers the next candidate without an overwrite. Its `finally` block
-removes the owned temporary directory. This implementation should be checked
-again when adding support for another filesystem or host.
+The [finalizer](../src/export/output.ts) writes complete bytes to a temporary file beside the source and claims a destination with a hard link. An occupied name triggers the next candidate without an overwrite. Its `finally` block removes the owned temporary directory. This implementation should be checked again when adding support for another filesystem or host.
 
 ## Repository map and integration pitfalls
 
@@ -129,27 +92,12 @@ These pointers describe the implemented integration; recheck them after rebasing
 
 ## Code presentation in DOCX and PDF
 
-DOCX uses the bundled [reference document](../media/export-reference.docx) and
-the existing Pandoc JSON transformation. The reference adds code paragraph and
-language styles; a native Word shape supplies the attached label while preserving
-editable code and language text. The reproducible asset builder is
-[build-docx-reference.py](../scripts/build-docx-reference.py). Normal compilation
-uses the checked-in asset and does not require that Python builder.
+DOCX uses the bundled [reference document](../media/export-reference.docx) and the existing Pandoc JSON transformation. The reference adds code paragraph and language styles; a native Word shape supplies the attached label while preserving editable code and language text. The reproducible asset builder is [build-docx-reference.py](../scripts/build-docx-reference.py). Normal compilation uses the checked-in asset and does not require that Python builder.
 
-Direct PDF uses the shared [language mapping](../src/export/code-language.ts)
-and [language-tab renderer](../src/export/language-tab.ts). Labels enter as text,
-and code nodes are retained intact. The job captures the document-scoped
-`binary-markdown.export.showCodeLanguage` setting once. HTML/EPUB, inline code,
-math and Mermaid retain their existing conversion routes.
+Direct PDF uses the shared [language mapping](../src/export/code-language.ts) and [language-tab renderer](../src/export/language-tab.ts). Labels enter as text, and code nodes are retained intact. The job captures the document-scoped `binary-markdown.export.showCodeLanguage` setting once. HTML/EPUB, inline code, math and Mermaid retain their existing conversion routes.
 
-Keeping a DOCX label with its code can move a long block to the next page;
-long blocks remain splittable. Current user-facing behavior is described in
-[export help](../media/export-help.md#code-language-tabs). The
-[dated investigation](../reports/investigations/2026-09-14-docx-code-blocks.md)
-records compared approaches and reader-specific evidence.
+Keeping a DOCX label with its code can move a long block to the next page; long blocks remain splittable. Current user-facing behavior is described in [export help](../media/export-help.md#code-language-tabs). The [dated investigation](../reports/investigations/2026-09-14-docx-code-blocks.md) records compared approaches and reader-specific evidence.
 
 ## Verify a change
 
-Use [Validate an export change](export-verification.md) to choose checks for the
-affected boundary. Earlier design choices and investigation results are retained
-in the [development history](../archive/development/export.md#decision-log).
+Use [Validate an export change](export-verification.md) to choose checks for the affected boundary. Earlier design choices and investigation results are retained in the [development history](../archive/development/export.md#decision-log).

@@ -1,8 +1,6 @@
 # Documentation
 
-Start here for maintained Binary Markdown guidance. These pages describe the
-source in this checkout; features in development are identified explicitly.
-For available packages and their tested scope, use [GitHub Releases](https://github.com/BinaryOutlook/binary-markdown/releases).
+Start here for maintained Binary Markdown guidance. These pages describe the source in this checkout; features in development are identified explicitly. For available packages and their tested scope, use [GitHub Releases](https://github.com/BinaryOutlook/binary-markdown/releases).
 
 | You want to… | Start with | Then read |
 | --- | --- | --- |
@@ -21,5 +19,4 @@ For available packages and their tested scope, use [GitHub Releases](https://git
 - [Release notes](../release-notes/README.md) and [changelog](../CHANGELOG.md): changes associated with individual versions.
 - [Archive](../archive/README.md): completed plans, earlier handoffs and inherited project material.
 
-Current instructions belong here. A report establishes what was observed for its
-recorded revision and environment; it does not establish the state of a later build.
+Current instructions belong here. A report establishes what was observed for its recorded revision and environment; it does not establish the state of a later build.
