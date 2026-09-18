@@ -2,9 +2,20 @@
 
 ## Unreleased
 
-- Fix absolute local file and folder links discovered in 0.2.1; show link destinations on hover and offer to copy unavailable targets. Planned for 0.2.2.
 - Check `main` daily for automatic VSIX publication after at least three days since the previous official release. Preserve manual releases, validate bot version bumps through PRs, and reuse the exact tested package and source.
 - Keep inline equation edits open and cancellable while delayed outline updates or document synchronization run.
+
+## 0.3.0
+
+Preserve code-block content through source switching and quoted saves, add
+configurable table controls, and improve document navigation. See the
+[release notes](release-notes/0.3.0.md) for details and known limitations.
+
+- Preserve pending edits when switching modes, render indented code fences, restore inactive highlighting, and keep quoted code readable.
+- Add automatic and configurable table-toolbar placement, with a compact menu for narrow panes.
+- Track the reading position in the outline, offer a configurable highlight color, and add a code-block delete control with Undo support.
+- Resolve local file and folder links, show destinations on hover, and offer to copy unavailable targets.
+- Share Windows browser capability checks across editors and preserve distinct executable paths.
 
 ## 0.2.1
 

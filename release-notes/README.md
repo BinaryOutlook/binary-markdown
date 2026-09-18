@@ -5,6 +5,7 @@ Version-specific notes are source material for release preparation. The
 identifies actual publication, source and downloadable artifacts; a file here
 does not publish a release.
 
+- [0.3.0](0.3.0.md): code-block preservation, configurable table controls, outline tracking, local links, and Windows export-tool handling.
 - [0.2.1](0.2.1.md): equation editing, YAML/TOC support, export presentation, Windows validation and documentation cleanup.
 - [0.2.0](0.2.0.md): original export, identity and release-process scope.
 - [Changelog](../CHANGELOG.md): concise version history and unreleased changes.
