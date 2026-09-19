@@ -624,27 +624,34 @@
         const sel = window.getSelection();
         if (!sel) return;
         
-        if (element.lastChild) {
-            if (element.lastChild.nodeType === 3) {
+        let last = element.lastChild;
+        // Header resize handles are editor UI, never a text caret destination.
+        while (last?.nodeType === 1 && last.classList.contains('table-col-resize-handle')) last = last.previousSibling;
+        if (element.matches('td, th')) {
+            while (last?.nodeType === 1 && last.matches('strong, b, em, i, s, del, u, a, code') && last.lastChild) last = last.lastChild;
+        }
+        if (last) {
+            if (last.nodeType === 3) {
                 // Text node - set cursor at end of text
-                range.setStart(element.lastChild, element.lastChild.length);
+                range.setStart(last, last.length);
                 range.collapse(true);
-            } else if (element.lastChild.nodeName === 'BR') {
+            } else if (last.nodeName === 'BR') {
                 // BR element - set cursor before the BR (inside the parent element)
-                range.setStart(element, element.childNodes.length - 1);
+                range.setStartBefore(last);
                 range.collapse(true);
             } else {
-                range.selectNodeContents(element.lastChild);
+                range.selectNodeContents(last);
                 range.collapse(false);
             }
         } else {
-            range.selectNodeContents(element);
-            range.collapse(false);
+            range.setStart(element, 0);
+            range.collapse(true);
         }
         
         sel.removeAllRanges();
         sel.addRange(range);
         element.focus();
+        revealTableCaret(element);
     }
     
     // Helper: scroll cursor position into view (for code block / mermaid block navigation)
@@ -698,6 +705,7 @@
         sel.removeAllRanges();
         sel.addRange(range);
         element.focus();
+        revealTableCaret(element);
     }
 
     // Set cursor to the start of the last line in an element (for table cell navigation)
@@ -4121,12 +4129,31 @@
 
     // ========== TABLE FUNCTIONALITY ==========
 
+    function revealTableCaret(element) {
+        const cell = element.closest?.('td, th');
+        if (!cell || !editor.contains(cell)) return;
+        cell.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+        const table = cell.closest('table');
+        const selection = window.getSelection();
+        if (!table || !selection?.isCollapsed || !selection.rangeCount || !cell.contains(selection.anchorNode)) return;
+        const caret = selection.getRangeAt(0).getBoundingClientRect();
+        if (!caret.height && !caret.width) return;
+        const bounds = table.getBoundingClientRect();
+        // A single unbroken cell can be wider than the pane: reveal its caret,
+        // rather than repeatedly aligning the cell's other edge with the pane.
+        const left = bounds.left + table.clientLeft;
+        const right = left + table.clientWidth;
+        if (caret.left < left + 2) table.scrollLeft -= left + 2 - caret.left;
+        else if (caret.right > right - 2) table.scrollLeft += caret.right - right + 2;
+    }
+
     let activeTableCell = null;
     let activeTable = null;
     var tableControls = window.BinaryTableToolbar.create({
         editor, header: toolbar, messages: i18n, icons: LUCIDE_ICONS,
         isSourceMode: () => isSourceMode,
         onContext(cell) { activeTableCell = cell; activeTable = cell?.closest('table') || null; },
+        onReveal: revealTableCaret,
         onLayout: updateToolbarScrollButtons,
         onPreference(value) { host.setTableToolbarPosition?.(value); },
         onAction(action) {
@@ -4511,6 +4538,7 @@
         let totalWidth = 0;
         headerCells.forEach((th, index) => {
             th.style.width = widths[index] + 'px';
+            th.style.minWidth = widths[index] + 'px';
             totalWidth += widths[index];
         });
         
@@ -4525,6 +4553,7 @@
             cells.forEach((td, colIndex) => {
                 if (widths[colIndex]) {
                     td.style.width = widths[colIndex] + 'px';
+                    td.style.minWidth = widths[colIndex] + 'px';
                 }
             });
         });
@@ -4540,6 +4569,9 @@
             const cells = row.querySelectorAll('th, td');
             if (cells[colIndex]) {
                 cells[colIndex].style.width = finalWidth + 'px';
+                // The table is a scroll box; retain the requested width in its
+                // anonymous inner table even when the visible box is narrower.
+                cells[colIndex].style.minWidth = finalWidth + 'px';
             }
         });
         
@@ -8099,7 +8131,6 @@
 
         // Tab key - table cell navigation or list indent
         if (e.key === 'Tab') {
-            undoManager.saveSnapshot();
             // #region agent log
             logger.log('Tab key pressed', {shiftKey: e.shiftKey});
             // #endregion
@@ -8121,6 +8152,7 @@
                 
                 if (tableCellNode) {
                     // Navigate between table cells
+                    activeTableCell = tableCellNode;
                     const row = tableCellNode.closest('tr');
                     const table = tableCellNode.closest('table');
                     const cellIndex = tableCellNode.cellIndex;
@@ -8152,10 +8184,15 @@
                             setCursorToEnd(activeTableCell);
                         }
                     }
+                    // Capture the new cell/range before a following Alt+F10.
+                    // selectionchange is asynchronous and can still describe
+                    // the previous cell when toolbar focus is requested.
+                    showTableToolbar(table);
                     return;
                 }
             }
 
+            undoManager.saveSnapshot();
             // Check if inside a code block or blockquote
             if (sel && sel.rangeCount) {
                 let anchorEl = sel.anchorNode;
@@ -8830,7 +8867,6 @@
                                 if (targetCell) {
                                     activeTableCell = targetCell;
                                     setCursorToLastLineStartByDOM(targetCell);
-                                    targetCell.scrollIntoView({ block: 'nearest' });
                                 }
                             } else {
                                 // At first row, exit table upward
@@ -8870,7 +8906,6 @@
                                 if (targetCell) {
                                     activeTableCell = targetCell;
                                     setCursorToStart(targetCell);
-                                    targetCell.scrollIntoView({ block: 'nearest' });
                                 }
                             } else {
                                 // At last row, exit table downward
@@ -8893,6 +8928,8 @@
                     }
                     // IMPORTANT: return after table cell arrow handling to prevent
                     // the "invasion code" below from also running and overwriting cursor position
+                    revealTableCaret(activeTableCell || tableCellNode);
+                    showTableToolbar(table);
                     return;
                 }
             }

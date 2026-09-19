@@ -94,6 +94,8 @@ Fixed controls stay at the chosen anchor where possible and use the overflow men
 
 Press `Alt+F10` from a table cell to focus its controls. Use left/right arrows in a horizontal toolbar, up/down arrows in a vertical toolbar or menu, and `Home`/`End` to move to the first/last action. `Enter` or `Space` activates a control; `Escape` returns to and reveals the retained cell. Focus follows an action into or out of overflow as space changes. Short menus scroll to reveal the focused item. Inserting above the header, deleting the header, and deleting the final column are disabled in both the toolbar and its overflow menu.
 
+Wide tables scroll horizontally within the table, keeping the surrounding document in place. Use the scrollbar below the table or a horizontal trackpad gesture to reveal offscreen columns. `Tab` and `Shift+Tab` move between cells and reveal the caret, including in headers and cells wider than the pane. Up/down navigation and `Escape` from the table controls also reveal the selected cell. Scrolling, window resizing, and cell navigation do not edit the Markdown or create an undo step. Column resizing remains available; the local scroll box is editor presentation and does not constrain exported tables.
+
 | Key | Action |
 | --- | --- |
 | `Tab` | Move to next cell |

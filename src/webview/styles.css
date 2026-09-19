@@ -892,6 +892,17 @@ body {
 .editor li > ul, .editor li > ol { margin: 0.25em 0; } /* Nested lists */
 .editor hr { border: none; border-top: 2px solid var(--border-color); margin: 1em 0; }
 .editor table { border-collapse: collapse; margin: 1em 0; position: relative; max-width: none; }
+/* Constrain the live table's scroll box without adding document/serializer wrappers.
+   Export preparation has no editable root and retains native table layout. */
+.editor[contenteditable="true"] table {
+    display: block;
+    width: max-content;
+    max-width: 100%;
+    overflow-x: auto;
+}
+.editor[contenteditable="true"] table::-webkit-scrollbar { height: 10px; }
+.editor[contenteditable="true"] table::-webkit-scrollbar-track { background: var(--code-bg); }
+.editor[contenteditable="true"] table::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 5px; }
 .editor th, .editor td { border: 1px solid var(--border-color); padding: 8px 12px; min-width: 80px; position: relative; word-wrap: break-word; }
 .editor th { background: var(--code-bg); font-weight: 600; text-align: center; }
 .editor td { text-align: left; vertical-align: top; }

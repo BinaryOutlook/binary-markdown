@@ -168,7 +168,10 @@
             const selection = window.getSelection();
             selection.removeAllRanges();
             selection.addRange(range);
-            if (reveal) cell.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+            if (reveal) {
+                cell.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+                options.onReveal?.(cell);
+            }
         }
         function schedule() {
             if (disposed || !table) return;
