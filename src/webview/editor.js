@@ -13529,6 +13529,15 @@
 
     // Handle messages from host (VSCode / Electron / test)
     host.onMessage(function(message) {
+        if (message.type === 'theme') {
+            if (!['github', 'sepia', 'night', 'dark', 'minimal', 'perplexity', 'things'].includes(message.value)) return;
+            if (document.documentElement.dataset.theme === message.value) return;
+            // A presentation change must not rebuild editable DOM or reset undo.
+            document.documentElement.dataset.theme = message.value;
+            mermaidInitialized = false;
+            editor.querySelectorAll('.mermaid-wrapper').forEach(wrapper => renderMermaidDiagram(wrapper));
+            return;
+        }
         if (message.type === 'tableToolbarPosition') {
             tableControls.setPreference(message.value);
             return;

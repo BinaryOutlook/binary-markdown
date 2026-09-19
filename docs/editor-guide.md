@@ -255,6 +255,8 @@ With `outlineStateScope` set to `file`, every Markdown resource restores its own
 
 ### Themes
 
+Changing the editor theme updates colors in place in VS Code and the desktop app, preserving the current selection and undo history. Quotes, their links, and inline code use the selected editor theme even when the surrounding VS Code workbench uses a different theme.
+
 | Theme | Description |
 | --- | --- |
 | `github` | Clean GitHub-style rendering |

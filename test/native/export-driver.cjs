@@ -106,7 +106,7 @@ exports.activate = async function activate(context) {
                     toolbarMode: value => ['simple', 'full'].includes(value),
                     tableToolbarPosition: value => ['auto', 'top-left', 'top-right', 'bottom-left', 'bottom-right', 'left', 'right', 'top-bar'].includes(value),
                     language: value => ['en', 'zh-CN'].includes(value),
-                    theme: value => ['github', 'night'].includes(value)
+                    theme: value => ['github', 'sepia', 'night', 'dark', 'minimal', 'perplexity', 'things'].includes(value)
                 };
                 if (!Object.hasOwn(allowed, request.key) || !allowed[request.key](request.value)) {
                     throw new Error('The driver only changes bounded export/appearance test settings in its isolated profile.');

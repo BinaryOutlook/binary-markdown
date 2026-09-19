@@ -669,6 +669,11 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
         let configurationRefresh: ReturnType<typeof setTimeout> | undefined;
         // Listen for configuration changes
         const changeConfigSubscription = vscode.workspace.onDidChangeConfiguration(e => {
+            const themeChanged = e.affectsConfiguration('binary-markdown.theme');
+            if (themeChanged) {
+                void webviewPanel.webview.postMessage({ type: 'theme', value:
+                    vscode.workspace.getConfiguration('binary-markdown', document.uri).get('theme', 'things') });
+            }
             const positionChanged = e.affectsConfiguration('binary-markdown.tableToolbarPosition');
             if (positionChanged) {
                 void webviewPanel.webview.postMessage({ type: 'tableToolbarPosition', value:
@@ -680,10 +685,10 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
             const toolsChanged = ['pandocPath', 'browserPath'].some(key =>
                 e.affectsConfiguration('binary-markdown.export.' + key));
             if (toolsChanged) { exportController.refreshCapabilities(); }
-            const editorSettings = ['theme', 'fontSize', 'imageDefaultDir', 'forceRelativeImagePath', 'language',
+            const editorSettings = ['fontSize', 'imageDefaultDir', 'forceRelativeImagePath', 'language',
                 'toolbarMode', 'outlineStateScope', 'outlineDefaultOpen', 'outlineActiveColor', 'enableDebugLogging', 'math.backslashDelimiters'];
             const editorChanged = editorSettings.some(key => e.affectsConfiguration('binary-markdown.' + key));
-            if (e.affectsConfiguration('binary-markdown') && (editorChanged || (!exportChanged && !positionChanged))) {
+            if (e.affectsConfiguration('binary-markdown') && (editorChanged || (!exportChanged && !positionChanged && !themeChanged))) {
                 clearTimeout(configurationRefresh);
                 configurationRefresh = setTimeout(() => {
                     configurationRefresh = undefined;

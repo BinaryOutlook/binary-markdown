@@ -371,14 +371,14 @@ test('PDF background and code-label changes do not launch tool probes in open ed
     }
 });
 
-test('new editors and appearance rebuilds use the current configured language', async t => {
+test('new editors and layout rebuilds use the current configured language', async t => {
     const h = await setup(t);
     assert.equal(h.renderConfigs[0].webviewMessages.locale, 'en');
     // A later settings value can be visible while handling an earlier event.
     // Rendering must use that snapshot, not depend on a language-event side effect.
     h.config.language = 'zh-CN';
-    h.config.theme = 'night';
-    h.configChanged(['binary-markdown.theme']);
+    h.config.fontSize = 18;
+    h.configChanged(['binary-markdown.fontSize']);
     await h.flushTimers();
     assert.equal(h.renderConfigs.at(-1).webviewMessages.locale, 'zh-CN');
     h.config.language = 'en';
@@ -387,6 +387,21 @@ test('new editors and appearance rebuilds use the current configured language', 
     await h.flushTimers();
     assert.equal(h.renderConfigs.at(-1).webviewMessages.locale, 'en');
     assert.equal(h.renderConfigs.at(-1).toolbarMode, 'simple');
+});
+
+test('theme changes update the current editor without saving, capturing or rebuilding', async t => {
+    const h = await setup(t);
+    for (const value of ['night', 'github', 'things']) {
+        h.config.theme = value;
+        h.configChanged(['binary-markdown.theme']);
+        await h.flushTimers();
+        assert.deepEqual(h.posts.at(-1), { type: 'theme', value });
+    }
+    assert.equal(h.renderConfigs.length, 1);
+    assert.equal(h.state.captureCalls, 0);
+    assert.equal(h.state.saveCalls, 0);
+    assert.equal(h.document.isDirty, false);
+    assert.equal(h.document.getText(), '# OLD-EDITOR\n');
 });
 
 test('combined export and appearance/language changes update both integrations', async t => {
@@ -513,6 +528,11 @@ test('combined table, export and appearance settings retain each required update
     assert.equal(h.state.controller.refreshes, 1);
     h.config.theme = 'night';
     h.configChanged(['binary-markdown.tableToolbarPosition', 'binary-markdown.theme']);
+    await h.flushTimers();
+    assert.equal(h.renderConfigs.length, 1);
+    assert.deepEqual(h.posts.findLast(message => message.type === 'theme'), { type: 'theme', value: 'night' });
+    assert.deepEqual(h.posts.findLast(message => message.type === 'tableToolbarPosition'), { type: 'tableToolbarPosition', value: 'bottom-right' });
+    h.configChanged(['binary-markdown.theme', 'binary-markdown.language']);
     await h.flushTimers();
     assert.equal(h.renderConfigs.length, 2);
     assert.equal(h.renderConfigs.at(-1).theme, 'night');

@@ -286,6 +286,14 @@ ipcMain.on('blur', () => { /* no-op */ });
 
 // Settings IPC
 ipcMain.on('settings-save', async (_event, key: string, value: unknown) => {
+    if (key === 'theme') {
+        if (!['github', 'sepia', 'night', 'dark', 'minimal', 'perplexity', 'things'].includes(value as string)) return;
+        settingsManager.set('theme', value as string);
+        for (const [win] of windows) {
+            if (!win.isDestroyed()) win.webContents.send('host-message', { type: 'theme', value });
+        }
+        return;
+    }
     if (key === 'tableToolbarPosition') {
         if (!['auto', 'top-left', 'top-right', 'bottom-left', 'bottom-right', 'left', 'right', 'top-bar'].includes(value as string)) return;
         settingsManager.set('tableToolbarPosition', value as string);

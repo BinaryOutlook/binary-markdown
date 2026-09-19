@@ -327,7 +327,7 @@ async function run(settings, owner) {
         fs.writeFileSync(report, JSON.stringify({ harness: harnessIdentity(), host: receipt(owner), packageSha256: hash(fs.readFileSync(settings.package)), receipts }, null, 2));
         console.log(name, JSON.stringify(details));
     };
-    const available = ['identity', 'filesystem', 'formats', 'saves', 'edges', 'ui', 'equations', 'pdf-background', 'selection', 'immutable', 'offline', 'document-aux', 'links', 'codeblocks', 'table-placement'];
+    const available = ['identity', 'filesystem', 'formats', 'saves', 'edges', 'ui', 'equations', 'pdf-background', 'selection', 'immutable', 'offline', 'document-aux', 'links', 'codeblocks', 'table-placement', 'blockquotes'];
     const groups = settings.suite === 'all' ? available : [settings.suite];
     assert.ok(groups.every(value => available.includes(value)), 'Suite must be all, ' + available.join(', '));
     const htmlExports = [];
@@ -506,6 +506,7 @@ async function run(settings, owner) {
         if (groups.includes('equations')) await equationCases(h, owner, record);
         if (groups.includes('links')) await linkCases(h, owner, record);
         if (groups.includes('codeblocks')) await codeblockCases(h, owner, record);
+        if (groups.includes('blockquotes')) await require('./blockquote-contrast.cjs').blockquoteCases(h, owner, record);
         if (groups.includes('pdf-background')) await pdfBackgroundCases(h, owner, record);
         if (groups.includes('selection')) await selectionCase(h, owner, record);
         if (groups.includes('immutable')) await immutableCase(h, owner, record);
