@@ -57,6 +57,10 @@
         dock.className = 'table-toolbar-dock';
         dock.hidden = true;
         header.insertBefore(dock, header.querySelector('.toolbar-fixed--right'));
+        const row = document.createElement('div');
+        row.className = 'table-toolbar-row';
+        row.hidden = true;
+        header.after(row);
         const toggle = document.createElement('button');
         toggle.type = 'button';
         toggle.className = 'table-toolbar-toggle';
@@ -114,7 +118,7 @@
         document.body.appendChild(overflow);
         let pickerAnchor = actions[actions.length - 1];
         const resize = new ResizeObserver(() => schedule());
-        for (const element of new Set([editor, wrapper, header])) resize.observe(element);
+        for (const element of new Set([editor, wrapper, header, row])) resize.observe(element);
         const mutations = new MutationObserver(() => schedule());
         mutations.observe(editor, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['style', 'class'] });
 
@@ -134,6 +138,8 @@
             closeMenus();
             controls.classList.remove('visible');
             dock.hidden = true;
+            row.hidden = true;
+            options.onLayout();
         }
         function clear() {
             if (table) resize.unobserve(table);
@@ -272,17 +278,30 @@
             if (overflow.contains(document.activeElement)) document.activeElement.scrollIntoView({ block: 'nearest', inline: 'nearest' });
             if (!picker.hidden) placeMenu(picker, pickerAnchor.getClientRects().length ? pickerAnchor : more.hidden ? actions[actions.length - 1] : more);
         }
+        function updateDockHost(docked) {
+            const secondRow = docked && document.documentElement.dataset.toolbarMode !== 'simple';
+            const parent = secondRow ? row : header;
+            row.hidden = !secondRow;
+            if (dock.parentElement !== parent) {
+                // Reparent the existing controls without losing a focused action
+                // or its open menu during a live toolbar-mode change.
+                const focused = document.activeElement;
+                parent.insertBefore(dock, secondRow ? null : header.querySelector('.toolbar-fixed--right'));
+                if (dock.contains(focused)) focused.focus({ preventScroll: true });
+            }
+        }
         function dockWidth() {
+            if (!row.hidden) return Math.max(28, row.clientWidth - 28);
             // Use the utilities' natural width even when their own overflow hides them.
             // Otherwise the two toolbars can repeatedly take space from each other.
             const fixed = Number(header.dataset.utilityWidth) || [...header.querySelectorAll('.toolbar-fixed')].reduce((total, node) => total + node.getBoundingClientRect().width, 0);
-            const reserve = document.documentElement.dataset.toolbarMode === 'simple' ? 12 : 296;
-            return Math.max(28, header.clientWidth - fixed - reserve);
+            return Math.max(28, header.clientWidth - fixed - 12);
         }
         function render() {
             if (!valid()) return clear();
             const palette = document.querySelector('.command-palette');
             if (palette?.getClientRects().length) return hide();
+            updateDockHost(current === 'top-bar');
             const rect = wrapper.getBoundingClientRect();
             const top = Math.max(0, rect.top, header.getBoundingClientRect().bottom);
             const bounds = geometry.box(Math.max(0, rect.left), top,
@@ -317,6 +336,7 @@
                 horizontal, vertical, obstacles: obstacles(bounds), current, allowUndock: settled });
             current = next.placement;
             if (current === 'hidden') return hide();
+            updateDockHost(current === 'top-bar');
             controls.dataset.placement = current;
             controls.dataset.vertical = String(Boolean(next.vertical));
             controls.setAttribute('aria-orientation', next.vertical ? 'vertical' : 'horizontal');
@@ -483,7 +503,7 @@
             disposed = true;
             cancelAnimationFrame(frame); clearTimeout(settleTimer);
             resize.disconnect(); mutations.disconnect(); listeners.forEach(remove => remove());
-            [controls, dock, picker, overflow, ...sizes].forEach(node => node.remove());
+            [controls, dock, row, picker, overflow, ...sizes].forEach(node => node.remove());
         }
         listen(window, 'pagehide', dispose);
         return { show, clear, schedule, dispose, owns, setPreference(value) {

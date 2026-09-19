@@ -32,12 +32,11 @@ for (const position of ['auto', 'top-left', 'top-right', 'bottom-left', 'bottom-
     });
 }
 
-test('compact dock exposes column insertion in a narrow editor', async ({ page }) => {
+test('Full mode gives docked column insertion its own row in a narrow editor', async ({ page }) => {
     await page.setViewportSize({ width: 600, height: 800 });
     await setup(page, 'top-bar', 'full');
-    const toggle = page.locator('.table-toolbar-toggle');
-    await expect(toggle).toBeVisible();
-    await toggle.click();
+    await expect(page.locator('.table-toolbar-row')).toBeVisible();
+    await expect(page.locator('.table-toolbar-toggle')).toBeHidden();
     await expect(page.locator(controls)).toBeVisible();
     await page.locator(controls + ' [data-action="add-col-right"]').click();
     await expect(page.locator('#editor th')).toHaveCount(4);
@@ -100,8 +99,8 @@ test('toolbar keyboard navigation and Escape return to the retained table cell',
 
 for (const variant of ['floating', 'docked', 'compact']) {
     test(`${variant}: every table action edits the selected row or column exactly once`, async ({ page }) => {
-        if (variant === 'compact') await page.setViewportSize({ width: 600, height: 800 });
-        await setup(page, variant === 'floating' ? 'right' : 'top-bar', variant === 'compact' ? 'full' : 'simple');
+        if (variant === 'compact') await page.setViewportSize({ width: 420, height: 800 });
+        await setup(page, variant === 'floating' ? 'right' : 'top-bar', 'simple');
         for (const action of ['add-col-left', 'add-col-right', 'del-col', 'add-row-above', 'add-row-below', 'del-row', 'align-left', 'align-center', 'align-right']) {
             await page.evaluate(text => (window as any).__testApi.setMarkdown(text), documentText);
             await page.locator('#editor tr').nth(1).locator('td').nth(1).click();
@@ -197,8 +196,12 @@ for (const width of [420, 900, 1280]) {
         await page.keyboard.press('Escape');
         const toggle = page.locator('.table-toolbar-toggle');
         if (await toggle.isVisible()) await toggle.click();
-        await expect(page.locator(`${controls} [data-action="add-col-right"]`)).toBeVisible();
-        await page.locator(`${controls} [data-action="add-col-right"]`).click();
+        let action = page.locator(`${controls} [data-action="add-col-right"]`);
+        if (!await action.isVisible()) {
+            await page.locator(`${controls} [data-action="more"]`).click();
+            action = page.locator('.table-overflow-menu [data-action="add-col-right"]');
+        }
+        await action.click();
         await expect(page.locator('#editor th')).toHaveCount(4);
     });
 }

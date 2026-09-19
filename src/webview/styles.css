@@ -991,8 +991,18 @@ body {
     visibility: hidden !important; pointer-events: none !important;
 }
 .table-toolbar-dock { display: flex; align-items: center; flex-shrink: 0; margin: 0 6px; min-width: 0; }
+.table-toolbar-row {
+    display: flex; align-items: center; flex-shrink: 0; height: 40px; padding: 0 8px;
+    background: var(--toolbar-bg); border-bottom: 1px solid var(--border-color);
+}
+.table-toolbar-row[hidden] { display: none; }
 .table-toolbar-dock[hidden], .table-toolbar-toggle[hidden], .table-placement-menu[hidden] { display: none !important; }
-.toolbar .table-toolbar-toggle { min-width: 28px; width: 28px; padding: 4px 6px; }
+.toolbar .table-toolbar-toggle, .table-toolbar-row .table-toolbar-toggle {
+    min-width: 28px; width: 28px; padding: 4px 6px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text-color); background: transparent; border: none; border-radius: 4px; cursor: pointer;
+}
+.table-toolbar-row .table-toolbar-toggle:hover { background: var(--selection-bg); }
 .table-toolbar-toggle svg { width: 16px; height: 16px; flex-shrink: 0; }
 .toolbar { flex-shrink: 0; overflow-x: auto; }
 .table-placement-menu, .table-overflow-menu {

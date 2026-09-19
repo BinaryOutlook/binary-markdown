@@ -327,7 +327,7 @@ async function run(settings, owner) {
         fs.writeFileSync(report, JSON.stringify({ harness: harnessIdentity(), host: receipt(owner), packageSha256: hash(fs.readFileSync(settings.package)), receipts }, null, 2));
         console.log(name, JSON.stringify(details));
     };
-    const available = ['identity', 'filesystem', 'formats', 'saves', 'edges', 'ui', 'equations', 'pdf-background', 'selection', 'immutable', 'offline', 'document-aux', 'links', 'codeblocks', 'table-placement', 'table-content', 'text-toolbar', 'blockquotes'];
+    const available = ['identity', 'filesystem', 'formats', 'saves', 'edges', 'ui', 'equations', 'pdf-background', 'selection', 'immutable', 'offline', 'document-aux', 'links', 'codeblocks', 'table-placement', 'table-content', 'table-row', 'text-toolbar', 'blockquotes'];
     const groups = settings.suite === 'all' ? available : [settings.suite];
     assert.ok(groups.every(value => available.includes(value)), 'Suite must be all, ' + available.join(', '));
     const htmlExports = [];
@@ -504,6 +504,7 @@ async function run(settings, owner) {
         if (groups.includes('ui')) await appearanceCases(h, owner, record);
         if (groups.includes('table-placement')) await tablePlacementCase(h, owner, record);
         if (groups.includes('table-content')) await tableContentCase(h, owner, record);
+        if (groups.includes('table-row')) await tableRowCase(h, owner, record);
         if (groups.includes('text-toolbar')) await textToolbarCase(h, owner, record);
         if (groups.includes('equations')) await equationCases(h, owner, record);
         if (groups.includes('links')) await linkCases(h, owner, record);
@@ -790,6 +791,49 @@ async function tablePlacementCase(h, owner, record) {
         if (connection) connection.close();
         await h.driver({ action: 'config', key: 'tableToolbarPosition', scope: 'workspace', value: null });
         await h.driver({ action: 'config', key: 'tableToolbarPosition', value: 'auto' });
+    }
+}
+
+async function tableRowCase(h, owner, record) {
+    const { source, tableRowChecks } = require('./table-toolbar-row.cjs');
+    const { installedEditor } = require('./table-toolbar-overflow.cjs');
+    const previous = await h.driver({ action: 'inspect' });
+    const file = 'table-row.md', filePath = path.join(owner.workspace, file);
+    await h.driver({ action: 'close' }); fs.writeFileSync(filePath, source);
+    let connection = await h.open(file);
+    try {
+        await h.workbench(async page => {
+            const frame = page.locator('iframe.webview:visible');
+            const before = await frame.evaluate(node => ({ maxWidth: node.style.maxWidth, maxHeight: node.style.maxHeight }));
+            try {
+                await tableRowChecks({ editor: installedEditor(connection, h), keyboard: page.keyboard,
+                    setMode: value => h.driver({ action: 'config', key: 'toolbarMode', scope: 'workspace', value }),
+                    setPosition: value => h.driver({ action: 'config', key: 'tableToolbarPosition', scope: 'workspace', value }),
+                    resize: async (width, height) => {
+                        const size = await frame.evaluate(async (node, size) => {
+                            node.style.maxWidth = size.width + 'px'; node.style.maxHeight = size.height + 'px';
+                            await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+                            return { width: node.clientWidth, height: node.clientHeight };
+                        }, { width, height });
+                        await h.until(() => connection.evaluate(`innerWidth === ${size.width} && innerHeight === ${size.height}`));
+                    },
+                    record: (name, details) => record(name, { ...details, route: 'installed frame constraints; real configuration; DOM activation and workbench keyboard' }),
+                });
+            } finally { await frame.evaluate((node, before) => Object.assign(node.style, before), before); }
+        });
+        await h.sourceMode(connection);
+        assert.equal(await connection.evaluate('document.getElementById("sourceEditor").value'), source);
+        await h.driver({ action: 'save' });
+        assert.equal(fs.readFileSync(filePath, 'utf8'), source);
+        connection.close(); connection = null;
+        await h.driver({ action: 'close' }); connection = await h.open(file);
+        assert.equal(await connection.evaluate('document.querySelectorAll("#editor th").length'), 2);
+        assert.equal(await connection.evaluate('document.querySelector(".table-toolbar-row").hidden'), true);
+        record('contextual-row-save', { sourceModeUnchanged: true, nativeSaveUnchanged: true, reopened: true });
+    } finally {
+        connection?.close();
+        await h.driver({ action: 'config', key: 'toolbarMode', scope: 'workspace', value: previous.toolbarModeScopes.workspace ?? null });
+        await h.driver({ action: 'config', key: 'tableToolbarPosition', scope: 'workspace', value: previous.tablePositionScopes.workspace ?? null });
     }
 }
 
