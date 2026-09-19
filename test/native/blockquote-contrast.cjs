@@ -27,6 +27,9 @@ function measureQuotes() {
 async function blockquoteCases(h, owner, record) {
     const file = 'blockquote-contrast-' + Date.now() + '.md';
     const filePath = path.join(owner.workspace, file);
+    // VS Code normalizes Windows drive letters; compare workspace-relative
+    // paths so the host snapshot cannot be missed because of drive casing.
+    const documentState = async () => (await h.driver({ action: 'inspect' })).documents.find(document => path.relative(owner.workspace, document.path) === file);
     fs.writeFileSync(filePath, source);
     const previous = (await h.driver({ action: 'inspect' })).appearance;
     const connection = await h.open(file);
@@ -39,7 +42,9 @@ async function blockquoteCases(h, owner, record) {
             const colors = await connection.evaluate(`(${measureQuotes.toString()})()`);
             assert.ok(colors.length >= 6 && colors.every(color => color.contrast >= 4.5), JSON.stringify({ theme, colors }));
             assert.equal(fs.readFileSync(filePath, 'utf8'), source);
-            assert.ok(!(await h.driver({ action: 'inspect' })).documents.some(document => document.path === filePath && document.dirty));
+            const state = await documentState();
+            assert.ok(state, 'The quote document is present in the host snapshot');
+            assert.equal(state.dirty, false);
             const html = await h.exportFile(connection, file, 'html');
             assert.ok(fs.readFileSync(html.outputPath, 'utf8').includes('.export-root{--blockquote-color:var(--text-color)}'));
             await h.workbench(page => page.screenshot({ path: path.join(owner.base, 'evidence', `quotes-${theme}.png`) }));
@@ -55,7 +60,7 @@ async function blockquoteCases(h, owner, record) {
         const before = await connection.evaluate('window.htmlToMarkdown()');
         await connection.evaluate(`(() => { document.getElementById('editor').focus(); const r = document.createRange(); r.selectNodeContents(document.querySelector('#editor > p:last-child')); r.collapse(false); getSelection().removeAllRanges(); getSelection().addRange(r); })()`);
         await connection.send('Input.insertText', { text: ' edited' });
-        await h.until(async () => (await h.driver({ action: 'inspect' })).documents.some(document => document.path === filePath && document.text.includes('edited')), 'typed edit reaches the host');
+        await h.until(async () => (await documentState())?.text.includes('edited'), 'typed edit reaches the host');
         await h.driver({ action: 'config', key: 'theme', value: 'github' });
         await h.until(() => connection.evaluate('document.documentElement.dataset.theme === "github"'));
         await connection.evaluate(`document.querySelector('[data-action="undo"]').click()`);
