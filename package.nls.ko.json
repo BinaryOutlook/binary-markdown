@@ -12,7 +12,7 @@
   "config.language.ko": "한국어",
   "config.language.es": "스페인어",
   "config.language.fr": "프랑스어",
-  "config.toolbarMode.description": "도구 모음에 표시할 버튼을 선택합니다.",
+  "config.toolbarMode.description": "도구 모음에 표시할 버튼을 선택합니다. 값이 설정되지 않았으면 Full을 사용합니다. 명시적으로 선택한 Simple은 유지됩니다.",
   "config.toolbarMode.full": "모든 버튼을 표시합니다.",
   "config.toolbarMode.simple": "실행 취소, 다시 실행, 보기 전환 버튼만 표시합니다. 다른 편집 기능은 Cmd+/ (macOS) 또는 Ctrl+/ (Windows/Linux)를 눌러 선택할 수 있습니다.",
   "config.outlineStateScope.description": "개요 패널의 열림·닫힘 상태를 파일별로 저장할지, 모든 파일에 공통으로 적용할지 선택합니다.",

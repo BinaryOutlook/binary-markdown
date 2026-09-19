@@ -86,43 +86,158 @@
     }
     initToolbarIcons();
 
-    // Toolbar horizontal scroll navigation
-    var toolbarScrollLeftBtn = document.getElementById('toolbarScrollLeft');
-    var toolbarScrollRightBtn = document.getElementById('toolbarScrollRight');
+    // Keep complete actions in the bar and move the remainder into a menu.
+    // Moving the original buttons retains their state, identity and listeners.
     var toolbarInner = document.getElementById('toolbarInner');
+    var toolbarMore = document.getElementById('toolbarMore');
+    var toolbarOverflow = document.getElementById('toolbarOverflow');
+    var toolbarActions = [];
+    var toolbarLayoutFrame = 0;
+    if (toolbarMore && toolbarOverflow) {
+        toolbar.querySelectorAll('button[data-action]').forEach(function(button) {
+            const home = document.createComment('toolbar action');
+            button.before(home);
+            if (button.title) button.setAttribute('aria-label', button.title);
+            const label = document.createElement('span');
+            label.className = 'toolbar-action-label';
+            label.textContent = button.title;
+            button.appendChild(label);
+            toolbarActions.push({ button, home, formatting: toolbarInner.contains(button) });
+        });
+    }
 
-    function updateToolbarScrollButtons() {
-        if (!toolbarInner) return;
-        var scrollLeft = toolbarInner.scrollLeft;
-        var maxScroll = toolbarInner.scrollWidth - toolbarInner.clientWidth;
-        if (maxScroll <= 0) {
-            // No overflow — hide both buttons
-            toolbarScrollLeftBtn.classList.add('hidden');
-            toolbarScrollRightBtn.classList.add('hidden');
-        } else {
-            toolbarScrollLeftBtn.classList.toggle('hidden', scrollLeft <= 0);
-            toolbarScrollRightBtn.classList.toggle('hidden', scrollLeft >= maxScroll - 1);
+    function closeToolbarOverflow(restoreFocus) {
+        if (!toolbarOverflow) return;
+        toolbarOverflow.hidden = true;
+        toolbarMore.setAttribute('aria-expanded', 'false');
+        if (restoreFocus) toolbarMore.focus({ preventScroll: true });
+    }
+
+    function positionToolbarOverflow() {
+        const rect = toolbarMore.getBoundingClientRect();
+        const width = Math.min(300, Math.max(0, window.innerWidth - 16));
+        toolbarOverflow.style.width = width + 'px';
+        toolbarOverflow.style.left = Math.max(8, Math.min(rect.left, window.innerWidth - width - 8)) + 'px';
+        toolbarOverflow.style.top = Math.min(rect.bottom + 4, window.innerHeight - 36) + 'px';
+        toolbarOverflow.style.maxHeight = Math.max(28, window.innerHeight - rect.bottom - 12) + 'px';
+    }
+
+    function openToolbarOverflow(last) {
+        toolbarOverflow.hidden = false;
+        toolbarMore.setAttribute('aria-expanded', 'true');
+        positionToolbarOverflow();
+        const items = [...toolbarOverflow.querySelectorAll('button:not(:disabled)')];
+        (last ? items.at(-1) : items[0])?.focus({ preventScroll: true });
+    }
+
+    function scheduleToolbarLayout() {
+        if (!toolbarMore || toolbarLayoutFrame) return;
+        toolbarLayoutFrame = requestAnimationFrame(layoutToolbarActions);
+    }
+
+    function layoutToolbarActions() {
+        toolbarLayoutFrame = 0;
+        const active = document.activeElement;
+        const focusedAction = toolbarActions.find(item => item.button === active);
+        const wasOpen = !toolbarOverflow.hidden;
+        const full = document.documentElement.dataset.toolbarMode !== 'simple';
+        for (const { button, home } of toolbarActions) {
+            if (button.parentNode !== home.parentNode) home.after(button);
+            button.removeAttribute('role');
+        }
+        toolbarMore.hidden = true;
+        toolbar.querySelectorAll('.toolbar-fixed').forEach(section => section.classList.remove('toolbar-empty'));
+        const utilityWidth = [...toolbar.querySelectorAll('.toolbar-fixed')].reduce((width, section) => width + section.getBoundingClientRect().width, 0);
+        if (toolbar.dataset.utilityWidth !== String(utilityWidth)) {
+            toolbar.dataset.utilityWidth = String(utilityWidth);
+            tableControls.schedule();
+        }
+        const fits = () => {
+            const fixedWidth = [...toolbar.children].filter(child => child !== toolbarInner && child !== toolbarOverflow && child.getClientRects().length)
+                .reduce((width, child) => {
+                    const style = getComputedStyle(child);
+                    return width + child.getBoundingClientRect().width + (parseFloat(style.marginLeft) || 0) + (parseFloat(style.marginRight) || 0);
+                }, 0);
+            return fixedWidth <= toolbar.clientWidth + 0.5 && (!full || toolbarInner.scrollWidth <= toolbarInner.clientWidth);
+        };
+        if (!fits()) {
+            toolbarMore.hidden = false;
+            const candidates = toolbarActions.filter(item => full && item.formatting).reverse()
+                .concat(toolbarActions.filter(item => !item.formatting && item.button.closest('.toolbar-fixed--right')).reverse())
+                .concat(toolbarActions.filter(item => !item.formatting && item.button.closest('.toolbar-fixed--left')).reverse());
+            for (const { button, home } of candidates) {
+                if (fits()) break;
+                if (!button.getClientRects().length) continue;
+                toolbarOverflow.appendChild(button);
+                button.setAttribute('role', 'menuitem');
+                const section = home.parentElement.closest('.toolbar-fixed');
+                if (section && ![...section.querySelectorAll('button')].some(item => item.getClientRects().length)) {
+                    section.classList.add('toolbar-empty');
+                }
+            }
+        }
+        // Original order in the menu remains stable as its membership changes.
+        for (const { button } of toolbarActions) {
+            if (button.parentNode === toolbarOverflow) toolbarOverflow.appendChild(button);
+        }
+        toolbarMore.hidden = !toolbarOverflow.children.length;
+        if (toolbarMore.hidden) closeToolbarOverflow(false);
+        else if (wasOpen || focusedAction?.button.parentNode === toolbarOverflow) {
+            toolbarOverflow.hidden = false;
+            toolbarMore.setAttribute('aria-expanded', 'true');
+            positionToolbarOverflow();
+        }
+        if (focusedAction && active.getClientRects().length) active.focus({ preventScroll: true });
+        else if (focusedAction || (active === toolbarMore && toolbarMore.hidden)) {
+            const first = toolbarActions.find(item => item.button.getClientRects().length && !item.button.disabled);
+            first?.button.focus({ preventScroll: true });
         }
     }
 
-    if (toolbarInner) {
-        toolbarInner.addEventListener('scroll', updateToolbarScrollButtons);
-        window.addEventListener('resize', updateToolbarScrollButtons);
-        // Initial check after icons are rendered
-        setTimeout(updateToolbarScrollButtons, 100);
-    }
-
-    if (toolbarScrollLeftBtn) {
-        toolbarScrollLeftBtn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            toolbarInner.scrollBy({ left: -200, behavior: 'smooth' });
+    if (toolbarMore) {
+        toolbar.addEventListener('toolbar-submenu-open', () => closeToolbarOverflow(false));
+        toolbarMore.addEventListener('click', function(event) {
+            event.stopPropagation();
+            if (toolbarOverflow.hidden) openToolbarOverflow(false);
+            else closeToolbarOverflow(true);
         });
-    }
-    if (toolbarScrollRightBtn) {
-        toolbarScrollRightBtn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            toolbarInner.scrollBy({ left: 200, behavior: 'smooth' });
+        toolbarMore.addEventListener('keydown', function(event) {
+            if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+                event.preventDefault();
+                openToolbarOverflow(event.key === 'ArrowUp');
+            }
         });
+        toolbarOverflow.addEventListener('keydown', function(event) {
+            if (toolbarOverflow.hidden) return;
+            const items = [...toolbarOverflow.querySelectorAll('button:not(:disabled)')];
+            const index = items.indexOf(document.activeElement);
+            let next;
+            if (event.key === 'ArrowDown') next = (index + 1) % items.length;
+            if (event.key === 'ArrowUp') next = (index + items.length - 1) % items.length;
+            if (event.key === 'Home') next = 0;
+            if (event.key === 'End') next = items.length - 1;
+            if (next !== undefined) {
+                event.preventDefault();
+                event.stopPropagation();
+                items[next]?.focus();
+                items[next]?.scrollIntoView({ block: 'nearest' });
+            } else if (event.key === 'Escape') {
+                event.preventDefault();
+                event.stopPropagation();
+                closeToolbarOverflow(true);
+            }
+        });
+        toolbarOverflow.addEventListener('focusout', function() {
+            queueMicrotask(() => {
+                if (!toolbarOverflow.contains(document.activeElement) && document.activeElement !== toolbarMore) closeToolbarOverflow(false);
+            });
+        });
+        document.addEventListener('mousedown', function(event) {
+            if (!toolbarOverflow.contains(event.target) && !toolbarMore.contains(event.target)) closeToolbarOverflow(false);
+        });
+        window.addEventListener('resize', scheduleToolbarLayout);
+        new ResizeObserver(scheduleToolbarLayout).observe(toolbar);
+        scheduleToolbarLayout();
     }
 
     // Search & Replace elements
@@ -4154,7 +4269,7 @@
         isSourceMode: () => isSourceMode,
         onContext(cell) { activeTableCell = cell; activeTable = cell?.closest('table') || null; },
         onReveal: revealTableCaret,
-        onLayout: updateToolbarScrollButtons,
+        onLayout: scheduleToolbarLayout,
         onPreference(value) { host.setTableToolbarPosition?.(value); },
         onAction(action) {
             if (!activeTableCell || !editor.contains(activeTableCell)) return;
@@ -11815,17 +11930,17 @@
 
     // Save the editor selection before toolbar buttons steal focus
     let savedToolbarRange = null;
-    toolbar.addEventListener('mousedown', function(e) {
+    function captureToolbarSelection(e) {
         if (tableControls.owns(e.target)) return;
         const btn = e.target.closest('button');
         if (!btn) return;
         const sel = window.getSelection();
-        if (sel && sel.rangeCount > 0) {
+        if (sel && sel.rangeCount > 0 && editor.contains(sel.getRangeAt(0).commonAncestorContainer)) {
             savedToolbarRange = sel.getRangeAt(0).cloneRange();
-        } else {
-            savedToolbarRange = null;
         }
-    });
+    }
+    toolbar.addEventListener('mousedown', captureToolbarSelection);
+    toolbar.addEventListener('focusin', captureToolbarSelection);
 
     toolbar.addEventListener('click', function(e) {
         if (tableControls.owns(e.target)) return;
@@ -11833,8 +11948,10 @@
         if (!btn) return;
 
         const action = btn.dataset.action;
+        if (!action) return;
         if (btn.matches('[data-export-format], [data-export-action]') ||
             (action && action.indexOf('export') === 0)) return;
+        closeToolbarOverflow(false);
 
         // View-only actions do not change Markdown content
         if (action !== 'source' && action !== 'openOutline') {
@@ -13582,6 +13699,13 @@
         }
         if (message.type === 'tableToolbarPosition') {
             tableControls.setPreference(message.value);
+            return;
+        }
+        if (message.type === 'toolbarMode') {
+            if (!['full', 'simple'].includes(message.value)) return;
+            document.documentElement.dataset.toolbarMode = message.value;
+            scheduleToolbarLayout();
+            tableControls.schedule();
             return;
         }
         if (message.type === 'validateExportImage') {

@@ -680,6 +680,11 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
                 void webviewPanel.webview.postMessage({ type: 'tableToolbarPosition', value:
                     normalizeTablePosition(vscode.workspace.getConfiguration('binary-markdown').get('tableToolbarPosition')) });
             }
+            const toolbarModeChanged = e.affectsConfiguration('binary-markdown.toolbarMode');
+            if (toolbarModeChanged) {
+                void webviewPanel.webview.postMessage({ type: 'toolbarMode', value:
+                    vscode.workspace.getConfiguration('binary-markdown').get('toolbarMode', 'full') });
+            }
             const exportChanged = e.affectsConfiguration('binary-markdown.export');
             // Presentation options are read by each export. Re-probing tools in
             // every open editor here launches a burst of browsers on Windows.
@@ -687,9 +692,9 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
                 e.affectsConfiguration('binary-markdown.export.' + key));
             if (toolsChanged) { exportController.refreshCapabilities(); }
             const editorSettings = ['fontSize', 'imageDefaultDir', 'forceRelativeImagePath', 'language',
-                'toolbarMode', 'outlineStateScope', 'outlineDefaultOpen', 'outlineActiveColor', 'enableDebugLogging', 'math.backslashDelimiters'];
+                'outlineStateScope', 'outlineDefaultOpen', 'outlineActiveColor', 'enableDebugLogging', 'math.backslashDelimiters'];
             const editorChanged = editorSettings.some(key => e.affectsConfiguration('binary-markdown.' + key));
-            if (e.affectsConfiguration('binary-markdown') && (editorChanged || (!exportChanged && !positionChanged && !themeChanged))) {
+            if (e.affectsConfiguration('binary-markdown') && (editorChanged || (!exportChanged && !positionChanged && !themeChanged && !toolbarModeChanged))) {
                 clearTimeout(configurationRefresh);
                 configurationRefresh = setTimeout(() => {
                     configurationRefresh = undefined;

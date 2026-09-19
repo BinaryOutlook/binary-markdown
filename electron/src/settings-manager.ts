@@ -22,7 +22,7 @@ export interface ElectronSettings {
 const DEFAULTS: ElectronSettings = {
     theme: 'things',
     fontSize: 16,
-    toolbarMode: 'simple',
+    toolbarMode: 'full',
     tableToolbarPosition: 'auto',
     language: 'default',
     imageDefaultDir: '',

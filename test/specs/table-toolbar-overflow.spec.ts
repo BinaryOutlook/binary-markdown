@@ -9,6 +9,7 @@ async function setup(page: Page, position: string) {
     await page.goto('/production-editor.html');
     await page.waitForFunction(() => (window as any).__testApi?.ready);
     await page.evaluate(({ source, position }) => {
+        (window as any).__hostMessageHandler({ type: 'toolbarMode', value: 'simple' });
         (window as any).__testApi.setMarkdown(source);
         (window as any).__hostMessageHandler({ type: 'tableToolbarPosition', value: position });
     }, { source, position });

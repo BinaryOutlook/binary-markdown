@@ -389,10 +389,30 @@ test('new editors and layout rebuilds use the current configured language', asyn
     assert.equal(h.renderConfigs.at(-1).webviewMessages.locale, 'zh-CN');
     h.config.language = 'en';
     h.config.toolbarMode = 'simple';
-    h.configChanged(['binary-markdown.toolbarMode']);
+    h.config.fontSize = 16;
+    h.configChanged(['binary-markdown.fontSize', 'binary-markdown.toolbarMode']);
     await h.flushTimers();
     assert.equal(h.renderConfigs.at(-1).webviewMessages.locale, 'en');
     assert.equal(h.renderConfigs.at(-1).toolbarMode, 'simple');
+});
+
+test('unset toolbar mode uses Full and explicit choices update without rebuilding or saving', async t => {
+    for (const initialConfig of [{}, { toolbarMode: 'simple' }, { toolbarMode: 'full' }]) {
+        const h = await setup(t, initialConfig);
+        assert.equal(h.renderConfigs[0].toolbarMode, initialConfig.toolbarMode || 'full');
+        for (const value of ['simple', 'full', undefined]) {
+            if (value === undefined) delete h.config.toolbarMode;
+            else h.config.toolbarMode = value;
+            h.configChanged(['binary-markdown.toolbarMode']);
+            await h.flushTimers();
+            assert.deepEqual(h.posts.at(-1), { type: 'toolbarMode', value: value || 'full' });
+        }
+        assert.equal(h.renderConfigs.length, 1);
+        assert.equal(h.state.captureCalls, 0);
+        assert.equal(h.state.saveCalls, 0);
+        assert.equal(h.document.isDirty, false);
+        assert.equal(h.document.getText(), '# OLD-EDITOR\n');
+    }
 });
 
 test('theme changes update the current editor without saving, capturing or rebuilding', async t => {
@@ -454,7 +474,8 @@ test('settings wait for the active render handshake and ignore stale acknowledge
     const h = await setup(t);
     const initial = h.renderConfigs.at(-1).renderGeneration;
     h.config.toolbarMode = 'full';
-    h.configChanged(['binary-markdown.toolbarMode']);
+    h.config.fontSize = 18;
+    h.configChanged(['binary-markdown.fontSize', 'binary-markdown.toolbarMode']);
     await h.flushTimers(false);
     const pending = h.renderConfigs.at(-1).renderGeneration;
     h.config.language = 'zh-CN';

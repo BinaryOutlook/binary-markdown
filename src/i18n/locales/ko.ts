@@ -34,6 +34,8 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  toolbarMoreActions: "더 많은 도구 모음 작업",
+  toolbarModeSaveFailed: "도구 모음 모드를 저장하지 못했습니다. 이전 설정이 계속 적용됩니다.",
   tablePositionSaveFailed: "표 도구 모음 위치를 저장하지 못했습니다. 이전 설정이 계속 적용됩니다.",
   tableControls: "표 도구",
   tableMenu: "표…",

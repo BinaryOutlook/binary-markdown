@@ -327,7 +327,7 @@ async function run(settings, owner) {
         fs.writeFileSync(report, JSON.stringify({ harness: harnessIdentity(), host: receipt(owner), packageSha256: hash(fs.readFileSync(settings.package)), receipts }, null, 2));
         console.log(name, JSON.stringify(details));
     };
-    const available = ['identity', 'filesystem', 'formats', 'saves', 'edges', 'ui', 'equations', 'pdf-background', 'selection', 'immutable', 'offline', 'document-aux', 'links', 'codeblocks', 'table-placement', 'table-content', 'blockquotes'];
+    const available = ['identity', 'filesystem', 'formats', 'saves', 'edges', 'ui', 'equations', 'pdf-background', 'selection', 'immutable', 'offline', 'document-aux', 'links', 'codeblocks', 'table-placement', 'table-content', 'text-toolbar', 'blockquotes'];
     const groups = settings.suite === 'all' ? available : [settings.suite];
     assert.ok(groups.every(value => available.includes(value)), 'Suite must be all, ' + available.join(', '));
     const htmlExports = [];
@@ -504,6 +504,7 @@ async function run(settings, owner) {
         if (groups.includes('ui')) await appearanceCases(h, owner, record);
         if (groups.includes('table-placement')) await tablePlacementCase(h, owner, record);
         if (groups.includes('table-content')) await tableContentCase(h, owner, record);
+        if (groups.includes('text-toolbar')) await textToolbarCase(h, owner, record);
         if (groups.includes('equations')) await equationCases(h, owner, record);
         if (groups.includes('links')) await linkCases(h, owner, record);
         if (groups.includes('codeblocks')) await codeblockCases(h, owner, record);
@@ -629,6 +630,68 @@ async function codeblockCases(h, owner, record) {
         assert.ok(await connection.evaluate('document.querySelectorAll("#editor > pre code .hljs-keyword").length > 0'));
         record('codeblocks', { indentedFences: true, inactiveHighlighting: true, readableQuote: true, hostSourceShortcut: true, savedCodePreserved: true, reopened: true });
     } finally { if (connection) connection.close(); }
+}
+
+async function textToolbarCase(h, owner, record) {
+    const { toolbarGeometry } = require('./text-toolbar.cjs');
+    const file = 'text-toolbar.md', source = 'Paragraph target.\n';
+    const previous = (await h.driver({ action: 'inspect' })).toolbarModeScopes;
+    await h.driver({ action: 'close' });
+    fs.writeFileSync(path.join(owner.workspace, file), source);
+    let connection;
+    try {
+        for (const scope of ['workspace', 'global']) await h.driver({ action: 'config', key: 'toolbarMode', ...(scope === 'workspace' ? { scope } : {}), value: null });
+        connection = await h.open(file);
+        assert.equal(await connection.evaluate('document.documentElement.dataset.toolbarMode'), 'full');
+        await connection.evaluate(`(() => {
+            window.__toolbarRetained = document.querySelector('#editor p');
+            const node = window.__toolbarRetained.firstChild, range = document.createRange();
+            range.setStart(node, 10); range.setEnd(node, 16); document.getElementById('editor').focus();
+            getSelection().removeAllRanges(); getSelection().addRange(range);
+        })()`);
+        const cases = [['global', 'simple', 'simple'], ['global', 'full', 'full'], ['workspace', 'simple', 'simple'],
+            ['global', 'simple', 'simple'], ['workspace', 'full', 'full'], ['global', null, 'full'], ['workspace', null, 'full']];
+        for (const [scope, value, effective] of cases) {
+            await h.driver({ action: 'config', key: 'toolbarMode', ...(scope === 'workspace' ? { scope } : {}), value });
+            await h.until(() => connection.evaluate(`document.documentElement.dataset.toolbarMode === '${effective}'`));
+            assert.equal(await connection.evaluate(`window.__toolbarRetained === document.querySelector('#editor p') && getSelection().toString() === 'target'`), true);
+            const state = await h.driver({ action: 'inspect' });
+            assert.equal(state.toolbarModeScopes[scope], value === null ? undefined : value);
+            assert.equal(state.documents.find(document => path.basename(document.path) === file).dirty, false);
+            record('text-toolbar-setting', { scope, value, effective, sameEditorAndSelection: true, cleanSource: true });
+        }
+        await h.workbench(async page => {
+            const frame = page.locator('iframe.webview:visible');
+            const before = await frame.evaluate(node => node.style.maxWidth);
+            try {
+                for (const width of [400, 680]) {
+                    await frame.evaluate(async (node, width) => {
+                        node.style.maxWidth = width + 'px';
+                        await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+                    }, width);
+                    await h.until(() => connection.evaluate(`(${toolbarGeometry.toString()})().clipped.length === 0`));
+                    const geometry = await connection.evaluate(`(${toolbarGeometry.toString()})()`);
+                    assert.deepEqual(geometry.overlaps, []);
+                    record('text-toolbar-layout', { geometry, route: 'installed webview frame constraints' });
+                }
+            } finally { await frame.evaluate((node, before) => { node.style.maxWidth = before; }, before); }
+        });
+        await connection.send('Input.insertText', { text: 'replacement' });
+        await h.until(async () => (await h.driver({ action: 'inspect' })).documents.some(document => document.text.includes('replacement')));
+        await h.driver({ action: 'config', key: 'toolbarMode', value: 'simple' });
+        await h.until(() => connection.evaluate(`document.documentElement.dataset.toolbarMode === 'simple'`));
+        await connection.evaluate(`document.querySelector('#toolbar [data-action="undo"]').click()`);
+        await h.driver({ action: 'save' });
+        assert.equal(fs.readFileSync(path.join(owner.workspace, file), 'utf8'), source);
+        connection.close(); connection = null;
+        await h.driver({ action: 'close' });
+        connection = await h.open(file);
+        assert.equal(await connection.evaluate('document.documentElement.dataset.toolbarMode'), 'simple');
+        record('text-toolbar-reopen', { explicitSimpleRetained: true, modeChangePreservesUndo: true, nativeSaveUnchanged: true });
+    } finally {
+        connection?.close();
+        for (const scope of ['workspace', 'global']) await h.driver({ action: 'config', key: 'toolbarMode', ...(scope === 'workspace' ? { scope } : {}), value: previous[scope] ?? null });
+    }
 }
 
 async function tablePlacementCase(h, owner, record) {

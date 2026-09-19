@@ -21,6 +21,8 @@
 
     button.title = text('title');
     button.setAttribute('aria-label', text('title'));
+    const toolbarLabel = button.querySelector('.toolbar-action-label');
+    if (toolbarLabel) toolbarLabel.textContent = text('title');
     menu.setAttribute('aria-label', text('title'));
     document.getElementById('exportExperimental').textContent = text('experimental');
     document.getElementById('exportLimitations').textContent = text('limitations');
@@ -54,8 +56,12 @@
         return Array.from(menu.querySelectorAll('[role="menuitem"]')).filter(item => !item.hidden);
     }
 
+    function visibleButton() {
+        return button.getClientRects().length ? button : document.getElementById('toolbarMore') || button;
+    }
+
     function positionMenu() {
-        const rect = button.getBoundingClientRect();
+        const rect = visibleButton().getBoundingClientRect();
         const width = Math.min(380, Math.max(220, window.innerWidth - 24));
         menu.style.width = width + 'px';
         menu.style.left = Math.max(12, Math.min(rect.right - width, window.innerWidth - width - 12)) + 'px';
@@ -66,7 +72,7 @@
     function closeMenu(restoreFocus) {
         menu.hidden = true;
         button.setAttribute('aria-expanded', 'false');
-        if (restoreFocus) button.focus({ preventScroll: true });
+        if (restoreFocus) visibleButton().focus({ preventScroll: true });
         restoreSelection();
     }
 
@@ -89,13 +95,15 @@
     }
 
     function openMenu(keyboard) {
+        const fromOverflow = Boolean(button.closest('#toolbarOverflow'));
         if (menu.hidden) preserveSelection();
+        button.dispatchEvent(new CustomEvent('toolbar-submenu-open', { bubbles: true }));
         menu.hidden = false;
         button.setAttribute('aria-expanded', 'true');
         positionMenu();
         updateCapabilities();
         if (typeof host.requestExportCapabilities === 'function') host.requestExportCapabilities();
-        if (keyboard) items()[0].focus({ preventScroll: true });
+        if (keyboard || fromOverflow) items()[0].focus({ preventScroll: true });
     }
 
     // Mouse opening keeps the caret and source selection; keyboard opening moves
@@ -113,6 +121,7 @@
     button.addEventListener('keydown', event => {
         if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
             event.preventDefault();
+            event.stopPropagation();
             openMenu(true);
             if (event.key === 'ArrowUp') items().at(-1).focus();
         }
@@ -152,7 +161,9 @@
             closeMenu(false);
             host.openExportSettings(tool === 'settings' ? undefined : tool);
         }
-        if (previousFocus && previousFocus.isConnected && previousFocus !== document.body) previousFocus.focus({ preventScroll: true });
+        if (previousFocus && previousFocus.isConnected && previousFocus !== document.body) {
+            (previousFocus.getClientRects().length ? previousFocus : visibleButton()).focus({ preventScroll: true });
+        }
         restoreSelection();
     });
     cancel.addEventListener('click', () => {

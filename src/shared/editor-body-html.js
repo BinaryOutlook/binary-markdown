@@ -70,7 +70,6 @@ function generateEditorBodyHtml(messages, platform, options) {
                         <button data-action="redo" title="${m('redo')}"></button>
                     </div>
                 </div>
-                <button class="toolbar-scroll-btn toolbar-scroll-btn--left hidden" id="toolbarScrollLeft">&#x276E;</button>
                 <div class="toolbar-inner" id="toolbarInner">
                     <div class="toolbar-group" data-group="inline">
                         <button data-action="bold" title="${m('bold')}"></button>
@@ -101,7 +100,7 @@ function generateEditorBodyHtml(messages, platform, options) {
                         <button data-action="table" title="${m('insertTable')}"></button>
                     </div>
                 </div>
-                <button class="toolbar-scroll-btn toolbar-scroll-btn--right hidden" id="toolbarScrollRight">&#x276F;</button>
+                <button type="button" class="toolbar-more" id="toolbarMore" title="${m('toolbarMoreActions')}" aria-label="${m('toolbarMoreActions')}" aria-haspopup="menu" aria-expanded="false" aria-controls="toolbarOverflow" hidden>&#x22EF;</button>
                 <div class="toolbar-fixed toolbar-fixed--right">
                     <div class="toolbar-group" data-group="utility">
                         <button data-action="openInTextEditor" title="${m('openInTextEditor')} (${mod}+Shift+.)"></button>
@@ -109,6 +108,7 @@ function generateEditorBodyHtml(messages, platform, options) {
                         <button data-action="source" title="${m('toggleSourceMode')} (${mod}+.)"></button>
                     </div>
                 </div>
+                <div id="toolbarOverflow" class="toolbar-overflow" role="menu" aria-label="${m('toolbarMoreActions')}" hidden></div>
             </div>
             ${exportPanels}
             <div class="editor-wrapper" id="editorWrapper">

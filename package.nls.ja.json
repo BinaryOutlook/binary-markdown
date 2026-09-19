@@ -12,7 +12,7 @@
   "config.language.ko": "韓国語",
   "config.language.es": "スペイン語",
   "config.language.fr": "フランス語",
-  "config.toolbarMode.description": "ツールバーに表示するボタンを選びます。",
+  "config.toolbarMode.description": "ツールバーに表示するボタンを選びます。未設定の場合は Full を使用します。明示的に選択した Simple は維持されます。",
   "config.toolbarMode.full": "すべてのボタンを表示します。",
   "config.toolbarMode.simple": "「元に戻す」「やり直し」と表示切り替えのボタンだけを表示します。その他の編集操作は Cmd+/（macOS）または Ctrl+/（Windows/Linux）から行えます。",
   "config.outlineStateScope.description": "アウトラインの開閉状態の保存方法を選びます。",

@@ -12,7 +12,7 @@
   "config.language.ko": "韩语",
   "config.language.es": "西班牙语",
   "config.language.fr": "法语",
-  "config.toolbarMode.description": "选择工具栏中显示哪些按钮。",
+  "config.toolbarMode.description": "选择工具栏中显示哪些按钮。未设置时使用 Full 模式；明确选择的 Simple 模式将被保留。",
   "config.toolbarMode.full": "显示全部按钮。",
   "config.toolbarMode.simple": "仅显示撤销、重做和视图切换按钮。按 Cmd+/（macOS）或 Ctrl+/（Windows/Linux）可使用其他编辑功能。",
   "config.outlineStateScope.description": "选择如何保存大纲的显示设置。",

@@ -34,6 +34,8 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  toolbarMoreActions: "More toolbar actions",
+  toolbarModeSaveFailed: "Could not save the toolbar mode. The previous setting remains active.",
   tablePositionSaveFailed: "Could not save the table toolbar position. The previous setting remains active.",
   tableControls: "Table controls",
   tableMenu: "Table…",

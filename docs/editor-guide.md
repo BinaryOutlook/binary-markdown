@@ -2,6 +2,12 @@
 
 Adapted from the inherited Binary Markdown documentation. See [Acknowledgments](../ACKNOWLEDGMENTS.md) for provenance and the [README](../README.md) for installation and current settings.
 
+## Formatting toolbar
+
+The **Full** toolbar shows standard text formatting by default in VS Code and the desktop app. Choose **Simple** with `binary-markdown.toolbarMode` in VS Code Settings or **Toolbar** in desktop Preferences for compact controls. Explicit `simple` and `full` preferences are retained. This default also applies to existing configurations without a stored toolbar preference; it is not limited to new installations.
+
+Resizing keeps complete buttons in the toolbar and puts remaining actions under **More toolbar actions**. At very narrow widths, utility actions can also move into that menu. Use the arrow keys or `Home`/`End` within the menu, and `Escape` to close it. Changing toolbar mode updates the current editor without replacing its document, selection, active equation input, or undo history.
+
 ## 📝 Creating Markdown Elements
 
 ### Block Elements
@@ -249,7 +255,7 @@ FORCE_RELATIVE_PATH: true
 | `binary-markdown.imageDefaultDir` | Default directory for saved images | `""` (same as markdown file) |
 | `binary-markdown.forceRelativeImagePath` | Force relative paths for images | `false` |
 | `binary-markdown.language` | UI language (`default`, `en`, `ja`, `zh-cn`, `zh-tw`, `ko`, `es`, `fr`) | `default` |
-| `binary-markdown.toolbarMode` | Toolbar display mode (`full`, `simple`). Simple shows only undo/redo and utility buttons (use `Cmd+/` for other operations) | `simple` |
+| `binary-markdown.toolbarMode` | Toolbar display mode (`full`, `simple`). Simple shows only undo/redo and utility buttons (use `Cmd+/` for other operations) | `full` |
 | `binary-markdown.outlineStateScope` | Remember outline visibility per Markdown file (`file`) or share it across all Markdown files (`global`) | `file` |
 | `binary-markdown.outlineDefaultOpen` | Open the outline when the selected scope does not have a saved state yet | `true` |
 | `binary-markdown.enableDebugLogging` | Enable debug logging in browser console | `false` |

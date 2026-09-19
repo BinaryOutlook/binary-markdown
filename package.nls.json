@@ -12,7 +12,7 @@
   "config.language.ko": "Korean",
   "config.language.es": "Spanish",
   "config.language.fr": "French",
-  "config.toolbarMode.description": "Choose which buttons appear in the toolbar.",
+  "config.toolbarMode.description": "Choose which buttons appear in the toolbar. Full is used when no value is set. Explicit Simple choices are preserved.",
   "config.toolbarMode.full": "Show all buttons.",
   "config.toolbarMode.simple": "Show only undo, redo, and view controls. Press Cmd+/ (macOS) or Ctrl+/ (Windows/Linux) to access other editing actions.",
   "config.outlineStateScope.description": "Choose how to remember whether the outline is open or closed.",

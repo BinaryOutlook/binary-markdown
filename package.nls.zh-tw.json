@@ -12,7 +12,7 @@
   "config.language.ko": "韓文",
   "config.language.es": "西班牙文",
   "config.language.fr": "法文",
-  "config.toolbarMode.description": "選擇工具列要顯示的按鈕。",
+  "config.toolbarMode.description": "選擇工具列要顯示的按鈕。未設定時使用 Full 模式；明確選擇的 Simple 模式將會保留。",
   "config.toolbarMode.full": "顯示所有按鈕。",
   "config.toolbarMode.simple": "只顯示復原、重做和檢視切換按鈕。按 Cmd+/（macOS）或 Ctrl+/（Windows/Linux）即可使用其他編輯功能。",
   "config.outlineStateScope.description": "選擇大綱顯示設定的儲存方式。",

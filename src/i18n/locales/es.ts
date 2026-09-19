@@ -34,6 +34,8 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  toolbarMoreActions: "Más acciones de la barra de herramientas",
+  toolbarModeSaveFailed: "No se pudo guardar el modo de la barra de herramientas. Se mantiene la configuración anterior.",
   tablePositionSaveFailed: "No se pudo guardar la posición de la barra de herramientas de tabla. Se mantiene la configuración anterior.",
   tableControls: "Controles de tabla",
   tableMenu: "Tabla…",

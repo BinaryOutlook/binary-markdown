@@ -273,7 +273,9 @@
             if (!picker.hidden) placeMenu(picker, pickerAnchor.getClientRects().length ? pickerAnchor : more.hidden ? actions[actions.length - 1] : more);
         }
         function dockWidth() {
-            const fixed = [...header.querySelectorAll('.toolbar-fixed')].reduce((total, node) => total + node.getBoundingClientRect().width, 0);
+            // Use the utilities' natural width even when their own overflow hides them.
+            // Otherwise the two toolbars can repeatedly take space from each other.
+            const fixed = Number(header.dataset.utilityWidth) || [...header.querySelectorAll('.toolbar-fixed')].reduce((total, node) => total + node.getBoundingClientRect().width, 0);
             const reserve = document.documentElement.dataset.toolbarMode === 'simple' ? 12 : 296;
             return Math.max(28, header.clientWidth - fixed - reserve);
         }

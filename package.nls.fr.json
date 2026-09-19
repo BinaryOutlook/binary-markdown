@@ -12,7 +12,7 @@
   "config.language.ko": "Coréen",
   "config.language.es": "Espagnol",
   "config.language.fr": "Français",
-  "config.toolbarMode.description": "Choisir les boutons à afficher dans la barre d’outils.",
+  "config.toolbarMode.description": "Choisir les boutons à afficher dans la barre d’outils. Sans valeur définie, le mode Full est utilisé. Les choix explicites du mode Simple sont conservés.",
   "config.toolbarMode.full": "Afficher tous les boutons.",
   "config.toolbarMode.simple": "Afficher uniquement les boutons Annuler, Rétablir et ceux qui permettent de changer de vue. Les autres outils d’édition sont accessibles avec Cmd+/ (macOS) ou Ctrl+/ (Windows/Linux).",
   "config.outlineStateScope.description": "Choisir comment mémoriser l’affichage du plan.",

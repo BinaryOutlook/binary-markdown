@@ -34,6 +34,8 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  toolbarMoreActions: "Autres actions de la barre d’outils",
+  toolbarModeSaveFailed: "Impossible d’enregistrer le mode de la barre d’outils. Le réglage précédent reste actif.",
   tablePositionSaveFailed: "Impossible d’enregistrer la position de la barre d’outils du tableau. Le réglage précédent reste actif.",
   tableControls: "Outils de tableau",
   tableMenu: "Tableau…",

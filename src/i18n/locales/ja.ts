@@ -34,6 +34,8 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  toolbarMoreActions: "その他のツールバー操作",
+  toolbarModeSaveFailed: "ツールバーのモードを保存できませんでした。以前の設定が引き続き使用されます。",
   tablePositionSaveFailed: "テーブルツールバーの位置を保存できませんでした。以前の設定が引き続き使用されます。",
   tableControls: "表の操作",
   tableMenu: "表…",

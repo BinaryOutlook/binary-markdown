@@ -73,14 +73,16 @@ test('menus and shortcuts resolve to declared commands and stay scoped to the op
     assert.equal(manifest.contributes.configurationDefaults?.['workbench.editorAssociations'], undefined);
 });
 
-test('settings retain their defaults without sharing any upstream keys', () => {
+test('settings retain their contracts and deliberate defaults without sharing upstream keys', () => {
     const current = manifest.contributes.configuration.properties;
     const original = upstream.contributes.configuration.properties;
     // Presentation text may be translated independently of the setting's behavior.
     const behavior = ({ description, enumDescriptions, ...schema }) => schema;
     for (const [oldKey, schema] of Object.entries(original)) {
         assert.equal(oldKey in current, false);
-        assert.deepEqual(behavior(current[oldKey.replace('any-markdown.', 'binary-markdown.')]), behavior(schema));
+        // Full is the approved unset preference; identifiers and enum values stay compatible.
+        const expected = oldKey === 'any-markdown.toolbarMode' ? { ...schema, default: 'full' } : schema;
+        assert.deepEqual(behavior(current[oldKey.replace('any-markdown.', 'binary-markdown.')]), behavior(expected));
     }
     assert.equal(current['binary-markdown.outlineStateScope'].default, 'file');
     assert.equal(current['binary-markdown.outlineDefaultOpen'].default, true);

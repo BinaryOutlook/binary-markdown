@@ -34,6 +34,8 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  toolbarMoreActions: "更多工具栏操作",
+  toolbarModeSaveFailed: "无法保存工具栏模式。将继续使用之前的设置。",
   tablePositionSaveFailed: "无法保存表格工具栏的位置。将继续使用之前的设置。",
   tableControls: "表格操作",
   tableMenu: "表格…",

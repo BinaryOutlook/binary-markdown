@@ -12,7 +12,7 @@
   "config.language.ko": "Coreano",
   "config.language.es": "Español",
   "config.language.fr": "Francés",
-  "config.toolbarMode.description": "Elegir qué botones aparecen en la barra de herramientas.",
+  "config.toolbarMode.description": "Elige qué botones aparecen en la barra de herramientas. Si no se ha definido un valor, se usa Full. Se conservan las selecciones explícitas de Simple.",
   "config.toolbarMode.full": "Mostrar todos los botones.",
   "config.toolbarMode.simple": "Mostrar solo los botones Deshacer, Rehacer y los controles de vista. Para acceder a las demás opciones de edición, pulse Cmd+/ (macOS) o Ctrl+/ (Windows/Linux).",
   "config.outlineStateScope.description": "Elegir cómo recordar el estado del panel de esquema: abierto o cerrado.",

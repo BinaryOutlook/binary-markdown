@@ -183,7 +183,7 @@
             "%config.toolbarMode.full%",
             "%config.toolbarMode.simple%"
           ],
-          "default": "simple",
+          "default": "full",
           "description": "%config.toolbarMode.description%"
         },
         "binary-markdown.outlineStateScope": {

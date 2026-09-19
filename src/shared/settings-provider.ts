@@ -20,7 +20,7 @@ export interface EditorSettings {
 export const DEFAULT_SETTINGS: EditorSettings = {
     theme: 'github',
     fontSize: 16,
-    toolbarMode: 'simple',
+    toolbarMode: 'full',
     tableToolbarPosition: 'auto',
     language: 'default',
     imageDefaultDir: '',

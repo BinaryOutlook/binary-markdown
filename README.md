@@ -71,7 +71,7 @@ Open **Settings** (`Cmd+,` on macOS or `Ctrl+,` on Windows/Linux) and search for
 | `binary-markdown.outlineDefaultOpen` | `true` | Start with the outline open when no remembered state exists. |
 | `binary-markdown.outlineStateScope` | `file` | Remember each file separately, or choose `global` to share visibility across files and workspaces. |
 | `binary-markdown.outlineActiveColor` | `theme` | Choose the outline highlight color: theme, blue, green, orange, red, or purple. |
-| `binary-markdown.toolbarMode` | `simple` | Use the compact toolbar or choose `full`. |
+| `binary-markdown.toolbarMode` | `full` | Show standard formatting; choose `simple` for compact controls. Explicit preferences are retained. |
 | `binary-markdown.tableToolbarPosition` | `auto` | Place table controls in available space, with a top-bar fallback. Explicitly choose any corner, either vertical side, or `top-bar`. The controls also offer a three-choice position menu. |
 | `binary-markdown.theme` | `things` | Choose `github`, `sepia`, `night`, `dark`, `minimal`, `perplexity`, or `things`. |
 | `binary-markdown.fontSize` | `16` | Editor font size in pixels. |
@@ -111,7 +111,7 @@ Export supports **HTML, PDF, Word (.docx), and EPUB** in **local desktop VS Code
 
 **Remote-SSH export is not yet supported.** The menu explains this restriction and marks every format unavailable. To export now, open a local copy of the Markdown file and its referenced assets in desktop VS Code on macOS, Linux or Windows. Installing Pandoc or a browser does not enable export in a remote window.
 
-Save the named Markdown file, then select the sharing-arrow button immediately to the right of the VS Code-logo toolbar button. Choose a format from its dropdown. Unsaved work produces a save-and-retry message; export does not save automatically. The job shows its actual stage, supports cancellation, and reports the saved path and any fallback warnings.
+Save the named Markdown file, then select the sharing-arrow **Export** button in the toolbar (or **More toolbar actions** in a narrow pane). Choose a format from its dropdown. Unsaved work produces a save-and-retry message; export does not save automatically. The job shows its actual stage, supports cancellation, and reports the saved path and any fallback warnings.
 
 | Format | Tool to install | Initial output goal |
 | --- | --- | --- |

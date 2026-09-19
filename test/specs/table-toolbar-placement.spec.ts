@@ -191,7 +191,10 @@ for (const width of [420, 900, 1280]) {
         await page.setViewportSize({ width, height: 800 });
         await setup(page, 'top-bar', 'full');
         await page.mouse.move(1, 1);
-        await expect(page.locator('#toolbar [data-action="source"]')).toBeVisible();
+        const source = page.locator('#toolbar [data-action="source"]');
+        if (!await source.isVisible()) await page.locator('#toolbarMore').click();
+        await expect(source).toBeVisible();
+        await page.keyboard.press('Escape');
         const toggle = page.locator('.table-toolbar-toggle');
         if (await toggle.isVisible()) await toggle.click();
         await expect(page.locator(`${controls} [data-action="add-col-right"]`)).toBeVisible();

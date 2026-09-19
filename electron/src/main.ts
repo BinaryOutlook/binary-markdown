@@ -310,6 +310,20 @@ ipcMain.on('settings-save', async (event, key: string, value: unknown) => {
         }
         return;
     }
+    if (key === 'toolbarMode') {
+        if (value !== 'full' && value !== 'simple') return;
+        try {
+            settingsManager.set('toolbarMode', value);
+        } catch {
+            settingsManager.refreshSetting('toolbarMode', getI18nMessages().toolbarModeSaveFailed);
+            return;
+        }
+        settingsManager.refreshSetting('toolbarMode');
+        for (const [win] of windows) {
+            if (!win.isDestroyed()) win.webContents.send('host-message', { type: 'toolbarMode', value });
+        }
+        return;
+    }
     settingsManager.set(key as any, value as any);
     // Reload all editor windows with new settings, preserving content
     for (const [win] of windows) {
