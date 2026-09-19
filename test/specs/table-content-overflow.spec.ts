@@ -100,6 +100,7 @@ test('sidebar and window changes retain the active cell and Escape reveals its c
     await page.locator('#editor th').first().click();
     for (let i = 0; i < 13; i++) await page.keyboard.press('Tab');
     await page.keyboard.press('Alt+F10');
+    expect(await page.evaluate(() => Boolean(document.activeElement?.closest('.table-toolbar, .table-toolbar-dock')))).toBe(true);
     if (await page.locator('.table-toolbar-toggle').evaluate(node => node === document.activeElement)) await page.keyboard.press('Enter');
     await page.setViewportSize({ width: 500, height: 450 });
     await page.evaluate(() => { document.querySelector<HTMLElement>('.sidebar')!.style.width = '300px'; });
@@ -112,6 +113,29 @@ test('sidebar and window changes retain the active cell and Escape reveals its c
     expect(await selectedCell(page)).toEqual({ index: 22, visible: true });
     await page.keyboard.press('ArrowUp');
     expect(await selectedCell(page)).toEqual({ index: 14, visible: true });
+    await expect(page.locator('#toolbar [data-action="undo"]')).toBeDisabled();
+});
+
+test('Alt+F10 focuses newly selected table controls before their next layout frame', async ({ page }) => {
+    await setup(page);
+    const focused = await page.evaluate(() => {
+        const cell = document.querySelector('#editor td')!;
+        const range = document.createRange();
+        range.selectNodeContents(cell.firstChild!);
+        range.collapse(true);
+        document.getElementById('editor')!.focus();
+        getSelection()!.removeAllRanges();
+        getSelection()!.addRange(range);
+        // Selection capture schedules toolbar layout. A keyboard command must
+        // also work when it arrives before that animation frame has executed.
+        document.dispatchEvent(new Event('selectionchange'));
+        document.dispatchEvent(new KeyboardEvent('keydown', { key: 'F10', altKey: true, bubbles: true, cancelable: true }));
+        return Boolean(document.activeElement?.closest('.table-toolbar, .table-toolbar-dock'));
+    });
+    expect(focused).toBe(true);
+    if (await page.locator('.table-toolbar-toggle').evaluate(node => node === document.activeElement)) await page.keyboard.press('Enter');
+    await page.keyboard.press('Escape');
+    expect(await selectedCell(page)).toEqual({ index: 8, visible: true });
     await expect(page.locator('#toolbar [data-action="undo"]')).toBeDisabled();
 });
 

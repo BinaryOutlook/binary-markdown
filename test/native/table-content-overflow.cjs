@@ -52,11 +52,23 @@ async function tableContentChecks({ editor, keyboard, resize, record }) {
     assert.deepEqual(await selected(), { index: 23, visible: true });
     await keyboard.press('ArrowUp');
     assert.deepEqual(await selected(), { index: 15, visible: true });
+    await keyboard.press('Alt+F10');
+    assert.equal(await editor.evaluate(() => Boolean(document.activeElement?.closest('.table-toolbar, .table-toolbar-dock'))), true);
+    if (await editor.evaluate(() => document.activeElement === document.querySelector('.table-toolbar-toggle'))) await keyboard.press('Enter');
+    const sidebarWidth = await editor.evaluate(() => {
+        const sidebar = document.querySelector('.sidebar');
+        const width = sidebar.style.width;
+        sidebar.style.width = '300px';
+        return width;
+    });
+    await keyboard.press('Escape');
+    assert.deepEqual(await selected(), { index: 15, visible: true });
+    await editor.evaluate(width => { document.querySelector('.sidebar').style.width = width; }, sidebarWidth);
     assert.deepEqual(await editor.evaluate(tableCells), cells);
     assert.equal(await editor.evaluate(() => window.htmlToMarkdown()), before);
     assert.equal(await editor.evaluate(() => document.querySelector('#toolbar [data-action="undo"]').disabled), true);
     record('table-content', { geometry, forwardAndBackwardCells: 24, narrowPane: true, arrowNavigation: true,
-        formattingAndAlignmentPreserved: true, noUndoStep: true });
+        keyboardToolbarEntryAndEscape: true, formattingAndAlignmentPreserved: true, noUndoStep: true });
     await resize(1400, 1000);
     return cells;
 }

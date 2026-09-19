@@ -447,6 +447,9 @@
         listen(document, 'keydown', event => {
             if (event.altKey && event.key === 'F10' && valid()) {
                 event.preventDefault();
+                // Selection and resize updates normally render next frame. A
+                // keyboard command can arrive first; hidden buttons cannot focus.
+                render();
                 (dock.hidden || toggle.hidden ? controls.querySelector('button:not([hidden]):not(:disabled)') : toggle)?.focus({ preventScroll: true });
             }
         });
