@@ -1047,12 +1047,27 @@ async function appearanceCases(h, owner, record) {
             await h.driver({ action: 'config', key: 'toolbarMode', value: mode });
             await h.driver({ action: 'config', key: 'language', value: language });
             const connection = await matchingEditor(`document.documentElement.dataset.toolbarMode===${JSON.stringify(mode)} && document.getElementById('exportButton').getAttribute('aria-label')===${JSON.stringify(label)}`);
+            let previousFrameWidth;
             try {
                 const phase = 'toolbar cycle ' + cycle + ' ' + mode + '/' + language;
                 console.log('checking', phase);
                 const observe = () => connection.evaluate(appearanceState);
                 assert.equal(receipt(owner).nativeLanguage, 'en', 'Native VS Code language remains independent of the runtime language');
-                assert.equal(await connection.evaluate(`document.getElementById('exportButton').previousElementSibling.dataset.action`), 'openInTextEditor');
+                if (cycle === 2) {
+                    previousFrameWidth = await h.workbench(page => page.locator('iframe.webview:visible').evaluate(async node => {
+                        const previous = node.style.maxWidth; node.style.maxWidth = '400px';
+                        await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+                        return previous;
+                    }));
+                }
+                await connection.evaluate(`new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))`);
+                const inOverflow = await connection.evaluate(`document.getElementById('toolbarOverflow').contains(document.getElementById('exportButton'))`);
+                // Responsive layout can move Export into More. Exercise that
+                // visible route instead of assuming fixed sibling positions.
+                if (inOverflow) {
+                    await connection.evaluate(`document.getElementById('toolbarMore').click()`);
+                    await h.until(() => connection.evaluate(`!document.getElementById('toolbarOverflow').hidden`), phase + ' toolbar overflow', observe);
+                }
                 // A ready document is not necessarily the focused native window.
                 // Establish the real keyboard precondition before sending input.
                 await h.workbench(page => page.bringToFront());
@@ -1065,9 +1080,12 @@ async function appearanceCases(h, owner, record) {
                 }
                 await connection.send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Escape', code: 'Escape' });
                 await connection.send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Escape', code: 'Escape' });
-                await h.until(() => connection.evaluate('document.getElementById("exportMenu").hidden && document.activeElement.id === "exportButton"'), phase + ' Escape', observe);
-                record('toolbar', { cycle, mode, language, label, nativeLanguage: 'en', keyboardNavigation: true, nextToVsCode: true });
-            } finally { connection.close(); }
+                await h.until(() => connection.evaluate(`document.getElementById('exportMenu').hidden && document.activeElement.id === (document.getElementById('exportButton').getClientRects().length ? 'exportButton' : 'toolbarMore')`), phase + ' Escape', observe);
+                record('toolbar', { cycle, mode, language, label, nativeLanguage: 'en', keyboardNavigation: true, route: inOverflow ? 'toolbar overflow' : 'primary toolbar', returnedToVisibleControl: true });
+            } finally {
+                if (previousFrameWidth !== undefined) await h.workbench(page => page.locator('iframe.webview:visible').evaluate((node, value) => { node.style.maxWidth = value; }, previousFrameWidth));
+                connection.close();
+            }
         }
     }
     for (const theme of ['github', 'night']) {
