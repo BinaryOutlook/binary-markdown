@@ -2,31 +2,17 @@
 
 Historical record · Original material updated 2026-09-10 · Separated 2026-09-14.
 
-This page preserves the export workstream's delivery plan, working agreement,
-milestone reports, decisions, reconnaissance, and delegation prompt. These sections
-were previously part of `docs/export-subsystem.md` version 1.5. Branch names,
-tool versions, pending-review statements, and instructions below describe that
-development period. The copied prompt is historical material, not a current task.
+This page preserves the export workstream's delivery plan, working agreement, milestone reports, decisions, reconnaissance, and delegation prompt. These sections were previously part of `docs/export-subsystem.md` version 1.5. Branch names, tool versions, pending-review statements, and instructions below describe that development period. The copied prompt is historical material, not a current task.
 
-For the maintained contract, use the [export reference](../../docs/export-subsystem.md).
-For new checks, use [Validate an export change](../../docs/export-verification.md). The
-[dated export evidence](../../reports/validation/2026-09-10-export.md) and [0.2.0 integration record](../../reports/validation/0.2.0.md)
-identify their own tested revisions. This reorganization does not rerun those
-tests or make a new release-status claim.
+For the maintained contract, use the [export reference](../../docs/export-subsystem.md). For new checks, use [Validate an export change](../../docs/export-verification.md). The [dated export evidence](../../reports/validation/2026-09-10-export.md) and [0.2.0 integration record](../../reports/validation/0.2.0.md) identify their own tested revisions. This reorganization does not rerun those tests or make a new release-status claim.
 
-The original specification was introduced in commit `5488f37` on 2026-09-09
-in this fork's export workstream. The commit records the file's origin;
-Git metadata does not establish sole manual authorship of its prose.
+The original specification was introduced in commit `5488f37` on 2026-09-09 in this fork's export workstream. The commit records the file's origin; Git metadata does not establish sole manual authorship of its prose.
 
 The original heading and introductory status are retained below for context.
 
 ## Subsequent PDF appearance decision
 
-The 2026-09-12 PDF changes were merged into the main revision `0a7641a` used as
-this documentation branch's base. The following decision and updated D2 guidance
-come from that revision. Earlier sections below retain their original context.
-The maintained requirements now include FR-EXP-042–043 and AC-15; see the
-[PDF appearance investigation and evidence](../../reports/investigations/2026-09-12-export-page-background.md).
+The 2026-09-12 PDF changes were merged into the main revision `0a7641a` used as this documentation branch's base. The following decision and updated D2 guidance come from that revision. Earlier sections below retain their original context. The maintained requirements now include FR-EXP-042–043 and AC-15; see the [PDF appearance investigation and evidence](../../reports/investigations/2026-09-12-export-page-background.md).
 
 | Date | Decision and reason | Affected scope / evidence |
 | --- | --- | --- |

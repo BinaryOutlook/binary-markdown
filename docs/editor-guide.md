@@ -23,7 +23,6 @@ Adapted from the inherited Binary Markdown documentation. See [Acknowledgments](
 | Table | `| col1 | col2 |` + Enter | Table button | `Ctrl+T` |
 | Horizontal Rule | `---` + Enter | HR button | `Ctrl+Shift+-` |
 
-
 ### Inline Elements
 
 | Element | Pattern Input | Toolbar | Shortcut |
@@ -34,7 +33,6 @@ Adapted from the inherited Binary Markdown documentation. See [Acknowledgments](
 | Inline Code | ``` `text` ``` + Space | Code button | ``` Ctrl+` ``` |
 | Link | `[text](url)` <br>Space conversion not supported<br> | Link button | `Ctrl+K` |
 | Image | `![text](url)` <br>Space conversion not supported<br> | Image button | `Ctrl+Shift+I` |
-
 
 ---
 

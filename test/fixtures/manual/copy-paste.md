@@ -1,10 +1,6 @@
 # Manual fixture: code copying and outline state
 
-Copy this document into a fresh test workspace and open it with Binary Markdown.
-Use the [contributor setup](../../../CONTRIBUTING.md#package-and-test) and record
-the tested source/package and observed results. These are reusable inputs, not
-a standing pass claim. Earlier results are in the
-[0.1.0 report](../../../reports/validation/0.1.0-copy-paste.md).
+Copy this document into a fresh test workspace and open it with Binary Markdown. Use the [contributor setup](../../../CONTRIBUTING.md#package-and-test) and record the tested source/package and observed results. These are reusable inputs, not a standing pass claim. Earlier results are in the [0.1.0 report](../../../reports/validation/0.1.0-copy-paste.md).
 
 ## How to compare
 
@@ -12,7 +8,6 @@ a standing pass claim. Earlier results are in the
 2. Open this document with the Markdown editor and use the code block's **Copy** button, rather than selecting text manually.
 3. Paste into a plain text editor first. Compare the line count and whitespace with the source.
 4. Repeat after editing a code block. Record the build, reproduction steps, and actual result.
-
 
 ## Three simple commands
 
@@ -25,7 +20,6 @@ echo gamma
 ```
 
 Expected: three separate lines. A result such as `echo alphaecho betaecho gamma` means the line breaks were lost.
-
 
 ## Predictable output
 
@@ -45,7 +39,6 @@ Second line
 Third line
 ```
 
-
 ## Blank-line preservation
 
 Copy this block into a plain text editor and check that the empty line remains.
@@ -55,7 +48,6 @@ echo before
 
 echo after
 ```
-
 
 ## Outline sidebar trial
 

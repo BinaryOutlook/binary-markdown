@@ -3,19 +3,12 @@
 
 A WYSIWYG markdown editor designed for the AI coding era. Edit markdown visually while AI assistants (Claude Code, Cursor, GitHub Copilot, etc.) modify the same file in real-time — your edits and AI's edits coexist safely.
 
-![VS Code Marketplace](https://img.shields.io/visual-studio-marketplace/v/imaken.any-markdown?label=VS%20Code%20Marketplace)
-![Open VSX](https://img.shields.io/open-vsx/v/imaken/any-markdown?label=Open%20VSX)
-![License](https://img.shields.io/badge/license-MIT-green)
-![GitHub Sponsors](https://img.shields.io/github/sponsors/raggbal?label=Sponsor)
+![VS Code Marketplace](https://img.shields.io/visual-studio-marketplace/v/imaken.any-markdown?label=VS%20Code%20Marketplace) ![Open VSX](https://img.shields.io/open-vsx/v/imaken/any-markdown?label=Open%20VSX) ![License](https://img.shields.io/badge/license-MIT-green) ![GitHub Sponsors](https://img.shields.io/github/sponsors/raggbal?label=Sponsor)
 
-**New: Redesigned for simplicity. **![assets/images/1772631963888.png](assets/images/1772631963888.png)
-**New: Action Palette (Cmd+/ / Ctrl+/)**
-![assets/images/1772632052456.png](assets/images/1772632052456.png)
+**New: Redesigned for simplicity. **![assets/images/1772631963888.png](assets/images/1772631963888.png) **New: Action Palette (Cmd+/ / Ctrl+/)** ![assets/images/1772632052456.png](assets/images/1772632052456.png)
 ## 🎬 Demo (gif)
 
-You can freely use markdown using only the keyboard.
-lists, tables, code blocks, and everything else!And when you want to request AI Chat, select the range and press cmd+l (ctr+l).
-![Demo](assets/videos/movie.gif)
+You can freely use markdown using only the keyboard. lists, tables, code blocks, and everything else!And when you want to request AI Chat, select the range and press cmd+l (ctr+l). ![Demo](assets/videos/movie.gif)
 > Note: The editor design shown in the gif above is from an older version.
 
 ## 🆕 Important Changes
@@ -67,7 +60,6 @@ If you prefer the previous full toolbar with all formatting buttons, change the 
 - Mermaid diagrams
 - KaTeX math equations
 - YAML Front Matter
-
 
 ---
 
@@ -142,7 +134,6 @@ To always open `.md` files with Any Markdown Editor:
 | Table | `| col1 | col2 |` + Enter | Table button | `Ctrl+T` |
 | Horizontal Rule | `---` + Enter | HR button | `Ctrl+Shift+-` |
 
-
 ### Inline Elements
 
 | Element | Pattern Input | Toolbar | Shortcut |
@@ -153,7 +144,6 @@ To always open `.md` files with Any Markdown Editor:
 | Inline Code | ``` `text` ``` + Space | Code button | ``` Ctrl+` ``` |
 | Link | `[text](url)` <br>Space conversion not supported<br> | Link button | `Ctrl+K` |
 | Image | `![text](url)` <br>Space conversion not supported<br> | Image button | `Ctrl+Shift+I` |
-
 
 ---
 
@@ -326,14 +316,14 @@ FORCE_RELATIVE_PATH: true
 
 `forceRelativeImagePath` allows you to separate the **image save location** from the **path written in Markdown**.
 
-**Use case**: When you want to save images to a specific absolute path (e.g., `/Users/shared/images/`) but reference them using relative paths from the Markdown file, set this to `true`.
+**Use case**: When you want to save images to a specific absolute path (e.g., `<absolute-image-directory>`) but reference them using relative paths from the Markdown file, set this to `true`.
 
 > **Note**: `forceRelativeImagePath` only takes effect when `imageDefaultDir` is an absolute path. When using relative paths, the setting is ignored as paths are always relative.
 
 | imageDefaultDir | forceRelativeImagePath | Image Save Location | Path in Markdown |
 | --- | --- | --- | --- |
-| Absolute (e.g., `/Users/shared/images`) | `false` (default) | Specified absolute path | Absolute path |
-| Absolute (e.g., `/Users/shared/images`) | `true` | Specified absolute path | Relative path from Markdown file |
+| Absolute (e.g., `<absolute-image-directory>`) | `false` (default) | Specified absolute path | Absolute path |
+| Absolute (e.g., `<absolute-image-directory>`) | `true` | Specified absolute path | Relative path from Markdown file |
 | Relative (e.g., `./images`) | `false` | Relative to Markdown file | Relative path |
 | Relative (e.g., `./images`) | `true` | Relative to Markdown file | Relative path (setting ignored) |
 
@@ -461,5 +451,4 @@ MIT License - feel free to use this extension in your projects.
 - Built with love for the VS Code community
 
 ---
-IMAGE_DIR: ./assets/images
-FORCE_RELATIVE_PATH: true
+IMAGE_DIR: ./assets/images FORCE_RELATIVE_PATH: true

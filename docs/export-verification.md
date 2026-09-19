@@ -1,10 +1,6 @@
 # Validate an export change
 
-Use this guide to select and record checks for a change to export. Run commands
-from the repository root using the checkout's `.node-version`. The
-[build guide](building.md) covers dependency installation and packaging; the
-[export reference](export-subsystem.md#acceptance-criteria-and-milestone-mapping)
-defines the acceptance criteria.
+Use this guide to select and record checks for a change to export. Run commands from the repository root using the checkout's `.node-version`. The [build guide](building.md) covers dependency installation and packaging; the [export reference](export-subsystem.md#acceptance-criteria-and-milestone-mapping) defines the acceptance criteria.
 
 ## Choose checks for the affected behavior
 
@@ -29,21 +25,13 @@ npm run test:export
 CI=1 npm run test:e2e -- test/specs/export-editor.spec.ts test/specs/export-ui.spec.ts --retries=0
 ```
 
-Browser tests need Playwright Chromium or the installed browser override
-documented in [CONTRIBUTING.md](../CONTRIBUTING.md#checks). The test server uses
-port 3000; ensure it is available. `test:e2e` regenerates the tracked standalone
-HTML fixture. Preserve any earlier edits to that generated file before running
-or restoring it. Full compilation is needed after shared/webview asset changes;
-TypeScript watch alone does not refresh all assets.
+Browser tests need Playwright Chromium or the installed browser override documented in [CONTRIBUTING.md](../CONTRIBUTING.md#checks). The test server uses port 3000; ensure it is available. `test:e2e` regenerates the tracked standalone HTML fixture. Preserve any earlier edits to that generated file before running or restoring it. Full compilation is needed after shared/webview asset changes; TypeScript watch alone does not refresh all assets.
 
-Successful focused checks establish only the behavior they exercise. The export
-unit command skips real converters unless explicitly enabled and skips package
-inspection unless a VSIX path is supplied. Record skips separately from passes.
+Successful focused checks establish only the behavior they exercise. The export unit command skips real converters unless explicitly enabled and skips package inspection unless a VSIX path is supplied. Record skips separately from passes.
 
 ## Exercise actual tools and the package
 
-Install Pandoc, a compatible Chrome/Chromium/Edge, and Poppler's `pdftotext` for
-the relevant checks. Build a candidate, then select its path from the manifest:
+Install Pandoc, a compatible Chrome/Chromium/Edge, and Poppler's `pdftotext` for the relevant checks. Build a candidate, then select its path from the manifest:
 
 ```sh
 npm run package
@@ -52,36 +40,16 @@ export EXPORT_VSIX_PATH="$(node -p "const p = require('./package.json'); 'dist/'
 npm run test:export
 ```
 
-Use `EXPORT_PANDOC_PATH`, `EXPORT_BROWSER_PATH`, and `EXPORT_PDFTOTEXT_PATH` when
-test tools are outside normal discovery. These test variables are separate from
-the extension's machine settings. The native harness accepts its own `--pandoc`
-and `--browser` options.
+Use `EXPORT_PANDOC_PATH`, `EXPORT_BROWSER_PATH`, and `EXPORT_PDFTOTEXT_PATH` when test tools are outside normal discovery. These test variables are separate from the extension's machine settings. The native harness accepts its own `--pandoc` and `--browser` options.
 
-Follow the [installed-VSIX harness](../test/native/export-smoke.md) to create a
-fresh profile and workspace and run the affected scenarios. Inspect outputs with
-the [artifact audit](../test/native/export-artifact-audit.md) and representative
-target readers. Stop the development server for checks intended to prove package
-independence. Compare the same package bytes across hosts when making a combined
-compatibility claim.
+Follow the [installed-VSIX harness](../test/native/export-smoke.md) to create a fresh profile and workspace and run the affected scenarios. Inspect outputs with the [artifact audit](../test/native/export-artifact-audit.md) and representative target readers. Stop the development server for checks intended to prove package independence. Compare the same package bytes across hosts when making a combined compatibility claim.
 
-For release validation, follow the fuller sequence and clean-source requirements
-in [building.md](building.md#validate-a-candidate) and the
-[release and support policy](releases-and-support.md). A development check does
-not replace those gates.
+For release validation, follow the fuller sequence and clean-source requirements in [building.md](building.md#validate-a-candidate) and the [release and support policy](releases-and-support.md). A development check does not replace those gates.
 
 ## Record results for review
 
-Record the base/head revisions, affected FR/NFR/AC IDs, commands, outcomes, and
-unavailable checks. For native runs, retain the package hash, host and tool
-versions, frozen-input hashes, output identities, and representative viewer
-observations. Link receipts rather than copying large generated artifacts into Git.
+Record the base/head revisions, affected FR/NFR/AC IDs, commands, outcomes, and unavailable checks. For native runs, retain the package hash, host and tool versions, frozen-input hashes, output identities, and representative viewer observations. Link receipts rather than copying large generated artifacts into Git.
 
-Keep new observations distinct from the dated [export-branch record](../reports/validation/2026-09-10-export.md)
-and [0.2.0 integration record](../reports/validation/0.2.0.md). Preserve earlier failures and
-their later corrections. A required check that could not run remains unverified.
-Do not weaken assertions or change frozen fixtures to fit an implementation.
+Keep new observations distinct from the dated [export-branch record](../reports/validation/2026-09-10-export.md) and [0.2.0 integration record](../reports/validation/0.2.0.md). Preserve earlier failures and their later corrections. A required check that could not run remains unverified. Do not weaken assertions or change frozen fixtures to fit an implementation.
 
-A review-ready change includes the scoped diff, affected documentation, relevant
-regression evidence, and explicit remaining limits. Human acceptance, merge,
-and release are separate states. A change to the export contract follows the
-[recorded decision process](export-subsystem.md#changes-to-this-contract).
+A review-ready change includes the scoped diff, affected documentation, relevant regression evidence, and explicit remaining limits. Human acceptance, merge, and release are separate states. A change to the export contract follows the [recorded decision process](export-subsystem.md#changes-to-this-contract).

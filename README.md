@@ -22,10 +22,7 @@ We will make a reasonable effort to reproduce and diagnose reported problems. We
 
 Access to the source is central to this project. Building your own version is an intended way to use Binary Markdown.
 
-Start with the [documentation index](docs/README.md) for editor guides, export,
-building and validation. The [reports index](reports/README.md) separates dated
-findings from current instructions; [release notes](release-notes/README.md)
-describe individual versions.
+Start with the [documentation index](docs/README.md) for editor guides, export, building and validation. The [reports index](reports/README.md) separates dated findings from current instructions; [release notes](release-notes/README.md) describe individual versions.
 
 ## Install
 
@@ -138,7 +135,6 @@ Files are saved beside the Markdown source with the same filename stem. An occup
 PDF defaults to a white page with GitHub light appearance. Disable `binary-markdown.export.pdfWhiteBackground` in VS Code settings to fill the entire page, including margins, with the current editor theme. Text keeps its 16 mm inset. This setting does not change the editor, source images or other export formats.
 
 Supported resources retain source resolution; missing or unsupported content receives a visible fallback and warning summary. PDF uses simple block fitting, so blank regions are acceptable. Advanced pagination, templates, compression, custom destinations and unsaved export remain future work. See [export help](media/export-help.md) for the initial format limitations and [the subsystem outline](docs/export-subsystem.md) for the agreed implementation scope.
-
 
 ## Build and contribute
 

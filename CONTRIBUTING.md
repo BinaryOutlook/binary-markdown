@@ -35,26 +35,13 @@ The identity tests check registration consistency and separation from the archiv
 
 ## Documentation language
 
-Use English for maintained project documentation, developer comments, and new test
-descriptions. Keep terminology consistent with the code and use exact interface
-labels in user instructions. Explain non-obvious behavior and constraints rather
-than restating the implementation.
+Use English for maintained project documentation, developer comments, and new test descriptions. Keep terminology consistent with the code and use exact interface labels in user instructions. Explain non-obvious behavior and constraints rather than restating the implementation.
 
-Interface translations, language names, and multilingual test inputs and expected
-results retain their original languages. Preserve upstream archives, third-party
-notices, and historical validation evidence; explain them in English when needed.
-Translate existing developer prose incrementally without changing executable
-behavior or test data.
+Interface translations, language names, and multilingual test inputs and expected results retain their original languages. Preserve upstream archives, third-party notices, and historical validation evidence; explain them in English when needed. Translate existing developer prose incrementally without changing executable behavior or test data.
 
-Follow the [documentation standard](docs/documentation-standard.md) for structure,
-writing conventions, and the review checklist. Existing documentation is being
-aligned incrementally, starting with the [export subsystem](docs/export-subsystem.md).
+Follow the [documentation standard](docs/documentation-standard.md) for structure, writing conventions, and the review checklist. Existing documentation is being aligned incrementally, starting with the [export subsystem](docs/export-subsystem.md).
 
-Keep maintained guidance in `docs/`, dated observations in `reports/`,
-version announcements in `release-notes/`, and completed plans in `archive/`.
-Reusable test inputs belong beside their tests. Update the relevant index and
-links when adding or moving a page. Screen reports and images for secrets,
-personal paths, account names and machine identifiers before including them.
+Keep maintained guidance in `docs/`, dated observations in `reports/`, version announcements in `release-notes/`, and completed plans in `archive/`. Reusable test inputs belong beside their tests. Update the relevant index and links when adding or moving a page. Screen reports and images for secrets, personal paths, account names and machine identifiers before including them.
 
 ## Settings translations
 
@@ -109,15 +96,6 @@ Use small, focused commits after checked slices. Keep FR/NFR changes and accepta
 
 BinaryOutlook currently handles reviews and releases. Changes may be developed and tested locally without publishing. Merging a PR does not itself publish a Marketplace extension.
 
-CI starts automatically for new and updated pull requests, including first-time
-contributors and drafts. The **Start PR CI automatically** workflow authorizes
-pending **Validate VSIX** runs; this grants permission to run tests, not approval
-of the proposed changes. The controller uses trusted repository code and never
-executes a contributor's branch with its Actions write permission.
+CI starts automatically for new and updated pull requests, including first-time contributors and drafts. The **Start PR CI automatically** workflow authorizes pending **Validate VSIX** runs; this grants permission to run tests, not approval of the proposed changes. The controller uses trusted repository code and never executes a contributor's branch with its Actions write permission.
 
-Merging into `main` requires **VSIX validation** to pass on an up-to-date branch,
-resolved review conversations, and at least one approving review. New changes
-dismiss stale approvals. The author cannot approve their own PR, so a maintainer's
-own PR also needs another eligible reviewer. CI does not submit reviews or merge
-pull requests. If an older PR is still awaiting CI permission, a maintainer can
-run **Start PR CI automatically** from Actions to authorize its current run.
+Merging into `main` requires **VSIX validation** to pass on an up-to-date branch, resolved review conversations, and at least one approving review. New changes dismiss stale approvals. The author cannot approve their own PR, so a maintainer's own PR also needs another eligible reviewer. CI does not submit reviews or merge pull requests. If an older PR is still awaiting CI permission, a maintainer can run **Start PR CI automatically** from Actions to authorize its current run.
