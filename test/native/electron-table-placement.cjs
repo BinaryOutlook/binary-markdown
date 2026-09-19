@@ -124,8 +124,11 @@ async function main() {
         assert.equal(await page.evaluate(() => window.htmlToMarkdown()), before);
         await require('./table-toolbar-overflow.cjs').tableOverflowChecks({
             editor: page, keyboard: page.keyboard,
-            resize: (width, height) => application.evaluate(({ BrowserWindow }, { width, height }) =>
-                BrowserWindow.getAllWindows().find(window => window.__fileManager).setContentSize(width, height), { width, height }),
+            resize: async (width, height) => {
+                await application.evaluate(({ BrowserWindow }, { width, height }) =>
+                    BrowserWindow.getAllWindows().find(window => window.__fileManager).setContentSize(width, height), { width, height });
+                await page.waitForFunction(({ width, height }) => innerWidth === width && innerHeight === height, { width, height });
+            },
             setPosition: value => page.evaluate(value => window.hostBridge.setTableToolbarPosition(value), value),
             record: (name, details) => receipts.push({ name, ...details }),
         });

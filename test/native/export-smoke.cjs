@@ -699,22 +699,26 @@ async function tablePlacementCase(h, owner, record) {
         record('table-placement', { liveConfiguration: true, explicitPreferenceRetained: true, pickerPersistedAcrossReopen: true, actionAndUndo: true });
         const saved = fs.readFileSync(path.join(owner.workspace, file), 'utf8');
         await h.workbench(async page => {
-            const frames = [];
-            for (const frame of page.frames()) if (await frame.locator('#editor').isVisible()) frames.push(frame);
-            assert.equal(frames.length, 1, 'Use only the visible installed editor for window resizing');
-            const session = await page.context().newCDPSession(page);
-            const { windowId, bounds } = await session.send('Browser.getWindowForTarget');
+            const { tableOverflowChecks, installedEditor } = require('./table-toolbar-overflow.cjs');
+            const frame = page.locator('iframe.webview:visible');
+            const previous = await frame.evaluate(node => ({ maxWidth: node.style.maxWidth, maxHeight: node.style.maxHeight }));
             try {
-                await require('./table-toolbar-overflow.cjs').tableOverflowChecks({
-                    editor: frames[0], keyboard: page.keyboard,
-                    resize: (width, height) => session.send('Browser.setWindowBounds', { windowId, bounds: { width, height, windowState: 'normal' } }),
+                await tableOverflowChecks({
+                    editor: installedEditor(connection, h), keyboard: page.keyboard,
+                    resize: async (width, height) => {
+                        const size = await frame.evaluate(async (node, { width, height }) => {
+                            node.style.maxWidth = width + 'px'; node.style.maxHeight = height + 'px';
+                            await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+                            return { width: node.clientWidth, height: node.clientHeight };
+                        }, { width, height });
+                        await h.until(() => connection.evaluate(`innerWidth === ${size.width} && innerHeight === ${size.height}`), 'installed viewport resize delivered');
+                    },
                     setPosition: value => h.driver({ action: 'config', key: 'tableToolbarPosition', value }),
-                    record,
+                    record: (name, details) => record(name, { ...details, resizeRoute: 'installed webview frame constraints; DOM activation; OS window resize remains manual' }),
                 });
                 assert.equal(fs.readFileSync(path.join(owner.workspace, file), 'utf8'), saved, 'Window resizing and undo leave saved bytes unchanged');
             } finally {
-                await session.send('Browser.setWindowBounds', { windowId, bounds });
-                await session.detach();
+                await frame.evaluate((node, previous) => Object.assign(node.style, previous), previous);
             }
         });
     } finally {

@@ -60,8 +60,10 @@
         const toggle = document.createElement('button');
         toggle.type = 'button';
         toggle.className = 'table-toolbar-toggle';
-        toggle.textContent = label('tableMenu', 'Table…');
-        toggle.setAttribute('aria-label', label('tableControls', 'Table controls'));
+        toggle.innerHTML = icons.table;
+        toggle.title = label('tableControls', 'Table controls');
+        toggle.querySelector('svg').setAttribute('aria-hidden', 'true');
+        toggle.setAttribute('aria-label', toggle.title);
         toggle.setAttribute('aria-haspopup', 'menu');
         toggle.setAttribute('aria-expanded', 'false');
         dock.appendChild(toggle);
@@ -392,7 +394,7 @@
                     overflow.scrollTop = 0;
                     placeMenu(overflow, more);
                     overflowActions.find(action => !action.hidden && !action.disabled)?.focus({ preventScroll: true });
-                }
+                } else more.focus({ preventScroll: true });
                 return;
             }
             if (button.dataset.action === 'placement') return openPicker(false, button);

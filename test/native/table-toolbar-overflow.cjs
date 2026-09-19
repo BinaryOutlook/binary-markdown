@@ -4,8 +4,9 @@ const assert = require('node:assert/strict');
 const controls = '.table-toolbar:not(.table-toolbar-measure)';
 const overflow = '.table-overflow-menu';
 
-// Both installed VS Code and Electron supply actual window resizing and their
-// real configuration bridge. No fixture-only editor APIs are used here.
+// Both hosts use their real configuration bridge. Electron resizes its window;
+// VS Code constrains the installed editor frame because Electron does not expose
+// Browser.setWindowBounds there. No fixture-only editor APIs are used here.
 async function tableOverflowChecks({ editor, keyboard, resize, setPosition, record }) {
     const source = await editor.evaluate(() => window.htmlToMarkdown());
     for (const position of ['top-left', 'left']) {
@@ -26,6 +27,7 @@ async function tableOverflowChecks({ editor, keyboard, resize, setPosition, reco
             });
         }, controls);
         await more.click();
+        await editor.locator(overflow).waitFor({ state: 'visible' });
         const actions = await editor.evaluate(({ controls, overflow }) => [controls, overflow].flatMap(selector =>
             [...document.querySelectorAll(`${selector} button:not([data-action="more"])`)].filter(button => button.getClientRects().length).map(button => button.dataset.action)), { controls, overflow });
         assert.deepEqual(actions, ['add-col-left', 'add-col-right', 'del-col', 'add-row-above', 'add-row-below', 'del-row', 'align-left', 'align-center', 'align-right', 'placement']);
@@ -64,4 +66,40 @@ async function tableOverflowChecks({ editor, keyboard, resize, setPosition, reco
     await resize(1400, 1000);
 }
 
-module.exports = { tableOverflowChecks };
+// VS Code's inner webview is not consistently exposed as a Playwright Frame.
+// Use the harness's ownership-checked CDP context and production DOM actions.
+// Pointer hit testing is covered by the browser and Electron checks separately.
+function installedEditor(connection, h) {
+    const evaluate = (fn, argument) => connection.evaluate(`(${fn.toString()})(${JSON.stringify(argument) ?? 'undefined'})`);
+    const locator = selector => {
+        const visible = () => evaluate(selector => {
+            const node = document.querySelector(selector);
+            return Boolean(node?.getClientRects().length) && getComputedStyle(node).visibility !== 'hidden';
+        }, selector);
+        const reveal = () => evaluate(selector => document.querySelector(selector).scrollIntoView({ block: 'nearest', inline: 'nearest' }), selector);
+        const result = {
+            first: () => result, isVisible: visible,
+            scrollIntoViewIfNeeded: reveal,
+            getAttribute: name => evaluate(({ selector, name }) => document.querySelector(selector).getAttribute(name), { selector, name }),
+            waitFor: ({ state }) => h.until(async () => (await visible()) === (state === 'visible'), selector + ' becomes ' + state),
+            click: async () => {
+                await h.until(visible, 'visible control: ' + selector);
+                await reveal();
+                await evaluate(selector => {
+                    const node = document.querySelector(selector);
+                    if (node.disabled) throw new Error('Cannot click a disabled control');
+                    if (node.matches('td,th')) {
+                        document.getElementById('editor').focus({ preventScroll: true });
+                        const range = document.createRange(); range.selectNodeContents(node); range.collapse(true);
+                        getSelection().removeAllRanges(); getSelection().addRange(range);
+                    }
+                    node.click();
+                }, selector);
+            },
+        };
+        return result;
+    };
+    return { evaluate, locator, waitForFunction: (fn, argument) => h.until(() => evaluate(fn, argument), 'installed overflow state') };
+}
+
+module.exports = { tableOverflowChecks, installedEditor };

@@ -91,6 +91,10 @@ test('docked controls retain leading actions and resize an open overflow menu', 
     await expect(page.locator(controls)).toHaveAttribute('data-docked', 'true');
     await wholeButtons(page);
     await more.click();
+    await more.click();
+    await expect(page.locator(overflow)).toBeHidden();
+    await expect(more).toBeFocused();
+    await more.click();
     await page.setViewportSize({ width: 420, height: 260 });
     await wholeButtons(page);
     await page.keyboard.press('End');
@@ -103,7 +107,9 @@ test('docked controls retain leading actions and resize an open overflow menu', 
 test('compact menu reveals its last action with the keyboard in a short pane', async ({ page }) => {
     await setup(page, 'top-bar');
     await page.setViewportSize({ width: 420, height: 260 });
-    await page.locator('.table-toolbar-toggle').click();
+    const toggle = page.getByRole('button', { name: 'Table controls', exact: true });
+    await expect(toggle.locator('svg')).toHaveAttribute('aria-hidden', 'true');
+    await toggle.click();
     await page.keyboard.press('End');
     const placement = page.locator(`${controls} [data-action="placement"]`);
     await expect(placement).toBeFocused();
