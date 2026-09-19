@@ -28,6 +28,7 @@ async function blockquoteCases(h, owner, record) {
     const file = 'blockquote-contrast-' + Date.now() + '.md';
     const filePath = path.join(owner.workspace, file);
     fs.writeFileSync(filePath, source);
+    const previous = (await h.driver({ action: 'inspect' })).appearance;
     const connection = await h.open(file);
     try {
         await connection.evaluate(`(() => { window.__quoteBeforeTheme = document.querySelector('#editor blockquote'); document.getElementById('editor').focus(); const r = document.createRange(); r.setStart(window.__quoteBeforeTheme.querySelector('p').firstChild, 3); r.collapse(true); getSelection().removeAllRanges(); getSelection().addRange(r); })()`);
@@ -60,7 +61,14 @@ async function blockquoteCases(h, owner, record) {
         await connection.evaluate(`document.querySelector('[data-action="undo"]').click()`);
         assert.equal(await connection.evaluate('window.htmlToMarkdown()'), before);
         record('blockquote-theme-undo', { undoRestoresPreviousEdit: true, sourceDiskUnchanged: fs.readFileSync(filePath, 'utf8') === source });
-    } finally { connection.close(); }
+    } finally {
+        connection.close();
+        // Leave the following suites the preferences they started with, even
+        // when a quote assertion fails before the normal end of the scenario.
+        for (const key of ['theme', 'export.pdfWhiteBackground']) {
+            await h.driver({ action: 'config', key, value: previous[key] });
+        }
+    }
 }
 
 module.exports = { themes, source, measureQuotes, blockquoteCases };
