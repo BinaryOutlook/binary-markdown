@@ -963,6 +963,7 @@ body {
     flex-shrink: 0;
 }
 .table-toolbar button svg[fill="none"] { fill: none; }
+.table-toolbar button[data-action="placement"] svg { width: 18px; height: 18px; }
 .table-toolbar button.text-btn {
     font-size: 11px;
     font-weight: 500;

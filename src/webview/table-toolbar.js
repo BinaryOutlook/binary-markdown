@@ -29,7 +29,7 @@
             ['del-row', 'deleteRow', 'Delete row'], null,
             ['align-left', 'alignLeft', 'Align left'], ['align-center', 'alignCenter', 'Align center'],
             ['align-right', 'alignRight', 'Align right'], null,
-            ['placement', 'tablePlacement', 'Table toolbar position', '⋯'],
+            ['placement', 'tablePlacement', 'Table toolbar position'],
         ];
         for (const item of items) {
             if (!item) {

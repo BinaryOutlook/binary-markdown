@@ -86,7 +86,7 @@ To exit inline formatting, type the closing marker followed by Space:
 
 Select a table cell to show its controls. **Automatic** is the default: the controls use an available corner or side, based on the visible table and surrounding content, and move into the top bar when there is no room. A narrow top bar shows a **Table…** button containing the same actions. The controls keep a usable position while you work and wait for scrolling or resizing to settle before leaving the top bar.
 
-Use **⋯** in the table controls to choose **Automatic**, **Always in top bar**, or **Choose a fixed position…**. Fixed positions include all four corners and the two vertical sides. You can also change `binary-markdown.tableToolbarPosition` in VS Code Settings, or **Table toolbar position** in desktop Preferences. Explicit choices are retained; only an unset preference uses the new default. The picker updates an existing workspace preference when present, otherwise your user preference.
+Use the table icon with a gear (**Table toolbar position**) to choose **Automatic**, **Always in top bar**, or **Choose a fixed position…**. Fixed positions include all four corners and the two vertical sides. You can also change `binary-markdown.tableToolbarPosition` in VS Code Settings, or **Table toolbar position** in desktop Preferences. Explicit choices are retained; only an unset preference uses the new default. The picker updates an existing workspace preference when present, otherwise your user preference.
 
 One selection applies and saves the placement without reloading the editor. If saving the preference fails, a notification explains the failure and the previous setting remains active. You can retry the choice without changing the document.
 
