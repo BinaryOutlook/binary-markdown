@@ -705,6 +705,7 @@ async function tablePlacementCase(h, owner, record) {
             try {
                 await tableOverflowChecks({
                     editor: installedEditor(connection, h), keyboard: page.keyboard,
+                    canEnlargeWindow: false,
                     resize: async (width, height) => {
                         const size = await frame.evaluate(async (node, { width, height }) => {
                             node.style.maxWidth = width + 'px'; node.style.maxHeight = height + 'px';

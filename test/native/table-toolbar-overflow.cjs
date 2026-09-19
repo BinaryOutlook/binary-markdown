@@ -7,7 +7,7 @@ const overflow = '.table-overflow-menu';
 // Both hosts use their real configuration bridge. Electron resizes its window;
 // VS Code constrains the installed editor frame because Electron does not expose
 // Browser.setWindowBounds there. No fixture-only editor APIs are used here.
-async function tableOverflowChecks({ editor, keyboard, resize, setPosition, record }) {
+async function tableOverflowChecks({ editor, keyboard, resize, setPosition, record, canEnlargeWindow = true }) {
     const source = await editor.evaluate(() => window.htmlToMarkdown());
     for (const position of ['top-left', 'left']) {
         await resize(1400, 1000);
@@ -45,10 +45,22 @@ async function tableOverflowChecks({ editor, keyboard, resize, setPosition, reco
         assert.equal(await editor.evaluate(() => window.htmlToMarkdown()), source);
         const smallestViewport = await editor.evaluate(() => ({ width: innerWidth, height: innerHeight }));
         await resize(1400, 1000);
-        await more.waitFor({ state: 'hidden' });
+        // A max-width on an installed webview cannot enlarge its OS window or
+        // reclaim space from VS Code's sidebars. Keep testing real reachability
+        // when the restored pane still legitimately requires overflow.
+        if (canEnlargeWindow) await more.waitFor({ state: 'hidden' });
+        else {
+            await editor.waitForFunction(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve(true)))));
+            if (await more.isVisible()) await more.click();
+            const restoredActions = await editor.evaluate(({ controls, overflow }) => [controls, overflow].flatMap(selector =>
+                [...document.querySelectorAll(`${selector} button:not([data-action="more"])`)].filter(button => button.getClientRects().length).map(button => button.dataset.action)), { controls, overflow });
+            assert.deepEqual(restoredActions, actions, 'Every action remains reachable in the actual restored pane');
+            if (await editor.locator(overflow).isVisible()) await keyboard.press('Escape');
+        }
+        const restoredViewport = await editor.evaluate(() => ({ width: innerWidth, height: innerHeight }));
         assert.equal(await editor.locator('html').getAttribute('data-table-toolbar-position'), position);
         record('table-overflow', { position, wholeButtons: true, allActionsReachable: true, openPickerResized: true, sourceUnchanged: true,
-            smallestViewport });
+            smallestViewport, restoredViewport, actualWindowResize: canEnlargeWindow });
     }
     await resize(520, 360);
     await editor.locator('#editor td').first().scrollIntoViewIfNeeded();
