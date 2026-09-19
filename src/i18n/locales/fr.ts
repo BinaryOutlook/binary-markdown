@@ -37,6 +37,7 @@ export const webviewMessages = {
   tablePositionSaveFailed: "Impossible d’enregistrer la position de la barre d’outils du tableau. Le réglage précédent reste actif.",
   tableControls: "Outils de tableau",
   tableMenu: "Tableau…",
+  tableMoreActions: "Autres actions du tableau",
   tablePlacement: "Position des outils de tableau",
   tablePositionAuto: "Automatique (recommandé)",
   tablePositionTopBar: "Toujours dans la barre supérieure",

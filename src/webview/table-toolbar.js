@@ -80,15 +80,49 @@
             document.body.appendChild(clone);
             return clone;
         });
+        const actions = [...controls.querySelectorAll('button')];
+        const more = document.createElement('button');
+        more.type = 'button';
+        more.dataset.action = 'more';
+        more.textContent = '⋯';
+        more.title = label('tableMoreActions', 'More table actions');
+        more.setAttribute('aria-label', more.title);
+        more.setAttribute('aria-haspopup', 'menu');
+        more.setAttribute('aria-expanded', 'false');
+        more.tabIndex = -1;
+        more.hidden = true;
+        controls.appendChild(more);
+        const overflow = document.createElement('div');
+        overflow.className = 'table-overflow-menu';
+        overflow.setAttribute('role', 'menu');
+        overflow.setAttribute('aria-label', more.title);
+        overflow.hidden = true;
+        const overflowActions = actions.map(button => {
+            const copy = button.cloneNode(false);
+            copy.removeAttribute('class');
+            copy.setAttribute('role', 'menuitem');
+            const icon = button.querySelector('svg');
+            if (icon) copy.appendChild(icon.cloneNode(true));
+            const text = document.createElement('span');
+            text.textContent = button.title;
+            copy.appendChild(text);
+            overflow.appendChild(copy);
+            return copy;
+        });
+        document.body.appendChild(overflow);
+        let pickerAnchor = actions[actions.length - 1];
         const resize = new ResizeObserver(() => schedule());
         for (const element of new Set([editor, wrapper, header])) resize.observe(element);
         const mutations = new MutationObserver(() => schedule());
         mutations.observe(editor, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['style', 'class'] });
 
-        function owns(node) { return controls.contains(node) || dock.contains(node) || picker.contains(node); }
+        function owns(node) { return controls.contains(node) || dock.contains(node) || picker.contains(node) || overflow.contains(node); }
         function valid() { return table && cell && editor.contains(table) && table.contains(cell) && !options.isSourceMode(); }
         function closeMenus() {
             picker.hidden = true;
+            overflow.hidden = true;
+            more.setAttribute('aria-expanded', 'false');
+            overflowActions[overflowActions.length - 1].setAttribute('aria-expanded', 'false');
             menuOpen = false;
             if (current === 'top-bar' && !toggle.hidden) controls.classList.remove('visible');
             toggle.setAttribute('aria-expanded', 'false');
@@ -176,6 +210,61 @@
             node.style.left = Math.max(6, Math.min(rect.left, innerWidth - size.width - 6)) + 'px';
             node.style.top = Math.max(6, Math.min(rect.bottom + 4, innerHeight - size.height - 6)) + 'px';
         }
+        function fitActions(width, height) {
+            const vertical = controls.dataset.vertical === 'true';
+            const measure = sizes[Number(vertical)];
+            const natural = measure.getBoundingClientRect();
+            const measured = [...measure.querySelectorAll('button')];
+            const style = getComputedStyle(controls);
+            const endPadding = parseFloat(vertical ? style.paddingBottom : style.paddingRight) + parseFloat(vertical ? style.borderBottomWidth : style.borderRightWidth);
+            const horizontalPadding = parseFloat(style.paddingLeft) + parseFloat(style.paddingRight) + parseFloat(style.borderLeftWidth) + parseFloat(style.borderRightWidth);
+            const verticalPadding = parseFloat(style.paddingTop) + parseFloat(style.paddingBottom) + parseFloat(style.borderTopWidth) + parseFloat(style.borderBottomWidth);
+            const moreStyle = getComputedStyle(more);
+            const moreSize = parseFloat(vertical ? moreStyle.height : moreStyle.width);
+            const gap = parseFloat(vertical ? style.rowGap : style.columnGap);
+            const limit = vertical ? height : width;
+            const compactMenu = controls.getAttribute('role') === 'menu';
+            let count = actions.length;
+            if (!compactMenu && (natural.width > width || natural.height > height)) {
+                count = 0;
+                for (const button of measured) {
+                    const rect = button.getBoundingClientRect();
+                    const end = vertical ? rect.bottom - natural.top : rect.right - natural.left;
+                    // Reserve the overflow trigger before accepting another whole action.
+                    if (end + gap + moreSize + endPadding > limit || rect.width > width - horizontalPadding || rect.height > height - verticalPadding) break;
+                    count++;
+                }
+            }
+            const focused = document.activeElement;
+            const focusedAction = actions.indexOf(focused) >= 0 ? actions.indexOf(focused) : overflowActions.indexOf(focused);
+            actions.forEach((button, index) => {
+                button.hidden = index >= count;
+                overflowActions[index].hidden = index < count;
+                overflowActions[index].disabled = button.disabled;
+            });
+            for (const separator of controls.querySelectorAll('.separator')) {
+                const next = separator.nextElementSibling;
+                separator.hidden = !next || next.hidden;
+            }
+            more.hidden = count === actions.length;
+            if (more.hidden) { overflow.hidden = true; more.setAttribute('aria-expanded', 'false'); }
+            if (focusedAction >= 0 && focused.hidden) {
+                if (actions[focusedAction].hidden) {
+                    overflow.hidden = false;
+                    more.setAttribute('aria-expanded', 'true');
+                    overflowActions[focusedAction].focus({ preventScroll: true });
+                } else {
+                    overflow.hidden = true;
+                    more.setAttribute('aria-expanded', 'false');
+                    actions[focusedAction].focus({ preventScroll: true });
+                }
+            } else if (focused === more && more.hidden) actions.find(button => !button.disabled)?.focus({ preventScroll: true });
+            const visible = [...actions, more].filter(button => !button.hidden && !button.disabled);
+            const tabStop = visible.includes(document.activeElement) ? document.activeElement : visible.find(button => button.tabIndex === 0) || visible[0];
+            [...actions, more].forEach(button => { button.tabIndex = button === tabStop ? 0 : -1; });
+            if (!overflow.hidden) placeMenu(overflow, more);
+            if (!picker.hidden) placeMenu(picker, pickerAnchor.getClientRects().length ? pickerAnchor : more.hidden ? actions[actions.length - 1] : more);
+        }
         function render() {
             if (!valid()) return clear();
             const palette = document.querySelector('.command-palette');
@@ -191,11 +280,12 @@
                 if (controls.dataset.docked !== 'true' && controls.classList.contains('visible')) {
                     controls.style.maxWidth = Math.max(1, bounds.width - 12) + 'px';
                     controls.style.maxHeight = Math.max(1, bounds.height - 12) + 'px';
+                    fitActions(Math.max(1, bounds.width - 12), Math.max(1, bounds.height - 12));
                     const size = controls.getBoundingClientRect();
                     controls.style.left = Math.max(bounds.left + 6, Math.min(size.left, bounds.right - size.width - 6)) + 'px';
                     controls.style.top = Math.max(bounds.top + 6, Math.min(size.top, bounds.bottom - size.height - 6)) + 'px';
                 }
-                if (!picker.hidden) placeMenu(picker, controls.querySelector('[data-action="placement"]'));
+                if (!picker.hidden) placeMenu(picker, pickerAnchor.getClientRects().length ? pickerAnchor : more);
                 return;
             }
             const horizontal = sizes[0].getBoundingClientRect(), vertical = sizes[1].getBoundingClientRect();
@@ -241,6 +331,7 @@
                 controls.style.maxWidth = next.width + 'px';
                 controls.style.maxHeight = next.height + 'px';
             }
+            fitActions(current === 'top-bar' ? horizontal.width : next.width, current === 'top-bar' ? innerHeight - 12 : next.height);
             options.onLayout();
         }
 
@@ -250,7 +341,8 @@
             'bottom-left': label('tablePositionBottomLeft', 'Bottom left'), 'bottom-right': label('tablePositionBottomRight', 'Bottom right'),
             left: label('tablePositionLeft', 'Left side (vertical)'), right: label('tablePositionRight', 'Right side (vertical)'),
         };
-        function openPicker(fixed = false) {
+        function openPicker(fixed = false, anchor = pickerAnchor) {
+            pickerAnchor = anchor;
             picker.replaceChildren();
             for (const value of fixed ? geometry.positions.slice(1, 7) : ['auto', 'top-bar', 'fixed']) {
                 const button = document.createElement('button');
@@ -264,23 +356,32 @@
             }
             picker.hidden = false;
             controls.querySelector('[data-action="placement"]').setAttribute('aria-expanded', 'true');
-            placeMenu(picker, controls.querySelector('[data-action="placement"]'));
+            anchor.setAttribute('aria-expanded', 'true');
+            placeMenu(picker, anchor);
             picker.firstElementChild.tabIndex = 0;
             picker.firstElementChild.focus({ preventScroll: true });
         }
-        for (const node of [controls, dock, picker]) {
+        for (const node of [controls, dock, picker, overflow]) {
             listen(node, 'mousedown', event => { event.preventDefault(); event.stopPropagation(); });
             listen(node, 'click', event => event.stopPropagation());
         }
-        listen(controls, 'click', event => {
+        function activate(event) {
             const button = event.target.closest('button');
             if (!button || button.disabled || !valid()) return;
-            if (button.dataset.action === 'placement') return openPicker();
+            if (button === more) {
+                overflow.hidden = !overflow.hidden;
+                more.setAttribute('aria-expanded', String(!overflow.hidden));
+                if (!overflow.hidden) { placeMenu(overflow, more); overflowActions.find(action => !action.hidden && !action.disabled)?.focus({ preventScroll: true }); }
+                return;
+            }
+            if (button.dataset.action === 'placement') return openPicker(false, button);
             closeMenus();
             restore();
             options.onAction(button.dataset.action);
             schedule();
-        });
+        }
+        listen(controls, 'click', activate);
+        listen(overflow, 'click', activate);
         listen(picker, 'click', event => {
             const value = event.target.closest('button')?.dataset.position;
             if (!value) return;
@@ -297,12 +398,12 @@
             if (menuOpen) { placeMenu(controls, toggle); controls.querySelector('button').focus({ preventScroll: true }); }
         });
         function keyboard(event) {
-            const container = picker.contains(event.target) ? picker : controls;
+            const container = picker.contains(event.target) ? picker : overflow.contains(event.target) ? overflow : controls;
             if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); closeMenus(); restore(); hovering = false; schedule(); return; }
-            const vertical = container === picker || controls.dataset.vertical === 'true';
+            const vertical = container !== controls || controls.dataset.vertical === 'true';
             const nextKey = vertical ? 'ArrowDown' : 'ArrowRight', previousKey = vertical ? 'ArrowUp' : 'ArrowLeft';
             if (![nextKey, previousKey, 'Home', 'End'].includes(event.key)) return;
-            const buttons = [...container.querySelectorAll('button:not(:disabled)')];
+            const buttons = [...container.querySelectorAll('button:not(:disabled):not([hidden])')];
             const index = buttons.indexOf(document.activeElement);
             const next = event.key === 'Home' ? 0 : event.key === 'End' ? buttons.length - 1 :
                 (index + (event.key === nextKey ? 1 : -1) + buttons.length) % buttons.length;
@@ -312,13 +413,14 @@
         }
         listen(controls, 'keydown', keyboard);
         listen(picker, 'keydown', keyboard);
-        for (const node of [controls, dock, picker]) listen(node, 'focusout', () => queueMicrotask(() => {
+        listen(overflow, 'keydown', keyboard);
+        for (const node of [controls, dock, picker, overflow]) listen(node, 'focusout', () => queueMicrotask(() => {
             if (!owns(document.activeElement)) { closeMenus(); schedule(); }
         }));
         listen(document, 'keydown', event => {
             if (event.altKey && event.key === 'F10' && valid()) {
                 event.preventDefault();
-                (dock.hidden || toggle.hidden ? controls.querySelector('button') : toggle).focus({ preventScroll: true });
+                (dock.hidden || toggle.hidden ? controls.querySelector('button:not([hidden]):not(:disabled)') : toggle)?.focus({ preventScroll: true });
             }
         });
         listen(controls, 'pointerenter', () => { hovering = true; });
@@ -349,7 +451,7 @@
             disposed = true;
             cancelAnimationFrame(frame); clearTimeout(settleTimer);
             resize.disconnect(); mutations.disconnect(); listeners.forEach(remove => remove());
-            [controls, dock, picker, ...sizes].forEach(node => node.remove());
+            [controls, dock, picker, overflow, ...sizes].forEach(node => node.remove());
         }
         listen(window, 'pagehide', dispose);
         return { show, clear, schedule, dispose, owns, setPreference(value) {

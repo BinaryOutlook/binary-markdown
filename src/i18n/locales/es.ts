@@ -37,6 +37,7 @@ export const webviewMessages = {
   tablePositionSaveFailed: "No se pudo guardar la posición de la barra de herramientas de tabla. Se mantiene la configuración anterior.",
   tableControls: "Controles de tabla",
   tableMenu: "Tabla…",
+  tableMoreActions: "Más acciones de tabla",
   tablePlacement: "Posición de la barra de tabla",
   tablePositionAuto: "Automática (recomendada)",
   tablePositionTopBar: "Siempre en la barra superior",

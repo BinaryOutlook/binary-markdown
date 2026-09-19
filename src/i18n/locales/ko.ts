@@ -37,6 +37,7 @@ export const webviewMessages = {
   tablePositionSaveFailed: "표 도구 모음 위치를 저장하지 못했습니다. 이전 설정이 계속 적용됩니다.",
   tableControls: "표 도구",
   tableMenu: "표…",
+  tableMoreActions: "추가 표 작업",
   tablePlacement: "표 도구 모음 위치",
   tablePositionAuto: "자동(권장)",
   tablePositionTopBar: "항상 상단 표시줄",

@@ -978,6 +978,8 @@ body {
 }
 .table-toolbar { width: max-content; overflow: auto; }
 .table-toolbar button { flex-shrink: 0; }
+.table-toolbar button[data-action="more"] { width: 26px; height: 26px; padding: 0; font-size: 20px; }
+.table-toolbar [hidden], .table-overflow-menu[hidden], .table-overflow-menu [hidden] { display: none !important; }
 .table-toolbar .separator { flex-shrink: 0; }
 .table-toolbar[data-vertical="true"] { flex-direction: column; }
 .table-toolbar[data-vertical="true"] .separator { width: 18px; height: 1px; margin: 4px 0; }
@@ -990,18 +992,21 @@ body {
 .table-toolbar-dock[hidden], .table-toolbar-toggle[hidden], .table-placement-menu[hidden] { display: none !important; }
 .toolbar .table-toolbar-toggle { min-width: 0; width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .toolbar { flex-shrink: 0; overflow-x: auto; }
-.table-placement-menu {
+.table-placement-menu, .table-overflow-menu {
     position: fixed; z-index: 1002; padding: 4px; overflow: auto; width: max-content;
     background: var(--toolbar-bg); color: var(--text-color);
     border: 1px solid var(--border-color); border-radius: 6px; box-shadow: 0 2px 8px #0003;
 }
-.table-placement-menu button {
+.table-placement-menu button, .table-overflow-menu button {
     display: block; width: 100%; text-align: left; padding: 8px 12px;
     background: none; color: inherit; border: none; cursor: pointer;
 }
 .table-placement-menu button[aria-checked="true"]::before { content: '✓ '; }
-.table-placement-menu button:hover { background: var(--selection-bg); }
-.table-toolbar button:focus-visible, .table-toolbar-toggle:focus-visible, .table-placement-menu button:focus-visible {
+.table-placement-menu button:hover, .table-overflow-menu button:hover { background: var(--selection-bg); }
+.table-overflow-menu button { display: flex; align-items: center; gap: 8px; }
+.table-overflow-menu button:disabled { opacity: .4; cursor: default; }
+.table-overflow-menu svg { width: 18px; height: 18px; flex-shrink: 0; }
+.table-toolbar button:focus-visible, .table-toolbar-toggle:focus-visible, .table-placement-menu button:focus-visible, .table-overflow-menu button:focus-visible {
     outline: 2px solid var(--link-color); outline-offset: -2px;
 }
 .editor li:has(> input[type="checkbox"]) {

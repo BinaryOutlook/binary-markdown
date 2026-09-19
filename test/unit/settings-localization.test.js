@@ -38,7 +38,7 @@ test('table placement defaults to Automatic and describes every explicit alterna
     assert.deepEqual(setting.enum, require('../../src/shared/table-placement').positions);
     for (const locale of ['en', 'es', 'fr', 'ja', 'ko', 'zh-cn', 'zh-tw']) {
         const { webviewMessages } = require('../../out/locales/' + locale + '.js');
-        for (const key of ['tableControls', 'tableMenu', 'tablePlacement', 'tablePositionAuto', 'tablePositionTopBar',
+        for (const key of ['tableControls', 'tableMenu', 'tableMoreActions', 'tablePlacement', 'tablePositionAuto', 'tablePositionTopBar',
             'tablePositionFixed', 'tablePositionTopLeft', 'tablePositionTopRight', 'tablePositionBottomLeft',
             'tablePositionBottomRight', 'tablePositionLeft', 'tablePositionRight', 'alignLeft', 'alignCenter', 'alignRight']) {
             assert.ok(webviewMessages[key]?.trim(), locale + ': ' + key);

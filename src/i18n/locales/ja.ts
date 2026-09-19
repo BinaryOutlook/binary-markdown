@@ -37,6 +37,7 @@ export const webviewMessages = {
   tablePositionSaveFailed: "テーブルツールバーの位置を保存できませんでした。以前の設定が引き続き使用されます。",
   tableControls: "表の操作",
   tableMenu: "表…",
+  tableMoreActions: "その他の表の操作",
   tablePlacement: "表ツールバーの位置",
   tablePositionAuto: "自動（推奨）",
   tablePositionTopBar: "常に上部バー",
