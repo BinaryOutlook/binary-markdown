@@ -54,6 +54,12 @@ export class SettingsManager {
         return { ...DEFAULTS, ...this.store.store };
     }
 
+    refreshSetting(key: keyof ElectronSettings, error = ''): void {
+        if (this.settingsWindow && !this.settingsWindow.isDestroyed()) {
+            this.settingsWindow.webContents.send('settings-value', { key, value: this.get(key), error });
+        }
+    }
+
     addRecentFile(filePath: string): void {
         const recent = this.get('recentFiles') || [];
         const filtered = recent.filter(f => f !== filePath);
@@ -115,6 +121,7 @@ export class SettingsManager {
 </style>
 </head>
 <body>
+    <p id="settingsError" role="alert" style="color:#9f2e2e" hidden></p>
     <h2>Appearance</h2>
     <div class="field">
         <label>Theme</label>
@@ -180,6 +187,16 @@ export class SettingsManager {
     </div>
 
     <script>
+    window.settingsBridge.onValue(function(update) {
+        const field = document.getElementById(update.key);
+        if (field) {
+            if (field.type === 'checkbox') field.checked = Boolean(update.value);
+            else field.value = String(update.value);
+        }
+        const error = document.getElementById('settingsError');
+        error.textContent = update.error || '';
+        error.hidden = !update.error;
+    });
     function save(key, value) {
         window.settingsBridge.save(key, value);
     }

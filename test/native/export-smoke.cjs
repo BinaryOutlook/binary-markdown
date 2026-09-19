@@ -631,13 +631,13 @@ async function codeblockCases(h, owner, record) {
 }
 
 async function tablePlacementCase(h, owner, record) {
-    const file = 'table-placement.md';
+    const file = 'table-placement-' + Date.now() + '.md';
     const source = '# Table controls\n\n| Item | State |\n| --- | --- |\n| One | Ready |\n| Two | Draft |\n';
     fs.writeFileSync(path.join(owner.workspace, file), source);
     assert.equal((await h.driver({ action: 'inspect' })).appearance.tableToolbarPosition, 'auto');
     let connection = await h.open(file);
     const controls = '.table-toolbar:not(.table-toolbar-measure)';
-    const selectCell = () => connection.evaluate(`const cell=document.querySelector('#editor td');cell.focus();const range=document.createRange();range.selectNodeContents(cell);range.collapse(true);getSelection().removeAllRanges();getSelection().addRange(range);cell.click()`);
+    const selectCell = () => connection.evaluate(`(() => { const cell=document.querySelector('#editor td');cell.focus();const range=document.createRange();range.selectNodeContents(cell);range.collapse(true);getSelection().removeAllRanges();getSelection().addRange(range);cell.click(); })()`);
     try {
         await selectCell();
         await connection.evaluate('window.__tablePlacementProbe="retained"');
@@ -649,6 +649,38 @@ async function tablePlacementCase(h, owner, record) {
             const state = await h.driver({ action: 'inspect' });
             assert.equal(state.documents.find(document => path.basename(document.path) === file).dirty, false);
         }
+        const positions = ['top-left', 'top-right', 'bottom-left', 'bottom-right', 'left', 'right', 'top-bar', 'auto'];
+        for (const scope of ['global', 'workspace']) {
+            await h.driver({ action: 'config', key: 'tableToolbarPosition', value: 'auto' });
+            await h.driver({ action: 'config', key: 'tableToolbarPosition', scope: 'workspace', value: scope === 'workspace' ? 'auto' : null });
+            for (const value of positions) {
+                await h.until(() => connection.evaluate(`document.querySelector('${controls}').classList.contains('visible') || !document.querySelector('.table-toolbar-toggle').hidden`));
+                await connection.evaluate(`(() => {
+                    const bar = document.querySelector('${controls}');
+                    if (!bar.classList.contains('visible')) document.querySelector('.table-toolbar-toggle').click();
+                    bar.querySelector('[data-action="placement"]').click();
+                    if (!['auto', 'top-bar'].includes(${JSON.stringify(value)})) document.querySelector('[data-position="fixed"]').click();
+                    document.querySelector('.table-placement-menu [data-position="${value}"]').click();
+                })()`);
+                const state = await h.until(async () => {
+                    const state = await h.driver({ action: 'inspect' });
+                    return state.appearance.tableToolbarPosition === value && state;
+                }, 'one picker choice persists at ' + scope + ' scope: ' + value);
+                await h.until(() => connection.evaluate(`document.documentElement.dataset.tableToolbarPosition === '${value}' && ('${value}' === 'auto' || document.querySelector('${controls}').dataset.placement === '${value}')`), 'one picker choice moves the visible toolbar: ' + value);
+                assert.equal(state.tablePositionScopes[scope], value);
+                if (scope === 'workspace') assert.equal(state.tablePositionScopes.global, 'auto');
+                else assert.equal(state.tablePositionScopes.workspace, undefined);
+                assert.equal(state.documents.find(document => path.basename(document.path) === file).dirty, false);
+                assert.equal(await connection.evaluate(`window.__tablePlacementProbe === 'retained' && document.querySelector('#editor td').contains(getSelection().anchorNode) && getSelection().anchorOffset === 0`), true);
+                assert.equal(fs.readFileSync(path.join(owner.workspace, file), 'utf8'), source);
+                record('table-picker', { scope, value, singleSelection: true, selectionPreserved: true, sourceUnchanged: true });
+            }
+        }
+        await connection.evaluate(`window.hostBridge.setTableToolbarPosition('left'); window.hostBridge.setTableToolbarPosition('right')`);
+        await h.until(async () => (await h.driver({ action: 'inspect' })).tablePositionScopes.workspace === 'right');
+        await h.until(() => connection.evaluate(`document.documentElement.dataset.tableToolbarPosition === 'right'`));
+        record('table-picker-rapid', { lastChoiceWins: true, workspaceScopePreserved: true });
+        await h.driver({ action: 'config', key: 'tableToolbarPosition', scope: 'workspace', value: null });
         await h.driver({ action: 'config', key: 'tableToolbarPosition', value: 'top-bar' });
         await h.until(() => connection.evaluate(`document.querySelector('${controls}').dataset.placement==='top-bar'`));
         await connection.evaluate(`const toggle=document.querySelector('.table-toolbar-toggle');if(!toggle.hidden)toggle.click();document.querySelector('${controls} [data-action="placement"]').click();document.querySelector('[data-position="fixed"]').click();document.querySelector('[data-position="bottom-right"]').click()`);
@@ -667,6 +699,7 @@ async function tablePlacementCase(h, owner, record) {
         record('table-placement', { liveConfiguration: true, explicitPreferenceRetained: true, pickerPersistedAcrossReopen: true, actionAndUndo: true });
     } finally {
         if (connection) connection.close();
+        await h.driver({ action: 'config', key: 'tableToolbarPosition', scope: 'workspace', value: null });
         await h.driver({ action: 'config', key: 'tableToolbarPosition', value: 'auto' });
     }
 }

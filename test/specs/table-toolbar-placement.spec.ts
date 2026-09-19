@@ -66,6 +66,25 @@ test('live placement updates preserve document, cell selection and clean state',
     await expect(page.locator('#toolbar [data-action="undo"]')).toBeDisabled();
 });
 
+test('a failed placement save reports the failure without moving or editing the table', async ({ page }) => {
+    await setup(page, 'top-left');
+    const before = await page.locator('#editor').innerHTML();
+    await page.evaluate(() => {
+        (window as any).hostBridge.setTableToolbarPosition = () => {
+            setTimeout(() => (window as any).__hostMessageHandler({ type: 'tableToolbarPositionError' }), 0);
+        };
+    });
+    await page.locator(`${controls} [data-action="placement"]`).click();
+    await page.locator('.table-placement-menu [data-position="top-bar"]').click();
+    await expect(page.getByRole('status')).toContainText('Could not save the table toolbar position');
+    await expect(page.locator('html')).toHaveAttribute('data-table-toolbar-position', 'top-left');
+    await expect(page.locator(controls)).toHaveAttribute('data-placement', 'top-left');
+    await expect(page.locator('#editor')).toHaveJSProperty('innerHTML', before);
+    expect(await page.evaluate(() => document.querySelector('#editor td')?.contains(getSelection()?.anchorNode || null))).toBe(true);
+    expect(await page.evaluate(() => (window as any).__testApi.messages.filter((message: any) => ['edit', 'save'].includes(message.type)))).toEqual([]);
+    await expect(page.locator('#toolbar [data-action="undo"]')).toBeDisabled();
+});
+
 test('toolbar keyboard navigation and Escape return to the retained table cell', async ({ page }) => {
     await setup(page, 'left');
     await expect(page.locator(controls)).toBeVisible();

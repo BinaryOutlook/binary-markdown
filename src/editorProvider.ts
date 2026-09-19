@@ -348,6 +348,7 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
     // Track the currently active webview panel for undo/redo command forwarding
     private activeWebviewPanel: vscode.WebviewPanel | undefined;
     private readonly exportControllers = new Map<vscode.WebviewPanel, ExportController>();
+    private tablePositionUpdates: Promise<void> = Promise.resolve();
 
     public insertToc(): boolean {
         if (!this.activeWebviewPanel?.active) { return false; }
@@ -791,12 +792,23 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
                     if (!tablePositions.includes(message.value)) {
                         break;
                     }
-                    const config = vscode.workspace.getConfiguration('binary-markdown');
-                    const scope = config.inspect('tableToolbarPosition')?.workspaceValue !== undefined
-                        ? vscode.ConfigurationTarget.Workspace : vscode.ConfigurationTarget.Global;
-                    await config.update('tableToolbarPosition', message.value, scope);
-                    void webviewPanel.webview.postMessage({ type: 'tableToolbarPosition', value:
-                        normalizeTablePosition(config.get('tableToolbarPosition')) });
+                    // Keep consecutive choices ordered, including requests from
+                    // another editor using this provider's shared preference.
+                    this.tablePositionUpdates = this.tablePositionUpdates.then(async () => {
+                        try {
+                            const config = vscode.workspace.getConfiguration('binary-markdown');
+                            const scope = config.inspect('tableToolbarPosition')?.workspaceValue !== undefined
+                                ? vscode.ConfigurationTarget.Workspace : vscode.ConfigurationTarget.Global;
+                            await config.update('tableToolbarPosition', message.value, scope);
+                            // The earlier configuration object is a snapshot.
+                            const current = vscode.workspace.getConfiguration('binary-markdown');
+                            void webviewPanel.webview.postMessage({ type: 'tableToolbarPosition', value:
+                                normalizeTablePosition(current.get('tableToolbarPosition')) });
+                        } catch {
+                            void webviewPanel.webview.postMessage({ type: 'tableToolbarPositionError' });
+                        }
+                    });
+                    await this.tablePositionUpdates;
                     break;
                 }
                 case 'renderLoaded':

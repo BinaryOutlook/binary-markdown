@@ -40,7 +40,11 @@ exports.activate = async function activate(context) {
         uiKind: vscode.env.uiKind, remoteName: vscode.env.remoteName ?? null,
         trusted: vscode.workspace.isTrusted,
         appearance: Object.fromEntries(['language', 'toolbarMode', 'tableToolbarPosition', 'theme', 'export.pdfWhiteBackground'].map(key =>
-            [key, vscode.workspace.getConfiguration('binary-markdown').get(key)]))
+            [key, vscode.workspace.getConfiguration('binary-markdown').get(key)])),
+        tablePositionScopes: (() => {
+            const setting = vscode.workspace.getConfiguration('binary-markdown').inspect('tableToolbarPosition');
+            return { global: setting.globalValue, workspace: setting.workspaceValue };
+        })()
     });
     const respond = value => {
         const temporary = path.join(workspace, 'response.json.tmp');
@@ -98,6 +102,12 @@ exports.activate = async function activate(context) {
                 break;
             }
             case 'config': {
+                // Workspace writes are only needed for the table preference
+                // scope regression, and remain inside the sentinel-owned workspace.
+                if (request.scope !== undefined && (request.scope !== 'workspace' || request.key !== 'tableToolbarPosition')) {
+                    throw new Error('Only the table preference permits an isolated workspace override.');
+                }
+                const clearWorkspace = request.scope === 'workspace' && request.value === null;
                 const allowed = {
                     'export.pandocPath': value => typeof value === 'string',
                     'export.browserPath': value => typeof value === 'string',
@@ -108,10 +118,11 @@ exports.activate = async function activate(context) {
                     language: value => ['en', 'zh-CN'].includes(value),
                     theme: value => ['github', 'sepia', 'night', 'dark', 'minimal', 'perplexity', 'things'].includes(value)
                 };
-                if (!Object.hasOwn(allowed, request.key) || !allowed[request.key](request.value)) {
+                if (!Object.hasOwn(allowed, request.key) || (!clearWorkspace && !allowed[request.key](request.value))) {
                     throw new Error('The driver only changes bounded export/appearance test settings in its isolated profile.');
                 }
-                await vscode.workspace.getConfiguration('binary-markdown').update(request.key, request.value, vscode.ConfigurationTarget.Global);
+                await vscode.workspace.getConfiguration('binary-markdown').update(request.key, clearWorkspace ? undefined : request.value,
+                    request.scope === 'workspace' ? vscode.ConfigurationTarget.Workspace : vscode.ConfigurationTarget.Global);
                 break;
             }
             case 'autoSave': {

@@ -60,6 +60,7 @@ async function setup(t, initialConfig = {}) {
     const state = {
         text: '# OLD-EDITOR\n', disk: '# OLD-EDITOR\n', captureCalls: 0, saveCalls: 0,
         captures: async () => '# OLD-EDITOR\n', beforeWrite: async () => {}, beforeRead: async () => {}, failedWrite: false,
+        beforeConfigWrite: async () => {},
         controller: undefined, exports: [], links: []
     };
     const file = value => ({ scheme: 'file', fsPath: value, toString: () => 'file://' + value });
@@ -93,16 +94,21 @@ async function setup(t, initialConfig = {}) {
         WorkspaceEdit: class { constructor() { this.edits = []; } replace(_uri, _range, text) { this.edits.push(text); } },
         TextEdit: { replace: (range, newText) => ({ range, newText }) },
         workspace: {
-            getConfiguration: () => ({
-                get: (key, fallback) => key in config ? config[key] : fallback,
-                inspect: key => ({ workspaceValue: workspaceConfig[key], globalValue: config[key] }),
-                update: async (key, value, target) => {
-                    configUpdates.push({ key, value, target });
-                    config[key] = value;
-                    if (target === 2) workspaceConfig[key] = value;
-                    configChanges.fire({ affectsConfiguration: query => query === 'binary-markdown' || query === 'binary-markdown.' + key });
-                }
-            }),
+            getConfiguration: () => {
+                // VS Code configuration objects are snapshots, not live views.
+                const snapshot = { ...config };
+                return {
+                    get: (key, fallback) => key in snapshot ? snapshot[key] : fallback,
+                    inspect: key => ({ workspaceValue: workspaceConfig[key], globalValue: config[key] }),
+                    update: async (key, value, target) => {
+                        configUpdates.push({ key, value, target });
+                        await state.beforeConfigWrite(key, value);
+                        config[key] = value;
+                        if (target === 2) workspaceConfig[key] = value;
+                        configChanges.fire({ affectsConfiguration: query => query === 'binary-markdown' || query === 'binary-markdown.' + key });
+                    }
+                };
+            },
             getWorkspaceFolder: () => undefined,
             onDidChangeTextDocument: changes.listen,
             onDidChangeConfiguration: configChanges.listen,
@@ -517,6 +523,36 @@ test('table position picker persists the existing workspace scope or defaults to
         assert.equal(h.renderConfigs.length, 1);
         assert.equal(h.document.isDirty, false);
     }
+});
+
+test('rapid placement requests persist in selection order despite asynchronous writes', async t => {
+    const h = await setup(t);
+    const firstWrite = deferred();
+    h.state.beforeConfigWrite = async (_key, value) => { if (value === 'left') await firstWrite.promise; };
+    const first = h.send({ type: 'setTableToolbarPosition', value: 'left' });
+    const second = h.send({ type: 'setTableToolbarPosition', value: 'right' });
+    try {
+        await Promise.resolve();
+        assert.deepEqual(h.configUpdates.map(update => update.value), ['left']);
+    } finally {
+        firstWrite.resolve();
+        await Promise.all([first, second]);
+    }
+    assert.equal(h.config.tableToolbarPosition, 'right');
+    assert.deepEqual(h.posts.at(-1), { type: 'tableToolbarPosition', value: 'right' });
+});
+
+test('failed placement persistence reports failure and permits a later retry', async t => {
+    const h = await setup(t, { tableToolbarPosition: 'auto' });
+    h.state.beforeConfigWrite = async () => { throw new Error('Synthetic settings write failure'); };
+    await h.send({ type: 'setTableToolbarPosition', value: 'left' });
+    assert.equal(h.config.tableToolbarPosition, 'auto');
+    assert.deepEqual(h.posts.at(-1), { type: 'tableToolbarPositionError' });
+    h.state.beforeConfigWrite = async () => {};
+    await h.send({ type: 'setTableToolbarPosition', value: 'right' });
+    assert.deepEqual(h.posts.at(-1), { type: 'tableToolbarPosition', value: 'right' });
+    assert.equal(h.renderConfigs.length, 1);
+    assert.equal(h.document.isDirty, false);
 });
 
 test('combined table, export and appearance settings retain each required update', async t => {

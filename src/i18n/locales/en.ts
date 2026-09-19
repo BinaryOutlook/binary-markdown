@@ -34,6 +34,7 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  tablePositionSaveFailed: "Could not save the table toolbar position. The previous setting remains active.",
   tableControls: "Table controls",
   tableMenu: "Table…",
   tablePlacement: "Table toolbar position",

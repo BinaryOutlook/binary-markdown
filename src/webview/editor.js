@@ -191,7 +191,7 @@
     }
 
     function saveCurrentDocument() {
-        try { refreshManagedTocs(false); } catch (error) { showExternalChangeToast(error.message); return; }
+        try { refreshManagedTocs(false); } catch (error) { showEditorToast(error.message); return; }
         const content = readCurrentMarkdown();
         cancelScheduledSync();
         markdown = content;
@@ -2295,7 +2295,7 @@
                 syncMarkdownSync();
                 updateOutline();
             }
-        } catch (error) { showExternalChangeToast(error.message); }
+        } catch (error) { showEditorToast(error.message); }
     }
 
     function setupDocumentAux() {
@@ -2304,7 +2304,7 @@
             block.dataset.auxSetup = 'true';
             block.querySelector('.toc-refresh').addEventListener('click', e => {
                 e.preventDefault(); e.stopPropagation();
-                try { refreshManagedTocs(true); } catch (error) { showExternalChangeToast(error.message); }
+                try { refreshManagedTocs(true); } catch (error) { showEditorToast(error.message); }
             });
             block.querySelectorAll('a').forEach(a => a.addEventListener('click', e => {
                 e.preventDefault(); e.stopPropagation();
@@ -13529,6 +13529,10 @@
 
     // Handle messages from host (VSCode / Electron / test)
     host.onMessage(function(message) {
+        if (message.type === 'tableToolbarPositionError') {
+            showEditorToast(i18n.tablePositionSaveFailed || 'Could not save the table toolbar position. The previous setting remains active.');
+            return;
+        }
         if (message.type === 'theme') {
             if (!['github', 'sepia', 'night', 'dark', 'minimal', 'perplexity', 'things'].includes(message.value)) return;
             if (document.documentElement.dataset.theme === message.value) return;
@@ -13731,7 +13735,7 @@
             editor.focus();
         } else if (message.type === 'externalChangeDetected') {
             // Show toast notification for external change
-            showExternalChangeToast(message.message);
+            showEditorToast(message.message);
         } else if (message.type === 'scrollToAnchor') {
             // Scroll to anchor (heading) in the document
             const anchor = message.anchor;
@@ -13769,14 +13773,15 @@
         }
     });
 
-    // External change toast notification
+    // Non-editing notifications retain the current selection and undo history.
     let externalChangeToast = null;
     let toastHideTimer = null;
 
-    function showExternalChangeToast(msg) {
+    function showEditorToast(msg) {
         if (!externalChangeToast) {
             externalChangeToast = document.createElement('div');
             externalChangeToast.className = 'external-change-toast';
+            externalChangeToast.setAttribute('role', 'status');
             const messageDiv = document.createElement('div');
             messageDiv.className = 'toast-message';
             externalChangeToast.appendChild(messageDiv);

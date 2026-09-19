@@ -285,7 +285,7 @@ ipcMain.on('focus', () => { /* no-op */ });
 ipcMain.on('blur', () => { /* no-op */ });
 
 // Settings IPC
-ipcMain.on('settings-save', async (_event, key: string, value: unknown) => {
+ipcMain.on('settings-save', async (event, key: string, value: unknown) => {
     if (key === 'theme') {
         if (!['github', 'sepia', 'night', 'dark', 'minimal', 'perplexity', 'things'].includes(value as string)) return;
         settingsManager.set('theme', value as string);
@@ -296,7 +296,15 @@ ipcMain.on('settings-save', async (_event, key: string, value: unknown) => {
     }
     if (key === 'tableToolbarPosition') {
         if (!['auto', 'top-left', 'top-right', 'bottom-left', 'bottom-right', 'left', 'right', 'top-bar'].includes(value as string)) return;
-        settingsManager.set('tableToolbarPosition', value as string);
+        try {
+            settingsManager.set('tableToolbarPosition', value as string);
+        } catch {
+            const message = getI18nMessages().tablePositionSaveFailed || 'Could not save the table toolbar position. The previous setting remains active.';
+            settingsManager.refreshSetting('tableToolbarPosition', message);
+            event.sender.send('host-message', { type: 'tableToolbarPositionError' });
+            return;
+        }
+        settingsManager.refreshSetting('tableToolbarPosition');
         for (const [win] of windows) {
             if (!win.isDestroyed()) win.webContents.send('host-message', { type: 'tableToolbarPosition', value });
         }

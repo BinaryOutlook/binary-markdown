@@ -34,6 +34,7 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  tablePositionSaveFailed: "無法儲存表格工具列的位置。將繼續使用先前的設定。",
   tableControls: "表格操作",
   tableMenu: "表格…",
   tablePlacement: "表格工具列位置",
