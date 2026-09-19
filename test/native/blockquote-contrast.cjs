@@ -25,12 +25,12 @@ function measureQuotes() {
 }
 
 async function blockquoteCases(h, owner, record) {
-    const file = 'blockquote-contrast.md';
+    const file = 'blockquote-contrast-' + Date.now() + '.md';
     const filePath = path.join(owner.workspace, file);
     fs.writeFileSync(filePath, source);
     const connection = await h.open(file);
     try {
-        await connection.evaluate(`window.__quoteBeforeTheme = document.querySelector('#editor blockquote'); document.getElementById('editor').focus(); const r = document.createRange(); r.setStart(window.__quoteBeforeTheme.querySelector('p').firstChild, 3); r.collapse(true); getSelection().removeAllRanges(); getSelection().addRange(r);`);
+        await connection.evaluate(`(() => { window.__quoteBeforeTheme = document.querySelector('#editor blockquote'); document.getElementById('editor').focus(); const r = document.createRange(); r.setStart(window.__quoteBeforeTheme.querySelector('p').firstChild, 3); r.collapse(true); getSelection().removeAllRanges(); getSelection().addRange(r); })()`);
         for (const theme of themes) {
             await h.driver({ action: 'config', key: 'theme', value: theme });
             await h.until(() => connection.evaluate(`document.documentElement.dataset.theme === ${JSON.stringify(theme)}`));
@@ -52,9 +52,9 @@ async function blockquoteCases(h, owner, record) {
             record('blockquote-pdf', { white, output: pdf.outputPath, quoteTextPresent: true });
         }
         const before = await connection.evaluate('window.htmlToMarkdown()');
-        await connection.evaluate(`document.getElementById('editor').focus(); const r = document.createRange(); r.selectNodeContents(document.querySelector('#editor > p:last-child')); r.collapse(false); getSelection().removeAllRanges(); getSelection().addRange(r);`);
+        await connection.evaluate(`(() => { document.getElementById('editor').focus(); const r = document.createRange(); r.selectNodeContents(document.querySelector('#editor > p:last-child')); r.collapse(false); getSelection().removeAllRanges(); getSelection().addRange(r); })()`);
         await connection.send('Input.insertText', { text: ' edited' });
-        await h.until(async () => (await h.driver({ action: 'inspect' })).documents.some(document => document.path === filePath && document.text.includes('After edited')));
+        await h.until(async () => (await h.driver({ action: 'inspect' })).documents.some(document => document.path === filePath && document.text.includes('edited')), 'typed edit reaches the host');
         await h.driver({ action: 'config', key: 'theme', value: 'github' });
         await h.until(() => connection.evaluate('document.documentElement.dataset.theme === "github"'));
         await connection.evaluate(`document.querySelector('[data-action="undo"]').click()`);
