@@ -2,14 +2,16 @@ import { test, expect, Page } from '@playwright/test';
 
 const documentText = '# Table\n\n| Item | State | Owner |\n| --- | --- | --- |\n| One | Ready | A |\n| Two | Draft | B |\n\nAfter table.\n';
 const controls = '.table-toolbar:not(.table-toolbar-measure)';
-async function setup(page: Page, preference = 'auto') {
+async function setup(page: Page, preference = 'auto', toolbarMode = 'simple') {
     await page.goto('/production-editor.html');
     await page.waitForFunction(() => (window as any).__testApi?.ready);
-    await page.evaluate(({ documentText, preference }) => {
+    await page.evaluate(({ documentText, preference, toolbarMode }) => {
+        document.documentElement.dataset.toolbarMode = toolbarMode;
         (window as any).__testApi.setMarkdown(documentText);
         (window as any).__hostMessageHandler({ type: 'tableToolbarPosition', value: preference });
-    }, { documentText, preference });
+    }, { documentText, preference, toolbarMode });
     await page.locator('#editor td').first().click();
+    await expect(page.locator(controls)).toHaveAttribute('data-placement', /.+/);
 }
 
 for (const position of ['auto', 'top-left', 'top-right', 'bottom-left', 'bottom-right', 'left', 'right', 'top-bar']) {
@@ -187,8 +189,7 @@ test('scrolling offscreen keeps Automatic reachable, while a fixed toolbar hides
 for (const width of [420, 900, 1280]) {
     test(`full formatting bar and table controls remain reachable at ${width}px`, async ({ page }) => {
         await page.setViewportSize({ width, height: 800 });
-        await setup(page, 'top-bar');
-        await page.locator('html').evaluate(node => { node.dataset.toolbarMode = 'full'; });
+        await setup(page, 'top-bar', 'full');
         await page.mouse.move(1, 1);
         await expect(page.locator('#toolbar [data-action="source"]')).toBeVisible();
         const toggle = page.locator('.table-toolbar-toggle');

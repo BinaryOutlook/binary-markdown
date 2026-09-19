@@ -112,7 +112,9 @@ test.describe('コマンドパレット', () => {
         await editor.focus();
         const modifier = process.platform === 'darwin' ? 'Meta' : 'Control';
         await page.keyboard.press(`${modifier}+/`);
-        await page.waitForTimeout(100);
+        // Opening the palette moves focus on the next animation frame.
+        await expect(page.locator('.command-palette-input')).toBeFocused();
+        await expect(page.locator('.command-palette-item').first()).toHaveClass(/selected/);
 
         // ↑ で最後のアイテムへ
         await page.keyboard.press('ArrowUp');
