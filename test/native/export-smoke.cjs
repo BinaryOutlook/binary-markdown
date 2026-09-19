@@ -697,6 +697,26 @@ async function tablePlacementCase(h, owner, record) {
         await h.until(() => connection.evaluate('document.querySelectorAll("#editor tr").length===3'));
         await h.driver({ action: 'save' });
         record('table-placement', { liveConfiguration: true, explicitPreferenceRetained: true, pickerPersistedAcrossReopen: true, actionAndUndo: true });
+        const saved = fs.readFileSync(path.join(owner.workspace, file), 'utf8');
+        await h.workbench(async page => {
+            const frames = [];
+            for (const frame of page.frames()) if (await frame.locator('#editor').isVisible()) frames.push(frame);
+            assert.equal(frames.length, 1, 'Use only the visible installed editor for window resizing');
+            const session = await page.context().newCDPSession(page);
+            const { windowId, bounds } = await session.send('Browser.getWindowForTarget');
+            try {
+                await require('./table-toolbar-overflow.cjs').tableOverflowChecks({
+                    editor: frames[0], keyboard: page.keyboard,
+                    resize: (width, height) => session.send('Browser.setWindowBounds', { windowId, bounds: { width, height, windowState: 'normal' } }),
+                    setPosition: value => h.driver({ action: 'config', key: 'tableToolbarPosition', value }),
+                    record,
+                });
+                assert.equal(fs.readFileSync(path.join(owner.workspace, file), 'utf8'), saved, 'Window resizing and undo leave saved bytes unchanged');
+            } finally {
+                await session.send('Browser.setWindowBounds', { windowId, bounds });
+                await session.detach();
+            }
+        });
     } finally {
         if (connection) connection.close();
         await h.driver({ action: 'config', key: 'tableToolbarPosition', scope: 'workspace', value: null });

@@ -122,6 +122,15 @@ async function main() {
         await page.locator('#toolbar [data-action="undo"]').click();
         await page.waitForFunction(() => document.querySelectorAll('#editor tr').length === 3);
         assert.equal(await page.evaluate(() => window.htmlToMarkdown()), before);
+        await require('./table-toolbar-overflow.cjs').tableOverflowChecks({
+            editor: page, keyboard: page.keyboard,
+            resize: (width, height) => application.evaluate(({ BrowserWindow }, { width, height }) =>
+                BrowserWindow.getAllWindows().find(window => window.__fileManager).setContentSize(width, height), { width, height }),
+            setPosition: value => page.evaluate(value => window.hostBridge.setTableToolbarPosition(value), value),
+            record: (name, details) => receipts.push({ name, ...details }),
+        });
+        await choose('top-bar');
+        await page.waitForFunction(() => document.documentElement.dataset.tableToolbarPosition === 'top-bar');
         const [newEditor] = await Promise.all([
             application.waitForEvent('window'),
             application.evaluate(({ Menu }) => Menu.getApplicationMenu().items.find(item => item.label === 'File').submenu.items.find(item => item.label === 'New').click()),

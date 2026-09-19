@@ -34,7 +34,7 @@ for (const position of ['auto', 'top-left', 'top-right', 'bottom-left', 'bottom-
 
 test('compact dock exposes column insertion in a narrow editor', async ({ page }) => {
     await page.setViewportSize({ width: 600, height: 800 });
-    await setup(page, 'top-bar');
+    await setup(page, 'top-bar', 'full');
     const toggle = page.locator('.table-toolbar-toggle');
     await expect(toggle).toBeVisible();
     await toggle.click();
@@ -101,7 +101,7 @@ test('toolbar keyboard navigation and Escape return to the retained table cell',
 for (const variant of ['floating', 'docked', 'compact']) {
     test(`${variant}: every table action edits the selected row or column exactly once`, async ({ page }) => {
         if (variant === 'compact') await page.setViewportSize({ width: 600, height: 800 });
-        await setup(page, variant === 'floating' ? 'right' : 'top-bar');
+        await setup(page, variant === 'floating' ? 'right' : 'top-bar', variant === 'compact' ? 'full' : 'simple');
         for (const action of ['add-col-left', 'add-col-right', 'del-col', 'add-row-above', 'add-row-below', 'del-row', 'align-left', 'align-center', 'align-right']) {
             await page.evaluate(text => (window as any).__testApi.setMarkdown(text), documentText);
             await page.locator('#editor tr').nth(1).locator('td').nth(1).click();

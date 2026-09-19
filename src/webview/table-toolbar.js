@@ -158,7 +158,7 @@
             if (selection.rangeCount && cell.contains(selection.anchorNode)) savedRange = selection.getRangeAt(0).cloneRange();
             schedule();
         }
-        function restore() {
+        function restore(reveal = false) {
             if (!valid()) return;
             editor.focus({ preventScroll: true });
             const range = savedRange && cell.contains(savedRange.startContainer) ? savedRange : document.createRange();
@@ -166,6 +166,7 @@
             const selection = window.getSelection();
             selection.removeAllRanges();
             selection.addRange(range);
+            if (reveal) cell.scrollIntoView({ block: 'nearest', inline: 'nearest' });
         }
         function schedule() {
             if (disposed || !table) return;
@@ -263,7 +264,13 @@
             const tabStop = visible.includes(document.activeElement) ? document.activeElement : visible.find(button => button.tabIndex === 0) || visible[0];
             [...actions, more].forEach(button => { button.tabIndex = button === tabStop ? 0 : -1; });
             if (!overflow.hidden) placeMenu(overflow, more);
+            if (overflow.contains(document.activeElement)) document.activeElement.scrollIntoView({ block: 'nearest', inline: 'nearest' });
             if (!picker.hidden) placeMenu(picker, pickerAnchor.getClientRects().length ? pickerAnchor : more.hidden ? actions[actions.length - 1] : more);
+        }
+        function dockWidth() {
+            const fixed = [...header.querySelectorAll('.toolbar-fixed')].reduce((total, node) => total + node.getBoundingClientRect().width, 0);
+            const reserve = document.documentElement.dataset.toolbarMode === 'simple' ? 12 : 296;
+            return Math.max(28, header.clientWidth - fixed - reserve);
         }
         function render() {
             if (!valid()) return clear();
@@ -284,6 +291,16 @@
                     const size = controls.getBoundingClientRect();
                     controls.style.left = Math.max(bounds.left + 6, Math.min(size.left, bounds.right - size.width - 6)) + 'px';
                     controls.style.top = Math.max(bounds.top + 6, Math.min(size.top, bounds.bottom - size.height - 6)) + 'px';
+                } else if (controls.dataset.docked === 'true') {
+                    // Retain the current dock while interacting, reducing it to
+                    // the overflow button if necessary instead of hiding focus.
+                    const available = Math.max(44, dockWidth());
+                    dock.style.maxWidth = controls.style.maxWidth = available + 'px';
+                    fitActions(available, sizes[0].getBoundingClientRect().height);
+                }
+                if (!overflow.hidden) placeMenu(overflow, more);
+                if (controls.getAttribute('role') === 'menu' && controls.contains(document.activeElement)) {
+                    document.activeElement.scrollIntoView({ block: 'nearest', inline: 'nearest' });
                 }
                 if (!picker.hidden) placeMenu(picker, pickerAnchor.getClientRects().length ? pickerAnchor : more);
                 return;
@@ -301,13 +318,12 @@
             controls.classList.add('visible');
             controls.style.maxWidth = '';
             controls.style.maxHeight = '';
+            let available = next.width;
             if (current === 'top-bar') {
-                const fixed = [...header.querySelectorAll('.toolbar-fixed')].reduce((total, node) => total + node.getBoundingClientRect().width, 0);
-                const reserve = document.documentElement.dataset.toolbarMode === 'simple' ? 12 : 296;
-                const available = Math.max(28, header.clientWidth - fixed - reserve);
+                available = dockWidth();
                 dock.hidden = false;
                 dock.style.maxWidth = available + 'px';
-                const compact = horizontal.width > available;
+                const compact = sizes[0].querySelector('button').getBoundingClientRect().width + 46 > available;
                 toggle.hidden = !compact;
                 if (compact) {
                     document.body.appendChild(controls);
@@ -321,6 +337,7 @@
                 } else {
                     dock.appendChild(controls);
                     controls.dataset.docked = 'true';
+                    controls.style.maxWidth = available + 'px';
                 }
             } else {
                 dock.hidden = true;
@@ -331,7 +348,7 @@
                 controls.style.maxWidth = next.width + 'px';
                 controls.style.maxHeight = next.height + 'px';
             }
-            fitActions(current === 'top-bar' ? horizontal.width : next.width, current === 'top-bar' ? innerHeight - 12 : next.height);
+            fitActions(available, current === 'top-bar' ? innerHeight - 12 : next.height);
             options.onLayout();
         }
 
@@ -371,7 +388,11 @@
             if (button === more) {
                 overflow.hidden = !overflow.hidden;
                 more.setAttribute('aria-expanded', String(!overflow.hidden));
-                if (!overflow.hidden) { placeMenu(overflow, more); overflowActions.find(action => !action.hidden && !action.disabled)?.focus({ preventScroll: true }); }
+                if (!overflow.hidden) {
+                    overflow.scrollTop = 0;
+                    placeMenu(overflow, more);
+                    overflowActions.find(action => !action.hidden && !action.disabled)?.focus({ preventScroll: true });
+                }
                 return;
             }
             if (button.dataset.action === 'placement') return openPicker(false, button);
@@ -399,7 +420,7 @@
         });
         function keyboard(event) {
             const container = picker.contains(event.target) ? picker : overflow.contains(event.target) ? overflow : controls;
-            if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); closeMenus(); restore(); hovering = false; schedule(); return; }
+            if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); closeMenus(); restore(true); hovering = false; schedule(); return; }
             const vertical = container !== controls || controls.dataset.vertical === 'true';
             const nextKey = vertical ? 'ArrowDown' : 'ArrowRight', previousKey = vertical ? 'ArrowUp' : 'ArrowLeft';
             if (![nextKey, previousKey, 'Home', 'End'].includes(event.key)) return;
@@ -410,6 +431,7 @@
             event.preventDefault(); event.stopPropagation();
             buttons.forEach((button, i) => { button.tabIndex = i === next ? 0 : -1; });
             buttons[next].focus({ preventScroll: true });
+            if (container !== controls || controls.getAttribute('role') === 'menu') buttons[next].scrollIntoView({ block: 'nearest', inline: 'nearest' });
         }
         listen(controls, 'keydown', keyboard);
         listen(picker, 'keydown', keyboard);
