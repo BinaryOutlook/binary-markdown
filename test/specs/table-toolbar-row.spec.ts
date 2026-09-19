@@ -142,3 +142,19 @@ test('Automatic docking remains stable after the contextual row changes viewport
     expect(new Set(placements)).toEqual(new Set(['top-bar']));
     await geometry(page);
 });
+
+test('layout changes retain the primary More button focus with a contextual row', async ({ page }) => {
+    await setup(page, 'full', 'top-bar', 600);
+    const more = page.locator('#toolbarMore');
+    await more.focus();
+    await page.evaluate(async () => {
+        window.dispatchEvent(new Event('resize'));
+        await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    });
+    await expect(more).toBeFocused();
+    await expect(page.locator('.table-toolbar-row')).toBeVisible();
+    await page.keyboard.press('ArrowDown');
+    await expect(page.locator('#toolbarOverflow')).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(more).toBeFocused();
+});

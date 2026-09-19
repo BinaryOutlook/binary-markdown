@@ -187,7 +187,8 @@
             toolbarMore.setAttribute('aria-expanded', 'true');
             positionToolbarOverflow();
         }
-        if (focusedAction && active.getClientRects().length) active.focus({ preventScroll: true });
+        if (active === toolbarMore && !toolbarMore.hidden) toolbarMore.focus({ preventScroll: true });
+        else if (focusedAction && active.getClientRects().length) active.focus({ preventScroll: true });
         else if (focusedAction || (active === toolbarMore && toolbarMore.hidden)) {
             const first = toolbarActions.find(item => item.button.getClientRects().length && !item.button.disabled);
             first?.button.focus({ preventScroll: true });

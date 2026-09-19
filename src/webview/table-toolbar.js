@@ -135,11 +135,12 @@
             controls.querySelector('[data-action="placement"]').setAttribute('aria-expanded', 'false');
         }
         function hide() {
+            const changed = !dock.hidden || !row.hidden;
             closeMenus();
             controls.classList.remove('visible');
             dock.hidden = true;
             row.hidden = true;
-            options.onLayout();
+            if (changed) options.onLayout();
         }
         function clear() {
             if (table) resize.unobserve(table);
