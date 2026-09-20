@@ -46,7 +46,7 @@ exports.activate = async function activate(context) {
             const setting = vscode.workspace.getConfiguration('binary-markdown').inspect(key);
             return [key, { global: setting.globalValue, workspace: setting.workspaceValue }];
         })),
-        exportCodeScopes: Object.fromEntries(['export.showCodeLanguage', 'export.codeLanguagePosition'].map(key => {
+        exportCodeScopes: Object.fromEntries(['export.showCodeLanguage', 'export.codeLanguagePosition', 'export.showCodeLineCount'].map(key => {
             const setting = vscode.workspace.getConfiguration('binary-markdown').inspect(key);
             return [key, { global: setting.globalValue, workspace: setting.workspaceValue }];
         })),
@@ -128,15 +128,16 @@ exports.activate = async function activate(context) {
             }
             case 'config': {
                 // Scope regressions remain inside the sentinel-owned profile/workspace.
-                if (request.scope !== undefined && (request.scope !== 'workspace' || !['tableToolbarPosition', 'toolbarMode', 'editorWidthMode', 'editorMaxWidth', 'editorAlignment', 'editorWidthIndicators', 'codeLanguageOrder', 'mathSourcePosition', 'mathSourceWrap', 'export.showCodeLanguage', 'export.codeLanguagePosition'].includes(request.key))) {
+                if (request.scope !== undefined && (request.scope !== 'workspace' || !['tableToolbarPosition', 'toolbarMode', 'editorWidthMode', 'editorMaxWidth', 'editorAlignment', 'editorWidthIndicators', 'codeLanguageOrder', 'mathSourcePosition', 'mathSourceWrap', 'export.showCodeLanguage', 'export.codeLanguagePosition', 'export.showCodeLineCount'].includes(request.key))) {
                     throw new Error('Only the listed editor preferences permit an isolated workspace override.');
                 }
-                const clearSetting = request.value === null && (request.scope === 'workspace' || ['toolbarMode', 'editorWidthMode', 'editorMaxWidth', 'editorAlignment', 'editorWidthIndicators', 'codeLanguageOrder', 'mathSourcePosition', 'mathSourceWrap', 'export.showCodeLanguage', 'export.codeLanguagePosition'].includes(request.key));
+                const clearSetting = request.value === null && (request.scope === 'workspace' || ['toolbarMode', 'editorWidthMode', 'editorMaxWidth', 'editorAlignment', 'editorWidthIndicators', 'codeLanguageOrder', 'mathSourcePosition', 'mathSourceWrap', 'export.showCodeLanguage', 'export.codeLanguagePosition', 'export.showCodeLineCount'].includes(request.key));
                 const allowed = {
                     'export.pandocPath': value => typeof value === 'string',
                     'export.browserPath': value => typeof value === 'string',
                     'export.pdfWhiteBackground': value => typeof value === 'boolean',
                     'export.showCodeLanguage': value => typeof value === 'boolean',
+                    'export.showCodeLineCount': value => typeof value === 'boolean',
                     'export.codeLanguagePosition': value => ['top-left', 'top-right', 'bottom-left', 'bottom-right'].includes(value),
                     'math.backslashDelimiters': value => typeof value === 'boolean',
                     mathSourceWrap: value => typeof value === 'boolean',

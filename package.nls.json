@@ -68,5 +68,6 @@
   "config.export.codeLanguagePosition.topLeft": "Top left.",
   "config.export.codeLanguagePosition.topRight": "Top right.",
   "config.export.codeLanguagePosition.bottomLeft": "Bottom left.",
-  "config.export.codeLanguagePosition.bottomRight": "Bottom right."
+  "config.export.codeLanguagePosition.bottomRight": "Bottom right.",
+  "config.export.showCodeLineCount.description": "Show the total number of authored code lines at the bottom-left of PDF and DOCX code blocks. Off by default; independent of language labels and per-line numbers. Captured once per export."
 }

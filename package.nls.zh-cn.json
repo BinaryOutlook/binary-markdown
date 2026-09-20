@@ -68,5 +68,6 @@
   "config.export.codeLanguagePosition.topLeft": "左上角。",
   "config.export.codeLanguagePosition.topRight": "右上角。",
   "config.export.codeLanguagePosition.bottomLeft": "左下角。",
-  "config.export.codeLanguagePosition.bottomRight": "右下角。"
+  "config.export.codeLanguagePosition.bottomRight": "右下角。",
+  "config.export.showCodeLineCount.description": "在PDF和DOCX代码块左下角显示源代码总行数。默认关闭，与语言标签和逐行行号独立；每次导出时固定此设置。"
 }

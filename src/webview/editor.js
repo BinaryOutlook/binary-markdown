@@ -2843,7 +2843,7 @@
                                 open: lines[codeStart], close: line, singleLine: false });
                         } else {
                             const countAttr = exportCode ? ' data-export-code-lines="' + (i - codeStart - 1) + '"' : '';
-                            html += '<pre data-lang="' + escapeHtml(codeLang) + '"' + countAttr + ' data-mode="display"><code contenteditable="false"' + trailingAttr + '>' + codeHtml + '</code></pre>';
+                            html += '<pre data-lang="' + escapeHtml(codeLang).replace(/"/g, '&quot;') + '"' + countAttr + ' data-mode="display"><code contenteditable="false"' + trailingAttr + '>' + codeHtml + '</code></pre>';
                         }
                         inCodeBlock = false;
                         codeContent = '';
@@ -3044,7 +3044,7 @@
                 // final empty entry. Remove only those parser delimiters.
                 const payload = codeContent.slice(0, -(body.endsWith('\n') ? 2 : 1));
                 const trailing = payload.endsWith('\n');
-                html += '<pre data-lang="' + escapeHtml(codeLang) + '" data-export-code-lines="' + count + '"><code' +
+                html += '<pre data-lang="' + escapeHtml(codeLang).replace(/"/g, '&quot;') + '" data-export-code-lines="' + count + '"><code' +
                     (trailing ? ' data-trailing-br="true"' : '') + '>' +
                     (payload ? escapeHtml(payload).replace(/\n/g, '<br>') + (trailing ? '<br>' : '') : '<br>') + '</code></pre>';
                 return html;

@@ -154,7 +154,9 @@ export class ExportController implements vscode.Disposable {
                 const config = vscode.workspace.getConfiguration('binary-markdown', this.document.uri);
                 const codeOptions = Object.freeze({
                     showCodeLanguage: config.get<boolean>('export.showCodeLanguage', true),
-                    codeLanguagePosition: codeLanguagePosition(config.get('export.codeLanguagePosition'))
+                    codeLanguagePosition: codeLanguagePosition(config.get('export.codeLanguagePosition')),
+                    showCodeLineCount: config.get<boolean>('export.showCodeLineCount', false) === true,
+                    codeLineCountLabel: messages.codeLineCountLabel
                 });
                 const source: SavedExportDocument = Object.freeze({
                     sourcePath: this.document.uri.fsPath, markdown: raw, version,

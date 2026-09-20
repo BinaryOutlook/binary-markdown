@@ -68,5 +68,6 @@
   "config.export.codeLanguagePosition.topLeft": "En haut à gauche.",
   "config.export.codeLanguagePosition.topRight": "En haut à droite.",
   "config.export.codeLanguagePosition.bottomLeft": "En bas à gauche.",
-  "config.export.codeLanguagePosition.bottomRight": "En bas à droite."
+  "config.export.codeLanguagePosition.bottomRight": "En bas à droite.",
+  "config.export.showCodeLineCount.description": "Afficher le nombre total de lignes de code saisies en bas à gauche des blocs PDF et DOCX. Désactivé par défaut, indépendamment des libellés de langue et des numéros de ligne. Réglage capturé une fois par export."
 }

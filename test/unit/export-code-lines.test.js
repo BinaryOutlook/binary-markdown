@@ -1,6 +1,15 @@
 const assert = require('node:assert/strict');
 const test = require('node:test');
 const { logicalCodeLines, pandocCodeLines } = require('../../out/export/code-lines');
+const fixtures = require('../fixtures/export-code-lines.cjs');
+
+test('shared export fixtures keep their explicit logical-line counts', () => {
+    for (const fixture of fixtures) {
+        const lines = logicalCodeLines(fixture.lines.join('\n'), fixture.count === 1 ? 1 : 0);
+        assert.deepEqual(lines, fixture.lines, fixture.name);
+        assert.equal(lines.length, fixture.count, fixture.name);
+    }
+});
 
 test('logical code lines preserve authored whitespace and distinguish empty from blank', () => {
     const cases = [
