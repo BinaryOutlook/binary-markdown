@@ -327,7 +327,7 @@ async function run(settings, owner) {
         fs.writeFileSync(report, JSON.stringify({ harness: harnessIdentity(), host: receipt(owner), packageSha256: hash(fs.readFileSync(settings.package)), receipts }, null, 2));
         console.log(name, JSON.stringify(details));
     };
-    const available = ['identity', 'filesystem', 'formats', 'saves', 'edges', 'ui', 'equations', 'pdf-background', 'selection', 'immutable', 'offline', 'document-aux', 'links', 'codeblocks', 'table-placement', 'table-content', 'table-row', 'text-toolbar', 'insert-menu', 'blockquotes'];
+    const available = ['identity', 'filesystem', 'formats', 'saves', 'edges', 'ui', 'equations', 'pdf-background', 'selection', 'immutable', 'offline', 'document-aux', 'links', 'codeblocks', 'table-placement', 'table-content', 'table-row', 'text-toolbar', 'insert-menu', 'underline', 'blockquotes'];
     const groups = settings.suite === 'all' ? available : [settings.suite];
     assert.ok(groups.every(value => available.includes(value)), 'Suite must be all, ' + available.join(', '));
     const htmlExports = [];
@@ -506,6 +506,7 @@ async function run(settings, owner) {
         if (groups.includes('table-content')) await tableContentCase(h, owner, record);
         if (groups.includes('table-row')) await tableRowCase(h, owner, record);
         if (groups.includes('insert-menu')) await insertMenuCase(h, owner, record);
+        if (groups.includes('underline')) await underlineCase(h, owner, record);
         if (groups.includes('text-toolbar')) await textToolbarCase(h, owner, record);
         if (groups.includes('equations')) await equationCases(h, owner, record);
         if (groups.includes('links')) await linkCases(h, owner, record);
@@ -792,6 +793,40 @@ async function tablePlacementCase(h, owner, record) {
         if (connection) connection.close();
         await h.driver({ action: 'config', key: 'tableToolbarPosition', scope: 'workspace', value: null });
         await h.driver({ action: 'config', key: 'tableToolbarPosition', value: 'auto' });
+    }
+}
+
+async function underlineCase(h, owner, record) {
+    const { source, underlineChecks } = require('./underline.cjs');
+    const { installedEditor } = require('./table-toolbar-overflow.cjs');
+    const previous = await h.driver({ action: 'inspect' });
+    const file = 'underline.md', filePath = path.join(owner.workspace, file);
+    await h.driver({ action: 'close' }); fs.writeFileSync(filePath, source);
+    await h.driver({ action: 'config', key: 'toolbarMode', scope: 'workspace', value: 'full' });
+    let connection = await h.open(file);
+    try {
+        let before;
+        await h.workbench(async page => {
+            before = await underlineChecks({ editor: installedEditor(connection, h), keyboard: page.keyboard,
+                modifier: process.platform === 'darwin' ? 'Meta' : 'Control', record,
+                save: async expected => {
+                    // The queued-edit/native-save overlap remains tracked by #11.
+                    await h.until(async () => (await h.driver({ action: 'inspect' })).documents.some(document => samePath(document.path, filePath) && document.text === expected), 'underlined content reached host');
+                    await h.driver({ action: 'save' });
+                    assert.equal(fs.readFileSync(filePath, 'utf8'), expected);
+                }
+            });
+        });
+        await h.sourceMode(connection);
+        assert.equal(await connection.evaluate('document.getElementById("sourceEditor").value'), before);
+        connection.close(); connection = null;
+        await h.driver({ action: 'close' }); connection = await h.open(file);
+        assert.equal(await connection.evaluate('document.querySelectorAll("#editor u").length'), 1);
+        assert.equal(fs.readFileSync(filePath, 'utf8'), before);
+        record('underline-reopened', { sourceRoundTrip: true, nativeSave: true, restoredContent: true });
+    } finally {
+        connection?.close();
+        await h.driver({ action: 'config', key: 'toolbarMode', scope: 'workspace', value: previous.toolbarModeScopes.workspace ?? null });
     }
 }
 

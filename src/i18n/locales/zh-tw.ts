@@ -34,6 +34,8 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  underline: "底線 (Ctrl+U)",
+  underlineUnavailable: "請選擇程式碼、公式和產生區塊之外的一般文字來加上底線。",
   insertLinkTitle: "插入連結",
   insertLinkUrl: "網址或檔案路徑",
   insertLinkText: "連結文字",

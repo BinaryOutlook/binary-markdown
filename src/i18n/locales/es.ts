@@ -34,6 +34,8 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  underline: "Subrayado (Ctrl+U)",
+  underlineUnavailable: "Selecciona texto fuera del código, las ecuaciones y los bloques generados para subrayarlo.",
   insertLinkTitle: "Insertar enlace",
   insertLinkUrl: "URL o ruta del archivo",
   insertLinkText: "Texto del enlace",

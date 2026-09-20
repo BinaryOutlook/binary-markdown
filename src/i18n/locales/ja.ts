@@ -34,6 +34,8 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  underline: "下線 (Ctrl+U)",
+  underlineUnavailable: "下線を付けるには、コード、数式、生成されたブロックの外にあるテキストを選択してください。",
   insertLinkTitle: "リンクを挿入",
   insertLinkUrl: "URL またはファイルパス",
   insertLinkText: "リンクのテキスト",

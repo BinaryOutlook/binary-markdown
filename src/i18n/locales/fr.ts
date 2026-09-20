@@ -34,6 +34,8 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  underline: "Souligné (Ctrl+U)",
+  underlineUnavailable: "Sélectionnez du texte hors du code, des équations et des blocs générés pour le souligner.",
   insertLinkTitle: "Insérer un lien",
   insertLinkUrl: "URL ou chemin du fichier",
   insertLinkText: "Texte du lien",

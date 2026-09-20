@@ -34,6 +34,8 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  underline: "下划线 (Ctrl+U)",
+  underlineUnavailable: "请选择代码、公式和生成区块之外的普通文字来添加下划线。",
   insertLinkTitle: "插入链接",
   insertLinkUrl: "网址或文件路径",
   insertLinkText: "链接文字",

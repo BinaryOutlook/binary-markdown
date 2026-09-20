@@ -34,6 +34,8 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  underline: "밑줄 (Ctrl+U)",
+  underlineUnavailable: "밑줄을 적용하려면 코드, 수식, 생성된 블록 밖의 텍스트를 선택하세요.",
   insertLinkTitle: "링크 삽입",
   insertLinkUrl: "URL 또는 파일 경로",
   insertLinkText: "링크 텍스트",

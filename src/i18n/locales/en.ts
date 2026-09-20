@@ -34,6 +34,8 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  underline: "Underline (Ctrl+U)",
+  underlineUnavailable: "Select ordinary text outside code, equations, and generated blocks to underline it.",
   insertLinkTitle: "Insert link",
   insertLinkUrl: "URL or file path",
   insertLinkText: "Link text",

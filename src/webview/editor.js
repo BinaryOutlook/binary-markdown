@@ -39,6 +39,7 @@
         // Group A: Inline formatting
         'bold': '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 12h9a4 4 0 0 1 0 8H7a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h7a4 4 0 0 1 0 8"/></svg>',
         'italic': '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" x2="10" y1="4" y2="4"/><line x1="14" x2="5" y1="20" y2="20"/><line x1="15" x2="9" y1="4" y2="20"/></svg>',
+        'underline': '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v7a6 6 0 0 0 12 0V3"/><path d="M4 21h16"/></svg>',
         'strikethrough': '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4H9a3 3 0 0 0-2.83 4"/><path d="M14 12a4 4 0 0 1 0 8H6"/><line x1="4" x2="20" y1="12" y2="12"/></svg>',
         'code': '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 18 6-6-6-6"/><path d="m8 6-6 6 6 6"/></svg>',
         // Group B: Block elements
@@ -1509,6 +1510,22 @@
 
     // ========== MARKDOWN TO HTML ==========
 
+    // Recognize only paired, attribute-free underline tags. Code spans and link
+    // destinations are protected before this runs; escaped tags stay literal.
+    function restoreUnderlineTags(html) {
+        const matches = [...html.matchAll(/&lt;(\/?)u&gt;/gi)];
+        const stack = [], paired = new Set();
+        for (const match of matches) {
+            let escapes = 0;
+            for (let at = match.index - 1; at >= 0 && html[at] === '\\'; at--) escapes++;
+            if (escapes % 2) continue;
+            if (!match[1]) stack.push(match.index);
+            else if (stack.length) { paired.add(stack.pop()); paired.add(match.index); }
+        }
+        return html.replace(/&lt;(\/?)u&gt;/gi, (literal, closing, index) =>
+            paired.has(index) ? (closing ? '</u>' : '<u>') : literal);
+    }
+
     function parseMarkdownLine(text, allowMath = true) {
         const parseLineInline = value => parseInline(value, allowMath);
         // Heading
@@ -1604,12 +1621,26 @@
         
         // Links (must be after images)
         html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, function(match, linkText, href) {
-            const linkHtml = '<a href="' + href + '">' + linkText + '</a>';
+            const linkHtml = '<a href="' + href + '">' + formatInlineText(linkText) + '</a>';
             const placeholder = '\x00LINK' + (placeholderIndex++) + '\x00';
             placeholders.push({ placeholder, html: linkHtml });
             return placeholder;
         });
         
+        html = formatInlineText(html);
+
+        // Restore placeholders with actual HTML
+        for (const { placeholder, html: replacement } of placeholders) {
+            html = html.replace(placeholder, replacement);
+        }
+        equations.forEach((equation, i) => {
+            html = html.replace(mathMarker + i + '\x00', () => inlineMathHtml(equation));
+        });
+
+        return html;
+    }
+
+    function formatInlineText(html) {
         // Now process inline formatting (bold, italic, etc.)
         // Bold + Italic
         html = html.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>');
@@ -1629,17 +1660,9 @@
         // Strikethrough
         html = html.replace(/~~(.+?)~~/g, '<del>$1</del>');
         
-        // Restore placeholders with actual HTML
-        for (const { placeholder, html: replacement } of placeholders) {
-            html = html.replace(placeholder, replacement);
-        }
-        equations.forEach((equation, i) => {
-            html = html.replace(mathMarker + i + '\x00', () => inlineMathHtml(equation));
-        });
-        
-        return html;
+        return restoreUnderlineTags(html);
     }
-    
+
     // Parse inline code spans according to CommonMark spec
     // Opening and closing backtick strings must be exactly the same length
     // Uses placeholders to protect code content from further markdown processing
@@ -5928,6 +5951,26 @@
         syncMarkdown();
     }
 
+    function toggleUnderline() {
+        const selection = window.getSelection();
+        const range = selection && selection.rangeCount ? selection.getRangeAt(0) : null;
+        if (isSourceMode || !editorRange(range)) return;
+        const protectedSelector = 'pre, code, .math-inline, .math-wrapper, .mermaid-wrapper, .front-matter, .toc-block';
+        const element = node => node.nodeType === Node.ELEMENT_NODE ? node : node.parentElement;
+        const protectedContent = element(range.startContainer).closest(protectedSelector) ||
+            element(range.endContainer).closest(protectedSelector) ||
+            (!range.collapsed && [...editor.querySelectorAll(protectedSelector)].some(node => range.intersectsNode(node)));
+        if (protectedContent) { showEditorToast(i18n.underlineUnavailable); return; }
+        const formatsSelection = !range.collapsed;
+        if (formatsSelection) {
+            markdown = readCurrentMarkdown();
+            undoManager.saveSnapshot();
+        }
+        document.execCommand('underline');
+        // A caret-only toggle affects subsequent typing; it is not a document edit.
+        if (formatsSelection) syncMarkdownSync();
+    }
+
     // Apply inline formatting (bold, italic, strikethrough) with proper handling
     // for blockquotes and table cells where line breaks should be preserved
     function applyInlineFormat(tagName) {
@@ -6283,6 +6326,7 @@
             case 'del':
             case 's':
             case 'strike':
+            case 'u':
             case 'code':
             case 'a':
                 // Use mdGetInlineMarkdown to properly normalize nested inline elements
@@ -6448,6 +6492,7 @@
         }
         
         if (tag === 'br') {
+            if (currentStyles.has('underline')) return [{ char: '\n', styles: new Set(currentStyles) }];
             // Line break - skip (handled at block level)
             return result;
         }
@@ -6470,6 +6515,8 @@
             newStyles.add('italic');
         } else if (tag === 'del' || tag === 's' || tag === 'strike') {
             newStyles.add('strikethrough');
+        } else if (tag === 'u') {
+            newStyles.add('underline');
         }
         
         // Process children with updated styles
@@ -6598,6 +6645,11 @@
      */
     function applyInlineStyles(text, styles) {
         if (!text) return '';
+        if (styles.has('underline')) {
+            const innerStyles = new Set(styles); innerStyles.delete('underline');
+            // Every physical source line needs a balanced inline wrapper.
+            return text.split('\n').map(line => line ? '<u>' + applyInlineStyles(line, innerStyles) + '</u>' : '').join('\n');
+        }
         
         let result = text;
         
@@ -6701,9 +6753,16 @@
                     // After processing div/p, push the line
                     lines.push(currentLine);
                     currentLine = '';
-                } else if (['strong', 'b', 'em', 'i', 'del', 's', 'strike', 'code', 'a', 'img'].includes(tag)) {
+                } else if (['strong', 'b', 'em', 'i', 'del', 's', 'strike', 'u', 'code', 'a', 'img'].includes(tag)) {
                     // Inline elements - process them
-                    currentLine += mdProcessNode(node);
+                    const content = mdProcessNode(node);
+                    if (tag === 'u' || node.querySelector('u')) {
+                        const parts = content.split('\n');
+                        parts.forEach((part, index) => {
+                            currentLine += part;
+                            if (index < parts.length - 1) { lines.push(currentLine); currentLine = ''; }
+                        });
+                    } else currentLine += content;
                 } else {
                     // Other elements - process children
                     for (const child of node.childNodes) {
@@ -6805,6 +6864,8 @@
                 return '*' + innerContent + '*';
             } else if (tag === 'del' || tag === 's' || tag === 'strike') {
                 return '~~' + innerContent + '~~';
+            } else if (tag === 'u') {
+                return '<u>' + innerContent + '</u>';
             } else if (tag === 'a') {
                 const href = node.getAttribute('href') || '';
                 return '[' + innerContent + '](' + href + ')';
@@ -11996,7 +12057,7 @@
         closeToolbarOverflow(false);
 
         // View-only actions do not change Markdown content
-        if (!['source', 'openOutline', 'link', 'image'].includes(action)) {
+        if (!['source', 'openOutline', 'link', 'image', 'underline'].includes(action)) {
             markAsEdited(); // User has made an edit
         }
 
@@ -12010,7 +12071,7 @@
         }
 
         // Save snapshot before structural toolbar actions (not for undo/redo/source/openOutline)
-        if (!['undo', 'redo', 'source', 'openOutline', 'link', 'image'].includes(action)) {
+        if (!['undo', 'redo', 'source', 'openOutline', 'link', 'image', 'underline'].includes(action)) {
             undoManager.saveSnapshot();
         }
 
@@ -12051,6 +12112,9 @@
             case 'italic':
                 applyInlineFormat('em');
                 syncMarkdown();
+                break;
+            case 'underline':
+                toggleUnderline();
                 break;
             case 'strikethrough':
                 applyInlineFormat('del');
@@ -12216,6 +12280,7 @@
         // Group: Inline
         { group: 'inline', action: 'bold',          i18nKey: 'bold',          icon: 'bold' },
         { group: 'inline', action: 'italic',        i18nKey: 'italic',        icon: 'italic' },
+        { group: 'inline', action: 'underline',     i18nKey: 'underline',   icon: 'underline' },
         { group: 'inline', action: 'strikethrough', i18nKey: 'strikethrough', icon: 'strikethrough' },
         { group: 'inline', action: 'code',          i18nKey: 'inlineCode',    icon: 'code' },
         { group: 'inline', action: 'inlineMath',    i18nKey: 'inlineMath',    icon: 'math' },
@@ -12719,7 +12784,7 @@
         }
 
         // Save undo snapshot before action
-        if (!['link', 'image'].includes(action)) {
+        if (!['link', 'image', 'underline'].includes(action)) {
             undoManager.saveSnapshot();
             markAsEdited();
         }
@@ -13111,6 +13176,7 @@
         if (isMod && !isSourceMode && e.key !== 's' && e.key !== 'f' && e.key !== 'h' && e.key !== 'l' && e.key !== 'a'
             && e.key !== 'z' && e.key !== 'Z' && e.key !== 'y' && e.key !== 'v' && e.key !== 'c' && e.key !== 'x'
             && e.key !== '/'
+            && e.key.toLowerCase() !== 'u'
             && e.key !== 'Meta' && e.key !== 'Control' && e.key !== 'Shift' && e.key !== 'Alt') {
             undoManager.saveSnapshot();
         }
@@ -13141,6 +13207,13 @@
             return;
         }
         
+        // Underline (Ctrl+U / Cmd+U)
+        if (isMod && !e.shiftKey && e.key.toLowerCase() === 'u') {
+            e.preventDefault(); e.stopPropagation();
+            toggleUnderline();
+            return;
+        }
+
         // Strikethrough (Ctrl+Shift+S)
         if (isMod && e.shiftKey && e.key.toLowerCase() === 's') {
             e.preventDefault();
@@ -14867,6 +14940,12 @@
                     }
                 });
                 
+                // Retain the supported underline wrapper, without source attributes.
+                turndownService.addRule('underline', {
+                    filter: 'u',
+                    replacement: function(content) { return content ? '<u>' + content + '</u>' : ''; }
+                });
+
                 // Custom rule: CSS style-based bold recognition
                 // Handles <span style="font-weight: bold"> etc. from Google Docs, web pages
                 turndownService.addRule('styledBold', {

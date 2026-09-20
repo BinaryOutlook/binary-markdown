@@ -8,6 +8,14 @@ The **Full** toolbar shows standard text formatting by default in VS Code and th
 
 Resizing keeps complete buttons in the toolbar and puts remaining actions under **More toolbar actions**. At very narrow widths, utility actions can also move into that menu. Use the arrow keys or `Home`/`End` within the menu, and `Escape` to close it. Changing toolbar mode updates the current editor without replacing its document, selection, active equation input, or undo history.
 
+## Underline
+
+Select ordinary text and choose **Underline**, use `Ctrl+U` (`Cmd+U` on macOS), or find **Underline** in the Action Palette. A mixed selection becomes fully underlined; an entirely underlined selection loses underline. At a caret, the command changes the formatting of subsequent typing. One Undo reverses a selection-formatting action.
+
+Underline is saved as `<u>text</u>`. The visual editor recognizes paired, attribute-free `<u>` tags and supports combinations with bold, italic, strikethrough, and links in paragraphs, lists, quotes, and table cells. Formatting across paragraph or quote-line boundaries produces balanced inline wrappers for each source line. Arbitrary HTML attributes and unrelated HTML are not activated by this feature.
+
+Code spans, code blocks, equations, and generated document blocks cannot be underlined through the command. To show a literal example, use code such as `` `<u>text</u>` `` or escape the opening angle brackets as `\<u>text\</u>`. Other Markdown readers need support for this inline HTML representation to display underline. Export compatibility is tracked separately in [issue #40](https://github.com/BinaryOutlook/binary-markdown/issues/40); editor support alone does not establish export-reader support.
+
 ## Insert menu
 
 **Insert** is available in both **Full** and **Simple** mode. Its dropdown includes inline equations, block equations, tables, code blocks, links, images, Mermaid diagrams, and a managed table of contents. At very narrow widths, open **More toolbar actions** to find **Insert**. Existing toolbar buttons, shortcuts, and the Action Palette remain available.
@@ -45,6 +53,7 @@ The menu explains unavailable contexts. Switch to the visual editor to insert it
 | --- | --- | --- | --- |
 | Bold | `**text**` + Space | Bold button | `Ctrl+B` |
 | Italic | `*text*` + Space | Italic button | `Ctrl+I` |
+| Underline | `<u>text</u>` in source | Underline button | `Ctrl+U` |
 | Strikethrough | `~~text~~` + Space | Strikethrough button | `Ctrl+Shift+S` |
 | Inline Code | ``` `text` ``` + Space | Code button | ``` Ctrl+` ``` |
 | Link | `[text](url)` <br>Space conversion not supported<br> | Link button | `Ctrl+K` |
@@ -68,6 +77,7 @@ These shortcuts are active when the Binary Markdown editor is focused:
 | `Ctrl/Cmd + Shift + Z` | Redo |
 | `Ctrl/Cmd + B` | Bold |
 | `Ctrl/Cmd + I` | Italic |
+| `Ctrl/Cmd + U` | Underline |
 | `Ctrl/Cmd + K` | Insert link |
 | `Ctrl/Cmd + F` | Find |
 | `Ctrl/Cmd + H` | Find and replace |

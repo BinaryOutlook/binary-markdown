@@ -75,6 +75,7 @@ function generateEditorBodyHtml(messages, platform, options) {
                     <div class="toolbar-group" data-group="inline">
                         <button data-action="bold" title="${m('bold')}"></button>
                         <button data-action="italic" title="${m('italic')}"></button>
+                        <button data-action="underline" title="${m('underline')}"></button>
                         <button data-action="strikethrough" title="${m('strikethrough')}"></button>
                         <button data-action="code" title="${m('inlineCode')}"></button>
                     </div>
