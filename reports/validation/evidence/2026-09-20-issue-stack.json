@@ -619,5 +619,21 @@
     "Unnumbered DOCX total may fall on a following page",
     "PDF extraction can include numbers and group columns",
     "Rapid equation redo before background synchronization remains a baseline limitation"
-  ]
+  ],
+  "finalFunctionalCI": {
+    "verifiedDate": "2026-09-21",
+    "workflow": "Validate VSIX",
+    "run": 35518653002,
+    "url": "https://github.com/BinaryOutlook/binary-markdown/actions/runs/35518653002",
+    "headCommit": "057c1a8b9bb090ddfebd8e579ee428b4ed7cff66",
+    "conclusion": "success",
+    "passedJobs": [
+      "Build candidate",
+      "Validate (macos)",
+      "Validate (windows)",
+      "Validate (ubuntu)",
+      "Validate (vscode-minimum)",
+      "VSIX validation"
+    ]
+  }
 }
