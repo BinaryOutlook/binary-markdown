@@ -92,13 +92,25 @@ These pointers describe the implemented integration; recheck them after rebasing
 
 ## Code presentation in DOCX and PDF
 
-DOCX uses bundled references for [bottom labels or hidden labels](../media/export-reference.docx) and [top labels](../media/export-reference-top.docx), selected from the captured presentation, with the existing Pandoc JSON transformation. The reference adds code paragraph and language styles; a native Word shape supplies the attached label while preserving editable code and language text. The reproducible asset builder is [build-docx-reference.py](../scripts/build-docx-reference.py). Normal compilation uses the checked-in asset and does not require that Python builder.
+DOCX uses bundled references for [bottom labels or hidden labels](../media/export-reference.docx), [top labels](../media/export-reference-top.docx), and [top labels with a count footer](../media/export-reference-top-footer.docx), selected from the captured presentation, with the existing Pandoc JSON transformation. The reference adds code paragraph and metadata styles; a native Word shape supplies the attached label while preserving editable code and language text. The reproducible asset builder is [build-docx-reference.py](../scripts/build-docx-reference.py). Normal compilation uses the checked-in assets and does not require that Python builder.
 
 Direct PDF uses the shared [language mapping](../src/export/code-language.ts) and [language-tab renderer](../src/export/language-tab.ts). Labels enter as text, and code nodes are retained intact. The job captures the document-scoped `binary-markdown.export.showCodeLanguage` and `binary-markdown.export.codeLanguagePosition` settings once in `CodePresentationOptions`. Invalid/unset placement normalizes to `top-left`; the other supported values are `top-right`, `bottom-left`, and `bottom-right`. HTML/EPUB, inline code, math and Mermaid retain their existing conversion routes.
 
 PDF metadata rows identify their `top`/`bottom` edge and `left`/`right` side outside the retained code node. DOCX metadata uses corresponding paragraph styles and escaped editable label text. Top metadata precedes the code and keeps with its first part; bottom metadata follows the complete code and keeps with its last part. Labels occur once per block, including across pages. These rows provide the placement boundary for additional export metadata without inserting it into source code.
 
 The top-label reference removes the code paragraph's inherited keep-with-next and moves its spacing after the block, avoiding an unwanted link to following prose. The footer reference keeps code with its footer. Keeping a DOCX footer attached can move a long block to the next page; long blocks remain splittable. Current user-facing behavior is described in [export help](../media/export-help.md#code-language-tabs). The [dated investigation](../reports/investigations/2026-09-14-docx-code-blocks.md) records compared approaches and reader-specific evidence.
+
+### Authored code lines
+
+The shared [line model](../src/export/code-lines.ts) takes a payload with fence separators and display-only breaks already excluded. It preserves every character and intentional blank line; an explicit source distinction separates an empty block (zero lines) from one blank line. The [shared fixtures](../test/fixtures/export-code-lines.cjs) declare counts independently and cover tabs, Unicode, unknown languages, wrapping and pagination.
+
+The detached editor parser supplies `data-export-code-lines` only during export preparation and marks display-only breaks. PDF counts use that model without changing the retained code node. The live editor, its serialization and code-copy path do not acquire export metadata.
+
+DOCX reads with [Pandoc's tab-preservation option](https://pandoc.org/MANUAL.html#option--preserve-tabs). A separate `sourcepos` analysis identifies the source extent of each code block and is matched against the main reader's payload and language. It is never used as the writer's tree: in the tested Pandoc version, source-position mode changes fenced-math recognition. The adapter removes only a proven unclosed-fence EOF delimiter and supplies the DOCX writer's consumed final newline when an authored blank tail needs preserving. Actual-converter regressions compare all resulting code characters; these adjustments occur only in the export copy.
+
+`binary-markdown.export.showCodeLineCount` defaults off and is captured with its localized label. PDF adds a bottom metadata row; DOCX uses `CodeLineCount` and a footer-aware reference. A bottom language label keeps with the separate count row below it. Counts never enter code payloads, and they are independent of language visibility and placement. Reader appearance and interactive copying remain separate verification boundaries.
+
+Keep-with-next is a layout request, not a cross-reader guarantee. In LibreOfficeDev 26.8.0.0.alpha0, a 150-line unnumbered block can leave its count alone on the next page. The code and count survive, but footer attachment remains an unresolved acceptance item; preserve this limitation in review evidence until the target readers establish otherwise.
 
 ## Verify a change
 

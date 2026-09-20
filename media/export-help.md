@@ -66,6 +66,24 @@ DOCX code remains editable and uses a light background and border; PDF code and 
 
 Long code blocks can span pages. A top label stays with the start of its block, and a bottom label stays with its end; labels are not repeated on continuation pages. In DOCX, keeping a footer attached can move a long block to a fresh page and leave space on the previous page. Reader-specific pagination and final visual appearance require inspection in your target reader.
 
+## Total code-line counts
+
+Enable `binary-markdown.export.showCodeLineCount` (default `false`) to show the total at the bottom-left of each PDF or DOCX code block. It works independently of language labels, including unlabeled blocks. A bottom language label uses a separate row above the count so the two cannot overlap. The setting and the interface language used for the count label are captured for each export.
+
+Counts describe authored source lines. Leading, internal and trailing blank lines count; spaces and tabs remain content. The newline separating the final authored line from the closing fence is not another line. Visual wrapping and page breaks add no lines.
+
+| Code between the fences | Count |
+| --- | --- |
+| No line between the opening and closing fences | 0 |
+| One deliberately empty line | 1 |
+| One line containing `x` | 1 |
+| `x`, followed by one empty line | 2 |
+| An empty line, `x`, then two empty lines | 4 |
+
+These are export options; totals never enter Markdown or the editor's code-copy text. DOCX conversion preserves tabs and authored blank tails even when totals are disabled. Reader selection/copy behavior can differ from the stored source; verify it in your target reader. Counts apply to ordinary code blocks, not rendered equations or Mermaid diagrams.
+
+Known DOCX pagination limit: the tested LibreOffice development build can place the count on the page after a long code block despite its keep-with-next styling. Inspect long blocks in your target reader; footer attachment is not yet verified across readers.
+
 ## Underlined text
 
 The editor's paired, attribute-free `<u>text</u>` representation is supported in HTML, PDF, DOCX, and EPUB. HTML/PDF retain the rendered underline. DOCX uses native underlined text runs, and EPUB uses semantic underline markup, preserving supported bold, italic, strikethrough, links, lists, quotations, and table cells. Code and escaped literal examples remain literal. Other raw HTML, attributed tags, and unmatched tags keep their existing fallback behavior; this does not enable arbitrary HTML.
