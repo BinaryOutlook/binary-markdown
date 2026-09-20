@@ -54,5 +54,6 @@
   "config.editorAlignment.description": "Position of the capped visual-editor column. Center is the default; no extra space is added in Full width or narrower panes. Text, Source, and export alignment are unchanged.",
   "config.editorAlignment.left": "Place unused space to the right of the column.",
   "config.editorAlignment.center": "Distribute unused space on both sides of the column.",
-  "config.editorAlignment.right": "Place unused space to the left of the column."
+  "config.editorAlignment.right": "Place unused space to the left of the column.",
+  "config.editorWidthIndicators.description": "Show marks at the outer column edges only while capped. Hide this guide to reclaim its narrow strip. Source and exports are unchanged."
 }

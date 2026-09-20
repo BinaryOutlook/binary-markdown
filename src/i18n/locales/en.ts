@@ -34,6 +34,11 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  widthIndicatorsLabel: "Width boundary indicators",
+  widthIndicatorsHelp: "Show marks at the outer column edges only while capped. Hide this guide to reclaim its narrow strip. Source and exports are unchanged.",
+  widthBoundaryExplanation: "Maximum document width reached. The marks show the outer column, including padding. Change Editor width to use more space.",
+  widthIndicatorsSaveFailed: "Could not save the width indicator preference. The previous setting remains active.",
+
   underline: "Underline (Ctrl+U)",
   underlineUnavailable: "Select ordinary text outside code, equations, and generated blocks to underline it.",
   insertLinkTitle: "Insert link",

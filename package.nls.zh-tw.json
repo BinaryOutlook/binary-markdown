@@ -54,5 +54,6 @@
   "config.editorAlignment.description": "達到寬度上限的視覺化編輯器內容欄的位置。預設置中；全寬模式或較窄區域不會增加額外空白。文字、原始碼和匯出的對齊方式不變。",
   "config.editorAlignment.left": "將剩餘空間放在內容欄右側。",
   "config.editorAlignment.center": "將剩餘空間平均分配到內容欄兩側。",
-  "config.editorAlignment.right": "將剩餘空間放在內容欄左側。"
+  "config.editorAlignment.right": "將剩餘空間放在內容欄左側。",
+  "config.editorWidthIndicators.description": "僅在達到寬度上限時顯示欄外緣標記。隱藏此輔助列可收回其佔用的窄條空間，不影響原始碼或匯出。"
 }

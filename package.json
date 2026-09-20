@@ -320,6 +320,11 @@
             "%config.editorAlignment.center%",
             "%config.editorAlignment.right%"
           ]
+        },
+        "binary-markdown.editorWidthIndicators": {
+          "type": "boolean",
+          "default": true,
+          "description": "%config.editorWidthIndicators.description%"
         }
       }
     },

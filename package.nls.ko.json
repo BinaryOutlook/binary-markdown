@@ -54,5 +54,6 @@
   "config.editorAlignment.description": "최대 너비에 도달한 시각적 편집기 열의 위치입니다. 기본값은 가운데이며 전체 너비나 더 좁은 영역에서는 여백을 추가하지 않습니다. 텍스트, 소스 및 내보내기 정렬은 그대로 유지됩니다.",
   "config.editorAlignment.left": "남는 공간을 열의 오른쪽에 둡니다.",
   "config.editorAlignment.center": "남는 공간을 열 양쪽에 균등하게 둡니다.",
-  "config.editorAlignment.right": "남는 공간을 열의 왼쪽에 둡니다."
+  "config.editorAlignment.right": "남는 공간을 열의 왼쪽에 둡니다.",
+  "config.editorWidthIndicators.description": "최대 너비에 도달한 경우에만 열 바깥쪽 가장자리에 표시합니다. 안내선을 숨기면 좁은 띠 공간을 되찾습니다. 소스와 내보내기는 바뀌지 않습니다."
 }

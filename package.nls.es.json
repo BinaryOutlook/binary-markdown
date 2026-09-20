@@ -54,5 +54,6 @@
   "config.editorAlignment.description": "Posición de la columna limitada del editor visual. Centro es el valor predeterminado; no añade espacio en ancho completo ni en paneles estrechos. No cambia la alineación del texto, código fuente o exportaciones.",
   "config.editorAlignment.left": "Colocar el espacio sobrante a la derecha de la columna.",
   "config.editorAlignment.center": "Repartir el espacio sobrante entre ambos lados de la columna.",
-  "config.editorAlignment.right": "Colocar el espacio sobrante a la izquierda de la columna."
+  "config.editorAlignment.right": "Colocar el espacio sobrante a la izquierda de la columna.",
+  "config.editorWidthIndicators.description": "Muestra marcas en los bordes exteriores solo al alcanzar el límite. Oculta la guía para recuperar su franja estrecha. No cambia el código fuente ni las exportaciones."
 }

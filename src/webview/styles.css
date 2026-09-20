@@ -399,6 +399,21 @@ body {
     margin-left: auto;
 }
 
+/* A separate, stable guide row keeps marks out of editable content/controls. */
+.editor-width-guide { flex: 0 0 24px; height: 24px; position: relative; user-select: none; }
+.editor-width-guide[hidden] { display: none; }
+.editor-width-bounds { position: absolute; height: 24px; pointer-events: none; }
+.editor-width-guide[data-capped="false"] .editor-width-bounds { visibility: hidden; }
+.editor-width-mark { position: absolute; top: 0; width: 24px; height: 24px; padding: 0; border: 0; background: transparent; color: var(--text-color); cursor: help; pointer-events: auto; }
+.editor-width-mark--left { left: 0; }
+.editor-width-mark--right { right: 0; }
+.editor-width-mark svg { display: block; fill: none; stroke: currentColor; stroke-width: 2; }
+.editor-width-mark:hover, .editor-width-mark:focus-visible { color: var(--text-color); background: var(--selection-bg); }
+.editor-width-mark:focus-visible { outline: 2px solid var(--link-color); outline-offset: -2px; }
+.editor-width-explanation { position: absolute; top: 100%; left: 8px; right: 8px; max-width: 460px; margin: 0 auto; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 4px; background: var(--bg-color); color: var(--text-color); font-size: 12px; line-height: 1.4; z-index: 10001; pointer-events: none; }
+.editor-width-explanation[hidden] { display: none; }
+@media print { .editor-width-guide { display: none; } }
+
 .editor-wrapper { flex: 1; overflow: auto; position: relative; }
 .editor {
     max-width: 860px;

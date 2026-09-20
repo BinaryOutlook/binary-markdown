@@ -34,6 +34,11 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  widthIndicatorsLabel: "宽度边界标记",
+  widthIndicatorsHelp: "仅在达到宽度上限时显示列外缘标记。隐藏此辅助条可收回其占用的窄条空间，不影响源码或导出。",
+  widthBoundaryExplanation: "已达到文档最大宽度。标记表示包含内边距的列外缘。可修改编辑器宽度以利用更多空间。",
+  widthIndicatorsSaveFailed: "无法保存宽度标记设置，将保留原设置。",
+
   underline: "下划线 (Ctrl+U)",
   underlineUnavailable: "请选择代码、公式和生成区块之外的普通文字来添加下划线。",
   insertLinkTitle: "插入链接",

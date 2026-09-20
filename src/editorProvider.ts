@@ -492,6 +492,7 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
                         editorWidthMode: config.get<string>('editorWidthMode', 'default'),
                         editorMaxWidth: config.get<number>('editorMaxWidth', 860),
                         editorAlignment: config.get<string>('editorAlignment', 'center'),
+                        editorWidthIndicators: config.get<boolean>('editorWidthIndicators', true),
                         toolbarMode: config.get<string>('toolbarMode', 'full'),
                         tableToolbarPosition: normalizeTablePosition(config.get('tableToolbarPosition')),
                         renderGeneration,
@@ -688,11 +689,11 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
                 void webviewPanel.webview.postMessage({ type: 'toolbarMode', value:
                     vscode.workspace.getConfiguration('binary-markdown').get('toolbarMode', 'full') });
             }
-            const widthChanged = ['editorWidthMode', 'editorMaxWidth', 'editorAlignment'].some(key => e.affectsConfiguration('binary-markdown.' + key));
+            const widthChanged = ['editorWidthMode', 'editorMaxWidth', 'editorAlignment', 'editorWidthIndicators'].some(key => e.affectsConfiguration('binary-markdown.' + key));
             if (widthChanged) {
                 const config = vscode.workspace.getConfiguration('binary-markdown');
                 void webviewPanel.webview.postMessage({ type: 'editorWidth', mode: config.get('editorWidthMode', 'default'),
-                    maxWidth: config.get('editorMaxWidth', 860), alignment: config.get('editorAlignment', 'center') });
+                    maxWidth: config.get('editorMaxWidth', 860), alignment: config.get('editorAlignment', 'center'), indicators: config.get('editorWidthIndicators', true) });
             }
             const exportChanged = e.affectsConfiguration('binary-markdown.export');
             // Presentation options are read by each export. Re-probing tools in

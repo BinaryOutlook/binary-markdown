@@ -54,5 +54,6 @@
   "config.editorAlignment.description": "最大幅に達したビジュアルエディターの列の位置。既定は中央。全幅や狭い領域では余分な空白を追加しません。文字、ソース、エクスポートの配置は変わりません。",
   "config.editorAlignment.left": "列の右側に空き領域を配置します。",
   "config.editorAlignment.center": "列の両側に空き領域を均等に配置します。",
-  "config.editorAlignment.right": "列の左側に空き領域を配置します。"
+  "config.editorAlignment.right": "列の左側に空き領域を配置します。",
+  "config.editorWidthIndicators.description": "最大幅に達したときだけ列の外端にマークを表示します。ガイドを非表示にすると細い帯の領域を戻せます。ソースと出力は変わりません。"
 }

@@ -15,6 +15,7 @@ export interface ElectronSettings {
     editorWidthMode: EditorWidthMode;
     editorMaxWidth: number;
     editorAlignment: EditorAlignment;
+    editorWidthIndicators: boolean;
     toolbarMode: string;
     tableToolbarPosition: string;
     language: string;
@@ -31,6 +32,7 @@ const DEFAULTS: ElectronSettings = {
     editorWidthMode: 'default',
     editorMaxWidth: 860,
     editorAlignment: 'center',
+    editorWidthIndicators: true,
     toolbarMode: 'full',
     tableToolbarPosition: 'auto',
     language: 'default',
@@ -63,7 +65,8 @@ export class SettingsManager {
         return { ...DEFAULTS, ...this.store.store,
             editorWidthMode: normalizeWidthMode(this.store.get('editorWidthMode')),
             editorMaxWidth: normalizeMaxWidth(this.store.get('editorMaxWidth')),
-            editorAlignment: normalizeAlignment(this.store.get('editorAlignment')) };
+            editorAlignment: normalizeAlignment(this.store.get('editorAlignment')),
+            editorWidthIndicators: this.store.get('editorWidthIndicators') !== false };
     }
 
     refreshSetting(key: keyof ElectronSettings, error = ''): void {
@@ -202,6 +205,12 @@ export class SettingsManager {
         </select>
     </div>
     <div class="field-desc" id="editorAlignmentHelp">${messages.editorAlignmentHelp || 'Places a capped column within the editor pane. Does not align the text or change Source or exports.'}</div>
+
+    <div class="field">
+        <label for="editorWidthIndicators">${messages.widthIndicatorsLabel}</label>
+        <input type="checkbox" id="editorWidthIndicators" ${settings.editorWidthIndicators ? 'checked' : ''} aria-describedby="widthIndicatorsHelp" onchange="save('editorWidthIndicators', this.checked)">
+    </div>
+    <div class="field-desc" id="widthIndicatorsHelp">${messages.widthIndicatorsHelp}</div>
 
     <h2>Images</h2>
     <div class="field field-text">

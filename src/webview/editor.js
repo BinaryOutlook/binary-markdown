@@ -24,6 +24,50 @@
     const toolbar = document.getElementById('toolbar');
     const editorWrapper = document.getElementById('editorWrapper');
     let editorRenderRevision = 0;
+    const widthGuide = document.getElementById('editorWidthGuide');
+    const widthBounds = document.getElementById('editorWidthBounds');
+    const widthExplanation = document.getElementById('editorWidthExplanation');
+
+    function updateWidthIndicators() {
+        if (!widthGuide) return;
+        const visible = document.documentElement.dataset.editorWidthIndicators !== 'false' && editor.style.display !== 'none';
+        if (!visible && widthGuide.contains(document.activeElement)) {
+            (editor.style.display === 'none' ? sourceEditor : editor).focus({ preventScroll: true });
+        }
+        widthGuide.hidden = !visible;
+        const pane = editorWrapper.getBoundingClientRect();
+        const column = editor.getBoundingClientRect();
+        // Reserve the guide strip while enabled, so revealing the marks cannot
+        // add a scrollbar and oscillate around the width threshold.
+        const capped = visible && document.documentElement.dataset.editorWidthMode !== 'full' && editorWrapper.clientWidth - column.width > 0.5;
+        widthGuide.dataset.capped = String(capped);
+        if (!capped) {
+            if (widthGuide.contains(document.activeElement)) editor.focus({ preventScroll: true });
+            widthExplanation.hidden = true;
+        }
+        widthBounds.style.left = (column.left - pane.left) + 'px';
+        widthBounds.style.width = column.width + 'px';
+    }
+    if (widthGuide) {
+        for (const mark of widthGuide.querySelectorAll('button')) {
+            mark.addEventListener('pointerdown', event => event.preventDefault());
+            mark.addEventListener('pointerenter', () => { widthExplanation.hidden = false; });
+            mark.addEventListener('pointerleave', () => { if (!widthGuide.contains(document.activeElement)) widthExplanation.hidden = true; });
+            mark.addEventListener('focus', () => { widthExplanation.hidden = false; });
+            mark.addEventListener('click', () => { widthExplanation.hidden = false; });
+            mark.addEventListener('keydown', event => {
+                if (event.key === 'Escape') {
+                    event.preventDefault(); event.stopPropagation();
+                    widthExplanation.hidden = true;
+                    editor.focus({ preventScroll: true });
+                }
+            });
+        }
+        widthGuide.addEventListener('focusout', event => { if (!widthGuide.contains(event.relatedTarget)) widthExplanation.hidden = true; });
+        new ResizeObserver(updateWidthIndicators).observe(editorWrapper);
+        new MutationObserver(updateWidthIndicators).observe(editor, { attributes: true, attributeFilter: ['style'] });
+        window.addEventListener('resize', updateWidthIndicators);
+    }
 
     function applyEditorWidth(mode, width, alignment = document.documentElement.dataset.editorAlignment) {
         const layout = window.BinaryEditorLayout;
@@ -47,6 +91,7 @@
         editor.style.marginRight = placement === 'right' ? '0' : 'auto';
         if (keepCaret) editorWrapper.scrollTop += range.getBoundingClientRect().top - caretBefore.top;
         else if (anchor && anchorTop !== undefined) editorWrapper.scrollTop += anchor.getBoundingClientRect().top - anchorTop;
+        updateWidthIndicators();
     }
     applyEditorWidth(document.documentElement.dataset.editorWidthMode, Number(document.documentElement.dataset.editorMaxWidth));
 
@@ -13995,7 +14040,13 @@
 
     // Handle messages from host (VSCode / Electron / test)
     host.onMessage(function(message) {
+        if (message.type === 'editorWidthIndicators') {
+            document.documentElement.dataset.editorWidthIndicators = String(message.value !== false);
+            updateWidthIndicators();
+            return;
+        }
         if (message.type === 'editorWidth') {
+            if (typeof message.indicators === 'boolean') document.documentElement.dataset.editorWidthIndicators = String(message.indicators);
             applyEditorWidth(message.mode, message.maxWidth, message.alignment);
             positionLanguageSelector();
             return;

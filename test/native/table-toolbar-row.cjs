@@ -7,6 +7,9 @@ function rowGeometry() {
     const header = document.getElementById('toolbar').getBoundingClientRect();
     const row = document.querySelector('.table-toolbar-row');
     const bounds = row.hidden ? header : row.getBoundingClientRect();
+    const guide = document.getElementById('editorWidthGuide');
+    const guideBounds = guide?.getBoundingClientRect();
+    const guideVisible = guide && !guide.hidden;
     const dock = document.querySelector('.table-toolbar-dock');
     const controls = document.querySelector('.table-toolbar:not(.table-toolbar-measure)');
     const docked = controls.dataset.placement === 'top-bar';
@@ -15,7 +18,7 @@ function rowGeometry() {
     return {
         mode: document.documentElement.dataset.toolbarMode, placement: controls.dataset.placement, width: innerWidth,
         correctRow: row.hidden !== shouldShow && (!docked || dock.parentElement === (shouldShow ? row : document.getElementById('toolbar'))),
-        viewportBelow: Math.abs(document.getElementById('editorWrapper').getBoundingClientRect().top - bounds.bottom) <= 1,
+        viewportBelow: Math.abs(document.getElementById('editorWrapper').getBoundingClientRect().top - (guideVisible ? guideBounds.bottom : bounds.bottom)) <= 1 && (!guideVisible || Math.abs(guideBounds.top - bounds.bottom) <= 1),
         wholeButtons: !docked || visible.every(button => { const rect = button.getBoundingClientRect(); return rect.left >= bounds.left && rect.right <= bounds.right + 1 && rect.top >= bounds.top && rect.bottom <= bounds.bottom + 1; }),
     };
 }

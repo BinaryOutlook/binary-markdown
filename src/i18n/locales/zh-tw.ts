@@ -34,6 +34,11 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  widthIndicatorsLabel: "寬度邊界標記",
+  widthIndicatorsHelp: "僅在達到寬度上限時顯示欄外緣標記。隱藏此輔助列可收回其佔用的窄條空間，不影響原始碼或匯出。",
+  widthBoundaryExplanation: "已達到文件最大寬度。標記表示包含內距的欄外緣。可修改編輯器寬度以利用更多空間。",
+  widthIndicatorsSaveFailed: "無法儲存寬度標記設定，將保留原設定。",
+
   underline: "底線 (Ctrl+U)",
   underlineUnavailable: "請選擇程式碼、公式和產生區塊之外的一般文字來加上底線。",
   insertLinkTitle: "插入連結",

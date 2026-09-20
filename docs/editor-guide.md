@@ -276,6 +276,7 @@ FORCE_RELATIVE_PATH: true
 | `binary-markdown.fontSize` | Base font size (px) | `16` |
 | `binary-markdown.editorWidthMode` | Visual editor column width: `default`, `full`, or `custom` | `default` |
 | `binary-markdown.editorMaxWidth` | Outer column cap in CSS pixels for Custom mode; integer 320–4000 | `860` |
+| `binary-markdown.editorWidthIndicators` | Show the visual editor width guide | `true` |
 | `binary-markdown.editorAlignment` | Position the capped column at the `left`, `center`, or `right` of the pane | `center` |
 | `binary-markdown.imageDefaultDir` | Default directory for saved images | `""` (same as markdown file) |
 | `binary-markdown.forceRelativeImagePath` | Force relative paths for images | `false` |
@@ -301,6 +302,14 @@ These settings apply immediately to the visual editor in both hosts and survive 
 Choose `binary-markdown.editorAlignment` in VS Code Settings or **Column alignment** in desktop Preferences to place the column at the **Left**, **Center**, or **Right** of the available pane. Center remains the default. Alignment takes effect when the pane is wider than the active maximum width. Full width and narrower panes use all available width without adding artificial space; your chosen alignment resumes when the column is capped again.
 
 This preference moves the document column without changing paragraph or table-cell alignment, Markdown, selection, active equation source, or undo. Open language menus follow their language tag and stay within the viewport; table controls follow the selected table. Source mode and exported documents retain their separate layout.
+
+### Width boundary indicators
+
+![Width boundary marks with a keyboard-accessible explanation](images/editor-width-boundaries.png)
+
+When the column reaches its maximum width, two small corner marks identify its **outer edges, including padding**. Hover a mark or reach it with Tab to read “Maximum document width reached” and the explanation. Escape dismisses the explanation and returns focus to the editor. This indicates a width preference; document content is still intact and reachable.
+
+The marks follow Default/Custom width, column alignment, and outline-pane resizing. They disappear at or below the cap and in Full width. The guide reserves a 24 px strip above the editor while enabled so it cannot cover document content or flicker as scrollbars appear at the threshold. Turn off `binary-markdown.editorWidthIndicators` in VS Code Settings or **Width boundary indicators** in desktop Preferences to remove the whole strip. Source mode hides it automatically. The guide is outside document selection and never becomes Markdown or exported content.
 
 ### Themes
 

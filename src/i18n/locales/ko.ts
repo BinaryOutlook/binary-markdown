@@ -34,6 +34,11 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  widthIndicatorsLabel: "너비 경계 표시",
+  widthIndicatorsHelp: "최대 너비에 도달한 경우에만 열 바깥쪽 가장자리에 표시합니다. 안내선을 숨기면 좁은 띠 공간을 되찾습니다. 소스와 내보내기는 바뀌지 않습니다.",
+  widthBoundaryExplanation: "문서가 최대 너비에 도달했습니다. 표시는 안쪽 여백을 포함한 열의 바깥쪽 가장자리입니다. 편집기 너비를 변경하면 공간을 더 사용할 수 있습니다.",
+  widthIndicatorsSaveFailed: "너비 경계 설정을 저장하지 못했습니다. 이전 설정을 유지합니다.",
+
   underline: "밑줄 (Ctrl+U)",
   underlineUnavailable: "밑줄을 적용하려면 코드, 수식, 생성된 블록 밖의 텍스트를 선택하세요.",
   insertLinkTitle: "링크 삽입",

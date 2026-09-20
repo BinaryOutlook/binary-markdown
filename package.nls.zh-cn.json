@@ -54,5 +54,6 @@
   "config.editorAlignment.description": "达到宽度上限的可视化编辑器内容列的位置。默认居中；全宽模式或较窄区域不会增加额外空白。文字、源码和导出对齐方式不变。",
   "config.editorAlignment.left": "将剩余空间放在内容列右侧。",
   "config.editorAlignment.center": "将剩余空间均分到内容列两侧。",
-  "config.editorAlignment.right": "将剩余空间放在内容列左侧。"
+  "config.editorAlignment.right": "将剩余空间放在内容列左侧。",
+  "config.editorWidthIndicators.description": "仅在达到宽度上限时显示列外缘标记。隐藏此辅助条可收回其占用的窄条空间，不影响源码或导出。"
 }

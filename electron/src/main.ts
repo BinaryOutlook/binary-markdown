@@ -107,6 +107,7 @@ function createWindow(filePath?: string): BrowserWindow {
             editorWidthMode: settings.editorWidthMode,
             editorMaxWidth: settings.editorMaxWidth,
             editorAlignment: settings.editorAlignment,
+            editorWidthIndicators: settings.editorWidthIndicators,
             toolbarMode: settings.toolbarMode,
             tableToolbarPosition: settings.tableToolbarPosition,
             documentBaseUri: `file://${docDir}/`,
@@ -312,6 +313,18 @@ ipcMain.on('settings-save', async (event, key: string, value: unknown) => {
         settingsManager.refreshSetting('tableToolbarPosition');
         for (const [win] of windows) {
             if (!win.isDestroyed()) win.webContents.send('host-message', { type: 'tableToolbarPosition', value });
+        }
+        return;
+    }
+    if (key === 'editorWidthIndicators') {
+        if (typeof value !== 'boolean') return;
+        try { settingsManager.set(key, value); } catch {
+            settingsManager.refreshSetting(key, getI18nMessages().widthIndicatorsSaveFailed);
+            return;
+        }
+        settingsManager.refreshSetting(key);
+        for (const [win] of windows) {
+            if (!win.isDestroyed()) win.webContents.send('host-message', { type: 'editorWidthIndicators', value });
         }
         return;
     }

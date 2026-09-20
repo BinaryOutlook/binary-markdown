@@ -114,6 +114,13 @@ function generateEditorBodyHtml(messages, platform, options) {
             </div>
             <div id="insertMenu" class="insert-menu" role="menu" aria-label="${m('commandPaletteInsert')}" hidden></div>
             ${exportPanels}
+            <div class="editor-width-guide" id="editorWidthGuide" hidden data-capped="false">
+                <div class="editor-width-bounds" id="editorWidthBounds">
+                    <button type="button" class="editor-width-mark editor-width-mark--left" aria-label="${m('editorAlignmentLeft')}: ${m('widthIndicatorsLabel')}" aria-describedby="editorWidthExplanation"><svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24"><path d="M1 17V7H11"/></svg></button>
+                    <button type="button" class="editor-width-mark editor-width-mark--right" aria-label="${m('editorAlignmentRight')}: ${m('widthIndicatorsLabel')}" aria-describedby="editorWidthExplanation"><svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24"><path d="M23 17V7H13"/></svg></button>
+                </div>
+                <div class="editor-width-explanation" id="editorWidthExplanation" role="tooltip" hidden>${m('widthBoundaryExplanation')}</div>
+            </div>
             <div class="editor-wrapper" id="editorWrapper">
                 <div class="search-replace-box" id="searchReplaceBox" style="display: none;">
                     <div class="search-row">

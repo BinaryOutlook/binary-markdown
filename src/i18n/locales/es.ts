@@ -34,6 +34,11 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  widthIndicatorsLabel: "Indicadores de límite de ancho",
+  widthIndicatorsHelp: "Muestra marcas en los bordes exteriores solo al alcanzar el límite. Oculta la guía para recuperar su franja estrecha. No cambia el código fuente ni las exportaciones.",
+  widthBoundaryExplanation: "Se ha alcanzado el ancho máximo del documento. Las marcas indican los bordes de la columna, incluido el relleno. Cambia el ancho del editor para usar más espacio.",
+  widthIndicatorsSaveFailed: "No se pudo guardar la preferencia de los indicadores. Se mantiene la anterior.",
+
   underline: "Subrayado (Ctrl+U)",
   underlineUnavailable: "Selecciona texto fuera del código, las ecuaciones y los bloques generados para subrayarlo.",
   insertLinkTitle: "Insertar enlace",

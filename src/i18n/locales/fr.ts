@@ -34,6 +34,11 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  widthIndicatorsLabel: "Indicateurs de largeur maximale",
+  widthIndicatorsHelp: "Affiche des repères sur les bords extérieurs uniquement à la largeur maximale. Masquez le guide pour récupérer sa fine bande. La source et les exports restent inchangés.",
+  widthBoundaryExplanation: "Largeur maximale du document atteinte. Les repères montrent les bords extérieurs, marges intérieures comprises. Modifiez la largeur de l’éditeur pour utiliser plus d’espace.",
+  widthIndicatorsSaveFailed: "Impossible d’enregistrer les indicateurs de largeur. Le réglage précédent est conservé.",
+
   underline: "Souligné (Ctrl+U)",
   underlineUnavailable: "Sélectionnez du texte hors du code, des équations et des blocs générés pour le souligner.",
   insertLinkTitle: "Insérer un lien",

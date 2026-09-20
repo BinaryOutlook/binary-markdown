@@ -54,5 +54,6 @@
   "config.editorAlignment.description": "Position de la colonne à largeur limitée de l’éditeur visuel. Centrée par défaut ; aucun espace ajouté en pleine largeur ou dans un volet plus étroit. L’alignement du texte, du mode source et des exports reste inchangé.",
   "config.editorAlignment.left": "Placer l’espace restant à droite de la colonne.",
   "config.editorAlignment.center": "Répartir l’espace restant de part et d’autre de la colonne.",
-  "config.editorAlignment.right": "Placer l’espace restant à gauche de la colonne."
+  "config.editorAlignment.right": "Placer l’espace restant à gauche de la colonne.",
+  "config.editorWidthIndicators.description": "Affiche des repères sur les bords extérieurs uniquement à la largeur maximale. Masquez le guide pour récupérer sa fine bande. La source et les exports restent inchangés."
 }

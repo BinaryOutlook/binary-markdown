@@ -25,10 +25,13 @@ async function geometry(page: Page) {
         const dock = document.querySelector<HTMLElement>('.table-toolbar-dock')!;
         const wrapper = document.getElementById('editorWrapper')!.getBoundingClientRect();
         const rowRect = row.getBoundingClientRect();
+        const guide = document.getElementById('editorWidthGuide')!;
+        const guideRect = guide.getBoundingClientRect();
+        const toolbarBottom = row.hidden ? header.bottom : rowRect.bottom;
         const parent = row.hidden ? header : rowRect;
         const visible = [...dock.querySelectorAll('button')].filter(button => button.getClientRects().length);
         return {
-            wrapperBelow: Math.abs(wrapper.top - (row.hidden ? header.bottom : rowRect.bottom)) <= 1,
+            wrapperBelow: Math.abs(wrapper.top - (guide.hidden ? toolbarBottom : guideRect.bottom)) <= 1 && (guide.hidden || Math.abs(guideRect.top - toolbarBottom) <= 1),
             rowBelow: row.hidden || Math.abs(rowRect.top - header.bottom) <= 1,
             buttonsFit: dock.hidden || visible.every(button => {
                 const rect = button.getBoundingClientRect();

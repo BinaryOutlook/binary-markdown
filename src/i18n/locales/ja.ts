@@ -34,6 +34,11 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  widthIndicatorsLabel: "幅の境界マーク",
+  widthIndicatorsHelp: "最大幅に達したときだけ列の外端にマークを表示します。ガイドを非表示にすると細い帯の領域を戻せます。ソースと出力は変わりません。",
+  widthBoundaryExplanation: "文書の最大幅に達しています。マークは余白を含む列の外端です。エディターの幅を変更すると、より広い領域を使えます。",
+  widthIndicatorsSaveFailed: "幅の境界マークの設定を保存できませんでした。以前の設定を維持します。",
+
   underline: "下線 (Ctrl+U)",
   underlineUnavailable: "下線を付けるには、コード、数式、生成されたブロックの外にあるテキストを選択してください。",
   insertLinkTitle: "リンクを挿入",
