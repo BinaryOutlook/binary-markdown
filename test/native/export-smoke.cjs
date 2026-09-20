@@ -327,7 +327,7 @@ async function run(settings, owner) {
         fs.writeFileSync(report, JSON.stringify({ harness: harnessIdentity(), host: receipt(owner), packageSha256: hash(fs.readFileSync(settings.package)), receipts }, null, 2));
         console.log(name, JSON.stringify(details));
     };
-    const available = ['identity', 'filesystem', 'formats', 'saves', 'edges', 'ui', 'equations', 'pdf-background', 'selection', 'immutable', 'offline', 'document-aux', 'links', 'codeblocks', 'table-placement', 'table-content', 'table-row', 'text-toolbar', 'insert-menu', 'underline', 'underline-exports', 'editor-width', 'editor-alignment', 'width-indicators', 'language-picker', 'language-order', 'blockquotes'];
+    const available = ['identity', 'filesystem', 'formats', 'saves', 'edges', 'ui', 'equations', 'pdf-background', 'selection', 'immutable', 'offline', 'document-aux', 'links', 'codeblocks', 'table-placement', 'table-content', 'table-row', 'text-toolbar', 'insert-menu', 'underline', 'underline-exports', 'editor-width', 'editor-alignment', 'width-indicators', 'language-picker', 'language-order', 'equation-source-position', 'blockquotes'];
     const groups = settings.suite === 'all' ? available : [settings.suite];
     assert.ok(groups.every(value => available.includes(value)), 'Suite must be all, ' + available.join(', '));
     const htmlExports = [];
@@ -508,6 +508,7 @@ async function run(settings, owner) {
         if (groups.includes('insert-menu')) await insertMenuCase(h, owner, record);
         if (groups.includes('width-indicators')) await widthIndicatorsCase(h, owner, record);
         if (groups.includes('language-picker')) await languagePickerCase(h, owner, record);
+        if (groups.includes('equation-source-position')) await equationPositionCase(h, owner, record);
         if (groups.includes('language-order')) await languageOrderCase(h, owner, record);
         if (groups.includes('editor-alignment')) await editorAlignmentCase(h, owner, record);
         if (groups.includes('editor-width')) await editorWidthCase(h, owner, record);
@@ -935,6 +936,50 @@ async function editorWidthCase(h, owner, record) {
             await h.driver({ action: 'config', key, value: previous.editorWidthScopes[key].workspace ?? null, scope: 'workspace' });
             await h.driver({ action: 'config', key, value: previous.editorWidthScopes[key].global ?? null });
         }
+    }
+}
+
+async function equationPositionCase(h, owner, record) {
+    const { source, equationPositionChecks } = require('./equation-source-position.cjs');
+    const { installedEditor } = require('./table-toolbar-overflow.cjs');
+    const previous = (await h.driver({ action: 'inspect' })).mathSourcePositionScopes;
+    const file = 'equation-source-position.md', filePath = path.join(owner.workspace, file);
+    await h.driver({ action: 'close' }); fs.writeFileSync(filePath, source);
+    let connection;
+    try {
+        await h.driver({ action: 'config', key: 'mathSourcePosition', value: null, scope: 'workspace' });
+        await h.driver({ action: 'config', key: 'mathSourcePosition', value: null });
+        connection = await h.open(file);
+        assert.equal(await connection.evaluate('document.documentElement.dataset.mathSourcePosition'), 'above');
+        const changed = await h.workbench(page => equationPositionChecks({
+            editor: installedEditor(connection, h), keyboard: page.keyboard,
+            set: value => h.driver({ action: 'config', key: 'mathSourcePosition', value }), record,
+            save: async expected => {
+                // The queued-edit/native-save overlap remains tracked by #11.
+                await h.until(async () => (await h.driver({ action: 'inspect' })).documents.some(document => samePath(document.path, filePath) && document.text === expected), 'equation input reached host');
+                await h.driver({ action: 'save' }); assert.equal(fs.readFileSync(filePath, 'utf8'), expected);
+            }
+        }));
+        const set = async (value, scope) => {
+            await h.driver({ action: 'config', key: 'mathSourcePosition', value, scope });
+            const expected = (await h.driver({ action: 'inspect' })).appearance.mathSourcePosition;
+            await h.until(() => connection.evaluate(`document.documentElement.dataset.mathSourcePosition === ${JSON.stringify(expected)}`), 'equation placement configuration');
+        };
+        await set('above', 'workspace'); await set('below');
+        assert.equal(await connection.evaluate('document.documentElement.dataset.mathSourcePosition'), 'above');
+        await set(null, 'workspace');
+        assert.equal(await connection.evaluate('document.documentElement.dataset.mathSourcePosition'), 'below');
+        assert.equal((await h.driver({ action: 'inspect' })).documents.find(document => samePath(document.path, filePath)).dirty, false);
+        await h.sourceMode(connection); assert.equal(await connection.evaluate('document.getElementById("sourceEditor").value'), changed);
+        connection.close(); connection = null; await h.driver({ action: 'close' }); connection = await h.open(file);
+        assert.equal(await connection.evaluate('document.documentElement.dataset.mathSourcePosition'), 'below');
+        assert.equal(await connection.evaluate('window.htmlToMarkdown()'), changed);
+        assert.equal(fs.readFileSync(filePath, 'utf8'), changed);
+        record('equation-source-position-persistence', { workspaceOverride: true, userFallback: true, reopen: true, sourceAndCleanStatePreserved: true });
+    } finally {
+        connection?.close(); await h.driver({ action: 'close' });
+        await h.driver({ action: 'config', key: 'mathSourcePosition', value: previous.workspace ?? null, scope: 'workspace' });
+        await h.driver({ action: 'config', key: 'mathSourcePosition', value: previous.global ?? null });
     }
 }
 
