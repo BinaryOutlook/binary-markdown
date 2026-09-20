@@ -44,6 +44,8 @@ Use `EXPORT_PANDOC_PATH`, `EXPORT_BROWSER_PATH`, and `EXPORT_PDFTOTEXT_PATH` whe
 
 Follow the [installed-VSIX harness](../test/native/export-smoke.md) to create a fresh profile and workspace and run the affected scenarios. Inspect outputs with the [artifact audit](../test/native/export-artifact-audit.md) and representative target readers. Stop the development server for checks intended to prove package independence. Compare the same package bytes across hosts when making a combined compatibility claim.
 
+For DOCX code numbering, use the [reader checkpoint procedure](../test/native/docx-reader-checkpoint.md) to generate fresh fixtures and check rendering, basic editing and save/reopen in the two named readers. Preserve original exports and edited copies separately. Converter checks and a headless resave do not substitute for these interaction checks.
+
 For release validation, follow the fuller sequence and clean-source requirements in [building.md](building.md#validate-a-candidate) and the [release and support policy](releases-and-support.md). A development check does not replace those gates.
 
 ## Record results for review

@@ -80,7 +80,7 @@ Counts describe authored source lines. Leading, internal and trailing blank line
 | `x`, followed by one empty line | 2 |
 | An empty line, `x`, then two empty lines | 4 |
 
-These are export options; totals never enter Markdown or the editor's code-copy text. DOCX conversion preserves tabs and authored blank tails even when totals are disabled. Reader selection/copy behavior can differ from the stored source; verify it in your target reader. Counts apply to ordinary code blocks, not rendered equations or Mermaid diagrams.
+These are export options; totals never enter Markdown or the editor's code-copy text. A DOCX total is export-time text: adding or deleting code in a document reader does not recalculate it. Re-export from the edited Markdown to refresh totals and language labels. DOCX conversion preserves tabs and authored blank tails even when totals are disabled. Reader selection/copy behavior can differ from the stored source; verify it in your target reader. Counts apply to ordinary code blocks, not rendered equations or Mermaid diagrams.
 
 Known DOCX pagination limit: the tested LibreOffice development build can place the count on the page after a long code block despite its keep-with-next styling. Inspect long blocks in your target reader; footer attachment is not yet verified across readers.
 
@@ -90,7 +90,7 @@ Enable `binary-markdown.export.showCodeLineNumbers` (default `false`) to add a g
 
 Code text, indentation and highlighting remain in the document. Numbers are generated presentation content, not saved Markdown. PDF text extraction can include them and can group the gutter separately from the code; extracted whitespace can also differ from the source. Do not rely on a PDF for an exact code copy. Interactive selection/copy and spoken reading order remain reader-specific checks.
 
-DOCX numbering is experimental. It uses editable paragraphs with automatic list numbers, preserves the original highlighting, and keeps the gutter outside the shaded code area. Disabling numbering retains the existing code-block layout. Editing does not recalculate syntax highlighting. Enter, soft breaks, copied list numbers and spoken reading order need checking in your target reader; the currently observed LibreOffice development build is not a general Word compatibility guarantee.
+DOCX numbering remains experimental pending the named-reader checks. It uses editable paragraphs with automatic list numbers, preserves the original highlighting, and keeps the gutter outside the shaded code area. Disabling numbering retains the existing code-block layout. Highlighting reflects the exported source and is not recalculated after editing in Word or another reader. Automatic wrapping does not create a numbered paragraph; inserting a paragraph and inserting a soft break are different reader operations. See the [reader checkpoint](../reports/validation/2026-09-21-docx-reader-checkpoint.md) for the named reader versions, observed results and pending editing checks. Copying can include list numbers depending on the reader and selection; number-free copying is not guaranteed.
 
 ## Underlined text
 

@@ -6,6 +6,8 @@ The freshly fetched baseline is `19b276f3b819b9549e3a9e06d2dc967d8187ec06`. The 
 
 The maintainer authorized tested parent PR heads as provisional dependency baselines before human review. This is not an accepted technical freeze, issue completion or permission to merge. In particular, #38's reader matrix and DOCX representation remain proposals. Review the focused PRs in sequence, then the combined integration diff against `main`; do not treat either path as already approved.
 
+**Follow-up, 2026-09-21:** the maintainer accepted native paragraphs and a bounded Word for macOS/stable LibreOffice scope. The [reader checkpoint](2026-09-21-docx-reader-checkpoint.md) records that decision and subsequent evidence. The proposal and pending items below describe the original batch; the follow-up supersedes its DOCX scope decisions without changing its historical test results.
+
 ## Sequential issue-to-PR map
 
 Within a row, review the original PR before its corrections. Each subsequent PR targets the preceding branch. All 32 recorded PR heads were verified open/draft, in the intended linear chain, and contained in the final functional head. The order explains implementation dependencies; independent issues can still be accepted separately.
