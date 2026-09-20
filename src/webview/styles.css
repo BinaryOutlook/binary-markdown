@@ -871,6 +871,20 @@ body {
     border-radius: 0 0 6px 6px;
     border-top: none;
 }
+/* Keep the editable node in place so changing visual order cannot blur/commit it. */
+html[data-math-source-position="below"] .editor .math-wrapper[data-mode="edit"] {
+    display: flex;
+    flex-direction: column-reverse;
+}
+html[data-math-source-position="below"] .editor .math-wrapper[data-mode="edit"] pre[data-lang="math"] {
+    border-radius: 0 0 6px 6px;
+}
+html[data-math-source-position="below"] .editor .math-wrapper[data-mode="edit"] .math-display {
+    border-radius: 6px 6px 0 0;
+    border-top: 1px solid var(--border-color);
+    border-bottom: none;
+}
+
 .editor .math-display .math-error {
     color: #d73a49;
     font-size: 14px;

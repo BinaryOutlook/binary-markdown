@@ -95,6 +95,19 @@
     }
     applyEditorWidth(document.documentElement.dataset.editorWidthMode, Number(document.documentElement.dataset.editorMaxWidth));
 
+    function applyMathSourcePosition(value) {
+        const selection = window.getSelection();
+        const range = selection?.rangeCount ? selection.getRangeAt(0) : null;
+        const node = selection?.anchorNode;
+        const wrapper = (node?.nodeType === Node.ELEMENT_NODE ? node : node?.parentElement)?.closest('.math-wrapper[data-mode="edit"]');
+        const caretBefore = wrapper && range?.getBoundingClientRect();
+        const bounds = editorWrapper.getBoundingClientRect();
+        const keepCaret = caretBefore?.height && caretBefore.top >= bounds.top && caretBefore.bottom <= bounds.bottom;
+        document.documentElement.dataset.mathSourcePosition = value === 'below' ? 'below' : 'above';
+        // CSS changes the visual order without detaching the active editable node.
+        if (keepCaret) editorWrapper.scrollTop += range.getBoundingClientRect().top - caretBefore.top;
+    }
+
     // Reading-position outline state. The active section is the last heading
     // that has crossed the reading line 30% down the visible editor viewport.
     let outlineHeadings = [];
@@ -14140,6 +14153,10 @@
 
     // Handle messages from host (VSCode / Electron / test)
     host.onMessage(function(message) {
+        if (message.type === 'mathSourcePosition') {
+            applyMathSourcePosition(message.value);
+            return;
+        }
         if (message.type === 'codeLanguageOrder') {
             document.documentElement.dataset.codeLanguageOrder = ['a-z', 'z-a'].includes(message.value) ? message.value : 'default';
             document.querySelector('.lang-selector')?.refreshOrder?.();
