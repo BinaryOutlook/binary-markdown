@@ -43,7 +43,7 @@ const testHostBridgeScript = fs.readFileSync(testHostBridgePath, 'utf-8');
 
 // プレースホルダーを置換
 editorScript = fs.readFileSync(path.join(__dirname, '../src/shared/math-syntax.js'), 'utf8') + '\n' + editorScript;
-editorScript = fs.readFileSync(path.join(__dirname, '../src/shared/table-placement.js'), 'utf8') + '\n' + fs.readFileSync(path.join(__dirname, '../src/webview/table-toolbar.js'), 'utf8') + '\n' + editorScript;
+editorScript = fs.readFileSync(path.join(__dirname, '../src/shared/editor-layout.js'), 'utf8') + '\n' + fs.readFileSync(path.join(__dirname, '../src/shared/table-placement.js'), 'utf8') + '\n' + fs.readFileSync(path.join(__dirname, '../src/webview/table-toolbar.js'), 'utf8') + '\n' + editorScript;
 editorScript = editorScript
     .replace('__MATH_BACKSLASH__', 'true')
     .replace('__DEBUG_MODE__', 'false')

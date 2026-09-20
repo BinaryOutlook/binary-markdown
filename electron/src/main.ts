@@ -3,7 +3,8 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { FileManager } from './file-manager';
 import { SettingsManager } from './settings-manager';
-import { generateEditorHtml, writeHtmlToTempFile } from './html-generator';
+import { generateEditorHtml, writeHtmlToTempFile, getResourcePath } from './html-generator';
+const { widthModes, isValidWidth, normalizeWidthMode } = require(getResourcePath('src/shared/editor-layout.js')) as typeof import('../../src/shared/editor-layout');
 import { buildMenu } from './menu';
 import { setupUpdateChecker, checkForUpdates } from './updater';
 import { showLinkDialog } from './link-dialog';
@@ -103,6 +104,8 @@ function createWindow(filePath?: string): BrowserWindow {
         const html = generateEditorHtml(content, {
             theme: settings.theme,
             fontSize: settings.fontSize,
+            editorWidthMode: settings.editorWidthMode,
+            editorMaxWidth: settings.editorMaxWidth,
             toolbarMode: settings.toolbarMode,
             tableToolbarPosition: settings.tableToolbarPosition,
             documentBaseUri: `file://${docDir}/`,
@@ -311,6 +314,26 @@ ipcMain.on('settings-save', async (event, key: string, value: unknown) => {
         }
         return;
     }
+    if (key === 'editorWidthMode' || key === 'editorMaxWidth') {
+        if (key === 'editorWidthMode' ? !widthModes.includes(value as any) : !isValidWidth(value)) {
+            settingsManager.refreshSetting(key, getI18nMessages().editorWidthInvalid);
+            return;
+        }
+        try {
+            if (key === 'editorWidthMode') settingsManager.set(key, normalizeWidthMode(value));
+            else settingsManager.set(key, value as number);
+        } catch {
+            settingsManager.refreshSetting(key, getI18nMessages().editorWidthSaveFailed);
+            return;
+        }
+        settingsManager.refreshSetting(key);
+        const settings = settingsManager.getAll();
+        for (const [win] of windows) {
+            if (!win.isDestroyed()) win.webContents.send('host-message', { type: 'editorWidth',
+                mode: settings.editorWidthMode, maxWidth: settings.editorMaxWidth });
+        }
+        return;
+    }
     if (key === 'toolbarMode') {
         if (value !== 'full' && value !== 'simple') return;
         try {
@@ -385,7 +408,7 @@ app.whenReady().then(() => {
         },
         openPreferences: () => {
             const win = BrowserWindow.getFocusedWindow();
-            if (win) settingsManager.openSettingsWindow(win);
+            if (win) settingsManager.openSettingsWindow(win, getI18nMessages());
         },
         checkForUpdates: () => {
             const win = BrowserWindow.getFocusedWindow();

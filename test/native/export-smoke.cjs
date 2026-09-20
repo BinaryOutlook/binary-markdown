@@ -327,7 +327,7 @@ async function run(settings, owner) {
         fs.writeFileSync(report, JSON.stringify({ harness: harnessIdentity(), host: receipt(owner), packageSha256: hash(fs.readFileSync(settings.package)), receipts }, null, 2));
         console.log(name, JSON.stringify(details));
     };
-    const available = ['identity', 'filesystem', 'formats', 'saves', 'edges', 'ui', 'equations', 'pdf-background', 'selection', 'immutable', 'offline', 'document-aux', 'links', 'codeblocks', 'table-placement', 'table-content', 'table-row', 'text-toolbar', 'insert-menu', 'underline', 'underline-exports', 'blockquotes'];
+    const available = ['identity', 'filesystem', 'formats', 'saves', 'edges', 'ui', 'equations', 'pdf-background', 'selection', 'immutable', 'offline', 'document-aux', 'links', 'codeblocks', 'table-placement', 'table-content', 'table-row', 'text-toolbar', 'insert-menu', 'underline', 'underline-exports', 'editor-width', 'blockquotes'];
     const groups = settings.suite === 'all' ? available : [settings.suite];
     assert.ok(groups.every(value => available.includes(value)), 'Suite must be all, ' + available.join(', '));
     const htmlExports = [];
@@ -506,6 +506,7 @@ async function run(settings, owner) {
         if (groups.includes('table-content')) await tableContentCase(h, owner, record);
         if (groups.includes('table-row')) await tableRowCase(h, owner, record);
         if (groups.includes('insert-menu')) await insertMenuCase(h, owner, record);
+        if (groups.includes('editor-width')) await editorWidthCase(h, owner, record);
         if (groups.includes('underline')) await underlineCase(h, owner, record);
         if (groups.includes('underline-exports')) await underlineExportCase(h, owner, record);
         if (groups.includes('text-toolbar')) await textToolbarCase(h, owner, record);
@@ -794,6 +795,48 @@ async function tablePlacementCase(h, owner, record) {
         if (connection) connection.close();
         await h.driver({ action: 'config', key: 'tableToolbarPosition', scope: 'workspace', value: null });
         await h.driver({ action: 'config', key: 'tableToolbarPosition', value: 'auto' });
+    }
+}
+
+async function editorWidthCase(h, owner, record) {
+    const { source, widthChecks } = require('./editor-width.cjs');
+    const { installedEditor } = require('./table-toolbar-overflow.cjs');
+    const previous = await h.driver({ action: 'inspect' });
+    const file = 'editor-width.md', filePath = path.join(owner.workspace, file);
+    await h.driver({ action: 'close' }); fs.writeFileSync(filePath, source);
+    let connection = await h.open(file);
+    try {
+        for (const scope of [undefined, 'workspace']) {
+            const before = await widthChecks({ editor: installedEditor(connection, h),
+                set: (key, value) => h.driver({ action: 'config', key, value, scope }), until: h.until, record });
+            assert.equal((await h.driver({ action: 'inspect' })).documents.find(document => samePath(document.path, filePath)).dirty, false);
+            assert.equal(fs.readFileSync(filePath, 'utf8'), source);
+            await connection.evaluate(`document.querySelector('[data-action="bold"]').click()`);
+            await h.driver({ action: 'config', key: 'editorWidthMode', value: 'full', scope });
+            await connection.evaluate(`document.querySelector('[data-action="undo"]').click()`);
+            assert.equal(await connection.evaluate('htmlToMarkdown()'), before);
+            // Wait for host edits before native Save; #11 owns overlapping saves.
+            await h.until(async () => (await h.driver({ action: 'inspect' })).documents.some(document => samePath(document.path, filePath) && document.text === source), 'width undo reached host');
+            await h.driver({ action: 'save' });
+            record('editor-width-scope', { scope: scope || 'user', cleanBeforeEdit: true, undoPreserved: true });
+        }
+        await h.driver({ action: 'config', key: 'editorWidthMode', value: 'custom', scope: 'workspace' });
+        await h.driver({ action: 'config', key: 'editorMaxWidth', value: 1000, scope: 'workspace' });
+        await h.sourceMode(connection);
+        assert.equal(await connection.evaluate('document.getElementById("sourceEditor").value'), source);
+        assert.equal(await connection.evaluate('getComputedStyle(document.getElementById("sourceEditor")).maxWidth'), '860px');
+        connection.close(); connection = null;
+        await h.driver({ action: 'close' }); connection = await h.open(file);
+        assert.equal(await connection.evaluate('document.documentElement.dataset.editorWidthMode'), 'custom');
+        assert.equal(await connection.evaluate('getComputedStyle(document.getElementById("editor")).maxWidth'), '1000px');
+        assert.equal(fs.readFileSync(filePath, 'utf8'), source);
+        record('editor-width-reopened', { persistedWorkspaceWidth: true, sourceAndFileUnchanged: true });
+    } finally {
+        connection?.close();
+        for (const key of ['editorWidthMode', 'editorMaxWidth']) {
+            await h.driver({ action: 'config', key, value: previous.editorWidthScopes[key].workspace ?? null, scope: 'workspace' });
+            await h.driver({ action: 'config', key, value: previous.editorWidthScopes[key].global ?? null });
+        }
     }
 }
 

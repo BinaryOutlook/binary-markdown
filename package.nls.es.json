@@ -45,5 +45,10 @@
   "config.tableToolbarPosition.bottomRight": "Abajo a la derecha",
   "config.tableToolbarPosition.left": "Lado izquierdo (vertical)",
   "config.tableToolbarPosition.right": "Lado derecho (vertical)",
-  "config.tableToolbarPosition.topBar": "Siempre en la barra superior"
+  "config.tableToolbarPosition.topBar": "Siempre en la barra superior",
+  "config.editorWidthMode.description": "Modo de ancho del editor visual. Los diseños del código fuente y las exportaciones son independientes.",
+  "config.editorWidthMode.default": "Columna centrada limitada a 860 píxeles CSS, incluido el relleno.",
+  "config.editorWidthMode.full": "Usar el ancho disponible del panel con relleno adaptable.",
+  "config.editorWidthMode.custom": "Usar Editor Max Width como límite de la columna, incluido el relleno.",
+  "config.editorMaxWidth.description": "Ancho exterior máximo de la columna en píxeles CSS para el modo personalizado (320–4000; valor predeterminado y alternativa ante valores no válidos: 860). Incluye el relleno y se reduce en paneles más estrechos."
 }

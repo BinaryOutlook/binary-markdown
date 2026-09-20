@@ -489,6 +489,8 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
                     {
                         theme: config.get<string>('theme', 'github'),
                         fontSize: config.get<number>('fontSize', 16),
+                        editorWidthMode: config.get<string>('editorWidthMode', 'default'),
+                        editorMaxWidth: config.get<number>('editorMaxWidth', 860),
                         toolbarMode: config.get<string>('toolbarMode', 'full'),
                         tableToolbarPosition: normalizeTablePosition(config.get('tableToolbarPosition')),
                         renderGeneration,
@@ -685,6 +687,12 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
                 void webviewPanel.webview.postMessage({ type: 'toolbarMode', value:
                     vscode.workspace.getConfiguration('binary-markdown').get('toolbarMode', 'full') });
             }
+            const widthChanged = ['editorWidthMode', 'editorMaxWidth'].some(key => e.affectsConfiguration('binary-markdown.' + key));
+            if (widthChanged) {
+                const config = vscode.workspace.getConfiguration('binary-markdown');
+                void webviewPanel.webview.postMessage({ type: 'editorWidth', mode: config.get('editorWidthMode', 'default'),
+                    maxWidth: config.get('editorMaxWidth', 860) });
+            }
             const exportChanged = e.affectsConfiguration('binary-markdown.export');
             // Presentation options are read by each export. Re-probing tools in
             // every open editor here launches a burst of browsers on Windows.
@@ -694,7 +702,7 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
             const editorSettings = ['fontSize', 'imageDefaultDir', 'forceRelativeImagePath', 'language',
                 'outlineStateScope', 'outlineDefaultOpen', 'outlineActiveColor', 'enableDebugLogging', 'math.backslashDelimiters'];
             const editorChanged = editorSettings.some(key => e.affectsConfiguration('binary-markdown.' + key));
-            if (e.affectsConfiguration('binary-markdown') && (editorChanged || (!exportChanged && !positionChanged && !themeChanged && !toolbarModeChanged))) {
+            if (e.affectsConfiguration('binary-markdown') && (editorChanged || (!exportChanged && !positionChanged && !themeChanged && !toolbarModeChanged && !widthChanged))) {
                 clearTimeout(configurationRefresh);
                 configurationRefresh = setTimeout(() => {
                     configurationRefresh = undefined;

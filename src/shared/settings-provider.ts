@@ -1,4 +1,5 @@
 import { TableToolbarPosition } from './table-placement';
+import { EditorWidthMode } from './editor-layout';
 /**
  * SettingsProvider: an abstraction for reading editor settings and observing changes.
  *
@@ -9,6 +10,8 @@ import { TableToolbarPosition } from './table-placement';
 export interface EditorSettings {
     theme: 'github' | 'sepia' | 'night' | 'dark' | 'minimal' | 'perplexity';
     fontSize: number;
+    editorWidthMode: EditorWidthMode;
+    editorMaxWidth: number;
     toolbarMode: 'full' | 'simple';
     tableToolbarPosition: TableToolbarPosition;
     language: 'default' | 'en' | 'ja' | 'zh-TW' | 'zh-CN' | 'ko' | 'es' | 'fr';
@@ -20,6 +23,8 @@ export interface EditorSettings {
 export const DEFAULT_SETTINGS: EditorSettings = {
     theme: 'github',
     fontSize: 16,
+    editorWidthMode: 'default',
+    editorMaxWidth: 860,
     toolbarMode: 'full',
     tableToolbarPosition: 'auto',
     language: 'default',

@@ -1,6 +1,9 @@
 import Store from 'electron-store';
 import { BrowserWindow } from 'electron';
 import * as path from 'path';
+import type { EditorWidthMode } from '../../src/shared/editor-layout';
+import { getResourcePath } from './html-generator';
+const { normalizeWidthMode, normalizeMaxWidth } = require(getResourcePath('src/shared/editor-layout.js')) as typeof import('../../src/shared/editor-layout');
 
 /**
  * Electron settings backed by electron-store.
@@ -9,6 +12,8 @@ import * as path from 'path';
 export interface ElectronSettings {
     theme: string;
     fontSize: number;
+    editorWidthMode: EditorWidthMode;
+    editorMaxWidth: number;
     toolbarMode: string;
     tableToolbarPosition: string;
     language: string;
@@ -22,6 +27,8 @@ export interface ElectronSettings {
 const DEFAULTS: ElectronSettings = {
     theme: 'things',
     fontSize: 16,
+    editorWidthMode: 'default',
+    editorMaxWidth: 860,
     toolbarMode: 'full',
     tableToolbarPosition: 'auto',
     language: 'default',
@@ -51,7 +58,9 @@ export class SettingsManager {
     }
 
     getAll(): ElectronSettings {
-        return { ...DEFAULTS, ...this.store.store };
+        return { ...DEFAULTS, ...this.store.store,
+            editorWidthMode: normalizeWidthMode(this.store.get('editorWidthMode')),
+            editorMaxWidth: normalizeMaxWidth(this.store.get('editorMaxWidth')) };
     }
 
     refreshSetting(key: keyof ElectronSettings, error = ''): void {
@@ -67,7 +76,7 @@ export class SettingsManager {
         this.set('recentFiles', filtered.slice(0, 10));
     }
 
-    openSettingsWindow(parentWindow: BrowserWindow): void {
+    openSettingsWindow(parentWindow: BrowserWindow, messages: Record<string, string> = {}): void {
         if (this.settingsWindow && !this.settingsWindow.isDestroyed()) {
             this.settingsWindow.focus();
             return;
@@ -89,7 +98,7 @@ export class SettingsManager {
             },
         });
 
-        const html = this.generateSettingsHtml();
+        const html = this.generateSettingsHtml(messages);
         this.settingsWindow.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(html)}`);
 
         this.settingsWindow.on('closed', () => {
@@ -97,7 +106,7 @@ export class SettingsManager {
         });
     }
 
-    private generateSettingsHtml(): string {
+    private generateSettingsHtml(messages: Record<string, string>): string {
         const settings = this.getAll();
         return `<!DOCTYPE html>
 <html>
@@ -166,6 +175,20 @@ export class SettingsManager {
             <option value="fr" ${settings.language === 'fr' ? 'selected' : ''}>French</option>
         </select>
     </div>
+
+    <div class="field">
+        <label for="editorWidthMode">${messages.editorWidthLabel || 'Editor width'}</label>
+        <select id="editorWidthMode" onchange="save('editorWidthMode', this.value)">
+            <option value="default" ${settings.editorWidthMode === 'default' ? 'selected' : ''}>${messages.editorWidthDefault || 'Default (860 px)'}</option>
+            <option value="full" ${settings.editorWidthMode === 'full' ? 'selected' : ''}>${messages.editorWidthFull || 'Full width'}</option>
+            <option value="custom" ${settings.editorWidthMode === 'custom' ? 'selected' : ''}>${messages.editorWidthCustom || 'Custom width'}</option>
+        </select>
+    </div>
+    <div class="field">
+        <label for="editorMaxWidth">${messages.editorMaxWidthLabel || 'Maximum width (px)'}</label>
+        <input type="number" id="editorMaxWidth" min="320" max="4000" step="1" value="${settings.editorMaxWidth}" aria-describedby="editorWidthHelp" onchange="save('editorMaxWidth', Number(this.value))">
+    </div>
+    <div class="field-desc" id="editorWidthHelp">${messages.editorWidthHelp || 'Custom width: 320–4000 CSS pixels, including padding. Visual editor only; Source and exports keep their own layout.'}</div>
 
     <h2>Images</h2>
     <div class="field field-text">

@@ -415,6 +415,11 @@ body {
     outline: 2px dashed var(--link-color);
     outline-offset: -10px;
 }
+#editor {
+    width: 100%;
+    /* Adapt to the actual editor pane, including outline and zoom changes. */
+    padding-inline: clamp(12px, 7%, 60px);
+}
 .editor img {
     max-width: 100%;
     height: auto;

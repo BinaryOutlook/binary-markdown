@@ -274,6 +274,8 @@ FORCE_RELATIVE_PATH: true
 | --- | --- | --- |
 | `binary-markdown.theme` | Editor theme (`github`, `sepia`, `night`, `dark`, `minimal`, `perplexity`, `things`) | `things` |
 | `binary-markdown.fontSize` | Base font size (px) | `16` |
+| `binary-markdown.editorWidthMode` | Visual editor column width: `default`, `full`, or `custom` | `default` |
+| `binary-markdown.editorMaxWidth` | Outer column cap in CSS pixels for Custom mode; integer 320–4000 | `860` |
 | `binary-markdown.imageDefaultDir` | Default directory for saved images | `""` (same as markdown file) |
 | `binary-markdown.forceRelativeImagePath` | Force relative paths for images | `false` |
 | `binary-markdown.language` | UI language (`default`, `en`, `ja`, `zh-cn`, `zh-tw`, `ko`, `es`, `fr`) | `default` |
@@ -284,6 +286,14 @@ FORCE_RELATIVE_PATH: true
 | `binary-markdown.export.pdfWhiteBackground` | Export PDF with a white page and GitHub light appearance. Disable to fill the whole page, including margins, with the editor theme. Other formats keep their existing styling. | `true` |
 
 With `outlineStateScope` set to `file`, every Markdown resource restores its own last outline state in the current workspace. With `global`, toggling the outline controls the next Markdown editor that renders as well, and the preference survives VS Code restarts.
+
+### Editor width
+
+In VS Code Settings, choose **Binary-markdown: Editor Width Mode**. In the desktop app's **Preferences**, use **Editor width**. **Default** keeps a centered column capped at 860 CSS pixels. **Full width** uses the available editor pane. **Custom width** uses **Editor Max Width** in VS Code or **Maximum width (px)** in Preferences. Switching modes retains your custom value.
+
+The cap measures the outside of the column, including its padding; it is not the width of the text alone. Custom values must be whole numbers from 320 to 4000. Invalid stored values fall back to 860, and an invalid mode falls back to Default. Preferences rejects invalid input and keeps the previous value. The column always shrinks to fit a narrower pane, with responsive side padding of 12–60 CSS pixels. Full width keeps that padding.
+
+These settings apply immediately to the visual editor in both hosts and survive reopening. They preserve the document and undo history, without replacing the current selection. The layout retains a visible caret's position where scrolling permits, or anchors the visible block. Source mode retains its own layout; HTML, PDF, DOCX, and EPUB keep their independent export dimensions. Width preferences do not reformat long code or equations, and wide tables retain their horizontal scrolling.
 
 ### Themes
 

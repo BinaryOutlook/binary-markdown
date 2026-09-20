@@ -283,6 +283,28 @@
             "%config.tableToolbarPosition.right%",
             "%config.tableToolbarPosition.topBar%"
           ]
+        },
+        "binary-markdown.editorWidthMode": {
+          "type": "string",
+          "enum": [
+            "default",
+            "full",
+            "custom"
+          ],
+          "default": "default",
+          "description": "%config.editorWidthMode.description%",
+          "enumDescriptions": [
+            "%config.editorWidthMode.default%",
+            "%config.editorWidthMode.full%",
+            "%config.editorWidthMode.custom%"
+          ]
+        },
+        "binary-markdown.editorMaxWidth": {
+          "type": "integer",
+          "default": 860,
+          "minimum": 320,
+          "maximum": 4000,
+          "description": "%config.editorMaxWidth.description%"
         }
       }
     },

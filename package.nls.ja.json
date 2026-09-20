@@ -45,5 +45,10 @@
   "config.tableToolbarPosition.bottomRight": "右下",
   "config.tableToolbarPosition.left": "左側（縦）",
   "config.tableToolbarPosition.right": "右側（縦）",
-  "config.tableToolbarPosition.topBar": "常に上部バー"
+  "config.tableToolbarPosition.topBar": "常に上部バー",
+  "config.editorWidthMode.description": "ビジュアルエディターの幅モード。ソースとエクスポートのレイアウトは独立しています。",
+  "config.editorWidthMode.default": "余白を含む最大860 CSSピクセルの中央揃え列。",
+  "config.editorWidthMode.full": "利用できるエディター領域の全幅を使い、余白を調整します。",
+  "config.editorWidthMode.custom": "余白を含む列の最大幅として「Editor Max Width」を使います。",
+  "config.editorMaxWidth.description": "カスタムモードの列の外側の最大幅（CSSピクセル）。320～4000、既定値と無効値の代替は860。余白を含み、狭い領域では縮小します。"
 }

@@ -25,6 +25,27 @@
     const editorWrapper = document.getElementById('editorWrapper');
     let editorRenderRevision = 0;
 
+    function applyEditorWidth(mode, width) {
+        const layout = window.BinaryEditorLayout;
+        const preference = layout.normalizeWidthMode(mode);
+        const maximum = layout.normalizeMaxWidth(width);
+        const bounds = editorWrapper.getBoundingClientRect();
+        const selection = window.getSelection();
+        const range = selection?.rangeCount && editor.contains(selection.anchorNode) ? selection.getRangeAt(0) : null;
+        const caretBefore = range?.getBoundingClientRect();
+        const keepCaret = caretBefore?.height && caretBefore.top >= bounds.top && caretBefore.bottom <= bounds.bottom;
+        const anchor = Array.from(editor.children).find(child => child.getBoundingClientRect().bottom > bounds.top);
+        const anchorTop = anchor?.getBoundingClientRect().top;
+        document.documentElement.dataset.editorWidthMode = preference;
+        document.documentElement.dataset.editorMaxWidth = String(maximum);
+        // Set only the live editor. Source and detached export preparation keep
+        // their own layout, and no editable nodes or undo snapshots are replaced.
+        editor.style.maxWidth = preference === 'full' ? 'none' : (preference === 'custom' ? maximum : layout.defaultWidth) + 'px';
+        if (keepCaret) editorWrapper.scrollTop += range.getBoundingClientRect().top - caretBefore.top;
+        else if (anchor && anchorTop !== undefined) editorWrapper.scrollTop += anchor.getBoundingClientRect().top - anchorTop;
+    }
+    applyEditorWidth(document.documentElement.dataset.editorWidthMode, Number(document.documentElement.dataset.editorMaxWidth));
+
     // Reading-position outline state. The active section is the last heading
     // that has crossed the reading line 30% down the visible editor viewport.
     let outlineHeadings = [];
@@ -13964,6 +13985,10 @@
 
     // Handle messages from host (VSCode / Electron / test)
     host.onMessage(function(message) {
+        if (message.type === 'editorWidth') {
+            applyEditorWidth(message.mode, message.maxWidth);
+            return;
+        }
         if (message.type === 'tableToolbarPositionError') {
             showEditorToast(i18n.tablePositionSaveFailed || 'Could not save the table toolbar position. The previous setting remains active.');
             return;

@@ -45,5 +45,10 @@
   "config.tableToolbarPosition.bottomRight": "En bas à droite",
   "config.tableToolbarPosition.left": "Côté gauche (vertical)",
   "config.tableToolbarPosition.right": "Côté droit (vertical)",
-  "config.tableToolbarPosition.topBar": "Toujours dans la barre supérieure"
+  "config.tableToolbarPosition.topBar": "Toujours dans la barre supérieure",
+  "config.editorWidthMode.description": "Mode de largeur de l’éditeur visuel. Le mode source et les exports ont une mise en page indépendante.",
+  "config.editorWidthMode.default": "Colonne centrée limitée à 860 pixels CSS, marges intérieures comprises.",
+  "config.editorWidthMode.full": "Utiliser la largeur disponible du volet avec des marges intérieures adaptatives.",
+  "config.editorWidthMode.custom": "Utiliser Editor Max Width comme limite de la colonne, marges intérieures comprises.",
+  "config.editorMaxWidth.description": "Largeur extérieure maximale de la colonne en pixels CSS en mode personnalisé (320–4000 ; valeur par défaut et de repli : 860). Comprend les marges intérieures et s’adapte aux volets plus étroits."
 }

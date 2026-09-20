@@ -1,4 +1,5 @@
 import { normalize as normalizeTablePosition } from './shared/table-placement';
+import { normalizeWidthMode, normalizeMaxWidth } from './shared/editor-layout';
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -20,6 +21,8 @@ function getNonce(): string {
 interface EditorConfig {
     theme: string;
     fontSize: number;
+    editorWidthMode?: string;
+    editorMaxWidth?: number;
     toolbarMode?: string;
     tableToolbarPosition?: string;
     documentBaseUri?: string;
@@ -79,6 +82,8 @@ export function getWebviewContent(
     const safeConfig: EditorConfig = {
         theme: config?.theme ?? 'github',
         fontSize: config?.fontSize ?? 16,
+        editorWidthMode: normalizeWidthMode(config?.editorWidthMode),
+        editorMaxWidth: normalizeMaxWidth(config?.editorMaxWidth),
         toolbarMode: config?.toolbarMode ?? 'full',
         tableToolbarPosition: normalizeTablePosition(config?.tableToolbarPosition),
         documentBaseUri: config?.documentBaseUri ?? '',
@@ -122,7 +127,7 @@ export function getWebviewContent(
     const katexCssUri = vendorUri('katex.min.css');
 
     const mathScript = fs.readFileSync(path.join(__dirname, 'shared', 'math-syntax.js'), 'utf8');
-    const editorScript = (fs.readFileSync(path.join(__dirname, 'shared', 'table-placement.js'), 'utf8') + '\n' + fs.readFileSync(path.join(__dirname, 'webview', 'table-toolbar.js'), 'utf8') + '\n' + mathScript + '\n' + fs.readFileSync(editorScriptPath, 'utf8'))
+    const editorScript = (fs.readFileSync(path.join(__dirname, 'shared', 'editor-layout.js'), 'utf8') + '\n' + fs.readFileSync(path.join(__dirname, 'shared', 'table-placement.js'), 'utf8') + '\n' + fs.readFileSync(path.join(__dirname, 'webview', 'table-toolbar.js'), 'utf8') + '\n' + mathScript + '\n' + fs.readFileSync(editorScriptPath, 'utf8'))
         .replace('__MATH_BACKSLASH__', String(safeConfig.mathBackslashDelimiters))
         .replace('__DEBUG_MODE__', String(safeConfig.enableDebugLogging ?? false))
         .replace('__I18N__', JSON.stringify(msg))
@@ -130,7 +135,7 @@ export function getWebviewContent(
         .replace('__CONTENT__', `'${base64Content}'`);
 
     return `<!DOCTYPE html>
-<html lang="en" data-theme="${safeConfig.theme}" data-toolbar-mode="${safeConfig.toolbarMode}" data-table-toolbar-position="${safeConfig.tableToolbarPosition}">
+<html lang="en" data-theme="${safeConfig.theme}" data-editor-width-mode="${safeConfig.editorWidthMode}" data-editor-max-width="${safeConfig.editorMaxWidth}" data-toolbar-mode="${safeConfig.toolbarMode}" data-table-toolbar-position="${safeConfig.tableToolbarPosition}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">

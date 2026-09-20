@@ -37,6 +37,15 @@ export interface Messages {
 }
 
 export interface WebviewMessages {
+  editorWidthLabel: string;
+  editorWidthDefault: string;
+  editorWidthFull: string;
+  editorWidthCustom: string;
+  editorMaxWidthLabel: string;
+  editorWidthHelp: string;
+  editorWidthInvalid: string;
+  editorWidthSaveFailed: string;
+
   tableControls: string;
   tableMenu: string;
   tablePlacement: string;

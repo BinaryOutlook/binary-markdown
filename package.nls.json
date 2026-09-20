@@ -45,5 +45,10 @@
   "config.tableToolbarPosition.bottomRight": "Bottom right",
   "config.tableToolbarPosition.left": "Left side (vertical)",
   "config.tableToolbarPosition.right": "Right side (vertical)",
-  "config.tableToolbarPosition.topBar": "Always in top bar"
+  "config.tableToolbarPosition.topBar": "Always in top bar",
+  "config.editorWidthMode.description": "Width mode for the visual editor. Source and export layouts are independent.",
+  "config.editorWidthMode.default": "Centered column capped at 860 CSS pixels, including padding.",
+  "config.editorWidthMode.full": "Use the available editor pane width with responsive padding.",
+  "config.editorWidthMode.custom": "Use Editor Max Width as the column cap, including padding.",
+  "config.editorMaxWidth.description": "Maximum outer column width in CSS pixels for Custom mode (320–4000; default and invalid-value fallback: 860). Includes padding; smaller panes still shrink to fit."
 }

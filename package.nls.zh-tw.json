@@ -45,5 +45,10 @@
   "config.tableToolbarPosition.bottomRight": "右下角",
   "config.tableToolbarPosition.left": "左側（垂直）",
   "config.tableToolbarPosition.right": "右側（垂直）",
-  "config.tableToolbarPosition.topBar": "始終位於頂端列"
+  "config.tableToolbarPosition.topBar": "始終位於頂端列",
+  "config.editorWidthMode.description": "視覺化編輯器的寬度模式。原始碼和匯出的版面配置各自獨立。",
+  "config.editorWidthMode.default": "置中顯示，最大寬度為 860 CSS 像素，包含內距。",
+  "config.editorWidthMode.full": "使用可用編輯器區域的寬度，並自動調整內距。",
+  "config.editorWidthMode.custom": "使用 Editor Max Width 作為欄寬上限，包含內距。",
+  "config.editorMaxWidth.description": "自訂模式下欄外邊界的最大寬度（CSS 像素，320–4000；預設值和無效值的替代值為 860）。包含內距；較窄的區域仍會自適應縮小。"
 }
