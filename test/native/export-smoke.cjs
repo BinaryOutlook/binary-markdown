@@ -327,7 +327,7 @@ async function run(settings, owner) {
         fs.writeFileSync(report, JSON.stringify({ harness: harnessIdentity(), host: receipt(owner), packageSha256: hash(fs.readFileSync(settings.package)), receipts }, null, 2));
         console.log(name, JSON.stringify(details));
     };
-    const available = ['identity', 'filesystem', 'formats', 'saves', 'edges', 'ui', 'equations', 'pdf-background', 'selection', 'immutable', 'offline', 'document-aux', 'links', 'codeblocks', 'table-placement', 'table-content', 'table-row', 'text-toolbar', 'insert-menu', 'underline', 'underline-exports', 'editor-width', 'editor-alignment', 'width-indicators', 'language-picker', 'language-order', 'equation-source-position', 'blockquotes'];
+    const available = ['identity', 'filesystem', 'formats', 'saves', 'edges', 'ui', 'equations', 'pdf-background', 'selection', 'immutable', 'offline', 'document-aux', 'links', 'codeblocks', 'table-placement', 'table-content', 'table-row', 'text-toolbar', 'insert-menu', 'underline', 'underline-exports', 'editor-width', 'editor-alignment', 'width-indicators', 'language-picker', 'language-order', 'equation-source-position', 'equation-source-wrap', 'blockquotes'];
     const groups = settings.suite === 'all' ? available : [settings.suite];
     assert.ok(groups.every(value => available.includes(value)), 'Suite must be all, ' + available.join(', '));
     const htmlExports = [];
@@ -508,6 +508,7 @@ async function run(settings, owner) {
         if (groups.includes('insert-menu')) await insertMenuCase(h, owner, record);
         if (groups.includes('width-indicators')) await widthIndicatorsCase(h, owner, record);
         if (groups.includes('language-picker')) await languagePickerCase(h, owner, record);
+        if (groups.includes('equation-source-wrap')) await equationWrapCase(h, owner, record);
         if (groups.includes('equation-source-position')) await equationPositionCase(h, owner, record);
         if (groups.includes('language-order')) await languageOrderCase(h, owner, record);
         if (groups.includes('editor-alignment')) await editorAlignmentCase(h, owner, record);
@@ -936,6 +937,56 @@ async function editorWidthCase(h, owner, record) {
             await h.driver({ action: 'config', key, value: previous.editorWidthScopes[key].workspace ?? null, scope: 'workspace' });
             await h.driver({ action: 'config', key, value: previous.editorWidthScopes[key].global ?? null });
         }
+    }
+}
+
+async function equationWrapCase(h, owner, record) {
+    const { source, equationWrapChecks } = require('./equation-source-wrap.cjs');
+    const { installedEditor } = require('./table-toolbar-overflow.cjs');
+    const initial = await h.driver({ action: 'inspect' });
+    const previous = initial.mathSourceWrapScopes;
+    const file = 'equation-source-wrap.md', filePath = path.join(owner.workspace, file);
+    // Preserve background editors when beginning this independent case.
+    fs.writeFileSync(filePath, source);
+    let connection;
+    try {
+        await h.driver({ action: 'config', key: 'mathSourceWrap', value: null, scope: 'workspace' });
+        await h.driver({ action: 'config', key: 'mathSourceWrap', value: null });
+        await h.driver({ action: 'config', key: 'mathSourcePosition', value: null, scope: 'workspace' });
+        connection = await h.open(file);
+        assert.equal(await connection.evaluate('document.documentElement.dataset.mathSourceWrap'), 'false');
+        const changed = await h.workbench(page => equationWrapChecks({
+            editor: installedEditor(connection, h), keyboard: page.keyboard,
+            setWrap: value => h.driver({ action: 'config', key: 'mathSourceWrap', value }),
+            setPosition: value => h.driver({ action: 'config', key: 'mathSourcePosition', value }), record,
+            save: async expected => {
+                // The queued-edit/native-save overlap remains tracked by #11.
+                await h.until(async () => (await h.driver({ action: 'inspect' })).documents.some(document => samePath(document.path, filePath) && document.text === expected), 'equation input reached host');
+                await h.driver({ action: 'save' }); assert.equal(fs.readFileSync(filePath, 'utf8'), expected);
+            }
+        }));
+        const set = async (value, scope) => {
+            await h.driver({ action: 'config', key: 'mathSourceWrap', value, scope });
+            const expected = (await h.driver({ action: 'inspect' })).appearance.mathSourceWrap;
+            await h.until(() => connection.evaluate(`document.documentElement.dataset.mathSourceWrap === ${JSON.stringify(String(expected))}`), 'equation wrapping configuration');
+        };
+        await set(false, 'workspace'); await set(true);
+        assert.equal(await connection.evaluate('document.documentElement.dataset.mathSourceWrap'), 'false');
+        await set(null, 'workspace');
+        assert.equal(await connection.evaluate('document.documentElement.dataset.mathSourceWrap'), 'true');
+        assert.equal((await h.driver({ action: 'inspect' })).documents.find(document => samePath(document.path, filePath)).dirty, false);
+        await h.sourceMode(connection); assert.equal(await connection.evaluate('document.getElementById("sourceEditor").value'), changed);
+        connection.close(); connection = null; await h.driver({ action: 'close' }); connection = await h.open(file);
+        assert.equal(await connection.evaluate('document.documentElement.dataset.mathSourceWrap'), 'true');
+        assert.equal(await connection.evaluate('window.htmlToMarkdown()'), changed);
+        assert.equal(fs.readFileSync(filePath, 'utf8'), changed);
+        record('equation-source-wrap-persistence', { workspaceOverride: true, userFallback: true, reopen: true, sourceAndCleanStatePreserved: true });
+    } finally {
+        connection?.close(); await h.driver({ action: 'close' });
+        await h.driver({ action: 'config', key: 'mathSourceWrap', value: previous.workspace ?? null, scope: 'workspace' });
+        await h.driver({ action: 'config', key: 'mathSourceWrap', value: previous.global ?? null });
+        await h.driver({ action: 'config', key: 'mathSourcePosition', value: initial.mathSourcePositionScopes.workspace ?? null, scope: 'workspace' });
+        await h.driver({ action: 'config', key: 'mathSourcePosition', value: initial.mathSourcePositionScopes.global ?? null });
     }
 }
 

@@ -236,6 +236,10 @@ $$
 
 Choose `binary-markdown.mathSourcePosition` in VS Code Settings, or **Equation source position** in desktop Preferences, to place editable block-equation source **Above preview** (default) or **Below preview**. The preference applies immediately and persists across reopened documents. Changing it retains the active source selection and edit mode; it does not change the equation, add an undo step, or affect inline equations, Source mode, or exported content.
 
+Enable `binary-markdown.mathSourceWrap` in VS Code Settings, or **Wrap equation source** in desktop Preferences, to wrap editable TeX to the available width. Wrapping is off by default and works with either source position. It preserves authored spaces, tabs, and blank lines; visual breaks never become source newlines or TeX commands. Disabling it restores horizontal source scrolling. The rendered equation and ordinary code blocks keep their existing layout.
+
+With wrapping enabled, Up/Down move through visual source rows and leave the block at its first/last visual row. Use Home/End on Windows/Linux, or Cmd+Left/Right on macOS, for the host's visual-line navigation. Shift extends the selection. Enter still inserts an authored line break, and Shift+Enter exits the equation. Copying, saving, or switching Source mode retains the authored text.
+
 HTML and PDF embed KaTeX rendering. DOCX and EPUB use Pandoc's native math conversion, which has its own command support. Backslash delimiters are normalized in an export-only copy; the Markdown file is never rewritten for conversion.
 
 ---
@@ -295,6 +299,7 @@ FORCE_RELATIVE_PATH: true
 | Setting | Description | Default |
 | --- | --- | --- |
 | `binary-markdown.theme` | Editor theme (`github`, `sepia`, `night`, `dark`, `minimal`, `perplexity`, `things`) | `things` |
+| `binary-markdown.mathSourceWrap` | Visually wrap editable block-equation source without inserting line breaks | `false` |
 | `binary-markdown.mathSourcePosition` | Editable block-equation source above or below its preview | `above` |
 | `binary-markdown.fontSize` | Base font size (px) | `16` |
 | `binary-markdown.codeLanguageOrder` | Code-language browsing order: `default`, `a-z`, or `z-a`; search prioritizes relevance | `default` |
