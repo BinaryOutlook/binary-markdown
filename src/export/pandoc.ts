@@ -8,26 +8,43 @@ import { checkCancelled, codeLanguagePosition, CodeLanguagePosition, CodePresent
 import { runTool } from './tools';
 import { codeLanguageLabel } from './code-language';
 import { docxLanguageTab } from './language-tab';
+import { pandocCodeLines } from './code-lines';
 
 type Json = null | boolean | number | string | Json[] | { [key: string]: Json };
 interface AstNode { t: string; c?: Json; }
 const emptyAttributes: Json = ['', [], []];
 
-function withDocxLanguageLabel(block: Json, classes: Json[], id: number, position: CodeLanguagePosition): Json {
-    const label = codeLanguageLabel(classes);
-    if (!label) { return block; }
+function withDocxCodeMetadata(block: Json, classes: Json[], id: number, options: CodePresentationOptions, count: number): Json {
+    const position = codeLanguagePosition(options.codeLanguagePosition);
+    const label = options.showCodeLanguage === false ? undefined : codeLanguageLabel(classes);
+    if (!label && !options.showCodeLineCount) { return block; }
     // Keep the code itself intact for Pandoc highlighting and exact copy/paste.
     // Position-specific metadata paragraphs keep the inline native shape beside
     // the corresponding code edge without changing the code node or its tokens.
     // Only extension-generated, escaped OpenXML enters this branch.
     const styles = { 'top-left': 'Code Language Top Left', 'top-right': 'Code Language Top Right',
         'bottom-left': 'Code Language Bottom Left', 'bottom-right': 'Code Language' };
+    const labelStyle = styles[position] + (options.showCodeLineCount && position.startsWith('bottom') ? ' With Count' : '');
     const metadata: Json = {
-        t: 'Div', c: [['', [], [['custom-style', styles[position]]]], [
-            { t: 'Para', c: [{ t: 'Space' }, { t: 'RawInline', c: ['openxml', docxLanguageTab(label, id, position)] }] }
+        t: 'Div', c: [['', [], [['custom-style', labelStyle]]], [
+            { t: 'Para', c: [{ t: 'Space' }, { t: 'RawInline', c: ['openxml', docxLanguageTab(label || '', id, position)] }] }
         ]]
     };
-    return { t: 'Div', c: [emptyAttributes, position.startsWith('top') ? [metadata, block] : [block, metadata]] };
+    const blocks: Json[] = !label ? [block] : position.startsWith('top') ? [metadata, block] : [block, metadata];
+    if (options.showCodeLineCount) {
+        blocks.push({ t: 'Div', c: [['', [], [['custom-style', 'Code Line Count']]], [
+            { t: 'Para', c: [{ t: 'Str', c: (options.codeLineCountLabel || 'Lines') + ': ' + count }] }
+        ]] });
+    }
+    return { t: 'Div', c: [emptyAttributes, blocks] };
+}
+
+function codeBlocks(value: Json, output: Json[] = []): Json[] {
+    if (value && typeof value === 'object') {
+        if (node(value)?.t === 'CodeBlock') { output.push(value); }
+        else { for (const child of Object.values(value)) { codeBlocks(child, output); } }
+    }
+    return output;
 }
 
 function node(value: Json): AstNode | undefined {
@@ -108,13 +125,39 @@ export async function convertPandoc(
         await fs.mkdir(dataDirectory);
         operations.report('converting');
         const commonArguments = ['--sandbox', `--data-dir=${dataDirectory}`];
-        const read = await runTool(executable, [...commonArguments, '--from=commonmark_x+tex_math_gfm-smart', '--to=json'], {
-            input: normalizeForPandoc(preparePandocMarkdown(document.markdown), document.mathBackslashDelimiters !== false), cwd: directory, signal: operations.signal
+        const input = normalizeForPandoc(preparePandocMarkdown(document.markdown), document.mathBackslashDelimiters !== false);
+        const read = await runTool(executable, [...commonArguments, '--from=commonmark_x+tex_math_gfm-smart', '--to=json',
+            ...(format === 'docx' ? ['--preserve-tabs'] : [])], {
+            input, cwd: directory, signal: operations.signal
         });
         if (read.stderr) { warn(operations, 'pandoc-reader', read.stderr); }
         const ast = JSON.parse(read.stdout.toString('utf8')) as Record<string, Json>;
         if (!Array.isArray(ast.blocks) || !Array.isArray(ast['pandoc-api-version'])) {
             throw new Error('Pandoc returned an invalid intermediate document.');
+        }
+        const codeModels = new Map<Json, string[]>();
+        if (format === 'docx' && codeBlocks(ast.blocks).length) {
+            // sourcepos changes Pandoc's fenced-math recognition. Use a separate
+            // analysis read; never pass that altered tree to the document writer.
+            const positioned = await runTool(executable, [...commonArguments, '--from=commonmark_x+tex_math_gfm-smart+sourcepos', '--to=json', '--preserve-tabs'], {
+                input, cwd: directory, signal: operations.signal
+            });
+            const candidates = codeBlocks(JSON.parse(positioned.stdout.toString('utf8')).blocks);
+            let index = 0;
+            for (const block of codeBlocks(ast.blocks)) {
+                const content = node(block)!.c as Json[];
+                let candidate: Json[] | undefined;
+                while (index < candidates.length) {
+                    candidate = node(candidates[index++])!.c as Json[];
+                    if (JSON.stringify((candidate[0] as Json[])[1]) === JSON.stringify((content[0] as Json[])[1]) && candidate[1] === content[1]) { break; }
+                    if (JSON.stringify((candidate[0] as Json[])[1]) !== '["math"]') { throw new Error('Code source analysis disagrees with the document reader.'); }
+                    candidate = undefined;
+                }
+                if (!candidate) { throw new Error('Code source analysis did not identify a saved block.'); }
+                const attributes = candidate[0] as Json[];
+                const positions = (attributes[2] as Json[][]).filter(pair => pair[0] === 'data-pos').map(pair => String(pair[1]));
+                codeModels.set(block, pandocCodeLines(String(content[1]), input, positions));
+            }
         }
 
         // Writer-affecting metadata (CSS, cover files, includes, templates, filters) is never taken from the document.
@@ -229,8 +272,14 @@ export async function convertPandoc(
                         { t: 'CodeBlock', c: [emptyAttributes, source] }
                     ]] };
                 }
-                if (format === 'docx' && options.showCodeLanguage !== false) {
-                    return withDocxLanguageLabel(value, classes, ++languageTabId, codeLanguagePosition(options.codeLanguagePosition));
+                if (format === 'docx') {
+                    const lines = codeModels.get(value)!;
+                    const payload = lines.join('\n');
+                    // Pandoc's DOCX writer consumes the last newline in a code
+                    // payload. Supply its delimiter in the export-only AST so
+                    // an authored blank tail survives; source stays untouched.
+                    const code: Json = { t: 'CodeBlock', c: [attributes, payload + (payload.endsWith('\n') ? '\n' : '')] };
+                    return withDocxCodeMetadata(code, classes, ++languageTabId, options, lines.length);
                 }
             }
             if (item?.t === 'RawBlock' || item?.t === 'RawInline') {
@@ -259,7 +308,7 @@ export async function convertPandoc(
         const outputFile = path.join(directory, `document.${format}`);
         const topLabel = options.showCodeLanguage !== false && codeLanguagePosition(options.codeLanguagePosition).startsWith('top');
         const writerArguments = format === 'docx'
-            ? [`--reference-doc=${path.resolve(__dirname, topLabel ? '../../media/export-reference-top.docx' : '../../media/export-reference.docx')}`]
+            ? [`--reference-doc=${path.resolve(__dirname, topLabel ? (options.showCodeLineCount ? '../../media/export-reference-top-footer.docx' : '../../media/export-reference-top.docx') : '../../media/export-reference.docx')}`]
             : ['--mathml'];
         const write = await runTool(executable, [...commonArguments, '--from=json', `--to=${format === 'epub' ? 'epub3' : 'docx'}`, ...writerArguments, '--standalone', `--output=${outputFile}`], {
             input: JSON.stringify(normalized), cwd: directory, signal: operations.signal

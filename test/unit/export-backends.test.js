@@ -411,6 +411,38 @@ test('real Pandoc exports editable code with four label corners, safe unknown na
     assert.doesNotMatch(html, /Code Language|CodeLanguage/);
 });
 
+test('real DOCX counts exact source lines and preserves tabs and authored blank tails', { skip: !realTools }, async t => {
+    const directory = await temporary(t);
+    const status = await discoverTool('pandoc', process.env.EXPORT_PANDOC_PATH || '');
+    assert.equal(status.available, true, status.error);
+    const cases = [[], [''], ['', ''], ['one'], ['', '\tλ <&>  ', '', ''], ['WRAP ' + 'word '.repeat(180), 'LAST']];
+    const source = cases.map((lines, index) => '```' + (index % 2 ? 'python' : '') + '\n' +
+        (lines.length ? lines.join('\n') + '\n' : '') + '```\n').join('\n') +
+        '\n> ```text\n> QUOTED\n> \n> ```\n\n- Nested\n\n  ```js\n  \tNESTED\n  \n  ```\n\n```js\nOPEN\n\n';
+    const expected = [...cases, ['QUOTED', ''], ['\tNESTED', ''], ['OPEN', '']];
+    const saved = { sourcePath: path.join(directory, 'counts.md'), markdown: source, version: 1, theme: 'github', fontSize: 16 };
+    const prepared = { html: '', theme: 'github', fontSize: 16, diagrams: [], warnings: [] };
+    for (const position of ['top-left', 'top-right', 'bottom-left', 'bottom-right', 'hidden', 'off']) {
+        const entries = archiveEntries(await convertPandoc('docx', saved, prepared, status.path, operations(), {
+            showCodeLineCount: position !== 'off', showCodeLanguage: position !== 'hidden',
+            codeLanguagePosition: ['hidden', 'off'].includes(position) ? 'top-left' : position
+        }));
+        const document = xmlDocument(entries.get('word/document.xml'));
+        const paragraphs = wordElements(document, 'p');
+        const style = paragraph => wordValue(wordElements(paragraph, 'pStyle')[0]);
+        const blocks = paragraphs.filter(paragraph => style(paragraph) === 'SourceCode');
+        assert.deepEqual(blocks.map(wordText), expected.map(lines => lines.join('\n')), position + ': every code character survives');
+        const counts = paragraphs.filter(paragraph => style(paragraph) === 'CodeLineCount');
+        assert.deepEqual(counts.map(wordText), position === 'off' ? [] : expected.map(lines => 'Lines: ' + lines.length));
+        if (position !== 'off') for (const count of counts) {
+            const previous = count.previousElementSibling;
+            assert.ok(style(previous) === 'SourceCode' || style(previous)?.endsWith('WithCount'));
+        }
+        assert.ok(wordElements(blocks[4], 'rStyle').length, 'whole-block syntax highlighting is retained');
+        assert.equal(saved.markdown, source);
+    }
+});
+
 test('real Pandoc exports structured content, native math and original assets without active raw HTML', { skip: !realTools }, async t => {
     const directory = await temporary(t);
     const status = await discoverTool('pandoc', process.env.EXPORT_PANDOC_PATH || '');

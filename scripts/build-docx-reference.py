@@ -92,6 +92,18 @@ for edge, side in [('Top', 'Left'), ('Top', 'Right'), ('Bottom', 'Left')]:
       </w:pPr></w:style>'''
     CODE_STYLES = CODE_STYLES.replace('</w:styles>', style + '</w:styles>')
 
+for suffix in ['', ' Bottom Left']:
+    style_id = 'CodeLanguage' + suffix.replace(' ', '') + 'WithCount'
+    style = f'''<w:style w:type="paragraph" w:customStyle="1" w:styleId="{style_id}">
+      <w:name w:val="Code Language{suffix} With Count"/><w:basedOn w:val="CodeLanguage{suffix.replace(' ', '')}"/>
+      <w:pPr><w:keepNext/><w:spacing w:before="0" w:after="0"/></w:pPr></w:style>'''
+    CODE_STYLES = CODE_STYLES.replace('</w:styles>', style + '</w:styles>')
+
+CODE_STYLES = CODE_STYLES.replace('</w:styles>', '''<w:style w:type="paragraph" w:customStyle="1" w:styleId="CodeLineCount">
+  <w:name w:val="Code Line Count"/><w:basedOn w:val="CodeLanguage"/>
+  <w:pPr><w:keepNext w:val="0"/><w:jc w:val="left"/><w:ind w:left="60" w:right="60"/>
+    <w:spacing w:before="0" w:after="180"/></w:pPr></w:style></w:styles>''')
+
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
@@ -102,16 +114,17 @@ def main():
     output = Path(__file__).resolve().parent.parent / 'media' / 'export-reference.docx'
     for top in (False, True):
         build(reference, output.with_name('export-reference-top.docx') if top else output, top)
+    build(reference, output.with_name('export-reference-top-footer.docx'), True, footer=True)
 
 
-def build(reference, output, top):
+def build(reference, output, top, footer=False):
     custom = minidom.parseString(CODE_STYLES)
     if top:
         code = custom.getElementsByTagNameNS(WORD_NS, 'style')[0]
-        code.getElementsByTagNameNS(WORD_NS, 'keepNext')[0].setAttribute('w:val', '0')
+        code.getElementsByTagNameNS(WORD_NS, 'keepNext')[0].setAttribute('w:val', '1' if footer else '0')
         spacing = code.getElementsByTagNameNS(WORD_NS, 'spacing')[0]
         spacing.setAttribute('w:before', '0')
-        spacing.setAttribute('w:after', '180')
+        spacing.setAttribute('w:after', '0' if footer else '180')
     custom_ids = {style.getAttributeNS(WORD_NS, 'styleId') for style in custom.getElementsByTagNameNS(WORD_NS, 'style')}
     with ZipFile(BytesIO(reference)) as source, ZipFile(output, 'w') as target:
         for name in sorted(source.namelist()):
