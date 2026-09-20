@@ -92,3 +92,40 @@ test('native visual-line movement and IME composition stay inside wrapped source
     expect((await metrics(page)).scroll).toBeLessThanOrEqual((await metrics(page)).width + 1);
     await cdp.detach();
 });
+
+for (const position of ['above', 'below']) {
+    test(`${position}: Up/Down traverse visual rows and leave only at the equation edges`, async ({ page }) => {
+        const block = 'Before.\n\n$$\n' + long + '\n$$\n\nAfter.\n'; await setup(page, block, position); await set(page, true);
+        const at = async (offset: number) => page.evaluate(offset => {
+            const code = document.querySelector('.math-wrapper code')!; (code.parentElement as HTMLElement).focus();
+            const range = document.createRange(); range.setStart(code.firstChild!, offset); range.collapse(true);
+            getSelection()!.removeAllRanges(); getSelection()!.addRange(range);
+        }, offset);
+        const caretY = () => page.evaluate(() => getSelection()!.getRangeAt(0).getBoundingClientRect().y);
+        await at(70); const middleY = await caretY();
+        await page.keyboard.press('ArrowUp'); await expect(page.locator('.math-wrapper')).toHaveAttribute('data-mode', 'edit');
+        expect(await caretY()).toBeLessThan(middleY);
+        await page.keyboard.press('ArrowDown'); await expect(page.locator('.math-wrapper')).toHaveAttribute('data-mode', 'edit');
+        expect(Math.abs(await caretY() - middleY)).toBeLessThan(2);
+        await at(0); await page.keyboard.press('ArrowUp'); await expect(page.locator('.math-wrapper')).toHaveAttribute('data-mode', 'display');
+        expect(await page.evaluate(() => document.querySelector('.math-wrapper')!.previousElementSibling!.contains(getSelection()!.anchorNode))).toBe(true);
+        await page.locator('.math-display').click(); await at(long.length); await page.keyboard.press('ArrowDown');
+        await expect(page.locator('.math-wrapper')).toHaveAttribute('data-mode', 'display');
+        expect(await page.evaluate(() => document.querySelector('.math-wrapper')!.nextElementSibling!.contains(getSelection()!.anchorNode))).toBe(true);
+        expect(await markdown(page)).toBe(block);
+    });
+}
+
+test('wrapping affects neither rendered math, ordinary code, nor prepared exports', async ({ page }) => {
+    const source = '$$\n' + long + '\n$$\n\n```js\n' + long + '\n```\n'; await setup(page, source);
+    await expect(page.locator('.math-display .katex')).toBeVisible();
+    const preview = await page.locator('.math-display').innerHTML(); const outputs: string[] = [];
+    for (const value of [false, true]) {
+        await set(page, value); expect(await page.locator('.math-display').innerHTML()).toBe(preview);
+        await expect(page.locator('pre[data-lang="js"] code')).toHaveCSS('white-space', 'pre');
+        await page.evaluate(({ source, value }) => (window as any).__hostMessageHandler({ type: 'prepareExport', requestId: String(value), markdown: source, theme: 'github', fontSize: 16 }), { source, value });
+        await expect.poll(() => page.evaluate(value => (window as any).__testApi.messages.some((m: any) => m.type === 'exportPrepared' && m.requestId === String(value)), value)).toBe(true);
+        outputs.push(await page.evaluate(value => (window as any).__testApi.messages.find((m: any) => m.type === 'exportPrepared' && m.requestId === String(value)).html, value));
+    }
+    expect(outputs[0]).toBe(outputs[1]); expect(await markdown(page)).toBe(source);
+});

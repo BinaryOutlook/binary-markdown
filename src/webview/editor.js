@@ -9333,6 +9333,18 @@
                 // Check if this block is inside a mermaid-wrapper or math-wrapper
                 const specialWrapperBlock = blockNode.closest('.mermaid-wrapper') || blockNode.closest('.math-wrapper');
 
+                // Source lines can span several visual rows when TeX wrapping is on.
+                // Let Chromium keep the caret column while moving within those rows;
+                // retain the existing block-exit behavior at the visual boundaries.
+                if (specialWrapperBlock?.classList.contains('math-wrapper') && document.documentElement.dataset.mathSourceWrap === 'true') {
+                    const code = blockNode.querySelector('code') || blockNode;
+                    const caret = sel.getRangeAt(0).getBoundingClientRect();
+                    const bounds = code.getBoundingClientRect();
+                    const lineHeight = parseFloat(getComputedStyle(code).lineHeight) || caret.height;
+                    if (caret.height && ((e.key === 'ArrowUp' && caret.top >= bounds.top + lineHeight) ||
+                        (e.key === 'ArrowDown' && caret.bottom <= bounds.bottom - lineHeight))) return;
+                }
+
                 const { currentLineIndex, totalLines } = getCurrentLineInBlock(blockNode, sel);
 
                 // #region agent log
