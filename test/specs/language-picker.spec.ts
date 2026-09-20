@@ -53,7 +53,8 @@ test('keyboard confirmation preserves whitespace, copy, Source and one-step undo
     await expect(page.locator('pre code .hljs-keyword')).not.toHaveCount(0);
     await context.grantPermissions(['clipboard-read', 'clipboard-write']);
     await page.locator('.code-copy-btn').click();
-    await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe(body);
+    // Windows clipboard reads expose CRLF; retain all tabs and blank lines.
+    await expect.poll(() => page.evaluate(async () => (await navigator.clipboard.readText()).replace(/\r\n/g, '\n'))).toBe(body);
     await page.locator('[data-action="source"]').click();
     await expect(page.locator('#sourceEditor')).toHaveValue(changed);
     await page.locator('[data-action="source"]').click();
