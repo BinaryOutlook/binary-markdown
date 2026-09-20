@@ -85,7 +85,9 @@ test('a focused action follows overflow in both directions without editing', asy
 
 test('docked controls retain leading actions and resize an open overflow menu', async ({ page }) => {
     await setup(page, 'top-bar');
-    await page.setViewportSize({ width: 600, height: 800 });
+    // Leave room for the persistent Insert control while still overflowing
+    // table actions; the narrower compact-menu state has its own check below.
+    await page.setViewportSize({ width: 720, height: 800 });
     const more = page.locator(`${controls} [data-action="more"]`);
     await expect(more).toBeVisible();
     await expect(page.locator(`${controls} [data-action="add-col-left"]`)).toBeVisible();

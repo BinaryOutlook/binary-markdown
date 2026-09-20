@@ -327,7 +327,7 @@ async function run(settings, owner) {
         fs.writeFileSync(report, JSON.stringify({ harness: harnessIdentity(), host: receipt(owner), packageSha256: hash(fs.readFileSync(settings.package)), receipts }, null, 2));
         console.log(name, JSON.stringify(details));
     };
-    const available = ['identity', 'filesystem', 'formats', 'saves', 'edges', 'ui', 'equations', 'pdf-background', 'selection', 'immutable', 'offline', 'document-aux', 'links', 'codeblocks', 'table-placement', 'table-content', 'table-row', 'text-toolbar', 'blockquotes'];
+    const available = ['identity', 'filesystem', 'formats', 'saves', 'edges', 'ui', 'equations', 'pdf-background', 'selection', 'immutable', 'offline', 'document-aux', 'links', 'codeblocks', 'table-placement', 'table-content', 'table-row', 'text-toolbar', 'insert-menu', 'blockquotes'];
     const groups = settings.suite === 'all' ? available : [settings.suite];
     assert.ok(groups.every(value => available.includes(value)), 'Suite must be all, ' + available.join(', '));
     const htmlExports = [];
@@ -505,6 +505,7 @@ async function run(settings, owner) {
         if (groups.includes('table-placement')) await tablePlacementCase(h, owner, record);
         if (groups.includes('table-content')) await tableContentCase(h, owner, record);
         if (groups.includes('table-row')) await tableRowCase(h, owner, record);
+        if (groups.includes('insert-menu')) await insertMenuCase(h, owner, record);
         if (groups.includes('text-toolbar')) await textToolbarCase(h, owner, record);
         if (groups.includes('equations')) await equationCases(h, owner, record);
         if (groups.includes('links')) await linkCases(h, owner, record);
@@ -791,6 +792,66 @@ async function tablePlacementCase(h, owner, record) {
         if (connection) connection.close();
         await h.driver({ action: 'config', key: 'tableToolbarPosition', scope: 'workspace', value: null });
         await h.driver({ action: 'config', key: 'tableToolbarPosition', value: 'auto' });
+    }
+}
+
+async function insertMenuCase(h, owner, record) {
+    const { source, insertMenuChecks, selectTarget, openInsert } = require('./insert-menu.cjs');
+    const { installedEditor } = require('./table-toolbar-overflow.cjs');
+    const previous = await h.driver({ action: 'inspect' });
+    const file = 'insert-menu.md', filePath = path.join(owner.workspace, file);
+    await h.driver({ action: 'close' }); fs.writeFileSync(filePath, source);
+    await h.driver({ action: 'simpleFileDialog', value: true });
+    let connection = await h.open(file);
+    try {
+        await h.workbench(async page => {
+            const editor = installedEditor(connection, h);
+            const input = () => page.locator('.quick-input-widget:visible input').first();
+            await insertMenuChecks({ editor, keyboard: page.keyboard,
+                setMode: value => h.driver({ action: 'config', key: 'toolbarMode', scope: 'workspace', value }),
+                record: (name, details) => record(name, { ...details, route: 'installed webview; native keyboard; VS Code input boxes and simplified file picker' }),
+                save: async expected => {
+                    // Keep the separately tracked queued-edit/native-save
+                    // overlap (#11) outside this insertion persistence check.
+                    await h.until(async () => (await h.driver({ action: 'inspect' })).documents.some(document => samePath(document.path, filePath) && document.text === expected), 'inserted content reached host');
+                    await h.driver({ action: 'save' });
+                    assert.equal(fs.readFileSync(filePath, 'utf8'), expected);
+                },
+                dialog: async (action, accepted) => {
+                    await input().waitFor({ state: 'visible' });
+                    if (!accepted) await page.keyboard.press('Escape');
+                    else {
+                        await input().fill(action === 'link' ? 'https://example.com/reference' : path.join(owner.workspace, 'assets/Field sample 图像.png'));
+                        await page.keyboard.press('Enter');
+                    }
+                    await page.locator('.quick-input-widget:visible').waitFor({ state: 'hidden' });
+                }
+            });
+            // With no selected label, Escape from the second input must cancel
+            // the entire insertion instead of creating a fallback link.
+            await selectTarget(editor);
+            await editor.evaluate(() => { getSelection().collapseToEnd(); window.__nativeInsertEvents = []; });
+            await openInsert(editor); await editor.locator('[data-insert-action="link"]').click();
+            await input().waitFor({ state: 'visible' });
+            await input().fill('https://example.com/cancel-label'); await page.keyboard.press('Enter');
+            await h.until(async () => await input().inputValue() === 'link', 'link label input');
+            await page.keyboard.press('Escape');
+            await editor.waitForFunction(() => window.__nativeInsertEvents.some(message => message.type === 'insertCancelled'));
+            assert.equal(await editor.evaluate(() => document.querySelector('[data-action="undo"]').disabled), true);
+            record('insert-link-second-prompt', { cancelledWithoutEdit: true });
+        });
+        await h.sourceMode(connection);
+        assert.equal(await connection.evaluate('document.getElementById("sourceEditor").value'), source);
+        await h.driver({ action: 'save' });
+        assert.equal(fs.readFileSync(filePath, 'utf8'), source);
+        connection.close(); connection = null;
+        await h.driver({ action: 'close' }); connection = await h.open(file);
+        assert.equal(await connection.evaluate('document.querySelectorAll("#editor th").length'), 1);
+        record('insert-save', { sourceModeUnchanged: true, nativeSaveUnchanged: true, reopened: true });
+    } finally {
+        connection?.close();
+        await h.driver({ action: 'config', key: 'toolbarMode', scope: 'workspace', value: previous.toolbarModeScopes.workspace ?? null });
+        await h.driver({ action: 'simpleFileDialog', value: previous.simpleFileDialog ?? null });
     }
 }
 

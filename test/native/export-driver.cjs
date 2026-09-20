@@ -39,6 +39,7 @@ exports.activate = async function activate(context) {
         platform: process.platform, arch: process.arch, nodeVersion: process.version,
         uiKind: vscode.env.uiKind, remoteName: vscode.env.remoteName ?? null,
         trusted: vscode.workspace.isTrusted,
+        simpleFileDialog: vscode.workspace.getConfiguration('files').inspect('simpleDialog.enable').globalValue,
         appearance: Object.fromEntries(['language', 'toolbarMode', 'tableToolbarPosition', 'theme', 'export.pdfWhiteBackground'].map(key =>
             [key, vscode.workspace.getConfiguration('binary-markdown').get(key)])),
         toolbarModeScopes: (() => {
@@ -132,6 +133,11 @@ exports.activate = async function activate(context) {
                 if (!['off', 'afterDelay'].includes(request.value)) throw new Error('Invalid isolated Auto Save mode.');
                 await vscode.workspace.getConfiguration('files').update('autoSaveDelay', 200, vscode.ConfigurationTarget.Global);
                 await vscode.workspace.getConfiguration('files').update('autoSave', request.value, vscode.ConfigurationTarget.Global);
+                break;
+            }
+            case 'simpleFileDialog': {
+                if (typeof request.value !== 'boolean' && request.value !== null) throw new Error('Invalid isolated file dialog mode.');
+                await vscode.workspace.getConfiguration('files').update('simpleDialog.enable', request.value === null ? undefined : request.value, vscode.ConfigurationTarget.Global);
                 break;
             }
             case 'untitled': {

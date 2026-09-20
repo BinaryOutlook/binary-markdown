@@ -60,11 +60,11 @@
         openLink: function(href) {
             window.__testApi.messages.push({ type: 'openLink', href: href });
         },
-        requestInsertLink: function(text) {
-            window.__testApi.messages.push({ type: 'insertLink', text: text });
+        requestInsertLink: function(text, requestId) {
+            window.__testApi.messages.push({ type: 'insertLink', text: text, requestId: requestId });
         },
-        requestInsertImage: function() {
-            window.__testApi.messages.push({ type: 'insertImage', position: 0 });
+        requestInsertImage: function(requestId) {
+            window.__testApi.messages.push({ type: 'insertImage', position: 0, requestId: requestId });
         },
         requestSetImageDir: function() {
             window.__testApi.messages.push({ type: 'setImageDir' });

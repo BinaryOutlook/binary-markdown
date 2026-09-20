@@ -52,11 +52,11 @@
         openLink: function(href) {
             api.postMessage({ type: 'openLink', href: href });
         },
-        requestInsertLink: function(text) {
-            api.postMessage({ type: 'insertLink', text: text });
+        requestInsertLink: function(text, requestId) {
+            api.postMessage({ type: 'insertLink', text: text, requestId: requestId });
         },
-        requestInsertImage: function() {
-            api.postMessage({ type: 'insertImage', position: 0 });
+        requestInsertImage: function(requestId) {
+            api.postMessage({ type: 'insertImage', position: 0, requestId: requestId });
         },
         requestSetImageDir: function() {
             api.postMessage({ type: 'setImageDir' });

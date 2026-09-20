@@ -34,6 +34,14 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  insertLinkTitle: "リンクを挿入",
+  insertLinkUrl: "URL またはファイルパス",
+  insertLinkText: "リンクのテキスト",
+  insertDialogCancel: "キャンセル",
+  insertUnavailableSource: "項目を挿入するにはビジュアルエディターに切り替えてください。",
+  insertUnavailableSelection: "文書内の挿入位置を選択してください。",
+  insertUnavailableContext: "コード、数式、または生成されたブロックの外にカーソルを移動してください。",
+  insertUnavailableBlock: "リスト、表、引用の外の段落を選択してください。",
   toolbarMoreActions: "その他のツールバー操作",
   toolbarModeSaveFailed: "ツールバーのモードを保存できませんでした。以前の設定が引き続き使用されます。",
   tablePositionSaveFailed: "テーブルツールバーの位置を保存できませんでした。以前の設定が引き続き使用されます。",

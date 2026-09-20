@@ -354,6 +354,23 @@ body {
     min-height: 28px;
 }
 .toolbar button:hover { background: var(--selection-bg); }
+.toolbar .toolbar-insert { gap: 5px; font: inherit; font-size: 13px; white-space: nowrap; }
+.toolbar-overflow .toolbar-insert-title { display: none; }
+.insert-menu {
+    position: fixed; z-index: 10003; box-sizing: border-box; overflow: auto;
+    padding: 5px; border: 1px solid var(--border-color); border-radius: 6px;
+    background: var(--toolbar-bg); color: var(--text-color); box-shadow: 0 4px 12px rgba(0, 0, 0, .18);
+}
+.insert-menu[hidden] { display: none; }
+.insert-menu button {
+    display: block; width: 100%; padding: 7px 9px; border: 0; border-radius: 3px;
+    text-align: start; color: inherit; background: transparent; font: inherit; font-size: 13px; cursor: pointer;
+}
+.insert-menu button:hover, .insert-menu button:focus { background: var(--selection-bg); }
+.insert-menu button:focus-visible { outline: 2px solid var(--link-color); outline-offset: -2px; }
+.insert-menu button[aria-disabled="true"] { cursor: default; }
+.insert-menu small { display: block; margin-top: 3px; font-size: 11px; line-height: 1.4; }
+.insert-menu small[hidden] { display: none; }
 .toolbar button svg {
     width: 16px;
     height: 16px;

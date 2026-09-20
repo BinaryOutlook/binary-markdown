@@ -69,6 +69,7 @@ function generateEditorBodyHtml(messages, platform, options) {
                         <button data-action="undo" title="${m('undo')}"></button>
                         <button data-action="redo" title="${m('redo')}"></button>
                     </div>
+                    <button type="button" data-action="insertMenu" class="toolbar-insert" id="insertButton" title="${m('commandPaletteInsert')}" aria-haspopup="menu" aria-expanded="false" aria-controls="insertMenu"><span class="toolbar-insert-title">${m('commandPaletteInsert')}</span><span aria-hidden="true">▾</span></button>
                 </div>
                 <div class="toolbar-inner" id="toolbarInner">
                     <div class="toolbar-group" data-group="inline">
@@ -110,6 +111,7 @@ function generateEditorBodyHtml(messages, platform, options) {
                 </div>
                 <div id="toolbarOverflow" class="toolbar-overflow" role="menu" aria-label="${m('toolbarMoreActions')}" hidden></div>
             </div>
+            <div id="insertMenu" class="insert-menu" role="menu" aria-label="${m('commandPaletteInsert')}" hidden></div>
             ${exportPanels}
             <div class="editor-wrapper" id="editorWrapper">
                 <div class="search-replace-box" id="searchReplaceBox" style="display: none;">

@@ -34,6 +34,14 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  insertLinkTitle: "Insertar enlace",
+  insertLinkUrl: "URL o ruta del archivo",
+  insertLinkText: "Texto del enlace",
+  insertDialogCancel: "Cancelar",
+  insertUnavailableSource: "Cambia al editor visual para insertar un elemento.",
+  insertUnavailableSelection: "Elige un punto de inserción en el documento.",
+  insertUnavailableContext: "Mueve el cursor fuera del código, la ecuación o el bloque generado.",
+  insertUnavailableBlock: "Elige un párrafo fuera de listas, tablas y citas.",
   toolbarMoreActions: "Más acciones de la barra de herramientas",
   toolbarModeSaveFailed: "No se pudo guardar el modo de la barra de herramientas. Se mantiene la configuración anterior.",
   tablePositionSaveFailed: "No se pudo guardar la posición de la barra de herramientas de tabla. Se mantiene la configuración anterior.",

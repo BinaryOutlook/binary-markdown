@@ -887,9 +887,15 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
                     break;
                 }
 
-                case 'insertImage':
-                    await this.handleImageInsert(document, webviewPanel.webview);
+                case 'insertImage': {
+                    const requestId = typeof message.requestId === 'string' ? message.requestId : undefined;
+                    let inserted = false;
+                    try { inserted = await this.handleImageInsert(document, webviewPanel.webview, requestId); }
+                    finally {
+                        if (!inserted && requestId) { void webviewPanel.webview.postMessage({ type: 'insertCancelled', requestId }); }
+                    }
                     break;
+                }
 
                 case 'saveImageAndInsert':
                     // Save pasted/dropped image to file
@@ -901,24 +907,29 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
                     await this.handleReadAndInsertImage(document, webviewPanel.webview, message.filePath);
                     break;
 
-                case 'insertLink':
-                    const url = await vscode.window.showInputBox({
-                        prompt: t('enterUrl'),
-                        placeHolder: 'https://example.com'
-                    });
-                    if (url) {
-                        const linkText = message.text || await vscode.window.showInputBox({
-                            prompt: t('enterLinkText'),
-                            placeHolder: 'Link text',
-                            value: 'link'
-                        }) || 'link';
-                        webviewPanel.webview.postMessage({
-                            type: 'insertLinkHtml',
-                            url: url,
-                            text: linkText
+                case 'insertLink': {
+                    const requestId = typeof message.requestId === 'string' ? message.requestId : undefined;
+                    let inserted = false;
+                    try {
+                        const url = await vscode.window.showInputBox({
+                            prompt: t('enterUrl'),
+                            placeHolder: 'https://example.com'
                         });
+                        if (!url) { break; }
+                        const linkText = message.text || await vscode.window.showInputBox({
+                            prompt: t('enterLinkText'), placeHolder: 'Link text', value: 'link'
+                        });
+                        // Escape from either prompt cancels the whole operation.
+                        if (linkText === undefined) { break; }
+                        void webviewPanel.webview.postMessage({
+                            type: 'insertLinkHtml', url, text: linkText || 'link', requestId
+                        });
+                        inserted = true;
+                    } finally {
+                        if (!inserted && requestId) { void webviewPanel.webview.postMessage({ type: 'insertCancelled', requestId }); }
                     }
                     break;
+                }
 
                 case 'openLink':
                     if (typeof message.href !== 'string' || !message.href) { break; }
@@ -1093,7 +1104,7 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
         });
     }
 
-    private async handleImageInsert(document: vscode.TextDocument, webview: vscode.Webview) {
+    private async handleImageInsert(document: vscode.TextDocument, webview: vscode.Webview, requestId?: string): Promise<boolean> {
         const path = require('path');
         const fs = require('fs');
         
@@ -1137,13 +1148,16 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
                 webview.postMessage({
                     type: 'insertImageHtml',
                     markdownPath: markdownPath,
-                    displayUri: webviewUri
+                    displayUri: webviewUri,
+                    requestId
                 });
+                return true;
             } catch (error) {
                 console.error('Failed to copy image:', error);
                 vscode.window.showErrorMessage(`${t('failedToCopyImage')}${error}`);
             }
         }
+        return false;
     }
 
     private async handleSaveImage(document: vscode.TextDocument, webview: vscode.Webview, dataUrl: string, fileName?: string) {

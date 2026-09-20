@@ -34,6 +34,14 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  insertLinkTitle: "插入連結",
+  insertLinkUrl: "網址或檔案路徑",
+  insertLinkText: "連結文字",
+  insertDialogCancel: "取消",
+  insertUnavailableSource: "請切換至視覺化編輯器後插入。",
+  insertUnavailableSelection: "請在文件中選擇插入位置。",
+  insertUnavailableContext: "請將游標移至程式碼、公式或產生的區塊之外。",
+  insertUnavailableBlock: "請選擇清單、表格和引文之外的段落。",
   toolbarMoreActions: "更多工具列操作",
   toolbarModeSaveFailed: "無法儲存工具列模式。將繼續使用先前的設定。",
   tablePositionSaveFailed: "無法儲存表格工具列的位置。將繼續使用先前的設定。",

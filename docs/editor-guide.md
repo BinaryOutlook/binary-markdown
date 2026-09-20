@@ -8,6 +8,16 @@ The **Full** toolbar shows standard text formatting by default in VS Code and th
 
 Resizing keeps complete buttons in the toolbar and puts remaining actions under **More toolbar actions**. At very narrow widths, utility actions can also move into that menu. Use the arrow keys or `Home`/`End` within the menu, and `Escape` to close it. Changing toolbar mode updates the current editor without replacing its document, selection, active equation input, or undo history.
 
+## Insert menu
+
+**Insert** is available in both **Full** and **Simple** mode. Its dropdown includes inline equations, block equations, tables, code blocks, links, images, Mermaid diagrams, and a managed table of contents. At very narrow widths, open **More toolbar actions** to find **Insert**. Existing toolbar buttons, shortcuts, and the Action Palette remain available.
+
+Opening the menu retains your caret or selection. Use up/down arrows or `Home`/`End` to navigate, `Enter` or `Space` to choose an item, and `Escape` to close it. Opening, navigating, or cancelling the menu does not edit the document. Cancelling a link or image dialog also leaves the document and undo history unchanged. Confirmed insertions use the retained location and can be undone in one step.
+
+Inline equations wrap the selected text, or start with `x` at a caret, and open their source input. Links use selected text as their label; images replace the selection or insert at the caret. Code blocks, block equations, and Mermaid diagrams appear after the current paragraph, or replace an empty paragraph, with their source ready to edit. Tables insert at the caret. The TOC command inserts a managed table of contents or refreshes the existing one.
+
+The menu explains unavailable contexts. Switch to the visual editor to insert items. Move outside code, equation, metadata, or generated blocks before using the menu. Inline items are available in ordinary list items and table cells; block items require a paragraph outside lists, tables, and blockquotes. These restrictions preserve the surrounding document structure.
+
 ## 📝 Creating Markdown Elements
 
 ### Block Elements
@@ -26,7 +36,7 @@ Resizing keeps complete buttons in the toolbar and puts remaining actions under 
 | Task List | `- [ ] ` + Space | Task list button | `Ctrl+Shift+X` |
 | Blockquote | `> ` + Space | Quote button | `Ctrl+Shift+Q` |
 | Code Block | ````` ``` ````` + Enter | Code button | `Ctrl+Shift+K` |
-| Table | `| col1 | col2 |` + Enter | Table button | `Ctrl+T` |
+| Table | `\| col1 \| col2 \|` + Enter | Table button | `Ctrl+T` |
 | Horizontal Rule | `---` + Enter | HR button | `Ctrl+Shift+-` |
 
 ### Inline Elements
@@ -186,7 +196,7 @@ a^2 + b^2 &= c^2
 $$
 ```
 
-- **Insert Equation** creates a display block using `$$`. **Insert Inline Equation** wraps the selection in `$…$` and opens its source input. Both actions are available in the toolbar and action palette.
+- **Insert Equation** creates a display block using `$$`. **Insert Inline Equation** wraps the selection in `$…$` and opens its source input. Both actions are available in the Insert menu, toolbar, and Action Palette.
 - Type `$$` and press Enter to create a display block. Complete an inline expression and type a space to render it.
 - Click a display equation to edit its TeX source. Click an inline equation, or focus it and press Enter, to edit it; Enter applies, Escape cancels, and clearing the input removes the equation.
 - Saving retains the original equation delimiters, including imported backslash delimiters and old fences. Backslash recognition is enabled by default; disable `binary-markdown.math.backslashDelimiters` for documents that use these sequences literally.
@@ -257,7 +267,7 @@ FORCE_RELATIVE_PATH: true
 | `binary-markdown.imageDefaultDir` | Default directory for saved images | `""` (same as markdown file) |
 | `binary-markdown.forceRelativeImagePath` | Force relative paths for images | `false` |
 | `binary-markdown.language` | UI language (`default`, `en`, `ja`, `zh-cn`, `zh-tw`, `ko`, `es`, `fr`) | `default` |
-| `binary-markdown.toolbarMode` | Toolbar display mode (`full`, `simple`). Simple shows only undo/redo and utility buttons (use `Cmd+/` for other operations) | `full` |
+| `binary-markdown.toolbarMode` | Toolbar display mode (`full`, `simple`). Simple shows undo/redo, Insert, and utility buttons; use the Action Palette for other operations | `full` |
 | `binary-markdown.outlineStateScope` | Remember outline visibility per Markdown file (`file`) or share it across all Markdown files (`global`) | `file` |
 | `binary-markdown.outlineDefaultOpen` | Open the outline when the selected scope does not have a saved state yet | `true` |
 | `binary-markdown.enableDebugLogging` | Enable debug logging in browser console | `false` |

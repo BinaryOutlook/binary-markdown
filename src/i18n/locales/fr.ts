@@ -34,6 +34,14 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  insertLinkTitle: "Insérer un lien",
+  insertLinkUrl: "URL ou chemin du fichier",
+  insertLinkText: "Texte du lien",
+  insertDialogCancel: "Annuler",
+  insertUnavailableSource: "Passez à l’éditeur visuel pour insérer un élément.",
+  insertUnavailableSelection: "Choisissez un point d’insertion dans le document.",
+  insertUnavailableContext: "Placez le curseur hors du code, de l’équation ou du bloc généré.",
+  insertUnavailableBlock: "Choisissez un paragraphe hors des listes, tableaux et citations.",
   toolbarMoreActions: "Autres actions de la barre d’outils",
   toolbarModeSaveFailed: "Impossible d’enregistrer le mode de la barre d’outils. Le réglage précédent reste actif.",
   tablePositionSaveFailed: "Impossible d’enregistrer la position de la barre d’outils du tableau. Le réglage précédent reste actif.",

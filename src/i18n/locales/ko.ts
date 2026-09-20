@@ -34,6 +34,14 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  insertLinkTitle: "링크 삽입",
+  insertLinkUrl: "URL 또는 파일 경로",
+  insertLinkText: "링크 텍스트",
+  insertDialogCancel: "취소",
+  insertUnavailableSource: "항목을 삽입하려면 시각적 편집기로 전환하세요.",
+  insertUnavailableSelection: "문서에서 삽입 위치를 선택하세요.",
+  insertUnavailableContext: "코드, 수식 또는 생성된 블록 밖으로 커서를 이동하세요.",
+  insertUnavailableBlock: "목록, 표, 인용문 밖의 단락을 선택하세요.",
   toolbarMoreActions: "더 많은 도구 모음 작업",
   toolbarModeSaveFailed: "도구 모음 모드를 저장하지 못했습니다. 이전 설정이 계속 적용됩니다.",
   tablePositionSaveFailed: "표 도구 모음 위치를 저장하지 못했습니다. 이전 설정이 계속 적용됩니다.",

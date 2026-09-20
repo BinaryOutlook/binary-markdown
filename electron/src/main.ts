@@ -6,6 +6,7 @@ import { SettingsManager } from './settings-manager';
 import { generateEditorHtml, writeHtmlToTempFile } from './html-generator';
 import { buildMenu } from './menu';
 import { setupUpdateChecker, checkForUpdates } from './updater';
+import { showLinkDialog } from './link-dialog';
 
 /**
  * Binary Markdown — Electron Main Process
@@ -187,41 +188,41 @@ ipcMain.on('open-link', (_event, href: string) => {
     shell.openExternal(href);
 });
 
-ipcMain.on('insert-link', async (event, text: string) => {
+ipcMain.on('insert-link', async (event, text: string, requestId?: string) => {
     const win = BrowserWindow.fromWebContents(event.sender);
     if (!win) return;
-    // Simple prompt using dialog (Electron has no built-in input dialog)
-    // Use executeJavaScript as a workaround
-    const url = await win.webContents.executeJavaScript(
-        `window.prompt('Enter URL:', 'https://')`
-    );
-    if (url) {
-        win.webContents.send('host-message', {
-            type: 'insertLinkHtml',
-            url,
-            text: text || url,
-        });
+    try {
+        const result = await showLinkDialog(win, text, getI18nMessages());
+        if (!win.isDestroyed()) win.webContents.send('host-message', result
+            ? { type: 'insertLinkHtml', ...result, requestId }
+            : { type: 'insertCancelled', requestId });
+    } catch (error) {
+        console.error('Link dialog could not complete:', error);
+        if (!win.isDestroyed()) win.webContents.send('host-message', { type: 'insertCancelled', requestId });
     }
 });
 
-ipcMain.on('insert-image', async (event) => {
+ipcMain.on('insert-image', async (event, requestId?: string) => {
     const win = BrowserWindow.fromWebContents(event.sender);
     if (!win) return;
-    const result = await dialog.showOpenDialog(win, {
-        filters: [{ name: 'Images', extensions: ['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp'] }],
-        properties: ['openFile'],
-    });
-    if (result.canceled || result.filePaths.length === 0) return;
-
-    const fm = windows.get(win);
-    if (!fm) return;
-    const imgResult = await fm.readAndInsertImage(result.filePaths[0]);
-    if (imgResult) {
-        win.webContents.send('host-message', {
-            type: 'insertImageHtml',
-            markdownPath: imgResult.markdownPath,
-            displayUri: imgResult.displayUri,
+    let inserted = false;
+    try {
+        const result = await dialog.showOpenDialog(win, {
+            filters: [{ name: 'Images', extensions: ['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp'] }],
+            properties: ['openFile'],
         });
+        if (result.canceled || result.filePaths.length === 0 || win.isDestroyed()) return;
+        const fm = windows.get(win);
+        if (!fm) return;
+        const imgResult = await fm.readAndInsertImage(result.filePaths[0]);
+        if (imgResult && !win.isDestroyed()) {
+            win.webContents.send('host-message', { type: 'insertImageHtml', ...imgResult, requestId });
+            inserted = true;
+        }
+    } catch (error) {
+        console.error('Image dialog could not complete:', error);
+    } finally {
+        if (!inserted && !win.isDestroyed()) win.webContents.send('host-message', { type: 'insertCancelled', requestId });
     }
 });
 

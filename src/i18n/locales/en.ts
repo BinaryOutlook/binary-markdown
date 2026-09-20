@@ -34,6 +34,14 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  insertLinkTitle: "Insert link",
+  insertLinkUrl: "URL or file path",
+  insertLinkText: "Link text",
+  insertDialogCancel: "Cancel",
+  insertUnavailableSource: "Switch to the visual editor to insert an item.",
+  insertUnavailableSelection: "Choose an insertion point in the document.",
+  insertUnavailableContext: "Move the caret outside this code, equation, or generated block.",
+  insertUnavailableBlock: "Choose a paragraph outside lists, tables, and blockquotes.",
   toolbarMoreActions: "More toolbar actions",
   toolbarModeSaveFailed: "Could not save the toolbar mode. The previous setting remains active.",
   tablePositionSaveFailed: "Could not save the table toolbar position. The previous setting remains active.",

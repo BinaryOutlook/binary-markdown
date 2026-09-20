@@ -24,8 +24,8 @@ export interface HostBridge {
 
     // Operations that require host interface support.
     openLink(href: string): void;
-    requestInsertLink(text: string): void;
-    requestInsertImage(): void;
+    requestInsertLink(text: string, requestId?: string): void;
+    requestInsertImage(requestId?: string): void;
     requestSetImageDir(): void;
     openSettings?(): void;
     setTableToolbarPosition?(value: string): void;
@@ -59,8 +59,9 @@ export type HostMessage =
     | { type: 'performRedo' }
     | { type: 'toggleSourceMode' }
     | { type: 'setImageDir'; dirPath: string; forceRelativePath: boolean | null }
-    | { type: 'insertImageHtml'; markdownPath: string; displayUri: string }
-    | { type: 'insertLinkHtml'; url: string; text: string }
+    | { type: 'insertImageHtml'; markdownPath: string; displayUri: string; requestId?: string }
+    | { type: 'insertLinkHtml'; url: string; text: string; requestId?: string }
+    | { type: 'insertCancelled'; requestId: string }
     | { type: 'externalChangeDetected'; message: string }
     | { type: 'scrollToAnchor'; anchor: string }
     | { type: 'imageDirInfo'; fileImageDir: string; defaultImageDir: string }

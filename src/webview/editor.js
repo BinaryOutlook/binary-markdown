@@ -23,6 +23,7 @@
     const sidebar = document.getElementById('sidebar');
     const toolbar = document.getElementById('toolbar');
     const editorWrapper = document.getElementById('editorWrapper');
+    let editorRenderRevision = 0;
 
     // Reading-position outline state. The active section is the last heading
     // that has crossed the reading line 30% down the visible editor viewport.
@@ -1710,6 +1711,8 @@
     }
 
     function renderFromMarkdown() {
+        closeInsertMenu(false);
+        editorRenderRevision++;
         if (tableControls) tableControls.clear();
         // Remove IMAGE_DIR and FORCE_RELATIVE_PATH directives before rendering (they're stored in variables)
         let markdownToRender = removeDirectivesFromMarkdown(markdown);
@@ -11931,6 +11934,43 @@
 
     // Save the editor selection before toolbar buttons steal focus
     let savedToolbarRange = null;
+    let pendingHostInsert = null;
+    let hostInsertSequence = 0;
+
+    function requestHostInsertion(action) {
+        if (pendingHostInsert || isSourceMode) return;
+        const selection = window.getSelection();
+        const range = selection && selection.rangeCount ? selection.getRangeAt(0) : null;
+        if (!editorRange(range)) return;
+        const requestId = 'insert-' + Date.now().toString(36) + '-' + (++hostInsertSequence);
+        pendingHostInsert = { requestId, action, range: range.cloneRange(), startNode: range.startContainer, endNode: range.endContainer, renderRevision: editorRenderRevision };
+        if (action === 'link') host.requestInsertLink(selection.toString() || '', requestId);
+        else host.requestInsertImage(requestId);
+    }
+
+    function finishHostInsertion(message, committed) {
+        // Clipboard/drop image responses retain their existing insertion route.
+        if (!message.requestId) return true;
+        if (!pendingHostInsert || message.requestId !== pendingHostInsert.requestId) return false;
+        const pending = pendingHostInsert;
+        if (committed && message.type !== (pending.action === 'link' ? 'insertLinkHtml' : 'insertImageHtml')) return false;
+        pendingHostInsert = null;
+        // Live Ranges collapse onto the editor when their original nodes are
+        // removed. Retain node identity so a reload cannot redirect a response.
+        if (isSourceMode || pending.renderRevision !== editorRenderRevision || !editorRange(pending.range) || !pending.startNode.isConnected || !pending.endNode.isConnected) {
+            if (committed) showEditorToast(i18n.insertUnavailableSelection);
+            return false;
+        }
+        editor.focus({ preventScroll: true });
+        const selection = window.getSelection();
+        selection.removeAllRanges();
+        selection.addRange(pending.range);
+        if (committed) {
+            markdown = readCurrentMarkdown();
+            undoManager.saveSnapshot();
+        }
+        return true;
+    }
     function captureToolbarSelection(e) {
         if (tableControls.owns(e.target)) return;
         const btn = e.target.closest('button');
@@ -11950,12 +11990,13 @@
 
         const action = btn.dataset.action;
         if (!action) return;
+        if (action === 'insertMenu') return;
         if (btn.matches('[data-export-format], [data-export-action]') ||
             (action && action.indexOf('export') === 0)) return;
         closeToolbarOverflow(false);
 
         // View-only actions do not change Markdown content
-        if (action !== 'source' && action !== 'openOutline') {
+        if (!['source', 'openOutline', 'link', 'image'].includes(action)) {
             markAsEdited(); // User has made an edit
         }
 
@@ -11969,7 +12010,7 @@
         }
 
         // Save snapshot before structural toolbar actions (not for undo/redo/source/openOutline)
-        if (action !== 'undo' && action !== 'redo' && action !== 'source' && action !== 'openOutline') {
+        if (!['undo', 'redo', 'source', 'openOutline', 'link', 'image'].includes(action)) {
             undoManager.saveSnapshot();
         }
 
@@ -12122,20 +12163,26 @@
                 break;
             }
             case 'inlineMath': {
-                const tex = window.getSelection().toString() || 'x';
+                const selection = window.getSelection();
+                const range = selection && selection.rangeCount ? selection.getRangeAt(0) : null;
+                if (!editorRange(range)) break;
+                const tex = selection.toString() || 'x';
                 const equation = { open: '$', close: '$', tex, raw: '$' + tex + '$' };
-                document.execCommand('insertHTML', false, inlineMathHtml(equation));
-                const span = editor.querySelector('.math-inline:not([data-math-setup])');
+                const template = document.createElement('template');
+                template.innerHTML = inlineMathHtml(equation);
+                const span = template.content.firstElementChild;
+                // insertHTML strips this noneditable span inside lists/cells.
+                // Retain the same math node and source attributes in every context.
+                range.deleteContents(); range.insertNode(span);
+                range.setStartAfter(span); range.collapse(true);
+                selection.removeAllRanges(); selection.addRange(range);
                 setupInlineMath(); syncMarkdownSync();
-                if (span) editInlineMath(span);
+                editInlineMath(span);
                 break;
             }
             case 'link':
-                var linkText = window.getSelection().toString() || '';
-                host.requestInsertLink(linkText);
-                break;
             case 'image':
-                host.requestInsertImage();
+                requestHostInsertion(action);
                 break;
             case 'toc':
                 insertManagedToc();
@@ -12203,6 +12250,162 @@
         blocks:   function() { return i18n.commandPaletteBlocks    || 'Blocks'; },
         insert:   function() { return i18n.commandPaletteInsert    || 'Insert'; },
     };
+
+    // The Insert dropdown reuses the command dispatcher and its localized names.
+    // Keep its bookmark separate from toolbar focus so menu navigation is view-only.
+    var insertButton = document.getElementById('insertButton');
+    var insertMenu = document.getElementById('insertMenu');
+    var insertMenuRange = null;
+    var insertActions = ['inlineMath', 'math', 'table', 'codeblock', 'link', 'image', 'mermaid', 'toc'];
+
+    function editorRange(range) {
+        return range && range.startContainer.isConnected && range.endContainer.isConnected &&
+            editor.contains(range.startContainer) && editor.contains(range.endContainer);
+    }
+
+    function insertUnavailable(action, range) {
+        if (isSourceMode) return i18n.insertUnavailableSource;
+        if (!editorRange(range)) return i18n.insertUnavailableSelection;
+        const element = node => node.nodeType === Node.ELEMENT_NODE ? node : node.parentElement;
+        const start = element(range.startContainer), end = element(range.endContainer);
+        const protectedBlock = 'pre, .math-wrapper, .mermaid-wrapper, .front-matter, .toc-block, .math-inline';
+        if (start.closest(protectedBlock) || end.closest(protectedBlock)) return i18n.insertUnavailableContext;
+        const inline = ['inlineMath', 'link', 'image'].includes(action);
+        if (!inline && (start.closest('li, td, th, blockquote') || end.closest('li, td, th, blockquote'))) {
+            return i18n.insertUnavailableBlock;
+        }
+        return '';
+    }
+
+    function insertTrigger() {
+        return insertButton.getClientRects().length ? insertButton : toolbarMore;
+    }
+
+    function positionInsertMenu() {
+        const rect = insertTrigger().getBoundingClientRect();
+        const width = Math.min(320, Math.max(0, window.innerWidth - 16));
+        insertMenu.style.width = width + 'px';
+        insertMenu.style.left = Math.max(8, Math.min(rect.left, window.innerWidth - width - 8)) + 'px';
+        insertMenu.style.top = Math.min(rect.bottom + 4, Math.max(8, window.innerHeight - 44)) + 'px';
+        insertMenu.style.maxHeight = Math.max(28, window.innerHeight - rect.bottom - 12) + 'px';
+    }
+
+    function restoreInsertRange() {
+        if (!editorRange(insertMenuRange)) return false;
+        const selection = window.getSelection();
+        selection.removeAllRanges();
+        selection.addRange(insertMenuRange);
+        return true;
+    }
+
+    function closeInsertMenu(restoreFocus) {
+        if (!insertMenu) return;
+        insertMenu.hidden = true;
+        insertButton.setAttribute('aria-expanded', 'false');
+        restoreInsertRange();
+        if (restoreFocus) insertTrigger().focus({ preventScroll: true });
+    }
+
+    function openInsertMenu(last) {
+        const selection = window.getSelection();
+        const current = selection && selection.rangeCount ? selection.getRangeAt(0) : null;
+        insertMenuRange = editorRange(current) ? current.cloneRange()
+            : editorRange(savedToolbarRange) ? savedToolbarRange.cloneRange() : null;
+        if (!insertMenuRange) {
+            insertMenuRange = document.createRange();
+            insertMenuRange.selectNodeContents(editor);
+            insertMenuRange.collapse(false);
+        }
+        insertButton.dispatchEvent(new CustomEvent('toolbar-submenu-open', { bubbles: true }));
+        for (const item of insertMenu.querySelectorAll('button')) {
+            const reason = insertUnavailable(item.dataset.insertAction, insertMenuRange);
+            item.setAttribute('aria-disabled', String(Boolean(reason)));
+            const description = item.querySelector('small');
+            description.textContent = reason;
+            description.hidden = !reason;
+        }
+        insertMenu.hidden = false;
+        insertButton.setAttribute('aria-expanded', 'true');
+        positionInsertMenu();
+        const choices = [...insertMenu.querySelectorAll('button')];
+        (last ? choices.at(-1) : choices[0]).focus({ preventScroll: true });
+    }
+
+    if (insertButton && insertMenu) {
+        for (const action of insertActions) {
+            const command = COMMAND_PALETTE_ITEMS.find(item => item.action === action);
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.setAttribute('role', 'menuitem');
+            button.dataset.insertAction = action;
+            const label = document.createElement('span');
+            label.textContent = i18n[command.i18nKey] || command.i18nKey;
+            const reason = document.createElement('small');
+            reason.id = 'insert-reason-' + action;
+            reason.hidden = true;
+            button.setAttribute('aria-describedby', reason.id);
+            button.append(label, reason);
+            insertMenu.appendChild(button);
+        }
+        insertButton.addEventListener('mousedown', event => { captureToolbarSelection(event); event.preventDefault(); });
+        insertButton.addEventListener('click', event => {
+            event.stopPropagation();
+            if (insertMenu.hidden) openInsertMenu(false); else closeInsertMenu(true);
+        });
+        insertButton.addEventListener('keydown', event => {
+            if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+                event.preventDefault(); event.stopPropagation();
+                openInsertMenu(event.key === 'ArrowUp');
+            }
+        });
+        insertMenu.addEventListener('mousedown', event => event.preventDefault());
+        insertMenu.addEventListener('keydown', event => {
+            const choices = [...insertMenu.querySelectorAll('button')];
+            const index = choices.indexOf(document.activeElement);
+            let next;
+            if (event.key === 'ArrowDown') next = (index + 1) % choices.length;
+            if (event.key === 'ArrowUp') next = (index + choices.length - 1) % choices.length;
+            if (event.key === 'Home') next = 0;
+            if (event.key === 'End') next = choices.length - 1;
+            if (next !== undefined) {
+                event.preventDefault(); event.stopPropagation();
+                choices[next].focus({ preventScroll: true });
+                choices[next].scrollIntoView({ block: 'nearest' });
+            } else if (event.key === 'Escape' || event.key === 'Tab') {
+                if (event.key === 'Escape') event.preventDefault();
+                event.stopPropagation(); closeInsertMenu(true);
+            }
+        });
+        insertMenu.addEventListener('click', event => {
+            const item = event.target.closest('button[data-insert-action]');
+            if (!item) return;
+            const action = item.dataset.insertAction;
+            const reason = insertUnavailable(action, insertMenuRange);
+            if (reason) { showEditorToast(reason); return; }
+            closeInsertMenu(false);
+            editor.focus({ preventScroll: true });
+            if (!restoreInsertRange()) return;
+            savedToolbarRange = null;
+            // Dialog actions take their snapshot only when their host confirms.
+            const directInsertion = !['link', 'image', 'toc'].includes(action);
+            if (directInsertion) {
+                markdown = readCurrentMarkdown();
+                undoManager.saveSnapshot();
+            }
+            dispatchToolbarAction(action);
+            // Redo must see the inserted block even when Undo arrives before
+            // an asynchronous rendering-frame sync. Keep equation inputs open.
+            if (directInsertion) syncMarkdownSync();
+        });
+        document.addEventListener('mousedown', event => {
+            if (!insertMenu.hidden && !insertMenu.contains(event.target) && !insertButton.contains(event.target)) closeInsertMenu(false);
+        });
+        insertMenu.addEventListener('focusout', () => queueMicrotask(() => {
+            if (!insertMenu.hidden && !insertMenu.contains(document.activeElement) && document.activeElement !== insertButton) closeInsertMenu(false);
+        }));
+        window.addEventListener('resize', () => { if (!insertMenu.hidden) positionInsertMenu(); });
+        new ResizeObserver(() => { if (!insertMenu.hidden) positionInsertMenu(); }).observe(toolbar);
+    }
 
     var commandPalette = null;
     var commandPaletteInput = null;
@@ -12516,8 +12719,10 @@
         }
 
         // Save undo snapshot before action
-        undoManager.saveSnapshot();
-        markAsEdited();
+        if (!['link', 'image'].includes(action)) {
+            undoManager.saveSnapshot();
+            markAsEdited();
+        }
 
         // Dispatch via shared function (same as toolbar)
         dispatchToolbarAction(action);
@@ -12599,6 +12804,7 @@
     });
 
     function toggleSourceMode() {
+        closeInsertMenu(false);
         hideTableToolbar();
         // Read while the current mode still owns the latest edits. The host
         // command can arrive before blur or the delayed visual sync runs.
@@ -13845,7 +14051,10 @@
             imageDirDisplayPath = message.displayPath;
             imageDirSource = message.source;
             updateStatus();
+        } else if (message.type === 'insertCancelled') {
+            finishHostInsertion(message, false);
         } else if (message.type === 'insertImageHtml') {
+            if (!finishHostInsertion(message, true)) return;
             logger.log('insertImageHtml received:', message);
             // Insert image at cursor position
             const img = document.createElement('img');
@@ -13873,9 +14082,10 @@
             } else {
                 editor.appendChild(img);
             }
-            syncMarkdown();
+            syncMarkdownSync();
             logger.log('Image element inserted');
         } else if (message.type === 'insertLinkHtml') {
+            if (!finishHostInsertion(message, true)) return;
             // Insert link at cursor position
             const a = document.createElement('a');
             a.href = message.url;
@@ -13894,7 +14104,7 @@
             } else {
                 editor.appendChild(a);
             }
-            syncMarkdown();
+            syncMarkdownSync();
             editor.focus();
         } else if (message.type === 'externalChangeDetected') {
             // Show toast notification for external change

@@ -34,6 +34,14 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  insertLinkTitle: "插入链接",
+  insertLinkUrl: "网址或文件路径",
+  insertLinkText: "链接文字",
+  insertDialogCancel: "取消",
+  insertUnavailableSource: "请切换到可视化编辑器后插入。",
+  insertUnavailableSelection: "请在文档中选择插入位置。",
+  insertUnavailableContext: "请将光标移到代码、公式或生成的区块之外。",
+  insertUnavailableBlock: "请选择列表、表格和引用之外的段落。",
   toolbarMoreActions: "更多工具栏操作",
   toolbarModeSaveFailed: "无法保存工具栏模式。将继续使用之前的设置。",
   tablePositionSaveFailed: "无法保存表格工具栏的位置。将继续使用之前的设置。",
