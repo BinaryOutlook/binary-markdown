@@ -34,6 +34,9 @@ img, svg, canvas { max-width: 100% !important; height: auto; object-fit: contain
 .export-code-metadata[data-edge="bottom"] { break-before: avoid-page; page-break-before: avoid; }
 .export-code-metadata[data-side="right"] { justify-content: flex-end; }
 .export-code-language { font-style: italic; }
+pre > code.export-numbered-code { display: block; white-space: normal !important; }
+.export-code-line { display: block; position: relative; padding-left: var(--export-code-gutter); min-height: 1lh; white-space: break-spaces !important; }
+.export-code-line::before { content: attr(data-line); position: absolute; left: 0; width: calc(var(--export-code-gutter) - 1.25ch); text-align: right; color: var(--text-color, #57606a); opacity: .75; user-select: none; font-variant-numeric: tabular-nums; }
 .export-code-count { padding: 2px 0; color: var(--text-color, #57606a); }
 .export-code-block[data-line-count] > pre { break-after: avoid-page; page-break-after: avoid; }
 /* A decorative vector outline leaves the label selectable and the top seam single. */
@@ -91,10 +94,11 @@ export async function convertPdf(html: string, executable: string, operations: E
             const labels = ${JSON.stringify(labels)};
             const position = ${JSON.stringify(codeLanguagePosition(options.codeLanguagePosition))};
             const showCount = ${options.showCodeLineCount === true};
+            const showNumbers = ${options.showCodeLineNumbers === true};
             const countLabel = ${JSON.stringify(options.codeLineCountLabel || 'Lines')};
             const sourceLines = ${logicalCodeLines.toString()};
             document.querySelectorAll('pre[data-lang]').forEach((pre, index) => {
-                if (!labels[index] && !showCount) return;
+                if (!labels[index] && !showCount && !showNumbers) return;
                 if (['math', 'mermaid'].includes(pre.dataset.lang)) return;
                 const wrapper = document.createElement('div');
                 wrapper.className = 'export-code-block';
@@ -110,7 +114,7 @@ export async function convertPdf(html: string, executable: string, operations: E
                 if (!labels[index]) wrapper.append(pre);
                 else if (footer.dataset.edge === 'top') wrapper.append(footer, pre);
                 else wrapper.append(pre, footer);
-                if (showCount) {
+                if (showCount || showNumbers) {
                     const code = pre.querySelector('code') || pre;
                     const copy = code.cloneNode(true);
                     copy.querySelectorAll('[data-export-display-break]').forEach(node => node.remove());
@@ -118,12 +122,50 @@ export async function convertPdf(html: string, executable: string, operations: E
                     const hint = Number(pre.dataset.exportCodeLines || 0);
                     const lines = sourceLines(copy.textContent || '', hint === 1 ? 1 : 0);
                     if (pre.hasAttribute('data-export-code-lines') && lines.length !== hint) throw new Error('Prepared code lines disagree with source.');
-                    const count = document.createElement('div');
-                    count.className = 'export-code-metadata export-code-count';
-                    count.dataset.edge = 'bottom';
-                    count.textContent = countLabel + ': ' + lines.length;
-                    wrapper.dataset.lineCount = String(lines.length);
-                    wrapper.append(count);
+                    if (showNumbers) {
+                        // Split highlighted spans at authored newlines, retaining their styles.
+                        // The gutter is generated presentation text, never a code text node.
+                        const split = node => {
+                            if (node.nodeType === 3) return node.textContent.split(String.fromCharCode(10)).map(text => {
+                                const fragment = document.createDocumentFragment();
+                                fragment.append(text); return fragment;
+                            });
+                            let parts = [document.createDocumentFragment()];
+                            for (const child of node.childNodes) {
+                                const children = split(child);
+                                parts[parts.length - 1].append(children[0]);
+                                parts.push(...children.slice(1));
+                            }
+                            if (node === copy) return parts;
+                            return parts.map(part => {
+                                const wrapper = node.cloneNode(false);
+                                wrapper.append(part); return wrapper;
+                            });
+                        };
+                        const fragments = lines.length ? split(copy) : [];
+                        if (fragments.length !== lines.length || fragments.some((part, i) => part.textContent !== lines[i])) {
+                            throw new Error('Numbered code differs from its source.');
+                        }
+                        code.replaceChildren();
+                        code.classList.add('export-numbered-code');
+                        code.style.setProperty('--export-code-gutter', (String(lines.length).length + 2) + 'ch');
+                        fragments.forEach((fragment, i) => {
+                            const row = document.createElement('span');
+                            row.className = 'export-code-line'; row.dataset.line = String(i + 1);
+                            row.append(fragment);
+                            if (i) code.append(String.fromCharCode(10));
+                            code.append(row);
+                        });
+                        if (code.textContent !== lines.join(String.fromCharCode(10))) throw new Error('Numbering changed code text.');
+                    }
+                    if (showCount) {
+                        const count = document.createElement('div');
+                        count.className = 'export-code-metadata export-code-count';
+                        count.dataset.edge = 'bottom';
+                        count.textContent = countLabel + ': ' + lines.length;
+                        wrapper.dataset.lineCount = String(lines.length);
+                        wrapper.append(count);
+                    }
                 }
                 wrapper.style.setProperty('--export-code-background', getComputedStyle(pre).backgroundColor);
             });

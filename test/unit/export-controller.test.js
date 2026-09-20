@@ -245,6 +245,20 @@ test('line-count visibility defaults off and is captured independently for each 
     }
 });
 
+test('line-number visibility defaults off and is captured independently for each saved export', async t => {
+    const fixture = await fs.readFile(path.join(__dirname, '../../media/export-reference.docx'));
+    for (const format of ['pdf', 'docx']) for (const initial of [undefined, false, true, 'invalid']) {
+        const config = { 'export.showCodeLineNumbers': initial, 'export.showCodeLanguage': false };
+        const seen = [];
+        const convert = ({ settings }) => { seen.push([settings.showCodeLineNumbers, settings.showCodeLanguage]); if (format === 'pdf') throw new Error('Captured'); return fixture; };
+        const h = await harness(t, { config, pdf: convert, pandoc: convert,
+            onPrepare: () => { config['export.showCodeLineNumbers'] = true; } });
+        await h.controller.export(format); await h.controller.export(format);
+        assert.deepEqual(seen, [[initial === true, false], [true, false]]);
+        await assertSourceIntact(h);
+    }
+});
+
 for (const platform of ['darwin', 'linux', 'win32']) for (const [name, options] of [
     ['dirty document', { document: { isDirty: true } }],
     ['untitled document', { document: { isUntitled: true } }],

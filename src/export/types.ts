@@ -8,6 +8,7 @@ export interface CodePresentationOptions {
     showCodeLanguage?: boolean;
     codeLanguagePosition?: CodeLanguagePosition;
     showCodeLineCount?: boolean;
+    showCodeLineNumbers?: boolean;
     codeLineCountLabel?: string;
 }
 

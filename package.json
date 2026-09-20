@@ -385,6 +385,12 @@
           "default": false,
           "description": "%config.export.showCodeLineCount.description%",
           "scope": "resource"
+        },
+        "binary-markdown.export.showCodeLineNumbers": {
+          "type": "boolean",
+          "default": false,
+          "description": "%config.export.showCodeLineNumbers.description%",
+          "scope": "resource"
         }
       }
     },

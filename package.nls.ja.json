@@ -69,5 +69,6 @@
   "config.export.codeLanguagePosition.topRight": "右上。",
   "config.export.codeLanguagePosition.bottomLeft": "左下。",
   "config.export.codeLanguagePosition.bottomRight": "右下。",
-  "config.export.showCodeLineCount.description": "PDFとDOCXのコードブロックの左下に、入力されたコードの総行数を表示します。初期状態ではオフで、言語ラベルや各行の番号とは独立しています。設定はエクスポート開始時に取得されます。"
+  "config.export.showCodeLineCount.description": "PDFとDOCXのコードブロックの左下に、入力されたコードの総行数を表示します。初期状態ではオフで、言語ラベルや各行の番号とは独立しています。設定はエクスポート開始時に取得されます。",
+  "config.export.showCodeLineNumbers.description": "PDF のコードブロックにソース行番号を表示します。折り返しでは番号は増えません。言語ラベルと総行数とは独立しています。"
 }

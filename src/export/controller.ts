@@ -156,6 +156,7 @@ export class ExportController implements vscode.Disposable {
                     showCodeLanguage: config.get<boolean>('export.showCodeLanguage', true),
                     codeLanguagePosition: codeLanguagePosition(config.get('export.codeLanguagePosition')),
                     showCodeLineCount: config.get<boolean>('export.showCodeLineCount', false) === true,
+                    showCodeLineNumbers: config.get<boolean>('export.showCodeLineNumbers', false) === true,
                     codeLineCountLabel: messages.codeLineCountLabel
                 });
                 const source: SavedExportDocument = Object.freeze({

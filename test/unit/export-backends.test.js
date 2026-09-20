@@ -651,3 +651,46 @@ test('real exports retain TOC destinations for equation headings and following h
     }
     assert.equal(saved.markdown, source);
 });
+
+test('real PDF numbers logical code lines without numbering wrapped continuations', { skip: !realTools }, async t => {
+    const directory = await temporary(t);
+    const status = await discoverTool('browser', process.env.EXPORT_BROWSER_PATH || '');
+    assert.equal(status.available, true, status.error);
+    const fixtures = require('../fixtures/export-code-lines.cjs');
+    const escape = text => text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    const html = '<html><head><style>pre{font:12px/1.5 monospace;padding:8px;background:#f6f8fa} .token{color:#008000}</style></head><body>' +
+        fixtures.map(f => '<pre data-lang="' + escape(f.language) + '" data-export-code-lines="' + f.count + '"><code><span class="token">' + escape(f.lines.join('\n')) + '</span></code></pre>').join('') + '</body></html>';
+    for (const showCodeLanguage of [false, true]) for (const showCodeLineCount of [false, true]) {
+        const file = path.join(directory, `${showCodeLanguage}-${showCodeLineCount}.pdf`);
+        await fs.writeFile(file, await convertPdf(html, status.path, operations(), {
+            showCodeLineNumbers: true, showCodeLanguage, showCodeLineCount, codeLanguagePosition: 'bottom-left'
+        }));
+        const bbox = xmlDocument((await runTool(process.env.EXPORT_PDFTOTEXT_PATH || 'pdftotext', ['-bbox', file, '-'])).stdout);
+        const words = [...bbox.getElementsByTagName('word')];
+        // Code starts to the right of the generated gutter. Counts below the block have a different x position.
+        const numbers = words.filter(word => /^\d+$/.test(word.textContent) && Number(word.getAttribute('xMax')) < 75 && words[words.indexOf(word) - 1]?.textContent !== 'Lines:');
+        assert.deepEqual(numbers.map(word => Number(word.textContent)), fixtures.flatMap(f => Array.from({ length: f.count }, (_, i) => i + 1)));
+        const text = words.map(word => word.textContent).join(' ');
+        for (let n = 1; n <= 150; n++) if (n % 19) assert.equal(text.split('CODE_LINE_' + String(n).padStart(3, '0')).length - 1, 1);
+        assert.equal(text.split('WRAP_END').length - 1, 1);
+        const last = words.find(word => word.textContent.includes('CODE_LINE_150'));
+        const number = numbers.at(-1);
+        assert.ok(Math.abs(Number(last.getAttribute('yMin')) - Number(number.getAttribute('yMin'))) < 1, 'last number stays beside the last logical line');
+        assert.equal(words.filter(word => word.textContent === 'Lines:').length, showCodeLineCount ? fixtures.length : 0);
+    }
+});
+
+test('real PDF keeps one source number for a logical line spanning multiple pages', { skip: !realTools }, async t => {
+    const directory = await temporary(t);
+    const status = await discoverTool('browser', process.env.EXPORT_BROWSER_PATH || '');
+    assert.equal(status.available, true, status.error);
+    const file = path.join(directory, 'oversized.pdf');
+    const source = 'PAGE_WRAP ' + 'wrapping '.repeat(3000) + 'END_WRAPPED\nAFTER_WRAP';
+    await fs.writeFile(file, await convertPdf('<style>pre{font:12px/1.5 monospace;padding:8px}</style><pre data-lang="text" data-export-code-lines="2"><code>' + source + '</code></pre>', status.path, operations(), { showCodeLineNumbers: true }));
+    const bbox = xmlDocument((await runTool(process.env.EXPORT_PDFTOTEXT_PATH || 'pdftotext', ['-bbox', file, '-'])).stdout);
+    const words = [...bbox.getElementsByTagName('word')];
+    assert.ok(bbox.getElementsByTagName('page').length > 2);
+    assert.deepEqual(words.filter(word => /^\d+$/.test(word.textContent)).map(word => word.textContent), ['1', '2']);
+    for (const marker of ['PAGE_WRAP', 'END_WRAPPED', 'AFTER_WRAP']) assert.equal(words.filter(word => word.textContent === marker).length, 1);
+    assert.equal(words.filter(word => word.textContent === 'wrapping').length, 3000);
+});

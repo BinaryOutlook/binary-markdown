@@ -69,5 +69,6 @@
   "config.export.codeLanguagePosition.topRight": "右上角。",
   "config.export.codeLanguagePosition.bottomLeft": "左下角。",
   "config.export.codeLanguagePosition.bottomRight": "右下角。",
-  "config.export.showCodeLineCount.description": "在PDF和DOCX程式碼區塊左下角顯示原始碼總行數。預設關閉，與語言標籤和逐行行號獨立；每次匯出時固定此設定。"
+  "config.export.showCodeLineCount.description": "在PDF和DOCX程式碼區塊左下角顯示原始碼總行數。預設關閉，與語言標籤和逐行行號獨立；每次匯出時固定此設定。",
+  "config.export.showCodeLineNumbers.description": "在 PDF 程式碼區塊旁顯示原始碼行號。自動換行不增加行號；與語言標籤及總行數獨立。"
 }

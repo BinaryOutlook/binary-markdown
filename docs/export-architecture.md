@@ -112,6 +112,12 @@ DOCX reads with [Pandoc's tab-preservation option](https://pandoc.org/MANUAL.htm
 
 Keep-with-next is a layout request, not a cross-reader guarantee. In LibreOfficeDev 26.8.0.0.alpha0, a 150-line unnumbered block can leave its count alone on the next page. The code and count survive, but footer attachment remains an unresolved acceptance item; preserve this limitation in review evidence until the target readers establish otherwise.
 
+### PDF numbering
+
+The captured `binary-markdown.export.showCodeLineNumbers` setting defaults off. When enabled, the PDF adapter splits a detached copy of highlighted code spans at source newlines, verifies every line against the shared model, and wraps each line with a generated gutter. Numbers are CSS presentation content; the reconstructed code text must remain byte-for-byte equal after newline normalization already performed by export preparation. The gutter grows with the number of digits. Logical rows may wrap and paginate without adding numbers.
+
+The original code subtree remains unchanged when numbering is off. Numbering, total counts and language labels are independent. Real-converter fixtures check blank lines, wrapping, metadata combinations and multi-page numbering. Poppler extraction includes gutter numbers and can group text by columns, so it is not a promise of number-free clipboard content or source-preserving reading order. Actual reader selection/copy and accessibility still require acceptance evidence.
+
 ## Verify a change
 
 Use [Validate an export change](export-verification.md) to choose checks for the affected boundary. Earlier design choices and investigation results are retained in the [development history](../archive/development/export.md#decision-log).
