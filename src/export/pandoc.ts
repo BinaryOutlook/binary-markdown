@@ -9,6 +9,7 @@ import { runTool } from './tools';
 import { codeLanguageLabel } from './code-language';
 import { docxLanguageTab } from './language-tab';
 import { pandocCodeLines } from './code-lines';
+import { CODE_MARKER, numberDocxCode } from './docx-numbering';
 
 type Json = null | boolean | number | string | Json[] | { [key: string]: Json };
 interface AstNode { t: string; c?: Json; }
@@ -218,6 +219,7 @@ export async function convertPandoc(
             }
             return result;
         };
+        const numberedModels: string[][] = [];
         const transform = async (value: Json): Promise<Json> => {
             checkCancelled(operations.signal);
             if (Array.isArray(value)) {
@@ -278,7 +280,12 @@ export async function convertPandoc(
                     // Pandoc's DOCX writer consumes the last newline in a code
                     // payload. Supply its delimiter in the export-only AST so
                     // an authored blank tail survives; source stays untouched.
-                    const code: Json = { t: 'CodeBlock', c: [attributes, payload + (payload.endsWith('\n') ? '\n' : '')] };
+                    let code: Json = { t: 'CodeBlock', c: [attributes, payload + (payload.endsWith('\n') ? '\n' : '')] };
+                    if (options.showCodeLineNumbers === true) {
+                        const marker = CODE_MARKER + numberedModels.length;
+                        numberedModels.push(lines);
+                        code = { t: 'Div', c: [emptyAttributes, [{ t: 'RawBlock', c: ['openxml', '<!--' + marker + '-->'] }, code]] };
+                    }
                     return withDocxCodeMetadata(code, classes, ++languageTabId, options, lines.length);
                 }
             }
@@ -319,7 +326,9 @@ export async function convertPandoc(
         if (bytes.length < 4 || bytes.readUInt32LE(0) !== 0x04034b50) {
             throw new Error(`Pandoc did not create a valid ${format.toUpperCase()} container.`);
         }
-        return bytes;
+        const result = format === 'docx' && options.showCodeLineNumbers === true ? numberDocxCode(bytes, numberedModels) : bytes;
+        checkCancelled(operations.signal);
+        return result;
     } finally {
         await fs.rm(directory, { recursive: true, force: true });
     }

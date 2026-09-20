@@ -62,6 +62,8 @@ Use `--suite underline` for the shared underline command in paragraphs, nested b
 
 Use `--suite code-label-position` for actual installed PDF/DOCX conversions with the unset default, all four corners, and hidden labels. It checks PDF word coordinates, DOCX metadata styles, code markers, unchanged source/editor state, and restoration of user/workspace preferences. It requires real converters and Poppler as above. This supplements reader inspection of long blocks and custom labels; it does not certify Microsoft Word or interactive copying/editing.
 
+Use `--suite docx-code-numbers` for default-off and enabled numbering through installed Pandoc, independent metadata combinations, numbered blank lines, restarts and unchanged source/editor state. Shared real-converter fixtures also cover highlighted, nested and multi-page blocks; reader edits/copying remain separate checks.
+
 Use `--suite pdf-code-numbers` for default-off numbering and independent label/count combinations through installed PDF conversion. It checks logical blank lines, numbering restarts, source/editor preservation and restored settings.
 
 Use `--suite code-line-count` for the initially off count setting and enabled counts with all label corners or hidden labels. The installed exports distinguish empty and blank blocks, preserve a trailing blank line, and check bottom-left PDF counts and DOCX metadata. The source/editor and prior user/workspace settings remain unchanged. The shared backend fixtures add long, tabbed, Unicode and multi-page cases; inspect their actual reader output separately.

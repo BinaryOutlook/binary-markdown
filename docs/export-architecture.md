@@ -118,6 +118,14 @@ The captured `binary-markdown.export.showCodeLineNumbers` setting defaults off. 
 
 The original code subtree remains unchanged when numbering is off. Numbering, total counts and language labels are independent. Real-converter fixtures check blank lines, wrapping, metadata combinations and multi-page numbering. Poppler extraction includes gutter numbers and can group text by columns, so it is not a promise of number-free clipboard content or source-preserving reading order. Actual reader selection/copy and accessibility still require acceptance evidence.
 
+### DOCX numbering
+
+The same default-off numbering preference enables the proposed native-paragraph representation from [#38's investigation](../reports/investigations/2026-09-20-docx-code-numbering.md). The adapter marks only ordinary source code in its temporary Pandoc tree. After conversion, [docx-numbering.ts](../src/export/docx-numbering.ts) checks each marked code payload against the shared model, preserves whole-block highlighting runs while splitting them into logical paragraphs, and assigns a fresh numbering instance starting at 1. Empty blocks retain an unnumbered display paragraph. Metadata remains separate; only the last logical paragraph keeps with its footer. Numbered code uses shading without per-paragraph borders so the gutter stays outside the code area. Lists and quotation indents are retained as the base for the gutter.
+
+The transformation handles marked code in the document, footnotes and endnotes, rejects unknown code-run structures or source mismatches, and checks that every marker was consumed. Disabling the option bypasses the transformation. The existing ZIP32 integrity reader is reused with a 128 MiB expanded-package bound; XML parts are limited to 16 MiB, with at most 5,000 code blocks and 100,000 logical lines per block. DTD/entity declarations are rejected. The pinned MIT-licensed [xmldom](https://github.com/xmldom/xmldom) parser and its license are copied into the VSIX; no Python or new native executable is required. ZIP parts are repacked in memory and validated before publication; unrelated part payloads remain unchanged.
+
+These production mechanics do not accept the investigation's reader matrix. Pandoc conversion and the observed LibreOfficeDev rendering/save round trip establish structural and converter evidence only. Microsoft Word, stable LibreOffice, interactive edits/copying, screen readers and final gutter appearance remain review gates. Native numbering may follow paragraph edits, but highlighting is captured at export and does not update afterward.
+
 ## Verify a change
 
 Use [Validate an export change](export-verification.md) to choose checks for the affected boundary. Earlier design choices and investigation results are retained in the [development history](../archive/development/export.md#decision-log).

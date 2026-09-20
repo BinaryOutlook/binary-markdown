@@ -74,4 +74,9 @@ fs.rmSync(playwrightTarget, { recursive: true, force: true });
 fs.cpSync(playwrightPackage, playwrightTarget, { recursive: true });
 console.log('  ✓ playwright-core (browser control only; installed browser required)');
 
+// DOCX transformation uses a pinned XML parser; ship its MIT notice with the runtime.
+const xmlTarget = path.join(VENDOR, 'xmldom');
+fs.rmSync(xmlTarget, { recursive: true, force: true });
+fs.cpSync(path.join(NODE_MODULES, '@xmldom/xmldom'), xmlTarget, { recursive: true });
+
 console.log('\nVendor copy complete.');

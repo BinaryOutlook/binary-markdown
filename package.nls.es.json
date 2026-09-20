@@ -70,5 +70,5 @@
   "config.export.codeLanguagePosition.bottomLeft": "Abajo a la izquierda.",
   "config.export.codeLanguagePosition.bottomRight": "Abajo a la derecha.",
   "config.export.showCodeLineCount.description": "Mostrar el total de líneas de código escritas en la esquina inferior izquierda de los bloques PDF y DOCX. Desactivado de forma predeterminada e independiente de las etiquetas de lenguaje y los números de línea. Se captura una vez por exportación.",
-  "config.export.showCodeLineNumbers.description": "Mostrar números de línea de origen junto a los bloques de código PDF. El ajuste visual no añade números. Independiente de las etiquetas de lenguaje y del total de líneas."
+  "config.export.showCodeLineNumbers.description": "Mostrar números de línea de origen junto a los bloques de código PDF y DOCX. El ajuste visual no añade números. Independiente de las etiquetas de lenguaje y del total de líneas."
 }

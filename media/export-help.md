@@ -84,11 +84,13 @@ These are export options; totals never enter Markdown or the editor's code-copy 
 
 Known DOCX pagination limit: the tested LibreOffice development build can place the count on the page after a long code block despite its keep-with-next styling. Inspect long blocks in your target reader; footer attachment is not yet verified across readers.
 
-## PDF code-line numbers
+## Code-line numbers
 
-Enable `binary-markdown.export.showCodeLineNumbers` (default `false`) to add a gutter beside logical code lines in PDF. Numbers restart at 1 for each block, including authored blank lines. Empty blocks have no number. Wrapped continuations and page breaks do not add numbers. Language labels and total counts remain independently configurable; this setting currently affects PDF only.
+Enable `binary-markdown.export.showCodeLineNumbers` (default `false`) to add a gutter beside logical code lines in PDF and DOCX. Numbers restart at 1 for each block, including authored blank lines. Empty blocks have no number. Wrapped continuations and page breaks do not add numbers. Language labels and total counts remain independently configurable.
 
 Code text, indentation and highlighting remain in the document. Numbers are generated presentation content, not saved Markdown. PDF text extraction can include them and can group the gutter separately from the code; extracted whitespace can also differ from the source. Do not rely on a PDF for an exact code copy. Interactive selection/copy and spoken reading order remain reader-specific checks.
+
+DOCX numbering is experimental. It uses editable paragraphs with automatic list numbers, preserves the original highlighting, and keeps the gutter outside the shaded code area. Disabling numbering retains the existing code-block layout. Editing does not recalculate syntax highlighting. Enter, soft breaks, copied list numbers and spoken reading order need checking in your target reader; the currently observed LibreOffice development build is not a general Word compatibility guarantee.
 
 ## Underlined text
 

@@ -261,7 +261,7 @@ function wordText(element) {
         if (child.namespaceURI !== wordNamespace) return '';
         if (child.localName === 't') return child.textContent;
         if (child.localName === 'br') return '\n';
-        if (child.localName === 'tab') return '\t';
+        if (child.localName === 'tab' && child.parentElement?.localName === 'r') return '\t';
         return '';
     }).join('');
 }
@@ -693,4 +693,40 @@ test('real PDF keeps one source number for a logical line spanning multiple page
     assert.deepEqual(words.filter(word => /^\d+$/.test(word.textContent)).map(word => word.textContent), ['1', '2']);
     for (const marker of ['PAGE_WRAP', 'END_WRAPPED', 'AFTER_WRAP']) assert.equal(words.filter(word => word.textContent === marker).length, 1);
     assert.equal(words.filter(word => word.textContent === 'wrapping').length, 3000);
+});
+
+test('real DOCX native numbering preserves whole-block highlighting and exact authored lines', { skip: !realTools }, async t => {
+    const directory = await temporary(t), status = await discoverTool('pandoc', process.env.EXPORT_PANDOC_PATH || '');
+    assert.equal(status.available, true, status.error);
+    const fixtures = require('../fixtures/export-code-lines.cjs');
+    const markdown = fixtures.map(f => '```' + f.language + '\n' + (f.lines.length ? f.lines.join('\n') + '\n' : '') + '```\n').join('\n') +
+        '\n> ```python\n> \tQUOTED λ\n> \n> ```\n\n- Item\n\n  ```js\n  NESTED\n  \n  ```\n\nRaw <span>literal</span> and $x^2$.\n';
+    const expected = [...fixtures.filter(f => f.count).map(f => f.lines), ['\tQUOTED λ', ''], ['NESTED', '']];
+    const saved = { sourcePath: path.join(directory, 'numbers.md'), markdown, version: 1, theme: 'github', fontSize: 16 };
+    const prepared = { html: '', theme: 'github', fontSize: 16, diagrams: [], warnings: [] };
+    for (const position of ['top-left', 'top-right', 'bottom-left', 'bottom-right', 'hidden', 'no-count']) {
+        const bytes = await convertPandoc('docx', saved, prepared, status.path, operations(), {
+            showCodeLineNumbers: true, showCodeLineCount: position !== 'no-count', showCodeLanguage: position !== 'hidden',
+            codeLanguagePosition: ['hidden', 'no-count'].includes(position) ? 'top-left' : position
+        });
+        const entries = archiveEntries(bytes), xml = entries.get('word/document.xml').toString();
+        assert.doesNotMatch(xml, /binary-markdown-code-/);
+        const paragraphs = wordElements(xmlDocument(xml), 'p').filter(p => wordValue(wordElements(p, 'pStyle')[0]) === 'SourceCode');
+        const groups = new Map();
+        for (const paragraph of paragraphs) {
+            const id = wordValue(wordElements(paragraph, 'numId')[0]);
+            if (!id) continue;
+            if (!groups.has(id)) groups.set(id, []);
+            groups.get(id).push(wordText(paragraph));
+        }
+        assert.deepEqual([...groups.values()], expected, position);
+        assert.ok(paragraphs.some(p => wordElements(p, 'rStyle').some(style => wordValue(style) === 'StringTok')), 'syntax token runs survive');
+        const numbering = xmlDocument(entries.get('word/numbering.xml'));
+        for (const id of groups.keys()) {
+            const instance = wordElements(numbering, 'num').find(n => n.getAttribute('w:numId') === id);
+            assert.equal(wordValue(wordElements(instance, 'startOverride')[0]), '1');
+        }
+        assert.equal(xmlDocument(xml).getElementsByTagName('m:oMath').length, 1, 'unrelated native equations survive');
+        assert.equal(saved.markdown, markdown);
+    }
 });

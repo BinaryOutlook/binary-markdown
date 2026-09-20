@@ -327,7 +327,7 @@ async function run(settings, owner) {
         fs.writeFileSync(report, JSON.stringify({ harness: harnessIdentity(), host: receipt(owner), packageSha256: hash(fs.readFileSync(settings.package)), receipts }, null, 2));
         console.log(name, JSON.stringify(details));
     };
-    const available = ['identity', 'filesystem', 'formats', 'saves', 'edges', 'ui', 'equations', 'pdf-background', 'selection', 'immutable', 'offline', 'document-aux', 'links', 'codeblocks', 'table-placement', 'table-content', 'table-row', 'text-toolbar', 'insert-menu', 'underline', 'underline-exports', 'editor-width', 'editor-alignment', 'width-indicators', 'language-picker', 'language-order', 'equation-source-position', 'equation-source-wrap', 'code-label-position', 'code-line-count', 'pdf-code-numbers', 'blockquotes'];
+    const available = ['identity', 'filesystem', 'formats', 'saves', 'edges', 'ui', 'equations', 'pdf-background', 'selection', 'immutable', 'offline', 'document-aux', 'links', 'codeblocks', 'table-placement', 'table-content', 'table-row', 'text-toolbar', 'insert-menu', 'underline', 'underline-exports', 'editor-width', 'editor-alignment', 'width-indicators', 'language-picker', 'language-order', 'equation-source-position', 'equation-source-wrap', 'code-label-position', 'code-line-count', 'pdf-code-numbers', 'docx-code-numbers', 'blockquotes'];
     const groups = settings.suite === 'all' ? available : [settings.suite];
     assert.ok(groups.every(value => available.includes(value)), 'Suite must be all, ' + available.join(', '));
     const htmlExports = [];
@@ -516,7 +516,8 @@ async function run(settings, owner) {
         if (groups.includes('underline')) await underlineCase(h, owner, record);
         if (groups.includes('code-label-position')) await codeLabelPositionCase(h, owner, record);
         if (groups.includes('code-line-count')) await codeLabelPositionCase(h, owner, record, true);
-        if (groups.includes('pdf-code-numbers')) await codeLabelPositionCase(h, owner, record, true, true);
+        if (groups.includes('pdf-code-numbers')) await codeLabelPositionCase(h, owner, record, true, 'pdf');
+        if (groups.includes('docx-code-numbers')) await codeLabelPositionCase(h, owner, record, true, 'docx');
         if (groups.includes('underline-exports')) await underlineExportCase(h, owner, record);
         if (groups.includes('text-toolbar')) await textToolbarCase(h, owner, record);
         if (groups.includes('equations')) await equationCases(h, owner, record);
@@ -1162,7 +1163,7 @@ async function underlineCase(h, owner, record) {
 
 async function codeLabelPositionCase(h, owner, record, countMode = false, numberMode = false) {
     const { JSDOM } = require('jsdom');
-    const name = numberMode ? 'pdf-code-numbers' : countMode ? 'code-line-count' : 'code-label-position';
+    const name = numberMode ? numberMode + '-code-numbers' : countMode ? 'code-line-count' : 'code-label-position';
     const file = name + '.md', filePath = path.join(owner.workspace, file);
     const source = '# Labels\n\n```js\nFIRST_MARKER\n\nLAST_MARKER\n' + (countMode ? '\n' : '') +
         '```\n\n```\nUNLABELED_MARKER\n```\n' + (countMode ? '\n```\n```\n\n```\n\n```\n' : '');
@@ -1182,7 +1183,7 @@ async function codeLabelPositionCase(h, owner, record, countMode = false, number
             await h.driver({ action: 'config', key: 'export.codeLanguagePosition', value: position === 'hidden' ? 'top-left' : position });
             await h.driver({ action: 'config', key: 'export.showCodeLineCount', value: showCount ? true : null });
             await h.driver({ action: 'config', key: 'export.showCodeLineNumbers', value: numberMode && position !== null ? true : null });
-            for (const format of numberMode ? ['pdf'] : ['pdf', 'docx']) {
+            for (const format of numberMode ? [numberMode] : ['pdf', 'docx']) {
                 const result = await h.exportFile(connection, file, format, true);
                 let text;
                 if (format === 'pdf') {
@@ -1210,6 +1211,10 @@ async function codeLabelPositionCase(h, owner, record, countMode = false, number
                     const expected = (position === 'bottom-right' ? 'CodeLanguage' : 'CodeLanguage' + (position || 'top-left').split('-').map(word => word[0].toUpperCase() + word.slice(1)).join('')) +
                         (showCount && position.startsWith('bottom') ? 'WithCount' : '');
                     assert.deepEqual(labels, position === 'hidden' ? [] : [expected]);
+                    const numbered = [...document.getElementsByTagName('w:p')].filter(p => p.getElementsByTagName('w:pStyle')[0]?.getAttribute('w:val') === 'SourceCode' && p.getElementsByTagName('w:numId').length);
+                    const groups = new Map();
+                    for (const p of numbered) { const id = p.getElementsByTagName('w:numId')[0].getAttribute('w:val'); groups.set(id, (groups.get(id) || 0) + 1); }
+                    assert.deepEqual([...groups.values()], numberMode && position !== null ? [4, 1, 1] : []);
                     const counts = [...document.getElementsByTagName('w:p')].filter(p => p.getElementsByTagName('w:pStyle')[0]?.getAttribute('w:val') === 'CodeLineCount');
                     assert.deepEqual(counts.map(p => [...p.getElementsByTagName('w:t')].map(t => t.textContent).join('')), showCount ? ['Lines: 4', 'Lines: 1', 'Lines: 0', 'Lines: 1'] : []);
                 }

@@ -20,7 +20,7 @@ const vendorDest = path.join(__dirname, 'html/vendor');
 if (fs.existsSync(vendorSrc)) {
     fs.mkdirSync(vendorDest, { recursive: true });
     for (const file of fs.readdirSync(vendorSrc)) {
-        if (file === 'playwright-core') continue; // Host-only PDF control runtime.
+        if (['playwright-core', 'xmldom'].includes(file)) continue; // Host-only export runtimes.
         const srcPath = path.join(vendorSrc, file);
         if (fs.statSync(srcPath).isDirectory()) {
             // fonts/ ディレクトリ

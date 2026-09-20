@@ -59,6 +59,7 @@ test('packaged VSIX contains an isolated export runtime, UI, guidance and locali
         'LICENSE.txt', 'NOTICE', 'LICENSES/AnyMarkdown-MIT.txt', 'ACKNOWLEDGMENTS.md',
         'out/export/controller.js', 'out/export/html.js', 'out/export/resources.js',
         'out/export/output.js', 'out/export/validate.js', 'out/export/webview-rpc.js',
+        'out/export/docx-numbering.js', 'vendor/xmldom/package.json', 'vendor/xmldom/LICENSE',
         'out/export/pandoc.js', 'out/export/pdf.js', 'out/export/code-language.js', 'out/export/tools.js',
         'out/export/messages.js', 'out/webview/editor.js', 'out/webview/styles.css',
         'out/shared/document-aux.js', 'out/shared/math-syntax.js',
@@ -162,7 +163,7 @@ test('packaged VSIX contains an isolated export runtime, UI, guidance and locali
                 const saved = { sourcePath: path.resolve('proof.md'), markdown, version: 1, theme: 'github', fontSize: 16 };
                 const prepared = { html: '', theme: 'github', fontSize: 16, diagrams: [], warnings: [] };
                 const ops = { signal: new AbortController().signal, warnings: [], report() {}, loadResource: async () => { throw new Error('No external assets'); } };
-                const bytes = await convertPandoc('docx', saved, prepared, status.path, ops);
+                const bytes = await convertPandoc('docx', saved, prepared, status.path, ops, { showCodeLineNumbers: true, showCodeLineCount: true });
                 validateArtifact('docx', bytes);
                 fs.writeFileSync('packaged-proof.docx', bytes);
             })().catch(error => { console.error(error); process.exitCode = 1; });

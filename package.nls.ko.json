@@ -70,5 +70,5 @@
   "config.export.codeLanguagePosition.bottomLeft": "왼쪽 아래.",
   "config.export.codeLanguagePosition.bottomRight": "오른쪽 아래.",
   "config.export.showCodeLineCount.description": "PDF와 DOCX 코드 블록의 왼쪽 아래에 작성된 코드의 총 줄 수를 표시합니다. 기본값은 꺼짐이며 언어 레이블 및 줄별 번호와 독립적입니다. 내보내기마다 설정을 한 번 저장합니다.",
-  "config.export.showCodeLineNumbers.description": "PDF 코드 블록 옆에 소스 줄 번호를 표시합니다. 자동 줄 바꿈은 번호를 추가하지 않습니다. 언어 레이블 및 총 줄 수와 독립적입니다."
+  "config.export.showCodeLineNumbers.description": "PDF 및 DOCX 코드 블록 옆에 소스 줄 번호를 표시합니다. 자동 줄 바꿈은 번호를 추가하지 않습니다. 언어 레이블 및 총 줄 수와 독립적입니다."
 }
