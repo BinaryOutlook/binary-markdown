@@ -30,7 +30,7 @@
   "config.export.pdfWhiteBackground.description": "PDFを白いページとGitHubのライトテーマで書き出し、文字や図を読みやすくします。無効にすると、余白を含むページ全体に現在のエディターテーマを使用します。他の書き出し形式には影響しません。",
   "config.export.pandocPath.description": "DOCX・EPUB書き出しに使うPandoc実行ファイルのパス。空欄でインストール済みツールを検出します。インストールは手動です。指定したパスが無効な場合は別のツールを選ばずエラーを表示します。",
   "config.export.browserPath.description": "PDF書き出しに使うChrome・Chromium・Edge実行ファイルのパス。空欄でインストール済みブラウザーを検出します。ブラウザーは自動ダウンロードされません。",
-  "config.export.showCodeLanguage.description": "DOCX・PDF書き出し時に、指定されたコード言語を各コードブロックの下に斜体の枠付きラベルで表示します。無効にしてもコードブロックの書式は保持されます。",
+  "config.export.showCodeLanguage.description": "DOCX と PDF のエクスポートで、指定されたコード言語のラベルを表示します。無効にしてもコードブロックの書式は保持されます。",
   "command.exportToHtml.title": "HTMLに書き出し",
   "command.exportToPdf.title": "PDFに書き出し",
   "command.exportToDocx.title": "Wordに書き出し",
@@ -63,5 +63,10 @@
   "config.mathSourcePosition.description": "編集可能な数式ソースをプレビューの上または下に表示します。数式の内容やエクスポートは変わりません。",
   "config.mathSourcePosition.above": "プレビューの上",
   "config.mathSourcePosition.below": "プレビューの下",
-  "config.mathSourceWrap.description": "ブロック数式の編集可能なソースを表示幅に合わせて折り返します。ソースに改行は追加されません。数式の表示やエクスポートは変わりません。"
+  "config.mathSourceWrap.description": "ブロック数式の編集可能なソースを表示幅に合わせて折り返します。ソースに改行は追加されません。数式の表示やエクスポートは変わりません。",
+  "config.export.codeLanguagePosition.description": "PDF と DOCX のコード言語ラベルの位置。既定は左上です。以前の位置を維持するには右下を選択します。設定はエクスポートごとに一度取得されます。",
+  "config.export.codeLanguagePosition.topLeft": "左上。",
+  "config.export.codeLanguagePosition.topRight": "右上。",
+  "config.export.codeLanguagePosition.bottomLeft": "左下。",
+  "config.export.codeLanguagePosition.bottomRight": "右下。"
 }

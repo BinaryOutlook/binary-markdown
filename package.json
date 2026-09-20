@@ -361,6 +361,24 @@
           "default": false,
           "scope": "window",
           "description": "%config.mathSourceWrap.description%"
+        },
+        "binary-markdown.export.codeLanguagePosition": {
+          "type": "string",
+          "enum": [
+            "top-left",
+            "top-right",
+            "bottom-left",
+            "bottom-right"
+          ],
+          "default": "top-left",
+          "scope": "resource",
+          "description": "%config.export.codeLanguagePosition.description%",
+          "enumDescriptions": [
+            "%config.export.codeLanguagePosition.topLeft%",
+            "%config.export.codeLanguagePosition.topRight%",
+            "%config.export.codeLanguagePosition.bottomLeft%",
+            "%config.export.codeLanguagePosition.bottomRight%"
+          ]
         }
       }
     },

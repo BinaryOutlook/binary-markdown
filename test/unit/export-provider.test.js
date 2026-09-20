@@ -371,6 +371,7 @@ test('PDF background and code-label changes do not launch tool probes in open ed
     for (const h of editors) {
         h.configChanged(['binary-markdown.export.pdfWhiteBackground']);
         h.configChanged(['binary-markdown.export.showCodeLanguage']);
+        h.configChanged(['binary-markdown.export.codeLanguagePosition']);
         await h.flushTimers();
         assert.equal(h.state.controller.refreshes, 0, 'Presentation settings do not change tool availability');
         assert.equal(h.renderConfigs.length, 1, 'Export settings preserve the live editor');

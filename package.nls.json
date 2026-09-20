@@ -30,7 +30,7 @@
   "config.export.pdfWhiteBackground.description": "Export PDFs with a white page and the GitHub light appearance for readable text and diagrams. Disable to use the current editor theme across the whole page, including margins. Other export formats are unaffected.",
   "config.export.pandocPath.description": "Path to the Pandoc executable for DOCX and EPUB export. Leave blank to detect an installed tool. Installation is user-managed; an invalid explicit path is reported without falling back.",
   "config.export.browserPath.description": "Path to a Chrome, Chromium or Edge executable for headless PDF export. Leave blank to detect an installed browser. No browser is downloaded automatically.",
-  "config.export.showCodeLanguage.description": "Show the declared code language in an italic, boxed label below each code block in DOCX and PDF exports. Turning this off keeps code block formatting.",
+  "config.export.showCodeLanguage.description": "Show declared code-language labels in DOCX and PDF exports. Turning this off keeps code block formatting.",
   "command.exportToHtml.title": "Export to HTML",
   "command.exportToPdf.title": "Export to PDF",
   "command.exportToDocx.title": "Export to Word",
@@ -63,5 +63,10 @@
   "config.mathSourcePosition.description": "Show editable equation source above or below its preview. Equation content and exports stay unchanged.",
   "config.mathSourcePosition.above": "Above preview",
   "config.mathSourcePosition.below": "Below preview",
-  "config.mathSourceWrap.description": "Visually wrap editable block-equation source. No source line breaks are added. Rendered equations and exports stay unchanged."
+  "config.mathSourceWrap.description": "Visually wrap editable block-equation source. No source line breaks are added. Rendered equations and exports stay unchanged.",
+  "config.export.codeLanguagePosition.description": "Position code-language labels in PDF and DOCX. Top-left is the default; choose bottom-right to retain the previous placement. Captured once per export.",
+  "config.export.codeLanguagePosition.topLeft": "Top left.",
+  "config.export.codeLanguagePosition.topRight": "Top right.",
+  "config.export.codeLanguagePosition.bottomLeft": "Bottom left.",
+  "config.export.codeLanguagePosition.bottomRight": "Bottom right."
 }

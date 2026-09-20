@@ -30,7 +30,7 @@
   "config.export.pdfWhiteBackground.description": "Exporte les PDF sur une page blanche avec le thème clair de GitHub pour un texte et des diagrammes lisibles. Désactivez cette option pour appliquer le thème actuel de l’éditeur à toute la page, marges comprises. Les autres formats d’exportation ne sont pas concernés.",
   "config.export.pandocPath.description": "Chemin de l’exécutable Pandoc pour exporter en DOCX et EPUB. Laissez vide pour détecter une installation. L’installation est manuelle ; un chemin explicite invalide produit une erreur sans sélectionner un autre outil.",
   "config.export.browserPath.description": "Chemin de l’exécutable Chrome, Chromium ou Edge pour exporter un PDF sans fenêtre. Laissez vide pour détecter un navigateur installé. Aucun navigateur n’est téléchargé automatiquement.",
-  "config.export.showCodeLanguage.description": "Affiche le langage déclaré dans une étiquette encadrée en italique sous chaque bloc de code lors des exports DOCX et PDF. Désactiver cette option conserve la mise en forme des blocs de code.",
+  "config.export.showCodeLanguage.description": "Afficher les étiquettes du langage déclaré dans les exports DOCX et PDF. La désactivation conserve la mise en forme des blocs de code.",
   "command.exportToHtml.title": "Exporter en HTML",
   "command.exportToPdf.title": "Exporter en PDF",
   "command.exportToDocx.title": "Exporter vers Word",
@@ -63,5 +63,10 @@
   "config.mathSourcePosition.description": "Affiche le code modifiable au-dessus ou au-dessous de son aperçu. Le contenu et les exports restent inchangés.",
   "config.mathSourcePosition.above": "Au-dessus de l’aperçu",
   "config.mathSourcePosition.below": "Au-dessous de l’aperçu",
-  "config.mathSourceWrap.description": "Adapte visuellement le code modifiable des équations en bloc à la largeur disponible, sans ajouter de sauts de ligne. Le rendu et les exports restent inchangés."
+  "config.mathSourceWrap.description": "Adapte visuellement le code modifiable des équations en bloc à la largeur disponible, sans ajouter de sauts de ligne. Le rendu et les exports restent inchangés.",
+  "config.export.codeLanguagePosition.description": "Position des étiquettes de langage dans les PDF et DOCX. En haut à gauche par défaut ; choisissez en bas à droite pour conserver la position précédente. Le réglage est lu une fois par export.",
+  "config.export.codeLanguagePosition.topLeft": "En haut à gauche.",
+  "config.export.codeLanguagePosition.topRight": "En haut à droite.",
+  "config.export.codeLanguagePosition.bottomLeft": "En bas à gauche.",
+  "config.export.codeLanguagePosition.bottomRight": "En bas à droite."
 }

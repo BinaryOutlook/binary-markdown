@@ -30,7 +30,7 @@
   "config.export.pdfWhiteBackground.description": "使用白色頁面和 GitHub 淺色外觀匯出 PDF，確保文字和圖表清晰可讀。關閉後，目前編輯器主題將覆蓋整頁（包括頁邊距）。不影響其他匯出格式。",
   "config.export.pandocPath.description": "用於DOCX和EPUB匯出的Pandoc執行檔路徑。留空以偵測已安裝的工具。請自行安裝；手動路徑無效時會回報錯誤，不會改用其他工具。",
   "config.export.browserPath.description": "用於無視窗PDF匯出的Chrome、Chromium或Edge執行檔路徑。留空以偵測已安裝的瀏覽器。不會自動下載瀏覽器。",
-  "config.export.showCodeLanguage.description": "在匯出的DOCX和PDF中，於每個程式碼區塊下方以帶框線的斜體標籤顯示已指定的程式語言。關閉後仍保留程式碼區塊格式。",
+  "config.export.showCodeLanguage.description": "在 DOCX 與 PDF 匯出中顯示宣告的程式碼語言標籤。關閉後保留程式碼區塊格式。",
   "command.exportToHtml.title": "匯出為HTML",
   "command.exportToPdf.title": "匯出為PDF",
   "command.exportToDocx.title": "匯出為Word",
@@ -63,5 +63,10 @@
   "config.mathSourcePosition.description": "在預覽上方或下方顯示可編輯的公式原始碼。公式內容和匯出保持不變。",
   "config.mathSourcePosition.above": "預覽上方",
   "config.mathSourcePosition.below": "預覽下方",
-  "config.mathSourceWrap.description": "依顯示寬度折行顯示可編輯的區塊公式原始碼，不加入原始碼換行字元。算繪後的公式和匯出保持不變。"
+  "config.mathSourceWrap.description": "依顯示寬度折行顯示可編輯的區塊公式原始碼，不加入原始碼換行字元。算繪後的公式和匯出保持不變。",
+  "config.export.codeLanguagePosition.description": "設定 PDF 與 DOCX 中程式碼語言標籤的位置。預設為左上角；選擇右下角可保留原來的位置。每次匯出時讀取一次設定。",
+  "config.export.codeLanguagePosition.topLeft": "左上角。",
+  "config.export.codeLanguagePosition.topRight": "右上角。",
+  "config.export.codeLanguagePosition.bottomLeft": "左下角。",
+  "config.export.codeLanguagePosition.bottomRight": "右下角。"
 }
