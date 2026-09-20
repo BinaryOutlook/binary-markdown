@@ -1,12 +1,5 @@
 // Simplified Chinese messages
 export const messages = {
-  languagePickerLabel: "代码语言",
-  languagePickerPlaceholder: "搜索名称或别名",
-  languagePickerNoResults: "没有匹配的语言。",
-  languagePickerCurrent: "当前语言",
-  languagePickerPlainText: "纯文本",
-  languagePickerMath: "数学公式",
-  languagePickerMermaid: "Mermaid 图表",
   copyLinkAddress: '复制链接地址',
   linkUnavailable: '无法在当前工作区中打开此链接。',
   linkNotFound: '找不到链接指向的文件或文件夹。',
@@ -41,6 +34,13 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  languagePickerLabel: "代码语言",
+  languagePickerPlaceholder: "搜索名称或别名",
+  languagePickerNoResults: "没有匹配的语言。",
+  languagePickerCurrent: "当前语言",
+  languagePickerPlainText: "纯文本",
+  languagePickerMath: "数学公式",
+  languagePickerMermaid: "Mermaid 图表",
   widthIndicatorsLabel: "宽度边界标记",
   widthIndicatorsHelp: "仅在达到宽度上限时显示列外缘标记。隐藏此辅助条可收回其占用的窄条空间，不影响源码或导出。",
   widthBoundaryExplanation: "已达到文档最大宽度。标记表示包含内边距的列外缘。可修改编辑器宽度以利用更多空间。",

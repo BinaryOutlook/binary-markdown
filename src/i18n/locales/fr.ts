@@ -1,12 +1,5 @@
 // French messages
 export const messages = {
-  languagePickerLabel: "Langage du code",
-  languagePickerPlaceholder: "Rechercher un nom ou un alias",
-  languagePickerNoResults: "Aucun langage correspondant.",
-  languagePickerCurrent: "Langage actuel",
-  languagePickerPlainText: "Texte brut",
-  languagePickerMath: "Équation mathématique",
-  languagePickerMermaid: "Diagramme Mermaid",
   copyLinkAddress: 'Copier l’adresse du lien',
   linkUnavailable: 'Ce lien ne peut pas être ouvert dans l’espace de travail actuel.',
   linkNotFound: 'Le fichier ou le dossier lié est introuvable.',
@@ -41,6 +34,13 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  languagePickerLabel: "Langage du code",
+  languagePickerPlaceholder: "Rechercher un nom ou un alias",
+  languagePickerNoResults: "Aucun langage correspondant.",
+  languagePickerCurrent: "Langage actuel",
+  languagePickerPlainText: "Texte brut",
+  languagePickerMath: "Équation mathématique",
+  languagePickerMermaid: "Diagramme Mermaid",
   widthIndicatorsLabel: "Indicateurs de largeur maximale",
   widthIndicatorsHelp: "Affiche des repères sur les bords extérieurs uniquement à la largeur maximale. Masquez le guide pour récupérer sa fine bande. La source et les exports restent inchangés.",
   widthBoundaryExplanation: "Largeur maximale du document atteinte. Les repères montrent les bords extérieurs, marges intérieures comprises. Modifiez la largeur de l’éditeur pour utiliser plus d’espace.",

@@ -1,12 +1,5 @@
 // Traditional Chinese messages
 export const messages = {
-  languagePickerLabel: "程式碼語言",
-  languagePickerPlaceholder: "搜尋名稱或別名",
-  languagePickerNoResults: "沒有符合的語言。",
-  languagePickerCurrent: "目前語言",
-  languagePickerPlainText: "純文字",
-  languagePickerMath: "數學公式",
-  languagePickerMermaid: "Mermaid 圖表",
   copyLinkAddress: '複製連結位址',
   linkUnavailable: '無法在目前的工作區中開啟此連結。',
   linkNotFound: '找不到連結指向的檔案或資料夾。',
@@ -41,6 +34,13 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  languagePickerLabel: "程式碼語言",
+  languagePickerPlaceholder: "搜尋名稱或別名",
+  languagePickerNoResults: "沒有符合的語言。",
+  languagePickerCurrent: "目前語言",
+  languagePickerPlainText: "純文字",
+  languagePickerMath: "數學公式",
+  languagePickerMermaid: "Mermaid 圖表",
   widthIndicatorsLabel: "寬度邊界標記",
   widthIndicatorsHelp: "僅在達到寬度上限時顯示欄外緣標記。隱藏此輔助列可收回其佔用的窄條空間，不影響原始碼或匯出。",
   widthBoundaryExplanation: "已達到文件最大寬度。標記表示包含內距的欄外緣。可修改編輯器寬度以利用更多空間。",

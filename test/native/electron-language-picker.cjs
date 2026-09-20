@@ -10,6 +10,9 @@ async function main() {
     const root = path.resolve(__dirname, '../..'), desktop = path.join(root, 'electron');
     const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'bm-electron-language-'));
     const profile = path.join(directory, 'profile'); fs.mkdirSync(profile);
+    const locale = process.env.LANGUAGE_PICKER_LOCALE || 'en';
+    assert.ok(['en', 'zh-CN'].includes(locale));
+    fs.writeFileSync(path.join(profile, 'config.json'), JSON.stringify({ language: locale }));
     const fixture = path.join(directory, 'languages.md'); fs.writeFileSync(fixture, source);
     const bootstrap = path.join(directory, 'bootstrap.cjs');
     fs.writeFileSync(bootstrap, `const { app } = require('electron'); app.setPath('userData', ${JSON.stringify(profile)}); app.setAppPath(${JSON.stringify(desktop)}); process.argv = [process.argv[0], ${JSON.stringify(desktop)}, ${JSON.stringify(fixture)}]; require(${JSON.stringify(path.join(desktop, 'out/main.js'))});`);
@@ -20,6 +23,14 @@ async function main() {
         assert.equal(await application.evaluate(({ app }) => app.getPath('userData')), profile);
         const page = await application.firstWindow(); await page.waitForSelector('.code-lang-tag');
         await application.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows().find(window => window.__fileManager).webContents.closeDevTools());
+        if (locale === 'zh-CN') {
+            assert.equal(await page.locator('.code-lang-tag').getAttribute('aria-label'), '代码语言: custom-lang');
+            await page.locator('.code-lang-tag').click();
+            assert.equal(await page.locator('.lang-selector-search').getAttribute('placeholder'), '搜索名称或别名');
+            await page.keyboard.insertText('纯文本');
+            assert.deepEqual(await page.locator('.lang-selector-item').evaluateAll(nodes => nodes.map(node => node.dataset.language)), ['plaintext']);
+            await page.keyboard.press('Escape');
+        }
         const capture = async name => {
             await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
             // Electron's native capture includes the whole surface at non-default zoom.
@@ -55,7 +66,7 @@ async function main() {
             await page.keyboard.press('Escape');
         }
         assert.equal(fs.readFileSync(fixture, 'utf8'), changed);
-        receipts.push({ versions: await application.evaluate(() => ({ electron: process.versions.electron, chromium: process.versions.chrome })), sourceRoundTrip: true, nativeClipboard: true, realWindowResizeAndZoom: [1, 2] });
+        receipts.push({ versions: await application.evaluate(() => ({ electron: process.versions.electron, chromium: process.versions.chrome })), locale, localizedLabelsAndSearch: locale === 'zh-CN', sourceRoundTrip: true, nativeClipboard: true, realWindowResizeAndZoom: [1, 2] });
         fs.writeFileSync(path.join(evidence, 'receipt.json'), JSON.stringify(receipts, null, 2));
         console.log('Electron language picker passed. Evidence:', evidence);
     } finally {

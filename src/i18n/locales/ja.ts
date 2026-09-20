@@ -1,12 +1,5 @@
 // Japanese messages
 export const messages = {
-  languagePickerLabel: "コードの言語",
-  languagePickerPlaceholder: "名前または別名で検索",
-  languagePickerNoResults: "一致する言語はありません。",
-  languagePickerCurrent: "現在の言語",
-  languagePickerPlainText: "プレーンテキスト",
-  languagePickerMath: "数式",
-  languagePickerMermaid: "Mermaid 図",
   copyLinkAddress: 'リンクのアドレスをコピー',
   linkUnavailable: '現在のワークスペースでは、このリンクを開けません。',
   linkNotFound: 'リンク先のファイルまたはフォルダーが見つかりません。',
@@ -41,6 +34,13 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  languagePickerLabel: "コードの言語",
+  languagePickerPlaceholder: "名前または別名で検索",
+  languagePickerNoResults: "一致する言語はありません。",
+  languagePickerCurrent: "現在の言語",
+  languagePickerPlainText: "プレーンテキスト",
+  languagePickerMath: "数式",
+  languagePickerMermaid: "Mermaid 図",
   widthIndicatorsLabel: "幅の境界マーク",
   widthIndicatorsHelp: "最大幅に達したときだけ列の外端にマークを表示します。ガイドを非表示にすると細い帯の領域を戻せます。ソースと出力は変わりません。",
   widthBoundaryExplanation: "文書の最大幅に達しています。マークは余白を含む列の外端です。エディターの幅を変更すると、より広い領域を使えます。",

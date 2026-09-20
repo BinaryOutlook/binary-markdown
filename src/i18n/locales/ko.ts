@@ -1,12 +1,5 @@
 // Korean messages
 export const messages = {
-  languagePickerLabel: "코드 언어",
-  languagePickerPlaceholder: "이름 또는 별칭 검색",
-  languagePickerNoResults: "일치하는 언어가 없습니다.",
-  languagePickerCurrent: "현재 언어",
-  languagePickerPlainText: "일반 텍스트",
-  languagePickerMath: "수식",
-  languagePickerMermaid: "Mermaid 다이어그램",
   copyLinkAddress: '링크 주소 복사',
   linkUnavailable: '현재 작업 영역에서 이 링크를 열 수 없습니다.',
   linkNotFound: '연결된 파일 또는 폴더를 찾을 수 없습니다.',
@@ -41,6 +34,13 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  languagePickerLabel: "코드 언어",
+  languagePickerPlaceholder: "이름 또는 별칭 검색",
+  languagePickerNoResults: "일치하는 언어가 없습니다.",
+  languagePickerCurrent: "현재 언어",
+  languagePickerPlainText: "일반 텍스트",
+  languagePickerMath: "수식",
+  languagePickerMermaid: "Mermaid 다이어그램",
   widthIndicatorsLabel: "너비 경계 표시",
   widthIndicatorsHelp: "최대 너비에 도달한 경우에만 열 바깥쪽 가장자리에 표시합니다. 안내선을 숨기면 좁은 띠 공간을 되찾습니다. 소스와 내보내기는 바뀌지 않습니다.",
   widthBoundaryExplanation: "문서가 최대 너비에 도달했습니다. 표시는 안쪽 여백을 포함한 열의 바깥쪽 가장자리입니다. 편집기 너비를 변경하면 공간을 더 사용할 수 있습니다.",

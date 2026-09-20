@@ -940,6 +940,7 @@ async function editorWidthCase(h, owner, record) {
 async function languagePickerCase(h, owner, record) {
     const { source, languagePickerChecks } = require('./language-picker.cjs');
     const { installedEditor } = require('./table-toolbar-overflow.cjs');
+    const previousLanguage = (await h.driver({ action: 'inspect' })).appearance.language;
     const file = 'languages.md', filePath = path.join(owner.workspace, file);
     await h.driver({ action: 'close' }); fs.writeFileSync(filePath, source);
     let connection = await h.open(file);
@@ -961,7 +962,24 @@ async function languagePickerCase(h, owner, record) {
         assert.equal(await connection.evaluate('document.querySelector("pre").dataset.lang'), 'cpp');
         assert.equal(fs.readFileSync(filePath, 'utf8'), changed);
         record('language-picker-reopened', { sourceRoundTrip: true, savedLanguageAndWhitespace: true });
-    } finally { connection?.close(); }
+        connection.close(); connection = null; await h.driver({ action: 'close' });
+        await h.driver({ action: 'config', key: 'language', value: 'zh-CN' });
+        connection = await h.open(file);
+        assert.equal(await connection.evaluate('document.querySelector(".code-lang-tag").getAttribute("aria-label")'), '代码语言: cpp');
+        await connection.evaluate('document.querySelector(".code-lang-tag").click()');
+        assert.equal(await connection.evaluate('document.querySelector(".lang-selector-search").placeholder'), '搜索名称或别名');
+        await h.workbench(async page => {
+            await page.keyboard.insertText('纯文本');
+            assert.deepEqual(await connection.evaluate('[...document.querySelectorAll(".lang-selector-item")].map(node => node.dataset.language)'), ['plaintext']);
+            await page.keyboard.press('Escape');
+        });
+        assert.equal(fs.readFileSync(filePath, 'utf8'), changed);
+        assert.equal((await h.driver({ action: 'inspect' })).documents.find(document => samePath(document.path, filePath)).dirty, false);
+        record('language-picker-localized', { language: 'zh-CN', localizedLabelAndSearch: true, sourceAndCleanStatePreserved: true });
+    } finally {
+        connection?.close(); await h.driver({ action: 'close' });
+        await h.driver({ action: 'config', key: 'language', value: previousLanguage });
+    }
 }
 
 async function underlineCase(h, owner, record) {

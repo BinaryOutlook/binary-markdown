@@ -11,6 +11,16 @@ const properties = manifest.contributes.configuration.properties;
 const translationFiles = () => fs.readdirSync(root).filter(name => /^package\.nls(?:\.[\w-]+)?\.json$/.test(name)).sort();
 const readTranslations = name => JSON.parse(fs.readFileSync(path.join(root, name), 'utf8'));
 
+test('language picker strings reach the editor webview dictionary in every locale', () => {
+    for (const locale of ['en', 'es', 'fr', 'ja', 'ko', 'zh-cn', 'zh-tw']) {
+        const { webviewMessages } = require('../../out/locales/' + locale + '.js');
+        for (const key of ['languagePickerLabel', 'languagePickerPlaceholder', 'languagePickerNoResults', 'languagePickerCurrent',
+            'languagePickerPlainText', 'languagePickerMath', 'languagePickerMermaid']) {
+            assert.ok(webviewMessages[key]?.trim(), locale + ': editor dictionary missing ' + key);
+        }
+    }
+});
+
 function settingsStrings() {
     return Object.values(properties).flatMap(schema => [schema.description, ...(schema.enumDescriptions || [])]);
 }

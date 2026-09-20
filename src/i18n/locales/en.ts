@@ -1,12 +1,5 @@
 // English messages
 export const messages = {
-  languagePickerLabel: "Code language",
-  languagePickerPlaceholder: "Search names or aliases",
-  languagePickerNoResults: "No matching languages.",
-  languagePickerCurrent: "Current language",
-  languagePickerPlainText: "Plain text",
-  languagePickerMath: "Math equation",
-  languagePickerMermaid: "Mermaid diagram",
   copyLinkAddress: 'Copy link address',
   linkUnavailable: 'This link cannot be opened in the current workspace.',
   linkNotFound: 'The linked file or folder could not be found.',
@@ -41,6 +34,13 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  languagePickerLabel: "Code language",
+  languagePickerPlaceholder: "Search names or aliases",
+  languagePickerNoResults: "No matching languages.",
+  languagePickerCurrent: "Current language",
+  languagePickerPlainText: "Plain text",
+  languagePickerMath: "Math equation",
+  languagePickerMermaid: "Mermaid diagram",
   widthIndicatorsLabel: "Width boundary indicators",
   widthIndicatorsHelp: "Show marks at the outer column edges only while capped. Hide this guide to reclaim its narrow strip. Source and exports are unchanged.",
   widthBoundaryExplanation: "Maximum document width reached. The marks show the outer column, including padding. Change Editor width to use more space.",

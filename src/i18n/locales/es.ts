@@ -1,12 +1,5 @@
 // Spanish messages
 export const messages = {
-  languagePickerLabel: "Lenguaje del código",
-  languagePickerPlaceholder: "Buscar nombres o alias",
-  languagePickerNoResults: "No hay lenguajes coincidentes.",
-  languagePickerCurrent: "Lenguaje actual",
-  languagePickerPlainText: "Texto sin formato",
-  languagePickerMath: "Ecuación matemática",
-  languagePickerMermaid: "Diagrama Mermaid",
   copyLinkAddress: 'Copiar dirección del enlace',
   linkUnavailable: 'Este enlace no se puede abrir en el espacio de trabajo actual.',
   linkNotFound: 'No se encontró el archivo o la carpeta del enlace.',
@@ -41,6 +34,13 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  languagePickerLabel: "Lenguaje del código",
+  languagePickerPlaceholder: "Buscar nombres o alias",
+  languagePickerNoResults: "No hay lenguajes coincidentes.",
+  languagePickerCurrent: "Lenguaje actual",
+  languagePickerPlainText: "Texto sin formato",
+  languagePickerMath: "Ecuación matemática",
+  languagePickerMermaid: "Diagrama Mermaid",
   widthIndicatorsLabel: "Indicadores de límite de ancho",
   widthIndicatorsHelp: "Muestra marcas en los bordes exteriores solo al alcanzar el límite. Oculta la guía para recuperar su franja estrecha. No cambia el código fuente ni las exportaciones.",
   widthBoundaryExplanation: "Se ha alcanzado el ancho máximo del documento. Las marcas indican los bordes de la columna, incluido el relleno. Cambia el ancho del editor para usar más espacio.",
