@@ -156,8 +156,11 @@ test('header and last-column restrictions do not create undo entries', async ({ 
 
 test('Automatic docks around occupied content and returns after space becomes available', async ({ page }) => {
     await setup(page);
+    // Choose Full width through the live setting; CSS cannot override its inline cap.
+    await page.evaluate(() => (window as any).__hostMessageHandler({ type: 'editorWidth', mode: 'full', maxWidth: 860 }));
+    await expect(page.locator('#editor')).toHaveCSS('max-width', 'none');
     // Deterministic document geometry, retaining the production toolbar and scroll container.
-    await page.addStyleTag({ content: '#editor{max-width:none;padding:8px} #editor table{width:100%;margin:0} #editor h1,#editor p{margin:0} #editorWrapper{scrollbar-gutter:stable}' });
+    await page.addStyleTag({ content: '#editor{padding:8px} #editor table{width:100%;margin:0} #editor h1,#editor p{margin:0} #editorWrapper{scrollbar-gutter:stable}' });
     await page.mouse.move(1, 1);
     await expect(page.locator(controls)).toHaveAttribute('data-placement', 'top-bar');
     await page.addStyleTag({ content: '#editor table{width:300px;margin:100px auto}' });
@@ -216,6 +219,7 @@ test('a focused placement menu stays usable when its pane shrinks', async ({ pag
 });
 
 test('Automatic avoids neighboring content inside a quotation', async ({ page }) => {
+    await page.setViewportSize({ width: 1600, height: 900 });
     await setup(page);
     await page.evaluate(() => {
         // Exercise nested editor geometry independently of Markdown import support.
@@ -225,7 +229,9 @@ test('Automatic avoids neighboring content inside a quotation', async ({ page })
         quote.innerHTML = '<p>Before.</p><p>After.</p>';
         quote.firstElementChild!.after(table);
     });
-    await page.addStyleTag({ content: '#editor{max-width:none;padding:8px} #editor blockquote{margin:0;padding:0;border:0} #editor table{width:100%;margin:0} #editor p{margin:0}' });
+    await page.evaluate(() => (window as any).__hostMessageHandler({ type: 'editorWidth', mode: 'full', maxWidth: 860 }));
+    await expect(page.locator('#editor')).toHaveCSS('max-width', 'none');
+    await page.addStyleTag({ content: '#editor{padding:8px} #editor blockquote{margin:0;padding:0;border:0} #editor table{width:100%;margin:0} #editor p{margin:0}' });
     await page.locator('#editor td').first().click();
     await page.mouse.move(1, 1);
     await expect(page.locator(controls)).toHaveAttribute('data-placement', 'top-bar');
