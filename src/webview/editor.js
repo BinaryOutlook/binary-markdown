@@ -530,10 +530,10 @@
     
     // Supported languages for syntax highlighting (must be defined before init())
     const SUPPORTED_LANGUAGES = [
-        'mermaid', 'math',
-        'javascript', 'typescript', 'python', 'json', 'bash', 'shell', 'css', 'html', 'xml',
-        'sql', 'java', 'go', 'rust', 'yaml', 'markdown', 'c', 'cpp', 'csharp', 'php',
-        'ruby', 'swift', 'kotlin', 'dockerfile', 'plaintext'
+        // Curated browsing order, not a measured popularity ranking.
+        'plaintext', 'markdown', 'javascript', 'typescript', 'python', 'java', 'c', 'cpp',
+        'csharp', 'go', 'rust', 'bash', 'shell', 'json', 'yaml', 'html', 'css', 'sql',
+        'dockerfile', 'php', 'ruby', 'swift', 'kotlin', 'xml', 'mermaid', 'math'
     ];
     
     const LANGUAGE_ALIASES = {
@@ -557,6 +557,16 @@
         return LANGUAGE_NAMES[id] || id;
     }
     
+    function orderedCodeLanguages() {
+        const mode = document.documentElement.dataset.codeLanguageOrder;
+        if (mode !== 'a-z' && mode !== 'z-a') return SUPPORTED_LANGUAGES;
+        // Explicit collation keeps ordering independent of the OS locale.
+        const names = new Intl.Collator('en', { sensitivity: 'base' });
+        const ordered = [...SUPPORTED_LANGUAGES].sort((a, b) =>
+            names.compare(codeLanguageName(a), codeLanguageName(b)) || a.localeCompare(b, 'en'));
+        return mode === 'z-a' ? ordered.reverse() : ordered;
+    }
+
     // Pre-compiled regex patterns for performance (avoid creating regex objects on every call)
     const REGEX = {
         // parseMarkdownLine patterns
@@ -4364,9 +4374,10 @@
             if (pre.getAttribute('data-mode') === 'display') applyHighlighting(pre);
             syncMarkdownSync();
         };
-        const render = () => {
+        const render = (keepActive = false) => {
+            const selected = keepActive ? results[active] : undefined;
             const query = input.value.trim().toLowerCase();
-            results = SUPPORTED_LANGUAGES.map(id => {
+            results = orderedCodeLanguages().map(id => {
                 const terms = [id, codeLanguageName(id).toLowerCase(), ...Object.keys(LANGUAGE_ALIASES).filter(alias => LANGUAGE_ALIASES[alias] === id)];
                 const rank = !query ? 0 : terms.some(term => term === query) ? 0 : terms.some(term => term.startsWith(query)) ? 1 : terms.some(term => term.includes(query)) ? 2 : 3;
                 return { id, rank };
@@ -4382,10 +4393,12 @@
                 item.addEventListener('click', () => choose(id)); list.appendChild(item);
             }
             empty.hidden = results.length > 0;
-            activate(query ? (results.length ? 0 : -1) : Math.max(0, results.indexOf(LANGUAGE_ALIASES[current.toLowerCase()] || current.toLowerCase())));
+            activate(selected && results.includes(selected) ? results.indexOf(selected) :
+                query ? (results.length ? 0 : -1) : Math.max(0, results.indexOf(LANGUAGE_ALIASES[current.toLowerCase()] || current.toLowerCase())));
             positionLanguageSelector();
         };
-        input.addEventListener('input', render);
+        input.addEventListener('input', () => render());
+        selector.refreshOrder = () => render(true);
         selector.addEventListener('keydown', event => {
             event.stopPropagation();
             if (event.isComposing) return;
@@ -14127,6 +14140,11 @@
 
     // Handle messages from host (VSCode / Electron / test)
     host.onMessage(function(message) {
+        if (message.type === 'codeLanguageOrder') {
+            document.documentElement.dataset.codeLanguageOrder = ['a-z', 'z-a'].includes(message.value) ? message.value : 'default';
+            document.querySelector('.lang-selector')?.refreshOrder?.();
+            return;
+        }
         if (message.type === 'editorWidthIndicators') {
             document.documentElement.dataset.editorWidthIndicators = String(message.value !== false);
             updateWidthIndicators();
