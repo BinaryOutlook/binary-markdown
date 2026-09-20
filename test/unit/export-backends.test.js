@@ -554,6 +554,35 @@ test('real PDF places selectable labels at every corner and defaults to top-left
     }
 });
 
+test('real PDF counts authored lines independently of labels, wrapping and display breaks', { skip: !realTools }, async t => {
+    const directory = await temporary(t);
+    const status = await discoverTool('browser', process.env.EXPORT_BROWSER_PATH || '');
+    assert.equal(status.available, true, status.error);
+    const html = '<html><head><style>pre{font:12px monospace;padding:8px}</style></head><body>' +
+        '<pre data-lang="js" data-export-code-lines="0"><code><br data-export-display-break></code></pre>' +
+        '<pre data-lang="" data-export-code-lines="1"><code><br data-export-display-break></code></pre>' +
+        '<pre data-lang="js" data-export-code-lines="4"><code><br>\tCOUNT_FIRST  <br><br><br data-export-display-break></code></pre>' +
+        '<pre data-lang="text" data-export-code-lines="2"><code>WRAP_START ' + 'word '.repeat(200) + 'WRAP_END<br>COUNT_LAST</code></pre></body></html>';
+    for (const position of ['top-left', 'top-right', 'bottom-left', 'bottom-right', 'hidden']) {
+        const file = path.join(directory, position + '.pdf');
+        await fs.writeFile(file, await convertPdf(html, status.path, operations(), {
+            showCodeLineCount: true, showCodeLanguage: position !== 'hidden', codeLanguagePosition: position === 'hidden' ? 'top-left' : position
+        }));
+        const bbox = xmlDocument((await runTool(process.env.EXPORT_PDFTOTEXT_PATH || 'pdftotext', ['-bbox', file, '-'])).stdout);
+        const words = [...bbox.getElementsByTagName('word')];
+        const counts = words.filter(word => word.textContent === 'Lines:');
+        assert.equal(counts.length, 4);
+        assert.deepEqual(counts.map(word => words[words.indexOf(word) + 1].textContent), ['0', '1', '4', '2']);
+        for (const count of counts) assert.ok(Number(count.getAttribute('xMin')) < 100, 'counts stay left aligned');
+        for (const marker of ['COUNT_FIRST', 'WRAP_START', 'WRAP_END', 'COUNT_LAST']) assert.equal(words.filter(word => word.textContent === marker).length, 1);
+        const lastCount = counts.at(-1), lastCode = words.find(word => word.textContent === 'COUNT_LAST');
+        assert.ok(Number(lastCount.getAttribute('yMin')) > Number(lastCode.getAttribute('yMin')));
+    }
+    const file = path.join(directory, 'default.pdf');
+    await fs.writeFile(file, await convertPdf(html, status.path, operations()));
+    assert.doesNotMatch((await runTool(process.env.EXPORT_PDFTOTEXT_PATH || 'pdftotext', [file, '-'])).stdout.toString(), /Lines:/);
+});
+
 test('real browser cancellation closes the worker and returns cancellation instead of a PDF', { skip: !realTools }, async () => {
     const status = await discoverTool('browser', process.env.EXPORT_BROWSER_PATH || '');
     assert.equal(status.available, true, status.error);

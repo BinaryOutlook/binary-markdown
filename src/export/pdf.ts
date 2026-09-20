@@ -3,6 +3,7 @@ import type { Browser, BrowserContext, Page } from 'playwright-core';
 import { checkCancelled, codeLanguagePosition, CodePresentationOptions, ExportOperations } from './types';
 import { codeLanguageLabel } from './code-language';
 import { languageTabPath } from './language-tab';
+import { logicalCodeLines } from './code-lines';
 
 const printStyles = `
 @page { size: A4; margin: 16mm; background: var(--bg-color, #fff); }
@@ -33,6 +34,8 @@ img, svg, canvas { max-width: 100% !important; height: auto; object-fit: contain
 .export-code-metadata[data-edge="bottom"] { break-before: avoid-page; page-break-before: avoid; }
 .export-code-metadata[data-side="right"] { justify-content: flex-end; }
 .export-code-language { font-style: italic; }
+.export-code-count { padding: 2px 0; color: var(--text-color, #57606a); }
+.export-code-block[data-line-count] > pre { break-after: avoid-page; page-break-after: avoid; }
 /* A decorative vector outline leaves the label selectable and the top seam single. */
 .export-code-language > span { position: relative; isolation: isolate; box-sizing: border-box; max-width: 100%; padding: 2px 14px 3px; text-align: center; color: var(--text-color, #57606a); overflow-wrap: anywhere; }
 .export-code-language > span > svg { position: absolute; inset: 0; z-index: -1; width: 100%; height: 100%; max-width: none; overflow: visible; }
@@ -87,21 +90,41 @@ export async function convertPdf(html: string, executable: string, operations: E
         const readiness = await page.evaluate<{ failedImages: number; oversizedBlocks: number }>(`(async () => {
             const labels = ${JSON.stringify(labels)};
             const position = ${JSON.stringify(codeLanguagePosition(options.codeLanguagePosition))};
+            const showCount = ${options.showCodeLineCount === true};
+            const countLabel = ${JSON.stringify(options.codeLineCountLabel || 'Lines')};
+            const sourceLines = ${logicalCodeLines.toString()};
             document.querySelectorAll('pre[data-lang]').forEach((pre, index) => {
-                if (!labels[index]) return;
+                if (!labels[index] && !showCount) return;
+                if (['math', 'mermaid'].includes(pre.dataset.lang)) return;
                 const wrapper = document.createElement('div');
                 wrapper.className = 'export-code-block';
-                wrapper.dataset.labelPosition = position;
+                if (labels[index]) wrapper.dataset.labelPosition = position;
                 const footer = document.createElement('div');
                 footer.className = 'export-code-metadata export-code-language';
                 footer.dataset.edge = position.startsWith('top') ? 'top' : 'bottom';
                 footer.dataset.side = position.endsWith('left') ? 'left' : 'right';
                 const badge = document.createElement('span');
-                badge.textContent = labels[index];
+                badge.textContent = labels[index] || '';
                 footer.appendChild(badge);
                 pre.replaceWith(wrapper);
-                if (footer.dataset.edge === 'top') wrapper.append(footer, pre);
+                if (!labels[index]) wrapper.append(pre);
+                else if (footer.dataset.edge === 'top') wrapper.append(footer, pre);
                 else wrapper.append(pre, footer);
+                if (showCount) {
+                    const code = pre.querySelector('code') || pre;
+                    const copy = code.cloneNode(true);
+                    copy.querySelectorAll('[data-export-display-break]').forEach(node => node.remove());
+                    copy.querySelectorAll('br').forEach(node => node.replaceWith(String.fromCharCode(10)));
+                    const hint = Number(pre.dataset.exportCodeLines || 0);
+                    const lines = sourceLines(copy.textContent || '', hint === 1 ? 1 : 0);
+                    if (pre.hasAttribute('data-export-code-lines') && lines.length !== hint) throw new Error('Prepared code lines disagree with source.');
+                    const count = document.createElement('div');
+                    count.className = 'export-code-metadata export-code-count';
+                    count.dataset.edge = 'bottom';
+                    count.textContent = countLabel + ': ' + lines.length;
+                    wrapper.dataset.lineCount = String(lines.length);
+                    wrapper.append(count);
+                }
                 wrapper.style.setProperty('--export-code-background', getComputedStyle(pre).backgroundColor);
             });
             await document.fonts.ready;

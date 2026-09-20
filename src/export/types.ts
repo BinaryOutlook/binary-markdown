@@ -7,6 +7,8 @@ export type CodeLanguagePosition = 'top-left' | 'top-right' | 'bottom-left' | 'b
 export interface CodePresentationOptions {
     showCodeLanguage?: boolean;
     codeLanguagePosition?: CodeLanguagePosition;
+    showCodeLineCount?: boolean;
+    codeLineCountLabel?: string;
 }
 
 export function codeLanguagePosition(value: unknown): CodeLanguagePosition {

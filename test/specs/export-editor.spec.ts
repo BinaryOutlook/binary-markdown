@@ -138,6 +138,33 @@ async function prepare(page: Page, markdown: string, requestId = 'render', appea
     return (await messages(page, 'exportPrepared')).find(message => message.requestId === requestId)!;
 }
 
+test('export code models exclude fence delimiters and display breaks while preserving all authored lines', async ({ page }) => {
+    await page.goto('/standalone-editor.html');
+    await page.waitForFunction(() => (window as unknown as ExportTestWindow).__testApi?.ready);
+    const cases = [[], [''], ['', ''], ['one'], ['', '\tλ <&>  ', '', ''], ['x'.repeat(2000), 'last']];
+    const source = cases.map(lines => '```js\n' + (lines.length ? lines.join('\n') + '\n' : '') + '```\n').join('\n');
+    await setMarkdown(page, source);
+    const before = await page.locator('#editor').innerHTML();
+    for (const [index, input] of [source, source.replace(/\n/g, '\r\n'), '> ' + source.replace(/\n/g, '\n> '), '```js\n\tOPEN\n\n'].entries()) {
+        const prepared = await prepare(page, input, 'lines-' + index);
+        const actual = await page.evaluate(html => {
+            const root = document.createElement('template'); root.innerHTML = html;
+            return [...root.content.querySelectorAll('pre[data-export-code-lines]')].map(pre => {
+                const code = pre.querySelector('code')!;
+                code.querySelectorAll('[data-export-display-break]').forEach(node => node.remove());
+                code.querySelectorAll('br').forEach(node => node.replaceWith('\n'));
+                return { count: Number((pre as HTMLElement).dataset.exportCodeLines), text: code.textContent };
+            });
+        }, prepared.html);
+        const expected = index === 3 ? [['\tOPEN', '']] : cases;
+        expect(actual).toEqual(expected.map(lines => ({ count: lines.length, text: lines.join('\n') })));
+    }
+    expect(await page.locator('#editor').innerHTML()).toBe(before);
+    expect(await page.locator('#editor [data-export-code-lines]').count()).toBe(0);
+    expect(await messages(page, 'edit')).toEqual([]);
+    expect(await messages(page, 'save')).toEqual([]);
+});
+
 test.describe('Export document-only rendering', () => {
     test.beforeEach(async ({ page }) => {
         await page.goto('/standalone-editor.html');

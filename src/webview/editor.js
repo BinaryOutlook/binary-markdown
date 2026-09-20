@@ -1980,7 +1980,7 @@
         const diagrams = [];
         const template = document.createElement('template');
         const normalizedSource = stripExportMetadata(source);
-        template.innerHTML = markdownToHtmlFragment(normalizedSource);
+        template.innerHTML = markdownToHtmlFragment(normalizedSource, true);
         assignHeadingAnchors(template.content, normalizedSource);
         template.content.querySelectorAll('.toc-refresh').forEach(button => button.remove());
         template.content.querySelectorAll('[data-toc-source]').forEach(block => block.removeAttribute('data-toc-source'));
@@ -2019,7 +2019,16 @@
         container.appendChild(template.content);
         document.body.appendChild(container);
         try {
-            container.querySelectorAll('pre:not([data-lang="math"]):not([data-lang="mermaid"])').forEach(applyHighlighting);
+            container.querySelectorAll('pre:not([data-lang="math"]):not([data-lang="mermaid"])').forEach(pre => {
+                applyHighlighting(pre);
+                const code = pre.querySelector('code');
+                // Mark display-only breaks before sanitization removes editor
+                // attributes. PDF metadata must never count a caret placeholder.
+                if (code && code.lastChild?.nodeName === 'BR' &&
+                    (code.dataset.trailingBr === 'true' || Number(pre.dataset.exportCodeLines) <= 1)) {
+                    code.lastChild.setAttribute('data-export-display-break', '');
+                }
+            });
             for (const span of container.querySelectorAll('.math-inline')) {
                 checkExportCancellation(signal);
                 const output = document.createElement('span');
@@ -2596,7 +2605,7 @@
         });
     }
 
-    function markdownToHtmlFragment(markdownText) {
+    function markdownToHtmlFragment(markdownText, exportCode = false) {
         // Normalize line endings: \r\n → \n, lone \r → \n
         const front = documentAux.splitFrontMatter(markdownText.replace(/\r\n?/g, '\n'));
         let body = front.body;
@@ -2761,7 +2770,7 @@
         function renderBlockquote(lines) {
             if (lines.length === 0) return '';
             if (lines.some((line, index) => /^\s*(?:`{3,}|~{3,})/.test(line) || mathSyntax.display(lines, index, mathBackslashDelimiters))) {
-                return '<blockquote>' + markdownToHtmlFragment(lines.join('\n')) + '</blockquote>';
+                return '<blockquote>' + markdownToHtmlFragment(lines.join('\n'), exportCode) + '</blockquote>';
             }
             // Join blockquote lines with actual newlines (like code blocks)
             // CSS white-space: pre-wrap will display them as line breaks
@@ -2833,7 +2842,8 @@
                             html += mathBlockHtml({ tex: trimmedContent, raw: lines.slice(codeStart, i + 1).join('\n'),
                                 open: lines[codeStart], close: line, singleLine: false });
                         } else {
-                            html += '<pre data-lang="' + escapeHtml(codeLang) + '" data-mode="display"><code contenteditable="false"' + trailingAttr + '>' + codeHtml + '</code></pre>';
+                            const countAttr = exportCode ? ' data-export-code-lines="' + (i - codeStart - 1) + '"' : '';
+                            html += '<pre data-lang="' + escapeHtml(codeLang) + '"' + countAttr + ' data-mode="display"><code contenteditable="false"' + trailingAttr + '>' + codeHtml + '</code></pre>';
                         }
                         inCodeBlock = false;
                         codeContent = '';
@@ -3028,6 +3038,17 @@
         if (inBlockquote) html += renderBlockquote(blockquoteLines);
         if (inTable) html += renderTable(tableRows);
         if (inCodeBlock) {
+            if (exportCode) {
+                const count = Math.max(0, lines.length - codeStart - 1 - (body.endsWith('\n') ? 1 : 0));
+                // The loop appends one newline per entry, including split()'s
+                // final empty entry. Remove only those parser delimiters.
+                const payload = codeContent.slice(0, -(body.endsWith('\n') ? 2 : 1));
+                const trailing = payload.endsWith('\n');
+                html += '<pre data-lang="' + escapeHtml(codeLang) + '" data-export-code-lines="' + count + '"><code' +
+                    (trailing ? ' data-trailing-br="true"' : '') + '>' +
+                    (payload ? escapeHtml(payload).replace(/\n/g, '<br>') + (trailing ? '<br>' : '') : '<br>') + '</code></pre>';
+                return html;
+            }
             // For empty code blocks, add a <br> for minimum height
             const codeHtml = (!codeContent || codeContent === '' || codeContent === '\n') 
                 ? '<br>' 
