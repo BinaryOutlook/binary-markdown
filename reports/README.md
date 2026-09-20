@@ -16,6 +16,7 @@ These records preserve observations about particular revisions and environments.
 
 | Recorded scope | Report | Evidence boundary |
 | --- | --- | --- |
+| 2026-09-20 editor/export issue stack | [Integration review](validation/2026-09-20-editor-export-stack.md) | All 22 issues and 10 correction PRs, exact dependency heads, local checks and unresolved reader/manual acceptance; development work, not a release |
 | 2026-09-14 Windows workstream | [Local Windows preparation](validation/2026-09-14-windows-preparation.md) | macOS development checks and platform-shim tests; actual Windows execution pending |
 | 2026-09-14 YAML/TOC branch | [YAML and TOC validation](validation/2026-09-14-yaml-toc.md) | Identified local branch, focused browser checks and installed-extension exports |
 | Version 0.2.0 integration | [Candidate validation](validation/0.2.0.md) | Recorded macOS/Ubuntu/minimum-VS-Code candidates and hosted runs |

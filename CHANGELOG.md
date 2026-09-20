@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- Fix blockquote contrast across themes and apply table-toolbar placement with one selection.
+- Distinguish table settings from overflow, keep complete toolbar actions reachable during resizing, and scroll wide tables locally to reveal every cell.
+- Show standard formatting by default while retaining explicit choices and Simple mode; place docked table controls in a contextual second row.
+- Add an Insert menu for equations, tables, code blocks, links, images, Mermaid, and a managed TOC.
+- Add source-preserving `<u>` underline in the editor and existing export formats, with documented reader compatibility limits.
+- Add full-width/custom-width visual editing, column alignment, and optional capped-width indicators; retain the initial 860 px centered layout.
+- Add searchable code-language selection and curated or alphabetical browsing orders.
+- Add above/below equation-source placement and optional visual soft wrapping without changing mathematical structure.
+- Add configurable PDF/DOCX code-label placement with a top-left default, optional total line counts, and optional per-line numbering. DOCX numbering remains experimental; reader acceptance and the unnumbered footer pagination limit are recorded in the [integration review](reports/validation/2026-09-20-editor-export-stack.md).
 - Check `main` daily for automatic VSIX publication after at least three days since the previous official release. Preserve manual releases, validate bot version bumps through PRs, and reuse the exact tested package and source.
 - Keep inline equation edits open and cancellable while delayed outline updates or document synchronization run.
 
