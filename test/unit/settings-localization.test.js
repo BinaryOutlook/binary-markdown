@@ -18,7 +18,8 @@ test('language picker strings reach the editor webview dictionary in every local
             'languagePickerPlainText', 'languagePickerMath', 'languagePickerMermaid',
             'codeLanguageOrderLabel', 'codeLanguageOrderHelp', 'codeLanguageOrderDefault', 'codeLanguageOrderAscending',
             'codeLanguageOrderDescending', 'codeLanguageOrderSaveFailed',
-            'mathSourcePositionLabel', 'mathSourcePositionHelp', 'mathSourcePositionAbove', 'mathSourcePositionBelow', 'mathSourcePositionSaveFailed']) {
+            'mathSourcePositionLabel', 'mathSourcePositionHelp', 'mathSourcePositionAbove', 'mathSourcePositionBelow', 'mathSourcePositionSaveFailed',
+            'mathSourceWrapLabel', 'mathSourceWrapHelp', 'mathSourceWrapSaveFailed']) {
             assert.ok(webviewMessages[key]?.trim(), locale + ': editor dictionary missing ' + key);
         }
     }

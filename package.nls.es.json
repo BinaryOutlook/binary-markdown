@@ -62,5 +62,6 @@
   "config.codeLanguageOrder.descending": "Ordena los nombres mostrados de Z a A, sin elementos fijados.",
   "config.mathSourcePosition.description": "Muestra el código editable encima o debajo de su vista previa. El contenido y las exportaciones no cambian.",
   "config.mathSourcePosition.above": "Encima de la vista previa",
-  "config.mathSourcePosition.below": "Debajo de la vista previa"
+  "config.mathSourcePosition.below": "Debajo de la vista previa",
+  "config.mathSourceWrap.description": "Ajusta visualmente el código editable de las ecuaciones de bloque. No añade saltos de línea al código. Las ecuaciones renderizadas y las exportaciones no cambian."
 }

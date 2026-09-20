@@ -34,6 +34,10 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  mathSourceWrapLabel: "Ajustar líneas del código de ecuación",
+  mathSourceWrapHelp: "Ajusta visualmente el código editable de las ecuaciones de bloque. No añade saltos de línea al código. Las ecuaciones renderizadas y las exportaciones no cambian.",
+  mathSourceWrapSaveFailed: "No se pudo guardar el ajuste de líneas de ecuaciones. Se mantiene la configuración anterior.",
+
   mathSourcePositionLabel: "Posición del código de ecuación",
   mathSourcePositionHelp: "Muestra el código editable encima o debajo de su vista previa. El contenido y las exportaciones no cambian.",
   mathSourcePositionAbove: "Encima de la vista previa",

@@ -62,5 +62,6 @@
   "config.codeLanguageOrder.descending": "Sort display names from Z to A, without pinned entries.",
   "config.mathSourcePosition.description": "Show editable equation source above or below its preview. Equation content and exports stay unchanged.",
   "config.mathSourcePosition.above": "Above preview",
-  "config.mathSourcePosition.below": "Below preview"
+  "config.mathSourcePosition.below": "Below preview",
+  "config.mathSourceWrap.description": "Visually wrap editable block-equation source. No source line breaks are added. Rendered equations and exports stay unchanged."
 }

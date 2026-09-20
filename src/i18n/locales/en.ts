@@ -34,6 +34,10 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  mathSourceWrapLabel: "Wrap equation source",
+  mathSourceWrapHelp: "Visually wrap editable block-equation source. No source line breaks are added. Rendered equations and exports stay unchanged.",
+  mathSourceWrapSaveFailed: "Could not save the equation wrapping preference. The previous setting remains active.",
+
   mathSourcePositionLabel: "Equation source position",
   mathSourcePositionHelp: "Show editable equation source above or below its preview. Equation content and exports stay unchanged.",
   mathSourcePositionAbove: "Above preview",

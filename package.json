@@ -355,6 +355,12 @@
             "%config.mathSourcePosition.above%",
             "%config.mathSourcePosition.below%"
           ]
+        },
+        "binary-markdown.mathSourceWrap": {
+          "type": "boolean",
+          "default": false,
+          "scope": "window",
+          "description": "%config.mathSourceWrap.description%"
         }
       }
     },

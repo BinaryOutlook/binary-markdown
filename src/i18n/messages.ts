@@ -37,6 +37,10 @@ export interface Messages {
 }
 
 export interface WebviewMessages {
+  mathSourceWrapLabel: string;
+  mathSourceWrapHelp: string;
+  mathSourceWrapSaveFailed: string;
+
   mathSourcePositionLabel: string;
   mathSourcePositionHelp: string;
   mathSourcePositionAbove: string;

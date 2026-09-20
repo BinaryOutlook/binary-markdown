@@ -34,6 +34,10 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  mathSourceWrapLabel: "数式ソースの折り返し",
+  mathSourceWrapHelp: "ブロック数式の編集可能なソースを表示幅に合わせて折り返します。ソースに改行は追加されません。数式の表示やエクスポートは変わりません。",
+  mathSourceWrapSaveFailed: "数式ソースの折り返しを保存できませんでした。以前の設定が維持されます。",
+
   mathSourcePositionLabel: "数式ソースの位置",
   mathSourcePositionHelp: "編集可能な数式ソースをプレビューの上または下に表示します。数式の内容やエクスポートは変わりません。",
   mathSourcePositionAbove: "プレビューの上",

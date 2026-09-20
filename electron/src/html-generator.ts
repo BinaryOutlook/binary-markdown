@@ -14,6 +14,7 @@ interface ElectronEditorConfig {
     editorMaxWidth?: number;
     editorAlignment?: string;
     editorWidthIndicators?: boolean;
+    mathSourceWrap?: boolean;
     mathSourcePosition?: string;
     codeLanguageOrder?: string;
     toolbarMode: string;
@@ -92,7 +93,7 @@ export function generateEditorHtml(
     const vendorFileUri = (file: string) => fileUri(path.join(vendorDir, file));
 
     return `<!DOCTYPE html>
-<html lang="en" data-theme="${config.theme}" data-editor-width-mode="${normalizeWidthMode(config.editorWidthMode)}" data-editor-max-width="${normalizeMaxWidth(config.editorMaxWidth)}" data-editor-alignment="${normalizeAlignment(config.editorAlignment)}" data-editor-width-indicators="${config.editorWidthIndicators !== false}" data-math-source-position="${config.mathSourcePosition === 'below' ? 'below' : 'above'}" data-code-language-order="${config.codeLanguageOrder === 'a-z' || config.codeLanguageOrder === 'z-a' ? config.codeLanguageOrder : 'default'}" data-toolbar-mode="${config.toolbarMode}" data-table-toolbar-position="${normalize(config.tableToolbarPosition)}">
+<html lang="en" data-theme="${config.theme}" data-editor-width-mode="${normalizeWidthMode(config.editorWidthMode)}" data-editor-max-width="${normalizeMaxWidth(config.editorMaxWidth)}" data-editor-alignment="${normalizeAlignment(config.editorAlignment)}" data-editor-width-indicators="${config.editorWidthIndicators !== false}" data-math-source-wrap="${config.mathSourceWrap === true}" data-math-source-position="${config.mathSourcePosition === 'below' ? 'below' : 'above'}" data-code-language-order="${config.codeLanguageOrder === 'a-z' || config.codeLanguageOrder === 'z-a' ? config.codeLanguageOrder : 'default'}" data-toolbar-mode="${config.toolbarMode}" data-table-toolbar-position="${normalize(config.tableToolbarPosition)}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">

@@ -62,5 +62,6 @@
   "config.codeLanguageOrder.descending": "Trie les noms affichés de Z à A, sans entrées épinglées.",
   "config.mathSourcePosition.description": "Affiche le code modifiable au-dessus ou au-dessous de son aperçu. Le contenu et les exports restent inchangés.",
   "config.mathSourcePosition.above": "Au-dessus de l’aperçu",
-  "config.mathSourcePosition.below": "Au-dessous de l’aperçu"
+  "config.mathSourcePosition.below": "Au-dessous de l’aperçu",
+  "config.mathSourceWrap.description": "Adapte visuellement le code modifiable des équations en bloc à la largeur disponible, sans ajouter de sauts de ligne. Le rendu et les exports restent inchangés."
 }

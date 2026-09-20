@@ -34,6 +34,10 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  mathSourceWrapLabel: "公式源码自动折行",
+  mathSourceWrapHelp: "按显示宽度折行显示可编辑的块公式源码，不添加源码换行符。渲染后的公式和导出保持不变。",
+  mathSourceWrapSaveFailed: "无法保存公式源码折行设置。将保留原有设置。",
+
   mathSourcePositionLabel: "公式源码位置",
   mathSourcePositionHelp: "在预览上方或下方显示可编辑的公式源码。公式内容和导出保持不变。",
   mathSourcePositionAbove: "预览上方",

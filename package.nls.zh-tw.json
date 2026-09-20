@@ -62,5 +62,6 @@
   "config.codeLanguageOrder.descending": "依顯示名稱從 Z 到 A 排列，不保留置頂項。",
   "config.mathSourcePosition.description": "在預覽上方或下方顯示可編輯的公式原始碼。公式內容和匯出保持不變。",
   "config.mathSourcePosition.above": "預覽上方",
-  "config.mathSourcePosition.below": "預覽下方"
+  "config.mathSourcePosition.below": "預覽下方",
+  "config.mathSourceWrap.description": "依顯示寬度折行顯示可編輯的區塊公式原始碼，不加入原始碼換行字元。算繪後的公式和匯出保持不變。"
 }

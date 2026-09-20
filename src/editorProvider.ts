@@ -493,6 +493,7 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
                         editorMaxWidth: config.get<number>('editorMaxWidth', 860),
                         editorAlignment: config.get<string>('editorAlignment', 'center'),
                         editorWidthIndicators: config.get<boolean>('editorWidthIndicators', true),
+                        mathSourceWrap: config.get<boolean>('mathSourceWrap', false),
                         mathSourcePosition: config.get<string>('mathSourcePosition', 'above'),
                         codeLanguageOrder: config.get<string>('codeLanguageOrder', 'default'),
                         toolbarMode: config.get<string>('toolbarMode', 'full'),
@@ -697,6 +698,11 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
                 void webviewPanel.webview.postMessage({ type: 'editorWidth', mode: config.get('editorWidthMode', 'default'),
                     maxWidth: config.get('editorMaxWidth', 860), alignment: config.get('editorAlignment', 'center'), indicators: config.get('editorWidthIndicators', true) });
             }
+            const mathSourceWrapChanged = e.affectsConfiguration('binary-markdown.mathSourceWrap');
+            if (mathSourceWrapChanged) {
+                void webviewPanel.webview.postMessage({ type: 'mathSourceWrap', value:
+                    vscode.workspace.getConfiguration('binary-markdown').get('mathSourceWrap', false) });
+            }
             const mathSourcePositionChanged = e.affectsConfiguration('binary-markdown.mathSourcePosition');
             if (mathSourcePositionChanged) {
                 void webviewPanel.webview.postMessage({ type: 'mathSourcePosition', value:
@@ -716,7 +722,7 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
             const editorSettings = ['fontSize', 'imageDefaultDir', 'forceRelativeImagePath', 'language',
                 'outlineStateScope', 'outlineDefaultOpen', 'outlineActiveColor', 'enableDebugLogging', 'math.backslashDelimiters'];
             const editorChanged = editorSettings.some(key => e.affectsConfiguration('binary-markdown.' + key));
-            if (e.affectsConfiguration('binary-markdown') && (editorChanged || (!exportChanged && !positionChanged && !themeChanged && !toolbarModeChanged && !widthChanged && !languageOrderChanged && !mathSourcePositionChanged))) {
+            if (e.affectsConfiguration('binary-markdown') && (editorChanged || (!exportChanged && !positionChanged && !themeChanged && !toolbarModeChanged && !widthChanged && !languageOrderChanged && !mathSourcePositionChanged && !mathSourceWrapChanged))) {
                 clearTimeout(configurationRefresh);
                 configurationRefresh = setTimeout(() => {
                     configurationRefresh = undefined;

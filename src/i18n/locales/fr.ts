@@ -34,6 +34,10 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  mathSourceWrapLabel: "Retour visuel du code des équations",
+  mathSourceWrapHelp: "Adapte visuellement le code modifiable des équations en bloc à la largeur disponible, sans ajouter de sauts de ligne. Le rendu et les exports restent inchangés.",
+  mathSourceWrapSaveFailed: "Impossible d’enregistrer le retour visuel des équations. Le réglage précédent reste actif.",
+
   mathSourcePositionLabel: "Position du code de l’équation",
   mathSourcePositionHelp: "Affiche le code modifiable au-dessus ou au-dessous de son aperçu. Le contenu et les exports restent inchangés.",
   mathSourcePositionAbove: "Au-dessus de l’aperçu",

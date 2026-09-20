@@ -62,5 +62,6 @@
   "config.codeLanguageOrder.descending": "表示名を Z から A の順に並べます。先頭への固定はありません。",
   "config.mathSourcePosition.description": "編集可能な数式ソースをプレビューの上または下に表示します。数式の内容やエクスポートは変わりません。",
   "config.mathSourcePosition.above": "プレビューの上",
-  "config.mathSourcePosition.below": "プレビューの下"
+  "config.mathSourcePosition.below": "プレビューの下",
+  "config.mathSourceWrap.description": "ブロック数式の編集可能なソースを表示幅に合わせて折り返します。ソースに改行は追加されません。数式の表示やエクスポートは変わりません。"
 }

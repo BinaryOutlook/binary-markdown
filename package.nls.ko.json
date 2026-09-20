@@ -62,5 +62,6 @@
   "config.codeLanguageOrder.descending": "표시 이름을 Z부터 A까지 정렬하며 고정 항목은 없습니다.",
   "config.mathSourcePosition.description": "편집 가능한 수식 소스를 미리 보기 위나 아래에 표시합니다. 수식 내용과 내보내기는 변경되지 않습니다.",
   "config.mathSourcePosition.above": "미리 보기 위",
-  "config.mathSourcePosition.below": "미리 보기 아래"
+  "config.mathSourcePosition.below": "미리 보기 아래",
+  "config.mathSourceWrap.description": "블록 수식의 편집 가능한 소스를 화면 너비에 맞춰 표시합니다. 소스에 줄 바꿈 문자는 추가되지 않습니다. 렌더링된 수식과 내보내기는 변경되지 않습니다."
 }

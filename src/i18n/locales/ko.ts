@@ -34,6 +34,10 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  mathSourceWrapLabel: "수식 소스 자동 줄 바꿈",
+  mathSourceWrapHelp: "블록 수식의 편집 가능한 소스를 화면 너비에 맞춰 표시합니다. 소스에 줄 바꿈 문자는 추가되지 않습니다. 렌더링된 수식과 내보내기는 변경되지 않습니다.",
+  mathSourceWrapSaveFailed: "수식 줄 바꿈 설정을 저장하지 못했습니다. 이전 설정이 유지됩니다.",
+
   mathSourcePositionLabel: "수식 소스 위치",
   mathSourcePositionHelp: "편집 가능한 수식 소스를 미리 보기 위나 아래에 표시합니다. 수식 내용과 내보내기는 변경되지 않습니다.",
   mathSourcePositionAbove: "미리 보기 위",
