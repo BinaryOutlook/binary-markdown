@@ -327,7 +327,7 @@ async function run(settings, owner) {
         fs.writeFileSync(report, JSON.stringify({ harness: harnessIdentity(), host: receipt(owner), packageSha256: hash(fs.readFileSync(settings.package)), receipts }, null, 2));
         console.log(name, JSON.stringify(details));
     };
-    const available = ['identity', 'filesystem', 'formats', 'saves', 'edges', 'ui', 'equations', 'pdf-background', 'selection', 'immutable', 'offline', 'document-aux', 'links', 'codeblocks', 'table-placement', 'table-content', 'table-row', 'text-toolbar', 'insert-menu', 'underline', 'underline-exports', 'editor-width', 'editor-alignment', 'width-indicators', 'language-picker', 'language-order', 'equation-source-position', 'equation-source-wrap', 'blockquotes'];
+    const available = ['identity', 'filesystem', 'formats', 'saves', 'edges', 'ui', 'equations', 'pdf-background', 'selection', 'immutable', 'offline', 'document-aux', 'links', 'codeblocks', 'table-placement', 'table-content', 'table-row', 'text-toolbar', 'insert-menu', 'underline', 'underline-exports', 'editor-width', 'editor-alignment', 'width-indicators', 'language-picker', 'language-order', 'equation-source-position', 'equation-source-wrap', 'code-label-position', 'blockquotes'];
     const groups = settings.suite === 'all' ? available : [settings.suite];
     assert.ok(groups.every(value => available.includes(value)), 'Suite must be all, ' + available.join(', '));
     const htmlExports = [];
@@ -514,6 +514,7 @@ async function run(settings, owner) {
         if (groups.includes('editor-alignment')) await editorAlignmentCase(h, owner, record);
         if (groups.includes('editor-width')) await editorWidthCase(h, owner, record);
         if (groups.includes('underline')) await underlineCase(h, owner, record);
+        if (groups.includes('code-label-position')) await codeLabelPositionCase(h, owner, record);
         if (groups.includes('underline-exports')) await underlineExportCase(h, owner, record);
         if (groups.includes('text-toolbar')) await textToolbarCase(h, owner, record);
         if (groups.includes('equations')) await equationCases(h, owner, record);
@@ -1154,6 +1155,60 @@ async function underlineCase(h, owner, record) {
     } finally {
         connection?.close();
         await h.driver({ action: 'config', key: 'toolbarMode', scope: 'workspace', value: previous.toolbarModeScopes.workspace ?? null });
+    }
+}
+
+async function codeLabelPositionCase(h, owner, record) {
+    const { JSDOM } = require('jsdom');
+    const file = 'code-label-position.md', filePath = path.join(owner.workspace, file);
+    const source = '# Labels\n\n```js\nFIRST_MARKER\n\nLAST_MARKER\n```\n\n```\nUNLABELED_MARKER\n```\n';
+    const previous = (await h.driver({ action: 'inspect' })).exportCodeScopes;
+    fs.writeFileSync(filePath, source);
+    let connection;
+    try {
+        for (const key of Object.keys(previous)) {
+            await h.driver({ action: 'config', key, value: null, scope: 'workspace' });
+            await h.driver({ action: 'config', key, value: null });
+        }
+        connection = await h.open(file);
+        const before = await connection.evaluate('document.getElementById("editor").innerHTML');
+        for (const position of [null, 'top-left', 'top-right', 'bottom-left', 'bottom-right', 'hidden']) {
+            await h.driver({ action: 'config', key: 'export.showCodeLanguage', value: position !== 'hidden' });
+            await h.driver({ action: 'config', key: 'export.codeLanguagePosition', value: position === 'hidden' ? 'top-left' : position });
+            for (const format of ['pdf', 'docx']) {
+                const result = await h.exportFile(connection, file, format, true);
+                let text;
+                if (format === 'pdf') {
+                    const xml = execFileSync(process.env.EXPORT_PDFTOTEXT_PATH || 'pdftotext', ['-bbox', result.outputPath, '-'], { encoding: 'utf8' });
+                    const document = new JSDOM(xml, { contentType: 'text/xml' }).window.document;
+                    const words = [...document.getElementsByTagName('word')]; text = words.map(word => word.textContent).join(' ');
+                    const label = words.find(word => word.textContent === 'JavaScript');
+                    assert.equal(Boolean(label), position !== 'hidden');
+                    if (label) {
+                        const code = words.find(word => word.textContent === 'FIRST_MARKER');
+                        assert.equal(Number(label.getAttribute('yMin')) < Number(code.getAttribute('yMin')), !position || position.startsWith('top'));
+                        assert.equal(Number(label.getAttribute('xMin')) > 400, Boolean(position?.endsWith('right')));
+                    }
+                } else {
+                    const document = new JSDOM(archiveText(result.outputPath, 'word/document.xml'), { contentType: 'text/xml' }).window.document;
+                    text = [...document.getElementsByTagName('w:t')].map(node => node.textContent).join('');
+                    const styles = [...document.getElementsByTagName('w:pStyle')].map(node => node.getAttribute('w:val'));
+                    const labels = styles.filter(value => value.startsWith('CodeLanguage'));
+                    const expected = position === 'bottom-right' ? 'CodeLanguage' : 'CodeLanguage' + (position || 'top-left').split('-').map(word => word[0].toUpperCase() + word.slice(1)).join('');
+                    assert.deepEqual(labels, position === 'hidden' ? [] : [expected]);
+                }
+                for (const marker of ['FIRST_MARKER', 'LAST_MARKER', 'UNLABELED_MARKER']) assert.ok(text.includes(marker));
+                assert.equal(fs.readFileSync(filePath, 'utf8'), source);
+                assert.equal(await connection.evaluate('document.getElementById("editor").innerHTML'), before);
+                record('code-label-position', { position: position || 'default', format, outputPath: result.outputPath, sourceAndEditorUnchanged: true });
+            }
+        }
+    } finally {
+        connection?.close();
+        for (const [key, value] of Object.entries(previous)) {
+            await h.driver({ action: 'config', key, value: value.workspace ?? null, scope: 'workspace' });
+            await h.driver({ action: 'config', key, value: value.global ?? null });
+        }
     }
 }
 
