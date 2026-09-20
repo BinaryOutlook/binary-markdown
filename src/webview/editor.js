@@ -95,7 +95,7 @@
     }
     applyEditorWidth(document.documentElement.dataset.editorWidthMode, Number(document.documentElement.dataset.editorMaxWidth));
 
-    function applyMathSourcePosition(value) {
+    function applyMathSourcePreference(name, value) {
         const selection = window.getSelection();
         const range = selection?.rangeCount ? selection.getRangeAt(0) : null;
         const node = selection?.anchorNode;
@@ -103,8 +103,8 @@
         const caretBefore = wrapper && range?.getBoundingClientRect();
         const bounds = editorWrapper.getBoundingClientRect();
         const keepCaret = caretBefore?.height && caretBefore.top >= bounds.top && caretBefore.bottom <= bounds.bottom;
-        document.documentElement.dataset.mathSourcePosition = value === 'below' ? 'below' : 'above';
-        // CSS changes the visual order without detaching the active editable node.
+        document.documentElement.dataset[name] = value;
+        // CSS changes the layout without detaching the active editable node.
         if (keepCaret) editorWrapper.scrollTop += range.getBoundingClientRect().top - caretBefore.top;
     }
 
@@ -14153,8 +14153,12 @@
 
     // Handle messages from host (VSCode / Electron / test)
     host.onMessage(function(message) {
+        if (message.type === 'mathSourceWrap') {
+            applyMathSourcePreference('mathSourceWrap', String(message.value === true));
+            return;
+        }
         if (message.type === 'mathSourcePosition') {
-            applyMathSourcePosition(message.value);
+            applyMathSourcePreference('mathSourcePosition', message.value === 'below' ? 'below' : 'above');
             return;
         }
         if (message.type === 'codeLanguageOrder') {

@@ -871,6 +871,13 @@ body {
     border-radius: 0 0 6px 6px;
     border-top: none;
 }
+/* Wrap only editable TeX, preserving authored whitespace and DOM line breaks. */
+html[data-math-source-wrap="true"] .editor .math-wrapper pre[data-lang="math"],
+html[data-math-source-wrap="true"] .editor .math-wrapper pre[data-lang="math"] code {
+    white-space: break-spaces;
+    overflow-wrap: anywhere;
+}
+
 /* Keep the editable node in place so changing visual order cannot blur/commit it. */
 html[data-math-source-position="below"] .editor .math-wrapper[data-mode="edit"] {
     display: flex;
