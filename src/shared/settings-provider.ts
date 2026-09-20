@@ -1,5 +1,5 @@
 import { TableToolbarPosition } from './table-placement';
-import { EditorWidthMode } from './editor-layout';
+import { EditorWidthMode, EditorAlignment } from './editor-layout';
 /**
  * SettingsProvider: an abstraction for reading editor settings and observing changes.
  *
@@ -12,6 +12,7 @@ export interface EditorSettings {
     fontSize: number;
     editorWidthMode: EditorWidthMode;
     editorMaxWidth: number;
+    editorAlignment: EditorAlignment;
     toolbarMode: 'full' | 'simple';
     tableToolbarPosition: TableToolbarPosition;
     language: 'default' | 'en' | 'ja' | 'zh-TW' | 'zh-CN' | 'ko' | 'es' | 'fr';
@@ -25,6 +26,7 @@ export const DEFAULT_SETTINGS: EditorSettings = {
     fontSize: 16,
     editorWidthMode: 'default',
     editorMaxWidth: 860,
+    editorAlignment: 'center',
     toolbarMode: 'full',
     tableToolbarPosition: 'auto',
     language: 'default',

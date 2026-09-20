@@ -1,9 +1,9 @@
 import Store from 'electron-store';
 import { BrowserWindow } from 'electron';
 import * as path from 'path';
-import type { EditorWidthMode } from '../../src/shared/editor-layout';
+import type { EditorWidthMode, EditorAlignment } from '../../src/shared/editor-layout';
 import { getResourcePath } from './html-generator';
-const { normalizeWidthMode, normalizeMaxWidth } = require(getResourcePath('src/shared/editor-layout.js')) as typeof import('../../src/shared/editor-layout');
+const { normalizeWidthMode, normalizeMaxWidth, normalizeAlignment } = require(getResourcePath('src/shared/editor-layout.js')) as typeof import('../../src/shared/editor-layout');
 
 /**
  * Electron settings backed by electron-store.
@@ -14,6 +14,7 @@ export interface ElectronSettings {
     fontSize: number;
     editorWidthMode: EditorWidthMode;
     editorMaxWidth: number;
+    editorAlignment: EditorAlignment;
     toolbarMode: string;
     tableToolbarPosition: string;
     language: string;
@@ -29,6 +30,7 @@ const DEFAULTS: ElectronSettings = {
     fontSize: 16,
     editorWidthMode: 'default',
     editorMaxWidth: 860,
+    editorAlignment: 'center',
     toolbarMode: 'full',
     tableToolbarPosition: 'auto',
     language: 'default',
@@ -60,7 +62,8 @@ export class SettingsManager {
     getAll(): ElectronSettings {
         return { ...DEFAULTS, ...this.store.store,
             editorWidthMode: normalizeWidthMode(this.store.get('editorWidthMode')),
-            editorMaxWidth: normalizeMaxWidth(this.store.get('editorMaxWidth')) };
+            editorMaxWidth: normalizeMaxWidth(this.store.get('editorMaxWidth')),
+            editorAlignment: normalizeAlignment(this.store.get('editorAlignment')) };
     }
 
     refreshSetting(key: keyof ElectronSettings, error = ''): void {
@@ -189,6 +192,16 @@ export class SettingsManager {
         <input type="number" id="editorMaxWidth" min="320" max="4000" step="1" value="${settings.editorMaxWidth}" aria-describedby="editorWidthHelp" onchange="save('editorMaxWidth', Number(this.value))">
     </div>
     <div class="field-desc" id="editorWidthHelp">${messages.editorWidthHelp || 'Custom width: 320–4000 CSS pixels, including padding. Visual editor only; Source and exports keep their own layout.'}</div>
+
+    <div class="field">
+        <label for="editorAlignment">${messages.editorAlignmentLabel || 'Column alignment'}</label>
+        <select id="editorAlignment" aria-describedby="editorAlignmentHelp" onchange="save('editorAlignment', this.value)">
+            <option value="left" ${settings.editorAlignment === 'left' ? 'selected' : ''}>${messages.editorAlignmentLeft || 'Left'}</option>
+            <option value="center" ${settings.editorAlignment === 'center' ? 'selected' : ''}>${messages.editorAlignmentCenter || 'Center'}</option>
+            <option value="right" ${settings.editorAlignment === 'right' ? 'selected' : ''}>${messages.editorAlignmentRight || 'Right'}</option>
+        </select>
+    </div>
+    <div class="field-desc" id="editorAlignmentHelp">${messages.editorAlignmentHelp || 'Places a capped column within the editor pane. Does not align the text or change Source or exports.'}</div>
 
     <h2>Images</h2>
     <div class="field field-text">

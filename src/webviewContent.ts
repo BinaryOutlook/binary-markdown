@@ -1,5 +1,5 @@
 import { normalize as normalizeTablePosition } from './shared/table-placement';
-import { normalizeWidthMode, normalizeMaxWidth } from './shared/editor-layout';
+import { normalizeWidthMode, normalizeMaxWidth, normalizeAlignment } from './shared/editor-layout';
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -23,6 +23,7 @@ interface EditorConfig {
     fontSize: number;
     editorWidthMode?: string;
     editorMaxWidth?: number;
+    editorAlignment?: string;
     toolbarMode?: string;
     tableToolbarPosition?: string;
     documentBaseUri?: string;
@@ -84,6 +85,7 @@ export function getWebviewContent(
         fontSize: config?.fontSize ?? 16,
         editorWidthMode: normalizeWidthMode(config?.editorWidthMode),
         editorMaxWidth: normalizeMaxWidth(config?.editorMaxWidth),
+        editorAlignment: normalizeAlignment(config?.editorAlignment),
         toolbarMode: config?.toolbarMode ?? 'full',
         tableToolbarPosition: normalizeTablePosition(config?.tableToolbarPosition),
         documentBaseUri: config?.documentBaseUri ?? '',
@@ -135,7 +137,7 @@ export function getWebviewContent(
         .replace('__CONTENT__', `'${base64Content}'`);
 
     return `<!DOCTYPE html>
-<html lang="en" data-theme="${safeConfig.theme}" data-editor-width-mode="${safeConfig.editorWidthMode}" data-editor-max-width="${safeConfig.editorMaxWidth}" data-toolbar-mode="${safeConfig.toolbarMode}" data-table-toolbar-position="${safeConfig.tableToolbarPosition}">
+<html lang="en" data-theme="${safeConfig.theme}" data-editor-width-mode="${safeConfig.editorWidthMode}" data-editor-max-width="${safeConfig.editorMaxWidth}" data-editor-alignment="${safeConfig.editorAlignment}" data-toolbar-mode="${safeConfig.toolbarMode}" data-table-toolbar-position="${safeConfig.tableToolbarPosition}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">

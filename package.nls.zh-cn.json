@@ -47,8 +47,12 @@
   "config.tableToolbarPosition.right": "右侧（垂直）",
   "config.tableToolbarPosition.topBar": "始终位于顶部栏",
   "config.editorWidthMode.description": "可视化编辑器的宽度模式。源码和导出布局相互独立。",
-  "config.editorWidthMode.default": "居中显示，最大宽度为 860 CSS 像素，包含内边距。",
+  "config.editorWidthMode.default": "最大宽度为 860 CSS 像素，包含内边距。",
   "config.editorWidthMode.full": "使用可用编辑器区域的宽度，并自动调整内边距。",
   "config.editorWidthMode.custom": "使用 Editor Max Width 作为列宽上限，包含内边距。",
-  "config.editorMaxWidth.description": "自定义模式下列外边界的最大宽度（CSS 像素，320–4000；默认值和无效值回退值为 860）。包含内边距；较窄的区域仍会自适应收缩。"
+  "config.editorMaxWidth.description": "自定义模式下列外边界的最大宽度（CSS 像素，320–4000；默认值和无效值回退值为 860）。包含内边距；较窄的区域仍会自适应收缩。",
+  "config.editorAlignment.description": "达到宽度上限的可视化编辑器内容列的位置。默认居中；全宽模式或较窄区域不会增加额外空白。文字、源码和导出对齐方式不变。",
+  "config.editorAlignment.left": "将剩余空间放在内容列右侧。",
+  "config.editorAlignment.center": "将剩余空间均分到内容列两侧。",
+  "config.editorAlignment.right": "将剩余空间放在内容列左侧。"
 }

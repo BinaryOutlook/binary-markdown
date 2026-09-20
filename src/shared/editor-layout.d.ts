@@ -1,3 +1,6 @@
+export type EditorAlignment = 'left' | 'center' | 'right';
+export const alignments: readonly EditorAlignment[];
+export function normalizeAlignment(value: unknown): EditorAlignment;
 export type EditorWidthMode = 'default' | 'full' | 'custom';
 export const widthModes: readonly EditorWidthMode[];
 export const defaultWidth: number;

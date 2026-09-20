@@ -37,6 +37,14 @@ export interface Messages {
 }
 
 export interface WebviewMessages {
+  editorAlignmentLabel: string;
+  editorAlignmentLeft: string;
+  editorAlignmentCenter: string;
+  editorAlignmentRight: string;
+  editorAlignmentHelp: string;
+  editorAlignmentInvalid: string;
+  editorAlignmentSaveFailed: string;
+
   editorWidthLabel: string;
   editorWidthDefault: string;
   editorWidthFull: string;

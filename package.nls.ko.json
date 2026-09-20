@@ -47,8 +47,12 @@
   "config.tableToolbarPosition.right": "오른쪽(세로)",
   "config.tableToolbarPosition.topBar": "항상 상단 표시줄",
   "config.editorWidthMode.description": "시각적 편집기의 너비 모드입니다. 소스와 내보내기 레이아웃은 독립적입니다.",
-  "config.editorWidthMode.default": "안쪽 여백을 포함하여 최대 860 CSS 픽셀인 가운데 정렬 열입니다.",
+  "config.editorWidthMode.default": "안쪽 여백을 포함하여 최대 860 CSS 픽셀인 열입니다.",
   "config.editorWidthMode.full": "안쪽 여백을 조정하여 사용 가능한 편집기 영역의 너비를 사용합니다.",
   "config.editorWidthMode.custom": "안쪽 여백을 포함한 열의 최대 너비로 Editor Max Width를 사용합니다.",
-  "config.editorMaxWidth.description": "사용자 지정 모드의 최대 외부 열 너비(CSS 픽셀, 320–4000; 기본값 및 잘못된 값의 대체값: 860). 안쪽 여백을 포함하며 더 좁은 영역에 맞춰 줄어듭니다."
+  "config.editorMaxWidth.description": "사용자 지정 모드의 최대 외부 열 너비(CSS 픽셀, 320–4000; 기본값 및 잘못된 값의 대체값: 860). 안쪽 여백을 포함하며 더 좁은 영역에 맞춰 줄어듭니다.",
+  "config.editorAlignment.description": "최대 너비에 도달한 시각적 편집기 열의 위치입니다. 기본값은 가운데이며 전체 너비나 더 좁은 영역에서는 여백을 추가하지 않습니다. 텍스트, 소스 및 내보내기 정렬은 그대로 유지됩니다.",
+  "config.editorAlignment.left": "남는 공간을 열의 오른쪽에 둡니다.",
+  "config.editorAlignment.center": "남는 공간을 열 양쪽에 균등하게 둡니다.",
+  "config.editorAlignment.right": "남는 공간을 열의 왼쪽에 둡니다."
 }

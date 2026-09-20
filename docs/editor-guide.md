@@ -276,6 +276,7 @@ FORCE_RELATIVE_PATH: true
 | `binary-markdown.fontSize` | Base font size (px) | `16` |
 | `binary-markdown.editorWidthMode` | Visual editor column width: `default`, `full`, or `custom` | `default` |
 | `binary-markdown.editorMaxWidth` | Outer column cap in CSS pixels for Custom mode; integer 320–4000 | `860` |
+| `binary-markdown.editorAlignment` | Position the capped column at the `left`, `center`, or `right` of the pane | `center` |
 | `binary-markdown.imageDefaultDir` | Default directory for saved images | `""` (same as markdown file) |
 | `binary-markdown.forceRelativeImagePath` | Force relative paths for images | `false` |
 | `binary-markdown.language` | UI language (`default`, `en`, `ja`, `zh-cn`, `zh-tw`, `ko`, `es`, `fr`) | `default` |
@@ -289,11 +290,17 @@ With `outlineStateScope` set to `file`, every Markdown resource restores its own
 
 ### Editor width
 
-In VS Code Settings, choose **Binary-markdown: Editor Width Mode**. In the desktop app's **Preferences**, use **Editor width**. **Default** keeps a centered column capped at 860 CSS pixels. **Full width** uses the available editor pane. **Custom width** uses **Editor Max Width** in VS Code or **Maximum width (px)** in Preferences. Switching modes retains your custom value.
+In VS Code Settings, choose **Binary-markdown: Editor Width Mode**. In the desktop app's **Preferences**, use **Editor width**. **Default** uses a column capped at 860 CSS pixels. **Full width** uses the available editor pane. **Custom width** uses **Editor Max Width** in VS Code or **Maximum width (px)** in Preferences. Switching modes retains your custom value.
 
 The cap measures the outside of the column, including its padding; it is not the width of the text alone. Custom values must be whole numbers from 320 to 4000. Invalid stored values fall back to 860, and an invalid mode falls back to Default. Preferences rejects invalid input and keeps the previous value. The column always shrinks to fit a narrower pane, with responsive side padding of 12–60 CSS pixels. Full width keeps that padding.
 
 These settings apply immediately to the visual editor in both hosts and survive reopening. They preserve the document and undo history, without replacing the current selection. The layout retains a visible caret's position where scrolling permits, or anchors the visible block. Source mode retains its own layout; HTML, PDF, DOCX, and EPUB keep their independent export dimensions. Width preferences do not reformat long code or equations, and wide tables retain their horizontal scrolling.
+
+### Column alignment
+
+Choose `binary-markdown.editorAlignment` in VS Code Settings or **Column alignment** in desktop Preferences to place the column at the **Left**, **Center**, or **Right** of the available pane. Center remains the default. Alignment takes effect when the pane is wider than the active maximum width. Full width and narrower panes use all available width without adding artificial space; your chosen alignment resumes when the column is capped again.
+
+This preference moves the document column without changing paragraph or table-cell alignment, Markdown, selection, active equation source, or undo. Open language menus follow their language tag and stay within the viewport; table controls follow the selected table. Source mode and exported documents retain their separate layout.
 
 ### Themes
 

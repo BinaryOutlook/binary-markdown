@@ -47,8 +47,12 @@
   "config.tableToolbarPosition.right": "Right side (vertical)",
   "config.tableToolbarPosition.topBar": "Always in top bar",
   "config.editorWidthMode.description": "Width mode for the visual editor. Source and export layouts are independent.",
-  "config.editorWidthMode.default": "Centered column capped at 860 CSS pixels, including padding.",
+  "config.editorWidthMode.default": "Column capped at 860 CSS pixels, including padding.",
   "config.editorWidthMode.full": "Use the available editor pane width with responsive padding.",
   "config.editorWidthMode.custom": "Use Editor Max Width as the column cap, including padding.",
-  "config.editorMaxWidth.description": "Maximum outer column width in CSS pixels for Custom mode (320–4000; default and invalid-value fallback: 860). Includes padding; smaller panes still shrink to fit."
+  "config.editorMaxWidth.description": "Maximum outer column width in CSS pixels for Custom mode (320–4000; default and invalid-value fallback: 860). Includes padding; smaller panes still shrink to fit.",
+  "config.editorAlignment.description": "Position of the capped visual-editor column. Center is the default; no extra space is added in Full width or narrower panes. Text, Source, and export alignment are unchanged.",
+  "config.editorAlignment.left": "Place unused space to the right of the column.",
+  "config.editorAlignment.center": "Distribute unused space on both sides of the column.",
+  "config.editorAlignment.right": "Place unused space to the left of the column."
 }

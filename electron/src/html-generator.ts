@@ -12,6 +12,7 @@ interface ElectronEditorConfig {
     fontSize: number;
     editorWidthMode?: string;
     editorMaxWidth?: number;
+    editorAlignment?: string;
     toolbarMode: string;
     tableToolbarPosition?: string;
     documentBaseUri: string;
@@ -62,7 +63,7 @@ export function generateEditorHtml(
     config: ElectronEditorConfig
 ): string {
     const { normalize } = require(getResourcePath('src/shared/table-placement.js'));
-    const { normalizeWidthMode, normalizeMaxWidth } = require(getResourcePath('src/shared/editor-layout.js'));
+    const { normalizeWidthMode, normalizeMaxWidth, normalizeAlignment } = require(getResourcePath('src/shared/editor-layout.js'));
     const stylesPath = getResourcePath('src/webview/styles.css');
     const auxScript = fs.readFileSync(getResourcePath('src/shared/document-aux.js'), 'utf8');
     const editorScriptPath = getResourcePath('src/webview/editor.js');
@@ -88,7 +89,7 @@ export function generateEditorHtml(
     const vendorFileUri = (file: string) => fileUri(path.join(vendorDir, file));
 
     return `<!DOCTYPE html>
-<html lang="en" data-theme="${config.theme}" data-editor-width-mode="${normalizeWidthMode(config.editorWidthMode)}" data-editor-max-width="${normalizeMaxWidth(config.editorMaxWidth)}" data-toolbar-mode="${config.toolbarMode}" data-table-toolbar-position="${normalize(config.tableToolbarPosition)}">
+<html lang="en" data-theme="${config.theme}" data-editor-width-mode="${normalizeWidthMode(config.editorWidthMode)}" data-editor-max-width="${normalizeMaxWidth(config.editorMaxWidth)}" data-editor-alignment="${normalizeAlignment(config.editorAlignment)}" data-toolbar-mode="${config.toolbarMode}" data-table-toolbar-position="${normalize(config.tableToolbarPosition)}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">

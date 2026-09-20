@@ -4,7 +4,7 @@ import * as fs from 'fs';
 import { FileManager } from './file-manager';
 import { SettingsManager } from './settings-manager';
 import { generateEditorHtml, writeHtmlToTempFile, getResourcePath } from './html-generator';
-const { widthModes, isValidWidth, normalizeWidthMode } = require(getResourcePath('src/shared/editor-layout.js')) as typeof import('../../src/shared/editor-layout');
+const { widthModes, isValidWidth, normalizeWidthMode, alignments, normalizeAlignment } = require(getResourcePath('src/shared/editor-layout.js')) as typeof import('../../src/shared/editor-layout');
 import { buildMenu } from './menu';
 import { setupUpdateChecker, checkForUpdates } from './updater';
 import { showLinkDialog } from './link-dialog';
@@ -106,6 +106,7 @@ function createWindow(filePath?: string): BrowserWindow {
             fontSize: settings.fontSize,
             editorWidthMode: settings.editorWidthMode,
             editorMaxWidth: settings.editorMaxWidth,
+            editorAlignment: settings.editorAlignment,
             toolbarMode: settings.toolbarMode,
             tableToolbarPosition: settings.tableToolbarPosition,
             documentBaseUri: `file://${docDir}/`,
@@ -314,23 +315,26 @@ ipcMain.on('settings-save', async (event, key: string, value: unknown) => {
         }
         return;
     }
-    if (key === 'editorWidthMode' || key === 'editorMaxWidth') {
-        if (key === 'editorWidthMode' ? !widthModes.includes(value as any) : !isValidWidth(value)) {
-            settingsManager.refreshSetting(key, getI18nMessages().editorWidthInvalid);
+    if (key === 'editorWidthMode' || key === 'editorMaxWidth' || key === 'editorAlignment') {
+        const valid = key === 'editorWidthMode' ? widthModes.some(mode => mode === value) :
+            key === 'editorAlignment' ? alignments.some(alignment => alignment === value) : isValidWidth(value);
+        if (!valid) {
+            settingsManager.refreshSetting(key, getI18nMessages()[key === 'editorAlignment' ? 'editorAlignmentInvalid' : 'editorWidthInvalid']);
             return;
         }
         try {
             if (key === 'editorWidthMode') settingsManager.set(key, normalizeWidthMode(value));
+            else if (key === 'editorAlignment') settingsManager.set(key, normalizeAlignment(value));
             else settingsManager.set(key, value as number);
         } catch {
-            settingsManager.refreshSetting(key, getI18nMessages().editorWidthSaveFailed);
+            settingsManager.refreshSetting(key, getI18nMessages()[key === 'editorAlignment' ? 'editorAlignmentSaveFailed' : 'editorWidthSaveFailed']);
             return;
         }
         settingsManager.refreshSetting(key);
         const settings = settingsManager.getAll();
         for (const [win] of windows) {
             if (!win.isDestroyed()) win.webContents.send('host-message', { type: 'editorWidth',
-                mode: settings.editorWidthMode, maxWidth: settings.editorMaxWidth });
+                mode: settings.editorWidthMode, maxWidth: settings.editorMaxWidth, alignment: settings.editorAlignment });
         }
         return;
     }

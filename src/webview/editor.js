@@ -25,10 +25,11 @@
     const editorWrapper = document.getElementById('editorWrapper');
     let editorRenderRevision = 0;
 
-    function applyEditorWidth(mode, width) {
+    function applyEditorWidth(mode, width, alignment = document.documentElement.dataset.editorAlignment) {
         const layout = window.BinaryEditorLayout;
         const preference = layout.normalizeWidthMode(mode);
         const maximum = layout.normalizeMaxWidth(width);
+        const placement = layout.normalizeAlignment(alignment);
         const bounds = editorWrapper.getBoundingClientRect();
         const selection = window.getSelection();
         const range = selection?.rangeCount && editor.contains(selection.anchorNode) ? selection.getRangeAt(0) : null;
@@ -38,9 +39,12 @@
         const anchorTop = anchor?.getBoundingClientRect().top;
         document.documentElement.dataset.editorWidthMode = preference;
         document.documentElement.dataset.editorMaxWidth = String(maximum);
+        document.documentElement.dataset.editorAlignment = placement;
         // Set only the live editor. Source and detached export preparation keep
         // their own layout, and no editable nodes or undo snapshots are replaced.
         editor.style.maxWidth = preference === 'full' ? 'none' : (preference === 'custom' ? maximum : layout.defaultWidth) + 'px';
+        editor.style.marginLeft = placement === 'left' ? '0' : 'auto';
+        editor.style.marginRight = placement === 'right' ? '0' : 'auto';
         if (keepCaret) editorWrapper.scrollTop += range.getBoundingClientRect().top - caretBefore.top;
         else if (anchor && anchorTop !== undefined) editorWrapper.scrollTop += anchor.getBoundingClientRect().top - anchorTop;
     }
@@ -4198,6 +4202,26 @@
     }
     
     // Show language selector dropdown
+    function positionLanguageSelector() {
+        const selector = document.querySelector('.lang-selector');
+        const anchor = selector?.languageAnchor;
+        if (!anchor) return;
+        if (!anchor.isConnected || !anchor.getClientRects().length) { selector.remove(); return; }
+        const rect = anchor.getBoundingClientRect();
+        const below = window.innerHeight - rect.bottom - 8;
+        const above = rect.top - 8;
+        const upward = below < 250 && above > below;
+        selector.style.maxHeight = Math.max(0, Math.min(250, upward ? above : below)) + 'px';
+        selector.style.maxWidth = Math.max(0, window.innerWidth - 8) + 'px';
+        selector.style.minWidth = Math.min(140, Math.max(0, window.innerWidth - 8)) + 'px';
+        selector.style.top = upward ? 'auto' : Math.max(4, rect.bottom + 4) + 'px';
+        selector.style.bottom = upward ? Math.max(4, window.innerHeight - rect.top + 4) + 'px' : 'auto';
+        selector.style.left = Math.max(4, Math.min(rect.left, window.innerWidth - selector.offsetWidth - 4)) + 'px';
+    }
+    window.addEventListener('resize', positionLanguageSelector);
+    editorWrapper.addEventListener('scroll', positionLanguageSelector);
+    new ResizeObserver(positionLanguageSelector).observe(editorWrapper);
+
     function showLanguageSelector(pre, langTag) {
         // Remove existing selector
         const existing = document.querySelector('.lang-selector');
@@ -4237,23 +4261,9 @@
         // Append to body for fixed positioning
         document.body.appendChild(selector);
         
-        // Position below the language tag
-        const rect = langTag.getBoundingClientRect();
-        const selectorHeight = 250; // max-height
-        const viewportHeight = window.innerHeight;
-        
-        // Check if there's enough space below
-        if (rect.bottom + selectorHeight > viewportHeight) {
-            // Show above the tag
-            selector.style.bottom = (viewportHeight - rect.top + 4) + 'px';
-            selector.style.top = 'auto';
-        } else {
-            // Show below the tag
-            selector.style.top = (rect.bottom + 4) + 'px';
-            selector.style.bottom = 'auto';
-        }
-        selector.style.left = rect.left + 'px';
-        
+        selector.languageAnchor = langTag;
+        positionLanguageSelector();
+
         // Close on click outside
         const closeHandler = (e) => {
             if (!selector.contains(e.target) && e.target !== langTag) {
@@ -13986,7 +13996,8 @@
     // Handle messages from host (VSCode / Electron / test)
     host.onMessage(function(message) {
         if (message.type === 'editorWidth') {
-            applyEditorWidth(message.mode, message.maxWidth);
+            applyEditorWidth(message.mode, message.maxWidth, message.alignment);
+            positionLanguageSelector();
             return;
         }
         if (message.type === 'tableToolbarPositionError') {

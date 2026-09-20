@@ -305,6 +305,21 @@
           "minimum": 320,
           "maximum": 4000,
           "description": "%config.editorMaxWidth.description%"
+        },
+        "binary-markdown.editorAlignment": {
+          "type": "string",
+          "enum": [
+            "left",
+            "center",
+            "right"
+          ],
+          "default": "center",
+          "description": "%config.editorAlignment.description%",
+          "enumDescriptions": [
+            "%config.editorAlignment.left%",
+            "%config.editorAlignment.center%",
+            "%config.editorAlignment.right%"
+          ]
         }
       }
     },
