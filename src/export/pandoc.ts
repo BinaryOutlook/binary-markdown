@@ -175,7 +175,25 @@ export async function convertPandoc(
             checkCancelled(operations.signal);
             if (Array.isArray(value)) {
                 const output: Json[] = [];
-                for (const child of value) { output.push(await transform(child)); }
+                // CommonMark keeps inline HTML as raw nodes. Pair only the
+                // editor's attribute-free underline tags within this inline
+                // sequence; code, escaped examples and other HTML retain their
+                // existing conversion/fallback behavior.
+                const openings: number[] = [];
+                const pairs = new Map<number, number>();
+                value.forEach((child, index) => {
+                    const inline = node(child);
+                    if (inline?.t !== 'RawInline' || !Array.isArray(inline.c) || inline.c[0] !== 'html') { return; }
+                    if (/^<u>$/i.test(String(inline.c[1]))) { openings.push(index); }
+                    else if (/^<\/u>$/i.test(String(inline.c[1])) && openings.length) { pairs.set(openings.pop()!, index); }
+                });
+                for (let index = 0; index < value.length; index++) {
+                    const closing = pairs.get(index);
+                    if (closing !== undefined) {
+                        output.push({ t: 'Underline', c: await transform(value.slice(index + 1, closing)) });
+                        index = closing;
+                    } else { output.push(await transform(value[index])); }
+                }
                 return output;
             }
             if (!value || typeof value !== 'object') { return value; }

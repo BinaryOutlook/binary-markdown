@@ -14,7 +14,7 @@ Select ordinary text and choose **Underline**, use `Ctrl+U` (`Cmd+U` on macOS), 
 
 Underline is saved as `<u>text</u>`. The visual editor recognizes paired, attribute-free `<u>` tags and supports combinations with bold, italic, strikethrough, and links in paragraphs, lists, quotes, and table cells. Formatting across paragraph or quote-line boundaries produces balanced inline wrappers for each source line. Arbitrary HTML attributes and unrelated HTML are not activated by this feature.
 
-Code spans, code blocks, equations, and generated document blocks cannot be underlined through the command. To show a literal example, use code such as `` `<u>text</u>` `` or escape the opening angle brackets as `\<u>text\</u>`. Other Markdown readers need support for this inline HTML representation to display underline. Export compatibility is tracked separately in [issue #40](https://github.com/BinaryOutlook/binary-markdown/issues/40); editor support alone does not establish export-reader support.
+Code spans, code blocks, equations, and generated document blocks cannot be underlined through the command. To show a literal example, use code such as `` `<u>text</u>` `` or escape the opening angle brackets as `\<u>text\</u>`. Other Markdown readers need support for this inline HTML representation to display underline. See [underlined text in exports](../media/export-help.md#underlined-text) for the existing four export formats and reader limitations.
 
 ## Insert menu
 

@@ -327,7 +327,7 @@ async function run(settings, owner) {
         fs.writeFileSync(report, JSON.stringify({ harness: harnessIdentity(), host: receipt(owner), packageSha256: hash(fs.readFileSync(settings.package)), receipts }, null, 2));
         console.log(name, JSON.stringify(details));
     };
-    const available = ['identity', 'filesystem', 'formats', 'saves', 'edges', 'ui', 'equations', 'pdf-background', 'selection', 'immutable', 'offline', 'document-aux', 'links', 'codeblocks', 'table-placement', 'table-content', 'table-row', 'text-toolbar', 'insert-menu', 'underline', 'blockquotes'];
+    const available = ['identity', 'filesystem', 'formats', 'saves', 'edges', 'ui', 'equations', 'pdf-background', 'selection', 'immutable', 'offline', 'document-aux', 'links', 'codeblocks', 'table-placement', 'table-content', 'table-row', 'text-toolbar', 'insert-menu', 'underline', 'underline-exports', 'blockquotes'];
     const groups = settings.suite === 'all' ? available : [settings.suite];
     assert.ok(groups.every(value => available.includes(value)), 'Suite must be all, ' + available.join(', '));
     const htmlExports = [];
@@ -507,6 +507,7 @@ async function run(settings, owner) {
         if (groups.includes('table-row')) await tableRowCase(h, owner, record);
         if (groups.includes('insert-menu')) await insertMenuCase(h, owner, record);
         if (groups.includes('underline')) await underlineCase(h, owner, record);
+        if (groups.includes('underline-exports')) await underlineExportCase(h, owner, record);
         if (groups.includes('text-toolbar')) await textToolbarCase(h, owner, record);
         if (groups.includes('equations')) await equationCases(h, owner, record);
         if (groups.includes('links')) await linkCases(h, owner, record);
@@ -828,6 +829,45 @@ async function underlineCase(h, owner, record) {
         connection?.close();
         await h.driver({ action: 'config', key: 'toolbarMode', scope: 'workspace', value: previous.toolbarModeScopes.workspace ?? null });
     }
+}
+
+async function underlineExportCase(h, owner, record) {
+    const { JSDOM } = require('jsdom');
+    const file = 'underline-export.md', filePath = path.join(owner.workspace, file);
+    const source = fs.readFileSync(filePath, 'utf8');
+    let connection = await h.open(file);
+    try {
+        assert.equal(await connection.evaluate('document.querySelectorAll("#editor u").length'), 7);
+        await h.sourceMode(connection);
+        assert.equal(await connection.evaluate('document.getElementById("sourceEditor").value'), source);
+        await h.driver({ action: 'save' });
+        assert.equal(fs.readFileSync(filePath, 'utf8'), source);
+        connection.close(); connection = null;
+        await h.driver({ action: 'close' }); connection = await h.open(file);
+        const before = await connection.evaluate('document.getElementById("editor").innerHTML');
+        for (const format of ['html', 'pdf', 'docx', 'epub']) {
+            const result = await h.exportFile(connection, file, format);
+            let text;
+            if (format === 'pdf') {
+                text = execFileSync(process.env.EXPORT_PDFTOTEXT_PATH || 'pdftotext', [result.outputPath, '-'], { encoding: 'utf8' });
+            } else if (format === 'docx') {
+                const document = new JSDOM(archiveText(result.outputPath, 'word/document.xml'), { contentType: 'text/xml' }).window.document;
+                assert.ok(document.getElementsByTagName('w:u').length >= 9, 'Word output contains native underline runs');
+                text = [...document.getElementsByTagName('w:t')].map(node => node.textContent).join('');
+            } else {
+                const html = format === 'html' ? fs.readFileSync(result.outputPath, 'utf8') : archiveText(result.outputPath, '*.xhtml');
+                const document = new JSDOM(html).window.document;
+                assert.equal(document.querySelectorAll('u, .underline').length, 7);
+                assert.equal(document.querySelector('td u, td .underline').textContent, 'Table cell');
+                text = document.body.textContent;
+            }
+            const escaped = ['html', 'pdf'].includes(format) ? String.raw`\<u>escaped example\</u>` : '<u>escaped example</u>';
+            for (const literal of ['<u>inline example</u>', escaped, '<u>fenced example</u>', 'UNDERLINE-END-MARKER']) assert.ok(text.includes(literal), format + ': ' + literal);
+            assert.equal(fs.readFileSync(filePath, 'utf8'), source);
+            assert.equal(await connection.evaluate('document.getElementById("editor").innerHTML'), before);
+            record('underline-export', { format, outputPath: result.outputPath, sourceUnchanged: true, savedAndReopened: true, literalMarkupRetained: true, structuralCheckOnly: true });
+        }
+    } finally { connection?.close(); }
 }
 
 async function insertMenuCase(h, owner, record) {

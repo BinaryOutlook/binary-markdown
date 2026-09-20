@@ -11,7 +11,7 @@ Use a workspace you trust and a local folder you can write to. The source must h
 ## Export a saved document
 
 1. Open the intended document in Binary Markdown and save it.
-2. Open the sharing-arrow **Export** menu beside the VS Code-logo button.
+2. Open the sharing-arrow **Export** menu. At narrow widths, find it under **More toolbar actions**.
 3. Choose **HTML**, **PDF**, **DOCX** (Word), or **EPUB**.
 4. Wait for completion, then open the output path shown in the result. Review any warnings about content that needed a fallback.
 
@@ -54,6 +54,14 @@ The setting is captured when export begins. Changing it does not reload the edit
 DOCX code remains editable and uses a light background, border and a language tab attached below the block. Common language aliases use readable names; unknown names remain literal text, and unlabeled blocks receive no invented label. PDF tabs use the export appearance. HTML, EPUB and inline code keep their existing behavior.
 
 Long code blocks can span pages. In DOCX, keeping the label attached can move a long block to a fresh page and leave space on the previous page. Reader-specific pagination and final visual appearance require inspection in your target reader.
+
+## Underlined text
+
+The editor's paired, attribute-free `<u>text</u>` representation is supported in HTML, PDF, DOCX, and EPUB. HTML/PDF retain the rendered underline. DOCX uses native underlined text runs, and EPUB uses semantic underline markup, preserving supported bold, italic, strikethrough, links, lists, quotations, and table cells. Code and escaped literal examples remain literal. Other raw HTML, attributed tags, and unmatched tags keep their existing fallback behavior; this does not enable arbitrary HTML.
+
+HTML/PDF retain the editor's existing visible backslashes in escaped tag examples such as `\<u>text\</u>`. DOCX/EPUB remove those Markdown escapes while keeping the tags literal. Use code spans or fences when you need consistent literal examples across formats.
+
+Conversion checks verify structure and source preservation. Appearance, interactive editing, copying, and accessibility can vary by reader; inspect the exported document in the reader you use. In particular, converter/XML checks alone do not establish Microsoft Word or a dedicated EPUB reader's behavior.
 
 ## Output and progress
 

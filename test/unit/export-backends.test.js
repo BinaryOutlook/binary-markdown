@@ -128,6 +128,72 @@ test('failed Pandoc conversion removes its owned intermediate directory', async 
 
 const realTools = process.env.EXPORT_REAL_TOOLS === '1';
 
+test('paired bare underline becomes native semantics without activating other raw content', async t => {
+    const directory = await temporary(t);
+    const receipt = path.join(directory, 'writer.json');
+    const raw = text => ({ t: 'RawInline', c: ['html', text] });
+    const word = text => ({ t: 'Str', c: text });
+    const code = { t: 'Code', c: [['', [], []], '<u>literal</u>'] };
+    const ast = { 'pandoc-api-version': [1, 23, 1, 1], meta: {}, blocks: [
+        { t: 'Para', c: [raw('<U>'), word('outer'), raw('<u>'), { t: 'Strong', c: [word('nested')] }, raw('</u>'), raw('</U>'), code] },
+        { t: 'Para', c: [raw('<u title="unrelated">'), word('attributes'), raw('</u>')] },
+        { t: 'Para', c: [raw('<u>'), word('unmatched')] },
+        { t: 'Para', c: [raw('</u>'), raw('<script>'), word('visible source'), raw('</script>')] }
+    ] };
+    const executablePath = await executable(directory, 'ast-pandoc', receipt, ast);
+    for (const format of ['docx', 'epub']) {
+        const ops = operations();
+        await convertPandoc(format, { sourcePath: path.join(directory, 'source.md'), markdown: 'fixture', version: 1, theme: 'github', fontSize: 16 },
+            { html: '', theme: 'github', fontSize: 16, diagrams: [], warnings: [] }, executablePath, ops);
+        const output = JSON.parse(await fs.readFile(receipt, 'utf8'));
+        assert.deepEqual(output.ast.blocks[0].c, [{ t: 'Underline', c: [word('outer'), { t: 'Underline', c: [{ t: 'Strong', c: [word('nested')] }] }] }, code]);
+        assert.equal(output.ast.blocks[1].c[0].t, 'Code');
+        assert.equal(output.ast.blocks[2].c[0].t, 'Code');
+        assert.equal(output.ast.blocks[3].c[1].t, 'Code');
+        assert.ok(ops.warnings.some(w => w.code === 'raw-content-fallback'));
+        assert.ok(output.args.includes('--sandbox'));
+    }
+});
+
+test('real DOCX and EPUB preserve underline, nested formatting, links and literal examples', { skip: !realTools }, async t => {
+    const directory = await temporary(t);
+    const status = await discoverTool('pandoc', process.env.EXPORT_PANDOC_PATH || '');
+    assert.equal(status.available, true, status.error);
+    const source = await fs.readFile(path.join(__dirname, '../fixtures/exports/underline-export.md'), 'utf8');
+    const sourcePath = path.join(directory, 'underline.md'); await fs.writeFile(sourcePath, source);
+    const saved = { sourcePath, markdown: source, version: 1, theme: 'github', fontSize: 16 };
+    const expected = ['Plain café 中文', 'Bold', 'italic', 'struck', 'Linked label', 'Outer link', 'List item', 'Quoted text', 'Table cell'];
+    for (const format of ['docx', 'epub']) {
+        const ops = operations();
+        const entries = archiveEntries(await convertPandoc(format, saved, { html: '', theme: 'github', fontSize: 16, diagrams: [], warnings: [] }, status.path, ops));
+        let underlined, literal;
+        if (format === 'docx') {
+            const document = xmlDocument(entries.get('word/document.xml'));
+            const runs = wordElements(document, 'r').filter(run => wordElements(run, 'u').length);
+            underlined = runs.map(wordText).join('');
+            literal = wordText(document);
+            assert.ok(runs.some(run => wordText(run) === 'Bold' && wordElements(run, 'b').length));
+            assert.ok(runs.some(run => wordText(run) === 'italic' && wordElements(run, 'i').length));
+            assert.ok(runs.some(run => wordText(run) === 'struck' && wordElements(run, 'strike').length));
+            assert.ok(wordElements(document, 'tbl').length);
+            assert.match(entries.get('word/_rels/document.xml.rels').toString(), /https:\/\/example\.com\/reference/);
+        } else {
+            const html = [...entries].filter(([name]) => name.endsWith('.xhtml')).map(([, bytes]) => bytes.toString()).join('\n');
+            const document = new JSDOM(html).window.document;
+            underlined = [...document.querySelectorAll('u, .underline')].map(el => el.textContent).join('');
+            literal = document.body.textContent;
+            assert.ok(document.querySelector('a[href="https://example.com/reference"] u, a[href="https://example.com/reference"] .underline'));
+            assert.ok(document.querySelector('table'));
+        }
+        for (const text of expected) assert.ok(underlined.includes(text), format + ' underline: ' + text);
+        for (const text of ['<u>inline example</u>', '<u>escaped example</u>', '<u>fenced example</u>', 'UNDERLINE-END-MARKER']) assert.ok(literal.includes(text), format + ' literal: ' + text);
+        assert.ok(!underlined.includes('example'), 'Literal markup examples are not underlined');
+        assert.deepEqual(ops.warnings, []);
+    }
+    assert.equal(await fs.readFile(sourcePath, 'utf8'), source);
+    assert.equal(saved.markdown, source);
+});
+
 test('real Pandoc exports all supported equation delimiters as native math without changing source', { skip: !realTools }, async t => {
     const directory = await temporary(t);
     const status = await discoverTool('pandoc', process.env.EXPORT_PANDOC_PATH || '');
