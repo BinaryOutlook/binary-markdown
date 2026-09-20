@@ -541,6 +541,21 @@
         'htm': 'html', 'yml': 'yaml', 'md': 'markdown', 'c++': 'cpp', 'c#': 'csharp',
         'cs': 'csharp', 'rb': 'ruby', 'docker': 'dockerfile', 'text': 'plaintext', 'txt': 'plaintext'
     };
+
+    const LANGUAGE_NAMES = {
+        javascript: 'JavaScript', typescript: 'TypeScript', python: 'Python', json: 'JSON',
+        bash: 'Bash', shell: 'Shell', css: 'CSS', html: 'HTML', xml: 'XML', sql: 'SQL',
+        java: 'Java', go: 'Go', rust: 'Rust', yaml: 'YAML', markdown: 'Markdown', c: 'C',
+        cpp: 'C++', csharp: 'C#', php: 'PHP', ruby: 'Ruby', swift: 'Swift', kotlin: 'Kotlin',
+        dockerfile: 'Dockerfile'
+    };
+
+    function codeLanguageName(id) {
+        if (id === 'plaintext') return i18n.languagePickerPlainText || 'Plain text';
+        if (id === 'math') return i18n.languagePickerMath || 'Math equation';
+        if (id === 'mermaid') return i18n.languagePickerMermaid || 'Mermaid diagram';
+        return LANGUAGE_NAMES[id] || id;
+    }
     
     // Pre-compiled regex patterns for performance (avoid creating regex objects on every call)
     const REGEX = {
@@ -1805,6 +1820,7 @@
 
     function renderFromMarkdown() {
         closeInsertMenu(false);
+        closeLanguageSelector();
         editorRenderRevision++;
         if (tableControls) tableControls.clear();
         // Remove IMAGE_DIR and FORCE_RELATIVE_PATH directives before rendering (they're stored in variables)
@@ -3672,16 +3688,25 @@
         header.setAttribute('contenteditable', 'false');
         
         const lang = pre.getAttribute('data-lang') || 'plaintext';
-        const langTag = document.createElement('span');
+        const langTag = document.createElement('button');
+        langTag.type = 'button';
         langTag.className = 'code-lang-tag';
         langTag.textContent = lang || 'plaintext';
+        langTag.title = langTag.textContent;
         langTag.setAttribute('contenteditable', 'false');
+        langTag.setAttribute('aria-haspopup', 'listbox');
+        langTag.setAttribute('aria-expanded', 'false');
+        langTag.setAttribute('aria-label', (i18n.languagePickerLabel || 'Code language') + ': ' + langTag.textContent);
+        langTag.addEventListener('mousedown', e => e.preventDefault());
+        langTag.addEventListener('keydown', event => {
+            // Button activation must not also run the editable document's Enter handler.
+            if (!event.ctrlKey && !event.metaKey) event.stopPropagation();
+            if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+                event.preventDefault(); showLanguageSelector(pre, langTag);
+            }
+        });
         langTag.addEventListener('click', (e) => {
             e.stopPropagation();
-            // Switch to display mode if in edit mode
-            if (pre.getAttribute('data-mode') === 'edit') {
-                enterDisplayMode(pre);
-            }
             showLanguageSelector(pre, langTag);
         });
         
@@ -3926,7 +3951,8 @@
         const code = pre.querySelector('code');
         if (!code) return;
 
-        const codeContent = getCodePlainText(code);
+        const empty = code.childNodes.length === 1 && code.firstChild.nodeName === 'BR';
+        const codeContent = empty ? '' : stripTrailingNewlines(getCodePlainText(code), code, pre);
         const wrapperClass = type + '-wrapper';
         const displayClass = type === 'mermaid' ? 'mermaid-diagram' : 'math-display';
         const renderFn = type === 'mermaid' ? renderMermaidDiagram : renderMathBlock;
@@ -3941,10 +3967,11 @@
         newPre.setAttribute('contenteditable', 'true');
 
         const newCode = document.createElement('code');
-        if (!codeContent || codeContent === '' || codeContent === '\n') {
+        if (!codeContent) {
             newCode.innerHTML = '<br>';
         } else if (codeContent.endsWith('\n')) {
             newCode.innerHTML = escapeHtml(codeContent).replace(/\n/g, '<br>') + '<br>';
+            newCode.setAttribute('data-trailing-br', 'true');
         } else {
             newCode.innerHTML = escapeHtml(codeContent).replace(/\n/g, '<br>');
         }
@@ -4246,21 +4273,26 @@
         return patterns;
     }
     
-    // Show language selector dropdown
+    function closeLanguageSelector(restoreFocus = false) {
+        document.querySelector('.lang-selector')?.closePicker?.(restoreFocus);
+    }
+
+    // The input remains visible while its result list scrolls in short panes.
     function positionLanguageSelector() {
         const selector = document.querySelector('.lang-selector');
         const anchor = selector?.languageAnchor;
         if (!anchor) return;
-        if (!anchor.isConnected || !anchor.getClientRects().length) { selector.remove(); return; }
+        if (!anchor.isConnected || !anchor.getClientRects().length) { closeLanguageSelector(); return; }
         const rect = anchor.getBoundingClientRect();
+        if (rect.bottom < 0 || rect.top > window.innerHeight) { closeLanguageSelector(); return; }
         const below = window.innerHeight - rect.bottom - 8;
         const above = rect.top - 8;
         const upward = below < 250 && above > below;
-        selector.style.maxHeight = Math.max(0, Math.min(250, upward ? above : below)) + 'px';
-        selector.style.maxWidth = Math.max(0, window.innerWidth - 8) + 'px';
-        selector.style.minWidth = Math.min(140, Math.max(0, window.innerWidth - 8)) + 'px';
-        selector.style.top = upward ? 'auto' : Math.max(4, rect.bottom + 4) + 'px';
-        selector.style.bottom = upward ? Math.max(4, window.innerHeight - rect.top + 4) + 'px' : 'auto';
+        const compact = Math.max(above, below) < 120;
+        selector.style.maxHeight = Math.max(0, Math.min(300, compact ? window.innerHeight - 8 : upward ? above : below)) + 'px';
+        selector.style.width = Math.min(260, Math.max(0, window.innerWidth - 8)) + 'px';
+        selector.style.top = compact ? '4px' : upward ? 'auto' : Math.max(4, rect.bottom + 4) + 'px';
+        selector.style.bottom = compact || !upward ? 'auto' : Math.max(4, window.innerHeight - rect.top + 4) + 'px';
         selector.style.left = Math.max(4, Math.min(rect.left, window.innerWidth - selector.offsetWidth - 4)) + 'px';
     }
     window.addEventListener('resize', positionLanguageSelector);
@@ -4268,55 +4300,109 @@
     new ResizeObserver(positionLanguageSelector).observe(editorWrapper);
 
     function showLanguageSelector(pre, langTag) {
-        // Remove existing selector
-        const existing = document.querySelector('.lang-selector');
-        if (existing) existing.remove();
-        
+        closeLanguageSelector();
+        const selection = window.getSelection();
+        const savedRange = selection.rangeCount && editor.contains(selection.getRangeAt(0).commonAncestorContainer)
+            ? selection.getRangeAt(0).cloneRange() : null;
+        const wasEditing = pre.getAttribute('data-mode') === 'edit';
+        const current = pre.getAttribute('data-lang') || 'plaintext';
         const selector = document.createElement('div');
         selector.className = 'lang-selector';
-        
-        SUPPORTED_LANGUAGES.forEach(lang => {
-            const item = document.createElement('div');
-            item.className = 'lang-selector-item';
-            item.textContent = lang;
-            item.addEventListener('click', () => {
-                selector.remove();
-                
-                // Special handling for mermaid/math: convert to wrapper block
-                if (lang === 'mermaid') {
-                    convertToSpecialBlock(pre, 'mermaid');
-                    return;
+        const input = document.createElement('input');
+        input.type = 'text'; input.className = 'lang-selector-search';
+        input.autocomplete = 'off'; input.spellcheck = false;
+        input.placeholder = i18n.languagePickerPlaceholder || 'Search names or aliases';
+        input.setAttribute('role', 'combobox');
+        input.setAttribute('aria-label', i18n.languagePickerLabel || 'Code language');
+        input.setAttribute('aria-autocomplete', 'list'); input.setAttribute('aria-expanded', 'true');
+        input.setAttribute('aria-controls', 'codeLanguageOptions');
+        const currentLabel = document.createElement('div'); currentLabel.className = 'lang-selector-current';
+        currentLabel.textContent = (i18n.languagePickerCurrent || 'Current language') + ': ' + current;
+        currentLabel.title = currentLabel.textContent;
+        const list = document.createElement('div'); list.className = 'lang-selector-options';
+        list.id = 'codeLanguageOptions'; list.setAttribute('role', 'listbox');
+        list.setAttribute('aria-label', i18n.languagePickerLabel || 'Code language');
+        const empty = document.createElement('div'); empty.className = 'lang-selector-empty'; empty.setAttribute('role', 'status');
+        empty.textContent = i18n.languagePickerNoResults || 'No matching languages.';
+        selector.append(input, currentLabel, list, empty);
+        let results = [], active = -1, closed = false;
+        const observer = new MutationObserver(() => { if (!editor.contains(pre)) closeLanguageSelector(); });
+        const outside = event => { if (!selector.contains(event.target) && event.target !== langTag) closeLanguageSelector(); };
+        selector.closePicker = restoreFocus => {
+            if (closed) return;
+            closed = true; observer.disconnect(); document.removeEventListener('pointerdown', outside, true);
+            selector.remove(); langTag.setAttribute('aria-expanded', 'false');
+            if (restoreFocus && editor.contains(pre)) {
+                const code = pre.querySelector('code');
+                const target = wasEditing && savedRange && code.contains(savedRange.commonAncestorContainer) ? code : langTag;
+                target.focus({ preventScroll: true });
+                if (savedRange?.startContainer.isConnected && savedRange.endContainer.isConnected) {
+                    selection.removeAllRanges(); selection.addRange(savedRange);
                 }
-                if (lang === 'math') {
-                    convertToSpecialBlock(pre, 'math');
-                    return;
-                }
-                
-                pre.setAttribute('data-lang', lang);
-                langTag.textContent = lang;
-                // Re-apply highlighting with new language
-                if (pre.getAttribute('data-mode') === 'display') {
-                    applyHighlighting(pre);
-                }
-                syncMarkdownSync();
-            });
-            selector.appendChild(item);
-        });
-        
-        // Append to body for fixed positioning
-        document.body.appendChild(selector);
-        
-        selector.languageAnchor = langTag;
-        positionLanguageSelector();
-
-        // Close on click outside
-        const closeHandler = (e) => {
-            if (!selector.contains(e.target) && e.target !== langTag) {
-                selector.remove();
-                document.removeEventListener('click', closeHandler);
             }
         };
-        setTimeout(() => document.addEventListener('click', closeHandler), 0);
+        const activate = index => {
+            active = index;
+            for (let i = 0; i < list.children.length; i++) list.children[i].setAttribute('aria-selected', String(i === active));
+            const option = list.children[active];
+            if (option) { input.setAttribute('aria-activedescendant', option.id); option.scrollIntoView({ block: 'nearest' }); }
+            else input.removeAttribute('aria-activedescendant');
+        };
+        const choose = id => {
+            if (isSourceMode || !editor.contains(pre)) { closeLanguageSelector(); return; }
+            closeLanguageSelector(true);
+            if (id === current) return;
+            // Capture the latest code edit, then make the language choice one undo step.
+            markdown = htmlToMarkdown(); undoManager.saveSnapshot();
+            if (id === 'mermaid' || id === 'math') {
+                convertToSpecialBlock(pre, id);
+                editor.focus({ preventScroll: true });
+                return;
+            }
+            pre.setAttribute('data-lang', id); langTag.textContent = id; langTag.title = id;
+            langTag.setAttribute('aria-label', (i18n.languagePickerLabel || 'Code language') + ': ' + id);
+            if (pre.getAttribute('data-mode') === 'display') applyHighlighting(pre);
+            syncMarkdownSync();
+        };
+        const render = () => {
+            const query = input.value.trim().toLowerCase();
+            results = SUPPORTED_LANGUAGES.map(id => {
+                const terms = [id, codeLanguageName(id).toLowerCase(), ...Object.keys(LANGUAGE_ALIASES).filter(alias => LANGUAGE_ALIASES[alias] === id)];
+                const rank = !query ? 0 : terms.some(term => term === query) ? 0 : terms.some(term => term.startsWith(query)) ? 1 : terms.some(term => term.includes(query)) ? 2 : 3;
+                return { id, rank };
+            }).filter(item => item.rank < 3).sort((a, b) => a.rank - b.rank).map(item => item.id);
+            list.replaceChildren();
+            for (const id of results) {
+                const item = document.createElement('div'); item.className = 'lang-selector-item';
+                item.id = 'codeLanguageOption-' + id; item.dataset.language = id; item.setAttribute('role', 'option');
+                const name = document.createElement('span'); name.textContent = codeLanguageName(id);
+                const identifier = document.createElement('small'); identifier.textContent = id;
+                item.append(name, identifier);
+                item.addEventListener('mousedown', event => event.preventDefault());
+                item.addEventListener('click', () => choose(id)); list.appendChild(item);
+            }
+            empty.hidden = results.length > 0;
+            activate(query ? (results.length ? 0 : -1) : Math.max(0, results.indexOf(LANGUAGE_ALIASES[current.toLowerCase()] || current.toLowerCase())));
+            positionLanguageSelector();
+        };
+        input.addEventListener('input', render);
+        selector.addEventListener('keydown', event => {
+            event.stopPropagation();
+            if (event.isComposing) return;
+            if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+                event.preventDefault();
+                if (results.length) activate((active + (event.key === 'ArrowDown' ? 1 : -1) + results.length) % results.length);
+            } else if (event.key === 'Enter') {
+                event.preventDefault(); if (results[active]) choose(results[active]);
+            } else if (event.key === 'Escape') {
+                event.preventDefault(); closeLanguageSelector(true);
+            } else if (event.key === 'Tab') closeLanguageSelector(true);
+        });
+        selector.languageAnchor = langTag;
+        document.body.appendChild(selector); langTag.setAttribute('aria-expanded', 'true');
+        observer.observe(editor, { childList: true, subtree: true });
+        document.addEventListener('pointerdown', outside, true);
+        render(); input.focus({ preventScroll: true });
     }
     
     // Copy code block content to clipboard
@@ -12946,6 +13032,7 @@
 
     function toggleSourceMode() {
         closeInsertMenu(false);
+        closeLanguageSelector();
         hideTableToolbar();
         // Read while the current mode still owns the latest edits. The host
         // command can arrive before blur or the delayed visual sync runs.

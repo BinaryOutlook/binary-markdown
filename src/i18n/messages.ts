@@ -3,6 +3,14 @@ import * as path from 'path';
 
 // Type definitions
 export interface Messages {
+  languagePickerLabel: string;
+  languagePickerPlaceholder: string;
+  languagePickerNoResults: string;
+  languagePickerCurrent: string;
+  languagePickerPlainText: string;
+  languagePickerMath: string;
+  languagePickerMermaid: string;
+
   openMarkdownFirst: string;
   numberOfRows: string;
   numberOfColumns: string;

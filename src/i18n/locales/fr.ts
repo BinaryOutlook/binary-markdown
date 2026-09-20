@@ -1,5 +1,12 @@
 // French messages
 export const messages = {
+  languagePickerLabel: "Langage du code",
+  languagePickerPlaceholder: "Rechercher un nom ou un alias",
+  languagePickerNoResults: "Aucun langage correspondant.",
+  languagePickerCurrent: "Langage actuel",
+  languagePickerPlainText: "Texte brut",
+  languagePickerMath: "Équation mathématique",
+  languagePickerMermaid: "Diagramme Mermaid",
   copyLinkAddress: 'Copier l’adresse du lien',
   linkUnavailable: 'Ce lien ne peut pas être ouvert dans l’espace de travail actuel.',
   linkNotFound: 'Le fichier ou le dossier lié est introuvable.',

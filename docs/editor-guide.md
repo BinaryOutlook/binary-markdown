@@ -171,6 +171,12 @@ The editor supports syntax highlighting for the following languages:
 
 **Language Aliases:** `js`→javascript, `ts`→typescript, `py`→python, `sh`→bash, `yml`→yaml, `md`→markdown, `c++`→cpp, `c#`→csharp
 
+### Search for a language
+
+Click the code block’s language button, or focus it and press Enter, Space, or an arrow key. The search field takes focus immediately. Search a readable name or alias, such as `JS`, `JavaScript`, `C++`/`cpp`, or `C#`/`csharp`. Exact matches appear before prefix and substring matches. Use Up/Down and Enter to choose; Escape cancels and restores the previous code caret or language-button focus. Tab closes the picker and continues keyboard navigation.
+
+The current identifier remains visible, including custom languages absent from the suggestions. Opening, searching, canceling, and choosing the unchanged language do not edit Markdown or create an undo step. An actual choice changes only the fence identifier and is one undoable action; code indentation, tabs, and blank lines remain intact. Choosing **Math equation** or **Mermaid diagram** explicitly converts the block to the corresponding editable preview. The search field stays above a scrolling result list in narrow or short panes.
+
 ### Display Mode / Edit Mode
 
 - **Display Mode**: Shows syntax-highlighted code with language tag and copy button

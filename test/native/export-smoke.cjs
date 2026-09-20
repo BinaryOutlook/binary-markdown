@@ -327,7 +327,7 @@ async function run(settings, owner) {
         fs.writeFileSync(report, JSON.stringify({ harness: harnessIdentity(), host: receipt(owner), packageSha256: hash(fs.readFileSync(settings.package)), receipts }, null, 2));
         console.log(name, JSON.stringify(details));
     };
-    const available = ['identity', 'filesystem', 'formats', 'saves', 'edges', 'ui', 'equations', 'pdf-background', 'selection', 'immutable', 'offline', 'document-aux', 'links', 'codeblocks', 'table-placement', 'table-content', 'table-row', 'text-toolbar', 'insert-menu', 'underline', 'underline-exports', 'editor-width', 'editor-alignment', 'width-indicators', 'blockquotes'];
+    const available = ['identity', 'filesystem', 'formats', 'saves', 'edges', 'ui', 'equations', 'pdf-background', 'selection', 'immutable', 'offline', 'document-aux', 'links', 'codeblocks', 'table-placement', 'table-content', 'table-row', 'text-toolbar', 'insert-menu', 'underline', 'underline-exports', 'editor-width', 'editor-alignment', 'width-indicators', 'language-picker', 'blockquotes'];
     const groups = settings.suite === 'all' ? available : [settings.suite];
     assert.ok(groups.every(value => available.includes(value)), 'Suite must be all, ' + available.join(', '));
     const htmlExports = [];
@@ -507,6 +507,7 @@ async function run(settings, owner) {
         if (groups.includes('table-row')) await tableRowCase(h, owner, record);
         if (groups.includes('insert-menu')) await insertMenuCase(h, owner, record);
         if (groups.includes('width-indicators')) await widthIndicatorsCase(h, owner, record);
+        if (groups.includes('language-picker')) await languagePickerCase(h, owner, record);
         if (groups.includes('editor-alignment')) await editorAlignmentCase(h, owner, record);
         if (groups.includes('editor-width')) await editorWidthCase(h, owner, record);
         if (groups.includes('underline')) await underlineCase(h, owner, record);
@@ -934,6 +935,33 @@ async function editorWidthCase(h, owner, record) {
             await h.driver({ action: 'config', key, value: previous.editorWidthScopes[key].global ?? null });
         }
     }
+}
+
+async function languagePickerCase(h, owner, record) {
+    const { source, languagePickerChecks } = require('./language-picker.cjs');
+    const { installedEditor } = require('./table-toolbar-overflow.cjs');
+    const file = 'languages.md', filePath = path.join(owner.workspace, file);
+    await h.driver({ action: 'close' }); fs.writeFileSync(filePath, source);
+    let connection = await h.open(file);
+    try {
+        let changed;
+        await h.workbench(async page => {
+            changed = await languagePickerChecks({ editor: installedEditor(connection, h), keyboard: page.keyboard, record,
+                save: async expected => {
+                    // The queued-edit/native-save overlap remains tracked by #11.
+                    await h.until(async () => (await h.driver({ action: 'inspect' })).documents.some(document => samePath(document.path, filePath) && document.text === expected), 'language choice reached host');
+                    await h.driver({ action: 'save' }); assert.equal(fs.readFileSync(filePath, 'utf8'), expected);
+                }
+            });
+        });
+        await h.sourceMode(connection);
+        assert.equal(await connection.evaluate('document.getElementById("sourceEditor").value'), changed);
+        connection.close(); connection = null;
+        await h.driver({ action: 'close' }); connection = await h.open(file);
+        assert.equal(await connection.evaluate('document.querySelector("pre").dataset.lang'), 'cpp');
+        assert.equal(fs.readFileSync(filePath, 'utf8'), changed);
+        record('language-picker-reopened', { sourceRoundTrip: true, savedLanguageAndWhitespace: true });
+    } finally { connection?.close(); }
 }
 
 async function underlineCase(h, owner, record) {

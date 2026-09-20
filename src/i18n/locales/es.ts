@@ -1,5 +1,12 @@
 // Spanish messages
 export const messages = {
+  languagePickerLabel: "Lenguaje del código",
+  languagePickerPlaceholder: "Buscar nombres o alias",
+  languagePickerNoResults: "No hay lenguajes coincidentes.",
+  languagePickerCurrent: "Lenguaje actual",
+  languagePickerPlainText: "Texto sin formato",
+  languagePickerMath: "Ecuación matemática",
+  languagePickerMermaid: "Diagrama Mermaid",
   copyLinkAddress: 'Copiar dirección del enlace',
   linkUnavailable: 'Este enlace no se puede abrir en el espacio de trabajo actual.',
   linkNotFound: 'No se encontró el archivo o la carpeta del enlace.',

@@ -1,5 +1,12 @@
 // Traditional Chinese messages
 export const messages = {
+  languagePickerLabel: "程式碼語言",
+  languagePickerPlaceholder: "搜尋名稱或別名",
+  languagePickerNoResults: "沒有符合的語言。",
+  languagePickerCurrent: "目前語言",
+  languagePickerPlainText: "純文字",
+  languagePickerMath: "數學公式",
+  languagePickerMermaid: "Mermaid 圖表",
   copyLinkAddress: '複製連結位址',
   linkUnavailable: '無法在目前的工作區中開啟此連結。',
   linkNotFound: '找不到連結指向的檔案或資料夾。',

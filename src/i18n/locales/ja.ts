@@ -1,5 +1,12 @@
 // Japanese messages
 export const messages = {
+  languagePickerLabel: "コードの言語",
+  languagePickerPlaceholder: "名前または別名で検索",
+  languagePickerNoResults: "一致する言語はありません。",
+  languagePickerCurrent: "現在の言語",
+  languagePickerPlainText: "プレーンテキスト",
+  languagePickerMath: "数式",
+  languagePickerMermaid: "Mermaid 図",
   copyLinkAddress: 'リンクのアドレスをコピー',
   linkUnavailable: '現在のワークスペースでは、このリンクを開けません。',
   linkNotFound: 'リンク先のファイルまたはフォルダーが見つかりません。',

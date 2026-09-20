@@ -1,5 +1,12 @@
 // Simplified Chinese messages
 export const messages = {
+  languagePickerLabel: "代码语言",
+  languagePickerPlaceholder: "搜索名称或别名",
+  languagePickerNoResults: "没有匹配的语言。",
+  languagePickerCurrent: "当前语言",
+  languagePickerPlainText: "纯文本",
+  languagePickerMath: "数学公式",
+  languagePickerMermaid: "Mermaid 图表",
   copyLinkAddress: '复制链接地址',
   linkUnavailable: '无法在当前工作区中打开此链接。',
   linkNotFound: '找不到链接指向的文件或文件夹。',

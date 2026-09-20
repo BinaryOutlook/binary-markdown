@@ -1,5 +1,12 @@
 // English messages
 export const messages = {
+  languagePickerLabel: "Code language",
+  languagePickerPlaceholder: "Search names or aliases",
+  languagePickerNoResults: "No matching languages.",
+  languagePickerCurrent: "Current language",
+  languagePickerPlainText: "Plain text",
+  languagePickerMath: "Math equation",
+  languagePickerMermaid: "Mermaid diagram",
   copyLinkAddress: 'Copy link address',
   linkUnavailable: 'This link cannot be opened in the current workspace.',
   linkNotFound: 'The linked file or folder could not be found.',

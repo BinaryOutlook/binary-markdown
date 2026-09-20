@@ -477,33 +477,18 @@ test.describe('《コードブロック》編集機能', () => {
         });
     });
 
-    test.describe('言語/コピーボタンクリックで描画モードに切り替え (v0.195.98)', () => {
-        test('編集モード中に言語ボタンをクリックすると描画モードに切り替わる', async ({ page }) => {
-            // パース済みHTMLを設定（編集モード）
+    test.describe('Code block header actions', () => {
+        test('language search retains the active code editing mode', async ({ page }) => {
             await page.evaluate(() => {
-                const editor = document.getElementById('editor');
-                if (!editor) return;
-                editor.innerHTML = `
-                    <pre data-lang="javascript" data-mode="edit"><code contenteditable="true">const x = 1;</code></pre>
-                `;
-                (window as any).__testApi?.setupInteractiveElements?.();
+                document.getElementById('editor')!.innerHTML = '<pre data-lang="javascript" data-mode="edit"><code contenteditable="true">const x = 1;</code></pre>';
+                (window as any).__testApi.setupInteractiveElements();
             });
-            await page.waitForTimeout(200);
-            
-            // 言語タグをクリック
-            const langTag = page.locator('.code-lang-tag').first();
-            await langTag.click();
-            await page.waitForTimeout(200);
-            
-            // 描画モードに切り替わっていることを確認
-            const result = await page.evaluate(() => {
-                const pre = document.querySelector('#editor pre');
-                return {
-                    mode: pre?.getAttribute('data-mode')
-                };
-            });
-            
-            expect(result.mode).toBe('display');
+            await page.locator('.code-lang-tag').first().click();
+            await expect(page.locator('#editor pre')).toHaveAttribute('data-mode', 'edit');
+            await expect(page.getByRole('combobox')).toBeFocused();
+            await page.keyboard.press('Escape');
+            await expect(page.locator('#editor pre')).toHaveAttribute('data-mode', 'edit');
+            await expect(page.locator('#editor pre code')).toHaveText('const x = 1;');
         });
 
         test('編集モード中にコピーボタンをクリックすると描画モードに切り替わる', async ({ page, context }) => {

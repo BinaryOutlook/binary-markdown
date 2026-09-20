@@ -67,7 +67,7 @@ test('an open language menu follows its tag through alignment and sidebar change
         }
     }
     expect(await page.evaluate(() => (window as any).htmlToMarkdown())).toBe(before);
-    await page.locator('.lang-selector-item').filter({ hasText: /^python$/ }).click();
+    await page.locator('.lang-selector-item[data-language="python"]').click();
     await expect(page.locator('#editor pre[data-lang="python"]')).toBeVisible();
 });
 

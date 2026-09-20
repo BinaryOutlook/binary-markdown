@@ -1,5 +1,12 @@
 // Korean messages
 export const messages = {
+  languagePickerLabel: "코드 언어",
+  languagePickerPlaceholder: "이름 또는 별칭 검색",
+  languagePickerNoResults: "일치하는 언어가 없습니다.",
+  languagePickerCurrent: "현재 언어",
+  languagePickerPlainText: "일반 텍스트",
+  languagePickerMath: "수식",
+  languagePickerMermaid: "Mermaid 다이어그램",
   copyLinkAddress: '링크 주소 복사',
   linkUnavailable: '현재 작업 영역에서 이 링크를 열 수 없습니다.',
   linkNotFound: '연결된 파일 또는 폴더를 찾을 수 없습니다.',
