@@ -510,7 +510,7 @@ test('real PDF adds declared-language badges after complete code and hides them 
         '<pre data-lang="rust"><code>' + long + '</code></pre><p>END_OF_PDF</p></body></html>';
     for (const showCodeLanguage of [undefined, false]) {
         const ops = operations();
-        const bytes = await convertPdf(html, status.path, ops, { showCodeLanguage });
+        const bytes = await convertPdf(html, status.path, ops, { showCodeLanguage, codeLanguagePosition: 'bottom-right' });
         const file = path.join(directory, showCodeLanguage === false ? 'hidden.pdf' : 'shown.pdf');
         await fs.writeFile(file, bytes);
         const text = (await runTool(process.env.EXPORT_PDFTOTEXT_PATH || 'pdftotext', [file, '-'])).stdout.toString();
@@ -524,6 +524,28 @@ test('real PDF adds declared-language badges after complete code and hides them 
             assert.match(text.split('\f').find(page => page.includes('CODE_MARKER_139')), /Rust/);
         }
         assert.deepEqual(ops.warnings, []);
+    }
+});
+
+test('real PDF places selectable labels at every corner and defaults to top-left', { skip: !realTools }, async t => {
+    const directory = await temporary(t);
+    const status = await discoverTool('browser', process.env.EXPORT_BROWSER_PATH || '');
+    assert.equal(status.available, true, status.error);
+    const html = '<!doctype html><html><head><style>pre{font:12px monospace;padding:8px}</style></head><body>' +
+        '<pre data-lang="js"><code>PLACEMENT_MARKER</code></pre></body></html>';
+    for (const position of [undefined, 'top-left', 'top-right', 'bottom-left', 'bottom-right']) {
+        const file = path.join(directory, (position || 'default') + '.pdf');
+        await fs.writeFile(file, await convertPdf(html, status.path, operations(), { codeLanguagePosition: position }));
+        const bbox = (await runTool(process.env.EXPORT_PDFTOTEXT_PATH || 'pdftotext', ['-bbox', file, '-'])).stdout.toString();
+        const document = xmlDocument(Buffer.from(bbox));
+        const words = [...document.getElementsByTagName('word')];
+        const label = words.find(word => word.textContent === 'JavaScript');
+        const code = words.find(word => word.textContent === 'PLACEMENT_MARKER');
+        assert.ok(label && code, 'label and code remain independently selectable text');
+        const top = !position || position.startsWith('top');
+        assert.equal(Number(label.getAttribute('yMin')) < Number(code.getAttribute('yMin')), top);
+        if (position?.endsWith('right')) assert.ok(Number(label.getAttribute('xMin')) > 400);
+        else assert.ok(Number(label.getAttribute('xMin')) < 100);
     }
 });
 

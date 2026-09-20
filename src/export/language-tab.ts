@@ -2,7 +2,7 @@
  * The code block supplies the straight top edge. Keep this function self-contained:
  * the PDF exporter also evaluates it in its isolated print document.
  */
-export function languageTabPath(width: number, height: number): string {
+export function languageTabPath(width: number, height: number, position = 'bottom-right'): string {
     const edge = 0.5;
     const bottom = height - edge;
     const inset = Math.min(9, height * 0.36, width / 4);
@@ -12,7 +12,11 @@ export function languageTabPath(width: number, height: number): string {
     const bendX = edge + inset * bendY / bottom;
     const controlX = bendX + (corner - bendX) * 2 / 3;
     const controlY = bendY + radius * 2 / 3;
-    const point = (...values: number[]) => values.map(value => Number(value.toFixed(3))).join(' ');
+    const point = (...values: number[]) => values.map((value, index) => {
+        if (index % 2 === 0 && position.endsWith('left')) value = width - value;
+        if (index % 2 === 1 && position.startsWith('top')) value = height - value;
+        return Number(value.toFixed(3));
+    }).join(' ');
     const right = width - edge;
     return `M ${point(edge, 0)} L ${point(bendX, bendY)} ` +
         `C ${point(controlX, controlY, corner + radius / 3, bottom, corner + radius, bottom)} ` +
@@ -22,7 +26,7 @@ export function languageTabPath(width: number, height: number): string {
 }
 
 /** Trusted, inline Word shape. The label remains ordinary editable Word text. */
-export function docxLanguageTab(label: string, id: number): string {
+export function docxLanguageTab(label: string, id: number, position = 'bottom-right'): string {
     // Conservative 9 pt glyph widths keep ordinary names compact while reserving
     // enough wrapped lines for long/custom names. Avoid VML auto-fit: some readers
     // detach the text from the shape when that flag is enabled.
@@ -31,7 +35,7 @@ export function docxLanguageTab(label: string, id: number): string {
             /[A-Zmw]/.test(char) ? 9 : /[iljtfrI.,:;!'| ]/.test(char) ? 4.5 : 7), 0);
     const width = Math.min(216, Math.max(52, textWidth + 26));
     const height = Math.max(24, Math.ceil(textWidth / (width - 24)) * 16 + 4);
-    const vmlPath = languageTabPath(width, height)
+    const vmlPath = languageTabPath(width, height, position)
         .replace(/([MLC])\s*([^MLC]+)/g, (_match, command: string, values: string) =>
             command.toLowerCase() + values.trim().split(/\s+/).map(number => Math.round(Number(number) * 100)).join(',')) + 'xe';
     // XML 1.0 cannot represent these code points, even as character references.

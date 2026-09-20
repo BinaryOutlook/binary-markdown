@@ -9,7 +9,7 @@ import { createResourceLoader, dataUri } from './resources';
 import { validateArtifact } from './validate';
 import { finalizeExport } from './output';
 import { getExportMessages } from './messages';
-import { checkCancelled, ExportFormat, ExportOperations, PreparedExportDocument, SavedExportDocument, ToolStatus } from './types';
+import { checkCancelled, codeLanguagePosition, ExportFormat, ExportOperations, PreparedExportDocument, SavedExportDocument, ToolStatus } from './types';
 
 const normalize = (value: string) => value.replace(/^\uFEFF/, '').replace(/\r\n?/g, '\n');
 
@@ -153,7 +153,8 @@ export class ExportController implements vscode.Disposable {
                 }
                 const config = vscode.workspace.getConfiguration('binary-markdown', this.document.uri);
                 const codeOptions = Object.freeze({
-                    showCodeLanguage: config.get<boolean>('export.showCodeLanguage', true)
+                    showCodeLanguage: config.get<boolean>('export.showCodeLanguage', true),
+                    codeLanguagePosition: codeLanguagePosition(config.get('export.codeLanguagePosition'))
                 });
                 const source: SavedExportDocument = Object.freeze({
                     sourcePath: this.document.uri.fsPath, markdown: raw, version,

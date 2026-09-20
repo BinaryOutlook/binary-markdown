@@ -1,6 +1,18 @@
 export type ExportFormat = 'html' | 'pdf' | 'docx' | 'epub';
 export type ExportStage = 'checking' | 'dependencies' | 'resources' | 'rendering' | 'converting' | 'saving';
 
+export type CodeLanguagePosition = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+
+/** Presentation captured once for the saved export revision. */
+export interface CodePresentationOptions {
+    showCodeLanguage?: boolean;
+    codeLanguagePosition?: CodeLanguagePosition;
+}
+
+export function codeLanguagePosition(value: unknown): CodeLanguagePosition {
+    return value === 'top-right' || value === 'bottom-left' || value === 'bottom-right' ? value : 'top-left';
+}
+
 export interface ExportWarning {
     code: string;
     message: string;
