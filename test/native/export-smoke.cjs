@@ -944,7 +944,9 @@ async function equationPositionCase(h, owner, record) {
     const { installedEditor } = require('./table-toolbar-overflow.cjs');
     const previous = (await h.driver({ action: 'inspect' })).mathSourcePositionScopes;
     const file = 'equation-source-position.md', filePath = path.join(owner.workspace, file);
-    await h.driver({ action: 'close' }); fs.writeFileSync(filePath, source);
+    // Open our fixture without closing a background editor left by a prior case.
+    // That editor may intentionally contain unsaved cancellation-test input.
+    fs.writeFileSync(filePath, source);
     let connection;
     try {
         await h.driver({ action: 'config', key: 'mathSourcePosition', value: null, scope: 'workspace' });
