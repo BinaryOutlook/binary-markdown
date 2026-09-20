@@ -21,6 +21,7 @@ export class VSCodeSettingsProvider implements SettingsProvider {
             editorMaxWidth: this.get('editorMaxWidth'),
             editorAlignment: this.get('editorAlignment'),
             editorWidthIndicators: this.get('editorWidthIndicators'),
+            mathSourcePosition: this.get('mathSourcePosition'),
             codeLanguageOrder: this.get('codeLanguageOrder'),
             toolbarMode: this.get('toolbarMode'),
             tableToolbarPosition: this.get('tableToolbarPosition'),

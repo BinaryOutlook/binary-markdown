@@ -59,5 +59,8 @@
   "config.codeLanguageOrder.description": "Elige el orden del selector de lenguajes de código. Las búsquedas priorizan las coincidencias.",
   "config.codeLanguageOrder.default": "Selección manual de lenguajes comunes, con Texto sin formato y Markdown primero; sin historial de uso.",
   "config.codeLanguageOrder.ascending": "Ordena los nombres mostrados de A a Z, sin elementos fijados.",
-  "config.codeLanguageOrder.descending": "Ordena los nombres mostrados de Z a A, sin elementos fijados."
+  "config.codeLanguageOrder.descending": "Ordena los nombres mostrados de Z a A, sin elementos fijados.",
+  "config.mathSourcePosition.description": "Muestra el código editable encima o debajo de su vista previa. El contenido y las exportaciones no cambian.",
+  "config.mathSourcePosition.above": "Encima de la vista previa",
+  "config.mathSourcePosition.below": "Debajo de la vista previa"
 }

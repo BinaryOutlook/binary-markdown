@@ -59,5 +59,8 @@
   "config.codeLanguageOrder.description": "コード言語選択の表示順を指定します。検索時は一致度を優先します。",
   "config.codeLanguageOrder.default": "よく使われる言語を手動で選び、プレーンテキストと Markdown を先頭に表示します。利用履歴は追跡しません。",
   "config.codeLanguageOrder.ascending": "表示名を A から Z の順に並べます。先頭への固定はありません。",
-  "config.codeLanguageOrder.descending": "表示名を Z から A の順に並べます。先頭への固定はありません。"
+  "config.codeLanguageOrder.descending": "表示名を Z から A の順に並べます。先頭への固定はありません。",
+  "config.mathSourcePosition.description": "編集可能な数式ソースをプレビューの上または下に表示します。数式の内容やエクスポートは変わりません。",
+  "config.mathSourcePosition.above": "プレビューの上",
+  "config.mathSourcePosition.below": "プレビューの下"
 }

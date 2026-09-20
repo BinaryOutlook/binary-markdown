@@ -34,6 +34,12 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  mathSourcePositionLabel: "Position du code de l’équation",
+  mathSourcePositionHelp: "Affiche le code modifiable au-dessus ou au-dessous de son aperçu. Le contenu et les exports restent inchangés.",
+  mathSourcePositionAbove: "Au-dessus de l’aperçu",
+  mathSourcePositionBelow: "Au-dessous de l’aperçu",
+  mathSourcePositionSaveFailed: "Impossible d’enregistrer la position du code de l’équation. Le réglage précédent reste actif.",
+
   codeLanguageOrderLabel: "Ordre des langages de code",
   codeLanguageOrderHelp: "L’ordre par défaut est une sélection manuelle, avec Texte brut et Markdown en tête. Les modes alphabétiques trient les noms affichés. Les recherches privilégient les correspondances.",
   codeLanguageOrderDefault: "Par défaut (sélection manuelle)",

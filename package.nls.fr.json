@@ -59,5 +59,8 @@
   "config.codeLanguageOrder.description": "Choisissez l’ordre du sélecteur de langages. Les recherches privilégient les correspondances.",
   "config.codeLanguageOrder.default": "Sélection manuelle de langages courants, avec Texte brut et Markdown en tête ; aucun suivi d’utilisation.",
   "config.codeLanguageOrder.ascending": "Trie les noms affichés de A à Z, sans entrées épinglées.",
-  "config.codeLanguageOrder.descending": "Trie les noms affichés de Z à A, sans entrées épinglées."
+  "config.codeLanguageOrder.descending": "Trie les noms affichés de Z à A, sans entrées épinglées.",
+  "config.mathSourcePosition.description": "Affiche le code modifiable au-dessus ou au-dessous de son aperçu. Le contenu et les exports restent inchangés.",
+  "config.mathSourcePosition.above": "Au-dessus de l’aperçu",
+  "config.mathSourcePosition.below": "Au-dessous de l’aperçu"
 }

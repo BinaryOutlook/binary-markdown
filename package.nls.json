@@ -59,5 +59,8 @@
   "config.codeLanguageOrder.description": "Choose the code-language picker browsing order. Searches prioritize query matches.",
   "config.codeLanguageOrder.default": "Curated common languages, with Plain text and Markdown first; no usage tracking.",
   "config.codeLanguageOrder.ascending": "Sort display names from A to Z, without pinned entries.",
-  "config.codeLanguageOrder.descending": "Sort display names from Z to A, without pinned entries."
+  "config.codeLanguageOrder.descending": "Sort display names from Z to A, without pinned entries.",
+  "config.mathSourcePosition.description": "Show editable equation source above or below its preview. Equation content and exports stay unchanged.",
+  "config.mathSourcePosition.above": "Above preview",
+  "config.mathSourcePosition.below": "Below preview"
 }

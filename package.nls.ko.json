@@ -59,5 +59,8 @@
   "config.codeLanguageOrder.description": "코드 언어 선택기의 표시 순서를 선택합니다. 검색 시 일치도가 우선됩니다.",
   "config.codeLanguageOrder.default": "직접 선정한 주요 언어 목록으로 일반 텍스트와 Markdown이 먼저 표시됩니다. 사용 기록을 추적하지 않습니다.",
   "config.codeLanguageOrder.ascending": "표시 이름을 A부터 Z까지 정렬하며 고정 항목은 없습니다.",
-  "config.codeLanguageOrder.descending": "표시 이름을 Z부터 A까지 정렬하며 고정 항목은 없습니다."
+  "config.codeLanguageOrder.descending": "표시 이름을 Z부터 A까지 정렬하며 고정 항목은 없습니다.",
+  "config.mathSourcePosition.description": "편집 가능한 수식 소스를 미리 보기 위나 아래에 표시합니다. 수식 내용과 내보내기는 변경되지 않습니다.",
+  "config.mathSourcePosition.above": "미리 보기 위",
+  "config.mathSourcePosition.below": "미리 보기 아래"
 }

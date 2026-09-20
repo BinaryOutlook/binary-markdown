@@ -108,6 +108,7 @@ function createWindow(filePath?: string): BrowserWindow {
             editorMaxWidth: settings.editorMaxWidth,
             editorAlignment: settings.editorAlignment,
             editorWidthIndicators: settings.editorWidthIndicators,
+            mathSourcePosition: settings.mathSourcePosition,
             codeLanguageOrder: settings.codeLanguageOrder,
             toolbarMode: settings.toolbarMode,
             tableToolbarPosition: settings.tableToolbarPosition,
@@ -314,6 +315,18 @@ ipcMain.on('settings-save', async (event, key: string, value: unknown) => {
         settingsManager.refreshSetting('tableToolbarPosition');
         for (const [win] of windows) {
             if (!win.isDestroyed()) win.webContents.send('host-message', { type: 'tableToolbarPosition', value });
+        }
+        return;
+    }
+    if (key === 'mathSourcePosition') {
+        if (value !== 'above' && value !== 'below') return;
+        try { settingsManager.set(key, value); } catch {
+            settingsManager.refreshSetting(key, getI18nMessages().mathSourcePositionSaveFailed);
+            return;
+        }
+        settingsManager.refreshSetting(key);
+        for (const [win] of windows) {
+            if (!win.isDestroyed()) win.webContents.send('host-message', { type: 'mathSourcePosition', value });
         }
         return;
     }

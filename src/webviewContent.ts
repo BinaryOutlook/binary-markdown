@@ -25,6 +25,7 @@ interface EditorConfig {
     editorMaxWidth?: number;
     editorAlignment?: string;
     editorWidthIndicators?: boolean;
+    mathSourcePosition?: string;
     codeLanguageOrder?: string;
     toolbarMode?: string;
     tableToolbarPosition?: string;
@@ -90,6 +91,7 @@ export function getWebviewContent(
         editorAlignment: normalizeAlignment(config?.editorAlignment),
         editorWidthIndicators: config?.editorWidthIndicators !== false,
         codeLanguageOrder: config?.codeLanguageOrder === 'a-z' || config?.codeLanguageOrder === 'z-a' ? config.codeLanguageOrder : 'default',
+        mathSourcePosition: config?.mathSourcePosition === 'below' ? 'below' : 'above',
         toolbarMode: config?.toolbarMode ?? 'full',
         tableToolbarPosition: normalizeTablePosition(config?.tableToolbarPosition),
         documentBaseUri: config?.documentBaseUri ?? '',
@@ -141,7 +143,7 @@ export function getWebviewContent(
         .replace('__CONTENT__', `'${base64Content}'`);
 
     return `<!DOCTYPE html>
-<html lang="en" data-theme="${safeConfig.theme}" data-editor-width-mode="${safeConfig.editorWidthMode}" data-editor-max-width="${safeConfig.editorMaxWidth}" data-editor-alignment="${safeConfig.editorAlignment}" data-editor-width-indicators="${safeConfig.editorWidthIndicators}" data-code-language-order="${safeConfig.codeLanguageOrder}" data-toolbar-mode="${safeConfig.toolbarMode}" data-table-toolbar-position="${safeConfig.tableToolbarPosition}">
+<html lang="en" data-theme="${safeConfig.theme}" data-editor-width-mode="${safeConfig.editorWidthMode}" data-editor-max-width="${safeConfig.editorMaxWidth}" data-editor-alignment="${safeConfig.editorAlignment}" data-editor-width-indicators="${safeConfig.editorWidthIndicators}" data-math-source-position="${safeConfig.mathSourcePosition}" data-code-language-order="${safeConfig.codeLanguageOrder}" data-toolbar-mode="${safeConfig.toolbarMode}" data-table-toolbar-position="${safeConfig.tableToolbarPosition}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">

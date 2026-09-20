@@ -16,6 +16,7 @@ export interface ElectronSettings {
     editorMaxWidth: number;
     editorAlignment: EditorAlignment;
     editorWidthIndicators: boolean;
+    mathSourcePosition: 'above' | 'below';
     codeLanguageOrder: 'default' | 'a-z' | 'z-a';
     toolbarMode: string;
     tableToolbarPosition: string;
@@ -34,6 +35,7 @@ const DEFAULTS: ElectronSettings = {
     editorMaxWidth: 860,
     editorAlignment: 'center',
     editorWidthIndicators: true,
+    mathSourcePosition: 'above',
     codeLanguageOrder: 'default',
     toolbarMode: 'full',
     tableToolbarPosition: 'auto',
@@ -69,6 +71,7 @@ export class SettingsManager {
             editorMaxWidth: normalizeMaxWidth(this.store.get('editorMaxWidth')),
             editorAlignment: normalizeAlignment(this.store.get('editorAlignment')),
             editorWidthIndicators: this.store.get('editorWidthIndicators') !== false,
+            mathSourcePosition: this.store.get('mathSourcePosition') === 'below' ? 'below' : 'above',
             codeLanguageOrder: ['a-z', 'z-a'].includes(this.store.get('codeLanguageOrder')) ? this.store.get('codeLanguageOrder') : 'default' };
     }
 
@@ -224,6 +227,15 @@ export class SettingsManager {
         </select>
     </div>
     <div class="field-desc" id="codeLanguageOrderHelp">${messages.codeLanguageOrderHelp}</div>
+
+    <div class="field">
+        <label for="mathSourcePosition">${messages.mathSourcePositionLabel}</label>
+        <select id="mathSourcePosition" aria-describedby="mathSourcePositionHelp" onchange="save('mathSourcePosition', this.value)">
+            <option value="above" ${settings.mathSourcePosition === 'above' ? 'selected' : ''}>${messages.mathSourcePositionAbove}</option>
+            <option value="below" ${settings.mathSourcePosition === 'below' ? 'selected' : ''}>${messages.mathSourcePositionBelow}</option>
+        </select>
+    </div>
+    <div class="field-desc" id="mathSourcePositionHelp">${messages.mathSourcePositionHelp}</div>
 
     <h2>Images</h2>
     <div class="field field-text">

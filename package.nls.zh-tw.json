@@ -59,5 +59,8 @@
   "config.codeLanguageOrder.description": "選擇程式碼語言清單的瀏覽順序。搜尋時優先考量匹配度。",
   "config.codeLanguageOrder.default": "人工精選常用語言，純文字與 Markdown 置頂；不追蹤使用記錄。",
   "config.codeLanguageOrder.ascending": "依顯示名稱從 A 到 Z 排列，不保留置頂項。",
-  "config.codeLanguageOrder.descending": "依顯示名稱從 Z 到 A 排列，不保留置頂項。"
+  "config.codeLanguageOrder.descending": "依顯示名稱從 Z 到 A 排列，不保留置頂項。",
+  "config.mathSourcePosition.description": "在預覽上方或下方顯示可編輯的公式原始碼。公式內容和匯出保持不變。",
+  "config.mathSourcePosition.above": "預覽上方",
+  "config.mathSourcePosition.below": "預覽下方"
 }

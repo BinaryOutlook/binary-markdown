@@ -34,6 +34,12 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  mathSourcePositionLabel: "Equation source position",
+  mathSourcePositionHelp: "Show editable equation source above or below its preview. Equation content and exports stay unchanged.",
+  mathSourcePositionAbove: "Above preview",
+  mathSourcePositionBelow: "Below preview",
+  mathSourcePositionSaveFailed: "Could not save the equation source position. The previous setting remains active.",
+
   codeLanguageOrderLabel: "Code language order",
   codeLanguageOrderHelp: "Default is curated, with Plain text and Markdown first. Alphabetical modes sort display names. Searches rank matching suggestions first.",
   codeLanguageOrderDefault: "Default (curated)",

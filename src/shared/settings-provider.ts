@@ -14,6 +14,7 @@ export interface EditorSettings {
     editorMaxWidth: number;
     editorAlignment: EditorAlignment;
     editorWidthIndicators: boolean;
+    mathSourcePosition: 'above' | 'below';
     codeLanguageOrder: 'default' | 'a-z' | 'z-a';
     toolbarMode: 'full' | 'simple';
     tableToolbarPosition: TableToolbarPosition;
@@ -30,6 +31,7 @@ export const DEFAULT_SETTINGS: EditorSettings = {
     editorMaxWidth: 860,
     editorAlignment: 'center',
     editorWidthIndicators: true,
+    mathSourcePosition: 'above',
     codeLanguageOrder: 'default',
     toolbarMode: 'full',
     tableToolbarPosition: 'auto',

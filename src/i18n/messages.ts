@@ -37,6 +37,12 @@ export interface Messages {
 }
 
 export interface WebviewMessages {
+  mathSourcePositionLabel: string;
+  mathSourcePositionHelp: string;
+  mathSourcePositionAbove: string;
+  mathSourcePositionBelow: string;
+  mathSourcePositionSaveFailed: string;
+
   codeLanguageOrderLabel: string;
   codeLanguageOrderHelp: string;
   codeLanguageOrderDefault: string;

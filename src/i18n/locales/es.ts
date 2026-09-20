@@ -34,6 +34,12 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  mathSourcePositionLabel: "Posición del código de ecuación",
+  mathSourcePositionHelp: "Muestra el código editable encima o debajo de su vista previa. El contenido y las exportaciones no cambian.",
+  mathSourcePositionAbove: "Encima de la vista previa",
+  mathSourcePositionBelow: "Debajo de la vista previa",
+  mathSourcePositionSaveFailed: "No se pudo guardar la posición del código de ecuación. Se mantiene la configuración anterior.",
+
   codeLanguageOrderLabel: "Orden de lenguajes de código",
   codeLanguageOrderHelp: "El orden predeterminado es una selección manual, con Texto sin formato y Markdown primero. Los modos alfabéticos ordenan los nombres mostrados. Las búsquedas priorizan las coincidencias.",
   codeLanguageOrderDefault: "Predeterminado (selección manual)",

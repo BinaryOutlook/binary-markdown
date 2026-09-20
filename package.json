@@ -341,6 +341,20 @@
             "%config.codeLanguageOrder.ascending%",
             "%config.codeLanguageOrder.descending%"
           ]
+        },
+        "binary-markdown.mathSourcePosition": {
+          "type": "string",
+          "enum": [
+            "above",
+            "below"
+          ],
+          "default": "above",
+          "scope": "window",
+          "description": "%config.mathSourcePosition.description%",
+          "enumDescriptions": [
+            "%config.mathSourcePosition.above%",
+            "%config.mathSourcePosition.below%"
+          ]
         }
       }
     },

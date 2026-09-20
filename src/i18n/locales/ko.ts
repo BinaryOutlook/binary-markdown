@@ -34,6 +34,12 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  mathSourcePositionLabel: "수식 소스 위치",
+  mathSourcePositionHelp: "편집 가능한 수식 소스를 미리 보기 위나 아래에 표시합니다. 수식 내용과 내보내기는 변경되지 않습니다.",
+  mathSourcePositionAbove: "미리 보기 위",
+  mathSourcePositionBelow: "미리 보기 아래",
+  mathSourcePositionSaveFailed: "수식 소스 위치를 저장하지 못했습니다. 이전 설정이 유지됩니다.",
+
   codeLanguageOrderLabel: "코드 언어 정렬",
   codeLanguageOrderHelp: "기본값은 직접 선정한 순서이며 일반 텍스트와 Markdown이 먼저 표시됩니다. 사전순 모드는 표시 이름을 정렬합니다. 검색 시 일치도가 우선됩니다.",
   codeLanguageOrderDefault: "기본값 (직접 선정)",

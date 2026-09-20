@@ -34,6 +34,12 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  mathSourcePositionLabel: "数式ソースの位置",
+  mathSourcePositionHelp: "編集可能な数式ソースをプレビューの上または下に表示します。数式の内容やエクスポートは変わりません。",
+  mathSourcePositionAbove: "プレビューの上",
+  mathSourcePositionBelow: "プレビューの下",
+  mathSourcePositionSaveFailed: "数式ソースの位置を保存できませんでした。以前の設定が維持されます。",
+
   codeLanguageOrderLabel: "コード言語の表示順",
   codeLanguageOrderHelp: "既定は手動で選んだ順序で、プレーンテキストと Markdown を先頭に表示します。アルファベット順では表示名で並べ替えます。検索時は一致度を優先します。",
   codeLanguageOrderDefault: "既定（手動選定）",

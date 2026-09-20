@@ -34,6 +34,12 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  mathSourcePositionLabel: "公式源码位置",
+  mathSourcePositionHelp: "在预览上方或下方显示可编辑的公式源码。公式内容和导出保持不变。",
+  mathSourcePositionAbove: "预览上方",
+  mathSourcePositionBelow: "预览下方",
+  mathSourcePositionSaveFailed: "无法保存公式源码位置。将保留原有设置。",
+
   codeLanguageOrderLabel: "代码语言排序",
   codeLanguageOrderHelp: "默认采用人工精选顺序，纯文本和 Markdown 置顶。字母排序按显示名称排列；搜索时优先显示匹配度高的结果。",
   codeLanguageOrderDefault: "默认（人工精选）",
