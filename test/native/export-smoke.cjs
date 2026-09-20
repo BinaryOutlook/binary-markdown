@@ -806,7 +806,8 @@ async function insertMenuCase(h, owner, record) {
     try {
         await h.workbench(async page => {
             const editor = installedEditor(connection, h);
-            const input = () => page.locator('.quick-input-widget:visible input').first();
+            // VS Code 1.85 also mounts a hidden select-all checkbox here.
+            const input = () => page.locator('.quick-input-widget:visible input:not([type="checkbox"]):visible').first();
             await insertMenuChecks({ editor, keyboard: page.keyboard,
                 setMode: value => h.driver({ action: 'config', key: 'toolbarMode', scope: 'workspace', value }),
                 record: (name, details) => record(name, { ...details, route: 'installed webview; native keyboard; VS Code input boxes and simplified file picker' }),
@@ -821,8 +822,19 @@ async function insertMenuCase(h, owner, record) {
                     await input().waitFor({ state: 'visible' });
                     if (!accepted) await page.keyboard.press('Escape');
                     else {
-                        await input().fill(action === 'link' ? 'https://example.com/reference' : path.join(owner.workspace, 'assets/Field sample 图像.png'));
-                        await page.keyboard.press('Enter');
+                        if (action === 'link') {
+                            await input().fill('https://example.com/reference');
+                            await page.keyboard.press('Enter');
+                        } else {
+                            const imageName = 'Field sample 图像.png';
+                            // Navigate first: older pickers do not refresh their
+                            // directory listing until the path is accepted.
+                            await input().fill(path.join(owner.workspace, 'assets') + path.sep);
+                            await page.keyboard.press('Enter');
+                            const image = page.locator('.quick-input-widget:visible .monaco-list-row').filter({ hasText: imageName });
+                            await image.waitFor({ state: 'visible' });
+                            await image.click();
+                        }
                     }
                     await page.locator('.quick-input-widget:visible').waitFor({ state: 'hidden' });
                 }
