@@ -4,7 +4,7 @@ import { scan as scanDocumentAux, START as TOC_START, END as TOC_END, headingTex
 import * as fs from 'fs/promises';
 import * as os from 'os';
 import * as path from 'path';
-import { checkCancelled, ExportOperations, PreparedExportDocument, SavedExportDocument } from './types';
+import { checkCancelled, codeLanguagePosition, CodeLanguagePosition, CodePresentationOptions, ExportOperations, PreparedExportDocument, SavedExportDocument } from './types';
 import { runTool } from './tools';
 import { codeLanguageLabel } from './code-language';
 import { docxLanguageTab } from './language-tab';
@@ -13,17 +13,21 @@ type Json = null | boolean | number | string | Json[] | { [key: string]: Json };
 interface AstNode { t: string; c?: Json; }
 const emptyAttributes: Json = ['', [], []];
 
-function withDocxLanguageLabel(block: Json, classes: Json[], id: number): Json {
+function withDocxLanguageLabel(block: Json, classes: Json[], id: number, position: CodeLanguagePosition): Json {
     const label = codeLanguageLabel(classes);
     if (!label) { return block; }
     // Keep the code itself intact for Pandoc highlighting and exact copy/paste.
-    // The reference paragraph places an inline native shape below the code, aligned right.
+    // Position-specific metadata paragraphs keep the inline native shape beside
+    // the corresponding code edge without changing the code node or its tokens.
     // Only extension-generated, escaped OpenXML enters this branch.
-    return { t: 'Div', c: [emptyAttributes, [block, {
-        t: 'Div', c: [['', [], [['custom-style', 'Code Language']]], [
-            { t: 'Para', c: [{ t: 'Space' }, { t: 'RawInline', c: ['openxml', docxLanguageTab(label, id)] }] }
+    const styles = { 'top-left': 'Code Language Top Left', 'top-right': 'Code Language Top Right',
+        'bottom-left': 'Code Language Bottom Left', 'bottom-right': 'Code Language' };
+    const metadata: Json = {
+        t: 'Div', c: [['', [], [['custom-style', styles[position]]]], [
+            { t: 'Para', c: [{ t: 'Space' }, { t: 'RawInline', c: ['openxml', docxLanguageTab(label, id, position)] }] }
         ]]
-    }]] };
+    };
+    return { t: 'Div', c: [emptyAttributes, position.startsWith('top') ? [metadata, block] : [block, metadata]] };
 }
 
 function node(value: Json): AstNode | undefined {
@@ -95,7 +99,7 @@ function warn(operations: ExportOperations, code: string, message: string): void
 
 export async function convertPandoc(
     format: 'docx' | 'epub', document: SavedExportDocument, prepared: PreparedExportDocument,
-    executable: string, operations: ExportOperations, options: { showCodeLanguage?: boolean } = {}
+    executable: string, operations: ExportOperations, options: CodePresentationOptions = {}
 ): Promise<Buffer> {
     checkCancelled(operations.signal);
     const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'binary-markdown-pandoc-'));
@@ -225,7 +229,9 @@ export async function convertPandoc(
                         { t: 'CodeBlock', c: [emptyAttributes, source] }
                     ]] };
                 }
-                if (format === 'docx' && options.showCodeLanguage !== false) { return withDocxLanguageLabel(value, classes, ++languageTabId); }
+                if (format === 'docx' && options.showCodeLanguage !== false) {
+                    return withDocxLanguageLabel(value, classes, ++languageTabId, codeLanguagePosition(options.codeLanguagePosition));
+                }
             }
             if (item?.t === 'RawBlock' || item?.t === 'RawInline') {
                 warn(operations, 'raw-content-fallback', `Raw ${String(content[0])} content is included as readable source because ${format.toUpperCase()} cannot preserve its displayed behavior reliably.`);
@@ -251,8 +257,9 @@ export async function convertPandoc(
         checkCancelled(operations.signal);
         operations.report('converting');
         const outputFile = path.join(directory, `document.${format}`);
+        const topLabel = options.showCodeLanguage !== false && codeLanguagePosition(options.codeLanguagePosition).startsWith('top');
         const writerArguments = format === 'docx'
-            ? [`--reference-doc=${path.resolve(__dirname, '../../media/export-reference.docx')}`]
+            ? [`--reference-doc=${path.resolve(__dirname, topLabel ? '../../media/export-reference-top.docx' : '../../media/export-reference.docx')}`]
             : ['--mathml'];
         const write = await runTool(executable, [...commonArguments, '--from=json', `--to=${format === 'epub' ? 'epub3' : 'docx'}`, ...writerArguments, '--standalone', `--output=${outputFile}`], {
             input: JSON.stringify(normalized), cwd: directory, signal: operations.signal

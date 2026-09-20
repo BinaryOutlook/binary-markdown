@@ -292,7 +292,7 @@ test('DOCX puts declared-language labels after intact code blocks, including nes
         return result;
     }
     for (const [format, showCodeLanguage] of [['docx', undefined], ['docx', true], ['docx', false], ['epub', true], ['epub', false]]) {
-        await convertPandoc(format, saved, { html: '', theme: 'github', fontSize: 16, diagrams: [], warnings: [] }, file, operations(), { showCodeLanguage });
+        await convertPandoc(format, saved, { html: '', theme: 'github', fontSize: 16, diagrams: [], warnings: [] }, file, operations(), { showCodeLanguage, codeLanguagePosition: 'bottom-right' });
         const output = JSON.parse(await fs.readFile(receipt, 'utf8'));
         assert.ok(output.args.includes('--sandbox'));
         assert.deepEqual(collect(output.ast, value => value.t === 'CodeBlock'), examples);
@@ -351,7 +351,7 @@ test('bundled Word styles provide a shaded code container and a right-aligned fo
     assert.equal(wordElements(style('VerbatimChar'), 'bdr').length, 0);
 });
 
-test('real Pandoc exports editable code with bottom language labels, safe unknown names, nested blocks and native highlighting', { skip: !realTools }, async t => {
+test('real Pandoc exports editable code with four label corners, safe unknown names and native highlighting', { skip: !realTools }, async t => {
     const directory = await temporary(t);
     const status = await discoverTool('pandoc', process.env.EXPORT_PANDOC_PATH || '');
     assert.equal(status.available, true, status.error);
@@ -367,40 +367,45 @@ test('real Pandoc exports editable code with bottom language labels, safe unknow
         '```js', long, '```', '', 'END_OF_CODE_TEST'
     ].join('\n');
     const saved = { sourcePath: path.join(directory, 'source.md'), markdown, version: 1, theme: 'github', fontSize: 16 };
-    const ops = operations();
-    const bytes = await convertPandoc('docx', saved, { html: '', theme: 'github', fontSize: 16, diagrams: [], warnings: [] }, status.path, ops);
-    const entries = archiveEntries(bytes);
-    const document = xmlDocument(entries.get('word/document.xml'));
-    const paragraphs = wordElements(document, 'p');
-    const style = paragraph => wordValue(wordElements(paragraph, 'pStyle')[0]);
-    const blocks = paragraphs.filter(paragraph => style(paragraph) === 'SourceCode');
-    assert.deepEqual(blocks.map(wordText), [python, 'unlabeled code', 'emit "result"', 'return 0;', 'quoted text', long]);
-    const labels = paragraphs.filter(paragraph => style(paragraph) === 'CodeLanguage');
-    assert.deepEqual(labels.map(label => wordText(label).trim()), ['Python', 'mydsl<&', 'C++', 'Plain text', 'JavaScript']);
-    for (const label of labels) {
-        assert.equal(style(label.previousElementSibling), 'SourceCode', 'label immediately follows complete code');
-        assert.equal(wordValue(wordElements(label, 'rStyle')[0]), 'CodeLanguageBadge', 'only label text receives the badge style');
-        const firstRun = wordElements(label, 'r')[0];
-        assert.equal(wordText(firstRun), ' ');
-        assert.equal(wordElements(firstRun, 'rStyle').length, 0, 'list continuation spacing stays outside the badge');
-        const shape = label.getElementsByTagNameNS('urn:schemas-microsoft-com:vml', 'shape')[0];
-        assert.ok(shape, 'language is editable text inside a native shape');
-        assert.equal(wordElements(shape, 'txbxContent').length, 1);
+    for (const position of [undefined, 'top-left', 'top-right', 'bottom-left', 'bottom-right']) {
+        const top = !position || position.startsWith('top');
+        const ops = operations();
+        const bytes = await convertPandoc('docx', saved, { html: '', theme: 'github', fontSize: 16, diagrams: [], warnings: [] }, status.path, ops, { codeLanguagePosition: position });
+        const entries = archiveEntries(bytes);
+        const document = xmlDocument(entries.get('word/document.xml'));
+        const paragraphs = wordElements(document, 'p');
+        const style = paragraph => wordValue(wordElements(paragraph, 'pStyle')[0]);
+        const blocks = paragraphs.filter(paragraph => style(paragraph) === 'SourceCode');
+        assert.deepEqual(blocks.map(wordText), [python, 'unlabeled code', 'emit "result"', 'return 0;', 'quoted text', long]);
+        const labels = paragraphs.filter(paragraph => style(paragraph)?.startsWith('CodeLanguage'));
+        assert.deepEqual(labels.map(label => wordText(label).trim()), ['Python', 'mydsl<&', 'C++', 'Plain text', 'JavaScript']);
+        for (const label of labels) {
+            assert.equal(style(top ? label.nextElementSibling : label.previousElementSibling), 'SourceCode', 'label immediately touches the selected code edge');
+            const expectedStyle = position === 'bottom-right' ? 'CodeLanguage' : 'CodeLanguage' + (position || 'top-left').split('-').map(word => word[0].toUpperCase() + word.slice(1)).join('');
+            assert.equal(style(label), expectedStyle);
+            assert.equal(wordValue(wordElements(label, 'rStyle')[0]), 'CodeLanguageBadge', 'only label text receives the badge style');
+            const firstRun = wordElements(label, 'r')[0];
+            assert.equal(wordText(firstRun), ' ');
+            assert.equal(wordElements(firstRun, 'rStyle').length, 0, 'list continuation spacing stays outside the badge');
+            const shape = label.getElementsByTagNameNS('urn:schemas-microsoft-com:vml', 'shape')[0];
+            assert.ok(shape, 'language is editable text inside a native shape');
+            assert.equal(wordElements(shape, 'txbxContent').length, 1);
+        }
+        assert.ok(wordElements(blocks[0], 'rStyle').some(element => wordValue(element) === 'KeywordTok'));
+        const inline = paragraphs.find(paragraph => wordText(paragraph).startsWith('Inline '));
+        assert.notEqual(style(inline), 'SourceCode');
+        assert.equal(wordValue(wordElements(inline, 'rStyle')[0]), 'VerbatimChar');
+        assert.ok(paragraphs.some(paragraph => wordText(paragraph) === 'END_OF_CODE_TEST'));
+        assert.deepEqual(ops.warnings, []);
+        const hidden = archiveEntries(await convertPandoc('docx', saved, { html: '', theme: 'github', fontSize: 16, diagrams: [], warnings: [] },
+            status.path, operations(), { showCodeLanguage: false }));
+        const hiddenParagraphs = wordElements(xmlDocument(hidden.get('word/document.xml')), 'p');
+        assert.equal(hiddenParagraphs.filter(paragraph => style(paragraph)?.startsWith('CodeLanguage')).length, 0);
+        assert.deepEqual(hiddenParagraphs.filter(paragraph => style(paragraph) === 'SourceCode').map(wordText), blocks.map(wordText),
+            'hidden badges preserve every styled code block');
+        assert.ok(wordElements(hiddenParagraphs.find(paragraph => style(paragraph) === 'SourceCode'), 'rStyle')
+            .some(element => wordValue(element) === 'KeywordTok'), 'hiding badges keeps highlighting');
     }
-    assert.ok(wordElements(blocks[0], 'rStyle').some(element => wordValue(element) === 'KeywordTok'));
-    const inline = paragraphs.find(paragraph => wordText(paragraph).startsWith('Inline '));
-    assert.notEqual(style(inline), 'SourceCode');
-    assert.equal(wordValue(wordElements(inline, 'rStyle')[0]), 'VerbatimChar');
-    assert.ok(paragraphs.some(paragraph => wordText(paragraph) === 'END_OF_CODE_TEST'));
-    assert.deepEqual(ops.warnings, []);
-    const hidden = archiveEntries(await convertPandoc('docx', saved, { html: '', theme: 'github', fontSize: 16, diagrams: [], warnings: [] },
-        status.path, operations(), { showCodeLanguage: false }));
-    const hiddenParagraphs = wordElements(xmlDocument(hidden.get('word/document.xml')), 'p');
-    assert.equal(hiddenParagraphs.filter(paragraph => style(paragraph) === 'CodeLanguage').length, 0);
-    assert.deepEqual(hiddenParagraphs.filter(paragraph => style(paragraph) === 'SourceCode').map(wordText), blocks.map(wordText),
-        'hidden badges preserve every styled code block');
-    assert.ok(wordElements(hiddenParagraphs.find(paragraph => style(paragraph) === 'SourceCode'), 'rStyle')
-        .some(element => wordValue(element) === 'KeywordTok'), 'hiding badges keeps highlighting');
     const epub = archiveEntries(await convertPandoc('epub', saved, { html: '', theme: 'github', fontSize: 16, diagrams: [], warnings: [] }, status.path, operations()));
     const html = [...epub].filter(([name]) => name.endsWith('.xhtml')).map(([, contents]) => contents.toString()).join('\n');
     assert.doesNotMatch(html, /Code Language|CodeLanguage/);
