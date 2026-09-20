@@ -20,6 +20,19 @@ for (const locale of ['en', 'es', 'fr', 'ja', 'ko', 'zh-cn', 'zh-tw']) {
         await expect(page.locator('.lang-selector-current')).toHaveText(messages.languagePickerCurrent + ': custom-lang');
         await expect(page.locator('[data-language="math"] span')).toHaveText(messages.languagePickerMath);
         await expect(page.locator('[data-language="mermaid"] span')).toHaveText(messages.languagePickerMermaid);
+        const options = () => page.getByRole('option').evaluateAll(nodes => nodes.map(node => ({
+            id: (node as HTMLElement).dataset.language!, name: node.querySelector('span')!.textContent!
+        })));
+        const curated = await options(); expect(curated).toHaveLength(26);
+        expect(curated.slice(0, 2).map(item => item.id)).toEqual(['plaintext', 'markdown']);
+        await page.evaluate(() => (window as any).__hostMessageHandler({ type: 'codeLanguageOrder', value: 'a-z' }));
+        const ascending = await options();
+        expect(new Set(ascending.map(item => item.id))).toEqual(new Set(curated.map(item => item.id)));
+        for (let i = 1; i < ascending.length; i++) {
+            expect(ascending[i - 1].name.localeCompare(ascending[i].name, 'en', { sensitivity: 'base' })).toBeLessThanOrEqual(0);
+        }
+        await page.evaluate(() => (window as any).__hostMessageHandler({ type: 'codeLanguageOrder', value: 'z-a' }));
+        expect(await options()).toEqual([...ascending].reverse());
         await input.fill('JS'); await expect(page.locator('[role="option"][aria-selected="true"]')).toHaveAttribute('data-language', 'javascript');
         await input.fill('no-such-language'); await expect(page.locator('.lang-selector-empty')).toHaveText(messages.languagePickerNoResults);
         await input.fill(messages.languagePickerPlainText);

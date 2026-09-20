@@ -325,6 +325,22 @@
           "type": "boolean",
           "default": true,
           "description": "%config.editorWidthIndicators.description%"
+        },
+        "binary-markdown.codeLanguageOrder": {
+          "type": "string",
+          "enum": [
+            "default",
+            "a-z",
+            "z-a"
+          ],
+          "default": "default",
+          "scope": "window",
+          "description": "%config.codeLanguageOrder.description%",
+          "enumDescriptions": [
+            "%config.codeLanguageOrder.default%",
+            "%config.codeLanguageOrder.ascending%",
+            "%config.codeLanguageOrder.descending%"
+          ]
         }
       }
     },

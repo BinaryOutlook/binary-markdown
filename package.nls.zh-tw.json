@@ -55,5 +55,9 @@
   "config.editorAlignment.left": "將剩餘空間放在內容欄右側。",
   "config.editorAlignment.center": "將剩餘空間平均分配到內容欄兩側。",
   "config.editorAlignment.right": "將剩餘空間放在內容欄左側。",
-  "config.editorWidthIndicators.description": "僅在達到寬度上限時顯示欄外緣標記。隱藏此輔助列可收回其佔用的窄條空間，不影響原始碼或匯出。"
+  "config.editorWidthIndicators.description": "僅在達到寬度上限時顯示欄外緣標記。隱藏此輔助列可收回其佔用的窄條空間，不影響原始碼或匯出。",
+  "config.codeLanguageOrder.description": "選擇程式碼語言清單的瀏覽順序。搜尋時優先考量匹配度。",
+  "config.codeLanguageOrder.default": "人工精選常用語言，純文字與 Markdown 置頂；不追蹤使用記錄。",
+  "config.codeLanguageOrder.ascending": "依顯示名稱從 A 到 Z 排列，不保留置頂項。",
+  "config.codeLanguageOrder.descending": "依顯示名稱從 Z 到 A 排列，不保留置頂項。"
 }

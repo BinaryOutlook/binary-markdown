@@ -34,6 +34,12 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  codeLanguageOrderLabel: "Code language order",
+  codeLanguageOrderHelp: "Default is curated, with Plain text and Markdown first. Alphabetical modes sort display names. Searches rank matching suggestions first.",
+  codeLanguageOrderDefault: "Default (curated)",
+  codeLanguageOrderAscending: "A–Z",
+  codeLanguageOrderDescending: "Z–A",
+  codeLanguageOrderSaveFailed: "Could not save the language order. The previous setting remains active.",
   languagePickerLabel: "Code language",
   languagePickerPlaceholder: "Search names or aliases",
   languagePickerNoResults: "No matching languages.",

@@ -55,5 +55,9 @@
   "config.editorAlignment.left": "列の右側に空き領域を配置します。",
   "config.editorAlignment.center": "列の両側に空き領域を均等に配置します。",
   "config.editorAlignment.right": "列の左側に空き領域を配置します。",
-  "config.editorWidthIndicators.description": "最大幅に達したときだけ列の外端にマークを表示します。ガイドを非表示にすると細い帯の領域を戻せます。ソースと出力は変わりません。"
+  "config.editorWidthIndicators.description": "最大幅に達したときだけ列の外端にマークを表示します。ガイドを非表示にすると細い帯の領域を戻せます。ソースと出力は変わりません。",
+  "config.codeLanguageOrder.description": "コード言語選択の表示順を指定します。検索時は一致度を優先します。",
+  "config.codeLanguageOrder.default": "よく使われる言語を手動で選び、プレーンテキストと Markdown を先頭に表示します。利用履歴は追跡しません。",
+  "config.codeLanguageOrder.ascending": "表示名を A から Z の順に並べます。先頭への固定はありません。",
+  "config.codeLanguageOrder.descending": "表示名を Z から A の順に並べます。先頭への固定はありません。"
 }

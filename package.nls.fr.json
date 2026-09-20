@@ -55,5 +55,9 @@
   "config.editorAlignment.left": "Placer l’espace restant à droite de la colonne.",
   "config.editorAlignment.center": "Répartir l’espace restant de part et d’autre de la colonne.",
   "config.editorAlignment.right": "Placer l’espace restant à gauche de la colonne.",
-  "config.editorWidthIndicators.description": "Affiche des repères sur les bords extérieurs uniquement à la largeur maximale. Masquez le guide pour récupérer sa fine bande. La source et les exports restent inchangés."
+  "config.editorWidthIndicators.description": "Affiche des repères sur les bords extérieurs uniquement à la largeur maximale. Masquez le guide pour récupérer sa fine bande. La source et les exports restent inchangés.",
+  "config.codeLanguageOrder.description": "Choisissez l’ordre du sélecteur de langages. Les recherches privilégient les correspondances.",
+  "config.codeLanguageOrder.default": "Sélection manuelle de langages courants, avec Texte brut et Markdown en tête ; aucun suivi d’utilisation.",
+  "config.codeLanguageOrder.ascending": "Trie les noms affichés de A à Z, sans entrées épinglées.",
+  "config.codeLanguageOrder.descending": "Trie les noms affichés de Z à A, sans entrées épinglées."
 }

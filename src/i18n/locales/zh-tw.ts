@@ -34,6 +34,12 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  codeLanguageOrderLabel: "程式碼語言排序",
+  codeLanguageOrderHelp: "預設採用人工精選順序，純文字與 Markdown 置頂。字母排序依顯示名稱排列；搜尋時優先顯示匹配度高的結果。",
+  codeLanguageOrderDefault: "預設（人工精選）",
+  codeLanguageOrderAscending: "A–Z",
+  codeLanguageOrderDescending: "Z–A",
+  codeLanguageOrderSaveFailed: "無法儲存語言排序，仍使用原設定。",
   languagePickerLabel: "程式碼語言",
   languagePickerPlaceholder: "搜尋名稱或別名",
   languagePickerNoResults: "沒有符合的語言。",

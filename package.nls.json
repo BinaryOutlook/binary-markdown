@@ -55,5 +55,9 @@
   "config.editorAlignment.left": "Place unused space to the right of the column.",
   "config.editorAlignment.center": "Distribute unused space on both sides of the column.",
   "config.editorAlignment.right": "Place unused space to the left of the column.",
-  "config.editorWidthIndicators.description": "Show marks at the outer column edges only while capped. Hide this guide to reclaim its narrow strip. Source and exports are unchanged."
+  "config.editorWidthIndicators.description": "Show marks at the outer column edges only while capped. Hide this guide to reclaim its narrow strip. Source and exports are unchanged.",
+  "config.codeLanguageOrder.description": "Choose the code-language picker browsing order. Searches prioritize query matches.",
+  "config.codeLanguageOrder.default": "Curated common languages, with Plain text and Markdown first; no usage tracking.",
+  "config.codeLanguageOrder.ascending": "Sort display names from A to Z, without pinned entries.",
+  "config.codeLanguageOrder.descending": "Sort display names from Z to A, without pinned entries."
 }

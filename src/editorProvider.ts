@@ -493,6 +493,7 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
                         editorMaxWidth: config.get<number>('editorMaxWidth', 860),
                         editorAlignment: config.get<string>('editorAlignment', 'center'),
                         editorWidthIndicators: config.get<boolean>('editorWidthIndicators', true),
+                        codeLanguageOrder: config.get<string>('codeLanguageOrder', 'default'),
                         toolbarMode: config.get<string>('toolbarMode', 'full'),
                         tableToolbarPosition: normalizeTablePosition(config.get('tableToolbarPosition')),
                         renderGeneration,
@@ -695,6 +696,11 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
                 void webviewPanel.webview.postMessage({ type: 'editorWidth', mode: config.get('editorWidthMode', 'default'),
                     maxWidth: config.get('editorMaxWidth', 860), alignment: config.get('editorAlignment', 'center'), indicators: config.get('editorWidthIndicators', true) });
             }
+            const languageOrderChanged = e.affectsConfiguration('binary-markdown.codeLanguageOrder');
+            if (languageOrderChanged) {
+                void webviewPanel.webview.postMessage({ type: 'codeLanguageOrder', value:
+                    vscode.workspace.getConfiguration('binary-markdown').get('codeLanguageOrder', 'default') });
+            }
             const exportChanged = e.affectsConfiguration('binary-markdown.export');
             // Presentation options are read by each export. Re-probing tools in
             // every open editor here launches a burst of browsers on Windows.
@@ -704,7 +710,7 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
             const editorSettings = ['fontSize', 'imageDefaultDir', 'forceRelativeImagePath', 'language',
                 'outlineStateScope', 'outlineDefaultOpen', 'outlineActiveColor', 'enableDebugLogging', 'math.backslashDelimiters'];
             const editorChanged = editorSettings.some(key => e.affectsConfiguration('binary-markdown.' + key));
-            if (e.affectsConfiguration('binary-markdown') && (editorChanged || (!exportChanged && !positionChanged && !themeChanged && !toolbarModeChanged && !widthChanged))) {
+            if (e.affectsConfiguration('binary-markdown') && (editorChanged || (!exportChanged && !positionChanged && !themeChanged && !toolbarModeChanged && !widthChanged && !languageOrderChanged))) {
                 clearTimeout(configurationRefresh);
                 configurationRefresh = setTimeout(() => {
                     configurationRefresh = undefined;

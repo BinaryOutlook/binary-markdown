@@ -55,5 +55,9 @@
   "config.editorAlignment.left": "Colocar el espacio sobrante a la derecha de la columna.",
   "config.editorAlignment.center": "Repartir el espacio sobrante entre ambos lados de la columna.",
   "config.editorAlignment.right": "Colocar el espacio sobrante a la izquierda de la columna.",
-  "config.editorWidthIndicators.description": "Muestra marcas en los bordes exteriores solo al alcanzar el límite. Oculta la guía para recuperar su franja estrecha. No cambia el código fuente ni las exportaciones."
+  "config.editorWidthIndicators.description": "Muestra marcas en los bordes exteriores solo al alcanzar el límite. Oculta la guía para recuperar su franja estrecha. No cambia el código fuente ni las exportaciones.",
+  "config.codeLanguageOrder.description": "Elige el orden del selector de lenguajes de código. Las búsquedas priorizan las coincidencias.",
+  "config.codeLanguageOrder.default": "Selección manual de lenguajes comunes, con Texto sin formato y Markdown primero; sin historial de uso.",
+  "config.codeLanguageOrder.ascending": "Ordena los nombres mostrados de A a Z, sin elementos fijados.",
+  "config.codeLanguageOrder.descending": "Ordena los nombres mostrados de Z a A, sin elementos fijados."
 }

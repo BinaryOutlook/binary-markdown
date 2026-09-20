@@ -34,6 +34,12 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  codeLanguageOrderLabel: "代码语言排序",
+  codeLanguageOrderHelp: "默认采用人工精选顺序，纯文本和 Markdown 置顶。字母排序按显示名称排列；搜索时优先显示匹配度高的结果。",
+  codeLanguageOrderDefault: "默认（人工精选）",
+  codeLanguageOrderAscending: "A–Z",
+  codeLanguageOrderDescending: "Z–A",
+  codeLanguageOrderSaveFailed: "无法保存语言排序，仍使用原设置。",
   languagePickerLabel: "代码语言",
   languagePickerPlaceholder: "搜索名称或别名",
   languagePickerNoResults: "没有匹配的语言。",

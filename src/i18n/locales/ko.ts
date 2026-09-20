@@ -34,6 +34,12 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  codeLanguageOrderLabel: "코드 언어 정렬",
+  codeLanguageOrderHelp: "기본값은 직접 선정한 순서이며 일반 텍스트와 Markdown이 먼저 표시됩니다. 사전순 모드는 표시 이름을 정렬합니다. 검색 시 일치도가 우선됩니다.",
+  codeLanguageOrderDefault: "기본값 (직접 선정)",
+  codeLanguageOrderAscending: "A–Z",
+  codeLanguageOrderDescending: "Z–A",
+  codeLanguageOrderSaveFailed: "언어 정렬을 저장하지 못했습니다. 이전 설정이 유지됩니다.",
   languagePickerLabel: "코드 언어",
   languagePickerPlaceholder: "이름 또는 별칭 검색",
   languagePickerNoResults: "일치하는 언어가 없습니다.",

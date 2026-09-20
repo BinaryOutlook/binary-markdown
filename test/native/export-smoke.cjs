@@ -327,7 +327,7 @@ async function run(settings, owner) {
         fs.writeFileSync(report, JSON.stringify({ harness: harnessIdentity(), host: receipt(owner), packageSha256: hash(fs.readFileSync(settings.package)), receipts }, null, 2));
         console.log(name, JSON.stringify(details));
     };
-    const available = ['identity', 'filesystem', 'formats', 'saves', 'edges', 'ui', 'equations', 'pdf-background', 'selection', 'immutable', 'offline', 'document-aux', 'links', 'codeblocks', 'table-placement', 'table-content', 'table-row', 'text-toolbar', 'insert-menu', 'underline', 'underline-exports', 'editor-width', 'editor-alignment', 'width-indicators', 'language-picker', 'blockquotes'];
+    const available = ['identity', 'filesystem', 'formats', 'saves', 'edges', 'ui', 'equations', 'pdf-background', 'selection', 'immutable', 'offline', 'document-aux', 'links', 'codeblocks', 'table-placement', 'table-content', 'table-row', 'text-toolbar', 'insert-menu', 'underline', 'underline-exports', 'editor-width', 'editor-alignment', 'width-indicators', 'language-picker', 'language-order', 'blockquotes'];
     const groups = settings.suite === 'all' ? available : [settings.suite];
     assert.ok(groups.every(value => available.includes(value)), 'Suite must be all, ' + available.join(', '));
     const htmlExports = [];
@@ -508,6 +508,7 @@ async function run(settings, owner) {
         if (groups.includes('insert-menu')) await insertMenuCase(h, owner, record);
         if (groups.includes('width-indicators')) await widthIndicatorsCase(h, owner, record);
         if (groups.includes('language-picker')) await languagePickerCase(h, owner, record);
+        if (groups.includes('language-order')) await languageOrderCase(h, owner, record);
         if (groups.includes('editor-alignment')) await editorAlignmentCase(h, owner, record);
         if (groups.includes('editor-width')) await editorWidthCase(h, owner, record);
         if (groups.includes('underline')) await underlineCase(h, owner, record);
@@ -934,6 +935,48 @@ async function editorWidthCase(h, owner, record) {
             await h.driver({ action: 'config', key, value: previous.editorWidthScopes[key].workspace ?? null, scope: 'workspace' });
             await h.driver({ action: 'config', key, value: previous.editorWidthScopes[key].global ?? null });
         }
+    }
+}
+
+async function languageOrderCase(h, owner, record) {
+    const { source, languageOrderChecks, alphabetical } = require('./language-order.cjs');
+    const { installedEditor } = require('./table-toolbar-overflow.cjs');
+    const previous = (await h.driver({ action: 'inspect' })).languageOrderScopes;
+    const file = 'language-order.md', filePath = path.join(owner.workspace, file);
+    await h.driver({ action: 'close' }); fs.writeFileSync(filePath, source);
+    let connection;
+    try {
+        await h.driver({ action: 'config', key: 'codeLanguageOrder', value: null, scope: 'workspace' });
+        await h.driver({ action: 'config', key: 'codeLanguageOrder', value: null });
+        connection = await h.open(file);
+        assert.equal(await connection.evaluate('document.documentElement.dataset.codeLanguageOrder'), 'default');
+        await h.workbench(async page => languageOrderChecks({
+            editor: installedEditor(connection, h), keyboard: page.keyboard,
+            set: value => h.driver({ action: 'config', key: 'codeLanguageOrder', value }), record
+        }));
+        const set = async (value, scope) => {
+            await h.driver({ action: 'config', key: 'codeLanguageOrder', value, scope });
+            const expected = (await h.driver({ action: 'inspect' })).appearance.codeLanguageOrder;
+            await h.until(() => connection.evaluate(`document.documentElement.dataset.codeLanguageOrder === ${JSON.stringify(expected)}`), 'language order configuration');
+        };
+        await set('a-z', 'workspace'); await set('default');
+        assert.equal(await connection.evaluate('document.documentElement.dataset.codeLanguageOrder'), 'a-z');
+        await set(null, 'workspace');
+        assert.equal(await connection.evaluate('document.documentElement.dataset.codeLanguageOrder'), 'default');
+        await set('z-a', 'workspace');
+        assert.equal((await h.driver({ action: 'inspect' })).documents.find(document => samePath(document.path, filePath)).dirty, false);
+        await h.sourceMode(connection);
+        assert.equal(await connection.evaluate('document.getElementById("sourceEditor").value'), source);
+        connection.close(); connection = null; await h.driver({ action: 'close' }); connection = await h.open(file);
+        assert.equal(await connection.evaluate('document.documentElement.dataset.codeLanguageOrder'), 'z-a');
+        await connection.evaluate('document.querySelector(".code-lang-tag").click()');
+        assert.deepEqual(await connection.evaluate('[...document.querySelectorAll("[role=option]")].map(node => node.dataset.language)'), [...alphabetical].reverse());
+        assert.equal(fs.readFileSync(filePath, 'utf8'), source);
+        record('language-order-persistence', { workspaceOverride: true, userFallback: true, reopen: true, sourceAndCleanStatePreserved: true });
+    } finally {
+        connection?.close(); await h.driver({ action: 'close' });
+        await h.driver({ action: 'config', key: 'codeLanguageOrder', value: previous.workspace ?? null, scope: 'workspace' });
+        await h.driver({ action: 'config', key: 'codeLanguageOrder', value: previous.global ?? null });
     }
 }
 

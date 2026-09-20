@@ -37,6 +37,13 @@ export interface Messages {
 }
 
 export interface WebviewMessages {
+  codeLanguageOrderLabel: string;
+  codeLanguageOrderHelp: string;
+  codeLanguageOrderDefault: string;
+  codeLanguageOrderAscending: string;
+  codeLanguageOrderDescending: string;
+  codeLanguageOrderSaveFailed: string;
+
   languagePickerLabel: string;
   languagePickerPlaceholder: string;
   languagePickerNoResults: string;

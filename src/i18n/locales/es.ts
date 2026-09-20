@@ -34,6 +34,12 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  codeLanguageOrderLabel: "Orden de lenguajes de código",
+  codeLanguageOrderHelp: "El orden predeterminado es una selección manual, con Texto sin formato y Markdown primero. Los modos alfabéticos ordenan los nombres mostrados. Las búsquedas priorizan las coincidencias.",
+  codeLanguageOrderDefault: "Predeterminado (selección manual)",
+  codeLanguageOrderAscending: "A–Z",
+  codeLanguageOrderDescending: "Z–A",
+  codeLanguageOrderSaveFailed: "No se pudo guardar el orden de lenguajes. Se mantiene la configuración anterior.",
   languagePickerLabel: "Lenguaje del código",
   languagePickerPlaceholder: "Buscar nombres o alias",
   languagePickerNoResults: "No hay lenguajes coincidentes.",

@@ -34,6 +34,12 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  codeLanguageOrderLabel: "コード言語の表示順",
+  codeLanguageOrderHelp: "既定は手動で選んだ順序で、プレーンテキストと Markdown を先頭に表示します。アルファベット順では表示名で並べ替えます。検索時は一致度を優先します。",
+  codeLanguageOrderDefault: "既定（手動選定）",
+  codeLanguageOrderAscending: "A–Z",
+  codeLanguageOrderDescending: "Z–A",
+  codeLanguageOrderSaveFailed: "言語の表示順を保存できませんでした。以前の設定が維持されます。",
   languagePickerLabel: "コードの言語",
   languagePickerPlaceholder: "名前または別名で検索",
   languagePickerNoResults: "一致する言語はありません。",

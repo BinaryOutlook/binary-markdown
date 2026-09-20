@@ -40,12 +40,16 @@ exports.activate = async function activate(context) {
         uiKind: vscode.env.uiKind, remoteName: vscode.env.remoteName ?? null,
         trusted: vscode.workspace.isTrusted,
         simpleFileDialog: vscode.workspace.getConfiguration('files').inspect('simpleDialog.enable').globalValue,
-        appearance: Object.fromEntries(['language', 'toolbarMode', 'tableToolbarPosition', 'editorWidthMode', 'editorMaxWidth', 'editorAlignment', 'editorWidthIndicators', 'theme', 'export.pdfWhiteBackground'].map(key =>
+        appearance: Object.fromEntries(['language', 'toolbarMode', 'tableToolbarPosition', 'editorWidthMode', 'editorMaxWidth', 'editorAlignment', 'editorWidthIndicators', 'codeLanguageOrder', 'theme', 'export.pdfWhiteBackground'].map(key =>
             [key, vscode.workspace.getConfiguration('binary-markdown').get(key)])),
         editorWidthScopes: Object.fromEntries(['editorWidthMode', 'editorMaxWidth', 'editorAlignment', 'editorWidthIndicators'].map(key => {
             const setting = vscode.workspace.getConfiguration('binary-markdown').inspect(key);
             return [key, { global: setting.globalValue, workspace: setting.workspaceValue }];
         })),
+        languageOrderScopes: (() => {
+            const setting = vscode.workspace.getConfiguration('binary-markdown').inspect('codeLanguageOrder');
+            return { global: setting.globalValue, workspace: setting.workspaceValue };
+        })(),
         toolbarModeScopes: (() => {
             const setting = vscode.workspace.getConfiguration('binary-markdown').inspect('toolbarMode');
             return { global: setting.globalValue, workspace: setting.workspaceValue };
@@ -112,15 +116,16 @@ exports.activate = async function activate(context) {
             }
             case 'config': {
                 // Scope regressions remain inside the sentinel-owned profile/workspace.
-                if (request.scope !== undefined && (request.scope !== 'workspace' || !['tableToolbarPosition', 'toolbarMode', 'editorWidthMode', 'editorMaxWidth', 'editorAlignment', 'editorWidthIndicators'].includes(request.key))) {
-                    throw new Error('Only the toolbar and width preferences permit an isolated workspace override.');
+                if (request.scope !== undefined && (request.scope !== 'workspace' || !['tableToolbarPosition', 'toolbarMode', 'editorWidthMode', 'editorMaxWidth', 'editorAlignment', 'editorWidthIndicators', 'codeLanguageOrder'].includes(request.key))) {
+                    throw new Error('Only the listed editor preferences permit an isolated workspace override.');
                 }
-                const clearSetting = request.value === null && (request.scope === 'workspace' || ['toolbarMode', 'editorWidthMode', 'editorMaxWidth', 'editorAlignment', 'editorWidthIndicators'].includes(request.key));
+                const clearSetting = request.value === null && (request.scope === 'workspace' || ['toolbarMode', 'editorWidthMode', 'editorMaxWidth', 'editorAlignment', 'editorWidthIndicators', 'codeLanguageOrder'].includes(request.key));
                 const allowed = {
                     'export.pandocPath': value => typeof value === 'string',
                     'export.browserPath': value => typeof value === 'string',
                     'export.pdfWhiteBackground': value => typeof value === 'boolean',
                     'math.backslashDelimiters': value => typeof value === 'boolean',
+                    codeLanguageOrder: value => ['default', 'a-z', 'z-a'].includes(value),
                     editorWidthIndicators: value => typeof value === 'boolean',
                     editorAlignment: value => ['left', 'center', 'right'].includes(value),
                     editorWidthMode: value => ['default', 'custom', 'full'].includes(value),

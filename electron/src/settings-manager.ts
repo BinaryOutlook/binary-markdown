@@ -16,6 +16,7 @@ export interface ElectronSettings {
     editorMaxWidth: number;
     editorAlignment: EditorAlignment;
     editorWidthIndicators: boolean;
+    codeLanguageOrder: 'default' | 'a-z' | 'z-a';
     toolbarMode: string;
     tableToolbarPosition: string;
     language: string;
@@ -33,6 +34,7 @@ const DEFAULTS: ElectronSettings = {
     editorMaxWidth: 860,
     editorAlignment: 'center',
     editorWidthIndicators: true,
+    codeLanguageOrder: 'default',
     toolbarMode: 'full',
     tableToolbarPosition: 'auto',
     language: 'default',
@@ -66,7 +68,8 @@ export class SettingsManager {
             editorWidthMode: normalizeWidthMode(this.store.get('editorWidthMode')),
             editorMaxWidth: normalizeMaxWidth(this.store.get('editorMaxWidth')),
             editorAlignment: normalizeAlignment(this.store.get('editorAlignment')),
-            editorWidthIndicators: this.store.get('editorWidthIndicators') !== false };
+            editorWidthIndicators: this.store.get('editorWidthIndicators') !== false,
+            codeLanguageOrder: ['a-z', 'z-a'].includes(this.store.get('codeLanguageOrder')) ? this.store.get('codeLanguageOrder') : 'default' };
     }
 
     refreshSetting(key: keyof ElectronSettings, error = ''): void {
@@ -211,6 +214,16 @@ export class SettingsManager {
         <input type="checkbox" id="editorWidthIndicators" ${settings.editorWidthIndicators ? 'checked' : ''} aria-describedby="widthIndicatorsHelp" onchange="save('editorWidthIndicators', this.checked)">
     </div>
     <div class="field-desc" id="widthIndicatorsHelp">${messages.widthIndicatorsHelp}</div>
+
+    <div class="field">
+        <label for="codeLanguageOrder">${messages.codeLanguageOrderLabel}</label>
+        <select id="codeLanguageOrder" aria-describedby="codeLanguageOrderHelp" onchange="save('codeLanguageOrder', this.value)">
+            <option value="default" ${settings.codeLanguageOrder === 'default' ? 'selected' : ''}>${messages.codeLanguageOrderDefault}</option>
+            <option value="a-z" ${settings.codeLanguageOrder === 'a-z' ? 'selected' : ''}>${messages.codeLanguageOrderAscending}</option>
+            <option value="z-a" ${settings.codeLanguageOrder === 'z-a' ? 'selected' : ''}>${messages.codeLanguageOrderDescending}</option>
+        </select>
+    </div>
+    <div class="field-desc" id="codeLanguageOrderHelp">${messages.codeLanguageOrderHelp}</div>
 
     <h2>Images</h2>
     <div class="field field-text">

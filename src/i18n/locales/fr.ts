@@ -34,6 +34,12 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  codeLanguageOrderLabel: "Ordre des langages de code",
+  codeLanguageOrderHelp: "L’ordre par défaut est une sélection manuelle, avec Texte brut et Markdown en tête. Les modes alphabétiques trient les noms affichés. Les recherches privilégient les correspondances.",
+  codeLanguageOrderDefault: "Par défaut (sélection manuelle)",
+  codeLanguageOrderAscending: "A–Z",
+  codeLanguageOrderDescending: "Z–A",
+  codeLanguageOrderSaveFailed: "Impossible d’enregistrer l’ordre des langages. Le réglage précédent reste actif.",
   languagePickerLabel: "Langage du code",
   languagePickerPlaceholder: "Rechercher un nom ou un alias",
   languagePickerNoResults: "Aucun langage correspondant.",

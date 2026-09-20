@@ -108,6 +108,7 @@ function createWindow(filePath?: string): BrowserWindow {
             editorMaxWidth: settings.editorMaxWidth,
             editorAlignment: settings.editorAlignment,
             editorWidthIndicators: settings.editorWidthIndicators,
+            codeLanguageOrder: settings.codeLanguageOrder,
             toolbarMode: settings.toolbarMode,
             tableToolbarPosition: settings.tableToolbarPosition,
             documentBaseUri: `file://${docDir}/`,
@@ -313,6 +314,18 @@ ipcMain.on('settings-save', async (event, key: string, value: unknown) => {
         settingsManager.refreshSetting('tableToolbarPosition');
         for (const [win] of windows) {
             if (!win.isDestroyed()) win.webContents.send('host-message', { type: 'tableToolbarPosition', value });
+        }
+        return;
+    }
+    if (key === 'codeLanguageOrder') {
+        if (value !== 'default' && value !== 'a-z' && value !== 'z-a') return;
+        try { settingsManager.set(key, value); } catch {
+            settingsManager.refreshSetting(key, getI18nMessages().codeLanguageOrderSaveFailed);
+            return;
+        }
+        settingsManager.refreshSetting(key);
+        for (const [win] of windows) {
+            if (!win.isDestroyed()) win.webContents.send('host-message', { type: 'codeLanguageOrder', value });
         }
         return;
     }

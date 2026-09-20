@@ -177,6 +177,20 @@ Click the code block’s language button, or focus it and press Enter, Space, or
 
 The current identifier remains visible, including custom languages absent from the suggestions. Opening, searching, canceling, and choosing the unchanged language do not edit Markdown or create an undo step. An actual choice changes only the fence identifier and is one undoable action; code indentation, tabs, and blank lines remain intact. Choosing **Math equation** or **Mermaid diagram** explicitly converts the block to the corresponding editable preview. The search field stays above a scrolling result list in narrow or short panes.
 
+### Choose the language order
+
+Set `binary-markdown.codeLanguageOrder` in VS Code Settings, or **Code language order** in desktop Preferences:
+
+| Choice | Browsing behavior |
+| --- | --- |
+| **Default (curated)** (`default`) | Plain text and Markdown first, followed by a maintained common-language list. This is a manual selection, with no popularity service or usage tracking. |
+| **A–Z** (`a-z`) | Sort displayed names in ascending order, without pinned entries. |
+| **Z–A** (`z-a`) | Reverse the alphabetical order, without pinned entries. |
+
+Alphabetical modes use a fixed English, case-insensitive collation of the displayed names, with the canonical identifier breaking ties. Programming-language names and source identifiers remain unchanged; localized names such as Plain text participate in that same sort. Search still ranks exact, prefix, and substring matches first, using the chosen browsing order to break equal-relevance ties. Nonmatching entries, including Plain text and Markdown, disappear from search results.
+
+The preference persists and applies immediately to open pickers, retaining the query and active matching result. It does not change source, the code editing context, clean state, or undo history. In VS Code, an explicit workspace value overrides the user preference. If desktop Preferences cannot save the value, an error appears and the previous choice remains active; retry after resolving the failure.
+
 ### Display Mode / Edit Mode
 
 - **Display Mode**: Shows syntax-highlighted code with language tag and copy button
@@ -280,6 +294,7 @@ FORCE_RELATIVE_PATH: true
 | --- | --- | --- |
 | `binary-markdown.theme` | Editor theme (`github`, `sepia`, `night`, `dark`, `minimal`, `perplexity`, `things`) | `things` |
 | `binary-markdown.fontSize` | Base font size (px) | `16` |
+| `binary-markdown.codeLanguageOrder` | Code-language browsing order: `default`, `a-z`, or `z-a`; search prioritizes relevance | `default` |
 | `binary-markdown.editorWidthMode` | Visual editor column width: `default`, `full`, or `custom` | `default` |
 | `binary-markdown.editorMaxWidth` | Outer column cap in CSS pixels for Custom mode; integer 320–4000 | `860` |
 | `binary-markdown.editorWidthIndicators` | Show the visual editor width guide | `true` |
