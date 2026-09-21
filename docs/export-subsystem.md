@@ -24,6 +24,10 @@ This is the first area applying the [documentation standard](documentation-stand
 
 Deliver a user-visible workflow in which a user saves a local Markdown document, selects HTML, PDF, DOCX, or EPUB, and receives a usable export beside the source. Explain recoverable compromises and fatal failures clearly. The first release may have simple layout and limited customization; preservation of supported content, source integrity, truthful progress, and safe file handling remain required.
 
+Markdown is the authoritative source. Export is responsible for accurate supported content, usable native document structure and compatibility verified in the stated reader versions. Subsequent editing in a word processor follows that application's native conventions. Editable DOCX output does not promise code-editor behavior inside the receiving application. The [user-facing export scope](../media/export-help.md#export-scope-and-editing) explains the recommended workflow and known limitations.
+
+For DOCX code under AC-07, verify initial content, whitespace, numbering and layout, retained editable text, and reader save/reopen behavior. Basic editing checks remain useful compatibility evidence and can identify exporter defects. The maintainer's [2026-09-21 scope decision](../reports/validation/2026-09-21-docx-reader-checkpoint.md#maintainer-scope-decision-2026-09-21) accepts the documented Enter-on-empty-numbered-line behavior as a reader limitation; retain its observed result separately from acceptance status. This exception does not waive other required checks or excuse malformed output, source loss, or incorrect export configuration. No format or supported-host requirement changes.
+
 The following decisions define the export MVP.
 
 | Area | Confirmed decision |

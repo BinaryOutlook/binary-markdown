@@ -123,6 +123,8 @@ The [editor guide](docs/editor-guide.md) covers formatting, keyboard operations,
 
 Export supports **HTML, PDF, Word (.docx), and EPUB** in **local desktop VS Code on macOS, Linux and Windows**. HTML/PDF follow supported editor rendering; DOCX/EPUB prioritize editable content and structure. See the [version notes](release-notes/0.3.0.md) and the [export validation history](reports/validation/2026-09-10-export.md) for tested systems and limitations.
 
+Markdown remains the authoritative source for the document. Exported DOCX content uses the receiving application's native editing behavior; see [export scope and editing](media/export-help.md#export-scope-and-editing) for the workflow and known reader limitations.
+
 **Remote-SSH export is not yet supported.** The menu explains this restriction and marks every format unavailable. To export now, open a local copy of the Markdown file and its referenced assets in desktop VS Code on macOS, Linux or Windows. Installing Pandoc or a browser does not enable export in a remote window.
 
 Save the named Markdown file, then select the sharing-arrow **Export** button in the toolbar (or **More toolbar actions** in a narrow pane). Choose a format from its dropdown. Unsaved work produces a save-and-retry message; export does not save automatically. The job shows its actual stage, supports cancellation, and reports the saved path and any fallback warnings.
@@ -148,7 +150,7 @@ Files are saved beside the Markdown source with the same filename stem. An occup
 
 PDF defaults to a white page with GitHub light appearance. Disable `binary-markdown.export.pdfWhiteBackground` in VS Code settings to fill the entire page, including margins, with the current editor theme. Text keeps its 16 mm inset. This setting does not change the editor, source images or other export formats.
 
-PDF and DOCX code labels default to the top-left, with all four corners selectable. Total logical-line counts and per-line numbering are independently optional and initially off. DOCX numbering is experimental; the [reader checkpoint](reports/validation/2026-09-21-docx-reader-checkpoint.md) records passing edits, the unresolved Enter-on-empty-line case and remaining layout checks. See [export help](media/export-help.md#code-language-tabs) for the settings, source-preservation rules, and reader limitations.
+PDF and DOCX code labels default to the top-left, with all four corners selectable. Total logical-line counts and per-line numbering are independently optional and initially off. DOCX numbering is experimental; [export help](media/export-help.md#code-line-numbers) explains the known Enter-on-empty-line limitation, and the [reader checkpoint](reports/validation/2026-09-21-docx-reader-checkpoint.md) records observed edits and remaining checks. See [code language settings](media/export-help.md#code-language-tabs) for label options and source-preservation rules.
 
 Supported resources retain source resolution; missing or unsupported content receives a visible fallback and warning summary. PDF uses simple block fitting, so blank regions are acceptable. Advanced pagination, templates, compression, custom destinations and unsaved export remain future work. See [export help](media/export-help.md) for the initial format limitations and [the subsystem outline](docs/export-subsystem.md) for the agreed implementation scope.
 

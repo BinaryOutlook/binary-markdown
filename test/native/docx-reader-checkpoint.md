@@ -13,7 +13,7 @@ This checkpoint covers editable native paragraphs, retained source whitespace an
 
 These are test targets, not standing pass claims. Record the operating system, architecture and exact application version with each run. Put dated results in [validation reports](../../reports/README.md#validation); retain failures and unavailable checks. Additional Word platforms and reader versions, automatic syntax re-highlighting after editing, and a guarantee that copied code always excludes numbers are outside this checkpoint.
 
-Counts and language labels describe the source at export time. Editing a document in Word or Writer does not recompute them or syntax highlighting. Native list numbers should follow the tested paragraph edits. Soft breaks remain inside their existing paragraph and do not receive another list number. This is an editable document, not a live code editor.
+Counts and language labels describe the source at export time. Editing a document in Word or Writer does not recompute them or syntax highlighting. Native list numbers should follow the tested paragraph edits, subject to the accepted empty-line limitation below. Soft breaks remain inside their existing paragraph and do not receive another list number. Follow the [export scope and editing guidance](../../media/export-help.md#export-scope-and-editing) when interpreting compatibility results.
 
 ## Prepare fresh inputs
 
@@ -75,6 +75,8 @@ Make a separate fresh copy of `editing.docx` for each operation and each reader.
 | Soft break | Press Shift+Enter immediately before `message` in the last paragraph | 3 |
 
 `expectations.json` supplies exact paragraph strings for every case; its `\t` and `\n` escapes represent a tab and a soft break. Verify the intended text change, sequential native numbers, unchanged second-block restart, retained code styling and all untouched whitespace. In particular, test both Enter positions and Enter on a blank paragraph: readers may apply a following paragraph style or terminate a list. Record such behavior as a failure or explicit limitation; do not manually repair formatting and report the original action as passing.
+
+The [maintainer's 2026-09-21 decision](../../reports/validation/2026-09-21-docx-reader-checkpoint.md#maintainer-scope-decision-2026-09-21) accepts the observed native-list termination for **Enter on a blank** in the named readers. Keep that operation, its original expected result and the actual saved/reopened result in the evidence; classify it as an accepted reader limitation rather than a passing edit or an outstanding exporter fix. Do not weaken fixture expectations or generalize the exception to other operations. Initial source preservation, untouched content, normal line-end continuation and the remaining reader checks retain their requirements.
 
 After each edit, save in DOCX format, close the document, reopen the saved file and repeat the checks. The exporter currently writes totals as static text, so the fixture expects those labels to remain 3 and 2 even when editing changes the number of paragraphs. These values describe the existing implementation; acceptance of static totals is tracked in the [checkpoint report](../../reports/validation/2026-09-21-docx-reader-checkpoint.md). Automatic syntax re-highlighting is outside this checkpoint. A soft break adds a visual line inside one numbered paragraph, so its expected paragraph string contains a newline but its list number remains unchanged.
 

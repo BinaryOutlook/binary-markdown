@@ -11,7 +11,7 @@
 - Add searchable code-language selection and curated or alphabetical browsing orders.
 - Add above/below equation-source placement and optional visual soft wrapping without changing mathematical structure.
 - Add configurable PDF/DOCX code-label placement with a top-left default, optional total line counts, and optional per-line numbering. DOCX numbering remains experimental; reader acceptance and historical pagination observations are recorded in the [reader checkpoint](reports/validation/2026-09-21-docx-reader-checkpoint.md).
-- Keep the code paragraph style and native numbering when Enter adds a line at the end of nonempty numbered DOCX code; empty-list behavior remains a documented reader limitation awaiting acceptance.
+- Keep the code paragraph style and native numbering when Enter adds a line at the end of nonempty numbered DOCX code; Enter on an empty numbered line remains an [accepted reader limitation](media/export-help.md#code-line-numbers).
 - Check `main` daily for automatic VSIX publication after at least three days since the previous official release. Preserve manual releases, validate bot version bumps through PRs, and reuse the exact tested package and source.
 - Keep inline equation edits open and cancellable while delayed outline updates or document synchronization run.
 

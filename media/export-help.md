@@ -8,6 +8,12 @@ Export is experimental in local desktop VS Code on macOS, Linux and Windows. Rem
 
 Use a workspace you trust and a local folder you can write to. The source must have a filename and be saved. The repository's validation record identifies the specific systems tested.
 
+## Export scope and editing
+
+Binary Markdown's export subsystem produces documents from a saved Markdown source. Export focuses on preserving supported content and producing readable output for the selected format. Markdown remains the authoritative source for code and document structure.
+
+DOCX content uses native document features and remains editable in the receiving application. Subsequent editing follows that application's conventions, including its handling of numbered paragraphs and formatting. We test compatibility in named reader versions and document known limitations. For consistent code formatting and numbering, make changes in Markdown and export again. See [code-line numbers](#code-line-numbers) for the specific empty-line editing behavior.
+
 ## Export a saved document
 
 1. Open the intended document in Binary Markdown and save it.
@@ -90,7 +96,11 @@ Enable `binary-markdown.export.showCodeLineNumbers` (default `false`) to add a g
 
 Code text, indentation and highlighting remain in the document. Numbers are generated presentation content, not saved Markdown. PDF text extraction can include them and can group the gutter separately from the code; extracted whitespace can also differ from the source. Do not rely on a PDF for an exact code copy. Interactive selection/copy and spoken reading order remain reader-specific checks.
 
-DOCX numbering remains experimental pending the named-reader checks. It uses editable paragraphs with automatic list numbers, preserves the original highlighting, and keeps the gutter outside the shaded code area. Disabling numbering retains the existing code-block layout. Highlighting reflects the exported source and is not recalculated after editing in Word or another reader. Automatic wrapping does not create a numbered paragraph; inserting a paragraph and inserting a soft break are different reader operations. See the [reader checkpoint](../reports/validation/2026-09-21-docx-reader-checkpoint.md) for the named reader versions, observed results and pending editing checks. In the tested Word and LibreOffice versions, Enter at the end of a nonempty numbered code line continues the code style and numbering. Enter on an already empty numbered line ends the list and can change formatting or consume the blank paragraph; that editing case remains unresolved. Copying can include list numbers depending on the reader and selection; number-free copying is not guaranteed.
+DOCX numbering remains experimental pending the remaining named-reader checks. It uses editable paragraphs with automatic list numbers, preserves the original highlighting, and keeps the gutter outside the shaded code area. Disabling numbering retains the existing code-block layout. Highlighting reflects the exported source and is not recalculated after editing in Word or another reader. Automatic wrapping does not create a numbered paragraph; inserting a paragraph and inserting a soft break are different reader operations. In the tested Word and LibreOffice versions, Enter at the end of a nonempty numbered code line continues the code style and numbering.
+
+**Known DOCX editing behavior:** In the tested Word and LibreOffice versions, pressing Enter on an already empty numbered code line ends the list. This can remove numbering, change formatting, or remove the blank paragraph. This behavior occurs during editing in the receiving application and is an accepted reader limitation for this version. For consistent code formatting and numbering, edit the Markdown source and export again.
+
+See the [reader checkpoint](../reports/validation/2026-09-21-docx-reader-checkpoint.md) for the named reader versions, observed results, acceptance decision and remaining checks. Copying can include list numbers depending on the reader and selection; number-free copying is not guaranteed.
 
 ## Underlined text
 
