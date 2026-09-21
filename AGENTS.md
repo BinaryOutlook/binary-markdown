@@ -55,6 +55,20 @@ These instructions apply to work in this repository. Follow the user's explicit 
 - Keep required CI enabled and respect branch protections. This policy permits skipping active monitoring; it does not permit bypassing required checks or release gates.
 - Report verification accurately: identify the previous successful run and state whether newer CI is pending, failed, or unverified. Never describe expected success as an observed pass. Investigate known failures rather than dismissing them because an earlier run passed.
 
+## Release versions and review candidates
+
+- The user decides the intended release version. Before preparing a new release series, recommend a target and briefly explain the feature scope, compatibility changes and remaining acceptance work. Carry forward an approved target without repeatedly asking.
+- Recommend patch increments for compatible fixes and minor increments for new functionality. Highlight breaking changes explicitly. While the project remains below 1.0, ask the user to decide the appropriate milestone rather than inferring it from change volume.
+- If a release target remains undecided, continue authorized development and testing with clearly identified development snapshots. An unanswered question does not approve a release version. Existing explicitly authorized patch automation remains governed by the release policy.
+- Once the target and candidate preparation are authorized, label final-review builds "`<version> RC<n>`", starting at RC1. Increment the candidate counter when preparing a replacement review build; keep the approved release target unchanged.
+- Use RC status when the intended feature scope is settled and remaining work is acceptance testing and fixes. Use development or beta status while substantial design or feature work remains.
+- Distinguish the review label from the package version. VSIX manifests require numeric `major.minor.patch` versions. For GitHub-distributed candidates, labels and prerelease tags may use suffixes such as `v0.4.0-rc.1`. Follow the release guide for channel-specific numbering.
+- Keep manifests, lockfile version fields, release notes and build information consistent when changing the package version. Preserve the extension identifier so settings and update continuity remain intact.
+- Identify every distributed candidate by its review label, package version, full source commit, local-change status and VSIX checksum. Retain the matching build-information and checksum files. Do not silently replace a previously distributed candidate.
+- Before requesting human review, provide the exact artifact, installation instructions, build-identity check, focused acceptance checklist and known limitations. Confirm which candidate each result applies to.
+- A changed candidate requires verification appropriate to its changes. Explain which earlier observations still apply and which need repeating. Follow existing CI and release gates without claiming that an earlier candidate's results validate a different build.
+- Candidate preparation, version selection, merging and release publication are separate actions. Perform each within existing authorization and the maintained release procedure.
+
 ## Delivery and communication
 
 - Carry authorized local work through implementation and appropriate verification. Keep the user informed about meaningful findings, decisions, and blockers.
