@@ -12,7 +12,14 @@ Development now continues in this standalone repository. The [original fork](htt
 
 ## Open source, releases and support
 
-Binary Markdown is proudly open source. Official releases are published periodically, when a set of changes has completed release validation; we do not promise a fixed release schedule.
+Binary Markdown is proudly free and open-source software:
+
+- **Free (cost):** Our official releases and all editor features are available at no charge.
+- **Free (freedom):** You may run the software for any purpose, study and modify its source, and redistribute original or modified versions under the applicable licenses.
+
+Our commitment draws on the free software philosophy articulated by Richard Stallman and advanced by the GNU Project and the Free Software Foundation. The [licensing guide](docs/licensing.md#cost-and-software-freedom) explains that heritage, the four freedoms, and AGPL obligations. Commercial redistribution is welcome under the applicable licenses; our no-charge pricing does not bind other distributors.
+
+Official releases are published periodically, when a set of changes has completed release validation; we do not promise a fixed release schedule.
 
 You are welcome to build, study, and modify the extension between releases. For development builds, we recommend starting from `main`, where changes are integrated. Other branches may contain incomplete experiments. An unreleased build has not necessarily undergone the same validation as an official release.
 
@@ -171,4 +178,6 @@ Bug reports, translations, accessibility work and compatibility testing are welc
 
 The [reference archive](archive/README.md) preserves superseded README, website, screenshots, and upstream release notes for historical reference. Archived instructions describe the original project and should not be used to install Binary Markdown.
 
-For the 0.2.0 transition, Binary Markdown is licensed under [GNU AGPL version 3 or later](LICENSE) (`AGPL-3.0-or-later`). Earlier MIT releases retain their original terms. The [retained MIT notice](LICENSES/AnyMarkdown-MIT.txt) covers inherited upstream code and prior MIT contributions; third-party components retain their own licences. See [NOTICE](NOTICE) and the [licensing guide](docs/licensing.md) for scope, retained grants and matching source. Project and dependency licence notices are included in packaged builds. The Electron desktop sources are retained under the Binary Markdown name; desktop installers and their compatibility are a separate release effort.
+Since the 0.2.0 transition, Binary Markdown is licensed under [GNU AGPL version 3 or later](LICENSE) (`AGPL-3.0-or-later`). Earlier MIT releases retain their original terms. The [retained MIT notice](LICENSES/AnyMarkdown-MIT.txt) covers inherited upstream code and prior MIT contributions; third-party components retain their own licences. See [NOTICE](NOTICE) and the [licensing guide](docs/licensing.md) for scope, retained grants and matching source. Project and dependency licence notices are included in packaged builds. The Electron desktop sources are retained under the Binary Markdown name; desktop installers and their compatibility are a separate release effort.
+
+If you prefer an MIT-licensed starting point, you are welcome to fork [Binary Markdown v0.1.0](https://github.com/BinaryOutlook/binary-markdown/tree/v0.1.0) or an MIT-licensed version of the original [Any Markdown](https://github.com/raggbal/any-markdown). Both are welcome choices. See [MIT-licensed starting points](docs/licensing.md#mit-licensed-starting-points) for the scope of those grants.

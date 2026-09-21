@@ -11,6 +11,7 @@ Start here for maintained Binary Markdown guidance. These pages describe the sou
 | Build or contribute | [Build from source](building.md) | [Contributing](../CONTRIBUTING.md), [documentation standard](documentation-standard.md) |
 | Test a change | [Validation guide](testing/README.md) | [Export verification](export-verification.md), [Windows checks](testing/windows.md) |
 | Understand export | [Architecture](export-architecture.md) | [Requirements and format support](export-subsystem.md) |
+| Understand software freedom, cost, and licensing | [Cost and software freedom](licensing.md#cost-and-software-freedom) | [Commercial redistribution](licensing.md#redistribution-and-commercial-use), [MIT-licensed starting points](licensing.md#mit-licensed-starting-points) |
 | Understand project policy | [Releases and support](releases-and-support.md) | [Roadmap](roadmap.md), [licensing](licensing.md), [branding](branding.md), [license decision](decisions/001-agpl-transition.md) |
 
 ## Historical material
