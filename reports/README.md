@@ -6,6 +6,7 @@ These records preserve observations about particular revisions and environments.
 
 | Date | Report | Scope |
 | --- | --- | --- |
+| 2026-09-21 | [Table source preservation](investigations/2026-09-21-table-source-preservation.md) | Baseline/integration conversion comparison and six Chromium interaction trials; source-formatting and compatibility defects, with installed-host file saves unverified |
 | 2026-09-20 | [Editable DOCX code-line numbering](investigations/2026-09-20-docx-code-numbering.md) | Isolated native-paragraph/table prototypes, preservation findings and LibreOffice development-reader evidence; reader matrix and technical freeze remain unaccepted |
 | 2026-09-14 | [DOCX code blocks and language tabs](investigations/2026-09-14-docx-code-blocks.md) | Reproduction, implementation choices and local reader/format checks; final Word visual acceptance remains separate |
 | 2026-09-12 | [Export page background](investigations/2026-09-12-export-page-background.md) | Original PDF investigation and subsequent fix evidence |

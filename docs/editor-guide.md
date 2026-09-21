@@ -134,6 +134,12 @@ Wide tables scroll horizontally within the table, keeping the surrounding docume
 | `←` / `→` | Navigate within/between cells |
 | `Cmd+A` | Select all text in current cell |
 
+#### Table source preservation
+
+Visual editing rebuilds Markdown from the edited document. After a visual edit, saving can reformat untouched tables, including column padding, separator lengths, and inline formatting markers. Adding a character and then deleting it does not guarantee restoration of the original source layout, so Git can show changes beyond the intended edit. Exact table source preservation is not currently guaranteed.
+
+Some existing table differences affect compatibility as well as formatting: a table without body rows can lose its alignment markers, and pipes inside inline code are interpreted differently from GitHub Flavored Markdown. For work where source layout matters, use a plain-text editor and inspect the saved diff. If using **Source** mode, switch before any visual edit; switching afterward can already include normalized content and does not restore the original formatting. Use the [D41 demonstrator](../test/fixtures/manual/editor-export-demonstrator.md#d41--table-source-preservation-investigation) with the [source comparison instructions](testing/manual-feature-review.md#run-the-source-validator), including a separate Source-mode trial. The [dated investigation](../reports/investigations/2026-09-21-table-source-preservation.md) records the evidence and remaining checks.
+
 ### Code Block Operations
 
 | Key | Action |

@@ -11,6 +11,7 @@ Use this guide to review the development features from issues #19–#40 and inve
 
 ```sh
 node scripts/validate-manual-review.cjs
+mkdir -p .vscode-test
 mkdir .vscode-test/manual-feature-review
 cp test/fixtures/manual/editor-export-demonstrator.md .vscode-test/manual-feature-review/baseline.md
 cp .vscode-test/manual-feature-review/baseline.md .vscode-test/manual-feature-review/review.md
@@ -34,7 +35,7 @@ Mark each row **Pass**, **Fail**, or **Not tested** in your own review record. K
 | D24 | Full toolbar default | Test unset, explicit Simple, and explicit Full; settings persist without losing selection. |
 | D25 | Insert | Try all eight entries, cancellation, retained selection, real image picker, and one-step undo. |
 | D26 | Contextual row | Full uses a second docked row; Simple uses the primary row; non-table and Source mode remove the context. |
-| D27 | Underline command | Apply and remove underline in paragraphs, bullets, nested/ordered/task lists, quotes, headers, and cells using actual selection, toolbar, shortcut, and caret typing. |
+| D27 | Underline command | Apply and remove underline in paragraphs, bullets, nested/ordered/task lists, quotes, headers, and cells using actual selection, toolbar, shortcut, caret typing, and narrow toolbar overflow. |
 | D28 | Width modes | Test Default, Full, and 640/1200 px Custom; check shrinking, outline changes, and persistence. |
 | D29 | Column alignment | Move a capped column left/center/right without changing text alignment; test a narrow pane. |
 | D30 | Width guides | Hover/focus/dismiss marks; test hiding them, Full width, Source mode, and content clearance. |
@@ -54,7 +55,7 @@ For settings, menus, and cancellation, verify that a clean document stays clean.
 
 ## Run the source validator
 
-The script checks fixture coverage, balanced fences, and the five declared logical-line counts. It does not run the editor, validate exported binaries, or grant a manual pass.
+The script checks fixture coverage, balanced fences, and five selected logical-line counts. It does not run the editor, validate exported binaries, or grant a manual pass.
 
 After a trial that should leave the saved source unchanged, compare its baseline and result:
 
