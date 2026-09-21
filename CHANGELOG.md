@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+The current human-review candidate is **0.4.0 RC1**, with numeric package version `0.4.0`. See the [candidate notes](release-notes/0.4.0-rc.1.md) for installation, review scope and remaining acceptance checks. This is not an official release.
+
 - Fix blockquote contrast across themes and apply table-toolbar placement with one selection.
 - Distinguish table settings from overflow, keep complete toolbar actions reachable during resizing, and scroll wide tables locally to reveal every cell.
 - Show standard formatting by default while retaining explicit choices and Simple mode; place docked table controls in a contextual second row.
