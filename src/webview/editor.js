@@ -313,6 +313,12 @@
                 closeToolbarOverflow(true);
             }
         });
+        toolbarOverflow.addEventListener('mousedown', function(event) {
+            // Keep the focused menu item until click dispatch. On macOS, a
+            // button mouse press can blur it without focusing the new button,
+            // letting focusout hide the menu before the action receives click.
+            if (event.button === 0 && event.target.closest('button')) event.preventDefault();
+        });
         toolbarOverflow.addEventListener('focusout', function() {
             queueMicrotask(() => {
                 if (!toolbarOverflow.contains(document.activeElement) && document.activeElement !== toolbarMore) closeToolbarOverflow(false);

@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Keep mouse formatting actions, including underline and bold, working when they move into the toolbar overflow menu.
 - Fix blockquote contrast across themes and apply table-toolbar placement with one selection.
 - Distinguish table settings from overflow, keep complete toolbar actions reachable during resizing, and scroll wide tables locally to reveal every cell.
 - Show standard formatting by default while retaining explicit choices and Simple mode; place docked table controls in a contextual second row.
