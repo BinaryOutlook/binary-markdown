@@ -17,6 +17,8 @@ Each lane runs compilation, frozen-input checks, unit and real-converter tests, 
 
 ## Run and inspect native checks
 
+Use the [manual feature review](manual-feature-review.md) for a sectioned Markdown demonstrator, per-feature acceptance checklist, and exact-source comparison tool covering the editor/export integration and the reported table round-trip concern.
+
 Use the [native harness](../../test/native/export-smoke.md) with a fresh owned profile, an identified VSIX and actual converters. Follow the [artifact audit procedure](../../test/native/export-artifact-audit.md) to inspect outputs, and retain representative reader observations where appearance matters. The [manual copy and outline fixture](../../test/fixtures/manual/copy-paste.md) supports targeted UI checks; it carries no standing pass claim.
 
 Record the source commit, package hash, OS/architecture, tool versions, commands, outcomes and skips. Keep current-run logs and generated files in ignored output directories or CI artifacts. Curated, sanitized summaries belong in [reports/validation](../../reports/README.md#validation), with links to the exact run or compact evidence. Do not include account names, personal documents, machine addresses or raw local profile paths.

@@ -6,7 +6,8 @@ const fs = require('node:fs');
 const path = require('node:path');
 const root = path.resolve(__dirname, '..');
 const files = new Set(['README.md', 'CONTRIBUTING.md', 'CHANGELOG.md',
-    'media/export-help.md', 'archive/README.md', 'test/fixtures/manual/copy-paste.md']);
+    'media/export-help.md', 'archive/README.md', 'test/fixtures/manual/copy-paste.md',
+    'test/fixtures/manual/editor-export-demonstrator.md']);
 function collect(directory) {
     for (const entry of fs.readdirSync(path.join(root, directory), { withFileTypes: true })) {
         const name = directory + '/' + entry.name;
