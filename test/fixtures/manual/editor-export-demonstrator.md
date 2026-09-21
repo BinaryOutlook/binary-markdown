@@ -106,6 +106,18 @@ Paragraph target text and <u>already underlined</u> text.
 
 Literal code must stay literal: `<u>target</u>`.
 
+Check these selections separately: select only `target` in the mixed-code bullet, then select the whole bullet. Only the ordinary-text selection should accept underline; including the code span should show a message and leave the source unchanged.
+
+- Mixed-code target `Widget` words.
+- Linked [target](https://example.com/) words.
+
+| Link and code selection | Expected check |
+| --- | --- |
+| Linked [target](https://example.com/) words. | Underline the link label without changing its destination. |
+| Mixed-code target `Widget` words. | Underline ordinary text separately; reject a selection containing code. |
+
+For the linked word, select it with the mouse and press Cmd/Ctrl+U while the pointer remains over the link. Repeat with the pointer moved away, using Things, GitHub, and Perplexity themes. Check that Source contains an explicit `<u>` wrapper, then toggle again and check its removal. A theme's decorative link underline alone is not stored formatting.
+
 ## D28 — Default, Full, and Custom widths
 
 Try Default, Full, and Custom widths of 640 and 1200 pixels. Narrow the window and open or close the outline. The column should fit the available pane without changing this paragraph, the current selection, or undo history. This longer sentence makes natural text wrapping easy to see as the available width changes.

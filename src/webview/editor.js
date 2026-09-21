@@ -6181,7 +6181,14 @@
             markdown = readCurrentMarkdown();
             undoManager.saveSnapshot();
         }
-        document.execCommand('underline');
+        // Native underline state includes theme decorations on links/headings.
+        // Hide those only while toggling, so the command sees authored <u> tags.
+        if (formatsSelection) editor.classList.add('underline-command');
+        try {
+            document.execCommand('underline');
+        } finally {
+            if (formatsSelection) editor.classList.remove('underline-command');
+        }
         // A caret-only toggle affects subsequent typing; it is not a document edit.
         if (formatsSelection) syncMarkdownSync();
     }

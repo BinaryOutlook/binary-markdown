@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Apply underline to selected links and headings consistently when themes supply decorative underlines, including hovered links; retain explicit underline in saved Markdown.
 - Keep mouse formatting actions, including underline and bold, working when they move into the toolbar overflow menu.
 - Fix blockquote contrast across themes and apply table-toolbar placement with one selection.
 - Distinguish table settings from overflow, keep complete toolbar actions reachable during resizing, and scroll wide tables locally to reveal every cell.

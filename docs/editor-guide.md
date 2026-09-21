@@ -14,7 +14,9 @@ Select ordinary text and choose **Underline**, use `Ctrl+U` (`Cmd+U` on macOS), 
 
 Underline is saved as `<u>text</u>`. The visual editor recognizes paired, attribute-free `<u>` tags and supports combinations with bold, italic, strikethrough, and links in paragraphs, lists, quotes, and table cells. Formatting across paragraph or quote-line boundaries produces balanced inline wrappers for each source line. Arbitrary HTML attributes and unrelated HTML are not activated by this feature.
 
-Code spans, code blocks, equations, and generated document blocks cannot be underlined through the command. To show a literal example, use code such as `` `<u>text</u>` `` or escape the opening angle brackets as `\<u>text\</u>`. Other Markdown readers need support for this inline HTML representation to display underline. See [underlined text in exports](../media/export-help.md#underlined-text) for the existing four export formats and reader limitations.
+Code spans, code blocks, equations, and generated document blocks cannot be underlined through the command. If a selection includes any of these, the entire command is rejected with a message; ordinary words beside an inline code span can still be selected and underlined separately. This also applies inside a list item or table cell. To show a literal example, use code such as `` `<u>text</u>` `` or escape the opening angle brackets as `\<u>text\</u>`. Other Markdown readers need support for this inline HTML representation to display underline. See [underlined text in exports](../media/export-help.md#underlined-text) for the existing four export formats and reader limitations.
+
+For links whose theme supplies a decorative underline, select existing link text before applying Underline. Turning underline on at a caret inside such a link does not yet reliably store underline on newly typed text.
 
 ## Insert menu
 

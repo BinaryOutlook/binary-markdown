@@ -644,6 +644,10 @@ body {
 .editor strong, .editor b { font-weight: 600; }
 .editor em, .editor i { font-style: italic; }
 .editor del, .editor s { text-decoration: line-through; }
+/* Keep decorative theme underlines out of the native formatting command's state. */
+.editor.underline-command a, .editor.underline-command h2 {
+    text-decoration-line: none !important;
+}
 .editor code {
     font-family: var(--font-mono);
     font-size: 0.9em;
