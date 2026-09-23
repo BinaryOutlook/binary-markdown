@@ -11,6 +11,20 @@ const properties = manifest.contributes.configuration.properties;
 const translationFiles = () => fs.readdirSync(root).filter(name => /^package\.nls(?:\.[\w-]+)?\.json$/.test(name)).sort();
 const readTranslations = name => JSON.parse(fs.readFileSync(path.join(root, name), 'utf8'));
 
+test('language picker strings reach the editor webview dictionary in every locale', () => {
+    for (const locale of ['en', 'es', 'fr', 'ja', 'ko', 'zh-cn', 'zh-tw']) {
+        const { webviewMessages } = require('../../out/locales/' + locale + '.js');
+        for (const key of ['languagePickerLabel', 'languagePickerPlaceholder', 'languagePickerNoResults', 'languagePickerCurrent',
+            'languagePickerPlainText', 'languagePickerMath', 'languagePickerMermaid',
+            'codeLanguageOrderLabel', 'codeLanguageOrderHelp', 'codeLanguageOrderDefault', 'codeLanguageOrderAscending',
+            'codeLanguageOrderDescending', 'codeLanguageOrderSaveFailed',
+            'mathSourcePositionLabel', 'mathSourcePositionHelp', 'mathSourcePositionAbove', 'mathSourcePositionBelow', 'mathSourcePositionSaveFailed',
+            'mathSourceWrapLabel', 'mathSourceWrapHelp', 'mathSourceWrapSaveFailed']) {
+            assert.ok(webviewMessages[key]?.trim(), locale + ': editor dictionary missing ' + key);
+        }
+    }
+});
+
 function settingsStrings() {
     return Object.values(properties).flatMap(schema => [schema.description, ...(schema.enumDescriptions || [])]);
 }
@@ -25,7 +39,7 @@ test('every settings description and option explanation uses a manifest translat
     for (const text of settingsStrings()) {
         assert.match(text, /^%[\w.]+%$/, `Hard-coded or missing settings text: ${text}`);
     }
-    for (const setting of ['language', 'toolbarMode', 'tableToolbarPosition', 'outlineStateScope', 'outlineActiveColor']) {
+    for (const setting of ['language', 'toolbarMode', 'tableToolbarPosition', 'codeLanguageOrder', 'mathSourcePosition', 'export.codeLanguagePosition', 'outlineStateScope', 'outlineActiveColor']) {
         const schema = properties[`binary-markdown.${setting}`];
         assert.equal(schema.enumDescriptions?.length, schema.enum.length, `${setting}: explain every option`);
     }
@@ -38,7 +52,7 @@ test('table placement defaults to Automatic and describes every explicit alterna
     assert.deepEqual(setting.enum, require('../../src/shared/table-placement').positions);
     for (const locale of ['en', 'es', 'fr', 'ja', 'ko', 'zh-cn', 'zh-tw']) {
         const { webviewMessages } = require('../../out/locales/' + locale + '.js');
-        for (const key of ['tableControls', 'tableMenu', 'tablePlacement', 'tablePositionAuto', 'tablePositionTopBar',
+        for (const key of ['tableControls', 'tableMenu', 'tableMoreActions', 'tablePlacement', 'tablePositionAuto', 'tablePositionTopBar',
             'tablePositionFixed', 'tablePositionTopLeft', 'tablePositionTopRight', 'tablePositionBottomLeft',
             'tablePositionBottomRight', 'tablePositionLeft', 'tablePositionRight', 'alignLeft', 'alignCenter', 'alignRight']) {
             assert.ok(webviewMessages[key]?.trim(), locale + ': ' + key);

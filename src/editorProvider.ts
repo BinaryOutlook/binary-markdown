@@ -348,6 +348,7 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
     // Track the currently active webview panel for undo/redo command forwarding
     private activeWebviewPanel: vscode.WebviewPanel | undefined;
     private readonly exportControllers = new Map<vscode.WebviewPanel, ExportController>();
+    private tablePositionUpdates: Promise<void> = Promise.resolve();
 
     public insertToc(): boolean {
         if (!this.activeWebviewPanel?.active) { return false; }
@@ -488,6 +489,13 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
                     {
                         theme: config.get<string>('theme', 'github'),
                         fontSize: config.get<number>('fontSize', 16),
+                        editorWidthMode: config.get<string>('editorWidthMode', 'default'),
+                        editorMaxWidth: config.get<number>('editorMaxWidth', 860),
+                        editorAlignment: config.get<string>('editorAlignment', 'center'),
+                        editorWidthIndicators: config.get<boolean>('editorWidthIndicators', true),
+                        mathSourceWrap: config.get<boolean>('mathSourceWrap', false),
+                        mathSourcePosition: config.get<string>('mathSourcePosition', 'above'),
+                        codeLanguageOrder: config.get<string>('codeLanguageOrder', 'default'),
                         toolbarMode: config.get<string>('toolbarMode', 'full'),
                         tableToolbarPosition: normalizeTablePosition(config.get('tableToolbarPosition')),
                         renderGeneration,
@@ -669,10 +677,41 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
         let configurationRefresh: ReturnType<typeof setTimeout> | undefined;
         // Listen for configuration changes
         const changeConfigSubscription = vscode.workspace.onDidChangeConfiguration(e => {
+            const themeChanged = e.affectsConfiguration('binary-markdown.theme');
+            if (themeChanged) {
+                void webviewPanel.webview.postMessage({ type: 'theme', value:
+                    vscode.workspace.getConfiguration('binary-markdown', document.uri).get('theme', 'things') });
+            }
             const positionChanged = e.affectsConfiguration('binary-markdown.tableToolbarPosition');
             if (positionChanged) {
                 void webviewPanel.webview.postMessage({ type: 'tableToolbarPosition', value:
                     normalizeTablePosition(vscode.workspace.getConfiguration('binary-markdown').get('tableToolbarPosition')) });
+            }
+            const toolbarModeChanged = e.affectsConfiguration('binary-markdown.toolbarMode');
+            if (toolbarModeChanged) {
+                void webviewPanel.webview.postMessage({ type: 'toolbarMode', value:
+                    vscode.workspace.getConfiguration('binary-markdown').get('toolbarMode', 'full') });
+            }
+            const widthChanged = ['editorWidthMode', 'editorMaxWidth', 'editorAlignment', 'editorWidthIndicators'].some(key => e.affectsConfiguration('binary-markdown.' + key));
+            if (widthChanged) {
+                const config = vscode.workspace.getConfiguration('binary-markdown');
+                void webviewPanel.webview.postMessage({ type: 'editorWidth', mode: config.get('editorWidthMode', 'default'),
+                    maxWidth: config.get('editorMaxWidth', 860), alignment: config.get('editorAlignment', 'center'), indicators: config.get('editorWidthIndicators', true) });
+            }
+            const mathSourceWrapChanged = e.affectsConfiguration('binary-markdown.mathSourceWrap');
+            if (mathSourceWrapChanged) {
+                void webviewPanel.webview.postMessage({ type: 'mathSourceWrap', value:
+                    vscode.workspace.getConfiguration('binary-markdown').get('mathSourceWrap', false) });
+            }
+            const mathSourcePositionChanged = e.affectsConfiguration('binary-markdown.mathSourcePosition');
+            if (mathSourcePositionChanged) {
+                void webviewPanel.webview.postMessage({ type: 'mathSourcePosition', value:
+                    vscode.workspace.getConfiguration('binary-markdown').get('mathSourcePosition', 'above') });
+            }
+            const languageOrderChanged = e.affectsConfiguration('binary-markdown.codeLanguageOrder');
+            if (languageOrderChanged) {
+                void webviewPanel.webview.postMessage({ type: 'codeLanguageOrder', value:
+                    vscode.workspace.getConfiguration('binary-markdown').get('codeLanguageOrder', 'default') });
             }
             const exportChanged = e.affectsConfiguration('binary-markdown.export');
             // Presentation options are read by each export. Re-probing tools in
@@ -680,10 +719,10 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
             const toolsChanged = ['pandocPath', 'browserPath'].some(key =>
                 e.affectsConfiguration('binary-markdown.export.' + key));
             if (toolsChanged) { exportController.refreshCapabilities(); }
-            const editorSettings = ['theme', 'fontSize', 'imageDefaultDir', 'forceRelativeImagePath', 'language',
-                'toolbarMode', 'outlineStateScope', 'outlineDefaultOpen', 'outlineActiveColor', 'enableDebugLogging', 'math.backslashDelimiters'];
+            const editorSettings = ['fontSize', 'imageDefaultDir', 'forceRelativeImagePath', 'language',
+                'outlineStateScope', 'outlineDefaultOpen', 'outlineActiveColor', 'enableDebugLogging', 'math.backslashDelimiters'];
             const editorChanged = editorSettings.some(key => e.affectsConfiguration('binary-markdown.' + key));
-            if (e.affectsConfiguration('binary-markdown') && (editorChanged || (!exportChanged && !positionChanged))) {
+            if (e.affectsConfiguration('binary-markdown') && (editorChanged || (!exportChanged && !positionChanged && !themeChanged && !toolbarModeChanged && !widthChanged && !languageOrderChanged && !mathSourcePositionChanged && !mathSourceWrapChanged))) {
                 clearTimeout(configurationRefresh);
                 configurationRefresh = setTimeout(() => {
                     configurationRefresh = undefined;
@@ -786,12 +825,23 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
                     if (!tablePositions.includes(message.value)) {
                         break;
                     }
-                    const config = vscode.workspace.getConfiguration('binary-markdown');
-                    const scope = config.inspect('tableToolbarPosition')?.workspaceValue !== undefined
-                        ? vscode.ConfigurationTarget.Workspace : vscode.ConfigurationTarget.Global;
-                    await config.update('tableToolbarPosition', message.value, scope);
-                    void webviewPanel.webview.postMessage({ type: 'tableToolbarPosition', value:
-                        normalizeTablePosition(config.get('tableToolbarPosition')) });
+                    // Keep consecutive choices ordered, including requests from
+                    // another editor using this provider's shared preference.
+                    this.tablePositionUpdates = this.tablePositionUpdates.then(async () => {
+                        try {
+                            const config = vscode.workspace.getConfiguration('binary-markdown');
+                            const scope = config.inspect('tableToolbarPosition')?.workspaceValue !== undefined
+                                ? vscode.ConfigurationTarget.Workspace : vscode.ConfigurationTarget.Global;
+                            await config.update('tableToolbarPosition', message.value, scope);
+                            // The earlier configuration object is a snapshot.
+                            const current = vscode.workspace.getConfiguration('binary-markdown');
+                            void webviewPanel.webview.postMessage({ type: 'tableToolbarPosition', value:
+                                normalizeTablePosition(current.get('tableToolbarPosition')) });
+                        } catch {
+                            void webviewPanel.webview.postMessage({ type: 'tableToolbarPositionError' });
+                        }
+                    });
+                    await this.tablePositionUpdates;
                     break;
                 }
                 case 'renderLoaded':
@@ -865,9 +915,15 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
                     break;
                 }
 
-                case 'insertImage':
-                    await this.handleImageInsert(document, webviewPanel.webview);
+                case 'insertImage': {
+                    const requestId = typeof message.requestId === 'string' ? message.requestId : undefined;
+                    let inserted = false;
+                    try { inserted = await this.handleImageInsert(document, webviewPanel.webview, requestId); }
+                    finally {
+                        if (!inserted && requestId) { void webviewPanel.webview.postMessage({ type: 'insertCancelled', requestId }); }
+                    }
                     break;
+                }
 
                 case 'saveImageAndInsert':
                     // Save pasted/dropped image to file
@@ -879,24 +935,29 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
                     await this.handleReadAndInsertImage(document, webviewPanel.webview, message.filePath);
                     break;
 
-                case 'insertLink':
-                    const url = await vscode.window.showInputBox({
-                        prompt: t('enterUrl'),
-                        placeHolder: 'https://example.com'
-                    });
-                    if (url) {
-                        const linkText = message.text || await vscode.window.showInputBox({
-                            prompt: t('enterLinkText'),
-                            placeHolder: 'Link text',
-                            value: 'link'
-                        }) || 'link';
-                        webviewPanel.webview.postMessage({
-                            type: 'insertLinkHtml',
-                            url: url,
-                            text: linkText
+                case 'insertLink': {
+                    const requestId = typeof message.requestId === 'string' ? message.requestId : undefined;
+                    let inserted = false;
+                    try {
+                        const url = await vscode.window.showInputBox({
+                            prompt: t('enterUrl'),
+                            placeHolder: 'https://example.com'
                         });
+                        if (!url) { break; }
+                        const linkText = message.text || await vscode.window.showInputBox({
+                            prompt: t('enterLinkText'), placeHolder: 'Link text', value: 'link'
+                        });
+                        // Escape from either prompt cancels the whole operation.
+                        if (linkText === undefined) { break; }
+                        void webviewPanel.webview.postMessage({
+                            type: 'insertLinkHtml', url, text: linkText || 'link', requestId
+                        });
+                        inserted = true;
+                    } finally {
+                        if (!inserted && requestId) { void webviewPanel.webview.postMessage({ type: 'insertCancelled', requestId }); }
                     }
                     break;
+                }
 
                 case 'openLink':
                     if (typeof message.href !== 'string' || !message.href) { break; }
@@ -1071,7 +1132,7 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
         });
     }
 
-    private async handleImageInsert(document: vscode.TextDocument, webview: vscode.Webview) {
+    private async handleImageInsert(document: vscode.TextDocument, webview: vscode.Webview, requestId?: string): Promise<boolean> {
         const path = require('path');
         const fs = require('fs');
         
@@ -1115,13 +1176,16 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
                 webview.postMessage({
                     type: 'insertImageHtml',
                     markdownPath: markdownPath,
-                    displayUri: webviewUri
+                    displayUri: webviewUri,
+                    requestId
                 });
+                return true;
             } catch (error) {
                 console.error('Failed to copy image:', error);
                 vscode.window.showErrorMessage(`${t('failedToCopyImage')}${error}`);
             }
         }
+        return false;
     }
 
     private async handleSaveImage(document: vscode.TextDocument, webview: vscode.Webview, dataUrl: string, fileName?: string) {

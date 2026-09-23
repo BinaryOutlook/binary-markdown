@@ -2,14 +2,16 @@ import { test, expect, Page } from '@playwright/test';
 
 const documentText = '# Table\n\n| Item | State | Owner |\n| --- | --- | --- |\n| One | Ready | A |\n| Two | Draft | B |\n\nAfter table.\n';
 const controls = '.table-toolbar:not(.table-toolbar-measure)';
-async function setup(page: Page, preference = 'auto') {
+async function setup(page: Page, preference = 'auto', toolbarMode = 'simple') {
     await page.goto('/production-editor.html');
     await page.waitForFunction(() => (window as any).__testApi?.ready);
-    await page.evaluate(({ documentText, preference }) => {
+    await page.evaluate(({ documentText, preference, toolbarMode }) => {
+        document.documentElement.dataset.toolbarMode = toolbarMode;
         (window as any).__testApi.setMarkdown(documentText);
         (window as any).__hostMessageHandler({ type: 'tableToolbarPosition', value: preference });
-    }, { documentText, preference });
+    }, { documentText, preference, toolbarMode });
     await page.locator('#editor td').first().click();
+    await expect(page.locator(controls)).toHaveAttribute('data-placement', /.+/);
 }
 
 for (const position of ['auto', 'top-left', 'top-right', 'bottom-left', 'bottom-right', 'left', 'right', 'top-bar']) {
@@ -30,12 +32,11 @@ for (const position of ['auto', 'top-left', 'top-right', 'bottom-left', 'bottom-
     });
 }
 
-test('compact dock exposes column insertion in a narrow editor', async ({ page }) => {
+test('Full mode gives docked column insertion its own row in a narrow editor', async ({ page }) => {
     await page.setViewportSize({ width: 600, height: 800 });
-    await setup(page, 'top-bar');
-    const toggle = page.locator('.table-toolbar-toggle');
-    await expect(toggle).toBeVisible();
-    await toggle.click();
+    await setup(page, 'top-bar', 'full');
+    await expect(page.locator('.table-toolbar-row')).toBeVisible();
+    await expect(page.locator('.table-toolbar-toggle')).toBeHidden();
     await expect(page.locator(controls)).toBeVisible();
     await page.locator(controls + ' [data-action="add-col-right"]').click();
     await expect(page.locator('#editor th')).toHaveCount(4);
@@ -66,6 +67,25 @@ test('live placement updates preserve document, cell selection and clean state',
     await expect(page.locator('#toolbar [data-action="undo"]')).toBeDisabled();
 });
 
+test('a failed placement save reports the failure without moving or editing the table', async ({ page }) => {
+    await setup(page, 'top-left');
+    const before = await page.locator('#editor').innerHTML();
+    await page.evaluate(() => {
+        (window as any).hostBridge.setTableToolbarPosition = () => {
+            setTimeout(() => (window as any).__hostMessageHandler({ type: 'tableToolbarPositionError' }), 0);
+        };
+    });
+    await page.locator(`${controls} [data-action="placement"]`).click();
+    await page.locator('.table-placement-menu [data-position="top-bar"]').click();
+    await expect(page.getByRole('status')).toContainText('Could not save the table toolbar position');
+    await expect(page.locator('html')).toHaveAttribute('data-table-toolbar-position', 'top-left');
+    await expect(page.locator(controls)).toHaveAttribute('data-placement', 'top-left');
+    await expect(page.locator('#editor')).toHaveJSProperty('innerHTML', before);
+    expect(await page.evaluate(() => document.querySelector('#editor td')?.contains(getSelection()?.anchorNode || null))).toBe(true);
+    expect(await page.evaluate(() => (window as any).__testApi.messages.filter((message: any) => ['edit', 'save'].includes(message.type)))).toEqual([]);
+    await expect(page.locator('#toolbar [data-action="undo"]')).toBeDisabled();
+});
+
 test('toolbar keyboard navigation and Escape return to the retained table cell', async ({ page }) => {
     await setup(page, 'left');
     await expect(page.locator(controls)).toBeVisible();
@@ -79,8 +99,8 @@ test('toolbar keyboard navigation and Escape return to the retained table cell',
 
 for (const variant of ['floating', 'docked', 'compact']) {
     test(`${variant}: every table action edits the selected row or column exactly once`, async ({ page }) => {
-        if (variant === 'compact') await page.setViewportSize({ width: 600, height: 800 });
-        await setup(page, variant === 'floating' ? 'right' : 'top-bar');
+        if (variant === 'compact') await page.setViewportSize({ width: 420, height: 800 });
+        await setup(page, variant === 'floating' ? 'right' : 'top-bar', 'simple');
         for (const action of ['add-col-left', 'add-col-right', 'del-col', 'add-row-above', 'add-row-below', 'del-row', 'align-left', 'align-center', 'align-right']) {
             await page.evaluate(text => (window as any).__testApi.setMarkdown(text), documentText);
             await page.locator('#editor tr').nth(1).locator('td').nth(1).click();
@@ -136,8 +156,11 @@ test('header and last-column restrictions do not create undo entries', async ({ 
 
 test('Automatic docks around occupied content and returns after space becomes available', async ({ page }) => {
     await setup(page);
+    // Choose Full width through the live setting; CSS cannot override its inline cap.
+    await page.evaluate(() => (window as any).__hostMessageHandler({ type: 'editorWidth', mode: 'full', maxWidth: 860 }));
+    await expect(page.locator('#editor')).toHaveCSS('max-width', 'none');
     // Deterministic document geometry, retaining the production toolbar and scroll container.
-    await page.addStyleTag({ content: '#editor{max-width:none;padding:8px} #editor table{width:100%;margin:0} #editor h1,#editor p{margin:0} #editorWrapper{scrollbar-gutter:stable}' });
+    await page.addStyleTag({ content: '#editor{padding:8px} #editor table{width:100%;margin:0} #editor h1,#editor p{margin:0} #editorWrapper{scrollbar-gutter:stable}' });
     await page.mouse.move(1, 1);
     await expect(page.locator(controls)).toHaveAttribute('data-placement', 'top-bar');
     await page.addStyleTag({ content: '#editor table{width:300px;margin:100px auto}' });
@@ -168,14 +191,20 @@ test('scrolling offscreen keeps Automatic reachable, while a fixed toolbar hides
 for (const width of [420, 900, 1280]) {
     test(`full formatting bar and table controls remain reachable at ${width}px`, async ({ page }) => {
         await page.setViewportSize({ width, height: 800 });
-        await setup(page, 'top-bar');
-        await page.locator('html').evaluate(node => { node.dataset.toolbarMode = 'full'; });
+        await setup(page, 'top-bar', 'full');
         await page.mouse.move(1, 1);
-        await expect(page.locator('#toolbar [data-action="source"]')).toBeVisible();
+        const source = page.locator('#toolbar [data-action="source"]');
+        if (!await source.isVisible()) await page.locator('#toolbarMore').click();
+        await expect(source).toBeVisible();
+        await page.keyboard.press('Escape');
         const toggle = page.locator('.table-toolbar-toggle');
         if (await toggle.isVisible()) await toggle.click();
-        await expect(page.locator(`${controls} [data-action="add-col-right"]`)).toBeVisible();
-        await page.locator(`${controls} [data-action="add-col-right"]`).click();
+        let action = page.locator(`${controls} [data-action="add-col-right"]`);
+        if (!await action.isVisible()) {
+            await page.locator(`${controls} [data-action="more"]`).click();
+            action = page.locator('.table-overflow-menu [data-action="add-col-right"]');
+        }
+        await action.click();
         await expect(page.locator('#editor th')).toHaveCount(4);
     });
 }
@@ -190,6 +219,7 @@ test('a focused placement menu stays usable when its pane shrinks', async ({ pag
 });
 
 test('Automatic avoids neighboring content inside a quotation', async ({ page }) => {
+    await page.setViewportSize({ width: 1600, height: 900 });
     await setup(page);
     await page.evaluate(() => {
         // Exercise nested editor geometry independently of Markdown import support.
@@ -199,7 +229,9 @@ test('Automatic avoids neighboring content inside a quotation', async ({ page })
         quote.innerHTML = '<p>Before.</p><p>After.</p>';
         quote.firstElementChild!.after(table);
     });
-    await page.addStyleTag({ content: '#editor{max-width:none;padding:8px} #editor blockquote{margin:0;padding:0;border:0} #editor table{width:100%;margin:0} #editor p{margin:0}' });
+    await page.evaluate(() => (window as any).__hostMessageHandler({ type: 'editorWidth', mode: 'full', maxWidth: 860 }));
+    await expect(page.locator('#editor')).toHaveCSS('max-width', 'none');
+    await page.addStyleTag({ content: '#editor{padding:8px} #editor blockquote{margin:0;padding:0;border:0} #editor table{width:100%;margin:0} #editor p{margin:0}' });
     await page.locator('#editor td').first().click();
     await page.mouse.move(1, 1);
     await expect(page.locator(controls)).toHaveAttribute('data-placement', 'top-bar');

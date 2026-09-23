@@ -138,11 +138,69 @@ async function prepare(page: Page, markdown: string, requestId = 'render', appea
     return (await messages(page, 'exportPrepared')).find(message => message.requestId === requestId)!;
 }
 
+test('export code models exclude fence delimiters and display breaks while preserving all authored lines', async ({ page }) => {
+    await page.goto('/standalone-editor.html');
+    await page.waitForFunction(() => (window as unknown as ExportTestWindow).__testApi?.ready);
+    const cases = [[], [''], ['', ''], ['one'], ['', '\tλ <&>  ', '', ''], ['x'.repeat(2000), 'last']];
+    const source = cases.map(lines => '```js\n' + (lines.length ? lines.join('\n') + '\n' : '') + '```\n').join('\n');
+    await setMarkdown(page, source);
+    const before = await page.locator('#editor').innerHTML();
+    for (const [index, input] of [source, source.replace(/\n/g, '\r\n'), '> ' + source.replace(/\n/g, '\n> '), '```js\n\tOPEN\n\n'].entries()) {
+        const prepared = await prepare(page, input, 'lines-' + index);
+        const actual = await page.evaluate(html => {
+            const root = document.createElement('template'); root.innerHTML = html;
+            return [...root.content.querySelectorAll('pre[data-export-code-lines]')].map(pre => {
+                const code = pre.querySelector('code')!;
+                code.querySelectorAll('[data-export-display-break]').forEach(node => node.remove());
+                code.querySelectorAll('br').forEach(node => node.replaceWith('\n'));
+                return { count: Number((pre as HTMLElement).dataset.exportCodeLines), text: code.textContent };
+            });
+        }, prepared.html);
+        const expected = index === 3 ? [['\tOPEN', '']] : cases;
+        expect(actual).toEqual(expected.map(lines => ({ count: lines.length, text: lines.join('\n') })));
+    }
+    expect(await page.locator('#editor').innerHTML()).toBe(before);
+    expect(await page.locator('#editor [data-export-code-lines]').count()).toBe(0);
+    expect(await messages(page, 'edit')).toEqual([]);
+    expect(await messages(page, 'save')).toEqual([]);
+});
+
 test.describe('Export document-only rendering', () => {
     test.beforeEach(async ({ page }) => {
         await page.goto('/standalone-editor.html');
         await page.waitForFunction(() => (window as unknown as ExportTestWindow).__testApi?.ready);
         await page.addScriptTag({ url: '/vendor/katex.min.js' });
+    });
+
+    test('HTML and PDF preparation retain underline and literal examples without editing the live document', async ({ page, context }) => {
+        const source = fs.readFileSync(path.resolve(__dirname, '../fixtures/exports/underline-export.md'), 'utf8');
+        await setMarkdown(page, source);
+        const before = await page.locator('#editor').innerHTML();
+        const rendered = await prepare(page, source);
+        expect(rendered.warnings).toEqual([]);
+        const html = await prepareStandaloneHtml({ sourcePath: path.resolve(__dirname, '../fixtures/exports/underline-export.md'), markdown: source, version: 1, theme: 'github', fontSize: 16 },
+            rendered as any, path.resolve(__dirname, '../..'), { signal: new AbortController().signal, report() {}, warnings: [], loadResource: async () => { throw new Error('Fixture has no external resources'); } });
+        const exported = await context.newPage();
+        try {
+            await exported.setContent(html);
+            await expect(exported.locator('u')).toHaveCount(7);
+            await expect(exported.locator('u strong')).toHaveText('Bold');
+            await expect(exported.locator('u em')).toHaveText('italic');
+            await expect(exported.locator('a[href="https://example.com/reference"] u')).toHaveText('Linked label');
+            await expect(exported.locator('td u')).toHaveText('Table cell');
+            await expect(exported.locator('blockquote u')).toHaveText('Quoted text');
+            // HTML/PDF retain the editor's existing visible escape backslashes;
+            // Pandoc's CommonMark reader removes them in DOCX/EPUB.
+            expect(await exported.locator('body').textContent()).toContain(String.raw`\<u>escaped example\</u>`);
+            await expect(exported.locator('pre code')).toHaveText('<u>fenced example</u>');
+            for (const media of ['screen', 'print'] as const) {
+                await exported.emulateMedia({ media });
+                expect(await exported.locator('u').evaluateAll(elements => elements.every(el => getComputedStyle(el).textDecorationLine.includes('underline')))).toBe(true);
+            }
+        } finally { await exported.close(); }
+        expect(await page.locator('#editor').innerHTML()).toBe(before);
+        expect(await messages(page, 'edit')).toEqual([]);
+        expect(await messages(page, 'save')).toEqual([]);
     });
 
     test('renders captured input in source mode without replacing the live document', async ({ page }) => {

@@ -1,6 +1,6 @@
 {
   "name": "binary-markdown-desktop",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Binary Markdown: an open-source visual Markdown editor for desktop.",
   "main": "out/main.js",
   "author": {
@@ -60,7 +60,8 @@
           "editor-body-html.js",
           "table-placement.js",
           "document-aux.js",
-          "math-syntax.js"
+          "math-syntax.js",
+          "editor-layout.js"
         ]
       },
       {

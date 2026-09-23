@@ -13,7 +13,7 @@
     --code-bg: #f6f8fa;
     --code-text: #24292f;
     --border-color: #d0d7de;
-    --blockquote-color: #ffffff;
+    --blockquote-color: var(--text-color);
     --blockquote-border: #d0d7de;
     --sidebar-bg: #f6f8fa;
     --sidebar-border: #eaecef;
@@ -29,7 +29,7 @@
     --code-bg: #f3efe4;
     --code-text: #5b4636;
     --border-color: #d9d3c3;
-    --blockquote-color: #ffffff;
+    --blockquote-color: var(--text-color);
     --blockquote-border: #c9c3b3;
     --sidebar-bg: #f3efe4;
     --sidebar-border: #e7e3d8;
@@ -45,7 +45,7 @@
     --code-bg: #24283b;
     --code-text: #a9b1d6;
     --border-color: #3b4261;
-    --blockquote-color: #ffffff;
+    --blockquote-color: var(--text-color);
     --blockquote-border: #3b4261;
     --sidebar-bg: #16161e;
     --sidebar-border: #1e1e28;
@@ -61,7 +61,7 @@
     --code-bg: #252526;
     --code-text: #d4d4d4;
     --border-color: #3c3c3c;
-    --blockquote-color: #ffffff;
+    --blockquote-color: var(--text-color);
     --blockquote-border: #3c3c3c;
     --sidebar-bg: #252526;
     --sidebar-border: #2e2e2f;
@@ -77,7 +77,7 @@
     --code-bg: #f0f0f0;
     --code-text: #333333;
     --border-color: #e0e0e0;
-    --blockquote-color: #ffffff;
+    --blockquote-color: var(--text-color);
     --blockquote-border: #cccccc;
     --sidebar-bg: #f5f5f5;
     --sidebar-border: #e9e9e9;
@@ -93,7 +93,7 @@
     --code-bg: #F2F2F7;
     --code-text: #3D3D3D;
     --border-color: #E5E5EA;
-    --blockquote-color: #ffffff;
+    --blockquote-color: #636366;
     --blockquote-border: #D1D1D6;
     --sidebar-bg: #F4F5F7;
     --sidebar-border: #ECEDF0;
@@ -110,7 +110,7 @@
     --code-bg: #EAEEEF;
     --code-text: #1a1a1a;
     --border-color: #D8D8D0;
-    --blockquote-color: #ffffff;
+    --blockquote-color: var(--text-color);
     --blockquote-border: #C8C8C0;
     --sidebar-bg: #F2F1EB;
     --sidebar-border: #E6E5DF;
@@ -258,7 +258,7 @@ body {
 }
 
 .editor-container { flex: 1; display: flex; flex-direction: column; min-width: 0; }
-/* ===== Toolbar: Fixed left/right + scrollable center ===== */
+/* ===== Toolbar: Whole actions with an overflow menu ===== */
 .toolbar {
     display: flex;
     align-items: center;
@@ -281,47 +281,42 @@ body {
 .toolbar-fixed--right {
     padding-right: 12px;
 }
-/* Scrollable inner container (center section) */
+/* Formatting actions fill the space between the utility sections. */
 .toolbar-inner {
     display: flex;
     align-items: center;
     gap: 2px;
     flex: 1;
-    overflow-x: auto;
-    overflow-y: hidden;
+    overflow: hidden;
     padding: 4px 4px;
-    scrollbar-width: none; /* Firefox */
     min-width: 0;
     position: relative;
 }
-.toolbar-inner::-webkit-scrollbar { display: none; } /* Chrome/Safari */
-/* Scroll navigation buttons */
-.toolbar-scroll-btn {
-    width: 28px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--toolbar-bg, #f6f8fa) !important;
-    border: none;
-    cursor: pointer;
-    color: var(--text-color);
-    z-index: 10;
-    font-size: 14px;
-    font-weight: bold;
-    padding: 0;
-    opacity: 1;
-    flex-shrink: 0;
+/* These rules also override the toolbar's general button display rule. */
+.toolbar [hidden], .toolbar .toolbar-empty, .toolbar-group:not(:has(button)) { display: none !important; }
+.toolbar-action-label { display: none; }
+.toolbar .toolbar-more { margin: 0 4px; }
+.toolbar-overflow {
+    position: fixed;
+    z-index: 1300;
+    overflow: auto;
+    padding: 4px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background: var(--bg-color);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, .16);
 }
-.toolbar-scroll-btn:hover {
-    background: var(--selection-bg) !important;
+.toolbar .toolbar-overflow button {
+    width: 100%;
+    justify-content: flex-start;
+    gap: 8px;
+    text-align: left;
 }
-.toolbar-scroll-btn.hidden { display: none; }
-.toolbar-scroll-btn--left {
-    box-shadow: 4px 0 8px -2px rgba(0,0,0,0.2);
+.toolbar-overflow .toolbar-action-label {
+    display: inline;
+    overflow-wrap: anywhere;
 }
-.toolbar-scroll-btn--right {
-    box-shadow: -4px 0 8px -2px rgba(0,0,0,0.2);
-}
+.toolbar button:focus-visible { outline: 2px solid var(--link-color); outline-offset: -2px; }
 /* Toolbar groups */
 .toolbar-group {
     display: flex;
@@ -339,8 +334,7 @@ body {
     margin: 0 6px;
     flex-shrink: 0;
 }
-/* Separator between fixed sections and scroll buttons */
-.toolbar-fixed + .toolbar-scroll-btn::before,
+/* Separator after the fixed section */
 .toolbar-fixed + .toolbar-inner > .toolbar-group:first-child::before {
     display: none;
 }
@@ -360,6 +354,23 @@ body {
     min-height: 28px;
 }
 .toolbar button:hover { background: var(--selection-bg); }
+.toolbar .toolbar-insert { gap: 5px; font: inherit; font-size: 13px; white-space: nowrap; }
+.toolbar-overflow .toolbar-insert-title { display: none; }
+.insert-menu {
+    position: fixed; z-index: 10003; box-sizing: border-box; overflow: auto;
+    padding: 5px; border: 1px solid var(--border-color); border-radius: 6px;
+    background: var(--toolbar-bg); color: var(--text-color); box-shadow: 0 4px 12px rgba(0, 0, 0, .18);
+}
+.insert-menu[hidden] { display: none; }
+.insert-menu button {
+    display: block; width: 100%; padding: 7px 9px; border: 0; border-radius: 3px;
+    text-align: start; color: inherit; background: transparent; font: inherit; font-size: 13px; cursor: pointer;
+}
+.insert-menu button:hover, .insert-menu button:focus { background: var(--selection-bg); }
+.insert-menu button:focus-visible { outline: 2px solid var(--link-color); outline-offset: -2px; }
+.insert-menu button[aria-disabled="true"] { cursor: default; }
+.insert-menu small { display: block; margin-top: 3px; font-size: 11px; line-height: 1.4; }
+.insert-menu small[hidden] { display: none; }
 .toolbar button svg {
     width: 16px;
     height: 16px;
@@ -384,12 +395,24 @@ body {
 [data-toolbar-mode="simple"] .toolbar-fixed--right .toolbar-group + .toolbar-group::before {
     display: none;
 }
-[data-toolbar-mode="simple"] .toolbar-scroll-btn {
-    display: none !important;
-}
 [data-toolbar-mode="simple"] .toolbar-fixed--right {
     margin-left: auto;
 }
+
+/* A separate, stable guide row keeps marks out of editable content/controls. */
+.editor-width-guide { flex: 0 0 24px; height: 24px; position: relative; user-select: none; }
+.editor-width-guide[hidden] { display: none; }
+.editor-width-bounds { position: absolute; height: 24px; pointer-events: none; }
+.editor-width-guide[data-capped="false"] .editor-width-bounds { visibility: hidden; }
+.editor-width-mark { position: absolute; top: 0; width: 24px; height: 24px; padding: 0; border: 0; background: transparent; color: var(--text-color); cursor: help; pointer-events: auto; }
+.editor-width-mark--left { left: 0; }
+.editor-width-mark--right { right: 0; }
+.editor-width-mark svg { display: block; fill: none; stroke: currentColor; stroke-width: 2; }
+.editor-width-mark:hover, .editor-width-mark:focus-visible { color: var(--text-color); background: var(--selection-bg); }
+.editor-width-mark:focus-visible { outline: 2px solid var(--link-color); outline-offset: -2px; }
+.editor-width-explanation { position: absolute; top: 100%; left: 8px; right: 8px; max-width: 460px; margin: 0 auto; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 4px; background: var(--bg-color); color: var(--text-color); font-size: 12px; line-height: 1.4; z-index: 10001; pointer-events: none; }
+.editor-width-explanation[hidden] { display: none; }
+@media print { .editor-width-guide { display: none; } }
 
 .editor-wrapper { flex: 1; overflow: auto; position: relative; }
 .editor {
@@ -406,6 +429,11 @@ body {
     background: var(--selection-bg);
     outline: 2px dashed var(--link-color);
     outline-offset: -10px;
+}
+#editor {
+    width: 100%;
+    /* Adapt to the actual editor pane, including outline and zoom changes. */
+    padding-inline: clamp(12px, 7%, 60px);
 }
 .editor img {
     max-width: 100%;
@@ -666,6 +694,12 @@ body {
     z-index: 10;
 }
 .code-lang-tag {
+    border: 0;
+    font-family: inherit;
+    max-width: min(180px, 35vw);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
     font-size: 11px;
     color: var(--text-color);
     background: var(--border-color);
@@ -679,6 +713,7 @@ body {
     opacity: 1;
     background: var(--selection-bg);
 }
+.code-lang-tag:focus-visible { outline: 2px solid var(--link-color); outline-offset: 2px; opacity: 1; }
 .code-copy-btn,
 .code-delete-btn {
     font-size: 12px;
@@ -723,22 +758,35 @@ body {
     box-sizing: border-box;
 }
 .lang-selector {
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
     position: fixed;
     background: var(--bg-color);
     border: 1px solid var(--border-color);
     border-radius: 4px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.2);
     max-height: 250px;
-    overflow-y: auto;
+    overflow: hidden;
     z-index: 10000;
-    min-width: 140px;
 }
+.lang-selector-search { flex: 0 0 auto; min-width: 0; margin: 6px; padding: 6px; border: 1px solid var(--border-color); border-radius: 3px; font: inherit; font-size: 12px; color: var(--text-color); background: var(--bg-color); }
+.lang-selector-search:focus { outline: 2px solid var(--link-color); outline-offset: -1px; }
+.lang-selector-current { flex: 0 0 auto; padding: 0 8px 6px; font-size: 11px; color: var(--text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lang-selector-options { min-height: 0; overflow-y: auto; }
+.lang-selector-empty { padding: 8px; color: var(--text-color); font-size: 12px; }
+.lang-selector-empty[hidden] { display: none; }
 .lang-selector-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
     padding: 6px 12px;
     cursor: pointer;
     font-size: 12px;
 }
-.lang-selector-item:hover {
+.lang-selector-item small { font-size: 10px; }
+.lang-selector-item:hover, .lang-selector-item[aria-selected="true"] {
     background: var(--selection-bg);
 }
 
@@ -823,6 +871,27 @@ body {
     border-radius: 0 0 6px 6px;
     border-top: none;
 }
+/* Wrap only editable TeX, preserving authored whitespace and DOM line breaks. */
+html[data-math-source-wrap="true"] .editor .math-wrapper pre[data-lang="math"],
+html[data-math-source-wrap="true"] .editor .math-wrapper pre[data-lang="math"] code {
+    white-space: break-spaces;
+    overflow-wrap: anywhere;
+}
+
+/* Keep the editable node in place so changing visual order cannot blur/commit it. */
+html[data-math-source-position="below"] .editor .math-wrapper[data-mode="edit"] {
+    display: flex;
+    flex-direction: column-reverse;
+}
+html[data-math-source-position="below"] .editor .math-wrapper[data-mode="edit"] pre[data-lang="math"] {
+    border-radius: 0 0 6px 6px;
+}
+html[data-math-source-position="below"] .editor .math-wrapper[data-mode="edit"] .math-display {
+    border-radius: 6px 6px 0 0;
+    border-top: 1px solid var(--border-color);
+    border-bottom: none;
+}
+
 .editor .math-display .math-error {
     color: #d73a49;
     font-size: 14px;
@@ -876,15 +945,33 @@ body {
     margin: 0.5em 0;
     padding: 0 1em;
     color: var(--blockquote-color);
+    background: transparent;
     border-left: 4px solid var(--blockquote-border);
     white-space: pre-wrap;
     word-wrap: break-word;
 }
+/* VS Code's injected quote/code defaults follow its own theme, not ours. */
+.editor blockquote code { color: var(--code-text); }
+/* These accent colors need darker variants against the quote backgrounds. */
+[data-theme="things"] .editor blockquote a { color: #2464d0; }
+[data-theme="perplexity"] .editor blockquote a { color: #117886; }
+.editor blockquote::selection, .editor blockquote ::selection { color: var(--text-color); }
 .editor ul, .editor ol { margin: 0.5em 0; padding-left: 2em; }
 .editor li { margin: 0.25em 0; }
 .editor li > ul, .editor li > ol { margin: 0.25em 0; } /* Nested lists */
 .editor hr { border: none; border-top: 2px solid var(--border-color); margin: 1em 0; }
 .editor table { border-collapse: collapse; margin: 1em 0; position: relative; max-width: none; }
+/* Constrain the live table's scroll box without adding document/serializer wrappers.
+   Export preparation has no editable root and retains native table layout. */
+.editor[contenteditable="true"] table {
+    display: block;
+    width: max-content;
+    max-width: 100%;
+    overflow-x: auto;
+}
+.editor[contenteditable="true"] table::-webkit-scrollbar { height: 10px; }
+.editor[contenteditable="true"] table::-webkit-scrollbar-track { background: var(--code-bg); }
+.editor[contenteditable="true"] table::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 5px; }
 .editor th, .editor td { border: 1px solid var(--border-color); padding: 8px 12px; min-width: 80px; position: relative; word-wrap: break-word; }
 .editor th { background: var(--code-bg); font-weight: 600; text-align: center; }
 .editor td { text-align: left; vertical-align: top; }
@@ -956,6 +1043,7 @@ body {
     flex-shrink: 0;
 }
 .table-toolbar button svg[fill="none"] { fill: none; }
+.table-toolbar button[data-action="placement"] svg { width: 18px; height: 18px; }
 .table-toolbar button.text-btn {
     font-size: 11px;
     font-weight: 500;
@@ -970,6 +1058,8 @@ body {
 }
 .table-toolbar { width: max-content; overflow: auto; }
 .table-toolbar button { flex-shrink: 0; }
+.table-toolbar button[data-action="more"] { width: 26px; height: 26px; padding: 0; font-size: 20px; }
+.table-toolbar [hidden], .table-overflow-menu[hidden], .table-overflow-menu [hidden] { display: none !important; }
 .table-toolbar .separator { flex-shrink: 0; }
 .table-toolbar[data-vertical="true"] { flex-direction: column; }
 .table-toolbar[data-vertical="true"] .separator { width: 18px; height: 1px; margin: 4px 0; }
@@ -979,21 +1069,35 @@ body {
     visibility: hidden !important; pointer-events: none !important;
 }
 .table-toolbar-dock { display: flex; align-items: center; flex-shrink: 0; margin: 0 6px; min-width: 0; }
+.table-toolbar-row {
+    display: flex; align-items: center; flex-shrink: 0; height: 40px; padding: 0 8px;
+    background: var(--toolbar-bg); border-bottom: 1px solid var(--border-color);
+}
+.table-toolbar-row[hidden] { display: none; }
 .table-toolbar-dock[hidden], .table-toolbar-toggle[hidden], .table-placement-menu[hidden] { display: none !important; }
-.toolbar .table-toolbar-toggle { min-width: 0; width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.toolbar .table-toolbar-toggle, .table-toolbar-row .table-toolbar-toggle {
+    min-width: 28px; width: 28px; padding: 4px 6px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text-color); background: transparent; border: none; border-radius: 4px; cursor: pointer;
+}
+.table-toolbar-row .table-toolbar-toggle:hover { background: var(--selection-bg); }
+.table-toolbar-toggle svg { width: 16px; height: 16px; flex-shrink: 0; }
 .toolbar { flex-shrink: 0; overflow-x: auto; }
-.table-placement-menu {
+.table-placement-menu, .table-overflow-menu {
     position: fixed; z-index: 1002; padding: 4px; overflow: auto; width: max-content;
     background: var(--toolbar-bg); color: var(--text-color);
     border: 1px solid var(--border-color); border-radius: 6px; box-shadow: 0 2px 8px #0003;
 }
-.table-placement-menu button {
+.table-placement-menu button, .table-overflow-menu button {
     display: block; width: 100%; text-align: left; padding: 8px 12px;
     background: none; color: inherit; border: none; cursor: pointer;
 }
 .table-placement-menu button[aria-checked="true"]::before { content: '✓ '; }
-.table-placement-menu button:hover { background: var(--selection-bg); }
-.table-toolbar button:focus-visible, .table-toolbar-toggle:focus-visible, .table-placement-menu button:focus-visible {
+.table-placement-menu button:hover, .table-overflow-menu button:hover { background: var(--selection-bg); }
+.table-overflow-menu button { display: flex; align-items: center; gap: 8px; }
+.table-overflow-menu button:disabled { opacity: .4; cursor: default; }
+.table-overflow-menu svg { width: 18px; height: 18px; flex-shrink: 0; }
+.table-toolbar button:focus-visible, .table-toolbar-toggle:focus-visible, .table-placement-menu button:focus-visible, .table-overflow-menu button:focus-visible {
     outline: 2px solid var(--link-color); outline-offset: -2px;
 }
 .editor li:has(> input[type="checkbox"]) {

@@ -69,7 +69,7 @@ test.describe('Code block language change to mermaid/math creates clickable spec
         await page.waitForTimeout(300);
 
         // 3. Select "math" from the language selector
-        const mathItem = page.locator('.lang-selector-item', { hasText: /^math$/ });
+        const mathItem = page.locator('.lang-selector-item[data-language="math"]');
         await mathItem.click();
         await page.waitForTimeout(500);
 

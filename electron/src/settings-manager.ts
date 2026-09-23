@@ -1,6 +1,9 @@
 import Store from 'electron-store';
 import { BrowserWindow } from 'electron';
 import * as path from 'path';
+import type { EditorWidthMode, EditorAlignment } from '../../src/shared/editor-layout';
+import { getResourcePath } from './html-generator';
+const { normalizeWidthMode, normalizeMaxWidth, normalizeAlignment } = require(getResourcePath('src/shared/editor-layout.js')) as typeof import('../../src/shared/editor-layout');
 
 /**
  * Electron settings backed by electron-store.
@@ -9,6 +12,13 @@ import * as path from 'path';
 export interface ElectronSettings {
     theme: string;
     fontSize: number;
+    editorWidthMode: EditorWidthMode;
+    editorMaxWidth: number;
+    editorAlignment: EditorAlignment;
+    editorWidthIndicators: boolean;
+    mathSourceWrap: boolean;
+    mathSourcePosition: 'above' | 'below';
+    codeLanguageOrder: 'default' | 'a-z' | 'z-a';
     toolbarMode: string;
     tableToolbarPosition: string;
     language: string;
@@ -22,7 +32,14 @@ export interface ElectronSettings {
 const DEFAULTS: ElectronSettings = {
     theme: 'things',
     fontSize: 16,
-    toolbarMode: 'simple',
+    editorWidthMode: 'default',
+    editorMaxWidth: 860,
+    editorAlignment: 'center',
+    editorWidthIndicators: true,
+    mathSourceWrap: false,
+    mathSourcePosition: 'above',
+    codeLanguageOrder: 'default',
+    toolbarMode: 'full',
     tableToolbarPosition: 'auto',
     language: 'default',
     imageDefaultDir: '',
@@ -51,7 +68,20 @@ export class SettingsManager {
     }
 
     getAll(): ElectronSettings {
-        return { ...DEFAULTS, ...this.store.store };
+        return { ...DEFAULTS, ...this.store.store,
+            editorWidthMode: normalizeWidthMode(this.store.get('editorWidthMode')),
+            editorMaxWidth: normalizeMaxWidth(this.store.get('editorMaxWidth')),
+            editorAlignment: normalizeAlignment(this.store.get('editorAlignment')),
+            editorWidthIndicators: this.store.get('editorWidthIndicators') !== false,
+            mathSourceWrap: this.store.get('mathSourceWrap') === true,
+            mathSourcePosition: this.store.get('mathSourcePosition') === 'below' ? 'below' : 'above',
+            codeLanguageOrder: ['a-z', 'z-a'].includes(this.store.get('codeLanguageOrder')) ? this.store.get('codeLanguageOrder') : 'default' };
+    }
+
+    refreshSetting(key: keyof ElectronSettings, error = ''): void {
+        if (this.settingsWindow && !this.settingsWindow.isDestroyed()) {
+            this.settingsWindow.webContents.send('settings-value', { key, value: this.get(key), error });
+        }
     }
 
     addRecentFile(filePath: string): void {
@@ -61,7 +91,7 @@ export class SettingsManager {
         this.set('recentFiles', filtered.slice(0, 10));
     }
 
-    openSettingsWindow(parentWindow: BrowserWindow): void {
+    openSettingsWindow(parentWindow: BrowserWindow, messages: Record<string, string> = {}): void {
         if (this.settingsWindow && !this.settingsWindow.isDestroyed()) {
             this.settingsWindow.focus();
             return;
@@ -83,7 +113,7 @@ export class SettingsManager {
             },
         });
 
-        const html = this.generateSettingsHtml();
+        const html = this.generateSettingsHtml(messages);
         this.settingsWindow.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(html)}`);
 
         this.settingsWindow.on('closed', () => {
@@ -91,7 +121,7 @@ export class SettingsManager {
         });
     }
 
-    private generateSettingsHtml(): string {
+    private generateSettingsHtml(messages: Record<string, string>): string {
         const settings = this.getAll();
         return `<!DOCTYPE html>
 <html>
@@ -115,6 +145,7 @@ export class SettingsManager {
 </style>
 </head>
 <body>
+    <p id="settingsError" role="alert" style="color:#9f2e2e" hidden></p>
     <h2>Appearance</h2>
     <div class="field">
         <label>Theme</label>
@@ -160,6 +191,61 @@ export class SettingsManager {
         </select>
     </div>
 
+    <div class="field">
+        <label for="editorWidthMode">${messages.editorWidthLabel || 'Editor width'}</label>
+        <select id="editorWidthMode" onchange="save('editorWidthMode', this.value)">
+            <option value="default" ${settings.editorWidthMode === 'default' ? 'selected' : ''}>${messages.editorWidthDefault || 'Default (860 px)'}</option>
+            <option value="full" ${settings.editorWidthMode === 'full' ? 'selected' : ''}>${messages.editorWidthFull || 'Full width'}</option>
+            <option value="custom" ${settings.editorWidthMode === 'custom' ? 'selected' : ''}>${messages.editorWidthCustom || 'Custom width'}</option>
+        </select>
+    </div>
+    <div class="field">
+        <label for="editorMaxWidth">${messages.editorMaxWidthLabel || 'Maximum width (px)'}</label>
+        <input type="number" id="editorMaxWidth" min="320" max="4000" step="1" value="${settings.editorMaxWidth}" aria-describedby="editorWidthHelp" onchange="save('editorMaxWidth', Number(this.value))">
+    </div>
+    <div class="field-desc" id="editorWidthHelp">${messages.editorWidthHelp || 'Custom width: 320–4000 CSS pixels, including padding. Visual editor only; Source and exports keep their own layout.'}</div>
+
+    <div class="field">
+        <label for="editorAlignment">${messages.editorAlignmentLabel || 'Column alignment'}</label>
+        <select id="editorAlignment" aria-describedby="editorAlignmentHelp" onchange="save('editorAlignment', this.value)">
+            <option value="left" ${settings.editorAlignment === 'left' ? 'selected' : ''}>${messages.editorAlignmentLeft || 'Left'}</option>
+            <option value="center" ${settings.editorAlignment === 'center' ? 'selected' : ''}>${messages.editorAlignmentCenter || 'Center'}</option>
+            <option value="right" ${settings.editorAlignment === 'right' ? 'selected' : ''}>${messages.editorAlignmentRight || 'Right'}</option>
+        </select>
+    </div>
+    <div class="field-desc" id="editorAlignmentHelp">${messages.editorAlignmentHelp || 'Places a capped column within the editor pane. Does not align the text or change Source or exports.'}</div>
+
+    <div class="field">
+        <label for="editorWidthIndicators">${messages.widthIndicatorsLabel}</label>
+        <input type="checkbox" id="editorWidthIndicators" ${settings.editorWidthIndicators ? 'checked' : ''} aria-describedby="widthIndicatorsHelp" onchange="save('editorWidthIndicators', this.checked)">
+    </div>
+    <div class="field-desc" id="widthIndicatorsHelp">${messages.widthIndicatorsHelp}</div>
+
+    <div class="field">
+        <label for="codeLanguageOrder">${messages.codeLanguageOrderLabel}</label>
+        <select id="codeLanguageOrder" aria-describedby="codeLanguageOrderHelp" onchange="save('codeLanguageOrder', this.value)">
+            <option value="default" ${settings.codeLanguageOrder === 'default' ? 'selected' : ''}>${messages.codeLanguageOrderDefault}</option>
+            <option value="a-z" ${settings.codeLanguageOrder === 'a-z' ? 'selected' : ''}>${messages.codeLanguageOrderAscending}</option>
+            <option value="z-a" ${settings.codeLanguageOrder === 'z-a' ? 'selected' : ''}>${messages.codeLanguageOrderDescending}</option>
+        </select>
+    </div>
+    <div class="field-desc" id="codeLanguageOrderHelp">${messages.codeLanguageOrderHelp}</div>
+
+    <div class="field">
+        <label for="mathSourcePosition">${messages.mathSourcePositionLabel}</label>
+        <select id="mathSourcePosition" aria-describedby="mathSourcePositionHelp" onchange="save('mathSourcePosition', this.value)">
+            <option value="above" ${settings.mathSourcePosition === 'above' ? 'selected' : ''}>${messages.mathSourcePositionAbove}</option>
+            <option value="below" ${settings.mathSourcePosition === 'below' ? 'selected' : ''}>${messages.mathSourcePositionBelow}</option>
+        </select>
+    </div>
+    <div class="field-desc" id="mathSourcePositionHelp">${messages.mathSourcePositionHelp}</div>
+
+    <div class="field">
+        <label for="mathSourceWrap">${messages.mathSourceWrapLabel}</label>
+        <input type="checkbox" id="mathSourceWrap" aria-describedby="mathSourceWrapHelp" ${settings.mathSourceWrap ? 'checked' : ''} onchange="save('mathSourceWrap', this.checked)">
+    </div>
+    <div class="field-desc" id="mathSourceWrapHelp">${messages.mathSourceWrapHelp}</div>
+
     <h2>Images</h2>
     <div class="field field-text">
         <label>Default Dir</label>
@@ -180,6 +266,16 @@ export class SettingsManager {
     </div>
 
     <script>
+    window.settingsBridge.onValue(function(update) {
+        const field = document.getElementById(update.key);
+        if (field) {
+            if (field.type === 'checkbox') field.checked = Boolean(update.value);
+            else field.value = String(update.value);
+        }
+        const error = document.getElementById('settingsError');
+        error.textContent = update.error || '';
+        error.hidden = !update.error;
+    });
     function save(key, value) {
         window.settingsBridge.save(key, value);
     }

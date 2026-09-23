@@ -23,6 +23,90 @@
     const sidebar = document.getElementById('sidebar');
     const toolbar = document.getElementById('toolbar');
     const editorWrapper = document.getElementById('editorWrapper');
+    let editorRenderRevision = 0;
+    const widthGuide = document.getElementById('editorWidthGuide');
+    const widthBounds = document.getElementById('editorWidthBounds');
+    const widthExplanation = document.getElementById('editorWidthExplanation');
+
+    function updateWidthIndicators() {
+        if (!widthGuide) return;
+        const visible = document.documentElement.dataset.editorWidthIndicators !== 'false' && editor.style.display !== 'none';
+        if (!visible && widthGuide.contains(document.activeElement)) {
+            (editor.style.display === 'none' ? sourceEditor : editor).focus({ preventScroll: true });
+        }
+        widthGuide.hidden = !visible;
+        const pane = editorWrapper.getBoundingClientRect();
+        const column = editor.getBoundingClientRect();
+        // Reserve the guide strip while enabled, so revealing the marks cannot
+        // add a scrollbar and oscillate around the width threshold.
+        const capped = visible && document.documentElement.dataset.editorWidthMode !== 'full' && editorWrapper.clientWidth - column.width > 0.5;
+        widthGuide.dataset.capped = String(capped);
+        if (!capped) {
+            if (widthGuide.contains(document.activeElement)) editor.focus({ preventScroll: true });
+            widthExplanation.hidden = true;
+        }
+        widthBounds.style.left = (column.left - pane.left) + 'px';
+        widthBounds.style.width = column.width + 'px';
+    }
+    if (widthGuide) {
+        for (const mark of widthGuide.querySelectorAll('button')) {
+            mark.addEventListener('pointerdown', event => event.preventDefault());
+            mark.addEventListener('pointerenter', () => { widthExplanation.hidden = false; });
+            mark.addEventListener('pointerleave', () => { if (!widthGuide.contains(document.activeElement)) widthExplanation.hidden = true; });
+            mark.addEventListener('focus', () => { widthExplanation.hidden = false; });
+            mark.addEventListener('click', () => { widthExplanation.hidden = false; });
+            mark.addEventListener('keydown', event => {
+                if (event.key === 'Escape') {
+                    event.preventDefault(); event.stopPropagation();
+                    widthExplanation.hidden = true;
+                    editor.focus({ preventScroll: true });
+                }
+            });
+        }
+        widthGuide.addEventListener('focusout', event => { if (!widthGuide.contains(event.relatedTarget)) widthExplanation.hidden = true; });
+        new ResizeObserver(updateWidthIndicators).observe(editorWrapper);
+        new MutationObserver(updateWidthIndicators).observe(editor, { attributes: true, attributeFilter: ['style'] });
+        window.addEventListener('resize', updateWidthIndicators);
+    }
+
+    function applyEditorWidth(mode, width, alignment = document.documentElement.dataset.editorAlignment) {
+        const layout = window.BinaryEditorLayout;
+        const preference = layout.normalizeWidthMode(mode);
+        const maximum = layout.normalizeMaxWidth(width);
+        const placement = layout.normalizeAlignment(alignment);
+        const bounds = editorWrapper.getBoundingClientRect();
+        const selection = window.getSelection();
+        const range = selection?.rangeCount && editor.contains(selection.anchorNode) ? selection.getRangeAt(0) : null;
+        const caretBefore = range?.getBoundingClientRect();
+        const keepCaret = caretBefore?.height && caretBefore.top >= bounds.top && caretBefore.bottom <= bounds.bottom;
+        const anchor = Array.from(editor.children).find(child => child.getBoundingClientRect().bottom > bounds.top);
+        const anchorTop = anchor?.getBoundingClientRect().top;
+        document.documentElement.dataset.editorWidthMode = preference;
+        document.documentElement.dataset.editorMaxWidth = String(maximum);
+        document.documentElement.dataset.editorAlignment = placement;
+        // Set only the live editor. Source and detached export preparation keep
+        // their own layout, and no editable nodes or undo snapshots are replaced.
+        editor.style.maxWidth = preference === 'full' ? 'none' : (preference === 'custom' ? maximum : layout.defaultWidth) + 'px';
+        editor.style.marginLeft = placement === 'left' ? '0' : 'auto';
+        editor.style.marginRight = placement === 'right' ? '0' : 'auto';
+        if (keepCaret) editorWrapper.scrollTop += range.getBoundingClientRect().top - caretBefore.top;
+        else if (anchor && anchorTop !== undefined) editorWrapper.scrollTop += anchor.getBoundingClientRect().top - anchorTop;
+        updateWidthIndicators();
+    }
+    applyEditorWidth(document.documentElement.dataset.editorWidthMode, Number(document.documentElement.dataset.editorMaxWidth));
+
+    function applyMathSourcePreference(name, value) {
+        const selection = window.getSelection();
+        const range = selection?.rangeCount ? selection.getRangeAt(0) : null;
+        const node = selection?.anchorNode;
+        const wrapper = (node?.nodeType === Node.ELEMENT_NODE ? node : node?.parentElement)?.closest('.math-wrapper[data-mode="edit"]');
+        const caretBefore = wrapper && range?.getBoundingClientRect();
+        const bounds = editorWrapper.getBoundingClientRect();
+        const keepCaret = caretBefore?.height && caretBefore.top >= bounds.top && caretBefore.bottom <= bounds.bottom;
+        document.documentElement.dataset[name] = value;
+        // CSS changes the layout without detaching the active editable node.
+        if (keepCaret) editorWrapper.scrollTop += range.getBoundingClientRect().top - caretBefore.top;
+    }
 
     // Reading-position outline state. The active section is the last heading
     // that has crossed the reading line 30% down the visible editor viewport.
@@ -38,6 +122,7 @@
         // Group A: Inline formatting
         'bold': '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 12h9a4 4 0 0 1 0 8H7a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h7a4 4 0 0 1 0 8"/></svg>',
         'italic': '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" x2="10" y1="4" y2="4"/><line x1="14" x2="5" y1="20" y2="20"/><line x1="15" x2="9" y1="4" y2="20"/></svg>',
+        'underline': '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v7a6 6 0 0 0 12 0V3"/><path d="M4 21h16"/></svg>',
         'strikethrough': '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4H9a3 3 0 0 0-2.83 4"/><path d="M14 12a4 4 0 0 1 0 8H6"/><line x1="4" x2="20" y1="12" y2="12"/></svg>',
         'code': '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 18 6-6-6-6"/><path d="m8 6-6 6 6 6"/></svg>',
         // Group B: Block elements
@@ -65,6 +150,7 @@
         'openInTextEditor': '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M23.15 2.587L18.21.21a1.494 1.494 0 0 0-1.705.29l-9.46 8.63-4.12-3.128a.999.999 0 0 0-1.276.057L.327 7.261A1 1 0 0 0 .326 8.74L3.899 12 .326 15.26a1 1 0 0 0 .001 1.479L1.65 17.94a.999.999 0 0 0 1.276.057l4.12-3.128 9.46 8.63a1.492 1.492 0 0 0 1.704.29l4.942-2.377A1.5 1.5 0 0 0 24 20.06V3.939a1.5 1.5 0 0 0-.85-1.352zm-5.146 14.861L10.826 12l7.178-5.448v10.896z"/></svg>',
         'source': '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z"/><path d="M14 2v5a1 1 0 0 0 1 1h5"/><path d="M10 12.5 8 15l2 2.5"/><path d="m14 12.5 2 2.5-2 2.5"/></svg>',
         // Table toolbar icons
+        'placement': '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M10 19H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v5M3 9h18M9 3v16M3 14h6"/><path d="M16 12h2l.4 1.4 1.2.7 1.4-.3 1 1.8-1 1v1.4l1 1-1 1.8-1.4-.3-1.2.7-.4 1.4h-2l-.4-1.4-1.2-.7-1.4.3-1-1.8 1-1v-1.4l-1-1 1-1.8 1.4.3 1.2-.7Z"/><circle cx="17" cy="17.3" r="1.5"/></svg>',
         'add-col-left': '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="13" x="3" y="8" rx="1"/><path d="m15 2-3 3-3-3"/><rect width="7" height="13" x="14" y="8" rx="1"/></svg>',
         'add-col-right': '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="13" x="3" y="3" rx="1"/><path d="m9 22 3-3 3 3"/><rect width="7" height="13" x="14" y="3" rx="1"/></svg>',
         'del-col': '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>',
@@ -85,43 +171,159 @@
     }
     initToolbarIcons();
 
-    // Toolbar horizontal scroll navigation
-    var toolbarScrollLeftBtn = document.getElementById('toolbarScrollLeft');
-    var toolbarScrollRightBtn = document.getElementById('toolbarScrollRight');
+    // Keep complete actions in the bar and move the remainder into a menu.
+    // Moving the original buttons retains their state, identity and listeners.
     var toolbarInner = document.getElementById('toolbarInner');
+    var toolbarMore = document.getElementById('toolbarMore');
+    var toolbarOverflow = document.getElementById('toolbarOverflow');
+    var toolbarActions = [];
+    var toolbarLayoutFrame = 0;
+    if (toolbarMore && toolbarOverflow) {
+        toolbar.querySelectorAll('button[data-action]').forEach(function(button) {
+            const home = document.createComment('toolbar action');
+            button.before(home);
+            if (button.title) button.setAttribute('aria-label', button.title);
+            const label = document.createElement('span');
+            label.className = 'toolbar-action-label';
+            label.textContent = button.title;
+            button.appendChild(label);
+            toolbarActions.push({ button, home, formatting: toolbarInner.contains(button) });
+        });
+    }
 
-    function updateToolbarScrollButtons() {
-        if (!toolbarInner) return;
-        var scrollLeft = toolbarInner.scrollLeft;
-        var maxScroll = toolbarInner.scrollWidth - toolbarInner.clientWidth;
-        if (maxScroll <= 0) {
-            // No overflow — hide both buttons
-            toolbarScrollLeftBtn.classList.add('hidden');
-            toolbarScrollRightBtn.classList.add('hidden');
-        } else {
-            toolbarScrollLeftBtn.classList.toggle('hidden', scrollLeft <= 0);
-            toolbarScrollRightBtn.classList.toggle('hidden', scrollLeft >= maxScroll - 1);
+    function closeToolbarOverflow(restoreFocus) {
+        if (!toolbarOverflow) return;
+        toolbarOverflow.hidden = true;
+        toolbarMore.setAttribute('aria-expanded', 'false');
+        if (restoreFocus) toolbarMore.focus({ preventScroll: true });
+    }
+
+    function positionToolbarOverflow() {
+        const rect = toolbarMore.getBoundingClientRect();
+        const width = Math.min(300, Math.max(0, window.innerWidth - 16));
+        toolbarOverflow.style.width = width + 'px';
+        toolbarOverflow.style.left = Math.max(8, Math.min(rect.left, window.innerWidth - width - 8)) + 'px';
+        toolbarOverflow.style.top = Math.min(rect.bottom + 4, window.innerHeight - 36) + 'px';
+        toolbarOverflow.style.maxHeight = Math.max(28, window.innerHeight - rect.bottom - 12) + 'px';
+    }
+
+    function openToolbarOverflow(last) {
+        toolbarOverflow.hidden = false;
+        toolbarMore.setAttribute('aria-expanded', 'true');
+        positionToolbarOverflow();
+        const items = [...toolbarOverflow.querySelectorAll('button:not(:disabled)')];
+        (last ? items.at(-1) : items[0])?.focus({ preventScroll: true });
+    }
+
+    function scheduleToolbarLayout() {
+        if (!toolbarMore || toolbarLayoutFrame) return;
+        toolbarLayoutFrame = requestAnimationFrame(layoutToolbarActions);
+    }
+
+    function layoutToolbarActions() {
+        toolbarLayoutFrame = 0;
+        const active = document.activeElement;
+        const focusedAction = toolbarActions.find(item => item.button === active);
+        const wasOpen = !toolbarOverflow.hidden;
+        const full = document.documentElement.dataset.toolbarMode !== 'simple';
+        for (const { button, home } of toolbarActions) {
+            if (button.parentNode !== home.parentNode) home.after(button);
+            button.removeAttribute('role');
+        }
+        toolbarMore.hidden = true;
+        toolbar.querySelectorAll('.toolbar-fixed').forEach(section => section.classList.remove('toolbar-empty'));
+        const utilityWidth = [...toolbar.querySelectorAll('.toolbar-fixed')].reduce((width, section) => width + section.getBoundingClientRect().width, 0);
+        if (toolbar.dataset.utilityWidth !== String(utilityWidth)) {
+            toolbar.dataset.utilityWidth = String(utilityWidth);
+            tableControls.schedule();
+        }
+        const fits = () => {
+            const fixedWidth = [...toolbar.children].filter(child => child !== toolbarInner && child !== toolbarOverflow && child.getClientRects().length)
+                .reduce((width, child) => {
+                    const style = getComputedStyle(child);
+                    return width + child.getBoundingClientRect().width + (parseFloat(style.marginLeft) || 0) + (parseFloat(style.marginRight) || 0);
+                }, 0);
+            return fixedWidth <= toolbar.clientWidth + 0.5 && (!full || toolbarInner.scrollWidth <= toolbarInner.clientWidth);
+        };
+        if (!fits()) {
+            toolbarMore.hidden = false;
+            const candidates = toolbarActions.filter(item => full && item.formatting).reverse()
+                .concat(toolbarActions.filter(item => !item.formatting && item.button.closest('.toolbar-fixed--right')).reverse())
+                .concat(toolbarActions.filter(item => !item.formatting && item.button.closest('.toolbar-fixed--left')).reverse());
+            for (const { button, home } of candidates) {
+                if (fits()) break;
+                if (!button.getClientRects().length) continue;
+                toolbarOverflow.appendChild(button);
+                button.setAttribute('role', 'menuitem');
+                const section = home.parentElement.closest('.toolbar-fixed');
+                if (section && ![...section.querySelectorAll('button')].some(item => item.getClientRects().length)) {
+                    section.classList.add('toolbar-empty');
+                }
+            }
+        }
+        // Original order in the menu remains stable as its membership changes.
+        for (const { button } of toolbarActions) {
+            if (button.parentNode === toolbarOverflow) toolbarOverflow.appendChild(button);
+        }
+        toolbarMore.hidden = !toolbarOverflow.children.length;
+        if (toolbarMore.hidden) closeToolbarOverflow(false);
+        else if (wasOpen || focusedAction?.button.parentNode === toolbarOverflow) {
+            toolbarOverflow.hidden = false;
+            toolbarMore.setAttribute('aria-expanded', 'true');
+            positionToolbarOverflow();
+        }
+        if (active === toolbarMore && !toolbarMore.hidden) toolbarMore.focus({ preventScroll: true });
+        else if (focusedAction && active.getClientRects().length) active.focus({ preventScroll: true });
+        else if (focusedAction || (active === toolbarMore && toolbarMore.hidden)) {
+            const first = toolbarActions.find(item => item.button.getClientRects().length && !item.button.disabled);
+            first?.button.focus({ preventScroll: true });
         }
     }
 
-    if (toolbarInner) {
-        toolbarInner.addEventListener('scroll', updateToolbarScrollButtons);
-        window.addEventListener('resize', updateToolbarScrollButtons);
-        // Initial check after icons are rendered
-        setTimeout(updateToolbarScrollButtons, 100);
-    }
-
-    if (toolbarScrollLeftBtn) {
-        toolbarScrollLeftBtn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            toolbarInner.scrollBy({ left: -200, behavior: 'smooth' });
+    if (toolbarMore) {
+        toolbar.addEventListener('toolbar-submenu-open', () => closeToolbarOverflow(false));
+        toolbarMore.addEventListener('click', function(event) {
+            event.stopPropagation();
+            if (toolbarOverflow.hidden) openToolbarOverflow(false);
+            else closeToolbarOverflow(true);
         });
-    }
-    if (toolbarScrollRightBtn) {
-        toolbarScrollRightBtn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            toolbarInner.scrollBy({ left: 200, behavior: 'smooth' });
+        toolbarMore.addEventListener('keydown', function(event) {
+            if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+                event.preventDefault();
+                openToolbarOverflow(event.key === 'ArrowUp');
+            }
         });
+        toolbarOverflow.addEventListener('keydown', function(event) {
+            if (toolbarOverflow.hidden) return;
+            const items = [...toolbarOverflow.querySelectorAll('button:not(:disabled)')];
+            const index = items.indexOf(document.activeElement);
+            let next;
+            if (event.key === 'ArrowDown') next = (index + 1) % items.length;
+            if (event.key === 'ArrowUp') next = (index + items.length - 1) % items.length;
+            if (event.key === 'Home') next = 0;
+            if (event.key === 'End') next = items.length - 1;
+            if (next !== undefined) {
+                event.preventDefault();
+                event.stopPropagation();
+                items[next]?.focus();
+                items[next]?.scrollIntoView({ block: 'nearest' });
+            } else if (event.key === 'Escape') {
+                event.preventDefault();
+                event.stopPropagation();
+                closeToolbarOverflow(true);
+            }
+        });
+        toolbarOverflow.addEventListener('focusout', function() {
+            queueMicrotask(() => {
+                if (!toolbarOverflow.contains(document.activeElement) && document.activeElement !== toolbarMore) closeToolbarOverflow(false);
+            });
+        });
+        document.addEventListener('mousedown', function(event) {
+            if (!toolbarOverflow.contains(event.target) && !toolbarMore.contains(event.target)) closeToolbarOverflow(false);
+        });
+        window.addEventListener('resize', scheduleToolbarLayout);
+        new ResizeObserver(scheduleToolbarLayout).observe(toolbar);
+        scheduleToolbarLayout();
     }
 
     // Search & Replace elements
@@ -191,7 +393,7 @@
     }
 
     function saveCurrentDocument() {
-        try { refreshManagedTocs(false); } catch (error) { showExternalChangeToast(error.message); return; }
+        try { refreshManagedTocs(false); } catch (error) { showEditorToast(error.message); return; }
         const content = readCurrentMarkdown();
         cancelScheduledSync();
         markdown = content;
@@ -341,10 +543,10 @@
     
     // Supported languages for syntax highlighting (must be defined before init())
     const SUPPORTED_LANGUAGES = [
-        'mermaid', 'math',
-        'javascript', 'typescript', 'python', 'json', 'bash', 'shell', 'css', 'html', 'xml',
-        'sql', 'java', 'go', 'rust', 'yaml', 'markdown', 'c', 'cpp', 'csharp', 'php',
-        'ruby', 'swift', 'kotlin', 'dockerfile', 'plaintext'
+        // Curated browsing order, not a measured popularity ranking.
+        'plaintext', 'markdown', 'javascript', 'typescript', 'python', 'java', 'c', 'cpp',
+        'csharp', 'go', 'rust', 'bash', 'shell', 'json', 'yaml', 'html', 'css', 'sql',
+        'dockerfile', 'php', 'ruby', 'swift', 'kotlin', 'xml', 'mermaid', 'math'
     ];
     
     const LANGUAGE_ALIASES = {
@@ -352,7 +554,32 @@
         'htm': 'html', 'yml': 'yaml', 'md': 'markdown', 'c++': 'cpp', 'c#': 'csharp',
         'cs': 'csharp', 'rb': 'ruby', 'docker': 'dockerfile', 'text': 'plaintext', 'txt': 'plaintext'
     };
+
+    const LANGUAGE_NAMES = {
+        javascript: 'JavaScript', typescript: 'TypeScript', python: 'Python', json: 'JSON',
+        bash: 'Bash', shell: 'Shell', css: 'CSS', html: 'HTML', xml: 'XML', sql: 'SQL',
+        java: 'Java', go: 'Go', rust: 'Rust', yaml: 'YAML', markdown: 'Markdown', c: 'C',
+        cpp: 'C++', csharp: 'C#', php: 'PHP', ruby: 'Ruby', swift: 'Swift', kotlin: 'Kotlin',
+        dockerfile: 'Dockerfile'
+    };
+
+    function codeLanguageName(id) {
+        if (id === 'plaintext') return i18n.languagePickerPlainText || 'Plain text';
+        if (id === 'math') return i18n.languagePickerMath || 'Math equation';
+        if (id === 'mermaid') return i18n.languagePickerMermaid || 'Mermaid diagram';
+        return LANGUAGE_NAMES[id] || id;
+    }
     
+    function orderedCodeLanguages() {
+        const mode = document.documentElement.dataset.codeLanguageOrder;
+        if (mode !== 'a-z' && mode !== 'z-a') return SUPPORTED_LANGUAGES;
+        // Explicit collation keeps ordering independent of the OS locale.
+        const names = new Intl.Collator('en', { sensitivity: 'base' });
+        const ordered = [...SUPPORTED_LANGUAGES].sort((a, b) =>
+            names.compare(codeLanguageName(a), codeLanguageName(b)) || a.localeCompare(b, 'en'));
+        return mode === 'z-a' ? ordered.reverse() : ordered;
+    }
+
     // Pre-compiled regex patterns for performance (avoid creating regex objects on every call)
     const REGEX = {
         // parseMarkdownLine patterns
@@ -623,27 +850,34 @@
         const sel = window.getSelection();
         if (!sel) return;
         
-        if (element.lastChild) {
-            if (element.lastChild.nodeType === 3) {
+        let last = element.lastChild;
+        // Header resize handles are editor UI, never a text caret destination.
+        while (last?.nodeType === 1 && last.classList.contains('table-col-resize-handle')) last = last.previousSibling;
+        if (element.matches('td, th')) {
+            while (last?.nodeType === 1 && last.matches('strong, b, em, i, s, del, u, a, code') && last.lastChild) last = last.lastChild;
+        }
+        if (last) {
+            if (last.nodeType === 3) {
                 // Text node - set cursor at end of text
-                range.setStart(element.lastChild, element.lastChild.length);
+                range.setStart(last, last.length);
                 range.collapse(true);
-            } else if (element.lastChild.nodeName === 'BR') {
+            } else if (last.nodeName === 'BR') {
                 // BR element - set cursor before the BR (inside the parent element)
-                range.setStart(element, element.childNodes.length - 1);
+                range.setStartBefore(last);
                 range.collapse(true);
             } else {
-                range.selectNodeContents(element.lastChild);
+                range.selectNodeContents(last);
                 range.collapse(false);
             }
         } else {
-            range.selectNodeContents(element);
-            range.collapse(false);
+            range.setStart(element, 0);
+            range.collapse(true);
         }
         
         sel.removeAllRanges();
         sel.addRange(range);
         element.focus();
+        revealTableCaret(element);
     }
     
     // Helper: scroll cursor position into view (for code block / mermaid block navigation)
@@ -697,6 +931,7 @@
         sel.removeAllRanges();
         sel.addRange(range);
         element.focus();
+        revealTableCaret(element);
     }
 
     // Set cursor to the start of the last line in an element (for table cell navigation)
@@ -1383,6 +1618,22 @@
 
     // ========== MARKDOWN TO HTML ==========
 
+    // Recognize only paired, attribute-free underline tags. Code spans and link
+    // destinations are protected before this runs; escaped tags stay literal.
+    function restoreUnderlineTags(html) {
+        const matches = [...html.matchAll(/&lt;(\/?)u&gt;/gi)];
+        const stack = [], paired = new Set();
+        for (const match of matches) {
+            let escapes = 0;
+            for (let at = match.index - 1; at >= 0 && html[at] === '\\'; at--) escapes++;
+            if (escapes % 2) continue;
+            if (!match[1]) stack.push(match.index);
+            else if (stack.length) { paired.add(stack.pop()); paired.add(match.index); }
+        }
+        return html.replace(/&lt;(\/?)u&gt;/gi, (literal, closing, index) =>
+            paired.has(index) ? (closing ? '</u>' : '<u>') : literal);
+    }
+
     function parseMarkdownLine(text, allowMath = true) {
         const parseLineInline = value => parseInline(value, allowMath);
         // Heading
@@ -1478,12 +1729,26 @@
         
         // Links (must be after images)
         html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, function(match, linkText, href) {
-            const linkHtml = '<a href="' + href + '">' + linkText + '</a>';
+            const linkHtml = '<a href="' + href + '">' + formatInlineText(linkText) + '</a>';
             const placeholder = '\x00LINK' + (placeholderIndex++) + '\x00';
             placeholders.push({ placeholder, html: linkHtml });
             return placeholder;
         });
         
+        html = formatInlineText(html);
+
+        // Restore placeholders with actual HTML
+        for (const { placeholder, html: replacement } of placeholders) {
+            html = html.replace(placeholder, replacement);
+        }
+        equations.forEach((equation, i) => {
+            html = html.replace(mathMarker + i + '\x00', () => inlineMathHtml(equation));
+        });
+
+        return html;
+    }
+
+    function formatInlineText(html) {
         // Now process inline formatting (bold, italic, etc.)
         // Bold + Italic
         html = html.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>');
@@ -1503,17 +1768,9 @@
         // Strikethrough
         html = html.replace(/~~(.+?)~~/g, '<del>$1</del>');
         
-        // Restore placeholders with actual HTML
-        for (const { placeholder, html: replacement } of placeholders) {
-            html = html.replace(placeholder, replacement);
-        }
-        equations.forEach((equation, i) => {
-            html = html.replace(mathMarker + i + '\x00', () => inlineMathHtml(equation));
-        });
-        
-        return html;
+        return restoreUnderlineTags(html);
     }
-    
+
     // Parse inline code spans according to CommonMark spec
     // Opening and closing backtick strings must be exactly the same length
     // Uses placeholders to protect code content from further markdown processing
@@ -1585,6 +1842,9 @@
     }
 
     function renderFromMarkdown() {
+        closeInsertMenu(false);
+        closeLanguageSelector();
+        editorRenderRevision++;
         if (tableControls) tableControls.clear();
         // Remove IMAGE_DIR and FORCE_RELATIVE_PATH directives before rendering (they're stored in variables)
         let markdownToRender = removeDirectivesFromMarkdown(markdown);
@@ -1720,7 +1980,7 @@
         const diagrams = [];
         const template = document.createElement('template');
         const normalizedSource = stripExportMetadata(source);
-        template.innerHTML = markdownToHtmlFragment(normalizedSource);
+        template.innerHTML = markdownToHtmlFragment(normalizedSource, true);
         assignHeadingAnchors(template.content, normalizedSource);
         template.content.querySelectorAll('.toc-refresh').forEach(button => button.remove());
         template.content.querySelectorAll('[data-toc-source]').forEach(block => block.removeAttribute('data-toc-source'));
@@ -1759,7 +2019,16 @@
         container.appendChild(template.content);
         document.body.appendChild(container);
         try {
-            container.querySelectorAll('pre:not([data-lang="math"]):not([data-lang="mermaid"])').forEach(applyHighlighting);
+            container.querySelectorAll('pre:not([data-lang="math"]):not([data-lang="mermaid"])').forEach(pre => {
+                applyHighlighting(pre);
+                const code = pre.querySelector('code');
+                // Mark display-only breaks before sanitization removes editor
+                // attributes. PDF metadata must never count a caret placeholder.
+                if (code && code.lastChild?.nodeName === 'BR' &&
+                    (code.dataset.trailingBr === 'true' || Number(pre.dataset.exportCodeLines) <= 1)) {
+                    code.lastChild.setAttribute('data-export-display-break', '');
+                }
+            });
             for (const span of container.querySelectorAll('.math-inline')) {
                 checkExportCancellation(signal);
                 const output = document.createElement('span');
@@ -2295,7 +2564,7 @@
                 syncMarkdownSync();
                 updateOutline();
             }
-        } catch (error) { showExternalChangeToast(error.message); }
+        } catch (error) { showEditorToast(error.message); }
     }
 
     function setupDocumentAux() {
@@ -2304,7 +2573,7 @@
             block.dataset.auxSetup = 'true';
             block.querySelector('.toc-refresh').addEventListener('click', e => {
                 e.preventDefault(); e.stopPropagation();
-                try { refreshManagedTocs(true); } catch (error) { showExternalChangeToast(error.message); }
+                try { refreshManagedTocs(true); } catch (error) { showEditorToast(error.message); }
             });
             block.querySelectorAll('a').forEach(a => a.addEventListener('click', e => {
                 e.preventDefault(); e.stopPropagation();
@@ -2336,7 +2605,7 @@
         });
     }
 
-    function markdownToHtmlFragment(markdownText) {
+    function markdownToHtmlFragment(markdownText, exportCode = false) {
         // Normalize line endings: \r\n → \n, lone \r → \n
         const front = documentAux.splitFrontMatter(markdownText.replace(/\r\n?/g, '\n'));
         let body = front.body;
@@ -2501,7 +2770,7 @@
         function renderBlockquote(lines) {
             if (lines.length === 0) return '';
             if (lines.some((line, index) => /^\s*(?:`{3,}|~{3,})/.test(line) || mathSyntax.display(lines, index, mathBackslashDelimiters))) {
-                return '<blockquote>' + markdownToHtmlFragment(lines.join('\n')) + '</blockquote>';
+                return '<blockquote>' + markdownToHtmlFragment(lines.join('\n'), exportCode) + '</blockquote>';
             }
             // Join blockquote lines with actual newlines (like code blocks)
             // CSS white-space: pre-wrap will display them as line breaks
@@ -2573,7 +2842,8 @@
                             html += mathBlockHtml({ tex: trimmedContent, raw: lines.slice(codeStart, i + 1).join('\n'),
                                 open: lines[codeStart], close: line, singleLine: false });
                         } else {
-                            html += '<pre data-lang="' + escapeHtml(codeLang) + '" data-mode="display"><code contenteditable="false"' + trailingAttr + '>' + codeHtml + '</code></pre>';
+                            const countAttr = exportCode ? ' data-export-code-lines="' + (i - codeStart - 1) + '"' : '';
+                            html += '<pre data-lang="' + escapeHtml(codeLang).replace(/"/g, '&quot;') + '"' + countAttr + ' data-mode="display"><code contenteditable="false"' + trailingAttr + '>' + codeHtml + '</code></pre>';
                         }
                         inCodeBlock = false;
                         codeContent = '';
@@ -2768,6 +3038,17 @@
         if (inBlockquote) html += renderBlockquote(blockquoteLines);
         if (inTable) html += renderTable(tableRows);
         if (inCodeBlock) {
+            if (exportCode) {
+                const count = Math.max(0, lines.length - codeStart - 1 - (body.endsWith('\n') ? 1 : 0));
+                // The loop appends one newline per entry, including split()'s
+                // final empty entry. Remove only those parser delimiters.
+                const payload = codeContent.slice(0, -(body.endsWith('\n') ? 2 : 1));
+                const trailing = payload.endsWith('\n');
+                html += '<pre data-lang="' + escapeHtml(codeLang).replace(/"/g, '&quot;') + '" data-export-code-lines="' + count + '"><code' +
+                    (trailing ? ' data-trailing-br="true"' : '') + '>' +
+                    (payload ? escapeHtml(payload).replace(/\n/g, '<br>') + (trailing ? '<br>' : '') : '<br>') + '</code></pre>';
+                return html;
+            }
             // For empty code blocks, add a <br> for minimum height
             const codeHtml = (!codeContent || codeContent === '' || codeContent === '\n') 
                 ? '<br>' 
@@ -3451,16 +3732,25 @@
         header.setAttribute('contenteditable', 'false');
         
         const lang = pre.getAttribute('data-lang') || 'plaintext';
-        const langTag = document.createElement('span');
+        const langTag = document.createElement('button');
+        langTag.type = 'button';
         langTag.className = 'code-lang-tag';
         langTag.textContent = lang || 'plaintext';
+        langTag.title = langTag.textContent;
         langTag.setAttribute('contenteditable', 'false');
+        langTag.setAttribute('aria-haspopup', 'listbox');
+        langTag.setAttribute('aria-expanded', 'false');
+        langTag.setAttribute('aria-label', (i18n.languagePickerLabel || 'Code language') + ': ' + langTag.textContent);
+        langTag.addEventListener('mousedown', e => e.preventDefault());
+        langTag.addEventListener('keydown', event => {
+            // Button activation must not also run the editable document's Enter handler.
+            if (!event.ctrlKey && !event.metaKey) event.stopPropagation();
+            if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+                event.preventDefault(); showLanguageSelector(pre, langTag);
+            }
+        });
         langTag.addEventListener('click', (e) => {
             e.stopPropagation();
-            // Switch to display mode if in edit mode
-            if (pre.getAttribute('data-mode') === 'edit') {
-                enterDisplayMode(pre);
-            }
             showLanguageSelector(pre, langTag);
         });
         
@@ -3705,7 +3995,8 @@
         const code = pre.querySelector('code');
         if (!code) return;
 
-        const codeContent = getCodePlainText(code);
+        const empty = code.childNodes.length === 1 && code.firstChild.nodeName === 'BR';
+        const codeContent = empty ? '' : stripTrailingNewlines(getCodePlainText(code), code, pre);
         const wrapperClass = type + '-wrapper';
         const displayClass = type === 'mermaid' ? 'mermaid-diagram' : 'math-display';
         const renderFn = type === 'mermaid' ? renderMermaidDiagram : renderMathBlock;
@@ -3720,10 +4011,11 @@
         newPre.setAttribute('contenteditable', 'true');
 
         const newCode = document.createElement('code');
-        if (!codeContent || codeContent === '' || codeContent === '\n') {
+        if (!codeContent) {
             newCode.innerHTML = '<br>';
         } else if (codeContent.endsWith('\n')) {
             newCode.innerHTML = escapeHtml(codeContent).replace(/\n/g, '<br>') + '<br>';
+            newCode.setAttribute('data-trailing-br', 'true');
         } else {
             newCode.innerHTML = escapeHtml(codeContent).replace(/\n/g, '<br>');
         }
@@ -4025,71 +4317,139 @@
         return patterns;
     }
     
-    // Show language selector dropdown
+    function closeLanguageSelector(restoreFocus = false) {
+        document.querySelector('.lang-selector')?.closePicker?.(restoreFocus);
+    }
+
+    // The input remains visible while its result list scrolls in short panes.
+    function positionLanguageSelector() {
+        const selector = document.querySelector('.lang-selector');
+        const anchor = selector?.languageAnchor;
+        if (!anchor) return;
+        if (!anchor.isConnected || !anchor.getClientRects().length) { closeLanguageSelector(); return; }
+        const rect = anchor.getBoundingClientRect();
+        if (rect.bottom < 0 || rect.top > window.innerHeight) { closeLanguageSelector(); return; }
+        const below = window.innerHeight - rect.bottom - 8;
+        const above = rect.top - 8;
+        const upward = below < 250 && above > below;
+        const compact = Math.max(above, below) < 120;
+        selector.style.maxHeight = Math.max(0, Math.min(300, compact ? window.innerHeight - 8 : upward ? above : below)) + 'px';
+        selector.style.width = Math.min(260, Math.max(0, window.innerWidth - 8)) + 'px';
+        selector.style.top = compact ? '4px' : upward ? 'auto' : Math.max(4, rect.bottom + 4) + 'px';
+        selector.style.bottom = compact || !upward ? 'auto' : Math.max(4, window.innerHeight - rect.top + 4) + 'px';
+        selector.style.left = Math.max(4, Math.min(rect.left, window.innerWidth - selector.offsetWidth - 4)) + 'px';
+    }
+    window.addEventListener('resize', positionLanguageSelector);
+    editorWrapper.addEventListener('scroll', positionLanguageSelector);
+    new ResizeObserver(positionLanguageSelector).observe(editorWrapper);
+
     function showLanguageSelector(pre, langTag) {
-        // Remove existing selector
-        const existing = document.querySelector('.lang-selector');
-        if (existing) existing.remove();
-        
+        closeLanguageSelector();
+        const selection = window.getSelection();
+        const savedRange = selection.rangeCount && editor.contains(selection.getRangeAt(0).commonAncestorContainer)
+            ? selection.getRangeAt(0).cloneRange() : null;
+        const wasEditing = pre.getAttribute('data-mode') === 'edit';
+        const current = pre.getAttribute('data-lang') || 'plaintext';
         const selector = document.createElement('div');
         selector.className = 'lang-selector';
-        
-        SUPPORTED_LANGUAGES.forEach(lang => {
-            const item = document.createElement('div');
-            item.className = 'lang-selector-item';
-            item.textContent = lang;
-            item.addEventListener('click', () => {
-                selector.remove();
-                
-                // Special handling for mermaid/math: convert to wrapper block
-                if (lang === 'mermaid') {
-                    convertToSpecialBlock(pre, 'mermaid');
-                    return;
+        const input = document.createElement('input');
+        input.type = 'text'; input.className = 'lang-selector-search';
+        input.autocomplete = 'off'; input.spellcheck = false;
+        input.placeholder = i18n.languagePickerPlaceholder || 'Search names or aliases';
+        input.setAttribute('role', 'combobox');
+        input.setAttribute('aria-label', i18n.languagePickerLabel || 'Code language');
+        input.setAttribute('aria-autocomplete', 'list'); input.setAttribute('aria-expanded', 'true');
+        input.setAttribute('aria-controls', 'codeLanguageOptions');
+        const currentLabel = document.createElement('div'); currentLabel.className = 'lang-selector-current';
+        currentLabel.textContent = (i18n.languagePickerCurrent || 'Current language') + ': ' + current;
+        currentLabel.title = currentLabel.textContent;
+        const list = document.createElement('div'); list.className = 'lang-selector-options';
+        list.id = 'codeLanguageOptions'; list.setAttribute('role', 'listbox');
+        list.setAttribute('aria-label', i18n.languagePickerLabel || 'Code language');
+        const empty = document.createElement('div'); empty.className = 'lang-selector-empty'; empty.setAttribute('role', 'status');
+        empty.textContent = i18n.languagePickerNoResults || 'No matching languages.';
+        selector.append(input, currentLabel, list, empty);
+        let results = [], active = -1, closed = false;
+        const observer = new MutationObserver(() => { if (!editor.contains(pre)) closeLanguageSelector(); });
+        const outside = event => { if (!selector.contains(event.target) && event.target !== langTag) closeLanguageSelector(); };
+        selector.closePicker = restoreFocus => {
+            if (closed) return;
+            closed = true; observer.disconnect(); document.removeEventListener('pointerdown', outside, true);
+            selector.remove(); langTag.setAttribute('aria-expanded', 'false');
+            if (restoreFocus && editor.contains(pre)) {
+                const code = pre.querySelector('code');
+                const target = wasEditing && savedRange && code.contains(savedRange.commonAncestorContainer) ? code : langTag;
+                target.focus({ preventScroll: true });
+                if (savedRange?.startContainer.isConnected && savedRange.endContainer.isConnected) {
+                    selection.removeAllRanges(); selection.addRange(savedRange);
                 }
-                if (lang === 'math') {
-                    convertToSpecialBlock(pre, 'math');
-                    return;
-                }
-                
-                pre.setAttribute('data-lang', lang);
-                langTag.textContent = lang;
-                // Re-apply highlighting with new language
-                if (pre.getAttribute('data-mode') === 'display') {
-                    applyHighlighting(pre);
-                }
-                syncMarkdownSync();
-            });
-            selector.appendChild(item);
-        });
-        
-        // Append to body for fixed positioning
-        document.body.appendChild(selector);
-        
-        // Position below the language tag
-        const rect = langTag.getBoundingClientRect();
-        const selectorHeight = 250; // max-height
-        const viewportHeight = window.innerHeight;
-        
-        // Check if there's enough space below
-        if (rect.bottom + selectorHeight > viewportHeight) {
-            // Show above the tag
-            selector.style.bottom = (viewportHeight - rect.top + 4) + 'px';
-            selector.style.top = 'auto';
-        } else {
-            // Show below the tag
-            selector.style.top = (rect.bottom + 4) + 'px';
-            selector.style.bottom = 'auto';
-        }
-        selector.style.left = rect.left + 'px';
-        
-        // Close on click outside
-        const closeHandler = (e) => {
-            if (!selector.contains(e.target) && e.target !== langTag) {
-                selector.remove();
-                document.removeEventListener('click', closeHandler);
             }
         };
-        setTimeout(() => document.addEventListener('click', closeHandler), 0);
+        const activate = index => {
+            active = index;
+            for (let i = 0; i < list.children.length; i++) list.children[i].setAttribute('aria-selected', String(i === active));
+            const option = list.children[active];
+            if (option) { input.setAttribute('aria-activedescendant', option.id); option.scrollIntoView({ block: 'nearest' }); }
+            else input.removeAttribute('aria-activedescendant');
+        };
+        const choose = id => {
+            if (isSourceMode || !editor.contains(pre)) { closeLanguageSelector(); return; }
+            closeLanguageSelector(true);
+            if (id === current) return;
+            // Capture the latest code edit, then make the language choice one undo step.
+            markdown = htmlToMarkdown(); undoManager.saveSnapshot();
+            if (id === 'mermaid' || id === 'math') {
+                convertToSpecialBlock(pre, id);
+                editor.focus({ preventScroll: true });
+                return;
+            }
+            pre.setAttribute('data-lang', id); langTag.textContent = id; langTag.title = id;
+            langTag.setAttribute('aria-label', (i18n.languagePickerLabel || 'Code language') + ': ' + id);
+            if (pre.getAttribute('data-mode') === 'display') applyHighlighting(pre);
+            syncMarkdownSync();
+        };
+        const render = (keepActive = false) => {
+            const selected = keepActive ? results[active] : undefined;
+            const query = input.value.trim().toLowerCase();
+            results = orderedCodeLanguages().map(id => {
+                const terms = [id, codeLanguageName(id).toLowerCase(), ...Object.keys(LANGUAGE_ALIASES).filter(alias => LANGUAGE_ALIASES[alias] === id)];
+                const rank = !query ? 0 : terms.some(term => term === query) ? 0 : terms.some(term => term.startsWith(query)) ? 1 : terms.some(term => term.includes(query)) ? 2 : 3;
+                return { id, rank };
+            }).filter(item => item.rank < 3).sort((a, b) => a.rank - b.rank).map(item => item.id);
+            list.replaceChildren();
+            for (const id of results) {
+                const item = document.createElement('div'); item.className = 'lang-selector-item';
+                item.id = 'codeLanguageOption-' + id; item.dataset.language = id; item.setAttribute('role', 'option');
+                const name = document.createElement('span'); name.textContent = codeLanguageName(id);
+                const identifier = document.createElement('small'); identifier.textContent = id;
+                item.append(name, identifier);
+                item.addEventListener('mousedown', event => event.preventDefault());
+                item.addEventListener('click', () => choose(id)); list.appendChild(item);
+            }
+            empty.hidden = results.length > 0;
+            activate(selected && results.includes(selected) ? results.indexOf(selected) :
+                query ? (results.length ? 0 : -1) : Math.max(0, results.indexOf(LANGUAGE_ALIASES[current.toLowerCase()] || current.toLowerCase())));
+            positionLanguageSelector();
+        };
+        input.addEventListener('input', () => render());
+        selector.refreshOrder = () => render(true);
+        selector.addEventListener('keydown', event => {
+            event.stopPropagation();
+            if (event.isComposing) return;
+            if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+                event.preventDefault();
+                if (results.length) activate((active + (event.key === 'ArrowDown' ? 1 : -1) + results.length) % results.length);
+            } else if (event.key === 'Enter') {
+                event.preventDefault(); if (results[active]) choose(results[active]);
+            } else if (event.key === 'Escape') {
+                event.preventDefault(); closeLanguageSelector(true);
+            } else if (event.key === 'Tab') closeLanguageSelector(true);
+        });
+        selector.languageAnchor = langTag;
+        document.body.appendChild(selector); langTag.setAttribute('aria-expanded', 'true');
+        observer.observe(editor, { childList: true, subtree: true });
+        document.addEventListener('pointerdown', outside, true);
+        render(); input.focus({ preventScroll: true });
     }
     
     // Copy code block content to clipboard
@@ -4120,13 +4480,32 @@
 
     // ========== TABLE FUNCTIONALITY ==========
 
+    function revealTableCaret(element) {
+        const cell = element.closest?.('td, th');
+        if (!cell || !editor.contains(cell)) return;
+        cell.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+        const table = cell.closest('table');
+        const selection = window.getSelection();
+        if (!table || !selection?.isCollapsed || !selection.rangeCount || !cell.contains(selection.anchorNode)) return;
+        const caret = selection.getRangeAt(0).getBoundingClientRect();
+        if (!caret.height && !caret.width) return;
+        const bounds = table.getBoundingClientRect();
+        // A single unbroken cell can be wider than the pane: reveal its caret,
+        // rather than repeatedly aligning the cell's other edge with the pane.
+        const left = bounds.left + table.clientLeft;
+        const right = left + table.clientWidth;
+        if (caret.left < left + 2) table.scrollLeft -= left + 2 - caret.left;
+        else if (caret.right > right - 2) table.scrollLeft += caret.right - right + 2;
+    }
+
     let activeTableCell = null;
     let activeTable = null;
     var tableControls = window.BinaryTableToolbar.create({
         editor, header: toolbar, messages: i18n, icons: LUCIDE_ICONS,
         isSourceMode: () => isSourceMode,
         onContext(cell) { activeTableCell = cell; activeTable = cell?.closest('table') || null; },
-        onLayout: updateToolbarScrollButtons,
+        onReveal: revealTableCaret,
+        onLayout: scheduleToolbarLayout,
         onPreference(value) { host.setTableToolbarPosition?.(value); },
         onAction(action) {
             if (!activeTableCell || !editor.contains(activeTableCell)) return;
@@ -4510,6 +4889,7 @@
         let totalWidth = 0;
         headerCells.forEach((th, index) => {
             th.style.width = widths[index] + 'px';
+            th.style.minWidth = widths[index] + 'px';
             totalWidth += widths[index];
         });
         
@@ -4524,6 +4904,7 @@
             cells.forEach((td, colIndex) => {
                 if (widths[colIndex]) {
                     td.style.width = widths[colIndex] + 'px';
+                    td.style.minWidth = widths[colIndex] + 'px';
                 }
             });
         });
@@ -4539,6 +4920,9 @@
             const cells = row.querySelectorAll('th, td');
             if (cells[colIndex]) {
                 cells[colIndex].style.width = finalWidth + 'px';
+                // The table is a scroll box; retain the requested width in its
+                // anonymous inner table even when the visible box is narrower.
+                cells[colIndex].style.minWidth = finalWidth + 'px';
             }
         });
         
@@ -5776,6 +6160,26 @@
         syncMarkdown();
     }
 
+    function toggleUnderline() {
+        const selection = window.getSelection();
+        const range = selection && selection.rangeCount ? selection.getRangeAt(0) : null;
+        if (isSourceMode || !editorRange(range)) return;
+        const protectedSelector = 'pre, code, .math-inline, .math-wrapper, .mermaid-wrapper, .front-matter, .toc-block';
+        const element = node => node.nodeType === Node.ELEMENT_NODE ? node : node.parentElement;
+        const protectedContent = element(range.startContainer).closest(protectedSelector) ||
+            element(range.endContainer).closest(protectedSelector) ||
+            (!range.collapsed && [...editor.querySelectorAll(protectedSelector)].some(node => range.intersectsNode(node)));
+        if (protectedContent) { showEditorToast(i18n.underlineUnavailable); return; }
+        const formatsSelection = !range.collapsed;
+        if (formatsSelection) {
+            markdown = readCurrentMarkdown();
+            undoManager.saveSnapshot();
+        }
+        document.execCommand('underline');
+        // A caret-only toggle affects subsequent typing; it is not a document edit.
+        if (formatsSelection) syncMarkdownSync();
+    }
+
     // Apply inline formatting (bold, italic, strikethrough) with proper handling
     // for blockquotes and table cells where line breaks should be preserved
     function applyInlineFormat(tagName) {
@@ -6131,6 +6535,7 @@
             case 'del':
             case 's':
             case 'strike':
+            case 'u':
             case 'code':
             case 'a':
                 // Use mdGetInlineMarkdown to properly normalize nested inline elements
@@ -6296,6 +6701,7 @@
         }
         
         if (tag === 'br') {
+            if (currentStyles.has('underline')) return [{ char: '\n', styles: new Set(currentStyles) }];
             // Line break - skip (handled at block level)
             return result;
         }
@@ -6318,6 +6724,8 @@
             newStyles.add('italic');
         } else if (tag === 'del' || tag === 's' || tag === 'strike') {
             newStyles.add('strikethrough');
+        } else if (tag === 'u') {
+            newStyles.add('underline');
         }
         
         // Process children with updated styles
@@ -6446,6 +6854,11 @@
      */
     function applyInlineStyles(text, styles) {
         if (!text) return '';
+        if (styles.has('underline')) {
+            const innerStyles = new Set(styles); innerStyles.delete('underline');
+            // Every physical source line needs a balanced inline wrapper.
+            return text.split('\n').map(line => line ? '<u>' + applyInlineStyles(line, innerStyles) + '</u>' : '').join('\n');
+        }
         
         let result = text;
         
@@ -6549,9 +6962,16 @@
                     // After processing div/p, push the line
                     lines.push(currentLine);
                     currentLine = '';
-                } else if (['strong', 'b', 'em', 'i', 'del', 's', 'strike', 'code', 'a', 'img'].includes(tag)) {
+                } else if (['strong', 'b', 'em', 'i', 'del', 's', 'strike', 'u', 'code', 'a', 'img'].includes(tag)) {
                     // Inline elements - process them
-                    currentLine += mdProcessNode(node);
+                    const content = mdProcessNode(node);
+                    if (tag === 'u' || node.querySelector('u')) {
+                        const parts = content.split('\n');
+                        parts.forEach((part, index) => {
+                            currentLine += part;
+                            if (index < parts.length - 1) { lines.push(currentLine); currentLine = ''; }
+                        });
+                    } else currentLine += content;
                 } else {
                     // Other elements - process children
                     for (const child of node.childNodes) {
@@ -6653,6 +7073,8 @@
                 return '*' + innerContent + '*';
             } else if (tag === 'del' || tag === 's' || tag === 'strike') {
                 return '~~' + innerContent + '~~';
+            } else if (tag === 'u') {
+                return '<u>' + innerContent + '</u>';
             } else if (tag === 'a') {
                 const href = node.getAttribute('href') || '';
                 return '[' + innerContent + '](' + href + ')';
@@ -8098,7 +8520,6 @@
 
         // Tab key - table cell navigation or list indent
         if (e.key === 'Tab') {
-            undoManager.saveSnapshot();
             // #region agent log
             logger.log('Tab key pressed', {shiftKey: e.shiftKey});
             // #endregion
@@ -8120,6 +8541,7 @@
                 
                 if (tableCellNode) {
                     // Navigate between table cells
+                    activeTableCell = tableCellNode;
                     const row = tableCellNode.closest('tr');
                     const table = tableCellNode.closest('table');
                     const cellIndex = tableCellNode.cellIndex;
@@ -8151,10 +8573,15 @@
                             setCursorToEnd(activeTableCell);
                         }
                     }
+                    // Capture the new cell/range before a following Alt+F10.
+                    // selectionchange is asynchronous and can still describe
+                    // the previous cell when toolbar focus is requested.
+                    showTableToolbar(table);
                     return;
                 }
             }
 
+            undoManager.saveSnapshot();
             // Check if inside a code block or blockquote
             if (sel && sel.rangeCount) {
                 let anchorEl = sel.anchorNode;
@@ -8829,7 +9256,6 @@
                                 if (targetCell) {
                                     activeTableCell = targetCell;
                                     setCursorToLastLineStartByDOM(targetCell);
-                                    targetCell.scrollIntoView({ block: 'nearest' });
                                 }
                             } else {
                                 // At first row, exit table upward
@@ -8869,7 +9295,6 @@
                                 if (targetCell) {
                                     activeTableCell = targetCell;
                                     setCursorToStart(targetCell);
-                                    targetCell.scrollIntoView({ block: 'nearest' });
                                 }
                             } else {
                                 // At last row, exit table downward
@@ -8892,6 +9317,8 @@
                     }
                     // IMPORTANT: return after table cell arrow handling to prevent
                     // the "invasion code" below from also running and overwriting cursor position
+                    revealTableCaret(activeTableCell || tableCellNode);
+                    showTableToolbar(table);
                     return;
                 }
             }
@@ -8926,6 +9353,18 @@
                 
                 // Check if this block is inside a mermaid-wrapper or math-wrapper
                 const specialWrapperBlock = blockNode.closest('.mermaid-wrapper') || blockNode.closest('.math-wrapper');
+
+                // Source lines can span several visual rows when TeX wrapping is on.
+                // Let Chromium keep the caret column while moving within those rows;
+                // retain the existing block-exit behavior at the visual boundaries.
+                if (specialWrapperBlock?.classList.contains('math-wrapper') && document.documentElement.dataset.mathSourceWrap === 'true') {
+                    const code = blockNode.querySelector('code') || blockNode;
+                    const caret = sel.getRangeAt(0).getBoundingClientRect();
+                    const bounds = code.getBoundingClientRect();
+                    const lineHeight = parseFloat(getComputedStyle(code).lineHeight) || caret.height;
+                    if (caret.height && ((e.key === 'ArrowUp' && caret.top >= bounds.top + lineHeight) ||
+                        (e.key === 'ArrowDown' && caret.bottom <= bounds.bottom - lineHeight))) return;
+                }
 
                 const { currentLineIndex, totalLines } = getCurrentLineInBlock(blockNode, sel);
 
@@ -11777,17 +12216,54 @@
 
     // Save the editor selection before toolbar buttons steal focus
     let savedToolbarRange = null;
-    toolbar.addEventListener('mousedown', function(e) {
+    let pendingHostInsert = null;
+    let hostInsertSequence = 0;
+
+    function requestHostInsertion(action) {
+        if (pendingHostInsert || isSourceMode) return;
+        const selection = window.getSelection();
+        const range = selection && selection.rangeCount ? selection.getRangeAt(0) : null;
+        if (!editorRange(range)) return;
+        const requestId = 'insert-' + Date.now().toString(36) + '-' + (++hostInsertSequence);
+        pendingHostInsert = { requestId, action, range: range.cloneRange(), startNode: range.startContainer, endNode: range.endContainer, renderRevision: editorRenderRevision };
+        if (action === 'link') host.requestInsertLink(selection.toString() || '', requestId);
+        else host.requestInsertImage(requestId);
+    }
+
+    function finishHostInsertion(message, committed) {
+        // Clipboard/drop image responses retain their existing insertion route.
+        if (!message.requestId) return true;
+        if (!pendingHostInsert || message.requestId !== pendingHostInsert.requestId) return false;
+        const pending = pendingHostInsert;
+        if (committed && message.type !== (pending.action === 'link' ? 'insertLinkHtml' : 'insertImageHtml')) return false;
+        pendingHostInsert = null;
+        // Live Ranges collapse onto the editor when their original nodes are
+        // removed. Retain node identity so a reload cannot redirect a response.
+        if (isSourceMode || pending.renderRevision !== editorRenderRevision || !editorRange(pending.range) || !pending.startNode.isConnected || !pending.endNode.isConnected) {
+            if (committed) showEditorToast(i18n.insertUnavailableSelection);
+            return false;
+        }
+        editor.focus({ preventScroll: true });
+        const selection = window.getSelection();
+        selection.removeAllRanges();
+        selection.addRange(pending.range);
+        if (committed) {
+            markdown = readCurrentMarkdown();
+            undoManager.saveSnapshot();
+        }
+        return true;
+    }
+    function captureToolbarSelection(e) {
         if (tableControls.owns(e.target)) return;
         const btn = e.target.closest('button');
         if (!btn) return;
         const sel = window.getSelection();
-        if (sel && sel.rangeCount > 0) {
+        if (sel && sel.rangeCount > 0 && editor.contains(sel.getRangeAt(0).commonAncestorContainer)) {
             savedToolbarRange = sel.getRangeAt(0).cloneRange();
-        } else {
-            savedToolbarRange = null;
         }
-    });
+    }
+    toolbar.addEventListener('mousedown', captureToolbarSelection);
+    toolbar.addEventListener('focusin', captureToolbarSelection);
 
     toolbar.addEventListener('click', function(e) {
         if (tableControls.owns(e.target)) return;
@@ -11795,11 +12271,14 @@
         if (!btn) return;
 
         const action = btn.dataset.action;
+        if (!action) return;
+        if (action === 'insertMenu') return;
         if (btn.matches('[data-export-format], [data-export-action]') ||
             (action && action.indexOf('export') === 0)) return;
+        closeToolbarOverflow(false);
 
         // View-only actions do not change Markdown content
-        if (action !== 'source' && action !== 'openOutline') {
+        if (!['source', 'openOutline', 'link', 'image', 'underline'].includes(action)) {
             markAsEdited(); // User has made an edit
         }
 
@@ -11813,7 +12292,7 @@
         }
 
         // Save snapshot before structural toolbar actions (not for undo/redo/source/openOutline)
-        if (action !== 'undo' && action !== 'redo' && action !== 'source' && action !== 'openOutline') {
+        if (!['undo', 'redo', 'source', 'openOutline', 'link', 'image', 'underline'].includes(action)) {
             undoManager.saveSnapshot();
         }
 
@@ -11854,6 +12333,9 @@
             case 'italic':
                 applyInlineFormat('em');
                 syncMarkdown();
+                break;
+            case 'underline':
+                toggleUnderline();
                 break;
             case 'strikethrough':
                 applyInlineFormat('del');
@@ -11966,20 +12448,26 @@
                 break;
             }
             case 'inlineMath': {
-                const tex = window.getSelection().toString() || 'x';
+                const selection = window.getSelection();
+                const range = selection && selection.rangeCount ? selection.getRangeAt(0) : null;
+                if (!editorRange(range)) break;
+                const tex = selection.toString() || 'x';
                 const equation = { open: '$', close: '$', tex, raw: '$' + tex + '$' };
-                document.execCommand('insertHTML', false, inlineMathHtml(equation));
-                const span = editor.querySelector('.math-inline:not([data-math-setup])');
+                const template = document.createElement('template');
+                template.innerHTML = inlineMathHtml(equation);
+                const span = template.content.firstElementChild;
+                // insertHTML strips this noneditable span inside lists/cells.
+                // Retain the same math node and source attributes in every context.
+                range.deleteContents(); range.insertNode(span);
+                range.setStartAfter(span); range.collapse(true);
+                selection.removeAllRanges(); selection.addRange(range);
                 setupInlineMath(); syncMarkdownSync();
-                if (span) editInlineMath(span);
+                editInlineMath(span);
                 break;
             }
             case 'link':
-                var linkText = window.getSelection().toString() || '';
-                host.requestInsertLink(linkText);
-                break;
             case 'image':
-                host.requestInsertImage();
+                requestHostInsertion(action);
                 break;
             case 'toc':
                 insertManagedToc();
@@ -12013,6 +12501,7 @@
         // Group: Inline
         { group: 'inline', action: 'bold',          i18nKey: 'bold',          icon: 'bold' },
         { group: 'inline', action: 'italic',        i18nKey: 'italic',        icon: 'italic' },
+        { group: 'inline', action: 'underline',     i18nKey: 'underline',   icon: 'underline' },
         { group: 'inline', action: 'strikethrough', i18nKey: 'strikethrough', icon: 'strikethrough' },
         { group: 'inline', action: 'code',          i18nKey: 'inlineCode',    icon: 'code' },
         { group: 'inline', action: 'inlineMath',    i18nKey: 'inlineMath',    icon: 'math' },
@@ -12047,6 +12536,162 @@
         blocks:   function() { return i18n.commandPaletteBlocks    || 'Blocks'; },
         insert:   function() { return i18n.commandPaletteInsert    || 'Insert'; },
     };
+
+    // The Insert dropdown reuses the command dispatcher and its localized names.
+    // Keep its bookmark separate from toolbar focus so menu navigation is view-only.
+    var insertButton = document.getElementById('insertButton');
+    var insertMenu = document.getElementById('insertMenu');
+    var insertMenuRange = null;
+    var insertActions = ['inlineMath', 'math', 'table', 'codeblock', 'link', 'image', 'mermaid', 'toc'];
+
+    function editorRange(range) {
+        return range && range.startContainer.isConnected && range.endContainer.isConnected &&
+            editor.contains(range.startContainer) && editor.contains(range.endContainer);
+    }
+
+    function insertUnavailable(action, range) {
+        if (isSourceMode) return i18n.insertUnavailableSource;
+        if (!editorRange(range)) return i18n.insertUnavailableSelection;
+        const element = node => node.nodeType === Node.ELEMENT_NODE ? node : node.parentElement;
+        const start = element(range.startContainer), end = element(range.endContainer);
+        const protectedBlock = 'pre, .math-wrapper, .mermaid-wrapper, .front-matter, .toc-block, .math-inline';
+        if (start.closest(protectedBlock) || end.closest(protectedBlock)) return i18n.insertUnavailableContext;
+        const inline = ['inlineMath', 'link', 'image'].includes(action);
+        if (!inline && (start.closest('li, td, th, blockquote') || end.closest('li, td, th, blockquote'))) {
+            return i18n.insertUnavailableBlock;
+        }
+        return '';
+    }
+
+    function insertTrigger() {
+        return insertButton.getClientRects().length ? insertButton : toolbarMore;
+    }
+
+    function positionInsertMenu() {
+        const rect = insertTrigger().getBoundingClientRect();
+        const width = Math.min(320, Math.max(0, window.innerWidth - 16));
+        insertMenu.style.width = width + 'px';
+        insertMenu.style.left = Math.max(8, Math.min(rect.left, window.innerWidth - width - 8)) + 'px';
+        insertMenu.style.top = Math.min(rect.bottom + 4, Math.max(8, window.innerHeight - 44)) + 'px';
+        insertMenu.style.maxHeight = Math.max(28, window.innerHeight - rect.bottom - 12) + 'px';
+    }
+
+    function restoreInsertRange() {
+        if (!editorRange(insertMenuRange)) return false;
+        const selection = window.getSelection();
+        selection.removeAllRanges();
+        selection.addRange(insertMenuRange);
+        return true;
+    }
+
+    function closeInsertMenu(restoreFocus) {
+        if (!insertMenu) return;
+        insertMenu.hidden = true;
+        insertButton.setAttribute('aria-expanded', 'false');
+        restoreInsertRange();
+        if (restoreFocus) insertTrigger().focus({ preventScroll: true });
+    }
+
+    function openInsertMenu(last) {
+        const selection = window.getSelection();
+        const current = selection && selection.rangeCount ? selection.getRangeAt(0) : null;
+        insertMenuRange = editorRange(current) ? current.cloneRange()
+            : editorRange(savedToolbarRange) ? savedToolbarRange.cloneRange() : null;
+        if (!insertMenuRange) {
+            insertMenuRange = document.createRange();
+            insertMenuRange.selectNodeContents(editor);
+            insertMenuRange.collapse(false);
+        }
+        insertButton.dispatchEvent(new CustomEvent('toolbar-submenu-open', { bubbles: true }));
+        for (const item of insertMenu.querySelectorAll('button')) {
+            const reason = insertUnavailable(item.dataset.insertAction, insertMenuRange);
+            item.setAttribute('aria-disabled', String(Boolean(reason)));
+            const description = item.querySelector('small');
+            description.textContent = reason;
+            description.hidden = !reason;
+        }
+        insertMenu.hidden = false;
+        insertButton.setAttribute('aria-expanded', 'true');
+        positionInsertMenu();
+        const choices = [...insertMenu.querySelectorAll('button')];
+        (last ? choices.at(-1) : choices[0]).focus({ preventScroll: true });
+    }
+
+    if (insertButton && insertMenu) {
+        for (const action of insertActions) {
+            const command = COMMAND_PALETTE_ITEMS.find(item => item.action === action);
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.setAttribute('role', 'menuitem');
+            button.dataset.insertAction = action;
+            const label = document.createElement('span');
+            label.textContent = i18n[command.i18nKey] || command.i18nKey;
+            const reason = document.createElement('small');
+            reason.id = 'insert-reason-' + action;
+            reason.hidden = true;
+            button.setAttribute('aria-describedby', reason.id);
+            button.append(label, reason);
+            insertMenu.appendChild(button);
+        }
+        insertButton.addEventListener('mousedown', event => { captureToolbarSelection(event); event.preventDefault(); });
+        insertButton.addEventListener('click', event => {
+            event.stopPropagation();
+            if (insertMenu.hidden) openInsertMenu(false); else closeInsertMenu(true);
+        });
+        insertButton.addEventListener('keydown', event => {
+            if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+                event.preventDefault(); event.stopPropagation();
+                openInsertMenu(event.key === 'ArrowUp');
+            }
+        });
+        insertMenu.addEventListener('mousedown', event => event.preventDefault());
+        insertMenu.addEventListener('keydown', event => {
+            const choices = [...insertMenu.querySelectorAll('button')];
+            const index = choices.indexOf(document.activeElement);
+            let next;
+            if (event.key === 'ArrowDown') next = (index + 1) % choices.length;
+            if (event.key === 'ArrowUp') next = (index + choices.length - 1) % choices.length;
+            if (event.key === 'Home') next = 0;
+            if (event.key === 'End') next = choices.length - 1;
+            if (next !== undefined) {
+                event.preventDefault(); event.stopPropagation();
+                choices[next].focus({ preventScroll: true });
+                choices[next].scrollIntoView({ block: 'nearest' });
+            } else if (event.key === 'Escape' || event.key === 'Tab') {
+                if (event.key === 'Escape') event.preventDefault();
+                event.stopPropagation(); closeInsertMenu(true);
+            }
+        });
+        insertMenu.addEventListener('click', event => {
+            const item = event.target.closest('button[data-insert-action]');
+            if (!item) return;
+            const action = item.dataset.insertAction;
+            const reason = insertUnavailable(action, insertMenuRange);
+            if (reason) { showEditorToast(reason); return; }
+            closeInsertMenu(false);
+            editor.focus({ preventScroll: true });
+            if (!restoreInsertRange()) return;
+            savedToolbarRange = null;
+            // Dialog actions take their snapshot only when their host confirms.
+            const directInsertion = !['link', 'image', 'toc'].includes(action);
+            if (directInsertion) {
+                markdown = readCurrentMarkdown();
+                undoManager.saveSnapshot();
+            }
+            dispatchToolbarAction(action);
+            // Redo must see the inserted block even when Undo arrives before
+            // an asynchronous rendering-frame sync. Keep equation inputs open.
+            if (directInsertion) syncMarkdownSync();
+        });
+        document.addEventListener('mousedown', event => {
+            if (!insertMenu.hidden && !insertMenu.contains(event.target) && !insertButton.contains(event.target)) closeInsertMenu(false);
+        });
+        insertMenu.addEventListener('focusout', () => queueMicrotask(() => {
+            if (!insertMenu.hidden && !insertMenu.contains(document.activeElement) && document.activeElement !== insertButton) closeInsertMenu(false);
+        }));
+        window.addEventListener('resize', () => { if (!insertMenu.hidden) positionInsertMenu(); });
+        new ResizeObserver(() => { if (!insertMenu.hidden) positionInsertMenu(); }).observe(toolbar);
+    }
 
     var commandPalette = null;
     var commandPaletteInput = null;
@@ -12360,8 +13005,10 @@
         }
 
         // Save undo snapshot before action
-        undoManager.saveSnapshot();
-        markAsEdited();
+        if (!['link', 'image', 'underline'].includes(action)) {
+            undoManager.saveSnapshot();
+            markAsEdited();
+        }
 
         // Dispatch via shared function (same as toolbar)
         dispatchToolbarAction(action);
@@ -12443,6 +13090,8 @@
     });
 
     function toggleSourceMode() {
+        closeInsertMenu(false);
+        closeLanguageSelector();
         hideTableToolbar();
         // Read while the current mode still owns the latest edits. The host
         // command can arrive before blur or the delayed visual sync runs.
@@ -12749,6 +13398,7 @@
         if (isMod && !isSourceMode && e.key !== 's' && e.key !== 'f' && e.key !== 'h' && e.key !== 'l' && e.key !== 'a'
             && e.key !== 'z' && e.key !== 'Z' && e.key !== 'y' && e.key !== 'v' && e.key !== 'c' && e.key !== 'x'
             && e.key !== '/'
+            && e.key.toLowerCase() !== 'u'
             && e.key !== 'Meta' && e.key !== 'Control' && e.key !== 'Shift' && e.key !== 'Alt') {
             undoManager.saveSnapshot();
         }
@@ -12779,6 +13429,13 @@
             return;
         }
         
+        // Underline (Ctrl+U / Cmd+U)
+        if (isMod && !e.shiftKey && e.key.toLowerCase() === 'u') {
+            e.preventDefault(); e.stopPropagation();
+            toggleUnderline();
+            return;
+        }
+
         // Strikethrough (Ctrl+Shift+S)
         if (isMod && e.shiftKey && e.key.toLowerCase() === 's') {
             e.preventDefault();
@@ -13529,8 +14186,52 @@
 
     // Handle messages from host (VSCode / Electron / test)
     host.onMessage(function(message) {
+        if (message.type === 'mathSourceWrap') {
+            applyMathSourcePreference('mathSourceWrap', String(message.value === true));
+            return;
+        }
+        if (message.type === 'mathSourcePosition') {
+            applyMathSourcePreference('mathSourcePosition', message.value === 'below' ? 'below' : 'above');
+            return;
+        }
+        if (message.type === 'codeLanguageOrder') {
+            document.documentElement.dataset.codeLanguageOrder = ['a-z', 'z-a'].includes(message.value) ? message.value : 'default';
+            document.querySelector('.lang-selector')?.refreshOrder?.();
+            return;
+        }
+        if (message.type === 'editorWidthIndicators') {
+            document.documentElement.dataset.editorWidthIndicators = String(message.value !== false);
+            updateWidthIndicators();
+            return;
+        }
+        if (message.type === 'editorWidth') {
+            if (typeof message.indicators === 'boolean') document.documentElement.dataset.editorWidthIndicators = String(message.indicators);
+            applyEditorWidth(message.mode, message.maxWidth, message.alignment);
+            positionLanguageSelector();
+            return;
+        }
+        if (message.type === 'tableToolbarPositionError') {
+            showEditorToast(i18n.tablePositionSaveFailed || 'Could not save the table toolbar position. The previous setting remains active.');
+            return;
+        }
+        if (message.type === 'theme') {
+            if (!['github', 'sepia', 'night', 'dark', 'minimal', 'perplexity', 'things'].includes(message.value)) return;
+            if (document.documentElement.dataset.theme === message.value) return;
+            // A presentation change must not rebuild editable DOM or reset undo.
+            document.documentElement.dataset.theme = message.value;
+            mermaidInitialized = false;
+            editor.querySelectorAll('.mermaid-wrapper').forEach(wrapper => renderMermaidDiagram(wrapper));
+            return;
+        }
         if (message.type === 'tableToolbarPosition') {
             tableControls.setPreference(message.value);
+            return;
+        }
+        if (message.type === 'toolbarMode') {
+            if (!['full', 'simple'].includes(message.value)) return;
+            document.documentElement.dataset.toolbarMode = message.value;
+            scheduleToolbarLayout();
+            tableControls.schedule();
             return;
         }
         if (message.type === 'validateExportImage') {
@@ -13669,7 +14370,10 @@
             imageDirDisplayPath = message.displayPath;
             imageDirSource = message.source;
             updateStatus();
+        } else if (message.type === 'insertCancelled') {
+            finishHostInsertion(message, false);
         } else if (message.type === 'insertImageHtml') {
+            if (!finishHostInsertion(message, true)) return;
             logger.log('insertImageHtml received:', message);
             // Insert image at cursor position
             const img = document.createElement('img');
@@ -13697,9 +14401,10 @@
             } else {
                 editor.appendChild(img);
             }
-            syncMarkdown();
+            syncMarkdownSync();
             logger.log('Image element inserted');
         } else if (message.type === 'insertLinkHtml') {
+            if (!finishHostInsertion(message, true)) return;
             // Insert link at cursor position
             const a = document.createElement('a');
             a.href = message.url;
@@ -13718,11 +14423,11 @@
             } else {
                 editor.appendChild(a);
             }
-            syncMarkdown();
+            syncMarkdownSync();
             editor.focus();
         } else if (message.type === 'externalChangeDetected') {
             // Show toast notification for external change
-            showExternalChangeToast(message.message);
+            showEditorToast(message.message);
         } else if (message.type === 'scrollToAnchor') {
             // Scroll to anchor (heading) in the document
             const anchor = message.anchor;
@@ -13760,14 +14465,15 @@
         }
     });
 
-    // External change toast notification
+    // Non-editing notifications retain the current selection and undo history.
     let externalChangeToast = null;
     let toastHideTimer = null;
 
-    function showExternalChangeToast(msg) {
+    function showEditorToast(msg) {
         if (!externalChangeToast) {
             externalChangeToast = document.createElement('div');
             externalChangeToast.className = 'external-change-toast';
+            externalChangeToast.setAttribute('role', 'status');
             const messageDiv = document.createElement('div');
             messageDiv.className = 'toast-message';
             externalChangeToast.appendChild(messageDiv);
@@ -14480,6 +15186,12 @@
                     }
                 });
                 
+                // Retain the supported underline wrapper, without source attributes.
+                turndownService.addRule('underline', {
+                    filter: 'u',
+                    replacement: function(content) { return content ? '<u>' + content + '</u>' : ''; }
+                });
+
                 // Custom rule: CSS style-based bold recognition
                 // Handles <span style="font-weight: bold"> etc. from Google Docs, web pages
                 turndownService.addRule('styledBold', {

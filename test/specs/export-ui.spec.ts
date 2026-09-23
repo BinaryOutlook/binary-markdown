@@ -211,3 +211,24 @@ test.describe('Export toolbar and job status', () => {
         await expect(page.locator('#exportStatus')).toHaveCount(0);
     });
 });
+
+test('export opens from text-toolbar overflow with mouse or keyboard and restores visible focus', async ({ page }) => {
+    await setup(page);
+    await page.setViewportSize({ width: 320, height: 600 });
+    await expect(page.locator('#toolbarOverflow #exportButton')).toHaveCount(1);
+    for (const input of ['keyboard', 'mouse']) {
+        await page.locator('#toolbarMore').click();
+        const button = page.locator('#exportButton');
+        if (input === 'keyboard') {
+            await button.focus();
+            await page.keyboard.press('ArrowDown');
+            await expect(page.locator('[data-export-format="html"]')).toBeFocused();
+        } else await button.click();
+        await expect(page.locator('#toolbarOverflow')).toBeHidden();
+        await expect(page.locator('#exportMenu')).toBeVisible();
+        await page.keyboard.press('Escape');
+        await expect(page.locator('#exportMenu')).toBeHidden();
+        await expect(page.locator('#toolbarMore')).toBeFocused();
+    }
+    expect(await outbound(page, 'edit')).toHaveLength(0);
+});

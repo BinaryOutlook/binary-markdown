@@ -1,8 +1,9 @@
 import * as path from 'path';
 import type { Browser, BrowserContext, Page } from 'playwright-core';
-import { checkCancelled, ExportOperations } from './types';
+import { checkCancelled, codeLanguagePosition, CodePresentationOptions, ExportOperations } from './types';
 import { codeLanguageLabel } from './code-language';
 import { languageTabPath } from './language-tab';
+import { logicalCodeLines } from './code-lines';
 
 const printStyles = `
 @page { size: A4; margin: 16mm; background: var(--bg-color, #fff); }
@@ -20,16 +21,31 @@ tr { break-inside: avoid-page; page-break-inside: avoid; }
 thead { display: table-header-group; } tfoot { display: table-footer-group; }
 img, svg, canvas { max-width: 100% !important; height: auto; object-fit: contain; }
 .export-oversized { break-inside: auto !important; page-break-inside: auto !important; }
-.export-code-block { break-inside: avoid-page; page-break-inside: avoid; }
-.export-code-block > pre { margin-bottom: 0 !important; border: 1px solid var(--border-color, #d0d7de) !important; border-bottom-right-radius: 0 !important; break-after: avoid-page; page-break-after: avoid; }
-.export-code-language { display: flex; justify-content: flex-end; margin: 0 0 1em; text-align: right; font-size: 9pt; font-style: italic; line-height: 1.4; break-before: avoid-page; page-break-before: avoid; break-inside: avoid; }
+.export-code-block { margin: 1em 0; break-inside: avoid-page; page-break-inside: avoid; }
+.export-code-block > pre { margin: 0 !important; border: 1px solid var(--border-color, #d0d7de) !important; }
+.export-code-block[data-label-position^="top"] > pre { break-before: avoid-page; page-break-before: avoid; }
+.export-code-block[data-label-position^="bottom"] > pre { break-after: avoid-page; page-break-after: avoid; }
+.export-code-block[data-label-position="top-left"] > pre { border-top-left-radius: 0 !important; }
+.export-code-block[data-label-position="top-right"] > pre { border-top-right-radius: 0 !important; }
+.export-code-block[data-label-position="bottom-left"] > pre { border-bottom-left-radius: 0 !important; }
+.export-code-block[data-label-position="bottom-right"] > pre { border-bottom-right-radius: 0 !important; }
+.export-code-metadata { display: flex; margin: 0; font-size: 9pt; line-height: 1.4; break-inside: avoid; }
+.export-code-metadata[data-edge="top"] { break-after: avoid-page; page-break-after: avoid; }
+.export-code-metadata[data-edge="bottom"] { break-before: avoid-page; page-break-before: avoid; }
+.export-code-metadata[data-side="right"] { justify-content: flex-end; }
+.export-code-language { font-style: italic; }
+pre > code.export-numbered-code { display: block; white-space: normal !important; }
+.export-code-line { display: block; position: relative; padding-left: var(--export-code-gutter); min-height: 1lh; white-space: break-spaces !important; }
+.export-code-line::before { content: attr(data-line); position: absolute; left: 0; width: calc(var(--export-code-gutter) - 1.25ch); text-align: right; color: var(--text-color, #57606a); opacity: .75; user-select: none; font-variant-numeric: tabular-nums; }
+.export-code-count { padding: 2px 0; color: var(--text-color, #57606a); }
+.export-code-block[data-line-count] > pre { break-after: avoid-page; page-break-after: avoid; }
 /* A decorative vector outline leaves the label selectable and the top seam single. */
 .export-code-language > span { position: relative; isolation: isolate; box-sizing: border-box; max-width: 100%; padding: 2px 14px 3px; text-align: center; color: var(--text-color, #57606a); overflow-wrap: anywhere; }
 .export-code-language > span > svg { position: absolute; inset: 0; z-index: -1; width: 100%; height: 100%; max-width: none; overflow: visible; }
 `;
 
 /** Print a self-contained, script-free document using an explicitly selected browser. */
-export async function convertPdf(html: string, executable: string, operations: ExportOperations, options: { showCodeLanguage?: boolean } = {}): Promise<Buffer> {
+export async function convertPdf(html: string, executable: string, operations: ExportOperations, options: CodePresentationOptions = {}): Promise<Buffer> {
     checkCancelled(operations.signal);
     operations.report('rendering');
     // The extension excludes node_modules from its VSIX. copy-vendor.js owns this runtime and its licenses.
@@ -76,24 +92,88 @@ export async function convertPdf(html: string, executable: string, operations: E
         // This is extension-owned code. Document scripts stay disabled throughout the isolated context.
         const readiness = await page.evaluate<{ failedImages: number; oversizedBlocks: number }>(`(async () => {
             const labels = ${JSON.stringify(labels)};
+            const position = ${JSON.stringify(codeLanguagePosition(options.codeLanguagePosition))};
+            const showCount = ${options.showCodeLineCount === true};
+            const showNumbers = ${options.showCodeLineNumbers === true};
+            const countLabel = ${JSON.stringify(options.codeLineCountLabel || 'Lines')};
+            const sourceLines = ${logicalCodeLines.toString()};
             document.querySelectorAll('pre[data-lang]').forEach((pre, index) => {
-                if (!labels[index]) return;
+                if (!labels[index] && !showCount && !showNumbers) return;
+                if (['math', 'mermaid'].includes(pre.dataset.lang)) return;
                 const wrapper = document.createElement('div');
                 wrapper.className = 'export-code-block';
+                if (labels[index]) wrapper.dataset.labelPosition = position;
                 const footer = document.createElement('div');
-                footer.className = 'export-code-language';
+                footer.className = 'export-code-metadata export-code-language';
+                footer.dataset.edge = position.startsWith('top') ? 'top' : 'bottom';
+                footer.dataset.side = position.endsWith('left') ? 'left' : 'right';
                 const badge = document.createElement('span');
-                badge.textContent = labels[index];
+                badge.textContent = labels[index] || '';
                 footer.appendChild(badge);
                 pre.replaceWith(wrapper);
-                wrapper.append(pre, footer);
+                if (!labels[index]) wrapper.append(pre);
+                else if (footer.dataset.edge === 'top') wrapper.append(footer, pre);
+                else wrapper.append(pre, footer);
+                if (showCount || showNumbers) {
+                    const code = pre.querySelector('code') || pre;
+                    const copy = code.cloneNode(true);
+                    copy.querySelectorAll('[data-export-display-break]').forEach(node => node.remove());
+                    copy.querySelectorAll('br').forEach(node => node.replaceWith(String.fromCharCode(10)));
+                    const hint = Number(pre.dataset.exportCodeLines || 0);
+                    const lines = sourceLines(copy.textContent || '', hint === 1 ? 1 : 0);
+                    if (pre.hasAttribute('data-export-code-lines') && lines.length !== hint) throw new Error('Prepared code lines disagree with source.');
+                    if (showNumbers) {
+                        // Split highlighted spans at authored newlines, retaining their styles.
+                        // The gutter is generated presentation text, never a code text node.
+                        const split = node => {
+                            if (node.nodeType === 3) return node.textContent.split(String.fromCharCode(10)).map(text => {
+                                const fragment = document.createDocumentFragment();
+                                fragment.append(text); return fragment;
+                            });
+                            let parts = [document.createDocumentFragment()];
+                            for (const child of node.childNodes) {
+                                const children = split(child);
+                                parts[parts.length - 1].append(children[0]);
+                                parts.push(...children.slice(1));
+                            }
+                            if (node === copy) return parts;
+                            return parts.map(part => {
+                                const wrapper = node.cloneNode(false);
+                                wrapper.append(part); return wrapper;
+                            });
+                        };
+                        const fragments = lines.length ? split(copy) : [];
+                        if (fragments.length !== lines.length || fragments.some((part, i) => part.textContent !== lines[i])) {
+                            throw new Error('Numbered code differs from its source.');
+                        }
+                        code.replaceChildren();
+                        code.classList.add('export-numbered-code');
+                        code.style.setProperty('--export-code-gutter', (String(lines.length).length + 2) + 'ch');
+                        fragments.forEach((fragment, i) => {
+                            const row = document.createElement('span');
+                            row.className = 'export-code-line'; row.dataset.line = String(i + 1);
+                            row.append(fragment);
+                            if (i) code.append(String.fromCharCode(10));
+                            code.append(row);
+                        });
+                        if (code.textContent !== lines.join(String.fromCharCode(10))) throw new Error('Numbering changed code text.');
+                    }
+                    if (showCount) {
+                        const count = document.createElement('div');
+                        count.className = 'export-code-metadata export-code-count';
+                        count.dataset.edge = 'bottom';
+                        count.textContent = countLabel + ': ' + lines.length;
+                        wrapper.dataset.lineCount = String(lines.length);
+                        wrapper.append(count);
+                    }
+                }
                 wrapper.style.setProperty('--export-code-background', getComputedStyle(pre).backgroundColor);
             });
             await document.fonts.ready;
             const tabPath = ${languageTabPath.toString()};
             for (const badge of document.querySelectorAll('.export-code-language > span')) {
                 const rect = badge.getBoundingClientRect();
-                const outline = tabPath(rect.width, rect.height);
+                const outline = tabPath(rect.width, rect.height, position);
                 const ns = 'http://www.w3.org/2000/svg';
                 const svg = document.createElementNS(ns, 'svg');
                 svg.setAttribute('viewBox', '0 0 ' + rect.width + ' ' + rect.height);

@@ -1,0 +1,426 @@
+{
+  "recordedDate": "2026-09-21",
+  "environment": {
+    "os": "macOS 26.5.2",
+    "architecture": "ARM64",
+    "node": "24.21.0",
+    "pandoc": "3.8.3",
+    "python": "3.14.3"
+  },
+  "localChanges": "Reader test tools and documentation only; no exporter or runtime changes from the recorded source commit.",
+  "mode": "HEADLESS_ONLY",
+  "sourceCommit": "3db30fa2024bf0dbfc25b946b68afc83ed97f98d",
+  "sourceTree": "e2e3d49a928f5f27d09545dbe89befd9ba24c095",
+  "sourceDirty": true,
+  "inputHashes": {
+    "source.md": "b11f205ebdf3870f011d59d0c7b9d38c42c3f0d5f95cee757386ac3d20750728",
+    "editing-source.md": "d46db8ccfe832b6ac2d755dd9850544b8f844988242a20af09262eaf64b92e65",
+    "expectations.json": "b75b68a195b620bea9f4b2b2d2c08f87c3f482ebad0b9a3f3c18e568c8019c69",
+    "receipt.json": "b120e56d73ad5e95752c822ba663fd0973978ad1e883767b148afb20fefaca8a"
+  },
+  "checkerSha256": "e27e7c62635cb63e56a54b55e6c04493b042c205172a3bdb7c92bc0192bd2a60",
+  "reader": {
+    "version": "LibreOffice 26.2.6.3 8221e31b3ac356a1623c672912a3d2b492f7e3d1",
+    "executableSha256": "c772a72b6f07e953a34956cebedf5d037b1ea841fad29014b1ee6355775c1d1e"
+  },
+  "pdftotextVersion": "pdftotext version 26.03.0",
+  "results": {
+    "top-left": {
+      "original": {
+        "exactBlocks": 8,
+        "nativeNumberedParagraphs": 169,
+        "highlightedStringRuns": true,
+        "counts": [
+          "Lines: 0",
+          "Lines: 1",
+          "Lines: 2",
+          "Lines: 6",
+          "Lines: 5",
+          "Lines: 2",
+          "Lines: 3",
+          "Lines: 150"
+        ],
+        "sha256": "ca5c2324b26a000719ab0c99666284dca33324ce115952ee298b02d1f42d5394"
+      },
+      "headlessResaved": {
+        "exactBlocks": 8,
+        "nativeNumberedParagraphs": 169,
+        "highlightedStringRuns": true,
+        "counts": [
+          "Lines: 0",
+          "Lines: 1",
+          "Lines: 2",
+          "Lines: 6",
+          "Lines: 5",
+          "Lines: 2",
+          "Lines: 3",
+          "Lines: 150"
+        ],
+        "sha256": "4b99f072d8d3af5c8003f5f8eb7a591d76a8a3f871521080034a530393f7e56d"
+      },
+      "headlessPdf": {
+        "pages": 5,
+        "correctNumbers": 169,
+        "multiPageMarkers": 143,
+        "sha256": "4295b5174720cebf2a3895fa069739b7dcb7c2e0054faf7b38770d36596edc2e",
+        "layoutTextSha256": "c92f02626bfb32f9a3092fcf35e3938a0adee1347f05afc0564c070dfd2734ea",
+        "lastCountOnLastCodePage": true
+      },
+      "headlessResavedPdf": {
+        "pages": 5,
+        "correctNumbers": 169,
+        "multiPageMarkers": 143,
+        "sha256": "9d0af6f9dccc3de1e4c38c9b610706531084d8741807d5dfaf9565f157c5667e",
+        "layoutTextSha256": "bd5a78073948b47fde5ff35b8d41b70e1f4f7d39c1b71ce7ce7b1ecd0d2adbb8",
+        "lastCountOnLastCodePage": true
+      }
+    },
+    "top-right": {
+      "original": {
+        "exactBlocks": 8,
+        "nativeNumberedParagraphs": 169,
+        "highlightedStringRuns": true,
+        "counts": [
+          "Lines: 0",
+          "Lines: 1",
+          "Lines: 2",
+          "Lines: 6",
+          "Lines: 5",
+          "Lines: 2",
+          "Lines: 3",
+          "Lines: 150"
+        ],
+        "sha256": "252b5ba440bf65e97fed6536d7d1e46dd2f5810b40e7403b454ba84f2b2f9304"
+      },
+      "headlessResaved": {
+        "exactBlocks": 8,
+        "nativeNumberedParagraphs": 169,
+        "highlightedStringRuns": true,
+        "counts": [
+          "Lines: 0",
+          "Lines: 1",
+          "Lines: 2",
+          "Lines: 6",
+          "Lines: 5",
+          "Lines: 2",
+          "Lines: 3",
+          "Lines: 150"
+        ],
+        "sha256": "aba34ce619b1ef11a67b32187824cfcb66bd6902d3f85eeb567e742eff11f4d7"
+      },
+      "headlessPdf": {
+        "pages": 5,
+        "correctNumbers": 169,
+        "multiPageMarkers": 143,
+        "sha256": "cbb8963af7e1edb9102d562c152242e9dd1deb9fe94d346e8a796bbc235e0ef1",
+        "layoutTextSha256": "d9032f62356ec82be8c48f1e81a5ae1affe9f0de14f05f615c8ea364b050e7a7",
+        "lastCountOnLastCodePage": true
+      },
+      "headlessResavedPdf": {
+        "pages": 5,
+        "correctNumbers": 169,
+        "multiPageMarkers": 143,
+        "sha256": "f555ecae6e4f0e9eb8573c3048eceb4d4a30d5d9a6e6f7ef07978187069228ab",
+        "layoutTextSha256": "8300c6e71e6183c147d528374227b624dbfce2ed9a05aab222628e4aefacd675",
+        "lastCountOnLastCodePage": true
+      }
+    },
+    "bottom-left": {
+      "original": {
+        "exactBlocks": 8,
+        "nativeNumberedParagraphs": 169,
+        "highlightedStringRuns": true,
+        "counts": [
+          "Lines: 0",
+          "Lines: 1",
+          "Lines: 2",
+          "Lines: 6",
+          "Lines: 5",
+          "Lines: 2",
+          "Lines: 3",
+          "Lines: 150"
+        ],
+        "sha256": "b84f02de3f1b6a40bd119c85a6f2c791a47bd1e4f8e953c3229cb01c7c5b35fa"
+      },
+      "headlessResaved": {
+        "exactBlocks": 8,
+        "nativeNumberedParagraphs": 169,
+        "highlightedStringRuns": true,
+        "counts": [
+          "Lines: 0",
+          "Lines: 1",
+          "Lines: 2",
+          "Lines: 6",
+          "Lines: 5",
+          "Lines: 2",
+          "Lines: 3",
+          "Lines: 150"
+        ],
+        "sha256": "9874d257e8f101173526598f172b5c0e38d532f5979ba20eb89daa8d1f9a1b32"
+      },
+      "headlessPdf": {
+        "pages": 5,
+        "correctNumbers": 169,
+        "multiPageMarkers": 143,
+        "sha256": "7b6da007f662eaee7311165425b8c3301c0906772c2c7d3236b641b63bdc4152",
+        "layoutTextSha256": "c8e895d1bf191de16a0eb47ffd635dcfcc3c4d7fe3ac3124930b07f9891e24f2",
+        "lastCountOnLastCodePage": true
+      },
+      "headlessResavedPdf": {
+        "pages": 5,
+        "correctNumbers": 169,
+        "multiPageMarkers": 143,
+        "sha256": "763a47c46602b9946fb438e91bb1a0dd0969cd511b580314597f2173a4240bb3",
+        "layoutTextSha256": "d0f8caf4cb61031c6fed1bca502a26a18ba96b81fbd9d107b67852c0898c8448",
+        "lastCountOnLastCodePage": true
+      }
+    },
+    "bottom-right": {
+      "original": {
+        "exactBlocks": 8,
+        "nativeNumberedParagraphs": 169,
+        "highlightedStringRuns": true,
+        "counts": [
+          "Lines: 0",
+          "Lines: 1",
+          "Lines: 2",
+          "Lines: 6",
+          "Lines: 5",
+          "Lines: 2",
+          "Lines: 3",
+          "Lines: 150"
+        ],
+        "sha256": "692359b432fb5cf9e84124ca357e3a3124a7444814d1726ddf9590193bbe0336"
+      },
+      "headlessResaved": {
+        "exactBlocks": 8,
+        "nativeNumberedParagraphs": 169,
+        "highlightedStringRuns": true,
+        "counts": [
+          "Lines: 0",
+          "Lines: 1",
+          "Lines: 2",
+          "Lines: 6",
+          "Lines: 5",
+          "Lines: 2",
+          "Lines: 3",
+          "Lines: 150"
+        ],
+        "sha256": "f2237a065e7a28c0f92bad431deb54fb5a4065dbb7a7f8fea2cf7c1702f31483"
+      },
+      "headlessPdf": {
+        "pages": 5,
+        "correctNumbers": 169,
+        "multiPageMarkers": 143,
+        "sha256": "251b4c2567cf1453f5daf89aa3d84927db07f427f6349353e992be4ca5b1163c",
+        "layoutTextSha256": "e32584003fb7c87931a1c435ff94b05c72412b3aa2955de6d7ec9cec5e70f17c",
+        "lastCountOnLastCodePage": true
+      },
+      "headlessResavedPdf": {
+        "pages": 5,
+        "correctNumbers": 169,
+        "multiPageMarkers": 143,
+        "sha256": "e004ff0869f3c8da1d4ed53c84591c0999a5b870aeef99fa2430e02c18da9eee",
+        "layoutTextSha256": "3c8729a0f16596ba7fb289ce6a67c594853402f0c49d04efe74c287b2f7dfd0c",
+        "lastCountOnLastCodePage": true
+      }
+    },
+    "hidden": {
+      "original": {
+        "exactBlocks": 8,
+        "nativeNumberedParagraphs": 169,
+        "highlightedStringRuns": true,
+        "counts": [
+          "Lines: 0",
+          "Lines: 1",
+          "Lines: 2",
+          "Lines: 6",
+          "Lines: 5",
+          "Lines: 2",
+          "Lines: 3",
+          "Lines: 150"
+        ],
+        "sha256": "87a68e9056757d7afe0852a8a6cac2eecc0769963cc66a8a25c8379ce43cb647"
+      },
+      "headlessResaved": {
+        "exactBlocks": 8,
+        "nativeNumberedParagraphs": 169,
+        "highlightedStringRuns": true,
+        "counts": [
+          "Lines: 0",
+          "Lines: 1",
+          "Lines: 2",
+          "Lines: 6",
+          "Lines: 5",
+          "Lines: 2",
+          "Lines: 3",
+          "Lines: 150"
+        ],
+        "sha256": "1a4027175171ce047c1a58c91d8164be0929b3b3da60415042ca757d517c80ce"
+      },
+      "headlessPdf": {
+        "pages": 5,
+        "correctNumbers": 169,
+        "multiPageMarkers": 143,
+        "sha256": "abd8bea6fba5b554549e2f2c71bce05aec4b6c16370d25ff11413c6545ddd336",
+        "layoutTextSha256": "1ac95ed1142dca1bc24e30776a0808f0afb07acfe6bfdf80ee94f44db4030928",
+        "lastCountOnLastCodePage": true
+      },
+      "headlessResavedPdf": {
+        "pages": 5,
+        "correctNumbers": 169,
+        "multiPageMarkers": 143,
+        "sha256": "31c7d8485e57dcb35e401fe508f98c20405b4017cf50c7d670d6efb070503e08",
+        "layoutTextSha256": "1ac95ed1142dca1bc24e30776a0808f0afb07acfe6bfdf80ee94f44db4030928",
+        "lastCountOnLastCodePage": true
+      }
+    },
+    "default-off": {
+      "original": {
+        "exactBlocks": 8,
+        "nativeNumberedParagraphs": 0,
+        "highlightedStringRuns": true,
+        "counts": [],
+        "sha256": "0b84f24578277161493002a671d1dc39238f36cbd9144b3ee94ba321d2038e1e"
+      },
+      "headlessResaved": {
+        "exactBlocks": 8,
+        "nativeNumberedParagraphs": 0,
+        "highlightedStringRuns": true,
+        "counts": [],
+        "sha256": "409edc47bdafb12a7311d35d573069d243015a58393a0de6092f6f875506002f"
+      },
+      "headlessPdf": {
+        "pages": 5,
+        "correctNumbers": 0,
+        "multiPageMarkers": 143,
+        "sha256": "468755478b4d4b7b02e1f6de876eabddcbe870e1104c0db6d8eaa785b4842a80",
+        "layoutTextSha256": "7177897a4218119ecb25ca5b50b75689b7c352117737934b197c55ef689fc899"
+      },
+      "headlessResavedPdf": {
+        "pages": 5,
+        "correctNumbers": 0,
+        "multiPageMarkers": 143,
+        "sha256": "954a5e408cfde33c470da6e0a17a2b0aafed7327626a08877b87988d70093dcc",
+        "layoutTextSha256": "9b37ed886d1d6fc452ce2c00dd676300e1e049273d92b2788ee9386b5809c722"
+      }
+    },
+    "numbers-only": {
+      "original": {
+        "exactBlocks": 8,
+        "nativeNumberedParagraphs": 169,
+        "highlightedStringRuns": true,
+        "counts": [],
+        "sha256": "35d7c8f00cae9d0a664fae6c09ac4aaa6a5ed5dc5d34ecb3d9df031a2f4a39c4"
+      },
+      "headlessResaved": {
+        "exactBlocks": 8,
+        "nativeNumberedParagraphs": 169,
+        "highlightedStringRuns": true,
+        "counts": [],
+        "sha256": "ad1379e058e13bdb0426587696956c73fe2a45579f488975bc6b67d3bac86abd"
+      },
+      "headlessPdf": {
+        "pages": 5,
+        "correctNumbers": 169,
+        "multiPageMarkers": 143,
+        "sha256": "bc5fe42dc7e3f56c075a9d885a322fe81481fec1a0fd70f148697d2884f08bb4",
+        "layoutTextSha256": "971f8f56fb7686e710a210a5cc0c2cef62dc44c70c7ceae04673fa2066b08bd5"
+      },
+      "headlessResavedPdf": {
+        "pages": 5,
+        "correctNumbers": 169,
+        "multiPageMarkers": 143,
+        "sha256": "9fc1c690e589f3c15aa9acf1e162f69d0cd7e5c638ebc66d5d81260097cc508b",
+        "layoutTextSha256": "971f8f56fb7686e710a210a5cc0c2cef62dc44c70c7ceae04673fa2066b08bd5"
+      }
+    },
+    "counts-only": {
+      "original": {
+        "exactBlocks": 8,
+        "nativeNumberedParagraphs": 0,
+        "highlightedStringRuns": true,
+        "counts": [
+          "Lines: 0",
+          "Lines: 1",
+          "Lines: 2",
+          "Lines: 6",
+          "Lines: 5",
+          "Lines: 2",
+          "Lines: 3",
+          "Lines: 150"
+        ],
+        "sha256": "1e7aae200c24300e77383fb5e9c4cfb8dbf7453f0f6268eae7ea672161d01303"
+      },
+      "headlessResaved": {
+        "exactBlocks": 8,
+        "nativeNumberedParagraphs": 0,
+        "highlightedStringRuns": true,
+        "counts": [
+          "Lines: 0",
+          "Lines: 1",
+          "Lines: 2",
+          "Lines: 6",
+          "Lines: 5",
+          "Lines: 2",
+          "Lines: 3",
+          "Lines: 150"
+        ],
+        "sha256": "7400064ea5656a150d76f4846f4e711586c66f17d4107ab668fa2ac169aac305"
+      },
+      "headlessPdf": {
+        "pages": 7,
+        "correctNumbers": 0,
+        "multiPageMarkers": 143,
+        "sha256": "a5414de189a47b378a4acf63918c6e0fcadc2243852ebbc4fd2e10f233e42a4e",
+        "layoutTextSha256": "9a6342d2d0f72ab7692d7b8bba44860658506d5cd94218342cf8d59f3eb4f561",
+        "lastCountOnLastCodePage": true
+      },
+      "headlessResavedPdf": {
+        "pages": 7,
+        "correctNumbers": 0,
+        "multiPageMarkers": 143,
+        "sha256": "6fdfdd38d79297cf7e783be9666a81e0c410ad56644896f43c8f88781627c44c",
+        "layoutTextSha256": "9a6342d2d0f72ab7692d7b8bba44860658506d5cd94218342cf8d59f3eb4f561",
+        "lastCountOnLastCodePage": true
+      }
+    },
+    "editing": {
+      "original": {
+        "exactBlocks": 2,
+        "nativeNumberedParagraphs": 5,
+        "highlightedStringRuns": true,
+        "counts": [
+          "Lines: 3",
+          "Lines: 2"
+        ],
+        "sha256": "82b011276c026f7ea7673d58495f51a3f21c59eb3d9dc5db4913aa874a63c5bd"
+      },
+      "headlessResaved": {
+        "exactBlocks": 2,
+        "nativeNumberedParagraphs": 5,
+        "highlightedStringRuns": true,
+        "counts": [
+          "Lines: 3",
+          "Lines: 2"
+        ],
+        "sha256": "2aadfa431cb0757b154a387ed8e8ede9502ba1811d25a719b5e38a0376da303b"
+      },
+      "headlessPdf": {
+        "pages": 1,
+        "correctNumbers": 5,
+        "multiPageMarkers": 0,
+        "sha256": "7ab6ea2a32125205072357d093d7cd33ed939b347475d14826ed2b6fc3dc5345",
+        "layoutTextSha256": "37be62b3a81d357703ab601cd2d0fb3fa482aabb294cf2820829d7276329df0e"
+      },
+      "headlessResavedPdf": {
+        "pages": 1,
+        "correctNumbers": 5,
+        "multiPageMarkers": 0,
+        "sha256": "7519f7bdaaa3a697696a3865b3e57a367ac6957c27ad6b56f07af317ca99337e",
+        "layoutTextSha256": "37be62b3a81d357703ab601cd2d0fb3fa482aabb294cf2820829d7276329df0e"
+      }
+    }
+  },
+  "interactiveAcceptance": "UNVERIFIED: no UI opening, editing or save/reopen was exercised."
+}

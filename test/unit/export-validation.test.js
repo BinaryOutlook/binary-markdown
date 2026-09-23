@@ -206,3 +206,29 @@ test('EPUB requires the declared OPF and a complete package root', () => {
     broken[2].data = '<package><metadata/>';
     rejects('epub', zip(broken), /Required XML root/);
 });
+
+test('bounded transformation rejects excessive expanded ZIP data before inflation', () => {
+    const { readZip } = require('../../out/export/validate');
+    const bytes = zip(docx());
+    assert.throws(() => readZip(bytes, 32), /size limit/);
+    assert.equal(readZip(bytes, 1024 * 1024).size, 3);
+});
+
+test('DOCX numbering rejects source mismatches, unsafe XML and missing markers', () => {
+    const { numberDocxCode } = require('../../out/export/docx-numbering');
+    const W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
+    const source = '<!--binary-markdown-code-0--><w:p><w:pPr><w:pStyle w:val="SourceCode"/></w:pPr><w:r><w:t>ORIGINAL</w:t></w:r></w:p>';
+    const fixture = (content = source, prefix = '') => zip(docx().filter(f => f.name !== 'word/document.xml').concat([
+        { name: 'word/document.xml', data: prefix + '<w:document xmlns:w="' + W + '"><w:body>' + content + '</w:body></w:document>' },
+        { name: 'word/numbering.xml', data: '<w:numbering xmlns:w="' + W + '"/>' },
+        { name: 'word/styles.xml', data: '<w:styles xmlns:w="' + W + '"><w:style w:type="paragraph" w:styleId="SourceCode"><w:name w:val="Source Code"/><w:next w:val="BodyText"/></w:style></w:styles>' }
+    ]));
+    assert.throws(() => numberDocxCode(fixture(), [['DIFFERENT']]), /differs from saved source/);
+    assert.throws(() => numberDocxCode(fixture(''), [['ORIGINAL']]), /not every source block/);
+    assert.throws(() => numberDocxCode(fixture(source + source), [['ORIGINAL']]), /invalid code marker/);
+    assert.throws(() => numberDocxCode(fixture(source, '<!DOCTYPE w:document>'), [['ORIGINAL']]), /DTD\/entity/);
+    assert.throws(() => numberDocxCode(fixture(source.replace('<w:t>', '<w:instrText>').replace('</w:t>', '</w:instrText>')), [['ORIGINAL']]), /unsupported code run/);
+    const input = fixture();
+    validateArtifact('docx', numberDocxCode(input, [['ORIGINAL']]));
+    assert.equal(numberDocxCode(input, []), input, 'no ordinary code returns the original bytes');
+});

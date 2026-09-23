@@ -59,10 +59,11 @@ test('packaged VSIX contains an isolated export runtime, UI, guidance and locali
         'LICENSE.txt', 'NOTICE', 'LICENSES/AnyMarkdown-MIT.txt', 'ACKNOWLEDGMENTS.md',
         'out/export/controller.js', 'out/export/html.js', 'out/export/resources.js',
         'out/export/output.js', 'out/export/validate.js', 'out/export/webview-rpc.js',
+        'out/export/docx-numbering.js', 'vendor/xmldom/package.json', 'vendor/xmldom/LICENSE',
         'out/export/pandoc.js', 'out/export/pdf.js', 'out/export/code-language.js', 'out/export/tools.js',
         'out/export/messages.js', 'out/webview/editor.js', 'out/webview/styles.css',
         'out/shared/document-aux.js', 'out/shared/math-syntax.js',
-        'out/shared/editor-body-html.js', 'out/shared/host-bridge.js', 'out/shared/vscode-host-bridge.js', 'out/export/language-tab.js', 'media/export-help.md', 'media/export-reference.docx',
+        'out/shared/editor-body-html.js', 'out/shared/host-bridge.js', 'out/shared/vscode-host-bridge.js', 'out/export/language-tab.js', 'out/export/code-lines.js', 'media/export-help.md', 'media/export-reference.docx', 'media/export-reference-top.docx', 'media/export-reference-top-footer.docx',
         'vendor/playwright-core/package.json', 'vendor/playwright-core/LICENSE',
         'vendor/playwright-core/NOTICE', 'vendor/katex.min.css', 'vendor/mermaid.min.js'
     ];
@@ -101,6 +102,11 @@ test('packaged VSIX contains an isolated export runtime, UI, guidance and locali
     assert.equal(properties[codeLanguageSetting].default, true);
     assert.equal(properties[codeLanguageSetting].scope, 'resource');
     settings.push(codeLanguageSetting);
+    const positionSetting = 'binary-markdown.export.codeLanguagePosition';
+    assert.equal(properties[positionSetting].default, 'top-left');
+    assert.equal(properties[positionSetting].scope, 'resource');
+    assert.deepEqual(properties[positionSetting].enum, ['top-left', 'top-right', 'bottom-left', 'bottom-right']);
+    settings.push(positionSetting);
     for (const locale of ['', '.es', '.fr', '.ja', '.ko', '.zh-cn', '.zh-tw']) {
         const dictionary = JSON.parse(entries.get('extension/package.nls' + locale + '.json').toString('utf8'));
         for (const setting of settings) {
@@ -115,6 +121,7 @@ test('packaged VSIX contains an isolated export runtime, UI, guidance and locali
     assert.match(entries.get('extension/out/webview/editor.js').toString('utf8'), /captureExportSnapshot/);
     assert.match(entries.get('extension/out/webview/editor.js').toString('utf8'), /validateExportImage/);
     assert.match(entries.get('extension/media/export-help.md').toString('utf8'), /Pandoc/);
+    assert.ok(entries.get('extension/media/export-reference-top.docx').equals(await fs.readFile(path.join(__dirname, '../../media/export-reference-top.docx'))), 'Top-label reference matches the source asset');
     assert.ok(entries.get('extension/media/export-reference.docx').equals(await fs.readFile(path.join(__dirname, '../../media/export-reference.docx'))), 'Word reference matches the source asset');
     for (const file of required.filter(name => name.startsWith('out/'))) {
         assert.ok(entries.get('extension/' + file).equals(await fs.readFile(path.join(__dirname, '../..', file))), file + ' differs from the current compiled build; package it again');
@@ -156,7 +163,7 @@ test('packaged VSIX contains an isolated export runtime, UI, guidance and locali
                 const saved = { sourcePath: path.resolve('proof.md'), markdown, version: 1, theme: 'github', fontSize: 16 };
                 const prepared = { html: '', theme: 'github', fontSize: 16, diagrams: [], warnings: [] };
                 const ops = { signal: new AbortController().signal, warnings: [], report() {}, loadResource: async () => { throw new Error('No external assets'); } };
-                const bytes = await convertPandoc('docx', saved, prepared, status.path, ops);
+                const bytes = await convertPandoc('docx', saved, prepared, status.path, ops, { showCodeLineNumbers: true, showCodeLineCount: true });
                 validateArtifact('docx', bytes);
                 fs.writeFileSync('packaged-proof.docx', bytes);
             })().catch(error => { console.error(error); process.exitCode = 1; });
@@ -164,7 +171,7 @@ test('packaged VSIX contains an isolated export runtime, UI, guidance and locali
         assert.equal(converted.status, 0, converted.stderr);
         const docx = unpack(await fs.readFile(path.join(directory, 'packaged-proof.docx')));
         assert.match(docx.get('word/document.xml').toString(), /PACKAGED_CODE/);
-        assert.match(docx.get('word/document.xml').toString(), /w:pStyle w:val="CodeLanguage"/);
+        assert.match(docx.get('word/document.xml').toString(), /w:pStyle w:val="CodeLanguage(?:TopLeft|TopRight|BottomLeft)?"/);
         assert.match(docx.get('word/document.xml').toString(), /w:rStyle w:val="CodeLanguageBadge"/);
         assert.match(docx.get('word/styles.xml').toString(), /w:jc w:val="right"/);
     }

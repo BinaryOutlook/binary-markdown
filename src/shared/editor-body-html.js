@@ -69,12 +69,13 @@ function generateEditorBodyHtml(messages, platform, options) {
                         <button data-action="undo" title="${m('undo')}"></button>
                         <button data-action="redo" title="${m('redo')}"></button>
                     </div>
+                    <button type="button" data-action="insertMenu" class="toolbar-insert" id="insertButton" title="${m('commandPaletteInsert')}" aria-haspopup="menu" aria-expanded="false" aria-controls="insertMenu"><span class="toolbar-insert-title">${m('commandPaletteInsert')}</span><span aria-hidden="true">▾</span></button>
                 </div>
-                <button class="toolbar-scroll-btn toolbar-scroll-btn--left hidden" id="toolbarScrollLeft">&#x276E;</button>
                 <div class="toolbar-inner" id="toolbarInner">
                     <div class="toolbar-group" data-group="inline">
                         <button data-action="bold" title="${m('bold')}"></button>
                         <button data-action="italic" title="${m('italic')}"></button>
+                        <button data-action="underline" title="${m('underline')}"></button>
                         <button data-action="strikethrough" title="${m('strikethrough')}"></button>
                         <button data-action="code" title="${m('inlineCode')}"></button>
                     </div>
@@ -101,7 +102,7 @@ function generateEditorBodyHtml(messages, platform, options) {
                         <button data-action="table" title="${m('insertTable')}"></button>
                     </div>
                 </div>
-                <button class="toolbar-scroll-btn toolbar-scroll-btn--right hidden" id="toolbarScrollRight">&#x276F;</button>
+                <button type="button" class="toolbar-more" id="toolbarMore" title="${m('toolbarMoreActions')}" aria-label="${m('toolbarMoreActions')}" aria-haspopup="menu" aria-expanded="false" aria-controls="toolbarOverflow" hidden>&#x22EF;</button>
                 <div class="toolbar-fixed toolbar-fixed--right">
                     <div class="toolbar-group" data-group="utility">
                         <button data-action="openInTextEditor" title="${m('openInTextEditor')} (${mod}+Shift+.)"></button>
@@ -109,8 +110,17 @@ function generateEditorBodyHtml(messages, platform, options) {
                         <button data-action="source" title="${m('toggleSourceMode')} (${mod}+.)"></button>
                     </div>
                 </div>
+                <div id="toolbarOverflow" class="toolbar-overflow" role="menu" aria-label="${m('toolbarMoreActions')}" hidden></div>
             </div>
+            <div id="insertMenu" class="insert-menu" role="menu" aria-label="${m('commandPaletteInsert')}" hidden></div>
             ${exportPanels}
+            <div class="editor-width-guide" id="editorWidthGuide" hidden data-capped="false">
+                <div class="editor-width-bounds" id="editorWidthBounds">
+                    <button type="button" class="editor-width-mark editor-width-mark--left" aria-label="${m('editorAlignmentLeft')}: ${m('widthIndicatorsLabel')}" aria-describedby="editorWidthExplanation"><svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24"><path d="M1 17V7H11"/></svg></button>
+                    <button type="button" class="editor-width-mark editor-width-mark--right" aria-label="${m('editorAlignmentRight')}: ${m('widthIndicatorsLabel')}" aria-describedby="editorWidthExplanation"><svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24"><path d="M23 17V7H13"/></svg></button>
+                </div>
+                <div class="editor-width-explanation" id="editorWidthExplanation" role="tooltip" hidden>${m('widthBoundaryExplanation')}</div>
+            </div>
             <div class="editor-wrapper" id="editorWrapper">
                 <div class="search-replace-box" id="searchReplaceBox" style="display: none;">
                     <div class="search-row">

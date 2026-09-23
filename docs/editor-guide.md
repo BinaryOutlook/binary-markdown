@@ -1,10 +1,36 @@
 # Binary Markdown editor guide
 
-Adapted from the inherited Binary Markdown documentation. See [Acknowledgments](../ACKNOWLEDGMENTS.md) for provenance and the [README](../README.md) for installation and current settings.
+Adapted from the inherited editor documentation. See [Acknowledgments](../ACKNOWLEDGMENTS.md) for provenance and the [README](../README.md#install) for installation. This guide describes the current source; the [0.4.0 notes](../release-notes/0.4.0.md) distinguish upcoming changes from published releases. Export configuration is maintained in [export help](../media/export-help.md).
 
-## 📝 Creating Markdown Elements
+## Formatting toolbar
 
-### Block Elements
+The **Full** toolbar shows standard text formatting by default in VS Code and the desktop app. Choose **Simple** with `binary-markdown.toolbarMode` in VS Code Settings or **Toolbar** in desktop Preferences for compact controls. Explicit `simple` and `full` preferences are retained. This default also applies to existing configurations without a stored toolbar preference; it is not limited to new installations.
+
+Resizing keeps complete buttons in the toolbar and puts remaining actions under **More toolbar actions**. At very narrow widths, utility actions can also move into that menu. Use the arrow keys or `Home`/`End` within the menu, and `Escape` to close it. Changing toolbar mode updates the current editor without replacing its document, selection, active equation input, or undo history.
+
+## Underline
+
+Select ordinary text and choose **Underline**, use `Ctrl+U` (`Cmd+U` on macOS), or find **Underline** in the Action Palette. A mixed selection becomes fully underlined; an entirely underlined selection loses underline. At a caret, the command changes the formatting of subsequent typing. One Undo reverses a selection-formatting action.
+
+Underline is saved as `<u>text</u>`. The visual editor recognizes paired, attribute-free `<u>` tags and supports combinations with bold, italic, strikethrough, and links in paragraphs, lists, quotes, and table cells. Formatting across paragraph or quote-line boundaries produces balanced inline wrappers for each source line. Arbitrary HTML attributes and unrelated HTML are not activated by this feature.
+
+Code spans, code blocks, equations, and generated document blocks cannot be underlined through the command. To show a literal example, use code such as `` `<u>text</u>` `` or escape the opening angle brackets as `\<u>text\</u>`. Other Markdown readers need support for this inline HTML representation to display underline. See [underlined text in exports](../media/export-help.md#underlined-text) for the existing four export formats and reader limitations.
+
+## Insert menu
+
+**Insert** is available in both **Full** and **Simple** mode. Its dropdown includes inline equations, block equations, tables, code blocks, links, images, Mermaid diagrams, and a managed table of contents. At very narrow widths, open **More toolbar actions** to find **Insert**. Existing toolbar buttons, shortcuts, and the Action Palette remain available.
+
+Opening the menu retains your caret or selection. Use up/down arrows or `Home`/`End` to navigate, `Enter` or `Space` to choose an item, and `Escape` to close it. Opening, navigating, or cancelling the menu does not edit the document. Cancelling a link or image dialog also leaves the document and undo history unchanged. Confirmed insertions use the retained location and can be undone in one step.
+
+Inline equations wrap the selected text, or start with `x` at a caret, and open their source input. Links use selected text as their label; images replace the selection or insert at the caret. Code blocks, block equations, and Mermaid diagrams appear after the current paragraph, or replace an empty paragraph, with their source ready to edit. Tables insert at the caret. The TOC command inserts a managed table of contents or refreshes the existing one.
+
+The menu explains unavailable contexts. Switch to the visual editor to insert items. Move outside code, equation, metadata, or generated blocks before using the menu. Inline items are available in ordinary list items and table cells; block items require a paragraph outside lists, tables, and blockquotes. These restrictions preserve the surrounding document structure.
+
+<a id="-creating-markdown-elements"></a>
+
+## Create Markdown elements
+
+### Block elements
 
 | Element | Pattern Input | Toolbar | Shortcut |
 | --- | --- | --- | --- |
@@ -14,31 +40,34 @@ Adapted from the inherited Binary Markdown documentation. See [Acknowledgments](
 | Heading 4 | `#### ` + Space | Heading menu → H4 | `Ctrl+4` |
 | Heading 5 | `##### ` + Space | Heading menu → H5 | `Ctrl+5` |
 | Heading 6 | `###### ` + Space | Heading menu → H6 | `Ctrl+6` |
-| Paragraph | (default)<br> | — | `Ctrl+0` |
+| Paragraph | (default) | — | `Ctrl+0` |
 | Unordered List | `- ` or `* ` + Space | List button | `Ctrl+Shift+U` |
 | Ordered List | `1. ` + Space | Numbered list button | `Ctrl+Shift+O` |
 | Task List | `- [ ] ` + Space | Task list button | `Ctrl+Shift+X` |
 | Blockquote | `> ` + Space | Quote button | `Ctrl+Shift+Q` |
 | Code Block | ````` ``` ````` + Enter | Code button | `Ctrl+Shift+K` |
-| Table | `| col1 | col2 |` + Enter | Table button | `Ctrl+T` |
+| Table | `\| col1 \| col2 \|` + Enter | Table button | `Ctrl+T` |
 | Horizontal Rule | `---` + Enter | HR button | `Ctrl+Shift+-` |
 
-### Inline Elements
+### Inline elements
 
 | Element | Pattern Input | Toolbar | Shortcut |
 | --- | --- | --- | --- |
 | Bold | `**text**` + Space | Bold button | `Ctrl+B` |
 | Italic | `*text*` + Space | Italic button | `Ctrl+I` |
+| Underline | `<u>text</u>` in source | Underline button | `Ctrl+U` |
 | Strikethrough | `~~text~~` + Space | Strikethrough button | `Ctrl+Shift+S` |
 | Inline Code | ``` `text` ``` + Space | Code button | ``` Ctrl+` ``` |
-| Link | `[text](url)` <br>Space conversion not supported<br> | Link button | `Ctrl+K` |
-| Image | `![text](url)` <br>Space conversion not supported<br> | Image button | `Ctrl+Shift+I` |
+| Link | `[text](url)` <br>Space conversion not supported | Link button | `Ctrl+K` |
+| Image | `![text](url)` <br>Space conversion not supported | Image button | `Ctrl+Shift+I` |
 
 ---
 
-## ⌨️ Special Operations
+<a id="-special-operations"></a>
 
-### General Shortcuts
+## Keyboard operations
+
+### General shortcuts
 
 These shortcuts are active when the Binary Markdown editor is focused:
 
@@ -52,12 +81,13 @@ These shortcuts are active when the Binary Markdown editor is focused:
 | `Ctrl/Cmd + Shift + Z` | Redo |
 | `Ctrl/Cmd + B` | Bold |
 | `Ctrl/Cmd + I` | Italic |
+| `Ctrl/Cmd + U` | Underline |
 | `Ctrl/Cmd + K` | Insert link |
 | `Ctrl/Cmd + F` | Find |
 | `Ctrl/Cmd + H` | Find and replace |
 | `Ctrl/Cmd + L` | Open source file with selected lines in text editor |
 
-### Escaping Block Elements
+### Escaping block elements
 
 | Element | Key | Action |
 | --- | --- | --- |
@@ -71,7 +101,7 @@ These shortcuts are active when the Binary Markdown editor is focused:
 | Mermaid/Math | `↑` at first line | Exit to previous element |
 | Mermaid/Math | `↓` at last line | Exit to next element |
 
-### Escaping Inline Elements
+### Escaping inline elements
 
 To exit inline formatting, type the closing marker followed by Space:
 
@@ -82,15 +112,21 @@ To exit inline formatting, type the closing marker followed by Space:
 | Strikethrough | `~~` + Space | Close strikethrough and move cursor outside |
 | Inline Code | ``` ` ``` + Space | Close inline code and move cursor outside |
 
-### Table Operations
+### Table operations
 
-Select a table cell to show its controls. **Automatic** is the default: the controls use an available corner or side, based on the visible table and surrounding content, and move into the top bar when there is no room. A narrow top bar shows a **Table…** button containing the same actions. The controls keep a usable position while you work and wait for scrolling or resizing to settle before leaving the top bar.
+Select a table cell to show its controls. **Automatic** is the default: the controls use an available corner or side, based on the visible table and surrounding content, and move into the top bar when there is no room. When space shrinks, complete leading buttons remain visible and **More table actions** (⋯) contains the remaining actions. A top bar with too little room for a leading action and overflow shows a table icon (**Table controls**) containing all actions. The controls keep a usable position while you work and wait for scrolling or resizing to settle before leaving the top bar.
 
-Use **⋯** in the table controls to choose **Automatic**, **Always in top bar**, or **Choose a fixed position…**. Fixed positions include all four corners and the two vertical sides. You can also change `binary-markdown.tableToolbarPosition` in VS Code Settings, or **Table toolbar position** in desktop Preferences. Explicit choices are retained; only an unset preference uses the new default. The picker updates an existing workspace preference when present, otherwise your user preference.
+In **Full** mode, docked table controls occupy a second row beneath general formatting and utilities. In **Simple** mode, they share the primary row. The second row appears only for the selected table when its controls are docked; selecting other content or entering Source mode removes it. Explicit floating positions keep their existing layout. You can reach both rows with `Tab`, or use `Alt+F10` to go directly from the table to its controls.
 
-Fixed controls stay at the chosen anchor where possible, remain within the visible editor, and scroll when space is limited. They hide when their table is completely offscreen. Automatic and top-bar controls remain available for the selected table until you select another block or enter Source mode. Changing placement does not edit the Markdown or add an undo step.
+Use the table icon with a gear (**Table toolbar position**) to choose **Automatic**, **Always in top bar**, or **Choose a fixed position…**. Fixed positions include all four corners and the two vertical sides. You can also change `binary-markdown.tableToolbarPosition` in VS Code Settings, or **Table toolbar position** in desktop Preferences. Explicit choices are retained; only an unset preference uses the new default. The picker updates an existing workspace preference when present, otherwise your user preference.
 
-Press `Alt+F10` from a table cell to focus its controls. Use left/right arrows in a horizontal toolbar, up/down arrows in a vertical toolbar or menu, and `Home`/`End` to move to the first/last action. `Enter` or `Space` activates a control; `Escape` returns to the retained cell. Inserting above the header, deleting the header, and deleting the final column are disabled.
+One selection applies and saves the placement without reloading the editor. If saving the preference fails, a notification explains the failure and the previous setting remains active. You can retry the choice without changing the document.
+
+Fixed controls stay at the chosen anchor where possible and use the overflow menu when horizontal or vertical space is limited. They hide when their table is completely offscreen. Automatic and top-bar controls remain available for the selected table until you select another block or enter Source mode. Changing placement does not edit the Markdown or add an undo step.
+
+Press `Alt+F10` from a table cell to focus its controls. Use left/right arrows in a horizontal toolbar, up/down arrows in a vertical toolbar or menu, and `Home`/`End` to move to the first/last action. `Enter` or `Space` activates a control; `Escape` returns to and reveals the retained cell. Focus follows an action into or out of overflow as space changes. Short menus scroll to reveal the focused item. Inserting above the header, deleting the header, and deleting the final column are disabled in both the toolbar and its overflow menu.
+
+Wide tables scroll horizontally within the table, keeping the surrounding document in place. Use the scrollbar below the table or a horizontal trackpad gesture to reveal offscreen columns. `Tab` and `Shift+Tab` move between cells and reveal the caret, including in headers and cells wider than the pane. Up/down navigation and `Escape` from the table controls also reveal the selected cell. Scrolling, window resizing, and cell navigation do not edit the Markdown or create an undo step. Column resizing remains available; the local scroll box is editor presentation and does not constrain exported tables.
 
 | Key | Action |
 | --- | --- |
@@ -102,7 +138,7 @@ Press `Alt+F10` from a table cell to focus its controls. Use left/right arrows i
 | `←` / `→` | Navigate within/between cells |
 | `Cmd+A` | Select all text in current cell |
 
-### Code Block Operations
+### Code block operations
 
 | Key | Action |
 | --- | --- |
@@ -110,7 +146,7 @@ Press `Alt+F10` from a table cell to focus its controls. Use left/right arrows i
 | `Shift+Tab` | Remove up to 4 leading spaces |
 | `Cmd+A` | Select all text within code block |
 
-### List Operations
+### List operations
 
 | Key | Action |
 | --- | --- |
@@ -120,7 +156,7 @@ Press `Alt+F10` from a table cell to focus its controls. Use left/right arrows i
 | `Backspace` at start | Convert to paragraph |
 | Pattern at line start + Space | Convert list type in-place (e.g., `1. ` converts `- item` to ordered list) |
 
-### Multi-Block Selection
+### Multi-block selection
 
 | Key | Action |
 | --- | --- |
@@ -129,9 +165,13 @@ Press `Alt+F10` from a table cell to focus its controls. Use left/right arrows i
 
 ---
 
-## 💻 Code Block Features
+<a id="-code-block-features"></a>
 
-### Supported Languages
+## Code block features
+
+<a id="supported-languages"></a>
+
+### Supported code languages
 
 The editor supports syntax highlighting for the following languages:
 
@@ -139,13 +179,35 @@ The editor supports syntax highlighting for the following languages:
 
 **Language Aliases:** `js`→javascript, `ts`→typescript, `py`→python, `sh`→bash, `yml`→yaml, `md`→markdown, `c++`→cpp, `c#`→csharp
 
-### Display Mode / Edit Mode
+### Search for a language
+
+Click the code block’s language button, or focus it and press Enter, Space, or an arrow key. The search field takes focus immediately. Search a readable name or alias, such as `JS`, `JavaScript`, `C++`/`cpp`, or `C#`/`csharp`. Exact matches appear before prefix and substring matches. Use Up/Down and Enter to choose; Escape cancels and restores the previous code caret or language-button focus. Tab closes the picker and continues keyboard navigation.
+
+The current identifier remains visible, including custom languages absent from the suggestions. Opening, searching, canceling, and choosing the unchanged language do not edit Markdown or create an undo step. An actual choice changes only the fence identifier and is one undoable action; code indentation, tabs, and blank lines remain intact. Choosing **Math equation** or **Mermaid diagram** explicitly converts the block to the corresponding editable preview. The search field stays above a scrolling result list in narrow or short panes.
+
+### Choose the language order
+
+Set `binary-markdown.codeLanguageOrder` in VS Code Settings, or **Code language order** in desktop Preferences:
+
+| Choice | Browsing behavior |
+| --- | --- |
+| **Default (curated)** (`default`) | Plain text and Markdown first, followed by a maintained common-language list. This is a manual selection, with no popularity service or usage tracking. |
+| **A–Z** (`a-z`) | Sort displayed names in ascending order, without pinned entries. |
+| **Z–A** (`z-a`) | Reverse the alphabetical order, without pinned entries. |
+
+Alphabetical modes use a fixed English, case-insensitive collation of the displayed names, with the canonical identifier breaking ties. Programming-language names and source identifiers remain unchanged; localized names such as Plain text participate in that same sort. Search still ranks exact, prefix, and substring matches first, using the chosen browsing order to break equal-relevance ties. Nonmatching entries, including Plain text and Markdown, disappear from search results.
+
+The preference persists and applies immediately to open pickers, retaining the query and active matching result. It does not change source, the code editing context, clean state, or undo history. In VS Code, an explicit workspace value overrides the user preference. If desktop Preferences cannot save the value, an error appears and the previous choice remains active; retry after resolving the failure.
+
+<a id="display-mode--edit-mode"></a>
+
+### Display and edit modes
 
 - **Display Mode**: Shows syntax-highlighted code with language tag and copy button
 - **Edit Mode**: Plain text editing (click on code block to enter)
 - **Expand Button**: Open code in a separate VS Code editor tab for larger editing
 
-### Mermaid Diagrams
+### Mermaid diagrams
 
 Code blocks with language `mermaid` are rendered as diagrams:
 
@@ -159,7 +221,7 @@ graph TD
 - Click on diagram to edit source
 - Diagram re-renders when exiting edit mode
 
-### KaTeX Math Equations
+### KaTeX math equations
 
 Use `$x^2$` or `\(x^2\)` for an inline equation. Use a standalone `$$…$$` or `\[…\]` block for a display equation. Existing fenced `math` blocks are also supported.
 
@@ -174,7 +236,7 @@ a^2 + b^2 &= c^2
 $$
 ```
 
-- **Insert Equation** creates a display block using `$$`. **Insert Inline Equation** wraps the selection in `$…$` and opens its source input. Both actions are available in the toolbar and action palette.
+- **Insert Equation** creates a display block using `$$`. **Insert Inline Equation** wraps the selection in `$…$` and opens its source input. Both actions are available in the Insert menu, toolbar, and Action Palette.
 - Type `$$` and press Enter to create a display block. Complete an inline expression and type a space to render it.
 - Click a display equation to edit its TeX source. Click an inline equation, or focus it and press Enter, to edit it; Enter applies, Escape cancels, and clearing the input removes the equation.
 - Saving retains the original equation delimiters, including imported backslash delimiters and old fences. Backslash recognition is enabled by default; disable `binary-markdown.math.backslashDelimiters` for documents that use these sequences literally.
@@ -182,15 +244,23 @@ $$
 - Code examples, link destinations, escaped delimiters, unmatched delimiters and common currency forms stay literal. Inline dollar math requires non-whitespace next to both delimiters and no digit immediately after the closing delimiter.
 - KaTeX renders supported TeX commands; this is not full MathJax or LaTeX support. Invalid expressions show an error and retain editable source. Empty display blocks show "Empty expression".
 
+Choose `binary-markdown.mathSourcePosition` in VS Code Settings, or **Equation source position** in desktop Preferences, to place editable block-equation source **Above preview** (default) or **Below preview**. The preference applies immediately and persists across reopened documents. Changing it retains the active source selection and edit mode; it does not change the equation, add an undo step, or affect inline equations, Source mode, or exported content.
+
+Enable `binary-markdown.mathSourceWrap` in VS Code Settings, or **Wrap equation source** in desktop Preferences, to wrap editable TeX to the available width. Wrapping is off by default and works with either source position. It preserves authored spaces, tabs, and blank lines; visual breaks never become source newlines or TeX commands. Disabling it restores horizontal source scrolling. The rendered equation and ordinary code blocks keep their existing layout.
+
+With wrapping enabled, Up/Down move through visual source rows and leave the block at its first/last visual row. Use Home/End on Windows/Linux, or Cmd+Left/Right on macOS, for the host's visual-line navigation. Shift extends the selection. Enter still inserts an authored line break, and Shift+Enter exits the equation. Copying, saving, or switching Source mode retains the authored text.
+
 HTML and PDF embed KaTeX rendering. DOCX and EPUB use Pandoc's native math conversion, which has its own command support. Backslash delimiters are normalized in an export-only copy; the Markdown file is never rewritten for conversion.
 
 ---
 
-## 🖼️ Image Path Configuration
+<a id="-image-path-configuration"></a>
+
+## Image paths
 
 Images can be saved to custom directories when pasting or drag-and-dropping.
 
-### Configuration Levels
+### Configuration levels
 
 | Level | Setting File | Description |
 | --- | --- | --- |
@@ -198,7 +268,9 @@ Images can be saved to custom directories when pasting or drag-and-dropping.
 | **Project** | `.vscode/settings.json` | Project-level override |
 | **File** | Per-file directive | Per-file override in markdown footer |
 
-### VS Code settings.json Setting
+<a id="vs-code-settingsjson-setting"></a>
+
+### VS Code image settings
 
 ```json
 {
@@ -207,7 +279,7 @@ Images can be saved to custom directories when pasting or drag-and-dropping.
 }
 ```
 
-### Per-File Directive
+### Per-file directive
 
 Add at the end of your markdown file:
 
@@ -217,7 +289,9 @@ IMAGE_DIR: ./assets/images
 FORCE_RELATIVE_PATH: true
 ```
 
-### Path Behavior Matrix
+<a id="path-behavior-matrix"></a>
+
+### Path behavior
 
 `forceRelativeImagePath` allows you to separate the **image save location** from the **path written in Markdown**.
 
@@ -234,26 +308,76 @@ FORCE_RELATIVE_PATH: true
 
 ---
 
-## 🎨 Configuration
+<a id="-configuration"></a>
 
-### VS Code Settings
+## Configuration
+
+### VS Code settings
+
+Open **Settings** (`Cmd+,` on macOS or `Ctrl+,` on Windows/Linux) and search for **Binary Markdown**. Editor preferences can be set at User or Workspace scope; an explicit workspace value takes precedence. These settings control the visual editor. See [export settings](../media/export-help.md#tools-and-settings) for conversion tools and output appearance.
 
 | Setting | Description | Default |
 | --- | --- | --- |
 | `binary-markdown.theme` | Editor theme (`github`, `sepia`, `night`, `dark`, `minimal`, `perplexity`, `things`) | `things` |
+| `binary-markdown.math.backslashDelimiters` | Recognize backslash delimiters for inline and display equations | `true` |
+| `binary-markdown.mathSourceWrap` | Visually wrap editable block-equation source without inserting line breaks | `false` |
+| `binary-markdown.mathSourcePosition` | Editable block-equation source above or below its preview | `above` |
 | `binary-markdown.fontSize` | Base font size (px) | `16` |
+| `binary-markdown.codeLanguageOrder` | Code-language browsing order: `default`, `a-z`, or `z-a`; search prioritizes relevance | `default` |
+| `binary-markdown.editorWidthMode` | Visual editor column width: `default`, `full`, or `custom` | `default` |
+| `binary-markdown.editorMaxWidth` | Outer column cap in CSS pixels for Custom mode; integer 320–4000 | `860` |
+| `binary-markdown.editorWidthIndicators` | Show the visual editor width guide | `true` |
+| `binary-markdown.editorAlignment` | Position the capped column at the `left`, `center`, or `right` of the pane | `center` |
 | `binary-markdown.imageDefaultDir` | Default directory for saved images | `""` (same as markdown file) |
 | `binary-markdown.forceRelativeImagePath` | Force relative paths for images | `false` |
-| `binary-markdown.language` | UI language (`default`, `en`, `ja`, `zh-cn`, `zh-tw`, `ko`, `es`, `fr`) | `default` |
-| `binary-markdown.toolbarMode` | Toolbar display mode (`full`, `simple`). Simple shows only undo/redo and utility buttons (use `Cmd+/` for other operations) | `simple` |
+| `binary-markdown.language` | UI language (`default`, `en`, `ja`, `zh-CN`, `zh-TW`, `ko`, `es`, `fr`) | `default` |
+| `binary-markdown.toolbarMode` | Toolbar display mode (`full`, `simple`). Simple shows undo/redo, Insert, and utility buttons; use the Action Palette for other operations | `full` |
+| `binary-markdown.tableToolbarPosition` | Use `auto`, any corner, `left`, `right`, or `top-bar`; see [table operations](#table-operations) | `auto` |
+| `binary-markdown.outlineActiveColor` | Outline highlight: `theme`, `blue`, `green`, `orange`, `red`, or `purple` | `theme` |
 | `binary-markdown.outlineStateScope` | Remember outline visibility per Markdown file (`file`) or share it across all Markdown files (`global`) | `file` |
 | `binary-markdown.outlineDefaultOpen` | Open the outline when the selected scope does not have a saved state yet | `true` |
 | `binary-markdown.enableDebugLogging` | Enable debug logging in browser console | `false` |
-| `binary-markdown.export.pdfWhiteBackground` | Export PDF with a white page and GitHub light appearance. Disable to fill the whole page, including margins, with the editor theme. Other formats keep their existing styling. | `true` |
+
+### Outline state
 
 With `outlineStateScope` set to `file`, every Markdown resource restores its own last outline state in the current workspace. With `global`, toggling the outline controls the next Markdown editor that renders as well, and the preference survives VS Code restarts.
 
+To start files with a closed outline when no saved visibility exists:
+
+```json
+{
+  "binary-markdown.outlineDefaultOpen": false,
+  "binary-markdown.outlineStateScope": "file"
+}
+```
+
+A remembered visibility overrides the initial default. Changing the default does not erase saved outline states. These settings control the editor's outline, not VS Code's Explorer sidebar. Choose `binary-markdown.outlineActiveColor` to customize its active-heading highlight.
+
+### Editor width
+
+In VS Code Settings, choose **Binary-markdown: Editor Width Mode**. In the desktop app's **Preferences**, use **Editor width**. **Default** uses a column capped at 860 CSS pixels. **Full width** uses the available editor pane. **Custom width** uses **Editor Max Width** in VS Code or **Maximum width (px)** in Preferences. Switching modes retains your custom value.
+
+The cap measures the outside of the column, including its padding; it is not the width of the text alone. Custom values must be whole numbers from 320 to 4000. Invalid stored values fall back to 860, and an invalid mode falls back to Default. Preferences rejects invalid input and keeps the previous value. The column always shrinks to fit a narrower pane, with responsive side padding of 12–60 CSS pixels. Full width keeps that padding.
+
+These settings apply immediately to the visual editor in both hosts and survive reopening. They preserve the document and undo history, without replacing the current selection. The layout retains a visible caret's position where scrolling permits, or anchors the visible block. Source mode retains its own layout; HTML, PDF, DOCX, and EPUB keep their independent export dimensions. Width preferences do not reformat long code or equations, and wide tables retain their horizontal scrolling.
+
+### Column alignment
+
+Choose `binary-markdown.editorAlignment` in VS Code Settings or **Column alignment** in desktop Preferences to place the column at the **Left**, **Center**, or **Right** of the available pane. Center remains the default. Alignment takes effect when the pane is wider than the active maximum width. Full width and narrower panes use all available width without adding artificial space; your chosen alignment resumes when the column is capped again.
+
+This preference moves the document column without changing paragraph or table-cell alignment, Markdown, selection, active equation source, or undo. Open language menus follow their language tag and stay within the viewport; table controls follow the selected table. Source mode and exported documents retain their separate layout.
+
+### Width boundary indicators
+
+![Width boundary marks with a keyboard-accessible explanation](images/editor-width-boundaries.png)
+
+When the column reaches its maximum width, two small corner marks identify its **outer edges, including padding**. Hover a mark or reach it with Tab to read “Maximum document width reached” and the explanation. Escape dismisses the explanation and returns focus to the editor. This indicates a width preference; document content is still intact and reachable.
+
+The marks follow Default/Custom width, column alignment, and outline-pane resizing. They disappear at or below the cap and in Full width. The guide reserves a 24 px strip above the editor while enabled so it cannot cover document content or flicker as scrollbars appear at the threshold. Turn off `binary-markdown.editorWidthIndicators` in VS Code Settings or **Width boundary indicators** in desktop Preferences to remove the whole strip. Source mode hides it automatically. The guide is outside document selection and never becomes Markdown or exported content.
+
 ### Themes
+
+Changing the editor theme updates colors in place in VS Code and the desktop app, preserving the current selection and undo history. Quotes, their links, and inline code use the selected editor theme even when the surrounding VS Code workbench uses a different theme.
 
 | Theme | Description |
 | --- | --- |
@@ -267,7 +391,9 @@ With `outlineStateScope` set to `file`, every Markdown resource restores its own
 
 ---
 
-## 🌐 Supported Languages (i18n)
+<a id="-supported-languages-i18n"></a>
+
+## Interface languages
 
 The editor UI supports the following languages:
 
@@ -275,17 +401,21 @@ The editor UI supports the following languages:
 | --- | --- |
 | English | `en` (default) |
 | Japanese | `ja` |
-| Simplified Chinese | `zh-cn` |
-| Traditional Chinese | `zh-tw` |
+| Simplified Chinese | `zh-CN` |
+| Traditional Chinese | `zh-TW` |
 | Korean | `ko` |
 | Spanish | `es` |
 | French | `fr` |
 
-Set via `binary-markdown.language` or use `default` to follow VS Code's display language.
+Set `binary-markdown.language` or use `default` to follow VS Code's display language.
+
+Settings descriptions and option explanations follow **VS Code's display language** independently of the editor preference. English, Japanese, Simplified Chinese, Traditional Chinese, Korean, Spanish, and French are supported; other display languages fall back to English. Use **Configure Display Language** in the Command Palette and restart VS Code to change that language.
 
 ---
 
-## 🔧 Commands
+<a id="-commands"></a>
+
+## Commands
 
 Available in Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`):
 
@@ -299,10 +429,15 @@ Available in Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`):
 | `Binary Markdown: Toggle Source Mode` | Switch between WYSIWYG and source mode |
 | `Binary Markdown: Undo` | Undo last edit |
 | `Binary Markdown: Redo` | Redo last undone edit |
+| `Binary Markdown: Copy Build Information` | Copy source and host identity for a reproducible bug report |
+
+Export commands are listed in [export help](../media/export-help.md#export-a-saved-document). Command labels follow the configured interface language.
 
 ---
 
-## 🔄 External File Changes
+<a id="-external-file-changes"></a>
+
+## External file changes
 
 When another tool (e.g., AI coding assistants like Claude Code, Cursor, etc.) modifies the same markdown file while you have it open in Binary Markdown:
 

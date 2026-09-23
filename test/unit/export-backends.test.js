@@ -128,6 +128,72 @@ test('failed Pandoc conversion removes its owned intermediate directory', async 
 
 const realTools = process.env.EXPORT_REAL_TOOLS === '1';
 
+test('paired bare underline becomes native semantics without activating other raw content', async t => {
+    const directory = await temporary(t);
+    const receipt = path.join(directory, 'writer.json');
+    const raw = text => ({ t: 'RawInline', c: ['html', text] });
+    const word = text => ({ t: 'Str', c: text });
+    const code = { t: 'Code', c: [['', [], []], '<u>literal</u>'] };
+    const ast = { 'pandoc-api-version': [1, 23, 1, 1], meta: {}, blocks: [
+        { t: 'Para', c: [raw('<U>'), word('outer'), raw('<u>'), { t: 'Strong', c: [word('nested')] }, raw('</u>'), raw('</U>'), code] },
+        { t: 'Para', c: [raw('<u title="unrelated">'), word('attributes'), raw('</u>')] },
+        { t: 'Para', c: [raw('<u>'), word('unmatched')] },
+        { t: 'Para', c: [raw('</u>'), raw('<script>'), word('visible source'), raw('</script>')] }
+    ] };
+    const executablePath = await executable(directory, 'ast-pandoc', receipt, ast);
+    for (const format of ['docx', 'epub']) {
+        const ops = operations();
+        await convertPandoc(format, { sourcePath: path.join(directory, 'source.md'), markdown: 'fixture', version: 1, theme: 'github', fontSize: 16 },
+            { html: '', theme: 'github', fontSize: 16, diagrams: [], warnings: [] }, executablePath, ops);
+        const output = JSON.parse(await fs.readFile(receipt, 'utf8'));
+        assert.deepEqual(output.ast.blocks[0].c, [{ t: 'Underline', c: [word('outer'), { t: 'Underline', c: [{ t: 'Strong', c: [word('nested')] }] }] }, code]);
+        assert.equal(output.ast.blocks[1].c[0].t, 'Code');
+        assert.equal(output.ast.blocks[2].c[0].t, 'Code');
+        assert.equal(output.ast.blocks[3].c[1].t, 'Code');
+        assert.ok(ops.warnings.some(w => w.code === 'raw-content-fallback'));
+        assert.ok(output.args.includes('--sandbox'));
+    }
+});
+
+test('real DOCX and EPUB preserve underline, nested formatting, links and literal examples', { skip: !realTools }, async t => {
+    const directory = await temporary(t);
+    const status = await discoverTool('pandoc', process.env.EXPORT_PANDOC_PATH || '');
+    assert.equal(status.available, true, status.error);
+    const source = await fs.readFile(path.join(__dirname, '../fixtures/exports/underline-export.md'), 'utf8');
+    const sourcePath = path.join(directory, 'underline.md'); await fs.writeFile(sourcePath, source);
+    const saved = { sourcePath, markdown: source, version: 1, theme: 'github', fontSize: 16 };
+    const expected = ['Plain café 中文', 'Bold', 'italic', 'struck', 'Linked label', 'Outer link', 'List item', 'Quoted text', 'Table cell'];
+    for (const format of ['docx', 'epub']) {
+        const ops = operations();
+        const entries = archiveEntries(await convertPandoc(format, saved, { html: '', theme: 'github', fontSize: 16, diagrams: [], warnings: [] }, status.path, ops));
+        let underlined, literal;
+        if (format === 'docx') {
+            const document = xmlDocument(entries.get('word/document.xml'));
+            const runs = wordElements(document, 'r').filter(run => wordElements(run, 'u').length);
+            underlined = runs.map(wordText).join('');
+            literal = wordText(document);
+            assert.ok(runs.some(run => wordText(run) === 'Bold' && wordElements(run, 'b').length));
+            assert.ok(runs.some(run => wordText(run) === 'italic' && wordElements(run, 'i').length));
+            assert.ok(runs.some(run => wordText(run) === 'struck' && wordElements(run, 'strike').length));
+            assert.ok(wordElements(document, 'tbl').length);
+            assert.match(entries.get('word/_rels/document.xml.rels').toString(), /https:\/\/example\.com\/reference/);
+        } else {
+            const html = [...entries].filter(([name]) => name.endsWith('.xhtml')).map(([, bytes]) => bytes.toString()).join('\n');
+            const document = new JSDOM(html).window.document;
+            underlined = [...document.querySelectorAll('u, .underline')].map(el => el.textContent).join('');
+            literal = document.body.textContent;
+            assert.ok(document.querySelector('a[href="https://example.com/reference"] u, a[href="https://example.com/reference"] .underline'));
+            assert.ok(document.querySelector('table'));
+        }
+        for (const text of expected) assert.ok(underlined.includes(text), format + ' underline: ' + text);
+        for (const text of ['<u>inline example</u>', '<u>escaped example</u>', '<u>fenced example</u>', 'UNDERLINE-END-MARKER']) assert.ok(literal.includes(text), format + ' literal: ' + text);
+        assert.ok(!underlined.includes('example'), 'Literal markup examples are not underlined');
+        assert.deepEqual(ops.warnings, []);
+    }
+    assert.equal(await fs.readFile(sourcePath, 'utf8'), source);
+    assert.equal(saved.markdown, source);
+});
+
 test('real Pandoc exports all supported equation delimiters as native math without changing source', { skip: !realTools }, async t => {
     const directory = await temporary(t);
     const status = await discoverTool('pandoc', process.env.EXPORT_PANDOC_PATH || '');
@@ -195,7 +261,7 @@ function wordText(element) {
         if (child.namespaceURI !== wordNamespace) return '';
         if (child.localName === 't') return child.textContent;
         if (child.localName === 'br') return '\n';
-        if (child.localName === 'tab') return '\t';
+        if (child.localName === 'tab' && child.parentElement?.localName === 'r') return '\t';
         return '';
     }).join('');
 }
@@ -226,7 +292,7 @@ test('DOCX puts declared-language labels after intact code blocks, including nes
         return result;
     }
     for (const [format, showCodeLanguage] of [['docx', undefined], ['docx', true], ['docx', false], ['epub', true], ['epub', false]]) {
-        await convertPandoc(format, saved, { html: '', theme: 'github', fontSize: 16, diagrams: [], warnings: [] }, file, operations(), { showCodeLanguage });
+        await convertPandoc(format, saved, { html: '', theme: 'github', fontSize: 16, diagrams: [], warnings: [] }, file, operations(), { showCodeLanguage, codeLanguagePosition: 'bottom-right' });
         const output = JSON.parse(await fs.readFile(receipt, 'utf8'));
         assert.ok(output.args.includes('--sandbox'));
         assert.deepEqual(collect(output.ast, value => value.t === 'CodeBlock'), examples);
@@ -285,7 +351,7 @@ test('bundled Word styles provide a shaded code container and a right-aligned fo
     assert.equal(wordElements(style('VerbatimChar'), 'bdr').length, 0);
 });
 
-test('real Pandoc exports editable code with bottom language labels, safe unknown names, nested blocks and native highlighting', { skip: !realTools }, async t => {
+test('real Pandoc exports editable code with four label corners, safe unknown names and native highlighting', { skip: !realTools }, async t => {
     const directory = await temporary(t);
     const status = await discoverTool('pandoc', process.env.EXPORT_PANDOC_PATH || '');
     assert.equal(status.available, true, status.error);
@@ -301,43 +367,80 @@ test('real Pandoc exports editable code with bottom language labels, safe unknow
         '```js', long, '```', '', 'END_OF_CODE_TEST'
     ].join('\n');
     const saved = { sourcePath: path.join(directory, 'source.md'), markdown, version: 1, theme: 'github', fontSize: 16 };
-    const ops = operations();
-    const bytes = await convertPandoc('docx', saved, { html: '', theme: 'github', fontSize: 16, diagrams: [], warnings: [] }, status.path, ops);
-    const entries = archiveEntries(bytes);
-    const document = xmlDocument(entries.get('word/document.xml'));
-    const paragraphs = wordElements(document, 'p');
-    const style = paragraph => wordValue(wordElements(paragraph, 'pStyle')[0]);
-    const blocks = paragraphs.filter(paragraph => style(paragraph) === 'SourceCode');
-    assert.deepEqual(blocks.map(wordText), [python, 'unlabeled code', 'emit "result"', 'return 0;', 'quoted text', long]);
-    const labels = paragraphs.filter(paragraph => style(paragraph) === 'CodeLanguage');
-    assert.deepEqual(labels.map(label => wordText(label).trim()), ['Python', 'mydsl<&', 'C++', 'Plain text', 'JavaScript']);
-    for (const label of labels) {
-        assert.equal(style(label.previousElementSibling), 'SourceCode', 'label immediately follows complete code');
-        assert.equal(wordValue(wordElements(label, 'rStyle')[0]), 'CodeLanguageBadge', 'only label text receives the badge style');
-        const firstRun = wordElements(label, 'r')[0];
-        assert.equal(wordText(firstRun), ' ');
-        assert.equal(wordElements(firstRun, 'rStyle').length, 0, 'list continuation spacing stays outside the badge');
-        const shape = label.getElementsByTagNameNS('urn:schemas-microsoft-com:vml', 'shape')[0];
-        assert.ok(shape, 'language is editable text inside a native shape');
-        assert.equal(wordElements(shape, 'txbxContent').length, 1);
+    for (const position of [undefined, 'top-left', 'top-right', 'bottom-left', 'bottom-right']) {
+        const top = !position || position.startsWith('top');
+        const ops = operations();
+        const bytes = await convertPandoc('docx', saved, { html: '', theme: 'github', fontSize: 16, diagrams: [], warnings: [] }, status.path, ops, { codeLanguagePosition: position });
+        const entries = archiveEntries(bytes);
+        const document = xmlDocument(entries.get('word/document.xml'));
+        const paragraphs = wordElements(document, 'p');
+        const style = paragraph => wordValue(wordElements(paragraph, 'pStyle')[0]);
+        const blocks = paragraphs.filter(paragraph => style(paragraph) === 'SourceCode');
+        assert.deepEqual(blocks.map(wordText), [python, 'unlabeled code', 'emit "result"', 'return 0;', 'quoted text', long]);
+        const labels = paragraphs.filter(paragraph => style(paragraph)?.startsWith('CodeLanguage'));
+        assert.deepEqual(labels.map(label => wordText(label).trim()), ['Python', 'mydsl<&', 'C++', 'Plain text', 'JavaScript']);
+        for (const label of labels) {
+            assert.equal(style(top ? label.nextElementSibling : label.previousElementSibling), 'SourceCode', 'label immediately touches the selected code edge');
+            const expectedStyle = position === 'bottom-right' ? 'CodeLanguage' : 'CodeLanguage' + (position || 'top-left').split('-').map(word => word[0].toUpperCase() + word.slice(1)).join('');
+            assert.equal(style(label), expectedStyle);
+            assert.equal(wordValue(wordElements(label, 'rStyle')[0]), 'CodeLanguageBadge', 'only label text receives the badge style');
+            const firstRun = wordElements(label, 'r')[0];
+            assert.equal(wordText(firstRun), ' ');
+            assert.equal(wordElements(firstRun, 'rStyle').length, 0, 'list continuation spacing stays outside the badge');
+            const shape = label.getElementsByTagNameNS('urn:schemas-microsoft-com:vml', 'shape')[0];
+            assert.ok(shape, 'language is editable text inside a native shape');
+            assert.equal(wordElements(shape, 'txbxContent').length, 1);
+        }
+        assert.ok(wordElements(blocks[0], 'rStyle').some(element => wordValue(element) === 'KeywordTok'));
+        const inline = paragraphs.find(paragraph => wordText(paragraph).startsWith('Inline '));
+        assert.notEqual(style(inline), 'SourceCode');
+        assert.equal(wordValue(wordElements(inline, 'rStyle')[0]), 'VerbatimChar');
+        assert.ok(paragraphs.some(paragraph => wordText(paragraph) === 'END_OF_CODE_TEST'));
+        assert.deepEqual(ops.warnings, []);
+        const hidden = archiveEntries(await convertPandoc('docx', saved, { html: '', theme: 'github', fontSize: 16, diagrams: [], warnings: [] },
+            status.path, operations(), { showCodeLanguage: false }));
+        const hiddenParagraphs = wordElements(xmlDocument(hidden.get('word/document.xml')), 'p');
+        assert.equal(hiddenParagraphs.filter(paragraph => style(paragraph)?.startsWith('CodeLanguage')).length, 0);
+        assert.deepEqual(hiddenParagraphs.filter(paragraph => style(paragraph) === 'SourceCode').map(wordText), blocks.map(wordText),
+            'hidden badges preserve every styled code block');
+        assert.ok(wordElements(hiddenParagraphs.find(paragraph => style(paragraph) === 'SourceCode'), 'rStyle')
+            .some(element => wordValue(element) === 'KeywordTok'), 'hiding badges keeps highlighting');
     }
-    assert.ok(wordElements(blocks[0], 'rStyle').some(element => wordValue(element) === 'KeywordTok'));
-    const inline = paragraphs.find(paragraph => wordText(paragraph).startsWith('Inline '));
-    assert.notEqual(style(inline), 'SourceCode');
-    assert.equal(wordValue(wordElements(inline, 'rStyle')[0]), 'VerbatimChar');
-    assert.ok(paragraphs.some(paragraph => wordText(paragraph) === 'END_OF_CODE_TEST'));
-    assert.deepEqual(ops.warnings, []);
-    const hidden = archiveEntries(await convertPandoc('docx', saved, { html: '', theme: 'github', fontSize: 16, diagrams: [], warnings: [] },
-        status.path, operations(), { showCodeLanguage: false }));
-    const hiddenParagraphs = wordElements(xmlDocument(hidden.get('word/document.xml')), 'p');
-    assert.equal(hiddenParagraphs.filter(paragraph => style(paragraph) === 'CodeLanguage').length, 0);
-    assert.deepEqual(hiddenParagraphs.filter(paragraph => style(paragraph) === 'SourceCode').map(wordText), blocks.map(wordText),
-        'hidden badges preserve every styled code block');
-    assert.ok(wordElements(hiddenParagraphs.find(paragraph => style(paragraph) === 'SourceCode'), 'rStyle')
-        .some(element => wordValue(element) === 'KeywordTok'), 'hiding badges keeps highlighting');
     const epub = archiveEntries(await convertPandoc('epub', saved, { html: '', theme: 'github', fontSize: 16, diagrams: [], warnings: [] }, status.path, operations()));
     const html = [...epub].filter(([name]) => name.endsWith('.xhtml')).map(([, contents]) => contents.toString()).join('\n');
     assert.doesNotMatch(html, /Code Language|CodeLanguage/);
+});
+
+test('real DOCX counts exact source lines and preserves tabs and authored blank tails', { skip: !realTools }, async t => {
+    const directory = await temporary(t);
+    const status = await discoverTool('pandoc', process.env.EXPORT_PANDOC_PATH || '');
+    assert.equal(status.available, true, status.error);
+    const cases = [[], [''], ['', ''], ['one'], ['', '\tλ <&>  ', '', ''], ['WRAP ' + 'word '.repeat(180), 'LAST']];
+    const source = cases.map((lines, index) => '```' + (index % 2 ? 'python' : '') + '\n' +
+        (lines.length ? lines.join('\n') + '\n' : '') + '```\n').join('\n') +
+        '\n> ```text\n> QUOTED\n> \n> ```\n\n- Nested\n\n  ```js\n  \tNESTED\n  \n  ```\n\n```js\nOPEN\n\n';
+    const expected = [...cases, ['QUOTED', ''], ['\tNESTED', ''], ['OPEN', '']];
+    const saved = { sourcePath: path.join(directory, 'counts.md'), markdown: source, version: 1, theme: 'github', fontSize: 16 };
+    const prepared = { html: '', theme: 'github', fontSize: 16, diagrams: [], warnings: [] };
+    for (const position of ['top-left', 'top-right', 'bottom-left', 'bottom-right', 'hidden', 'off']) {
+        const entries = archiveEntries(await convertPandoc('docx', saved, prepared, status.path, operations(), {
+            showCodeLineCount: position !== 'off', showCodeLanguage: position !== 'hidden',
+            codeLanguagePosition: ['hidden', 'off'].includes(position) ? 'top-left' : position
+        }));
+        const document = xmlDocument(entries.get('word/document.xml'));
+        const paragraphs = wordElements(document, 'p');
+        const style = paragraph => wordValue(wordElements(paragraph, 'pStyle')[0]);
+        const blocks = paragraphs.filter(paragraph => style(paragraph) === 'SourceCode');
+        assert.deepEqual(blocks.map(wordText), expected.map(lines => lines.join('\n')), position + ': every code character survives');
+        const counts = paragraphs.filter(paragraph => style(paragraph) === 'CodeLineCount');
+        assert.deepEqual(counts.map(wordText), position === 'off' ? [] : expected.map(lines => 'Lines: ' + lines.length));
+        if (position !== 'off') for (const count of counts) {
+            const previous = count.previousElementSibling;
+            assert.ok(style(previous) === 'SourceCode' || style(previous)?.endsWith('WithCount'));
+        }
+        assert.ok(wordElements(blocks[4], 'rStyle').length, 'whole-block syntax highlighting is retained');
+        assert.equal(saved.markdown, source);
+    }
 });
 
 test('real Pandoc exports structured content, native math and original assets without active raw HTML', { skip: !realTools }, async t => {
@@ -444,7 +547,7 @@ test('real PDF adds declared-language badges after complete code and hides them 
         '<pre data-lang="rust"><code>' + long + '</code></pre><p>END_OF_PDF</p></body></html>';
     for (const showCodeLanguage of [undefined, false]) {
         const ops = operations();
-        const bytes = await convertPdf(html, status.path, ops, { showCodeLanguage });
+        const bytes = await convertPdf(html, status.path, ops, { showCodeLanguage, codeLanguagePosition: 'bottom-right' });
         const file = path.join(directory, showCodeLanguage === false ? 'hidden.pdf' : 'shown.pdf');
         await fs.writeFile(file, bytes);
         const text = (await runTool(process.env.EXPORT_PDFTOTEXT_PATH || 'pdftotext', [file, '-'])).stdout.toString();
@@ -459,6 +562,57 @@ test('real PDF adds declared-language badges after complete code and hides them 
         }
         assert.deepEqual(ops.warnings, []);
     }
+});
+
+test('real PDF places selectable labels at every corner and defaults to top-left', { skip: !realTools }, async t => {
+    const directory = await temporary(t);
+    const status = await discoverTool('browser', process.env.EXPORT_BROWSER_PATH || '');
+    assert.equal(status.available, true, status.error);
+    const html = '<!doctype html><html><head><style>pre{font:12px monospace;padding:8px}</style></head><body>' +
+        '<pre data-lang="js"><code>PLACEMENT_MARKER</code></pre></body></html>';
+    for (const position of [undefined, 'top-left', 'top-right', 'bottom-left', 'bottom-right']) {
+        const file = path.join(directory, (position || 'default') + '.pdf');
+        await fs.writeFile(file, await convertPdf(html, status.path, operations(), { codeLanguagePosition: position }));
+        const bbox = (await runTool(process.env.EXPORT_PDFTOTEXT_PATH || 'pdftotext', ['-bbox', file, '-'])).stdout.toString();
+        const document = xmlDocument(Buffer.from(bbox));
+        const words = [...document.getElementsByTagName('word')];
+        const label = words.find(word => word.textContent === 'JavaScript');
+        const code = words.find(word => word.textContent === 'PLACEMENT_MARKER');
+        assert.ok(label && code, 'label and code remain independently selectable text');
+        const top = !position || position.startsWith('top');
+        assert.equal(Number(label.getAttribute('yMin')) < Number(code.getAttribute('yMin')), top);
+        if (position?.endsWith('right')) assert.ok(Number(label.getAttribute('xMin')) > 400);
+        else assert.ok(Number(label.getAttribute('xMin')) < 100);
+    }
+});
+
+test('real PDF counts authored lines independently of labels, wrapping and display breaks', { skip: !realTools }, async t => {
+    const directory = await temporary(t);
+    const status = await discoverTool('browser', process.env.EXPORT_BROWSER_PATH || '');
+    assert.equal(status.available, true, status.error);
+    const html = '<html><head><style>pre{font:12px monospace;padding:8px}</style></head><body>' +
+        '<pre data-lang="js" data-export-code-lines="0"><code><br data-export-display-break></code></pre>' +
+        '<pre data-lang="" data-export-code-lines="1"><code><br data-export-display-break></code></pre>' +
+        '<pre data-lang="js" data-export-code-lines="4"><code><br>\tCOUNT_FIRST  <br><br><br data-export-display-break></code></pre>' +
+        '<pre data-lang="text" data-export-code-lines="2"><code>WRAP_START ' + 'word '.repeat(200) + 'WRAP_END<br>COUNT_LAST</code></pre></body></html>';
+    for (const position of ['top-left', 'top-right', 'bottom-left', 'bottom-right', 'hidden']) {
+        const file = path.join(directory, position + '.pdf');
+        await fs.writeFile(file, await convertPdf(html, status.path, operations(), {
+            showCodeLineCount: true, showCodeLanguage: position !== 'hidden', codeLanguagePosition: position === 'hidden' ? 'top-left' : position
+        }));
+        const bbox = xmlDocument((await runTool(process.env.EXPORT_PDFTOTEXT_PATH || 'pdftotext', ['-bbox', file, '-'])).stdout);
+        const words = [...bbox.getElementsByTagName('word')];
+        const counts = words.filter(word => word.textContent === 'Lines:');
+        assert.equal(counts.length, 4);
+        assert.deepEqual(counts.map(word => words[words.indexOf(word) + 1].textContent), ['0', '1', '4', '2']);
+        for (const count of counts) assert.ok(Number(count.getAttribute('xMin')) < 100, 'counts stay left aligned');
+        for (const marker of ['COUNT_FIRST', 'WRAP_START', 'WRAP_END', 'COUNT_LAST']) assert.equal(words.filter(word => word.textContent === marker).length, 1);
+        const lastCount = counts.at(-1), lastCode = words.find(word => word.textContent === 'COUNT_LAST');
+        assert.ok(Number(lastCount.getAttribute('yMin')) > Number(lastCode.getAttribute('yMin')));
+    }
+    const file = path.join(directory, 'default.pdf');
+    await fs.writeFile(file, await convertPdf(html, status.path, operations()));
+    assert.doesNotMatch((await runTool(process.env.EXPORT_PDFTOTEXT_PATH || 'pdftotext', [file, '-'])).stdout.toString(), /Lines:/);
 });
 
 test('real browser cancellation closes the worker and returns cancellation instead of a PDF', { skip: !realTools }, async () => {
@@ -496,4 +650,114 @@ test('real exports retain TOC destinations for equation headings and following h
         }
     }
     assert.equal(saved.markdown, source);
+});
+
+test('real PDF numbers logical code lines without numbering wrapped continuations', { skip: !realTools }, async t => {
+    const directory = await temporary(t);
+    const status = await discoverTool('browser', process.env.EXPORT_BROWSER_PATH || '');
+    assert.equal(status.available, true, status.error);
+    const fixtures = require('../fixtures/export-code-lines.cjs');
+    const escape = text => text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    const html = '<html><head><style>pre{font:12px/1.5 monospace;padding:8px;background:#f6f8fa} .token{color:#008000}</style></head><body>' +
+        fixtures.map(f => '<pre data-lang="' + escape(f.language) + '" data-export-code-lines="' + f.count + '"><code><span class="token">' + escape(f.lines.join('\n')) + '</span></code></pre>').join('') + '</body></html>';
+    for (const showCodeLanguage of [false, true]) for (const showCodeLineCount of [false, true]) {
+        const file = path.join(directory, `${showCodeLanguage}-${showCodeLineCount}.pdf`);
+        await fs.writeFile(file, await convertPdf(html, status.path, operations(), {
+            showCodeLineNumbers: true, showCodeLanguage, showCodeLineCount, codeLanguagePosition: 'bottom-left'
+        }));
+        const bbox = xmlDocument((await runTool(process.env.EXPORT_PDFTOTEXT_PATH || 'pdftotext', ['-bbox', file, '-'])).stdout);
+        const words = [...bbox.getElementsByTagName('word')];
+        // Code starts to the right of the generated gutter. Counts below the block have a different x position.
+        const numbers = words.filter(word => /^\d+$/.test(word.textContent) && Number(word.getAttribute('xMax')) < 75 && words[words.indexOf(word) - 1]?.textContent !== 'Lines:');
+        assert.deepEqual(numbers.map(word => Number(word.textContent)), fixtures.flatMap(f => Array.from({ length: f.count }, (_, i) => i + 1)));
+        const text = words.map(word => word.textContent).join(' ');
+        for (let n = 1; n <= 150; n++) if (n % 19) assert.equal(text.split('CODE_LINE_' + String(n).padStart(3, '0')).length - 1, 1);
+        assert.equal(text.split('WRAP_END').length - 1, 1);
+        const last = words.find(word => word.textContent.includes('CODE_LINE_150'));
+        const number = numbers.at(-1);
+        assert.ok(Math.abs(Number(last.getAttribute('yMin')) - Number(number.getAttribute('yMin'))) < 1, 'last number stays beside the last logical line');
+        assert.equal(words.filter(word => word.textContent === 'Lines:').length, showCodeLineCount ? fixtures.length : 0);
+    }
+});
+
+test('real PDF keeps one source number for a logical line spanning multiple pages', { skip: !realTools }, async t => {
+    const directory = await temporary(t);
+    const status = await discoverTool('browser', process.env.EXPORT_BROWSER_PATH || '');
+    assert.equal(status.available, true, status.error);
+    const file = path.join(directory, 'oversized.pdf');
+    const source = 'PAGE_WRAP ' + 'wrapping '.repeat(3000) + 'END_WRAPPED\nAFTER_WRAP';
+    await fs.writeFile(file, await convertPdf('<style>pre{font:12px/1.5 monospace;padding:8px}</style><pre data-lang="text" data-export-code-lines="2"><code>' + source + '</code></pre>', status.path, operations(), { showCodeLineNumbers: true }));
+    const bbox = xmlDocument((await runTool(process.env.EXPORT_PDFTOTEXT_PATH || 'pdftotext', ['-bbox', file, '-'])).stdout);
+    const words = [...bbox.getElementsByTagName('word')];
+    assert.ok(bbox.getElementsByTagName('page').length > 2);
+    assert.deepEqual(words.filter(word => /^\d+$/.test(word.textContent)).map(word => word.textContent), ['1', '2']);
+    for (const marker of ['PAGE_WRAP', 'END_WRAPPED', 'AFTER_WRAP']) assert.equal(words.filter(word => word.textContent === marker).length, 1);
+    assert.equal(words.filter(word => word.textContent === 'wrapping').length, 3000);
+});
+
+test('real DOCX native numbering preserves whole-block highlighting and exact authored lines', { skip: !realTools }, async t => {
+    const directory = await temporary(t), status = await discoverTool('pandoc', process.env.EXPORT_PANDOC_PATH || '');
+    assert.equal(status.available, true, status.error);
+    const fixtures = require('../fixtures/export-code-lines.cjs');
+    const markdown = fixtures.map(f => '```' + f.language + '\n' + (f.lines.length ? f.lines.join('\n') + '\n' : '') + '```\n').join('\n') +
+        '\n> ```python\n> \tQUOTED λ\n> \n> ```\n\n- Item\n\n  ```js\n  NESTED\n  \n  ```\n\nRaw <span>literal</span> and $x^2$.\n';
+    const expected = [...fixtures.filter(f => f.count).map(f => f.lines), ['\tQUOTED λ', ''], ['NESTED', '']];
+    const saved = { sourcePath: path.join(directory, 'numbers.md'), markdown, version: 1, theme: 'github', fontSize: 16 };
+    const prepared = { html: '', theme: 'github', fontSize: 16, diagrams: [], warnings: [] };
+    for (const position of ['top-left', 'top-right', 'bottom-left', 'bottom-right', 'hidden', 'no-count']) {
+        const bytes = await convertPandoc('docx', saved, prepared, status.path, operations(), {
+            showCodeLineNumbers: true, showCodeLineCount: position !== 'no-count', showCodeLanguage: position !== 'hidden',
+            codeLanguagePosition: ['hidden', 'no-count'].includes(position) ? 'top-left' : position
+        });
+        const entries = archiveEntries(bytes), xml = entries.get('word/document.xml').toString();
+        assert.doesNotMatch(xml, /binary-markdown-code-/);
+        const paragraphs = wordElements(xmlDocument(xml), 'p').filter(p => wordValue(wordElements(p, 'pStyle')[0]) === 'SourceCode');
+        const groups = new Map();
+        for (const paragraph of paragraphs) {
+            const id = wordValue(wordElements(paragraph, 'numId')[0]);
+            if (!id) continue;
+            if (!groups.has(id)) groups.set(id, []);
+            groups.get(id).push(wordText(paragraph));
+        }
+        assert.deepEqual([...groups.values()], expected, position);
+        assert.ok(paragraphs.some(p => wordElements(p, 'rStyle').some(style => wordValue(style) === 'StringTok')), 'syntax token runs survive');
+        const numbering = xmlDocument(entries.get('word/numbering.xml'));
+        for (const id of groups.keys()) {
+            const instance = wordElements(numbering, 'num').find(n => n.getAttribute('w:numId') === id);
+            assert.equal(wordValue(wordElements(instance, 'startOverride')[0]), '1');
+        }
+        assert.equal(xmlDocument(xml).getElementsByTagName('m:oMath').length, 1, 'unrelated native equations survive');
+        assert.equal(saved.markdown, markdown);
+    }
+});
+
+test('real DOCX numbered code keeps its paragraph style when readers insert the next line', { skip: !realTools }, async t => {
+    const directory = await temporary(t), status = await discoverTool('pandoc', process.env.EXPORT_PANDOC_PATH || '');
+    assert.equal(status.available, true, status.error);
+    const lines = ['def greet(name):', '\tmessage = "Hello " + name  ', '    return message'];
+    const second = ['SECOND_FIRST = 1', 'SECOND_LAST = 2'];
+    const markdown = [lines, second].map(block => '```python\n' + block.join('\n') + '\n```').join('\n\n');
+    const saved = { sourcePath: path.join(directory, 'editing.md'), markdown, version: 1, theme: 'github', fontSize: 16 };
+    const prepared = { html: '', theme: 'github', fontSize: 16, diagrams: [], warnings: [] };
+    const convert = showCodeLineNumbers => convertPandoc('docx', saved, prepared, status.path, operations(), {
+        showCodeLineNumbers, showCodeLineCount: true, codeLanguagePosition: 'top-left'
+    });
+    const numbered = archiveEntries(await convert(true)), plain = archiveEntries(await convert(false));
+    const numberedStyles = xmlDocument(numbered.get('word/styles.xml'));
+    const plainStyles = xmlDocument(plain.get('word/styles.xml'));
+    const style = document => wordElements(document, 'style').find(element => wordValue(element, 'styleId') === 'SourceCode');
+    const next = wordElements(style(numberedStyles), 'next')[0];
+    assert.equal(wordValue(next), 'SourceCode', 'Enter at line end must not switch numbered code to BodyText');
+    assert.equal(wordValue(wordElements(style(plainStyles), 'next')[0]), 'BodyText', 'numbering-off continuation is unchanged');
+    next.setAttribute('w:val', 'BodyText');
+    assert.equal(numberedStyles.documentElement.outerHTML, plainStyles.documentElement.outerHTML,
+        'the continuation target is the only style change; shading, token styles and unrelated styles survive');
+    const code = wordElements(xmlDocument(numbered.get('word/document.xml')), 'p')
+        .filter(paragraph => wordValue(wordElements(paragraph, 'pStyle')[0]) === 'SourceCode');
+    assert.deepEqual(code.map(wordText), [...lines, ...second]);
+    const ids = code.map(paragraph => wordValue(wordElements(paragraph, 'numId')[0]));
+    assert.ok(ids.every(Boolean));
+    assert.deepEqual(ids.slice(0, 3), [ids[0], ids[0], ids[0]]);
+    assert.deepEqual(ids.slice(3), [ids[3], ids[3]]);
+    assert.notEqual(ids[0], ids[3], 'independent code blocks retain separate native numbering');
 });

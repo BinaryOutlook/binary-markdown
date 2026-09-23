@@ -13,8 +13,8 @@ contextBridge.exposeInMainWorld('hostBridge', {
     reportBlur: () => ipcRenderer.send('blur'),
     reportOutlineState: () => { /* VS Code extension setting only */ },
     openLink: (href: string) => ipcRenderer.send('open-link', href),
-    requestInsertLink: (text: string) => ipcRenderer.send('insert-link', text),
-    requestInsertImage: () => ipcRenderer.send('insert-image'),
+    requestInsertLink: (text: string, requestId?: string) => ipcRenderer.send('insert-link', text, requestId),
+    requestInsertImage: (requestId?: string) => ipcRenderer.send('insert-image', requestId),
     requestSetImageDir: () => ipcRenderer.send('set-image-dir'),
     saveImageAndInsert: (dataUrl: string, fileName?: string) =>
         ipcRenderer.send('save-image', dataUrl, fileName),

@@ -11,7 +11,7 @@ Use a workspace you trust and a local folder you can write to. The source must h
 ## Export a saved document
 
 1. Open the intended document in Binary Markdown and save it.
-2. Open the sharing-arrow **Export** menu beside the VS Code-logo button.
+2. Open the sharing-arrow **Export** menu. At narrow widths, find it under **More toolbar actions**.
 3. Choose **HTML**, **PDF**, **DOCX** (Word), or **EPUB**.
 4. Wait for completion, then open the output path shown in the result. Review any warnings about content that needed a fallback.
 
@@ -49,11 +49,56 @@ The setting is captured when export begins. Changing it does not reload the edit
 
 ## Code language tabs
 
-`binary-markdown.export.showCodeLanguage` (default `true`) controls language tabs in DOCX and direct PDF exports. Change it in User, Workspace or folder Settings. Disable it to keep code styling without labels. The setting is captured once per export, so changing it during a job affects the next export.
+`binary-markdown.export.showCodeLanguage` (default `true`) controls language tabs in DOCX and direct PDF exports. Change it in User, Workspace or folder Settings. Disable it to keep code styling without labels. Visibility and placement are captured once per export, so changing them during a job affects the next export.
 
-DOCX code remains editable and uses a light background, border and a language tab attached below the block. Common language aliases use readable names; unknown names remain literal text, and unlabeled blocks receive no invented label. PDF tabs use the export appearance. HTML, EPUB and inline code keep their existing behavior.
+Choose `binary-markdown.export.codeLanguagePosition` for the tab's corner:
 
-Long code blocks can span pages. In DOCX, keeping the label attached can move a long block to a fresh page and leave space on the previous page. Reader-specific pagination and final visual appearance require inspection in your target reader.
+| Value | Placement |
+| --- | --- |
+| `top-left` (default) | Left end of a header immediately above the code |
+| `top-right` | Right end of that header |
+| `bottom-left` | Left end of a footer immediately below the code |
+| `bottom-right` | Right end of that footer; the previous placement |
+
+The new unset default moves visible labels to top-left for both new and existing installations. Select `bottom-right` to retain the previous position. Stored visibility choices remain unchanged; hiding a label retains its selected position for later use.
+
+DOCX code remains editable and uses a light background, with a border in the default unnumbered layout; PDF code and labels remain selectable text. Common language aliases use readable names; unknown names remain literal text, and unlabeled blocks receive no invented label. PDF tabs use the export appearance. HTML, EPUB and inline code keep their existing behavior.
+
+Long code blocks can span pages. A top label stays with the start of its block, and a bottom label stays with its end; labels are not repeated on continuation pages. In DOCX, keeping a footer attached can move a long block to a fresh page and leave space on the previous page. Reader-specific pagination and final visual appearance require inspection in your target reader.
+
+## Total code-line counts
+
+Enable `binary-markdown.export.showCodeLineCount` (default `false`) to show the total at the bottom-left of each PDF or DOCX code block. It works independently of language labels, including unlabeled blocks. A bottom language label uses a separate row above the count so the two cannot overlap. The setting and the interface language used for the count label are captured for each export.
+
+Counts describe authored source lines. Leading, internal and trailing blank lines count; spaces and tabs remain content. The newline separating the final authored line from the closing fence is not another line. Visual wrapping and page breaks add no lines.
+
+| Code between the fences | Count |
+| --- | --- |
+| No line between the opening and closing fences | 0 |
+| One deliberately empty line | 1 |
+| One line containing `x` | 1 |
+| `x`, followed by one empty line | 2 |
+| An empty line, `x`, then two empty lines | 4 |
+
+These are export options; totals never enter Markdown or the editor's code-copy text. A DOCX total is export-time text: adding or deleting code in a document reader does not recalculate it. Re-export from the edited Markdown to refresh totals and language labels. DOCX conversion preserves tabs and authored blank tails even when totals are disabled. Reader selection/copy behavior can differ from the stored source; verify it in your target reader. Counts apply to ordinary code blocks, not rendered equations or Mermaid diagrams.
+
+A historical LibreOffice development build placed a long block's count on the following page. That case did not reproduce in stable LibreOffice 26.2.6.3 across the five tested label configurations. Inspect long blocks in your target reader; this does not establish Word pagination or other reader versions.
+
+## Code-line numbers
+
+Enable `binary-markdown.export.showCodeLineNumbers` (default `false`) to add a gutter beside logical code lines in PDF and DOCX. Numbers restart at 1 for each block, including authored blank lines. Empty blocks have no number. Wrapped continuations and page breaks do not add numbers. Language labels and total counts remain independently configurable.
+
+Code text, indentation and highlighting remain in the document. Numbers are generated presentation content, not saved Markdown. PDF text extraction can include them and can group the gutter separately from the code; extracted whitespace can also differ from the source. Do not rely on a PDF for an exact code copy. Interactive selection/copy and spoken reading order remain reader-specific checks.
+
+DOCX numbering remains experimental pending the named-reader checks. It uses editable paragraphs with automatic list numbers, preserves the original highlighting, and keeps the gutter outside the shaded code area. Disabling numbering retains the existing code-block layout. Highlighting reflects the exported source and is not recalculated after editing in Word or another reader. Automatic wrapping does not create a numbered paragraph; inserting a paragraph and inserting a soft break are different reader operations. See the [reader checkpoint](../reports/validation/2026-09-21-docx-reader-checkpoint.md) for the named reader versions, observed results and pending editing checks. In the tested Word and LibreOffice versions, Enter at the end of a nonempty numbered code line continues the code style and numbering. Enter on an already empty numbered line ends the list and can change formatting or consume the blank paragraph; that editing case remains unresolved. Copying can include list numbers depending on the reader and selection; number-free copying is not guaranteed.
+
+## Underlined text
+
+The editor's paired, attribute-free `<u>text</u>` representation is supported in HTML, PDF, DOCX, and EPUB. HTML/PDF retain the rendered underline. DOCX uses native underlined text runs, and EPUB uses semantic underline markup, preserving supported bold, italic, strikethrough, links, lists, quotations, and table cells. Code and escaped literal examples remain literal. Other raw HTML, attributed tags, and unmatched tags keep their existing fallback behavior; this does not enable arbitrary HTML.
+
+HTML/PDF retain the editor's existing visible backslashes in escaped tag examples such as `\<u>text\</u>`. DOCX/EPUB remove those Markdown escapes while keeping the tags literal. Use code spans or fences when you need consistent literal examples across formats.
+
+Conversion checks verify structure and source preservation. Appearance, interactive editing, copying, and accessibility can vary by reader; inspect the exported document in the reader you use. In particular, converter/XML checks alone do not establish Microsoft Word or a dedicated EPUB reader's behavior.
 
 ## Output and progress
 
@@ -66,7 +111,7 @@ The editor displays the actual stage and an indeterminate activity indicator. Co
 - HTML and PDF reuse supported editor rendering. HTML retains the editor theme; PDF uses the white/theme setting above. Inline `$...$` / `\(...\)`, display `$$...$$` / `\[...\]`, and fenced `math` blocks render with KaTeX. Backslash recognition follows `binary-markdown.math.backslashDelimiters` (enabled by default). Saved tables of contents render as links to headings. Footnotes remain visible source with warnings. Invalid supported math/diagrams receive source fallbacks.
 - PDF uses simple pagination. Generous blank areas are acceptable; oversized text and tables split, while graphics scale to fit.
 - DOCX and EPUB prioritize editable structure and native math. Enabled backslash equation delimiters are converted to dollars in an export-only copy held in memory; the source file is preserved, and temporary conversion files are removed when the job ends. TeX command support and layout can differ from KaTeX. Raw HTML is exported as readable source when its behavior cannot be preserved.
-- DOCX code blocks have a pale background and border. DOCX and direct PDF exports can show the declared language (for example, `python`) in a small italic tab attached to the complete block's lower-right edge. The tab has a sloped left edge, a straight right edge, rounded bottom corners, and a matching background and border. Blocks without a language do not receive a guessed label. DOCX code remains editable, with syntax colouring for languages Pandoc recognizes; PDF retains its browser-rendered code formatting.
+- DOCX code blocks have a pale background and, when unnumbered, a border. DOCX and direct PDF exports can show the declared language (for example, `python`) in a small italic tab at the selected corner. The outline faces the adjoining code edge and uses a matching background and border. Blocks without a language do not receive a guessed label. DOCX code remains editable, with syntax coloring for languages Pandoc recognizes; PDF retains its browser-rendered code formatting.
 - Supported images retain source resolution. Unsupported image formats, unreadable resources and unrepresentable diagrams receive visible fallbacks.
 - Only needed referenced resources may be fetched. Conversion remains local. Standalone HTML embeds supported resources for offline viewing.
 - Interface and settings labels are localized; detailed conversion/resource diagnostics and fallback explanations currently remain English.

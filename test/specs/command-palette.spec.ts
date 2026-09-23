@@ -68,8 +68,9 @@ test.describe('コマンドパレット', () => {
 
         // 全アイテム数を確認
         const allItems = await page.locator('.command-palette-item').count();
-        expect(allItems).toBe(23); // Includes inline equations and the table of contents command.
+        expect(allItems).toBe(24); // Includes underline, inline equations, and the table of contents command.
         await expect(page.locator('.command-palette-item[data-action="toc"]')).toHaveCount(1);
+        await expect(page.locator('.command-palette-item[data-action="underline"]')).toHaveCount(1);
 
         // "heading" でフィルタ
         const input = page.locator('.command-palette-input');
@@ -112,7 +113,9 @@ test.describe('コマンドパレット', () => {
         await editor.focus();
         const modifier = process.platform === 'darwin' ? 'Meta' : 'Control';
         await page.keyboard.press(`${modifier}+/`);
-        await page.waitForTimeout(100);
+        // Opening the palette moves focus on the next animation frame.
+        await expect(page.locator('.command-palette-input')).toBeFocused();
+        await expect(page.locator('.command-palette-item').first()).toHaveClass(/selected/);
 
         // ↑ で最後のアイテムへ
         await page.keyboard.press('ArrowUp');

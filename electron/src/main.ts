@@ -3,9 +3,11 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { FileManager } from './file-manager';
 import { SettingsManager } from './settings-manager';
-import { generateEditorHtml, writeHtmlToTempFile } from './html-generator';
+import { generateEditorHtml, writeHtmlToTempFile, getResourcePath } from './html-generator';
+const { widthModes, isValidWidth, normalizeWidthMode, alignments, normalizeAlignment } = require(getResourcePath('src/shared/editor-layout.js')) as typeof import('../../src/shared/editor-layout');
 import { buildMenu } from './menu';
 import { setupUpdateChecker, checkForUpdates } from './updater';
+import { showLinkDialog } from './link-dialog';
 
 /**
  * Binary Markdown — Electron Main Process
@@ -102,6 +104,13 @@ function createWindow(filePath?: string): BrowserWindow {
         const html = generateEditorHtml(content, {
             theme: settings.theme,
             fontSize: settings.fontSize,
+            editorWidthMode: settings.editorWidthMode,
+            editorMaxWidth: settings.editorMaxWidth,
+            editorAlignment: settings.editorAlignment,
+            editorWidthIndicators: settings.editorWidthIndicators,
+            mathSourceWrap: settings.mathSourceWrap,
+            mathSourcePosition: settings.mathSourcePosition,
+            codeLanguageOrder: settings.codeLanguageOrder,
             toolbarMode: settings.toolbarMode,
             tableToolbarPosition: settings.tableToolbarPosition,
             documentBaseUri: `file://${docDir}/`,
@@ -187,41 +196,41 @@ ipcMain.on('open-link', (_event, href: string) => {
     shell.openExternal(href);
 });
 
-ipcMain.on('insert-link', async (event, text: string) => {
+ipcMain.on('insert-link', async (event, text: string, requestId?: string) => {
     const win = BrowserWindow.fromWebContents(event.sender);
     if (!win) return;
-    // Simple prompt using dialog (Electron has no built-in input dialog)
-    // Use executeJavaScript as a workaround
-    const url = await win.webContents.executeJavaScript(
-        `window.prompt('Enter URL:', 'https://')`
-    );
-    if (url) {
-        win.webContents.send('host-message', {
-            type: 'insertLinkHtml',
-            url,
-            text: text || url,
-        });
+    try {
+        const result = await showLinkDialog(win, text, getI18nMessages());
+        if (!win.isDestroyed()) win.webContents.send('host-message', result
+            ? { type: 'insertLinkHtml', ...result, requestId }
+            : { type: 'insertCancelled', requestId });
+    } catch (error) {
+        console.error('Link dialog could not complete:', error);
+        if (!win.isDestroyed()) win.webContents.send('host-message', { type: 'insertCancelled', requestId });
     }
 });
 
-ipcMain.on('insert-image', async (event) => {
+ipcMain.on('insert-image', async (event, requestId?: string) => {
     const win = BrowserWindow.fromWebContents(event.sender);
     if (!win) return;
-    const result = await dialog.showOpenDialog(win, {
-        filters: [{ name: 'Images', extensions: ['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp'] }],
-        properties: ['openFile'],
-    });
-    if (result.canceled || result.filePaths.length === 0) return;
-
-    const fm = windows.get(win);
-    if (!fm) return;
-    const imgResult = await fm.readAndInsertImage(result.filePaths[0]);
-    if (imgResult) {
-        win.webContents.send('host-message', {
-            type: 'insertImageHtml',
-            markdownPath: imgResult.markdownPath,
-            displayUri: imgResult.displayUri,
+    let inserted = false;
+    try {
+        const result = await dialog.showOpenDialog(win, {
+            filters: [{ name: 'Images', extensions: ['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp'] }],
+            properties: ['openFile'],
         });
+        if (result.canceled || result.filePaths.length === 0 || win.isDestroyed()) return;
+        const fm = windows.get(win);
+        if (!fm) return;
+        const imgResult = await fm.readAndInsertImage(result.filePaths[0]);
+        if (imgResult && !win.isDestroyed()) {
+            win.webContents.send('host-message', { type: 'insertImageHtml', ...imgResult, requestId });
+            inserted = true;
+        }
+    } catch (error) {
+        console.error('Image dialog could not complete:', error);
+    } finally {
+        if (!inserted && !win.isDestroyed()) win.webContents.send('host-message', { type: 'insertCancelled', requestId });
     }
 });
 
@@ -285,12 +294,113 @@ ipcMain.on('focus', () => { /* no-op */ });
 ipcMain.on('blur', () => { /* no-op */ });
 
 // Settings IPC
-ipcMain.on('settings-save', async (_event, key: string, value: unknown) => {
+ipcMain.on('settings-save', async (event, key: string, value: unknown) => {
+    if (key === 'theme') {
+        if (!['github', 'sepia', 'night', 'dark', 'minimal', 'perplexity', 'things'].includes(value as string)) return;
+        settingsManager.set('theme', value as string);
+        for (const [win] of windows) {
+            if (!win.isDestroyed()) win.webContents.send('host-message', { type: 'theme', value });
+        }
+        return;
+    }
     if (key === 'tableToolbarPosition') {
         if (!['auto', 'top-left', 'top-right', 'bottom-left', 'bottom-right', 'left', 'right', 'top-bar'].includes(value as string)) return;
-        settingsManager.set('tableToolbarPosition', value as string);
+        try {
+            settingsManager.set('tableToolbarPosition', value as string);
+        } catch {
+            const message = getI18nMessages().tablePositionSaveFailed || 'Could not save the table toolbar position. The previous setting remains active.';
+            settingsManager.refreshSetting('tableToolbarPosition', message);
+            event.sender.send('host-message', { type: 'tableToolbarPositionError' });
+            return;
+        }
+        settingsManager.refreshSetting('tableToolbarPosition');
         for (const [win] of windows) {
             if (!win.isDestroyed()) win.webContents.send('host-message', { type: 'tableToolbarPosition', value });
+        }
+        return;
+    }
+    if (key === 'mathSourceWrap') {
+        if (typeof value !== 'boolean') return;
+        try { settingsManager.set(key, value); } catch {
+            settingsManager.refreshSetting(key, getI18nMessages().mathSourceWrapSaveFailed);
+            return;
+        }
+        settingsManager.refreshSetting(key);
+        for (const [win] of windows) {
+            if (!win.isDestroyed()) win.webContents.send('host-message', { type: 'mathSourceWrap', value });
+        }
+        return;
+    }
+    if (key === 'mathSourcePosition') {
+        if (value !== 'above' && value !== 'below') return;
+        try { settingsManager.set(key, value); } catch {
+            settingsManager.refreshSetting(key, getI18nMessages().mathSourcePositionSaveFailed);
+            return;
+        }
+        settingsManager.refreshSetting(key);
+        for (const [win] of windows) {
+            if (!win.isDestroyed()) win.webContents.send('host-message', { type: 'mathSourcePosition', value });
+        }
+        return;
+    }
+    if (key === 'codeLanguageOrder') {
+        if (value !== 'default' && value !== 'a-z' && value !== 'z-a') return;
+        try { settingsManager.set(key, value); } catch {
+            settingsManager.refreshSetting(key, getI18nMessages().codeLanguageOrderSaveFailed);
+            return;
+        }
+        settingsManager.refreshSetting(key);
+        for (const [win] of windows) {
+            if (!win.isDestroyed()) win.webContents.send('host-message', { type: 'codeLanguageOrder', value });
+        }
+        return;
+    }
+    if (key === 'editorWidthIndicators') {
+        if (typeof value !== 'boolean') return;
+        try { settingsManager.set(key, value); } catch {
+            settingsManager.refreshSetting(key, getI18nMessages().widthIndicatorsSaveFailed);
+            return;
+        }
+        settingsManager.refreshSetting(key);
+        for (const [win] of windows) {
+            if (!win.isDestroyed()) win.webContents.send('host-message', { type: 'editorWidthIndicators', value });
+        }
+        return;
+    }
+    if (key === 'editorWidthMode' || key === 'editorMaxWidth' || key === 'editorAlignment') {
+        const valid = key === 'editorWidthMode' ? widthModes.some(mode => mode === value) :
+            key === 'editorAlignment' ? alignments.some(alignment => alignment === value) : isValidWidth(value);
+        if (!valid) {
+            settingsManager.refreshSetting(key, getI18nMessages()[key === 'editorAlignment' ? 'editorAlignmentInvalid' : 'editorWidthInvalid']);
+            return;
+        }
+        try {
+            if (key === 'editorWidthMode') settingsManager.set(key, normalizeWidthMode(value));
+            else if (key === 'editorAlignment') settingsManager.set(key, normalizeAlignment(value));
+            else settingsManager.set(key, value as number);
+        } catch {
+            settingsManager.refreshSetting(key, getI18nMessages()[key === 'editorAlignment' ? 'editorAlignmentSaveFailed' : 'editorWidthSaveFailed']);
+            return;
+        }
+        settingsManager.refreshSetting(key);
+        const settings = settingsManager.getAll();
+        for (const [win] of windows) {
+            if (!win.isDestroyed()) win.webContents.send('host-message', { type: 'editorWidth',
+                mode: settings.editorWidthMode, maxWidth: settings.editorMaxWidth, alignment: settings.editorAlignment });
+        }
+        return;
+    }
+    if (key === 'toolbarMode') {
+        if (value !== 'full' && value !== 'simple') return;
+        try {
+            settingsManager.set('toolbarMode', value);
+        } catch {
+            settingsManager.refreshSetting('toolbarMode', getI18nMessages().toolbarModeSaveFailed);
+            return;
+        }
+        settingsManager.refreshSetting('toolbarMode');
+        for (const [win] of windows) {
+            if (!win.isDestroyed()) win.webContents.send('host-message', { type: 'toolbarMode', value });
         }
         return;
     }
@@ -354,7 +464,7 @@ app.whenReady().then(() => {
         },
         openPreferences: () => {
             const win = BrowserWindow.getFocusedWindow();
-            if (win) settingsManager.openSettingsWindow(win);
+            if (win) settingsManager.openSettingsWindow(win, getI18nMessages());
         },
         checkForUpdates: () => {
             const win = BrowserWindow.getFocusedWindow();

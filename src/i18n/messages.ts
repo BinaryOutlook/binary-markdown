@@ -37,6 +37,53 @@ export interface Messages {
 }
 
 export interface WebviewMessages {
+  mathSourceWrapLabel: string;
+  mathSourceWrapHelp: string;
+  mathSourceWrapSaveFailed: string;
+
+  mathSourcePositionLabel: string;
+  mathSourcePositionHelp: string;
+  mathSourcePositionAbove: string;
+  mathSourcePositionBelow: string;
+  mathSourcePositionSaveFailed: string;
+
+  codeLanguageOrderLabel: string;
+  codeLanguageOrderHelp: string;
+  codeLanguageOrderDefault: string;
+  codeLanguageOrderAscending: string;
+  codeLanguageOrderDescending: string;
+  codeLanguageOrderSaveFailed: string;
+
+  languagePickerLabel: string;
+  languagePickerPlaceholder: string;
+  languagePickerNoResults: string;
+  languagePickerCurrent: string;
+  languagePickerPlainText: string;
+  languagePickerMath: string;
+  languagePickerMermaid: string;
+
+  widthIndicatorsLabel: string;
+  widthIndicatorsHelp: string;
+  widthBoundaryExplanation: string;
+  widthIndicatorsSaveFailed: string;
+
+  editorAlignmentLabel: string;
+  editorAlignmentLeft: string;
+  editorAlignmentCenter: string;
+  editorAlignmentRight: string;
+  editorAlignmentHelp: string;
+  editorAlignmentInvalid: string;
+  editorAlignmentSaveFailed: string;
+
+  editorWidthLabel: string;
+  editorWidthDefault: string;
+  editorWidthFull: string;
+  editorWidthCustom: string;
+  editorMaxWidthLabel: string;
+  editorWidthHelp: string;
+  editorWidthInvalid: string;
+  editorWidthSaveFailed: string;
+
   tableControls: string;
   tableMenu: string;
   tablePlacement: string;

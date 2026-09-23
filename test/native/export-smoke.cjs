@@ -327,7 +327,7 @@ async function run(settings, owner) {
         fs.writeFileSync(report, JSON.stringify({ harness: harnessIdentity(), host: receipt(owner), packageSha256: hash(fs.readFileSync(settings.package)), receipts }, null, 2));
         console.log(name, JSON.stringify(details));
     };
-    const available = ['identity', 'filesystem', 'formats', 'saves', 'edges', 'ui', 'equations', 'pdf-background', 'selection', 'immutable', 'offline', 'document-aux', 'links', 'codeblocks', 'table-placement'];
+    const available = ['identity', 'filesystem', 'formats', 'saves', 'edges', 'ui', 'equations', 'pdf-background', 'selection', 'immutable', 'offline', 'document-aux', 'links', 'codeblocks', 'table-placement', 'table-content', 'table-row', 'text-toolbar', 'insert-menu', 'underline', 'underline-exports', 'editor-width', 'editor-alignment', 'width-indicators', 'language-picker', 'language-order', 'equation-source-position', 'equation-source-wrap', 'code-label-position', 'code-line-count', 'pdf-code-numbers', 'docx-code-numbers', 'blockquotes'];
     const groups = settings.suite === 'all' ? available : [settings.suite];
     assert.ok(groups.every(value => available.includes(value)), 'Suite must be all, ' + available.join(', '));
     const htmlExports = [];
@@ -503,9 +503,27 @@ async function run(settings, owner) {
         await h.driver({ action: 'config', key: 'export.pandocPath', value: settings.pandoc });
         if (groups.includes('ui')) await appearanceCases(h, owner, record);
         if (groups.includes('table-placement')) await tablePlacementCase(h, owner, record);
+        if (groups.includes('table-content')) await tableContentCase(h, owner, record);
+        if (groups.includes('table-row')) await tableRowCase(h, owner, record);
+        if (groups.includes('insert-menu')) await insertMenuCase(h, owner, record);
+        if (groups.includes('width-indicators')) await widthIndicatorsCase(h, owner, record);
+        if (groups.includes('language-picker')) await languagePickerCase(h, owner, record);
+        if (groups.includes('equation-source-wrap')) await equationWrapCase(h, owner, record);
+        if (groups.includes('equation-source-position')) await equationPositionCase(h, owner, record);
+        if (groups.includes('language-order')) await languageOrderCase(h, owner, record);
+        if (groups.includes('editor-alignment')) await editorAlignmentCase(h, owner, record);
+        if (groups.includes('editor-width')) await editorWidthCase(h, owner, record);
+        if (groups.includes('underline')) await underlineCase(h, owner, record);
+        if (groups.includes('code-label-position')) await codeLabelPositionCase(h, owner, record);
+        if (groups.includes('code-line-count')) await codeLabelPositionCase(h, owner, record, true);
+        if (groups.includes('pdf-code-numbers')) await codeLabelPositionCase(h, owner, record, true, 'pdf');
+        if (groups.includes('docx-code-numbers')) await codeLabelPositionCase(h, owner, record, true, 'docx');
+        if (groups.includes('underline-exports')) await underlineExportCase(h, owner, record);
+        if (groups.includes('text-toolbar')) await textToolbarCase(h, owner, record);
         if (groups.includes('equations')) await equationCases(h, owner, record);
         if (groups.includes('links')) await linkCases(h, owner, record);
         if (groups.includes('codeblocks')) await codeblockCases(h, owner, record);
+        if (groups.includes('blockquotes')) await require('./blockquote-contrast.cjs').blockquoteCases(h, owner, record);
         if (groups.includes('pdf-background')) await pdfBackgroundCases(h, owner, record);
         if (groups.includes('selection')) await selectionCase(h, owner, record);
         if (groups.includes('immutable')) await immutableCase(h, owner, record);
@@ -629,14 +647,76 @@ async function codeblockCases(h, owner, record) {
     } finally { if (connection) connection.close(); }
 }
 
+async function textToolbarCase(h, owner, record) {
+    const { toolbarGeometry } = require('./text-toolbar.cjs');
+    const file = 'text-toolbar.md', source = 'Paragraph target.\n';
+    const previous = (await h.driver({ action: 'inspect' })).toolbarModeScopes;
+    await h.driver({ action: 'close' });
+    fs.writeFileSync(path.join(owner.workspace, file), source);
+    let connection;
+    try {
+        for (const scope of ['workspace', 'global']) await h.driver({ action: 'config', key: 'toolbarMode', ...(scope === 'workspace' ? { scope } : {}), value: null });
+        connection = await h.open(file);
+        assert.equal(await connection.evaluate('document.documentElement.dataset.toolbarMode'), 'full');
+        await connection.evaluate(`(() => {
+            window.__toolbarRetained = document.querySelector('#editor p');
+            const node = window.__toolbarRetained.firstChild, range = document.createRange();
+            range.setStart(node, 10); range.setEnd(node, 16); document.getElementById('editor').focus();
+            getSelection().removeAllRanges(); getSelection().addRange(range);
+        })()`);
+        const cases = [['global', 'simple', 'simple'], ['global', 'full', 'full'], ['workspace', 'simple', 'simple'],
+            ['global', 'simple', 'simple'], ['workspace', 'full', 'full'], ['global', null, 'full'], ['workspace', null, 'full']];
+        for (const [scope, value, effective] of cases) {
+            await h.driver({ action: 'config', key: 'toolbarMode', ...(scope === 'workspace' ? { scope } : {}), value });
+            await h.until(() => connection.evaluate(`document.documentElement.dataset.toolbarMode === '${effective}'`));
+            assert.equal(await connection.evaluate(`window.__toolbarRetained === document.querySelector('#editor p') && getSelection().toString() === 'target'`), true);
+            const state = await h.driver({ action: 'inspect' });
+            assert.equal(state.toolbarModeScopes[scope], value === null ? undefined : value);
+            assert.equal(state.documents.find(document => path.basename(document.path) === file).dirty, false);
+            record('text-toolbar-setting', { scope, value, effective, sameEditorAndSelection: true, cleanSource: true });
+        }
+        await h.workbench(async page => {
+            const frame = page.locator('iframe.webview:visible');
+            const before = await frame.evaluate(node => node.style.maxWidth);
+            try {
+                for (const width of [400, 680]) {
+                    await frame.evaluate(async (node, width) => {
+                        node.style.maxWidth = width + 'px';
+                        await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+                    }, width);
+                    await h.until(() => connection.evaluate(`(${toolbarGeometry.toString()})().clipped.length === 0`));
+                    const geometry = await connection.evaluate(`(${toolbarGeometry.toString()})()`);
+                    assert.deepEqual(geometry.overlaps, []);
+                    record('text-toolbar-layout', { geometry, route: 'installed webview frame constraints' });
+                }
+            } finally { await frame.evaluate((node, before) => { node.style.maxWidth = before; }, before); }
+        });
+        await connection.send('Input.insertText', { text: 'replacement' });
+        await h.until(async () => (await h.driver({ action: 'inspect' })).documents.some(document => document.text.includes('replacement')));
+        await h.driver({ action: 'config', key: 'toolbarMode', value: 'simple' });
+        await h.until(() => connection.evaluate(`document.documentElement.dataset.toolbarMode === 'simple'`));
+        await connection.evaluate(`document.querySelector('#toolbar [data-action="undo"]').click()`);
+        await h.driver({ action: 'save' });
+        assert.equal(fs.readFileSync(path.join(owner.workspace, file), 'utf8'), source);
+        connection.close(); connection = null;
+        await h.driver({ action: 'close' });
+        connection = await h.open(file);
+        assert.equal(await connection.evaluate('document.documentElement.dataset.toolbarMode'), 'simple');
+        record('text-toolbar-reopen', { explicitSimpleRetained: true, modeChangePreservesUndo: true, nativeSaveUnchanged: true });
+    } finally {
+        connection?.close();
+        for (const scope of ['workspace', 'global']) await h.driver({ action: 'config', key: 'toolbarMode', ...(scope === 'workspace' ? { scope } : {}), value: previous[scope] ?? null });
+    }
+}
+
 async function tablePlacementCase(h, owner, record) {
-    const file = 'table-placement.md';
+    const file = 'table-placement-' + Date.now() + '.md';
     const source = '# Table controls\n\n| Item | State |\n| --- | --- |\n| One | Ready |\n| Two | Draft |\n';
     fs.writeFileSync(path.join(owner.workspace, file), source);
     assert.equal((await h.driver({ action: 'inspect' })).appearance.tableToolbarPosition, 'auto');
     let connection = await h.open(file);
     const controls = '.table-toolbar:not(.table-toolbar-measure)';
-    const selectCell = () => connection.evaluate(`const cell=document.querySelector('#editor td');cell.focus();const range=document.createRange();range.selectNodeContents(cell);range.collapse(true);getSelection().removeAllRanges();getSelection().addRange(range);cell.click()`);
+    const selectCell = () => connection.evaluate(`(() => { const cell=document.querySelector('#editor td');cell.focus();const range=document.createRange();range.selectNodeContents(cell);range.collapse(true);getSelection().removeAllRanges();getSelection().addRange(range);cell.click(); })()`);
     try {
         await selectCell();
         await connection.evaluate('window.__tablePlacementProbe="retained"');
@@ -648,6 +728,38 @@ async function tablePlacementCase(h, owner, record) {
             const state = await h.driver({ action: 'inspect' });
             assert.equal(state.documents.find(document => path.basename(document.path) === file).dirty, false);
         }
+        const positions = ['top-left', 'top-right', 'bottom-left', 'bottom-right', 'left', 'right', 'top-bar', 'auto'];
+        for (const scope of ['global', 'workspace']) {
+            await h.driver({ action: 'config', key: 'tableToolbarPosition', value: 'auto' });
+            await h.driver({ action: 'config', key: 'tableToolbarPosition', scope: 'workspace', value: scope === 'workspace' ? 'auto' : null });
+            for (const value of positions) {
+                await h.until(() => connection.evaluate(`document.querySelector('${controls}').classList.contains('visible') || !document.querySelector('.table-toolbar-toggle').hidden`));
+                await connection.evaluate(`(() => {
+                    const bar = document.querySelector('${controls}');
+                    if (!bar.classList.contains('visible')) document.querySelector('.table-toolbar-toggle').click();
+                    bar.querySelector('[data-action="placement"]').click();
+                    if (!['auto', 'top-bar'].includes(${JSON.stringify(value)})) document.querySelector('[data-position="fixed"]').click();
+                    document.querySelector('.table-placement-menu [data-position="${value}"]').click();
+                })()`);
+                const state = await h.until(async () => {
+                    const state = await h.driver({ action: 'inspect' });
+                    return state.appearance.tableToolbarPosition === value && state;
+                }, 'one picker choice persists at ' + scope + ' scope: ' + value);
+                await h.until(() => connection.evaluate(`document.documentElement.dataset.tableToolbarPosition === '${value}' && ('${value}' === 'auto' || document.querySelector('${controls}').dataset.placement === '${value}')`), 'one picker choice moves the visible toolbar: ' + value);
+                assert.equal(state.tablePositionScopes[scope], value);
+                if (scope === 'workspace') assert.equal(state.tablePositionScopes.global, 'auto');
+                else assert.equal(state.tablePositionScopes.workspace, undefined);
+                assert.equal(state.documents.find(document => path.basename(document.path) === file).dirty, false);
+                assert.equal(await connection.evaluate(`window.__tablePlacementProbe === 'retained' && document.querySelector('#editor td').contains(getSelection().anchorNode) && getSelection().anchorOffset === 0`), true);
+                assert.equal(fs.readFileSync(path.join(owner.workspace, file), 'utf8'), source);
+                record('table-picker', { scope, value, singleSelection: true, selectionPreserved: true, sourceUnchanged: true });
+            }
+        }
+        await connection.evaluate(`window.hostBridge.setTableToolbarPosition('left'); window.hostBridge.setTableToolbarPosition('right')`);
+        await h.until(async () => (await h.driver({ action: 'inspect' })).tablePositionScopes.workspace === 'right');
+        await h.until(() => connection.evaluate(`document.documentElement.dataset.tableToolbarPosition === 'right'`));
+        record('table-picker-rapid', { lastChoiceWins: true, workspaceScopePreserved: true });
+        await h.driver({ action: 'config', key: 'tableToolbarPosition', scope: 'workspace', value: null });
         await h.driver({ action: 'config', key: 'tableToolbarPosition', value: 'top-bar' });
         await h.until(() => connection.evaluate(`document.querySelector('${controls}').dataset.placement==='top-bar'`));
         await connection.evaluate(`const toggle=document.querySelector('.table-toolbar-toggle');if(!toggle.hidden)toggle.click();document.querySelector('${controls} [data-action="placement"]').click();document.querySelector('[data-position="fixed"]').click();document.querySelector('[data-position="bottom-right"]').click()`);
@@ -664,10 +776,663 @@ async function tablePlacementCase(h, owner, record) {
         await h.until(() => connection.evaluate('document.querySelectorAll("#editor tr").length===3'));
         await h.driver({ action: 'save' });
         record('table-placement', { liveConfiguration: true, explicitPreferenceRetained: true, pickerPersistedAcrossReopen: true, actionAndUndo: true });
+        const saved = fs.readFileSync(path.join(owner.workspace, file), 'utf8');
+        await h.workbench(async page => {
+            const { tableOverflowChecks, installedEditor } = require('./table-toolbar-overflow.cjs');
+            const frame = page.locator('iframe.webview:visible');
+            const previous = await frame.evaluate(node => ({ maxWidth: node.style.maxWidth, maxHeight: node.style.maxHeight }));
+            try {
+                await tableOverflowChecks({
+                    editor: installedEditor(connection, h), keyboard: page.keyboard,
+                    canEnlargeWindow: false,
+                    resize: async (width, height) => {
+                        const size = await frame.evaluate(async (node, { width, height }) => {
+                            node.style.maxWidth = width + 'px'; node.style.maxHeight = height + 'px';
+                            await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+                            return { width: node.clientWidth, height: node.clientHeight };
+                        }, { width, height });
+                        await h.until(() => connection.evaluate(`innerWidth === ${size.width} && innerHeight === ${size.height}`), 'installed viewport resize delivered');
+                    },
+                    setPosition: value => h.driver({ action: 'config', key: 'tableToolbarPosition', value }),
+                    record: (name, details) => record(name, { ...details, resizeRoute: 'installed webview frame constraints; DOM activation; OS window resize remains manual' }),
+                });
+                assert.equal(fs.readFileSync(path.join(owner.workspace, file), 'utf8'), saved, 'Window resizing and undo leave saved bytes unchanged');
+            } finally {
+                await frame.evaluate((node, previous) => Object.assign(node.style, previous), previous);
+            }
+        });
     } finally {
         if (connection) connection.close();
+        await h.driver({ action: 'config', key: 'tableToolbarPosition', scope: 'workspace', value: null });
         await h.driver({ action: 'config', key: 'tableToolbarPosition', value: 'auto' });
     }
+}
+
+async function widthIndicatorsCase(h, owner, record) {
+    const { source, indicatorChecks } = require('./width-indicators.cjs');
+    const { installedEditor } = require('./table-toolbar-overflow.cjs');
+    const previous = await h.driver({ action: 'inspect' });
+    const file = 'width-indicators.md', filePath = path.join(owner.workspace, file);
+    await h.driver({ action: 'close' }); fs.writeFileSync(filePath, source);
+    let connection = await h.open(file);
+    try {
+        for (const scope of [undefined, 'workspace']) {
+            const before = await indicatorChecks({ editor: installedEditor(connection, h),
+                set: (key, value) => h.driver({ action: 'config', key, value, scope }), until: h.until, record });
+            assert.equal((await h.driver({ action: 'inspect' })).documents.find(document => samePath(document.path, filePath)).dirty, false);
+            assert.equal(fs.readFileSync(filePath, 'utf8'), source);
+            await connection.evaluate(`(() => { const node = [...document.querySelectorAll('#editor > p')].find(node => node.textContent === 'Plain target.').firstChild;
+                const range = document.createRange(); range.setStart(node, 6); range.setEnd(node, 12); getSelection().removeAllRanges(); getSelection().addRange(range);
+                document.querySelector('[data-action="bold"]').click(); })()`);
+            await h.driver({ action: 'config', key: 'editorWidthIndicators', value: false, scope });
+            await connection.evaluate(`document.querySelector('[data-action="undo"]').click()`);
+            assert.equal(await connection.evaluate('htmlToMarkdown()'), before);
+            // Wait for host edits before native Save; #11 owns overlapping saves.
+            await h.until(async () => (await h.driver({ action: 'inspect' })).documents.some(document => samePath(document.path, filePath) && document.text === source), 'width undo reached host');
+            await h.driver({ action: 'save' });
+            record('width-indicator-scope', { scope: scope || 'user', cleanBeforeEdit: true, undoPreserved: true });
+        }
+        await h.driver({ action: 'config', key: 'editorWidthMode', value: 'custom', scope: 'workspace' });
+        await h.driver({ action: 'config', key: 'editorMaxWidth', value: 1000, scope: 'workspace' });
+        await h.driver({ action: 'config', key: 'editorAlignment', value: 'right', scope: 'workspace' });
+        await h.driver({ action: 'config', key: 'editorWidthIndicators', value: false, scope: 'workspace' });
+        await h.sourceMode(connection);
+        assert.equal(await connection.evaluate('document.getElementById("sourceEditor").value'), source);
+        assert.equal(await connection.evaluate('getComputedStyle(document.getElementById("sourceEditor")).maxWidth'), '860px');
+        connection.close(); connection = null;
+        await h.driver({ action: 'close' }); connection = await h.open(file);
+        assert.equal(await connection.evaluate('document.documentElement.dataset.editorWidthMode'), 'custom');
+        assert.equal(await connection.evaluate('getComputedStyle(document.getElementById("editor")).maxWidth'), '1000px');
+        assert.equal(await connection.evaluate('document.documentElement.dataset.editorAlignment'), 'right');
+        assert.equal(fs.readFileSync(filePath, 'utf8'), source);
+        assert.equal(await connection.evaluate('document.getElementById("editorWidthGuide").hidden'), true);
+        record('width-indicators-reopened', { persistedWorkspaceWidth: true, sourceAndFileUnchanged: true });
+    } finally {
+        connection?.close();
+        for (const key of ['editorWidthMode', 'editorMaxWidth', 'editorAlignment', 'editorWidthIndicators']) {
+            await h.driver({ action: 'config', key, value: previous.editorWidthScopes[key].workspace ?? null, scope: 'workspace' });
+            await h.driver({ action: 'config', key, value: previous.editorWidthScopes[key].global ?? null });
+        }
+    }
+}
+
+async function editorAlignmentCase(h, owner, record) {
+    const { source, alignmentChecks } = require('./editor-alignment.cjs');
+    const { installedEditor } = require('./table-toolbar-overflow.cjs');
+    const previous = await h.driver({ action: 'inspect' });
+    const file = 'editor-alignment.md', filePath = path.join(owner.workspace, file);
+    await h.driver({ action: 'close' }); fs.writeFileSync(filePath, source);
+    let connection = await h.open(file);
+    try {
+        for (const scope of [undefined, 'workspace']) {
+            const before = await alignmentChecks({ editor: installedEditor(connection, h),
+                set: (key, value) => h.driver({ action: 'config', key, value, scope }), until: h.until, record });
+            assert.equal((await h.driver({ action: 'inspect' })).documents.find(document => samePath(document.path, filePath)).dirty, false);
+            assert.equal(fs.readFileSync(filePath, 'utf8'), source);
+            await connection.evaluate(`(() => { const node = [...document.querySelectorAll('#editor > p')].find(node => node.textContent === 'Plain target.').firstChild;
+                const range = document.createRange(); range.setStart(node, 6); range.setEnd(node, 12); getSelection().removeAllRanges(); getSelection().addRange(range);
+                document.querySelector('[data-action="bold"]').click(); })()`);
+            await h.driver({ action: 'config', key: 'editorAlignment', value: 'left', scope });
+            await connection.evaluate(`document.querySelector('[data-action="undo"]').click()`);
+            assert.equal(await connection.evaluate('htmlToMarkdown()'), before);
+            // Wait for host edits before native Save; #11 owns overlapping saves.
+            await h.until(async () => (await h.driver({ action: 'inspect' })).documents.some(document => samePath(document.path, filePath) && document.text === source), 'width undo reached host');
+            await h.driver({ action: 'save' });
+            record('editor-alignment-scope', { scope: scope || 'user', cleanBeforeEdit: true, undoPreserved: true });
+        }
+        await h.driver({ action: 'config', key: 'editorWidthMode', value: 'custom', scope: 'workspace' });
+        await h.driver({ action: 'config', key: 'editorMaxWidth', value: 1000, scope: 'workspace' });
+        await h.driver({ action: 'config', key: 'editorAlignment', value: 'right', scope: 'workspace' });
+        await h.sourceMode(connection);
+        assert.equal(await connection.evaluate('document.getElementById("sourceEditor").value'), source);
+        assert.equal(await connection.evaluate('getComputedStyle(document.getElementById("sourceEditor")).maxWidth'), '860px');
+        connection.close(); connection = null;
+        await h.driver({ action: 'close' }); connection = await h.open(file);
+        assert.equal(await connection.evaluate('document.documentElement.dataset.editorWidthMode'), 'custom');
+        assert.equal(await connection.evaluate('getComputedStyle(document.getElementById("editor")).maxWidth'), '1000px');
+        assert.equal(await connection.evaluate('document.documentElement.dataset.editorAlignment'), 'right');
+        assert.equal(fs.readFileSync(filePath, 'utf8'), source);
+        record('editor-alignment-reopened', { persistedWorkspaceWidth: true, sourceAndFileUnchanged: true });
+    } finally {
+        connection?.close();
+        for (const key of ['editorWidthMode', 'editorMaxWidth', 'editorAlignment']) {
+            await h.driver({ action: 'config', key, value: previous.editorWidthScopes[key].workspace ?? null, scope: 'workspace' });
+            await h.driver({ action: 'config', key, value: previous.editorWidthScopes[key].global ?? null });
+        }
+    }
+}
+
+async function editorWidthCase(h, owner, record) {
+    const { source, widthChecks } = require('./editor-width.cjs');
+    const { installedEditor } = require('./table-toolbar-overflow.cjs');
+    const previous = await h.driver({ action: 'inspect' });
+    const file = 'editor-width.md', filePath = path.join(owner.workspace, file);
+    await h.driver({ action: 'close' }); fs.writeFileSync(filePath, source);
+    let connection = await h.open(file);
+    try {
+        for (const scope of [undefined, 'workspace']) {
+            const before = await widthChecks({ editor: installedEditor(connection, h),
+                set: (key, value) => h.driver({ action: 'config', key, value, scope }), until: h.until, record });
+            assert.equal((await h.driver({ action: 'inspect' })).documents.find(document => samePath(document.path, filePath)).dirty, false);
+            assert.equal(fs.readFileSync(filePath, 'utf8'), source);
+            await connection.evaluate(`document.querySelector('[data-action="bold"]').click()`);
+            await h.driver({ action: 'config', key: 'editorWidthMode', value: 'full', scope });
+            await connection.evaluate(`document.querySelector('[data-action="undo"]').click()`);
+            assert.equal(await connection.evaluate('htmlToMarkdown()'), before);
+            // Wait for host edits before native Save; #11 owns overlapping saves.
+            await h.until(async () => (await h.driver({ action: 'inspect' })).documents.some(document => samePath(document.path, filePath) && document.text === source), 'width undo reached host');
+            await h.driver({ action: 'save' });
+            record('editor-width-scope', { scope: scope || 'user', cleanBeforeEdit: true, undoPreserved: true });
+        }
+        await h.driver({ action: 'config', key: 'editorWidthMode', value: 'custom', scope: 'workspace' });
+        await h.driver({ action: 'config', key: 'editorMaxWidth', value: 1000, scope: 'workspace' });
+        await h.sourceMode(connection);
+        assert.equal(await connection.evaluate('document.getElementById("sourceEditor").value'), source);
+        assert.equal(await connection.evaluate('getComputedStyle(document.getElementById("sourceEditor")).maxWidth'), '860px');
+        connection.close(); connection = null;
+        await h.driver({ action: 'close' }); connection = await h.open(file);
+        assert.equal(await connection.evaluate('document.documentElement.dataset.editorWidthMode'), 'custom');
+        assert.equal(await connection.evaluate('getComputedStyle(document.getElementById("editor")).maxWidth'), '1000px');
+        assert.equal(fs.readFileSync(filePath, 'utf8'), source);
+        record('editor-width-reopened', { persistedWorkspaceWidth: true, sourceAndFileUnchanged: true });
+    } finally {
+        connection?.close();
+        for (const key of ['editorWidthMode', 'editorMaxWidth']) {
+            await h.driver({ action: 'config', key, value: previous.editorWidthScopes[key].workspace ?? null, scope: 'workspace' });
+            await h.driver({ action: 'config', key, value: previous.editorWidthScopes[key].global ?? null });
+        }
+    }
+}
+
+async function equationWrapCase(h, owner, record) {
+    const { source, equationWrapChecks } = require('./equation-source-wrap.cjs');
+    const { installedEditor } = require('./table-toolbar-overflow.cjs');
+    const initial = await h.driver({ action: 'inspect' });
+    const previous = initial.mathSourceWrapScopes;
+    const file = 'equation-source-wrap.md', filePath = path.join(owner.workspace, file);
+    // Preserve background editors when beginning this independent case.
+    fs.writeFileSync(filePath, source);
+    let connection;
+    try {
+        await h.driver({ action: 'config', key: 'mathSourceWrap', value: null, scope: 'workspace' });
+        await h.driver({ action: 'config', key: 'mathSourceWrap', value: null });
+        await h.driver({ action: 'config', key: 'mathSourcePosition', value: null, scope: 'workspace' });
+        connection = await h.open(file);
+        assert.equal(await connection.evaluate('document.documentElement.dataset.mathSourceWrap'), 'false');
+        const changed = await h.workbench(page => equationWrapChecks({
+            editor: installedEditor(connection, h), keyboard: page.keyboard,
+            setWrap: value => h.driver({ action: 'config', key: 'mathSourceWrap', value }),
+            setPosition: value => h.driver({ action: 'config', key: 'mathSourcePosition', value }), record,
+            save: async expected => {
+                // The queued-edit/native-save overlap remains tracked by #11.
+                await h.until(async () => (await h.driver({ action: 'inspect' })).documents.some(document => samePath(document.path, filePath) && document.text === expected), 'equation input reached host');
+                await h.driver({ action: 'save' }); assert.equal(fs.readFileSync(filePath, 'utf8'), expected);
+            }
+        }));
+        const set = async (value, scope) => {
+            await h.driver({ action: 'config', key: 'mathSourceWrap', value, scope });
+            const expected = (await h.driver({ action: 'inspect' })).appearance.mathSourceWrap;
+            await h.until(() => connection.evaluate(`document.documentElement.dataset.mathSourceWrap === ${JSON.stringify(String(expected))}`), 'equation wrapping configuration');
+        };
+        await set(false, 'workspace'); await set(true);
+        assert.equal(await connection.evaluate('document.documentElement.dataset.mathSourceWrap'), 'false');
+        await set(null, 'workspace');
+        assert.equal(await connection.evaluate('document.documentElement.dataset.mathSourceWrap'), 'true');
+        assert.equal((await h.driver({ action: 'inspect' })).documents.find(document => samePath(document.path, filePath)).dirty, false);
+        await h.sourceMode(connection); assert.equal(await connection.evaluate('document.getElementById("sourceEditor").value'), changed);
+        connection.close(); connection = null; await h.driver({ action: 'close' }); connection = await h.open(file);
+        assert.equal(await connection.evaluate('document.documentElement.dataset.mathSourceWrap'), 'true');
+        assert.equal(await connection.evaluate('window.htmlToMarkdown()'), changed);
+        assert.equal(fs.readFileSync(filePath, 'utf8'), changed);
+        record('equation-source-wrap-persistence', { workspaceOverride: true, userFallback: true, reopen: true, sourceAndCleanStatePreserved: true });
+    } finally {
+        connection?.close(); await h.driver({ action: 'close' });
+        await h.driver({ action: 'config', key: 'mathSourceWrap', value: previous.workspace ?? null, scope: 'workspace' });
+        await h.driver({ action: 'config', key: 'mathSourceWrap', value: previous.global ?? null });
+        await h.driver({ action: 'config', key: 'mathSourcePosition', value: initial.mathSourcePositionScopes.workspace ?? null, scope: 'workspace' });
+        await h.driver({ action: 'config', key: 'mathSourcePosition', value: initial.mathSourcePositionScopes.global ?? null });
+    }
+}
+
+async function equationPositionCase(h, owner, record) {
+    const { source, equationPositionChecks } = require('./equation-source-position.cjs');
+    const { installedEditor } = require('./table-toolbar-overflow.cjs');
+    const previous = (await h.driver({ action: 'inspect' })).mathSourcePositionScopes;
+    const file = 'equation-source-position.md', filePath = path.join(owner.workspace, file);
+    // Open our fixture without closing a background editor left by a prior case.
+    // That editor may intentionally contain unsaved cancellation-test input.
+    fs.writeFileSync(filePath, source);
+    let connection;
+    try {
+        await h.driver({ action: 'config', key: 'mathSourcePosition', value: null, scope: 'workspace' });
+        await h.driver({ action: 'config', key: 'mathSourcePosition', value: null });
+        connection = await h.open(file);
+        assert.equal(await connection.evaluate('document.documentElement.dataset.mathSourcePosition'), 'above');
+        const changed = await h.workbench(page => equationPositionChecks({
+            editor: installedEditor(connection, h), keyboard: page.keyboard,
+            set: value => h.driver({ action: 'config', key: 'mathSourcePosition', value }), record,
+            save: async expected => {
+                // The queued-edit/native-save overlap remains tracked by #11.
+                await h.until(async () => (await h.driver({ action: 'inspect' })).documents.some(document => samePath(document.path, filePath) && document.text === expected), 'equation input reached host');
+                await h.driver({ action: 'save' }); assert.equal(fs.readFileSync(filePath, 'utf8'), expected);
+            }
+        }));
+        const set = async (value, scope) => {
+            await h.driver({ action: 'config', key: 'mathSourcePosition', value, scope });
+            const expected = (await h.driver({ action: 'inspect' })).appearance.mathSourcePosition;
+            await h.until(() => connection.evaluate(`document.documentElement.dataset.mathSourcePosition === ${JSON.stringify(expected)}`), 'equation placement configuration');
+        };
+        await set('above', 'workspace'); await set('below');
+        assert.equal(await connection.evaluate('document.documentElement.dataset.mathSourcePosition'), 'above');
+        await set(null, 'workspace');
+        assert.equal(await connection.evaluate('document.documentElement.dataset.mathSourcePosition'), 'below');
+        assert.equal((await h.driver({ action: 'inspect' })).documents.find(document => samePath(document.path, filePath)).dirty, false);
+        await h.sourceMode(connection); assert.equal(await connection.evaluate('document.getElementById("sourceEditor").value'), changed);
+        connection.close(); connection = null; await h.driver({ action: 'close' }); connection = await h.open(file);
+        assert.equal(await connection.evaluate('document.documentElement.dataset.mathSourcePosition'), 'below');
+        assert.equal(await connection.evaluate('window.htmlToMarkdown()'), changed);
+        assert.equal(fs.readFileSync(filePath, 'utf8'), changed);
+        record('equation-source-position-persistence', { workspaceOverride: true, userFallback: true, reopen: true, sourceAndCleanStatePreserved: true });
+    } finally {
+        connection?.close(); await h.driver({ action: 'close' });
+        await h.driver({ action: 'config', key: 'mathSourcePosition', value: previous.workspace ?? null, scope: 'workspace' });
+        await h.driver({ action: 'config', key: 'mathSourcePosition', value: previous.global ?? null });
+    }
+}
+
+async function languageOrderCase(h, owner, record) {
+    const { source, languageOrderChecks, alphabetical } = require('./language-order.cjs');
+    const { installedEditor } = require('./table-toolbar-overflow.cjs');
+    const previous = (await h.driver({ action: 'inspect' })).languageOrderScopes;
+    const file = 'language-order.md', filePath = path.join(owner.workspace, file);
+    await h.driver({ action: 'close' }); fs.writeFileSync(filePath, source);
+    let connection;
+    try {
+        await h.driver({ action: 'config', key: 'codeLanguageOrder', value: null, scope: 'workspace' });
+        await h.driver({ action: 'config', key: 'codeLanguageOrder', value: null });
+        connection = await h.open(file);
+        assert.equal(await connection.evaluate('document.documentElement.dataset.codeLanguageOrder'), 'default');
+        await h.workbench(async page => languageOrderChecks({
+            editor: installedEditor(connection, h), keyboard: page.keyboard,
+            set: value => h.driver({ action: 'config', key: 'codeLanguageOrder', value }), record
+        }));
+        const set = async (value, scope) => {
+            await h.driver({ action: 'config', key: 'codeLanguageOrder', value, scope });
+            const expected = (await h.driver({ action: 'inspect' })).appearance.codeLanguageOrder;
+            await h.until(() => connection.evaluate(`document.documentElement.dataset.codeLanguageOrder === ${JSON.stringify(expected)}`), 'language order configuration');
+        };
+        await set('a-z', 'workspace'); await set('default');
+        assert.equal(await connection.evaluate('document.documentElement.dataset.codeLanguageOrder'), 'a-z');
+        await set(null, 'workspace');
+        assert.equal(await connection.evaluate('document.documentElement.dataset.codeLanguageOrder'), 'default');
+        await set('z-a', 'workspace');
+        assert.equal((await h.driver({ action: 'inspect' })).documents.find(document => samePath(document.path, filePath)).dirty, false);
+        await h.sourceMode(connection);
+        assert.equal(await connection.evaluate('document.getElementById("sourceEditor").value'), source);
+        connection.close(); connection = null; await h.driver({ action: 'close' }); connection = await h.open(file);
+        assert.equal(await connection.evaluate('document.documentElement.dataset.codeLanguageOrder'), 'z-a');
+        await connection.evaluate('document.querySelector(".code-lang-tag").click()');
+        assert.deepEqual(await connection.evaluate('[...document.querySelectorAll("[role=option]")].map(node => node.dataset.language)'), [...alphabetical].reverse());
+        assert.equal(fs.readFileSync(filePath, 'utf8'), source);
+        record('language-order-persistence', { workspaceOverride: true, userFallback: true, reopen: true, sourceAndCleanStatePreserved: true });
+    } finally {
+        connection?.close(); await h.driver({ action: 'close' });
+        await h.driver({ action: 'config', key: 'codeLanguageOrder', value: previous.workspace ?? null, scope: 'workspace' });
+        await h.driver({ action: 'config', key: 'codeLanguageOrder', value: previous.global ?? null });
+    }
+}
+
+async function languagePickerCase(h, owner, record) {
+    const { source, languagePickerChecks } = require('./language-picker.cjs');
+    const { installedEditor } = require('./table-toolbar-overflow.cjs');
+    const previousLanguage = (await h.driver({ action: 'inspect' })).appearance.language;
+    const file = 'languages.md', filePath = path.join(owner.workspace, file);
+    await h.driver({ action: 'close' }); fs.writeFileSync(filePath, source);
+    let connection = await h.open(file);
+    try {
+        let changed;
+        await h.workbench(async page => {
+            changed = await languagePickerChecks({ editor: installedEditor(connection, h), keyboard: page.keyboard, record,
+                save: async expected => {
+                    // The queued-edit/native-save overlap remains tracked by #11.
+                    await h.until(async () => (await h.driver({ action: 'inspect' })).documents.some(document => samePath(document.path, filePath) && document.text === expected), 'language choice reached host');
+                    await h.driver({ action: 'save' }); assert.equal(fs.readFileSync(filePath, 'utf8'), expected);
+                }
+            });
+        });
+        await h.sourceMode(connection);
+        assert.equal(await connection.evaluate('document.getElementById("sourceEditor").value'), changed);
+        connection.close(); connection = null;
+        await h.driver({ action: 'close' }); connection = await h.open(file);
+        assert.equal(await connection.evaluate('document.querySelector("pre").dataset.lang'), 'cpp');
+        assert.equal(fs.readFileSync(filePath, 'utf8'), changed);
+        record('language-picker-reopened', { sourceRoundTrip: true, savedLanguageAndWhitespace: true });
+        connection.close(); connection = null; await h.driver({ action: 'close' });
+        await h.driver({ action: 'config', key: 'language', value: 'zh-CN' });
+        connection = await h.open(file);
+        assert.equal(await connection.evaluate('document.querySelector(".code-lang-tag").getAttribute("aria-label")'), '代码语言: cpp');
+        await connection.evaluate('document.querySelector(".code-lang-tag").click()');
+        assert.equal(await connection.evaluate('document.querySelector(".lang-selector-search").placeholder'), '搜索名称或别名');
+        await h.workbench(async page => {
+            await page.keyboard.insertText('纯文本');
+            assert.deepEqual(await connection.evaluate('[...document.querySelectorAll(".lang-selector-item")].map(node => node.dataset.language)'), ['plaintext']);
+            await page.keyboard.press('Escape');
+        });
+        assert.equal(fs.readFileSync(filePath, 'utf8'), changed);
+        assert.equal((await h.driver({ action: 'inspect' })).documents.find(document => samePath(document.path, filePath)).dirty, false);
+        record('language-picker-localized', { language: 'zh-CN', localizedLabelAndSearch: true, sourceAndCleanStatePreserved: true });
+    } finally {
+        connection?.close(); await h.driver({ action: 'close' });
+        await h.driver({ action: 'config', key: 'language', value: previousLanguage });
+    }
+}
+
+async function underlineCase(h, owner, record) {
+    const { source, underlineChecks } = require('./underline.cjs');
+    const { installedEditor } = require('./table-toolbar-overflow.cjs');
+    const previous = await h.driver({ action: 'inspect' });
+    const file = 'underline.md', filePath = path.join(owner.workspace, file);
+    await h.driver({ action: 'close' }); fs.writeFileSync(filePath, source);
+    await h.driver({ action: 'config', key: 'toolbarMode', scope: 'workspace', value: 'full' });
+    let connection = await h.open(file);
+    try {
+        let before;
+        await h.workbench(async page => {
+            before = await underlineChecks({ editor: installedEditor(connection, h), keyboard: page.keyboard,
+                modifier: process.platform === 'darwin' ? 'Meta' : 'Control', record,
+                save: async expected => {
+                    // The queued-edit/native-save overlap remains tracked by #11.
+                    await h.until(async () => (await h.driver({ action: 'inspect' })).documents.some(document => samePath(document.path, filePath) && document.text === expected), 'underlined content reached host');
+                    await h.driver({ action: 'save' });
+                    assert.equal(fs.readFileSync(filePath, 'utf8'), expected);
+                }
+            });
+        });
+        await h.sourceMode(connection);
+        assert.equal(await connection.evaluate('document.getElementById("sourceEditor").value'), before);
+        connection.close(); connection = null;
+        await h.driver({ action: 'close' }); connection = await h.open(file);
+        assert.equal(await connection.evaluate('document.querySelectorAll("#editor u").length'), 1);
+        assert.equal(fs.readFileSync(filePath, 'utf8'), before);
+        record('underline-reopened', { sourceRoundTrip: true, nativeSave: true, restoredContent: true });
+    } finally {
+        connection?.close();
+        await h.driver({ action: 'config', key: 'toolbarMode', scope: 'workspace', value: previous.toolbarModeScopes.workspace ?? null });
+    }
+}
+
+async function codeLabelPositionCase(h, owner, record, countMode = false, numberMode = false) {
+    const { JSDOM } = require('jsdom');
+    const name = numberMode ? numberMode + '-code-numbers' : countMode ? 'code-line-count' : 'code-label-position';
+    const file = name + '.md', filePath = path.join(owner.workspace, file);
+    const source = '# Labels\n\n```js\nFIRST_MARKER\n\nLAST_MARKER\n' + (countMode ? '\n' : '') +
+        '```\n\n```\nUNLABELED_MARKER\n```\n' + (countMode ? '\n```\n```\n\n```\n\n```\n' : '');
+    const previous = (await h.driver({ action: 'inspect' })).exportCodeScopes;
+    fs.writeFileSync(filePath, source);
+    let connection;
+    try {
+        for (const key of Object.keys(previous)) {
+            await h.driver({ action: 'config', key, value: null, scope: 'workspace' });
+            await h.driver({ action: 'config', key, value: null });
+        }
+        connection = await h.open(file);
+        const before = await connection.evaluate('document.getElementById("editor").innerHTML');
+        for (const position of [null, 'top-left', 'top-right', 'bottom-left', 'bottom-right', 'hidden']) {
+            const showCount = countMode && position !== null && (!numberMode || position.startsWith('bottom'));
+            await h.driver({ action: 'config', key: 'export.showCodeLanguage', value: position !== 'hidden' });
+            await h.driver({ action: 'config', key: 'export.codeLanguagePosition', value: position === 'hidden' ? 'top-left' : position });
+            await h.driver({ action: 'config', key: 'export.showCodeLineCount', value: showCount ? true : null });
+            await h.driver({ action: 'config', key: 'export.showCodeLineNumbers', value: numberMode && position !== null ? true : null });
+            for (const format of numberMode ? [numberMode] : ['pdf', 'docx']) {
+                const result = await h.exportFile(connection, file, format, true);
+                let text;
+                if (format === 'pdf') {
+                    const xml = execFileSync(process.env.EXPORT_PDFTOTEXT_PATH || 'pdftotext', ['-bbox', result.outputPath, '-'], { encoding: 'utf8' });
+                    const document = new JSDOM(xml, { contentType: 'text/xml' }).window.document;
+                    const words = [...document.getElementsByTagName('word')]; text = words.map(word => word.textContent).join(' ');
+                    const counts = words.filter(word => word.textContent === 'Lines:');
+                    assert.deepEqual(counts.map(word => words[words.indexOf(word) + 1].textContent), showCount ? ['4', '1', '0', '1'] : []);
+                    for (const count of counts) assert.ok(Number(count.getAttribute('xMin')) < 100);
+                    const countValues = new Set(counts.map(word => words[words.indexOf(word) + 1]));
+                    const numbers = words.filter(word => /^\d+$/.test(word.textContent) && !countValues.has(word));
+                    assert.deepEqual(numbers.map(word => word.textContent), numberMode && position !== null ? ['1', '2', '3', '4', '1', '1'] : []);
+                    const label = words.find(word => word.textContent === 'JavaScript');
+                    assert.equal(Boolean(label), position !== 'hidden');
+                    if (label) {
+                        const code = words.find(word => word.textContent === 'FIRST_MARKER');
+                        assert.equal(Number(label.getAttribute('yMin')) < Number(code.getAttribute('yMin')), !position || position.startsWith('top'));
+                        assert.equal(Number(label.getAttribute('xMin')) > 400, Boolean(position?.endsWith('right')));
+                    }
+                } else {
+                    const document = new JSDOM(archiveText(result.outputPath, 'word/document.xml'), { contentType: 'text/xml' }).window.document;
+                    text = [...document.getElementsByTagName('w:t')].map(node => node.textContent).join('');
+                    const styles = [...document.getElementsByTagName('w:pStyle')].map(node => node.getAttribute('w:val'));
+                    const labels = styles.filter(value => value.startsWith('CodeLanguage'));
+                    const expected = (position === 'bottom-right' ? 'CodeLanguage' : 'CodeLanguage' + (position || 'top-left').split('-').map(word => word[0].toUpperCase() + word.slice(1)).join('')) +
+                        (showCount && position.startsWith('bottom') ? 'WithCount' : '');
+                    assert.deepEqual(labels, position === 'hidden' ? [] : [expected]);
+                    const numbered = [...document.getElementsByTagName('w:p')].filter(p => p.getElementsByTagName('w:pStyle')[0]?.getAttribute('w:val') === 'SourceCode' && p.getElementsByTagName('w:numId').length);
+                    const groups = new Map();
+                    for (const p of numbered) { const id = p.getElementsByTagName('w:numId')[0].getAttribute('w:val'); groups.set(id, (groups.get(id) || 0) + 1); }
+                    assert.deepEqual([...groups.values()], numberMode && position !== null ? [4, 1, 1] : []);
+                    const counts = [...document.getElementsByTagName('w:p')].filter(p => p.getElementsByTagName('w:pStyle')[0]?.getAttribute('w:val') === 'CodeLineCount');
+                    assert.deepEqual(counts.map(p => [...p.getElementsByTagName('w:t')].map(t => t.textContent).join('')), showCount ? ['Lines: 4', 'Lines: 1', 'Lines: 0', 'Lines: 1'] : []);
+                }
+                for (const marker of ['FIRST_MARKER', 'LAST_MARKER', 'UNLABELED_MARKER']) assert.ok(text.includes(marker));
+                assert.equal(fs.readFileSync(filePath, 'utf8'), source);
+                assert.equal(await connection.evaluate('document.getElementById("editor").innerHTML'), before);
+                record(name, { position: position || 'default', showCount, format, outputPath: result.outputPath, sourceAndEditorUnchanged: true });
+            }
+        }
+    } finally {
+        connection?.close();
+        for (const [key, value] of Object.entries(previous)) {
+            await h.driver({ action: 'config', key, value: value.workspace ?? null, scope: 'workspace' });
+            await h.driver({ action: 'config', key, value: value.global ?? null });
+        }
+    }
+}
+
+async function underlineExportCase(h, owner, record) {
+    const { JSDOM } = require('jsdom');
+    const file = 'underline-export.md', filePath = path.join(owner.workspace, file);
+    const source = fs.readFileSync(filePath, 'utf8');
+    let connection = await h.open(file);
+    try {
+        assert.equal(await connection.evaluate('document.querySelectorAll("#editor u").length'), 7);
+        await h.sourceMode(connection);
+        assert.equal(await connection.evaluate('document.getElementById("sourceEditor").value'), source);
+        await h.driver({ action: 'save' });
+        assert.equal(fs.readFileSync(filePath, 'utf8'), source);
+        connection.close(); connection = null;
+        await h.driver({ action: 'close' }); connection = await h.open(file);
+        const before = await connection.evaluate('document.getElementById("editor").innerHTML');
+        for (const format of ['html', 'pdf', 'docx', 'epub']) {
+            const result = await h.exportFile(connection, file, format);
+            let text;
+            if (format === 'pdf') {
+                text = execFileSync(process.env.EXPORT_PDFTOTEXT_PATH || 'pdftotext', [result.outputPath, '-'], { encoding: 'utf8' });
+            } else if (format === 'docx') {
+                const document = new JSDOM(archiveText(result.outputPath, 'word/document.xml'), { contentType: 'text/xml' }).window.document;
+                assert.ok(document.getElementsByTagName('w:u').length >= 9, 'Word output contains native underline runs');
+                text = [...document.getElementsByTagName('w:t')].map(node => node.textContent).join('');
+            } else {
+                const html = format === 'html' ? fs.readFileSync(result.outputPath, 'utf8') : archiveText(result.outputPath, '*.xhtml');
+                const document = new JSDOM(html).window.document;
+                assert.equal(document.querySelectorAll('u, .underline').length, 7);
+                assert.equal(document.querySelector('td u, td .underline').textContent, 'Table cell');
+                text = document.body.textContent;
+            }
+            const escaped = ['html', 'pdf'].includes(format) ? String.raw`\<u>escaped example\</u>` : '<u>escaped example</u>';
+            for (const literal of ['<u>inline example</u>', escaped, '<u>fenced example</u>', 'UNDERLINE-END-MARKER']) assert.ok(text.includes(literal), format + ': ' + literal);
+            assert.equal(fs.readFileSync(filePath, 'utf8'), source);
+            assert.equal(await connection.evaluate('document.getElementById("editor").innerHTML'), before);
+            record('underline-export', { format, outputPath: result.outputPath, sourceUnchanged: true, savedAndReopened: true, literalMarkupRetained: true, structuralCheckOnly: true });
+        }
+    } finally { connection?.close(); }
+}
+
+async function insertMenuCase(h, owner, record) {
+    const { source, insertMenuChecks, selectTarget, openInsert } = require('./insert-menu.cjs');
+    const { installedEditor } = require('./table-toolbar-overflow.cjs');
+    const previous = await h.driver({ action: 'inspect' });
+    const file = 'insert-menu.md', filePath = path.join(owner.workspace, file);
+    await h.driver({ action: 'close' }); fs.writeFileSync(filePath, source);
+    await h.driver({ action: 'simpleFileDialog', value: true });
+    let connection = await h.open(file);
+    try {
+        await h.workbench(async page => {
+            const editor = installedEditor(connection, h);
+            // VS Code 1.85 also mounts a hidden select-all checkbox here.
+            const input = () => page.locator('.quick-input-widget:visible input:not([type="checkbox"]):visible').first();
+            await insertMenuChecks({ editor, keyboard: page.keyboard,
+                setMode: value => h.driver({ action: 'config', key: 'toolbarMode', scope: 'workspace', value }),
+                record: (name, details) => record(name, { ...details, route: 'installed webview; native keyboard; VS Code input boxes and simplified file picker' }),
+                save: async expected => {
+                    // Keep the separately tracked queued-edit/native-save
+                    // overlap (#11) outside this insertion persistence check.
+                    await h.until(async () => (await h.driver({ action: 'inspect' })).documents.some(document => samePath(document.path, filePath) && document.text === expected), 'inserted content reached host');
+                    await h.driver({ action: 'save' });
+                    assert.equal(fs.readFileSync(filePath, 'utf8'), expected);
+                },
+                dialog: async (action, accepted) => {
+                    await input().waitFor({ state: 'visible' });
+                    if (!accepted) await page.keyboard.press('Escape');
+                    else {
+                        if (action === 'link') {
+                            await input().fill('https://example.com/reference');
+                            await page.keyboard.press('Enter');
+                        } else {
+                            const imageName = 'Field sample 图像.png';
+                            // Navigate first: older pickers do not refresh their
+                            // directory listing until the path is accepted.
+                            await input().fill(path.join(owner.workspace, 'assets') + path.sep);
+                            await page.keyboard.press('Enter');
+                            const image = page.locator('.quick-input-widget:visible .monaco-list-row').filter({ hasText: imageName });
+                            await image.waitFor({ state: 'visible' });
+                            await image.click();
+                        }
+                    }
+                    await page.locator('.quick-input-widget:visible').waitFor({ state: 'hidden' });
+                }
+            });
+            // With no selected label, Escape from the second input must cancel
+            // the entire insertion instead of creating a fallback link.
+            await selectTarget(editor);
+            await editor.evaluate(() => { getSelection().collapseToEnd(); window.__nativeInsertEvents = []; });
+            await openInsert(editor); await editor.locator('[data-insert-action="link"]').click();
+            await input().waitFor({ state: 'visible' });
+            await input().fill('https://example.com/cancel-label'); await page.keyboard.press('Enter');
+            await h.until(async () => await input().inputValue() === 'link', 'link label input');
+            await page.keyboard.press('Escape');
+            await editor.waitForFunction(() => window.__nativeInsertEvents.some(message => message.type === 'insertCancelled'));
+            assert.equal(await editor.evaluate(() => document.querySelector('[data-action="undo"]').disabled), true);
+            record('insert-link-second-prompt', { cancelledWithoutEdit: true });
+        });
+        await h.sourceMode(connection);
+        assert.equal(await connection.evaluate('document.getElementById("sourceEditor").value'), source);
+        await h.driver({ action: 'save' });
+        assert.equal(fs.readFileSync(filePath, 'utf8'), source);
+        connection.close(); connection = null;
+        await h.driver({ action: 'close' }); connection = await h.open(file);
+        assert.equal(await connection.evaluate('document.querySelectorAll("#editor th").length'), 1);
+        record('insert-save', { sourceModeUnchanged: true, nativeSaveUnchanged: true, reopened: true });
+    } finally {
+        connection?.close();
+        await h.driver({ action: 'config', key: 'toolbarMode', scope: 'workspace', value: previous.toolbarModeScopes.workspace ?? null });
+        await h.driver({ action: 'simpleFileDialog', value: previous.simpleFileDialog ?? null });
+    }
+}
+
+async function tableRowCase(h, owner, record) {
+    const { source, tableRowChecks } = require('./table-toolbar-row.cjs');
+    const { installedEditor } = require('./table-toolbar-overflow.cjs');
+    const previous = await h.driver({ action: 'inspect' });
+    const file = 'table-row.md', filePath = path.join(owner.workspace, file);
+    await h.driver({ action: 'close' }); fs.writeFileSync(filePath, source);
+    let connection = await h.open(file);
+    try {
+        await h.workbench(async page => {
+            const frame = page.locator('iframe.webview:visible');
+            const before = await frame.evaluate(node => ({ maxWidth: node.style.maxWidth, maxHeight: node.style.maxHeight }));
+            try {
+                await tableRowChecks({ editor: installedEditor(connection, h), keyboard: page.keyboard,
+                    setMode: value => h.driver({ action: 'config', key: 'toolbarMode', scope: 'workspace', value }),
+                    setPosition: value => h.driver({ action: 'config', key: 'tableToolbarPosition', scope: 'workspace', value }),
+                    resize: async (width, height) => {
+                        const size = await frame.evaluate(async (node, size) => {
+                            node.style.maxWidth = size.width + 'px'; node.style.maxHeight = size.height + 'px';
+                            await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+                            return { width: node.clientWidth, height: node.clientHeight };
+                        }, { width, height });
+                        await h.until(() => connection.evaluate(`innerWidth === ${size.width} && innerHeight === ${size.height}`));
+                    },
+                    record: (name, details) => record(name, { ...details, route: 'installed frame constraints; real configuration; DOM activation and workbench keyboard' }),
+                });
+            } finally { await frame.evaluate((node, before) => Object.assign(node.style, before), before); }
+        });
+        await h.sourceMode(connection);
+        assert.equal(await connection.evaluate('document.getElementById("sourceEditor").value'), source);
+        await h.driver({ action: 'save' });
+        assert.equal(fs.readFileSync(filePath, 'utf8'), source);
+        connection.close(); connection = null;
+        await h.driver({ action: 'close' }); connection = await h.open(file);
+        assert.equal(await connection.evaluate('document.querySelectorAll("#editor th").length'), 2);
+        assert.equal(await connection.evaluate('document.querySelector(".table-toolbar-row").hidden'), true);
+        record('contextual-row-save', { sourceModeUnchanged: true, nativeSaveUnchanged: true, reopened: true });
+    } finally {
+        connection?.close();
+        await h.driver({ action: 'config', key: 'toolbarMode', scope: 'workspace', value: previous.toolbarModeScopes.workspace ?? null });
+        await h.driver({ action: 'config', key: 'tableToolbarPosition', scope: 'workspace', value: previous.tablePositionScopes.workspace ?? null });
+    }
+}
+
+async function tableContentCase(h, owner, record) {
+    const { source, tableCells, tableContentChecks } = require('./table-content-overflow.cjs');
+    const { installedEditor } = require('./table-toolbar-overflow.cjs');
+    const file = 'wide-table.md', filePath = path.join(owner.workspace, file);
+    await h.driver({ action: 'close' });
+    fs.writeFileSync(filePath, source);
+    let connection = await h.open(file);
+    try {
+        let cells;
+        await h.workbench(async page => {
+            const frame = page.locator('iframe.webview:visible');
+            const previous = await frame.evaluate(node => ({ maxWidth: node.style.maxWidth, maxHeight: node.style.maxHeight }));
+            try {
+                cells = await tableContentChecks({ editor: installedEditor(connection, h), keyboard: page.keyboard,
+                    resize: async (width, height) => {
+                        const size = await frame.evaluate(async (node, size) => {
+                            node.style.maxWidth = size.width + 'px'; node.style.maxHeight = size.height + 'px';
+                            await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+                            return { width: node.clientWidth, height: node.clientHeight };
+                        }, { width, height });
+                        await h.until(() => connection.evaluate(`innerWidth === ${size.width} && innerHeight === ${size.height}`));
+                    },
+                    record: (name, details) => record(name, { ...details, resizeRoute: 'installed webview frame constraints; DOM activation; native workbench keyboard' }),
+                });
+            } finally { await frame.evaluate((node, previous) => Object.assign(node.style, previous), previous); }
+        });
+        assert.equal(fs.readFileSync(filePath, 'utf8'), source);
+        assert.equal((await h.driver({ action: 'inspect' })).documents.find(document => samePath(document.path, filePath)).dirty, false);
+        await h.sourceMode(connection);
+        assert.equal(await connection.evaluate('document.getElementById("sourceEditor").value'), source);
+        await connection.evaluate('document.querySelector(\'[data-action="source"]\').click()');
+        await h.until(() => connection.evaluate('document.querySelectorAll("#editor td").length === 16'));
+        await connection.evaluate(`(() => {
+            const paragraph = [...document.querySelectorAll('#editor > p')].find(node => node.textContent === 'After.');
+            document.getElementById('editor').focus(); const range = document.createRange();
+            range.selectNodeContents(paragraph); range.collapse(false); getSelection().removeAllRanges(); getSelection().addRange(range);
+        })()`);
+        await connection.send('Input.insertText', { text: ' updated' });
+        await h.driver({ action: 'save' });
+        await h.until(() => fs.readFileSync(filePath, 'utf8').includes('After. updated'));
+        connection.close(); connection = null;
+        await h.driver({ action: 'close' });
+        connection = await h.open(file);
+        assert.deepEqual(await connection.evaluate(`(${tableCells.toString()})()`), cells);
+        record('table-content-save', { sourceSwitchUnchanged: true, cleanAfterNavigation: true, nativeSaveAndReopen: true, tableCellsAndAlignmentPreserved: true });
+    } finally { connection?.close(); }
 }
 
 async function equationCases(h, owner, record) {
@@ -876,12 +1641,27 @@ async function appearanceCases(h, owner, record) {
             await h.driver({ action: 'config', key: 'toolbarMode', value: mode });
             await h.driver({ action: 'config', key: 'language', value: language });
             const connection = await matchingEditor(`document.documentElement.dataset.toolbarMode===${JSON.stringify(mode)} && document.getElementById('exportButton').getAttribute('aria-label')===${JSON.stringify(label)}`);
+            let previousFrameWidth;
             try {
                 const phase = 'toolbar cycle ' + cycle + ' ' + mode + '/' + language;
                 console.log('checking', phase);
                 const observe = () => connection.evaluate(appearanceState);
                 assert.equal(receipt(owner).nativeLanguage, 'en', 'Native VS Code language remains independent of the runtime language');
-                assert.equal(await connection.evaluate(`document.getElementById('exportButton').previousElementSibling.dataset.action`), 'openInTextEditor');
+                if (cycle === 2) {
+                    previousFrameWidth = await h.workbench(page => page.locator('iframe.webview:visible').evaluate(async node => {
+                        const previous = node.style.maxWidth; node.style.maxWidth = '400px';
+                        await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+                        return previous;
+                    }));
+                }
+                await connection.evaluate(`new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))`);
+                const inOverflow = await connection.evaluate(`document.getElementById('toolbarOverflow').contains(document.getElementById('exportButton'))`);
+                // Responsive layout can move Export into More. Exercise that
+                // visible route instead of assuming fixed sibling positions.
+                if (inOverflow) {
+                    await connection.evaluate(`document.getElementById('toolbarMore').click()`);
+                    await h.until(() => connection.evaluate(`!document.getElementById('toolbarOverflow').hidden`), phase + ' toolbar overflow', observe);
+                }
                 // A ready document is not necessarily the focused native window.
                 // Establish the real keyboard precondition before sending input.
                 await h.workbench(page => page.bringToFront());
@@ -894,9 +1674,12 @@ async function appearanceCases(h, owner, record) {
                 }
                 await connection.send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Escape', code: 'Escape' });
                 await connection.send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Escape', code: 'Escape' });
-                await h.until(() => connection.evaluate('document.getElementById("exportMenu").hidden && document.activeElement.id === "exportButton"'), phase + ' Escape', observe);
-                record('toolbar', { cycle, mode, language, label, nativeLanguage: 'en', keyboardNavigation: true, nextToVsCode: true });
-            } finally { connection.close(); }
+                await h.until(() => connection.evaluate(`document.getElementById('exportMenu').hidden && document.activeElement.id === (document.getElementById('exportButton').getClientRects().length ? 'exportButton' : 'toolbarMore')`), phase + ' Escape', observe);
+                record('toolbar', { cycle, mode, language, label, nativeLanguage: 'en', keyboardNavigation: true, route: inOverflow ? 'toolbar overflow' : 'primary toolbar', returnedToVisibleControl: true });
+            } finally {
+                if (previousFrameWidth !== undefined) await h.workbench(page => page.locator('iframe.webview:visible').evaluate((node, value) => { node.style.maxWidth = value; }, previousFrameWidth));
+                connection.close();
+            }
         }
     }
     for (const theme of ['github', 'night']) {

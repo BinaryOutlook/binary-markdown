@@ -4,26 +4,48 @@ import { scan as scanDocumentAux, START as TOC_START, END as TOC_END, headingTex
 import * as fs from 'fs/promises';
 import * as os from 'os';
 import * as path from 'path';
-import { checkCancelled, ExportOperations, PreparedExportDocument, SavedExportDocument } from './types';
+import { checkCancelled, codeLanguagePosition, CodeLanguagePosition, CodePresentationOptions, ExportOperations, PreparedExportDocument, SavedExportDocument } from './types';
 import { runTool } from './tools';
 import { codeLanguageLabel } from './code-language';
 import { docxLanguageTab } from './language-tab';
+import { pandocCodeLines } from './code-lines';
+import { CODE_MARKER, numberDocxCode } from './docx-numbering';
 
 type Json = null | boolean | number | string | Json[] | { [key: string]: Json };
 interface AstNode { t: string; c?: Json; }
 const emptyAttributes: Json = ['', [], []];
 
-function withDocxLanguageLabel(block: Json, classes: Json[], id: number): Json {
-    const label = codeLanguageLabel(classes);
-    if (!label) { return block; }
+function withDocxCodeMetadata(block: Json, classes: Json[], id: number, options: CodePresentationOptions, count: number): Json {
+    const position = codeLanguagePosition(options.codeLanguagePosition);
+    const label = options.showCodeLanguage === false ? undefined : codeLanguageLabel(classes);
+    if (!label && !options.showCodeLineCount) { return block; }
     // Keep the code itself intact for Pandoc highlighting and exact copy/paste.
-    // The reference paragraph places an inline native shape below the code, aligned right.
+    // Position-specific metadata paragraphs keep the inline native shape beside
+    // the corresponding code edge without changing the code node or its tokens.
     // Only extension-generated, escaped OpenXML enters this branch.
-    return { t: 'Div', c: [emptyAttributes, [block, {
-        t: 'Div', c: [['', [], [['custom-style', 'Code Language']]], [
-            { t: 'Para', c: [{ t: 'Space' }, { t: 'RawInline', c: ['openxml', docxLanguageTab(label, id)] }] }
+    const styles = { 'top-left': 'Code Language Top Left', 'top-right': 'Code Language Top Right',
+        'bottom-left': 'Code Language Bottom Left', 'bottom-right': 'Code Language' };
+    const labelStyle = styles[position] + (options.showCodeLineCount && position.startsWith('bottom') ? ' With Count' : '');
+    const metadata: Json = {
+        t: 'Div', c: [['', [], [['custom-style', labelStyle]]], [
+            { t: 'Para', c: [{ t: 'Space' }, { t: 'RawInline', c: ['openxml', docxLanguageTab(label || '', id, position)] }] }
         ]]
-    }]] };
+    };
+    const blocks: Json[] = !label ? [block] : position.startsWith('top') ? [metadata, block] : [block, metadata];
+    if (options.showCodeLineCount) {
+        blocks.push({ t: 'Div', c: [['', [], [['custom-style', 'Code Line Count']]], [
+            { t: 'Para', c: [{ t: 'Str', c: (options.codeLineCountLabel || 'Lines') + ': ' + count }] }
+        ]] });
+    }
+    return { t: 'Div', c: [emptyAttributes, blocks] };
+}
+
+function codeBlocks(value: Json, output: Json[] = []): Json[] {
+    if (value && typeof value === 'object') {
+        if (node(value)?.t === 'CodeBlock') { output.push(value); }
+        else { for (const child of Object.values(value)) { codeBlocks(child, output); } }
+    }
+    return output;
 }
 
 function node(value: Json): AstNode | undefined {
@@ -95,7 +117,7 @@ function warn(operations: ExportOperations, code: string, message: string): void
 
 export async function convertPandoc(
     format: 'docx' | 'epub', document: SavedExportDocument, prepared: PreparedExportDocument,
-    executable: string, operations: ExportOperations, options: { showCodeLanguage?: boolean } = {}
+    executable: string, operations: ExportOperations, options: CodePresentationOptions = {}
 ): Promise<Buffer> {
     checkCancelled(operations.signal);
     const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'binary-markdown-pandoc-'));
@@ -104,13 +126,39 @@ export async function convertPandoc(
         await fs.mkdir(dataDirectory);
         operations.report('converting');
         const commonArguments = ['--sandbox', `--data-dir=${dataDirectory}`];
-        const read = await runTool(executable, [...commonArguments, '--from=commonmark_x+tex_math_gfm-smart', '--to=json'], {
-            input: normalizeForPandoc(preparePandocMarkdown(document.markdown), document.mathBackslashDelimiters !== false), cwd: directory, signal: operations.signal
+        const input = normalizeForPandoc(preparePandocMarkdown(document.markdown), document.mathBackslashDelimiters !== false);
+        const read = await runTool(executable, [...commonArguments, '--from=commonmark_x+tex_math_gfm-smart', '--to=json',
+            ...(format === 'docx' ? ['--preserve-tabs'] : [])], {
+            input, cwd: directory, signal: operations.signal
         });
         if (read.stderr) { warn(operations, 'pandoc-reader', read.stderr); }
         const ast = JSON.parse(read.stdout.toString('utf8')) as Record<string, Json>;
         if (!Array.isArray(ast.blocks) || !Array.isArray(ast['pandoc-api-version'])) {
             throw new Error('Pandoc returned an invalid intermediate document.');
+        }
+        const codeModels = new Map<Json, string[]>();
+        if (format === 'docx' && codeBlocks(ast.blocks).length) {
+            // sourcepos changes Pandoc's fenced-math recognition. Use a separate
+            // analysis read; never pass that altered tree to the document writer.
+            const positioned = await runTool(executable, [...commonArguments, '--from=commonmark_x+tex_math_gfm-smart+sourcepos', '--to=json', '--preserve-tabs'], {
+                input, cwd: directory, signal: operations.signal
+            });
+            const candidates = codeBlocks(JSON.parse(positioned.stdout.toString('utf8')).blocks);
+            let index = 0;
+            for (const block of codeBlocks(ast.blocks)) {
+                const content = node(block)!.c as Json[];
+                let candidate: Json[] | undefined;
+                while (index < candidates.length) {
+                    candidate = node(candidates[index++])!.c as Json[];
+                    if (JSON.stringify((candidate[0] as Json[])[1]) === JSON.stringify((content[0] as Json[])[1]) && candidate[1] === content[1]) { break; }
+                    if (JSON.stringify((candidate[0] as Json[])[1]) !== '["math"]') { throw new Error('Code source analysis disagrees with the document reader.'); }
+                    candidate = undefined;
+                }
+                if (!candidate) { throw new Error('Code source analysis did not identify a saved block.'); }
+                const attributes = candidate[0] as Json[];
+                const positions = (attributes[2] as Json[][]).filter(pair => pair[0] === 'data-pos').map(pair => String(pair[1]));
+                codeModels.set(block, pandocCodeLines(String(content[1]), input, positions));
+            }
         }
 
         // Writer-affecting metadata (CSS, cover files, includes, templates, filters) is never taken from the document.
@@ -171,11 +219,30 @@ export async function convertPandoc(
             }
             return result;
         };
+        const numberedModels: string[][] = [];
         const transform = async (value: Json): Promise<Json> => {
             checkCancelled(operations.signal);
             if (Array.isArray(value)) {
                 const output: Json[] = [];
-                for (const child of value) { output.push(await transform(child)); }
+                // CommonMark keeps inline HTML as raw nodes. Pair only the
+                // editor's attribute-free underline tags within this inline
+                // sequence; code, escaped examples and other HTML retain their
+                // existing conversion/fallback behavior.
+                const openings: number[] = [];
+                const pairs = new Map<number, number>();
+                value.forEach((child, index) => {
+                    const inline = node(child);
+                    if (inline?.t !== 'RawInline' || !Array.isArray(inline.c) || inline.c[0] !== 'html') { return; }
+                    if (/^<u>$/i.test(String(inline.c[1]))) { openings.push(index); }
+                    else if (/^<\/u>$/i.test(String(inline.c[1])) && openings.length) { pairs.set(openings.pop()!, index); }
+                });
+                for (let index = 0; index < value.length; index++) {
+                    const closing = pairs.get(index);
+                    if (closing !== undefined) {
+                        output.push({ t: 'Underline', c: await transform(value.slice(index + 1, closing)) });
+                        index = closing;
+                    } else { output.push(await transform(value[index])); }
+                }
                 return output;
             }
             if (!value || typeof value !== 'object') { return value; }
@@ -207,7 +274,20 @@ export async function convertPandoc(
                         { t: 'CodeBlock', c: [emptyAttributes, source] }
                     ]] };
                 }
-                if (format === 'docx' && options.showCodeLanguage !== false) { return withDocxLanguageLabel(value, classes, ++languageTabId); }
+                if (format === 'docx') {
+                    const lines = codeModels.get(value)!;
+                    const payload = lines.join('\n');
+                    // Pandoc's DOCX writer consumes the last newline in a code
+                    // payload. Supply its delimiter in the export-only AST so
+                    // an authored blank tail survives; source stays untouched.
+                    let code: Json = { t: 'CodeBlock', c: [attributes, payload + (payload.endsWith('\n') ? '\n' : '')] };
+                    if (options.showCodeLineNumbers === true) {
+                        const marker = CODE_MARKER + numberedModels.length;
+                        numberedModels.push(lines);
+                        code = { t: 'Div', c: [emptyAttributes, [{ t: 'RawBlock', c: ['openxml', '<!--' + marker + '-->'] }, code]] };
+                    }
+                    return withDocxCodeMetadata(code, classes, ++languageTabId, options, lines.length);
+                }
             }
             if (item?.t === 'RawBlock' || item?.t === 'RawInline') {
                 warn(operations, 'raw-content-fallback', `Raw ${String(content[0])} content is included as readable source because ${format.toUpperCase()} cannot preserve its displayed behavior reliably.`);
@@ -233,8 +313,9 @@ export async function convertPandoc(
         checkCancelled(operations.signal);
         operations.report('converting');
         const outputFile = path.join(directory, `document.${format}`);
+        const topLabel = options.showCodeLanguage !== false && codeLanguagePosition(options.codeLanguagePosition).startsWith('top');
         const writerArguments = format === 'docx'
-            ? [`--reference-doc=${path.resolve(__dirname, '../../media/export-reference.docx')}`]
+            ? [`--reference-doc=${path.resolve(__dirname, topLabel ? (options.showCodeLineCount ? '../../media/export-reference-top-footer.docx' : '../../media/export-reference-top.docx') : '../../media/export-reference.docx')}`]
             : ['--mathml'];
         const write = await runTool(executable, [...commonArguments, '--from=json', `--to=${format === 'epub' ? 'epub3' : 'docx'}`, ...writerArguments, '--standalone', `--output=${outputFile}`], {
             input: JSON.stringify(normalized), cwd: directory, signal: operations.signal
@@ -245,7 +326,9 @@ export async function convertPandoc(
         if (bytes.length < 4 || bytes.readUInt32LE(0) !== 0x04034b50) {
             throw new Error(`Pandoc did not create a valid ${format.toUpperCase()} container.`);
         }
-        return bytes;
+        const result = format === 'docx' && options.showCodeLineNumbers === true ? numberDocxCode(bytes, numberedModels) : bytes;
+        checkCancelled(operations.signal);
+        return result;
     } finally {
         await fs.rm(directory, { recursive: true, force: true });
     }

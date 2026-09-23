@@ -10,6 +10,13 @@ import * as os from 'os';
 interface ElectronEditorConfig {
     theme: string;
     fontSize: number;
+    editorWidthMode?: string;
+    editorMaxWidth?: number;
+    editorAlignment?: string;
+    editorWidthIndicators?: boolean;
+    mathSourceWrap?: boolean;
+    mathSourcePosition?: string;
+    codeLanguageOrder?: string;
     toolbarMode: string;
     tableToolbarPosition?: string;
     documentBaseUri: string;
@@ -17,7 +24,7 @@ interface ElectronEditorConfig {
     enableDebugLogging: boolean;
 }
 
-function getResourcePath(relativePath: string): string {
+export function getResourcePath(relativePath: string): string {
     // Development: resolve relative to the project root (the parent of electron/).
     const devPath = path.join(__dirname, '..', '..', relativePath);
     if (fs.existsSync(devPath)) {
@@ -60,6 +67,7 @@ export function generateEditorHtml(
     config: ElectronEditorConfig
 ): string {
     const { normalize } = require(getResourcePath('src/shared/table-placement.js'));
+    const { normalizeWidthMode, normalizeMaxWidth, normalizeAlignment } = require(getResourcePath('src/shared/editor-layout.js'));
     const stylesPath = getResourcePath('src/webview/styles.css');
     const auxScript = fs.readFileSync(getResourcePath('src/shared/document-aux.js'), 'utf8');
     const editorScriptPath = getResourcePath('src/webview/editor.js');
@@ -75,7 +83,7 @@ export function generateEditorHtml(
         .replace('__OUTLINE_ACTIVE_COLOR__', 'var(--link-color)');
 
     const mathScript = fs.readFileSync(getResourcePath('src/shared/math-syntax.js'), 'utf8');
-    const editorScript = (fs.readFileSync(getResourcePath('src/shared/table-placement.js'), 'utf8') + '\n' + fs.readFileSync(getResourcePath('src/webview/table-toolbar.js'), 'utf8') + '\n' + mathScript + '\n' + fs.readFileSync(editorScriptPath, 'utf8'))
+    const editorScript = (fs.readFileSync(getResourcePath('src/shared/editor-layout.js'), 'utf8') + '\n' + fs.readFileSync(getResourcePath('src/shared/table-placement.js'), 'utf8') + '\n' + fs.readFileSync(getResourcePath('src/webview/table-toolbar.js'), 'utf8') + '\n' + mathScript + '\n' + fs.readFileSync(editorScriptPath, 'utf8'))
         .replace('__MATH_BACKSLASH__', 'true')
         .replace('__DEBUG_MODE__', String(config.enableDebugLogging))
         .replace('__I18N__', JSON.stringify(config.webviewMessages))
@@ -85,7 +93,7 @@ export function generateEditorHtml(
     const vendorFileUri = (file: string) => fileUri(path.join(vendorDir, file));
 
     return `<!DOCTYPE html>
-<html lang="en" data-theme="${config.theme}" data-toolbar-mode="${config.toolbarMode}" data-table-toolbar-position="${normalize(config.tableToolbarPosition)}">
+<html lang="en" data-theme="${config.theme}" data-editor-width-mode="${normalizeWidthMode(config.editorWidthMode)}" data-editor-max-width="${normalizeMaxWidth(config.editorMaxWidth)}" data-editor-alignment="${normalizeAlignment(config.editorAlignment)}" data-editor-width-indicators="${config.editorWidthIndicators !== false}" data-math-source-wrap="${config.mathSourceWrap === true}" data-math-source-position="${config.mathSourcePosition === 'below' ? 'below' : 'above'}" data-code-language-order="${config.codeLanguageOrder === 'a-z' || config.codeLanguageOrder === 'z-a' ? config.codeLanguageOrder : 'default'}" data-toolbar-mode="${config.toolbarMode}" data-table-toolbar-position="${normalize(config.tableToolbarPosition)}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">

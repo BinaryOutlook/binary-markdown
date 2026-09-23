@@ -20,7 +20,7 @@ const vendorDest = path.join(__dirname, 'html/vendor');
 if (fs.existsSync(vendorSrc)) {
     fs.mkdirSync(vendorDest, { recursive: true });
     for (const file of fs.readdirSync(vendorSrc)) {
-        if (file === 'playwright-core') continue; // Host-only PDF control runtime.
+        if (['playwright-core', 'xmldom'].includes(file)) continue; // Host-only export runtimes.
         const srcPath = path.join(vendorSrc, file);
         if (fs.statSync(srcPath).isDirectory()) {
             // fonts/ ディレクトリ
@@ -43,11 +43,11 @@ const testHostBridgeScript = fs.readFileSync(testHostBridgePath, 'utf-8');
 
 // プレースホルダーを置換
 editorScript = fs.readFileSync(path.join(__dirname, '../src/shared/math-syntax.js'), 'utf8') + '\n' + editorScript;
-editorScript = fs.readFileSync(path.join(__dirname, '../src/shared/table-placement.js'), 'utf8') + '\n' + fs.readFileSync(path.join(__dirname, '../src/webview/table-toolbar.js'), 'utf8') + '\n' + editorScript;
+editorScript = fs.readFileSync(path.join(__dirname, '../src/shared/editor-layout.js'), 'utf8') + '\n' + fs.readFileSync(path.join(__dirname, '../src/shared/table-placement.js'), 'utf8') + '\n' + fs.readFileSync(path.join(__dirname, '../src/webview/table-toolbar.js'), 'utf8') + '\n' + editorScript;
 editorScript = editorScript
     .replace('__MATH_BACKSLASH__', 'true')
     .replace('__DEBUG_MODE__', 'false')
-    .replace('__I18N__', '{}')
+    .replace('__I18N__', JSON.stringify(require('../src/i18n/locales/en.ts').webviewMessages))
     .replace('__DOCUMENT_BASE_URI__', '')
     .replace('__CONTENT__', '``');
 
@@ -236,7 +236,7 @@ const styles = fs.readFileSync(path.join(__dirname, '../src/webview/styles.css')
     .replace('__FONT_SIZE__', '16')
     .replace('__OUTLINE_ACTIVE_COLOR__', 'var(--link-color)');
 fs.writeFileSync(path.join(__dirname, 'html/production-editor.html'), `<!doctype html>
-<html lang="en" data-theme="things" data-toolbar-mode="simple"><head><meta charset="utf-8"><style>${styles}</style></head>
-<body>${generateEditorBodyHtml({}, process.platform, { exportEnabled: true, settingsEnabled: true })}
+<html lang="en" data-theme="things" data-toolbar-mode="${require('../package.json').contributes.configuration.properties['binary-markdown.toolbarMode'].default}"><head><meta charset="utf-8"><style>${styles}</style></head>
+<body>${generateEditorBodyHtml(require('../src/i18n/locales/en.ts').webviewMessages, process.platform, { exportEnabled: true, settingsEnabled: true })}
 <script src="vendor/turndown.js"></script><script src="vendor/turndown-plugin-gfm.js"></script>
 <script>${testHostBridgeScript}</script><script>${editorScript}</script></body></html>`);

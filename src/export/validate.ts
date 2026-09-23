@@ -1,7 +1,7 @@
 import { inflateRawSync } from 'zlib';
 import { ExportFormat } from './types';
 
-interface ZipEntry {
+export interface ZipEntry {
     name: string;
     bytes: Buffer;
     method: number;
@@ -14,7 +14,7 @@ const CRC_TABLE = Array.from({ length: 256 }, (_, value) => {
     return value >>> 0;
 });
 
-function crc32(bytes: Buffer): number {
+export function crc32(bytes: Buffer): number {
     let crc = 0xffffffff;
     for (const value of bytes) { crc = (crc >>> 8) ^ CRC_TABLE[(crc ^ value) & 0xff]; }
     return (crc ^ 0xffffffff) >>> 0;
@@ -25,7 +25,7 @@ function requireValid(condition: unknown, reason: string): asserts condition {
 }
 
 /** Check the ZIP32 subset produced by our converters; never extract paths to disk. */
-function readZip(bytes: Buffer): Map<string, ZipEntry> {
+export function readZip(bytes: Buffer, maxUncompressedBytes = Number.MAX_SAFE_INTEGER): Map<string, ZipEntry> {
     requireValid(bytes.length >= 22, 'ZIP end-of-central-directory is missing.');
     let end = -1;
     for (let offset = bytes.length - 22; offset >= Math.max(0, bytes.length - 22 - 0xffff); offset--) {
@@ -45,6 +45,7 @@ function readZip(bytes: Buffer): Map<string, ZipEntry> {
     const entries = new Map<string, ZipEntry>();
     const ranges: Array<{ start: number; end: number }> = [];
     let cursor = start;
+    let totalPlainSize = 0;
     for (let index = 0; index < count; index++) {
         requireValid(cursor + 46 <= end && bytes.readUInt32LE(cursor) === 0x02014b50, 'ZIP central-directory entry is incomplete.');
         const flags = bytes.readUInt16LE(cursor + 8);
@@ -52,6 +53,8 @@ function readZip(bytes: Buffer): Map<string, ZipEntry> {
         const checksum = bytes.readUInt32LE(cursor + 16);
         const compressedSize = bytes.readUInt32LE(cursor + 20);
         const plainSize = bytes.readUInt32LE(cursor + 24);
+        totalPlainSize += plainSize;
+        requireValid(totalPlainSize <= maxUncompressedBytes, 'ZIP exceeds the transformation size limit.');
         const nameLength = bytes.readUInt16LE(cursor + 28);
         const extraLength = bytes.readUInt16LE(cursor + 30);
         const commentLength = bytes.readUInt16LE(cursor + 32);

@@ -2,7 +2,7 @@
 """Regenerate the checked-in DOCX reference; not needed for builds or exports.
 
 Requires Python 3 (standard library only) and Pandoc. Initially generated using
-Pandoc 3.8.3. Retains its default document parts and changes only three styles.
+Pandoc 3.8.3. Retains default document parts and defines code/metadata styles for both edges.
 Usage: python3 scripts/build-docx-reference.py [--pandoc /path/to/pandoc]
 """
 import argparse
@@ -80,6 +80,31 @@ CODE_STYLES = f'''<w:styles xmlns:w="{WORD_NS}">
 </w:styles>'''
 
 
+# A metadata row is independent of code text. Headers keep the following code;
+# footers rely on the code's keepNext. No label is duplicated across pages.
+for edge, side in [('Top', 'Left'), ('Top', 'Right'), ('Bottom', 'Left')]:
+    before, after = ('140', '0') if edge == 'Top' else ('0', '180')
+    style = f'''<w:style w:type="paragraph" w:customStyle="1" w:styleId="CodeLanguage{edge}{side}">
+      <w:name w:val="Code Language {edge} {side}"/><w:basedOn w:val="CodeLanguage"/>
+      <w:pPr><w:keepNext w:val="{1 if edge == 'Top' else 0}"/>
+        <w:spacing w:before="{before}" w:after="{after}" w:line="240" w:lineRule="auto"/>
+        <w:ind w:left="60" w:right="60"/><w:jc w:val="{side.lower()}"/>
+      </w:pPr></w:style>'''
+    CODE_STYLES = CODE_STYLES.replace('</w:styles>', style + '</w:styles>')
+
+for suffix in ['', ' Bottom Left']:
+    style_id = 'CodeLanguage' + suffix.replace(' ', '') + 'WithCount'
+    style = f'''<w:style w:type="paragraph" w:customStyle="1" w:styleId="{style_id}">
+      <w:name w:val="Code Language{suffix} With Count"/><w:basedOn w:val="CodeLanguage{suffix.replace(' ', '')}"/>
+      <w:pPr><w:keepNext/><w:spacing w:before="0" w:after="0"/></w:pPr></w:style>'''
+    CODE_STYLES = CODE_STYLES.replace('</w:styles>', style + '</w:styles>')
+
+CODE_STYLES = CODE_STYLES.replace('</w:styles>', '''<w:style w:type="paragraph" w:customStyle="1" w:styleId="CodeLineCount">
+  <w:name w:val="Code Line Count"/><w:basedOn w:val="CodeLanguage"/>
+  <w:pPr><w:keepNext w:val="0"/><w:jc w:val="left"/><w:ind w:left="60" w:right="60"/>
+    <w:spacing w:before="0" w:after="180"/></w:pPr></w:style></w:styles>''')
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--pandoc', default='pandoc')
@@ -87,14 +112,27 @@ def main():
     reference = subprocess.run([args.pandoc, '--print-default-data-file=reference.docx'],
                                check=True, capture_output=True).stdout
     output = Path(__file__).resolve().parent.parent / 'media' / 'export-reference.docx'
+    for top in (False, True):
+        build(reference, output.with_name('export-reference-top.docx') if top else output, top)
+    build(reference, output.with_name('export-reference-top-footer.docx'), True, footer=True)
+
+
+def build(reference, output, top, footer=False):
     custom = minidom.parseString(CODE_STYLES)
+    if top:
+        code = custom.getElementsByTagNameNS(WORD_NS, 'style')[0]
+        code.getElementsByTagNameNS(WORD_NS, 'keepNext')[0].setAttribute('w:val', '1' if footer else '0')
+        spacing = code.getElementsByTagNameNS(WORD_NS, 'spacing')[0]
+        spacing.setAttribute('w:before', '0')
+        spacing.setAttribute('w:after', '0' if footer else '180')
+    custom_ids = {style.getAttributeNS(WORD_NS, 'styleId') for style in custom.getElementsByTagNameNS(WORD_NS, 'style')}
     with ZipFile(BytesIO(reference)) as source, ZipFile(output, 'w') as target:
         for name in sorted(source.namelist()):
             data = source.read(name)
             if name == 'word/styles.xml':
                 styles = minidom.parseString(data)
                 for style in list(styles.getElementsByTagNameNS(WORD_NS, 'style')):
-                    if style.getAttributeNS(WORD_NS, 'styleId') in ('SourceCode', 'CodeLanguage', 'CodeLanguageBadge'):
+                    if style.getAttributeNS(WORD_NS, 'styleId') in custom_ids:
                         style.parentNode.removeChild(style)
                 for style in custom.getElementsByTagNameNS(WORD_NS, 'style'):
                     styles.documentElement.appendChild(styles.importNode(style, deep=True))

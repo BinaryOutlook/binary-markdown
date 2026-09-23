@@ -1,0 +1,2183 @@
+{
+  "schemaVersion": 1,
+  "recordedDate": "2026-09-21",
+  "scope": "Bounded DOCX native numbered-paragraph reader checkpoint",
+  "readiness": "NOT_READY: reader list-termination failures, four unexecuted LibreOffice editing cases, and static-count product acceptance remain unresolved.",
+  "environment": {
+    "os": "macOS 26.5.2",
+    "architecture": "arm64",
+    "node": "v24.21.0",
+    "pandoc": "pandoc 3.8.3",
+    "python": "3.14.3",
+    "pdftotext": "pdftotext version 26.03.0",
+    "word": {
+      "version": "16.113.1",
+      "build": "16.113.26091740"
+    },
+    "libreoffice": {
+      "version": "LibreOffice 26.2.6.3 8221e31b3ac356a1623c672912a3d2b492f7e3d1",
+      "executableSha256": "c772a72b6f07e953a34956cebedf5d037b1ea841fad29014b1ee6355775c1d1e"
+    }
+  },
+  "sourceIdentity": {
+    "fixtureGenerationCommit": "c998bca9fe1e73337b4323c980d1f3fab6fb581c",
+    "fixtureGenerationTree": "b1ae5bb21e0ea25cc68eb2b05f109f9ff17cdb3c",
+    "fixtureGenerationSourceDirty": true,
+    "generationNote": "Fixtures were generated from c998bca with the uncommitted numbered SourceCode continuation fix. This is dirty-tree test evidence, not a clean package build.",
+    "equivalentCommittedRuntime": "20a9915a1adf3a4967ac52d3388841dda6a25e97",
+    "equivalenceScope": "The recorded compiled exporter hashes still match, and the numbered-export source hash matches the committed source. This establishes identity of the audited exporter files, not an installed-package identity claim.",
+    "runtimeSha256": {
+      "out/export/pandoc.js": "a9b2b98f15f198c9fb930eb832efc5012aebe4a82bcac79dcf204463a222cb4d",
+      "out/export/docx-numbering.js": "90fe4711315332958bae60ef24f92c0f804945a45201d2cb565a60420973c78c",
+      "out/export/code-lines.js": "7e727a7994a427e73240b994339ee3859bfa9634f89419b4cc27da13a77f2258",
+      "src/export/docx-numbering.ts": "a8e410a9446cab1935487a7b3aacf74c8531944d2c8e60b184ab4d1398c2ff1d"
+    },
+    "numberedSourceMatchesEquivalentCommit": true,
+    "generatorPath": "test/native/docx-reader-fixtures.cjs",
+    "generatorSha256": "121952b3fb8e7298b2ca55ecd2a3a33e938efeb3e8b114bfd20e185997221c93",
+    "fixtureInputs": [
+      {
+        "name": "source.md",
+        "sha256": "b11f205ebdf3870f011d59d0c7b9d38c42c3f0d5f95cee757386ac3d20750728"
+      },
+      {
+        "name": "editing-source.md",
+        "sha256": "d46db8ccfe832b6ac2d755dd9850544b8f844988242a20af09262eaf64b92e65"
+      },
+      {
+        "name": "expectations.json",
+        "sha256": "b75b68a195b620bea9f4b2b2d2c08f87c3f482ebad0b9a3f3c18e568c8019c69"
+      },
+      {
+        "name": "top-left.docx",
+        "sha256": "95be9614fd34ba9812d3120c2ad2d4a5656fe330cb90066448dc299a97b3a456"
+      },
+      {
+        "name": "top-right.docx",
+        "sha256": "fe83c62964ea81edcbf346b92b2394a93ec0ddbb9a9000750f0584c6ca53c3ab"
+      },
+      {
+        "name": "bottom-left.docx",
+        "sha256": "a402c45ca950d37a9755c209c5a8e6ce3f4078e7275481fd15196cc67ffdc3ec"
+      },
+      {
+        "name": "bottom-right.docx",
+        "sha256": "435d2aa8e558f48018096e617f95d32ab20d7c3e5ee2234009dabea159492498"
+      },
+      {
+        "name": "hidden.docx",
+        "sha256": "9d6ba83df7c7ab08b105015bdf59469a30fee0d9d16ed371145f420ecf16e18f"
+      },
+      {
+        "name": "default-off.docx",
+        "sha256": "0b84f24578277161493002a671d1dc39238f36cbd9144b3ee94ba321d2038e1e"
+      },
+      {
+        "name": "numbers-only.docx",
+        "sha256": "4eb6c1d7211aa40b6168461b4fbb26ba11927703b6e4112cae96f2c89eaa827d"
+      },
+      {
+        "name": "counts-only.docx",
+        "sha256": "1e7aae200c24300e77383fb5e9c4cfb8dbf7453f0f6268eae7ea672161d01303"
+      },
+      {
+        "name": "editing.docx",
+        "sha256": "414548e4f9262b45c5f5d73ebd32f2bb3be57b773eb4cef3d1522710f5ff4a36"
+      }
+    ],
+    "fixtureReceiptSha256": "e7bb21aade80b3e617a5f72ebd9e64752c5c678fa5a27dc1e5370a3246fae556"
+  },
+  "headlessMatrix": {
+    "mode": "HEADLESS_ONLY",
+    "checkerPath": "test/native/docx-reader-inspect.py",
+    "checkerSha256": "e27e7c62635cb63e56a54b55e6c04493b042c205172a3bdb7c92bc0192bd2a60",
+    "privateInspectionSha256": "42f90fa16019f793c7eac15f3f3ca5318fd75741ce8de05519269342175c3a04",
+    "coverage": "All nine original and headlessly resaved DOCX configurations: exact payloads, native numbered-paragraph counts, static count labels, retained StringTok runs, rendered line-number sequences and multipage code markers.",
+    "cases": {
+      "top-left": {
+        "status": "PASS",
+        "sourceDocxSha256": "95be9614fd34ba9812d3120c2ad2d4a5656fe330cb90066448dc299a97b3a456",
+        "resavedDocxSha256": "dba84e336f32abb3acf69b0aea472b53761d93b2091c015bde8bf5b98e92a330",
+        "exactBlocks": 8,
+        "nativeNumberedParagraphs": 169,
+        "countLabels": [
+          "Lines: 0",
+          "Lines: 1",
+          "Lines: 2",
+          "Lines: 6",
+          "Lines: 5",
+          "Lines: 2",
+          "Lines: 3",
+          "Lines: 150"
+        ],
+        "originalPdf": {
+          "pages": 5,
+          "correctNumbers": 169,
+          "multiPageMarkers": 143,
+          "sha256": "2d2c07f093bd8af8e2e3258169a27b3a1c89ec1a5ec89d8ead8d039595a2ee99",
+          "layoutTextSha256": "c92f02626bfb32f9a3092fcf35e3938a0adee1347f05afc0564c070dfd2734ea",
+          "lastCountOnLastCodePage": true
+        },
+        "resavedPdf": {
+          "pages": 5,
+          "correctNumbers": 169,
+          "multiPageMarkers": 143,
+          "sha256": "01f6b1d764188bd21b19b67c93aa5d7c8efe052c4cc9129c03914dec407d7293",
+          "layoutTextSha256": "bd5a78073948b47fde5ff35b8d41b70e1f4f7d39c1b71ce7ce7b1ecd0d2adbb8",
+          "lastCountOnLastCodePage": true
+        }
+      },
+      "top-right": {
+        "status": "PASS",
+        "sourceDocxSha256": "fe83c62964ea81edcbf346b92b2394a93ec0ddbb9a9000750f0584c6ca53c3ab",
+        "resavedDocxSha256": "f8b3bc81dc5c4a8e021df20180bd1abd4818978fbfb57d8364fd85f76eff0f22",
+        "exactBlocks": 8,
+        "nativeNumberedParagraphs": 169,
+        "countLabels": [
+          "Lines: 0",
+          "Lines: 1",
+          "Lines: 2",
+          "Lines: 6",
+          "Lines: 5",
+          "Lines: 2",
+          "Lines: 3",
+          "Lines: 150"
+        ],
+        "originalPdf": {
+          "pages": 5,
+          "correctNumbers": 169,
+          "multiPageMarkers": 143,
+          "sha256": "387df34df75d0b363de179f5843e1e661f50622286fdc1266bf76f4d20d75bab",
+          "layoutTextSha256": "d9032f62356ec82be8c48f1e81a5ae1affe9f0de14f05f615c8ea364b050e7a7",
+          "lastCountOnLastCodePage": true
+        },
+        "resavedPdf": {
+          "pages": 5,
+          "correctNumbers": 169,
+          "multiPageMarkers": 143,
+          "sha256": "8e3f1fc31041fe243bec6673598a4fbc31a36a97b6f60c81b10fe36fe45e0441",
+          "layoutTextSha256": "8300c6e71e6183c147d528374227b624dbfce2ed9a05aab222628e4aefacd675",
+          "lastCountOnLastCodePage": true
+        }
+      },
+      "bottom-left": {
+        "status": "PASS",
+        "sourceDocxSha256": "a402c45ca950d37a9755c209c5a8e6ce3f4078e7275481fd15196cc67ffdc3ec",
+        "resavedDocxSha256": "913800125a2c9db007db94e570b60ad2ff87cd3e9082d63a061bc26e16b0a585",
+        "exactBlocks": 8,
+        "nativeNumberedParagraphs": 169,
+        "countLabels": [
+          "Lines: 0",
+          "Lines: 1",
+          "Lines: 2",
+          "Lines: 6",
+          "Lines: 5",
+          "Lines: 2",
+          "Lines: 3",
+          "Lines: 150"
+        ],
+        "originalPdf": {
+          "pages": 5,
+          "correctNumbers": 169,
+          "multiPageMarkers": 143,
+          "sha256": "c8481d3e00cac0817d62cd40a2a3a9441905b90df8fb78f6c487f18554ea62d3",
+          "layoutTextSha256": "c8e895d1bf191de16a0eb47ffd635dcfcc3c4d7fe3ac3124930b07f9891e24f2",
+          "lastCountOnLastCodePage": true
+        },
+        "resavedPdf": {
+          "pages": 5,
+          "correctNumbers": 169,
+          "multiPageMarkers": 143,
+          "sha256": "86c1816c8afa96c5f1fefef2ca9c8acfe0406a8a5ec073c41f019c2f4a46ac63",
+          "layoutTextSha256": "d0f8caf4cb61031c6fed1bca502a26a18ba96b81fbd9d107b67852c0898c8448",
+          "lastCountOnLastCodePage": true
+        }
+      },
+      "bottom-right": {
+        "status": "PASS",
+        "sourceDocxSha256": "435d2aa8e558f48018096e617f95d32ab20d7c3e5ee2234009dabea159492498",
+        "resavedDocxSha256": "0d43da578bc0773707ed299494fda78738f3dc05240c2345830b16cf3de1062a",
+        "exactBlocks": 8,
+        "nativeNumberedParagraphs": 169,
+        "countLabels": [
+          "Lines: 0",
+          "Lines: 1",
+          "Lines: 2",
+          "Lines: 6",
+          "Lines: 5",
+          "Lines: 2",
+          "Lines: 3",
+          "Lines: 150"
+        ],
+        "originalPdf": {
+          "pages": 5,
+          "correctNumbers": 169,
+          "multiPageMarkers": 143,
+          "sha256": "277d6a9669ec281c393b920ae7033946abd63f55b023c5b7bf3fc933014470cc",
+          "layoutTextSha256": "e32584003fb7c87931a1c435ff94b05c72412b3aa2955de6d7ec9cec5e70f17c",
+          "lastCountOnLastCodePage": true
+        },
+        "resavedPdf": {
+          "pages": 5,
+          "correctNumbers": 169,
+          "multiPageMarkers": 143,
+          "sha256": "cba2be668fe587b154493439bd62914d32d5d42ff8fb0b74ea555ac606080799",
+          "layoutTextSha256": "3c8729a0f16596ba7fb289ce6a67c594853402f0c49d04efe74c287b2f7dfd0c",
+          "lastCountOnLastCodePage": true
+        }
+      },
+      "hidden": {
+        "status": "PASS",
+        "sourceDocxSha256": "9d6ba83df7c7ab08b105015bdf59469a30fee0d9d16ed371145f420ecf16e18f",
+        "resavedDocxSha256": "b82545f5e84f59825ef4fbbb932a5f79e22e64b2d484f2632e7ae21ef89f36eb",
+        "exactBlocks": 8,
+        "nativeNumberedParagraphs": 169,
+        "countLabels": [
+          "Lines: 0",
+          "Lines: 1",
+          "Lines: 2",
+          "Lines: 6",
+          "Lines: 5",
+          "Lines: 2",
+          "Lines: 3",
+          "Lines: 150"
+        ],
+        "originalPdf": {
+          "pages": 5,
+          "correctNumbers": 169,
+          "multiPageMarkers": 143,
+          "sha256": "5bee91125efac9a5349e940bd7af3c90c46995f9f1042c268215c534bde52b61",
+          "layoutTextSha256": "1ac95ed1142dca1bc24e30776a0808f0afb07acfe6bfdf80ee94f44db4030928",
+          "lastCountOnLastCodePage": true
+        },
+        "resavedPdf": {
+          "pages": 5,
+          "correctNumbers": 169,
+          "multiPageMarkers": 143,
+          "sha256": "91498096f7bda7969d4ae1eb62bf705586cf823752cfab15f32af18eacbb00c9",
+          "layoutTextSha256": "1ac95ed1142dca1bc24e30776a0808f0afb07acfe6bfdf80ee94f44db4030928",
+          "lastCountOnLastCodePage": true
+        }
+      },
+      "default-off": {
+        "status": "PASS",
+        "sourceDocxSha256": "0b84f24578277161493002a671d1dc39238f36cbd9144b3ee94ba321d2038e1e",
+        "resavedDocxSha256": "e8dc8c454e15c5ea0e534f6dd092e13ce87fca11d6f59093264e1640d9fc51c9",
+        "exactBlocks": 8,
+        "nativeNumberedParagraphs": 0,
+        "countLabels": [],
+        "originalPdf": {
+          "pages": 5,
+          "correctNumbers": 0,
+          "multiPageMarkers": 143,
+          "sha256": "137d837685bf50faf905679d07467f994842cea01a1870d49e3bd580e9c140d8",
+          "layoutTextSha256": "7177897a4218119ecb25ca5b50b75689b7c352117737934b197c55ef689fc899"
+        },
+        "resavedPdf": {
+          "pages": 5,
+          "correctNumbers": 0,
+          "multiPageMarkers": 143,
+          "sha256": "623cc25d3ea24eb372288b85128f2f3c096ca9afc93fd7ebf6d127db01650b80",
+          "layoutTextSha256": "9b37ed886d1d6fc452ce2c00dd676300e1e049273d92b2788ee9386b5809c722"
+        }
+      },
+      "numbers-only": {
+        "status": "PASS",
+        "sourceDocxSha256": "4eb6c1d7211aa40b6168461b4fbb26ba11927703b6e4112cae96f2c89eaa827d",
+        "resavedDocxSha256": "c2e1f65a8f3f9b58752f5ccb42ee55b8cfe3760f9be054a33e38d8f7b8e2b896",
+        "exactBlocks": 8,
+        "nativeNumberedParagraphs": 169,
+        "countLabels": [],
+        "originalPdf": {
+          "pages": 5,
+          "correctNumbers": 169,
+          "multiPageMarkers": 143,
+          "sha256": "57e89165e33f632cfa43aa536b904f9956ea96faeed622f439fa99767f685de5",
+          "layoutTextSha256": "971f8f56fb7686e710a210a5cc0c2cef62dc44c70c7ceae04673fa2066b08bd5"
+        },
+        "resavedPdf": {
+          "pages": 5,
+          "correctNumbers": 169,
+          "multiPageMarkers": 143,
+          "sha256": "eb43f1d4bec6f0d57a3ce5bcdea900c3b7c964d2f8008ba5904a5c1f1cddcdba",
+          "layoutTextSha256": "971f8f56fb7686e710a210a5cc0c2cef62dc44c70c7ceae04673fa2066b08bd5"
+        }
+      },
+      "counts-only": {
+        "status": "PASS",
+        "sourceDocxSha256": "1e7aae200c24300e77383fb5e9c4cfb8dbf7453f0f6268eae7ea672161d01303",
+        "resavedDocxSha256": "89fc9af7add2457da4c04abd7b0a0c74798562a5394391aa3749af7359ccac0d",
+        "exactBlocks": 8,
+        "nativeNumberedParagraphs": 0,
+        "countLabels": [
+          "Lines: 0",
+          "Lines: 1",
+          "Lines: 2",
+          "Lines: 6",
+          "Lines: 5",
+          "Lines: 2",
+          "Lines: 3",
+          "Lines: 150"
+        ],
+        "originalPdf": {
+          "pages": 7,
+          "correctNumbers": 0,
+          "multiPageMarkers": 143,
+          "sha256": "43ae027dd88b1b397b33652c514da025abd7671b64bd5f2e498d1058816152ee",
+          "layoutTextSha256": "9a6342d2d0f72ab7692d7b8bba44860658506d5cd94218342cf8d59f3eb4f561",
+          "lastCountOnLastCodePage": true
+        },
+        "resavedPdf": {
+          "pages": 7,
+          "correctNumbers": 0,
+          "multiPageMarkers": 143,
+          "sha256": "dcaebf313a928e73a592c1158682a9d08cec5fe4caefd136f8ddd892c9095c6b",
+          "layoutTextSha256": "9a6342d2d0f72ab7692d7b8bba44860658506d5cd94218342cf8d59f3eb4f561",
+          "lastCountOnLastCodePage": true
+        }
+      },
+      "editing": {
+        "status": "PASS",
+        "sourceDocxSha256": "414548e4f9262b45c5f5d73ebd32f2bb3be57b773eb4cef3d1522710f5ff4a36",
+        "resavedDocxSha256": "dfebec76b4e4632d4e70c746a3ad4b9bd0ab72a254152fe83aad44325c70b47b",
+        "exactBlocks": 2,
+        "nativeNumberedParagraphs": 5,
+        "countLabels": [
+          "Lines: 3",
+          "Lines: 2"
+        ],
+        "originalPdf": {
+          "pages": 1,
+          "correctNumbers": 5,
+          "multiPageMarkers": 0,
+          "sha256": "be6e18ffb58081e132696add72b5b4e0cd72c71a4d6d112b00ef77ebd6ee4487",
+          "layoutTextSha256": "37be62b3a81d357703ab601cd2d0fb3fa482aabb294cf2820829d7276329df0e"
+        },
+        "resavedPdf": {
+          "pages": 1,
+          "correctNumbers": 5,
+          "multiPageMarkers": 0,
+          "sha256": "e60963cb461103ca61c9892886bab4f44804bfecf8390a82e38f9d8bc1553d95",
+          "layoutTextSha256": "37be62b3a81d357703ab601cd2d0fb3fa482aabb294cf2820829d7276329df0e"
+        }
+      }
+    },
+    "limits": [
+      "Headless conversion/resaving does not establish GUI editing or reopen acceptance.",
+      "Footer attachment is an observed result for these fixtures, not a universal pagination guarantee."
+    ]
+  },
+  "effectiveHighlightAudit": {
+    "mode": "DOCX_STRUCTURE",
+    "algorithm": "Resolve docDefaults, paragraph basedOn inheritance, character basedOn inheritance, and direct run properties; apply style bold/italic toggles; normalize hexadecimal color case; compare effective properties per code character and all token-style definitions.",
+    "properties": [
+      "color",
+      "bold",
+      "italic",
+      "complex-script bold",
+      "complex-script italic",
+      "ASCII font",
+      "high-ANSI font",
+      "font size",
+      "complex-script font size"
+    ],
+    "textCoverage": [
+      "exact characters",
+      "spaces",
+      "tabs",
+      "internal breaks",
+      "paragraph boundaries"
+    ],
+    "privateAuditScriptSha256": "1ce81d1bfbbce3882c64307d682174e9de8ccc75fb996c049e1610c1b1a4b936",
+    "privateReportSha256": "8fad12de0cd9bb10c4466fcb6cb527ee2cc42f062805e0f4ea29e49821c3630f",
+    "summary": {
+      "cases": 9,
+      "charactersCompared": 33657,
+      "differingCharacters": 0,
+      "definedTokenStyleComparisons": 279,
+      "styleDefinitionDifferences": 0
+    },
+    "cases": [
+      {
+        "case": "bottom-left",
+        "codeParagraphs": 170,
+        "charactersCompared": 4155,
+        "spaces": 89,
+        "tabs": 3,
+        "lineBreaksWithinParagraph": 0,
+        "emptyParagraphs": 18,
+        "textPreserved": true,
+        "differingCharacters": 0,
+        "tokenStylesUsed": {
+          "NormalTok": 336,
+          "OperatorTok": 5,
+          "StringTok": 3012,
+          "BuiltInTok": 720,
+          "VerbatimChar": 71,
+          "KeywordTok": 10,
+          "DecValTok": 1
+        },
+        "tokenStyleDefinitionsCompared": 31,
+        "effectiveTokenStyleDifferences": {},
+        "sourceSha256": "a402c45ca950d37a9755c209c5a8e6ce3f4078e7275481fd15196cc67ffdc3ec",
+        "resaveSha256": "913800125a2c9db007db94e570b60ad2ff87cd3e9082d63a061bc26e16b0a585"
+      },
+      {
+        "case": "bottom-right",
+        "codeParagraphs": 170,
+        "charactersCompared": 4155,
+        "spaces": 89,
+        "tabs": 3,
+        "lineBreaksWithinParagraph": 0,
+        "emptyParagraphs": 18,
+        "textPreserved": true,
+        "differingCharacters": 0,
+        "tokenStylesUsed": {
+          "NormalTok": 336,
+          "OperatorTok": 5,
+          "StringTok": 3012,
+          "BuiltInTok": 720,
+          "VerbatimChar": 71,
+          "KeywordTok": 10,
+          "DecValTok": 1
+        },
+        "tokenStyleDefinitionsCompared": 31,
+        "effectiveTokenStyleDifferences": {},
+        "sourceSha256": "435d2aa8e558f48018096e617f95d32ab20d7c3e5ee2234009dabea159492498",
+        "resaveSha256": "0d43da578bc0773707ed299494fda78738f3dc05240c2345830b16cf3de1062a"
+      },
+      {
+        "case": "counts-only",
+        "codeParagraphs": 8,
+        "charactersCompared": 4317,
+        "spaces": 89,
+        "tabs": 3,
+        "lineBreaksWithinParagraph": 162,
+        "emptyParagraphs": 2,
+        "textPreserved": true,
+        "differingCharacters": 0,
+        "tokenStylesUsed": {
+          "(none)": 162,
+          "NormalTok": 336,
+          "OperatorTok": 5,
+          "StringTok": 3012,
+          "BuiltInTok": 720,
+          "VerbatimChar": 71,
+          "KeywordTok": 10,
+          "DecValTok": 1
+        },
+        "tokenStyleDefinitionsCompared": 31,
+        "effectiveTokenStyleDifferences": {},
+        "sourceSha256": "1e7aae200c24300e77383fb5e9c4cfb8dbf7453f0f6268eae7ea672161d01303",
+        "resaveSha256": "89fc9af7add2457da4c04abd7b0a0c74798562a5394391aa3749af7359ccac0d"
+      },
+      {
+        "case": "default-off",
+        "codeParagraphs": 8,
+        "charactersCompared": 4317,
+        "spaces": 89,
+        "tabs": 3,
+        "lineBreaksWithinParagraph": 162,
+        "emptyParagraphs": 2,
+        "textPreserved": true,
+        "differingCharacters": 0,
+        "tokenStylesUsed": {
+          "(none)": 162,
+          "NormalTok": 336,
+          "OperatorTok": 5,
+          "StringTok": 3012,
+          "BuiltInTok": 720,
+          "VerbatimChar": 71,
+          "KeywordTok": 10,
+          "DecValTok": 1
+        },
+        "tokenStyleDefinitionsCompared": 31,
+        "effectiveTokenStyleDifferences": {},
+        "sourceSha256": "0b84f24578277161493002a671d1dc39238f36cbd9144b3ee94ba321d2038e1e",
+        "resaveSha256": "e8dc8c454e15c5ea0e534f6dd092e13ce87fca11d6f59093264e1640d9fc51c9"
+      },
+      {
+        "case": "editing",
+        "codeParagraphs": 5,
+        "charactersCompared": 93,
+        "spaces": 17,
+        "tabs": 1,
+        "lineBreaksWithinParagraph": 0,
+        "emptyParagraphs": 0,
+        "textPreserved": true,
+        "differingCharacters": 0,
+        "tokenStylesUsed": {
+          "KeywordTok": 3,
+          "NormalTok": 70,
+          "OperatorTok": 4,
+          "StringTok": 8,
+          "ControlFlowTok": 6,
+          "DecValTok": 2
+        },
+        "tokenStyleDefinitionsCompared": 31,
+        "effectiveTokenStyleDifferences": {},
+        "sourceSha256": "414548e4f9262b45c5f5d73ebd32f2bb3be57b773eb4cef3d1522710f5ff4a36",
+        "resaveSha256": "dfebec76b4e4632d4e70c746a3ad4b9bd0ab72a254152fe83aad44325c70b47b"
+      },
+      {
+        "case": "hidden",
+        "codeParagraphs": 170,
+        "charactersCompared": 4155,
+        "spaces": 89,
+        "tabs": 3,
+        "lineBreaksWithinParagraph": 0,
+        "emptyParagraphs": 18,
+        "textPreserved": true,
+        "differingCharacters": 0,
+        "tokenStylesUsed": {
+          "NormalTok": 336,
+          "OperatorTok": 5,
+          "StringTok": 3012,
+          "BuiltInTok": 720,
+          "VerbatimChar": 71,
+          "KeywordTok": 10,
+          "DecValTok": 1
+        },
+        "tokenStyleDefinitionsCompared": 31,
+        "effectiveTokenStyleDifferences": {},
+        "sourceSha256": "9d6ba83df7c7ab08b105015bdf59469a30fee0d9d16ed371145f420ecf16e18f",
+        "resaveSha256": "b82545f5e84f59825ef4fbbb932a5f79e22e64b2d484f2632e7ae21ef89f36eb"
+      },
+      {
+        "case": "numbers-only",
+        "codeParagraphs": 170,
+        "charactersCompared": 4155,
+        "spaces": 89,
+        "tabs": 3,
+        "lineBreaksWithinParagraph": 0,
+        "emptyParagraphs": 18,
+        "textPreserved": true,
+        "differingCharacters": 0,
+        "tokenStylesUsed": {
+          "NormalTok": 336,
+          "OperatorTok": 5,
+          "StringTok": 3012,
+          "BuiltInTok": 720,
+          "VerbatimChar": 71,
+          "KeywordTok": 10,
+          "DecValTok": 1
+        },
+        "tokenStyleDefinitionsCompared": 31,
+        "effectiveTokenStyleDifferences": {},
+        "sourceSha256": "4eb6c1d7211aa40b6168461b4fbb26ba11927703b6e4112cae96f2c89eaa827d",
+        "resaveSha256": "c2e1f65a8f3f9b58752f5ccb42ee55b8cfe3760f9be054a33e38d8f7b8e2b896"
+      },
+      {
+        "case": "top-left",
+        "codeParagraphs": 170,
+        "charactersCompared": 4155,
+        "spaces": 89,
+        "tabs": 3,
+        "lineBreaksWithinParagraph": 0,
+        "emptyParagraphs": 18,
+        "textPreserved": true,
+        "differingCharacters": 0,
+        "tokenStylesUsed": {
+          "NormalTok": 336,
+          "OperatorTok": 5,
+          "StringTok": 3012,
+          "BuiltInTok": 720,
+          "VerbatimChar": 71,
+          "KeywordTok": 10,
+          "DecValTok": 1
+        },
+        "tokenStyleDefinitionsCompared": 31,
+        "effectiveTokenStyleDifferences": {},
+        "sourceSha256": "95be9614fd34ba9812d3120c2ad2d4a5656fe330cb90066448dc299a97b3a456",
+        "resaveSha256": "dba84e336f32abb3acf69b0aea472b53761d93b2091c015bde8bf5b98e92a330"
+      },
+      {
+        "case": "top-right",
+        "codeParagraphs": 170,
+        "charactersCompared": 4155,
+        "spaces": 89,
+        "tabs": 3,
+        "lineBreaksWithinParagraph": 0,
+        "emptyParagraphs": 18,
+        "textPreserved": true,
+        "differingCharacters": 0,
+        "tokenStylesUsed": {
+          "NormalTok": 336,
+          "OperatorTok": 5,
+          "StringTok": 3012,
+          "BuiltInTok": 720,
+          "VerbatimChar": 71,
+          "KeywordTok": 10,
+          "DecValTok": 1
+        },
+        "tokenStyleDefinitionsCompared": 31,
+        "effectiveTokenStyleDifferences": {},
+        "sourceSha256": "fe83c62964ea81edcbf346b92b2394a93ec0ddbb9a9000750f0584c6ca53c3ab",
+        "resaveSha256": "f8b3bc81dc5c4a8e021df20180bd1abd4818978fbfb57d8364fd85f76eff0f22"
+      }
+    ],
+    "limits": [
+      "The general nine-case matrix contains no italic=true code characters; the separate italic probe exercises them.",
+      "Auto font/color values are compared symbolically; physical font substitution is not certified by DOCX structure.",
+      "This audit does not compare every DOCX formatting property. LibreOffice removes the SourceCode noProof and wordWrap properties during resaving.",
+      "Private audit scripts are retained locally and are not a maintained repository test command."
+    ],
+    "inputSelection": "The private audit algorithm was run with the fixed fixture and fixed-headless-resave directories substituted for the earlier inputs; formatting resolution was unchanged."
+  },
+  "italicProbe": {
+    "mode": "HEADLESS_ONLY",
+    "sourceCommit": "c998bca9fe1e73337b4323c980d1f3fab6fb581c",
+    "sourceDirty": true,
+    "runtimeSha256": {
+      "out/export/pandoc.js": "a9b2b98f15f198c9fb930eb832efc5012aebe4a82bcac79dcf204463a222cb4d",
+      "out/export/docx-numbering.js": "90fe4711315332958bae60ef24f92c0f804945a45201d2cb565a60420973c78c",
+      "out/export/code-lines.js": "7e727a7994a427e73240b994339ee3859bfa9634f89419b4cc27da13a77f2258",
+      "src/export/docx-numbering.ts": "a8e410a9446cab1935487a7b3aacf74c8531944d2c8e60b184ab4d1398c2ff1d"
+    },
+    "runtimeStableDuringExport": true,
+    "sourceLines": [
+      "# ITALIC_COMMENT λ & <text>  ",
+      "\t# INDENTED_COMMENT with tab  ",
+      "value = \"HIGHLIGHTED_STRING\"",
+      "if value:",
+      "    print(value)"
+    ],
+    "sourceSha256": "7a25268e9f95d2c54501fa815ec525219487ff04450e26f405a0dbbc25efcacf",
+    "originalDocxSha256": "e290cfceb44c11d5d415912773a6aae1c1b045a2267e96b9bb05a57403c9db61",
+    "resavedDocxSha256": "9e73d8af1188cdc09d7db871a374082a607d3701d2b0f7c0fb0bcaf443e9beca",
+    "codeParagraphs": 5,
+    "charactersCompared": 112,
+    "italicCharactersCompared": 58,
+    "italicColor": "60A0B0",
+    "everyEffectiveCharacterPropertyPreserved": true,
+    "allTokenStyleDefinitionsPreserved": true,
+    "renderedEvidence": [
+      {
+        "stage": "rendered",
+        "pdfSha256": "e18f6522c00ad8fb41f6a7a9074961494065e44fcddaf1f8fdfd70ff85f35b65",
+        "commentTokens": {
+          "ITALIC_COMMENT": {
+            "italic": true,
+            "color": "#60a0b0",
+            "text": "# ITALIC_COMMENT λ & <text> "
+          },
+          "INDENTED_COMMENT": {
+            "italic": true,
+            "color": "#60a0b0",
+            "text": "# INDENTED_COMMENT with tab "
+          }
+        },
+        "embeddedObliqueFontObserved": true
+      },
+      {
+        "stage": "resaved-rendered",
+        "pdfSha256": "153c14853a64827fe021ca3f2943369658431ef52ea0084e90c7a480f489a93d",
+        "commentTokens": {
+          "ITALIC_COMMENT": {
+            "italic": true,
+            "color": "#60a0b0",
+            "text": "# ITALIC_COMMENT λ & <text> "
+          },
+          "INDENTED_COMMENT": {
+            "italic": true,
+            "color": "#60a0b0",
+            "text": "# INDENTED_COMMENT with tab "
+          }
+        },
+        "embeddedObliqueFontObserved": true
+      }
+    ],
+    "renderInspectionMethod": "Poppler pdftohtml XML identifies both comment markers as italic in color #60a0b0; pdffonts identifies an embedded oblique font before and after resaving.",
+    "privateGeneratorSha256": "a0f69aa09d86d123968c6fec2331c078ef58e313b88213a273716bac9ec316a7",
+    "privateInspectorSha256": "dd6e68f62625605a65d21342406601547fe9324baefa79cc80f778a2c984bf30",
+    "privateInspectionSha256": "cf67644965dfcc6cf40c0a6cc54a7f8b0eda9ee686097508821e1cbbe920559e",
+    "limits": [
+      "This probe does not establish Word rendering or GUI editing acceptance.",
+      "The reader may substitute a physical font while preserving the requested DOCX font properties."
+    ],
+    "renderExtraction": "The Poppler XML assertions were performed separately after the private headless inspection script; they are recorded observations rather than a maintained executable test."
+  },
+  "historicalUnnumberedFooterRecheck": {
+    "mode": "HEADLESS_ONLY",
+    "recordedSourceCommit": "c998bca9fe1e73337b4323c980d1f3fab6fb581c",
+    "generationDirtyStatus": "NOT_RECORDED",
+    "reader": "LibreOffice 26.2.6.3 8221e31b3ac356a1623c672912a3d2b492f7e3d1",
+    "reason": "Recheck the earlier development-reader observation that an unnumbered 150-line code block could orphan its total.",
+    "configuration": {
+      "showCodeLineNumbers": false,
+      "showCodeLineCount": true
+    },
+    "sourceSha256": "0ed6afcc5537dd32a9ceb4e0fb9c30cb9ffbe726b42a29ab614042fb5f0900e4",
+    "privateInspectionSha256": "dedd2477d3d7bee8ea54bf3a0a385c021372da065534e164622b65ab6d521c6e",
+    "cases": {
+      "top-left": {
+        "pages": 7,
+        "lastCodePages": [
+          7
+        ],
+        "lastCountPages": [
+          7
+        ],
+        "attached": true,
+        "docxSha256": "68e759c136b8b2e2b5f978771d26d6ad950fd7102566e2f28ebadbbb80bd72d7",
+        "pdfSha256": "f9dc73fe5bdd2f1316278ce44ed588c9656484f0a3d0b811d62a38bc6bb2dd35"
+      },
+      "top-right": {
+        "pages": 7,
+        "lastCodePages": [
+          7
+        ],
+        "lastCountPages": [
+          7
+        ],
+        "attached": true,
+        "docxSha256": "307ab31bba8e7d425ac5ada9e5cba6576dc25267e61716f9c83e4261574a6ea5",
+        "pdfSha256": "b2ea9064a316ad04f44268ef20e5ab1486345c733b38b843adf7154b77258bd2"
+      },
+      "bottom-left": {
+        "pages": 6,
+        "lastCodePages": [
+          6
+        ],
+        "lastCountPages": [
+          6
+        ],
+        "attached": true,
+        "docxSha256": "7b617f6bd852f7756fe7aceafd8b0424f4525423c17bf2015a1feda0e8a2fbf4",
+        "pdfSha256": "6a18ea11ec5d49af7f7fb94b9d197a20a883b65565380e761a56a81bf84f5895"
+      },
+      "bottom-right": {
+        "pages": 6,
+        "lastCodePages": [
+          6
+        ],
+        "lastCountPages": [
+          6
+        ],
+        "attached": true,
+        "docxSha256": "30baf1cb9e665dad6a27d77c0b86e56b999aa697359a496c7b3bed2aa8feb5b0",
+        "pdfSha256": "ea4828ed12835d10e5f61a56f85e958f7e1deece5c5f84da53deaee04a979560"
+      },
+      "hidden": {
+        "pages": 6,
+        "lastCodePages": [
+          6
+        ],
+        "lastCountPages": [
+          6
+        ],
+        "attached": true,
+        "docxSha256": "cc1b194078d4b9d58952851f9d94697626330c508db56dbcad1a39959eb37180",
+        "pdfSha256": "441612a23101cf1c753aa5baeed79f6b5a6a6557961fe3f6d2ab11b83b731da3"
+      }
+    },
+    "conclusion": "The earlier orphaned-total observation did not reproduce in these five stable-reader cases. This does not rewrite the historical observation or guarantee pagination in other documents."
+  },
+  "interactiveEditing": {
+    "baselineDocxSha256": "414548e4f9262b45c5f5d73ebd32f2bb3be57b773eb4cef3d1522710f5ff4a36",
+    "expectationsSha256": "b75b68a195b620bea9f4b2b2d2c08f87c3f482ebad0b9a3f3c18e568c8019c69",
+    "privateSavedFileCheckerSha256": "c687ab3eba3eb4019b1bb1ccfb71ce0e63f3436083a8ed4b0d9ce4886057afff",
+    "savedFileCheckerCoverage": [
+      "reject unchanged copies presented as edits",
+      "compare exact expected paragraphs including tabs, trailing spaces and soft breaks",
+      "require SourceCode-derived paragraph style",
+      "inspect native decimal-numbering metadata",
+      "compare unchanged control-block effective formatting",
+      "check unchanged export-time totals",
+      "reject tracked changes"
+    ],
+    "limits": [
+      "Saved-file checks alone do not prove GUI actions; completed-case action claims come from the native desktop interaction record.",
+      "Native numbering metadata is not a substitute for reader-rendered number inspection. Passing completed cases also received visual inspection after reopening.",
+      "Existing text formatting is not automatically re-highlighted after edits.",
+      "Only the three explicitly completed LibreOffice case files are counted. Other prepared files are NOT_RUN."
+    ],
+    "readers": {
+      "word": {
+        "version": "16.113.1",
+        "completedCases": 7,
+        "passingCases": 6,
+        "failingCases": 1,
+        "notRunCases": 0,
+        "cases": [
+          {
+            "case": "replace-text",
+            "status": "PASS",
+            "guiOperationsObserved": [
+              "open fresh case copy",
+              "perform specified edit",
+              "save as DOCX",
+              "close document",
+              "reopen saved document",
+              "inspect reopened result"
+            ],
+            "guiEvidenceSource": "Native desktop interactions and observations by the testing agent; saved-file assertions performed separately.",
+            "savedDocxSha256": "c09234785ec12e47b0ee4546fc2335c13d1a6aff59cad9812ea2b0ed7a411cb9",
+            "savedFileChecks": {
+              "savedFileDiffersFromBaseline": true,
+              "exactExpectedParagraphs": true,
+              "firstBlockContentChanged": true,
+              "allParagraphsRetainCodeStyle": true,
+              "everyCodeParagraphHasDecimalNumbering": true,
+              "staticExportCountsUnchanged": true,
+              "noTrackedChanges": true,
+              "independentBlockEffectiveFormattingUnchanged": true
+            },
+            "expectedParagraphs": [
+              [
+                "def greet(name):",
+                "\tmessage = \"Welcome \" + name  ",
+                "    return message"
+              ],
+              [
+                "SECOND_FIRST = 1",
+                "SECOND_LAST = 2"
+              ]
+            ],
+            "observedParagraphs": [
+              [
+                "def greet(name):",
+                "\tmessage = \"Welcome \" + name  ",
+                "    return message"
+              ],
+              [
+                "SECOND_FIRST = 1",
+                "SECOND_LAST = 2"
+              ]
+            ],
+            "expectedVisibleNumbers": [
+              [
+                1,
+                2,
+                3
+              ],
+              [
+                1,
+                2
+              ]
+            ],
+            "observedNativeNumberingPresent": [
+              [
+                true,
+                true,
+                true
+              ],
+              [
+                true,
+                true
+              ]
+            ],
+            "observedNumberingMetadata": [
+              [
+                {
+                  "numId": "2",
+                  "abstractNumId": "2",
+                  "level": "0",
+                  "format": "decimal",
+                  "pattern": "%1",
+                  "start": 1
+                },
+                {
+                  "numId": "2",
+                  "abstractNumId": "2",
+                  "level": "0",
+                  "format": "decimal",
+                  "pattern": "%1",
+                  "start": 1
+                },
+                {
+                  "numId": "2",
+                  "abstractNumId": "2",
+                  "level": "0",
+                  "format": "decimal",
+                  "pattern": "%1",
+                  "start": 1
+                }
+              ],
+              [
+                {
+                  "numId": "3",
+                  "abstractNumId": "1",
+                  "level": "0",
+                  "format": "decimal",
+                  "pattern": "%1",
+                  "start": 1
+                },
+                {
+                  "numId": "3",
+                  "abstractNumId": "1",
+                  "level": "0",
+                  "format": "decimal",
+                  "pattern": "%1",
+                  "start": 1
+                }
+              ]
+            ],
+            "observedCountLabels": [
+              "Lines: 3",
+              "Lines: 2"
+            ],
+            "visibleNumberingObservation": "Matches expected sequence after reopen."
+          },
+          {
+            "case": "enter-within-line",
+            "status": "PASS",
+            "guiOperationsObserved": [
+              "open fresh case copy",
+              "perform specified edit",
+              "save as DOCX",
+              "close document",
+              "reopen saved document",
+              "inspect reopened result"
+            ],
+            "guiEvidenceSource": "Native desktop interactions and observations by the testing agent; saved-file assertions performed separately.",
+            "savedDocxSha256": "eb034550052974112cb3693213e290e5fc979a467c63fba1838b578e4fa81056",
+            "savedFileChecks": {
+              "savedFileDiffersFromBaseline": true,
+              "exactExpectedParagraphs": true,
+              "firstBlockContentChanged": true,
+              "allParagraphsRetainCodeStyle": true,
+              "everyCodeParagraphHasDecimalNumbering": true,
+              "staticExportCountsUnchanged": true,
+              "noTrackedChanges": true,
+              "independentBlockEffectiveFormattingUnchanged": true
+            },
+            "expectedParagraphs": [
+              [
+                "def ",
+                "greet(name):",
+                "\tmessage = \"Hello \" + name  ",
+                "    return message"
+              ],
+              [
+                "SECOND_FIRST = 1",
+                "SECOND_LAST = 2"
+              ]
+            ],
+            "observedParagraphs": [
+              [
+                "def ",
+                "greet(name):",
+                "\tmessage = \"Hello \" + name  ",
+                "    return message"
+              ],
+              [
+                "SECOND_FIRST = 1",
+                "SECOND_LAST = 2"
+              ]
+            ],
+            "expectedVisibleNumbers": [
+              [
+                1,
+                2,
+                3,
+                4
+              ],
+              [
+                1,
+                2
+              ]
+            ],
+            "observedNativeNumberingPresent": [
+              [
+                true,
+                true,
+                true,
+                true
+              ],
+              [
+                true,
+                true
+              ]
+            ],
+            "observedNumberingMetadata": [
+              [
+                {
+                  "numId": "2",
+                  "abstractNumId": "1",
+                  "level": "0",
+                  "format": "decimal",
+                  "pattern": "%1",
+                  "start": 1
+                },
+                {
+                  "numId": "2",
+                  "abstractNumId": "1",
+                  "level": "0",
+                  "format": "decimal",
+                  "pattern": "%1",
+                  "start": 1
+                },
+                {
+                  "numId": "2",
+                  "abstractNumId": "1",
+                  "level": "0",
+                  "format": "decimal",
+                  "pattern": "%1",
+                  "start": 1
+                },
+                {
+                  "numId": "2",
+                  "abstractNumId": "1",
+                  "level": "0",
+                  "format": "decimal",
+                  "pattern": "%1",
+                  "start": 1
+                }
+              ],
+              [
+                {
+                  "numId": "3",
+                  "abstractNumId": "2",
+                  "level": "0",
+                  "format": "decimal",
+                  "pattern": "%1",
+                  "start": 1
+                },
+                {
+                  "numId": "3",
+                  "abstractNumId": "2",
+                  "level": "0",
+                  "format": "decimal",
+                  "pattern": "%1",
+                  "start": 1
+                }
+              ]
+            ],
+            "observedCountLabels": [
+              "Lines: 3",
+              "Lines: 2"
+            ],
+            "visibleNumberingObservation": "Matches expected sequence after reopen."
+          },
+          {
+            "case": "enter-at-line-end",
+            "status": "PASS",
+            "guiOperationsObserved": [
+              "open fresh case copy",
+              "perform specified edit",
+              "save as DOCX",
+              "close document",
+              "reopen saved document",
+              "inspect reopened result"
+            ],
+            "guiEvidenceSource": "Native desktop interactions and observations by the testing agent; saved-file assertions performed separately.",
+            "savedDocxSha256": "60972b1bf934d3bb57cfd6e6694619a051876c92cb1de1130ecd962055c5b4be",
+            "savedFileChecks": {
+              "savedFileDiffersFromBaseline": true,
+              "exactExpectedParagraphs": true,
+              "firstBlockContentChanged": true,
+              "allParagraphsRetainCodeStyle": true,
+              "everyCodeParagraphHasDecimalNumbering": true,
+              "staticExportCountsUnchanged": true,
+              "noTrackedChanges": true,
+              "independentBlockEffectiveFormattingUnchanged": true
+            },
+            "expectedParagraphs": [
+              [
+                "def greet(name):",
+                "# INSERTED",
+                "\tmessage = \"Hello \" + name  ",
+                "    return message"
+              ],
+              [
+                "SECOND_FIRST = 1",
+                "SECOND_LAST = 2"
+              ]
+            ],
+            "observedParagraphs": [
+              [
+                "def greet(name):",
+                "# INSERTED",
+                "\tmessage = \"Hello \" + name  ",
+                "    return message"
+              ],
+              [
+                "SECOND_FIRST = 1",
+                "SECOND_LAST = 2"
+              ]
+            ],
+            "expectedVisibleNumbers": [
+              [
+                1,
+                2,
+                3,
+                4
+              ],
+              [
+                1,
+                2
+              ]
+            ],
+            "observedNativeNumberingPresent": [
+              [
+                true,
+                true,
+                true,
+                true
+              ],
+              [
+                true,
+                true
+              ]
+            ],
+            "observedNumberingMetadata": [
+              [
+                {
+                  "numId": "2",
+                  "abstractNumId": "2",
+                  "level": "0",
+                  "format": "decimal",
+                  "pattern": "%1",
+                  "start": 1
+                },
+                {
+                  "numId": "2",
+                  "abstractNumId": "2",
+                  "level": "0",
+                  "format": "decimal",
+                  "pattern": "%1",
+                  "start": 1
+                },
+                {
+                  "numId": "2",
+                  "abstractNumId": "2",
+                  "level": "0",
+                  "format": "decimal",
+                  "pattern": "%1",
+                  "start": 1
+                },
+                {
+                  "numId": "2",
+                  "abstractNumId": "2",
+                  "level": "0",
+                  "format": "decimal",
+                  "pattern": "%1",
+                  "start": 1
+                }
+              ],
+              [
+                {
+                  "numId": "3",
+                  "abstractNumId": "1",
+                  "level": "0",
+                  "format": "decimal",
+                  "pattern": "%1",
+                  "start": 1
+                },
+                {
+                  "numId": "3",
+                  "abstractNumId": "1",
+                  "level": "0",
+                  "format": "decimal",
+                  "pattern": "%1",
+                  "start": 1
+                }
+              ]
+            ],
+            "observedCountLabels": [
+              "Lines: 3",
+              "Lines: 2"
+            ],
+            "visibleNumberingObservation": "Matches expected sequence after reopen."
+          },
+          {
+            "case": "insert-blank",
+            "status": "PASS",
+            "guiOperationsObserved": [
+              "open fresh case copy",
+              "perform specified edit",
+              "save as DOCX",
+              "close document",
+              "reopen saved document",
+              "inspect reopened result"
+            ],
+            "guiEvidenceSource": "Native desktop interactions and observations by the testing agent; saved-file assertions performed separately.",
+            "savedDocxSha256": "1dae66e974ec2461f82d60c3d999cc95461c6a7377b669e1f307b0f8bb70b027",
+            "savedFileChecks": {
+              "savedFileDiffersFromBaseline": true,
+              "exactExpectedParagraphs": true,
+              "firstBlockContentChanged": true,
+              "allParagraphsRetainCodeStyle": true,
+              "everyCodeParagraphHasDecimalNumbering": true,
+              "staticExportCountsUnchanged": true,
+              "noTrackedChanges": true,
+              "independentBlockEffectiveFormattingUnchanged": true
+            },
+            "expectedParagraphs": [
+              [
+                "def greet(name):",
+                "",
+                "\tmessage = \"Hello \" + name  ",
+                "    return message"
+              ],
+              [
+                "SECOND_FIRST = 1",
+                "SECOND_LAST = 2"
+              ]
+            ],
+            "observedParagraphs": [
+              [
+                "def greet(name):",
+                "",
+                "\tmessage = \"Hello \" + name  ",
+                "    return message"
+              ],
+              [
+                "SECOND_FIRST = 1",
+                "SECOND_LAST = 2"
+              ]
+            ],
+            "expectedVisibleNumbers": [
+              [
+                1,
+                2,
+                3,
+                4
+              ],
+              [
+                1,
+                2
+              ]
+            ],
+            "observedNativeNumberingPresent": [
+              [
+                true,
+                true,
+                true,
+                true
+              ],
+              [
+                true,
+                true
+              ]
+            ],
+            "observedNumberingMetadata": [
+              [
+                {
+                  "numId": "2",
+                  "abstractNumId": "2",
+                  "level": "0",
+                  "format": "decimal",
+                  "pattern": "%1",
+                  "start": 1
+                },
+                {
+                  "numId": "2",
+                  "abstractNumId": "2",
+                  "level": "0",
+                  "format": "decimal",
+                  "pattern": "%1",
+                  "start": 1
+                },
+                {
+                  "numId": "2",
+                  "abstractNumId": "2",
+                  "level": "0",
+                  "format": "decimal",
+                  "pattern": "%1",
+                  "start": 1
+                },
+                {
+                  "numId": "2",
+                  "abstractNumId": "2",
+                  "level": "0",
+                  "format": "decimal",
+                  "pattern": "%1",
+                  "start": 1
+                }
+              ],
+              [
+                {
+                  "numId": "3",
+                  "abstractNumId": "1",
+                  "level": "0",
+                  "format": "decimal",
+                  "pattern": "%1",
+                  "start": 1
+                },
+                {
+                  "numId": "3",
+                  "abstractNumId": "1",
+                  "level": "0",
+                  "format": "decimal",
+                  "pattern": "%1",
+                  "start": 1
+                }
+              ]
+            ],
+            "observedCountLabels": [
+              "Lines: 3",
+              "Lines: 2"
+            ],
+            "visibleNumberingObservation": "Matches expected sequence after reopen."
+          },
+          {
+            "case": "enter-on-blank",
+            "status": "FAIL",
+            "guiOperationsObserved": [
+              "open fresh case copy",
+              "perform specified edit",
+              "save as DOCX",
+              "close document",
+              "reopen saved document",
+              "inspect reopened result"
+            ],
+            "guiEvidenceSource": "Native desktop interactions and observations by the testing agent; saved-file assertions performed separately.",
+            "savedDocxSha256": "1c3f5b0b54adb6890f3b4df64a4fba3c13d29721878004e0eb4ee7239cad7b30",
+            "savedFileChecks": {
+              "savedFileDiffersFromBaseline": true,
+              "exactExpectedParagraphs": true,
+              "firstBlockContentChanged": true,
+              "allParagraphsRetainCodeStyle": true,
+              "everyCodeParagraphHasDecimalNumbering": false,
+              "staticExportCountsUnchanged": true,
+              "noTrackedChanges": true,
+              "independentBlockEffectiveFormattingUnchanged": true
+            },
+            "expectedParagraphs": [
+              [
+                "def greet(name):",
+                "",
+                "# AFTER_BLANK",
+                "\tmessage = \"Hello \" + name  ",
+                "    return message"
+              ],
+              [
+                "SECOND_FIRST = 1",
+                "SECOND_LAST = 2"
+              ]
+            ],
+            "observedParagraphs": [
+              [
+                "def greet(name):",
+                "",
+                "# AFTER_BLANK",
+                "\tmessage = \"Hello \" + name  ",
+                "    return message"
+              ],
+              [
+                "SECOND_FIRST = 1",
+                "SECOND_LAST = 2"
+              ]
+            ],
+            "expectedVisibleNumbers": [
+              [
+                1,
+                2,
+                3,
+                4,
+                5
+              ],
+              [
+                1,
+                2
+              ]
+            ],
+            "observedNativeNumberingPresent": [
+              [
+                true,
+                false,
+                false,
+                true,
+                true
+              ],
+              [
+                true,
+                true
+              ]
+            ],
+            "observedNumberingMetadata": [
+              [
+                {
+                  "numId": "2",
+                  "abstractNumId": "2",
+                  "level": "0",
+                  "format": "decimal",
+                  "pattern": "%1",
+                  "start": 1
+                },
+                null,
+                null,
+                {
+                  "numId": "2",
+                  "abstractNumId": "2",
+                  "level": "0",
+                  "format": "decimal",
+                  "pattern": "%1",
+                  "start": 1
+                },
+                {
+                  "numId": "2",
+                  "abstractNumId": "2",
+                  "level": "0",
+                  "format": "decimal",
+                  "pattern": "%1",
+                  "start": 1
+                }
+              ],
+              [
+                {
+                  "numId": "3",
+                  "abstractNumId": "1",
+                  "level": "0",
+                  "format": "decimal",
+                  "pattern": "%1",
+                  "start": 1
+                },
+                {
+                  "numId": "3",
+                  "abstractNumId": "1",
+                  "level": "0",
+                  "format": "decimal",
+                  "pattern": "%1",
+                  "start": 1
+                }
+              ]
+            ],
+            "observedCountLabels": [
+              "Lines: 3",
+              "Lines: 2"
+            ],
+            "visibleNumberingObservation": "List termination observed after Enter on an empty numbered paragraph.",
+            "failure": {
+              "type": "READER_LIST_TERMINATION",
+              "paragraphsWithoutNumbering": [
+                2,
+                3
+              ],
+              "blankParagraphPreserved": true,
+              "newText": "# AFTER_BLANK",
+              "newTextEffectiveFormat": {
+                "ascii": "theme:minorHAnsi",
+                "hAnsi": "theme:minorHAnsi",
+                "sizePoints": 12,
+                "color": "AUTO",
+                "bold": false,
+                "italic": false
+              },
+              "originalCodeCharacterFormat": {
+                "ascii": "Consolas",
+                "hAnsi": "Consolas",
+                "sizePoints": 11
+              },
+              "description": "Enter on the inserted blank paragraph removes numbering from the blank paragraph and the new text paragraph. The new text also overrides the original code font with a 12 pt theme body font."
+            }
+          },
+          {
+            "case": "delete-line",
+            "status": "PASS",
+            "guiOperationsObserved": [
+              "open fresh case copy",
+              "perform specified edit",
+              "save as DOCX",
+              "close document",
+              "reopen saved document",
+              "inspect reopened result"
+            ],
+            "guiEvidenceSource": "Native desktop interactions and observations by the testing agent; saved-file assertions performed separately.",
+            "savedDocxSha256": "aa368814177aea0970d42b90d7bad52f73483346412962421e328b223aeefadd",
+            "savedFileChecks": {
+              "savedFileDiffersFromBaseline": true,
+              "exactExpectedParagraphs": true,
+              "firstBlockContentChanged": true,
+              "allParagraphsRetainCodeStyle": true,
+              "everyCodeParagraphHasDecimalNumbering": true,
+              "staticExportCountsUnchanged": true,
+              "noTrackedChanges": true,
+              "independentBlockEffectiveFormattingUnchanged": true
+            },
+            "expectedParagraphs": [
+              [
+                "def greet(name):",
+                "    return message"
+              ],
+              [
+                "SECOND_FIRST = 1",
+                "SECOND_LAST = 2"
+              ]
+            ],
+            "observedParagraphs": [
+              [
+                "def greet(name):",
+                "    return message"
+              ],
+              [
+                "SECOND_FIRST = 1",
+                "SECOND_LAST = 2"
+              ]
+            ],
+            "expectedVisibleNumbers": [
+              [
+                1,
+                2
+              ],
+              [
+                1,
+                2
+              ]
+            ],
+            "observedNativeNumberingPresent": [
+              [
+                true,
+                true
+              ],
+              [
+                true,
+                true
+              ]
+            ],
+            "observedNumberingMetadata": [
+              [
+                {
+                  "numId": "2",
+                  "abstractNumId": "1",
+                  "level": "0",
+                  "format": "decimal",
+                  "pattern": "%1",
+                  "start": 1
+                },
+                {
+                  "numId": "2",
+                  "abstractNumId": "1",
+                  "level": "0",
+                  "format": "decimal",
+                  "pattern": "%1",
+                  "start": 1
+                }
+              ],
+              [
+                {
+                  "numId": "3",
+                  "abstractNumId": "2",
+                  "level": "0",
+                  "format": "decimal",
+                  "pattern": "%1",
+                  "start": 1
+                },
+                {
+                  "numId": "3",
+                  "abstractNumId": "2",
+                  "level": "0",
+                  "format": "decimal",
+                  "pattern": "%1",
+                  "start": 1
+                }
+              ]
+            ],
+            "observedCountLabels": [
+              "Lines: 3",
+              "Lines: 2"
+            ],
+            "visibleNumberingObservation": "Matches expected sequence after reopen."
+          },
+          {
+            "case": "soft-break",
+            "status": "PASS",
+            "guiOperationsObserved": [
+              "open fresh case copy",
+              "perform specified edit",
+              "save as DOCX",
+              "close document",
+              "reopen saved document",
+              "inspect reopened result"
+            ],
+            "guiEvidenceSource": "Native desktop interactions and observations by the testing agent; saved-file assertions performed separately.",
+            "savedDocxSha256": "6e255a5fa94908a7ed83ecedbcf01c722185105d750ec644190e5497ae58e698",
+            "savedFileChecks": {
+              "savedFileDiffersFromBaseline": true,
+              "exactExpectedParagraphs": true,
+              "firstBlockContentChanged": true,
+              "allParagraphsRetainCodeStyle": true,
+              "everyCodeParagraphHasDecimalNumbering": true,
+              "staticExportCountsUnchanged": true,
+              "noTrackedChanges": true,
+              "independentBlockEffectiveFormattingUnchanged": true
+            },
+            "expectedParagraphs": [
+              [
+                "def greet(name):",
+                "\tmessage = \"Hello \" + name  ",
+                "    return \nmessage"
+              ],
+              [
+                "SECOND_FIRST = 1",
+                "SECOND_LAST = 2"
+              ]
+            ],
+            "observedParagraphs": [
+              [
+                "def greet(name):",
+                "\tmessage = \"Hello \" + name  ",
+                "    return \nmessage"
+              ],
+              [
+                "SECOND_FIRST = 1",
+                "SECOND_LAST = 2"
+              ]
+            ],
+            "expectedVisibleNumbers": [
+              [
+                1,
+                2,
+                3
+              ],
+              [
+                1,
+                2
+              ]
+            ],
+            "observedNativeNumberingPresent": [
+              [
+                true,
+                true,
+                true
+              ],
+              [
+                true,
+                true
+              ]
+            ],
+            "observedNumberingMetadata": [
+              [
+                {
+                  "numId": "2",
+                  "abstractNumId": "1",
+                  "level": "0",
+                  "format": "decimal",
+                  "pattern": "%1",
+                  "start": 1
+                },
+                {
+                  "numId": "2",
+                  "abstractNumId": "1",
+                  "level": "0",
+                  "format": "decimal",
+                  "pattern": "%1",
+                  "start": 1
+                },
+                {
+                  "numId": "2",
+                  "abstractNumId": "1",
+                  "level": "0",
+                  "format": "decimal",
+                  "pattern": "%1",
+                  "start": 1
+                }
+              ],
+              [
+                {
+                  "numId": "3",
+                  "abstractNumId": "2",
+                  "level": "0",
+                  "format": "decimal",
+                  "pattern": "%1",
+                  "start": 1
+                },
+                {
+                  "numId": "3",
+                  "abstractNumId": "2",
+                  "level": "0",
+                  "format": "decimal",
+                  "pattern": "%1",
+                  "start": 1
+                }
+              ]
+            ],
+            "observedCountLabels": [
+              "Lines: 3",
+              "Lines: 2"
+            ],
+            "visibleNumberingObservation": "Matches expected sequence after reopen."
+          }
+        ],
+        "build": "16.113.26091740"
+      },
+      "libreoffice": {
+        "version": "LibreOffice 26.2.6.3 8221e31b3ac356a1623c672912a3d2b492f7e3d1",
+        "completedCases": 3,
+        "passingCases": 2,
+        "failingCases": 1,
+        "notRunCases": 4,
+        "cases": [
+          {
+            "case": "replace-text",
+            "status": "PASS",
+            "guiOperationsObserved": [
+              "open fresh case copy",
+              "perform specified edit",
+              "save as DOCX",
+              "close document",
+              "reopen saved document",
+              "inspect reopened result"
+            ],
+            "guiEvidenceSource": "Native desktop interactions and observations by the testing agent; saved-file assertions performed separately.",
+            "savedDocxSha256": "71207ffba424b292df6e782718657d8e0faaa5b7f1bdc55a74641739a53d9485",
+            "savedFileChecks": {
+              "savedFileDiffersFromBaseline": true,
+              "exactExpectedParagraphs": true,
+              "firstBlockContentChanged": true,
+              "allParagraphsRetainCodeStyle": true,
+              "everyCodeParagraphHasDecimalNumbering": true,
+              "staticExportCountsUnchanged": true,
+              "noTrackedChanges": true,
+              "independentBlockEffectiveFormattingUnchanged": true
+            },
+            "expectedParagraphs": [
+              [
+                "def greet(name):",
+                "\tmessage = \"Welcome \" + name  ",
+                "    return message"
+              ],
+              [
+                "SECOND_FIRST = 1",
+                "SECOND_LAST = 2"
+              ]
+            ],
+            "observedParagraphs": [
+              [
+                "def greet(name):",
+                "\tmessage = \"Welcome \" + name  ",
+                "    return message"
+              ],
+              [
+                "SECOND_FIRST = 1",
+                "SECOND_LAST = 2"
+              ]
+            ],
+            "expectedVisibleNumbers": [
+              [
+                1,
+                2,
+                3
+              ],
+              [
+                1,
+                2
+              ]
+            ],
+            "observedNativeNumberingPresent": [
+              [
+                true,
+                true,
+                true
+              ],
+              [
+                true,
+                true
+              ]
+            ],
+            "observedNumberingMetadata": [
+              [
+                {
+                  "numId": "4",
+                  "abstractNumId": "1",
+                  "level": "0",
+                  "format": "decimal",
+                  "pattern": "%1",
+                  "start": 1
+                },
+                {
+                  "numId": "1",
+                  "abstractNumId": "1",
+                  "level": "0",
+                  "format": "decimal",
+                  "pattern": "%1",
+                  "start": 1
+                },
+                {
+                  "numId": "1",
+                  "abstractNumId": "1",
+                  "level": "0",
+                  "format": "decimal",
+                  "pattern": "%1",
+                  "start": 1
+                }
+              ],
+              [
+                {
+                  "numId": "5",
+                  "abstractNumId": "2",
+                  "level": "0",
+                  "format": "decimal",
+                  "pattern": "%1",
+                  "start": 1
+                },
+                {
+                  "numId": "2",
+                  "abstractNumId": "2",
+                  "level": "0",
+                  "format": "decimal",
+                  "pattern": "%1",
+                  "start": 1
+                }
+              ]
+            ],
+            "observedCountLabels": [
+              "Lines: 3",
+              "Lines: 2"
+            ],
+            "visibleNumberingObservation": "Matches expected sequence after reopen."
+          },
+          {
+            "case": "enter-within-line",
+            "status": "NOT_RUN",
+            "reason": "Desktop session locked again before this case; prepared copies are not accepted as executed edits."
+          },
+          {
+            "case": "enter-at-line-end",
+            "status": "PASS",
+            "guiOperationsObserved": [
+              "open fresh case copy",
+              "perform specified edit",
+              "save as DOCX",
+              "close document",
+              "reopen saved document",
+              "inspect reopened result"
+            ],
+            "guiEvidenceSource": "Native desktop interactions and observations by the testing agent; saved-file assertions performed separately.",
+            "savedDocxSha256": "ba730be24e5a82f2d907fc04c81b8e7a99af11f537a70edd6f7f4aa4993a182f",
+            "savedFileChecks": {
+              "savedFileDiffersFromBaseline": true,
+              "exactExpectedParagraphs": true,
+              "firstBlockContentChanged": true,
+              "allParagraphsRetainCodeStyle": true,
+              "everyCodeParagraphHasDecimalNumbering": true,
+              "staticExportCountsUnchanged": true,
+              "noTrackedChanges": true,
+              "independentBlockEffectiveFormattingUnchanged": true
+            },
+            "expectedParagraphs": [
+              [
+                "def greet(name):",
+                "# INSERTED",
+                "\tmessage = \"Hello \" + name  ",
+                "    return message"
+              ],
+              [
+                "SECOND_FIRST = 1",
+                "SECOND_LAST = 2"
+              ]
+            ],
+            "observedParagraphs": [
+              [
+                "def greet(name):",
+                "# INSERTED",
+                "\tmessage = \"Hello \" + name  ",
+                "    return message"
+              ],
+              [
+                "SECOND_FIRST = 1",
+                "SECOND_LAST = 2"
+              ]
+            ],
+            "expectedVisibleNumbers": [
+              [
+                1,
+                2,
+                3,
+                4
+              ],
+              [
+                1,
+                2
+              ]
+            ],
+            "observedNativeNumberingPresent": [
+              [
+                true,
+                true,
+                true,
+                true
+              ],
+              [
+                true,
+                true
+              ]
+            ],
+            "observedNumberingMetadata": [
+              [
+                {
+                  "numId": "4",
+                  "abstractNumId": "1",
+                  "level": "0",
+                  "format": "decimal",
+                  "pattern": "%1",
+                  "start": 1
+                },
+                {
+                  "numId": "1",
+                  "abstractNumId": "1",
+                  "level": "0",
+                  "format": "decimal",
+                  "pattern": "%1",
+                  "start": 1
+                },
+                {
+                  "numId": "1",
+                  "abstractNumId": "1",
+                  "level": "0",
+                  "format": "decimal",
+                  "pattern": "%1",
+                  "start": 1
+                },
+                {
+                  "numId": "1",
+                  "abstractNumId": "1",
+                  "level": "0",
+                  "format": "decimal",
+                  "pattern": "%1",
+                  "start": 1
+                }
+              ],
+              [
+                {
+                  "numId": "5",
+                  "abstractNumId": "2",
+                  "level": "0",
+                  "format": "decimal",
+                  "pattern": "%1",
+                  "start": 1
+                },
+                {
+                  "numId": "2",
+                  "abstractNumId": "2",
+                  "level": "0",
+                  "format": "decimal",
+                  "pattern": "%1",
+                  "start": 1
+                }
+              ]
+            ],
+            "observedCountLabels": [
+              "Lines: 3",
+              "Lines: 2"
+            ],
+            "visibleNumberingObservation": "Matches expected sequence after reopen."
+          },
+          {
+            "case": "insert-blank",
+            "status": "NOT_RUN",
+            "reason": "Desktop session locked again before this case; prepared copies are not accepted as executed edits."
+          },
+          {
+            "case": "enter-on-blank",
+            "status": "FAIL",
+            "guiOperationsObserved": [
+              "open fresh case copy",
+              "perform specified edit",
+              "save as DOCX",
+              "close document",
+              "reopen saved document",
+              "inspect reopened result"
+            ],
+            "guiEvidenceSource": "Native desktop interactions and observations by the testing agent; saved-file assertions performed separately.",
+            "savedDocxSha256": "5f39a657b42dff7744f785b746e730bc3818a3b1409c8d65fc5ac09e3624642d",
+            "savedFileChecks": {
+              "savedFileDiffersFromBaseline": true,
+              "exactExpectedParagraphs": false,
+              "firstBlockContentChanged": true,
+              "allParagraphsRetainCodeStyle": true,
+              "everyCodeParagraphHasDecimalNumbering": false,
+              "staticExportCountsUnchanged": true,
+              "noTrackedChanges": true,
+              "independentBlockEffectiveFormattingUnchanged": true
+            },
+            "expectedParagraphs": [
+              [
+                "def greet(name):",
+                "",
+                "# AFTER_BLANK",
+                "\tmessage = \"Hello \" + name  ",
+                "    return message"
+              ],
+              [
+                "SECOND_FIRST = 1",
+                "SECOND_LAST = 2"
+              ]
+            ],
+            "observedParagraphs": [
+              [
+                "def greet(name):",
+                "# AFTER_BLANK",
+                "\tmessage = \"Hello \" + name  ",
+                "    return message"
+              ],
+              [
+                "SECOND_FIRST = 1",
+                "SECOND_LAST = 2"
+              ]
+            ],
+            "expectedVisibleNumbers": [
+              [
+                1,
+                2,
+                3,
+                4,
+                5
+              ],
+              [
+                1,
+                2
+              ]
+            ],
+            "observedNativeNumberingPresent": [
+              [
+                true,
+                false,
+                true,
+                true
+              ],
+              [
+                true,
+                true
+              ]
+            ],
+            "observedNumberingMetadata": [
+              [
+                {
+                  "numId": "4",
+                  "abstractNumId": "1",
+                  "level": "0",
+                  "format": "decimal",
+                  "pattern": "%1",
+                  "start": 1
+                },
+                null,
+                {
+                  "numId": "1",
+                  "abstractNumId": "1",
+                  "level": "0",
+                  "format": "decimal",
+                  "pattern": "%1",
+                  "start": 1
+                },
+                {
+                  "numId": "1",
+                  "abstractNumId": "1",
+                  "level": "0",
+                  "format": "decimal",
+                  "pattern": "%1",
+                  "start": 1
+                }
+              ],
+              [
+                {
+                  "numId": "5",
+                  "abstractNumId": "2",
+                  "level": "0",
+                  "format": "decimal",
+                  "pattern": "%1",
+                  "start": 1
+                },
+                {
+                  "numId": "2",
+                  "abstractNumId": "2",
+                  "level": "0",
+                  "format": "decimal",
+                  "pattern": "%1",
+                  "start": 1
+                }
+              ]
+            ],
+            "observedCountLabels": [
+              "Lines: 3",
+              "Lines: 2"
+            ],
+            "visibleNumberingObservation": "List termination observed after Enter on an empty numbered paragraph.",
+            "failure": {
+              "type": "READER_LIST_TERMINATION",
+              "paragraphsWithoutNumbering": [
+                2
+              ],
+              "blankParagraphPreserved": false,
+              "newText": "# AFTER_BLANK",
+              "newTextEffectiveFormat": {
+                "ascii": "Consolas",
+                "hAnsi": "Consolas",
+                "sizePoints": 11,
+                "bold": false,
+                "italic": false,
+                "color": "AUTO"
+              },
+              "description": "After inserting and focusing a blank numbered paragraph, Enter ends the list and consumes that blank paragraph. The inserted text is unnumbered; the code font remains unchanged."
+            }
+          },
+          {
+            "case": "delete-line",
+            "status": "NOT_RUN",
+            "reason": "Desktop session locked again before this case; prepared copies are not accepted as executed edits."
+          },
+          {
+            "case": "soft-break",
+            "status": "NOT_RUN",
+            "reason": "Desktop session locked again before this case; prepared copies are not accepted as executed edits."
+          }
+        ]
+      }
+    }
+  },
+  "excludedAttempts": [
+    {
+      "reader": "Word",
+      "case": "default-off layout copy",
+      "reason": "An incorrect file-dialog selection caused an incidental owned-test edit. The contaminated GUI copy is excluded; the untouched generated default-off headless control remains valid."
+    },
+    {
+      "reader": "LibreOffice",
+      "case": "earlier enter-on-blank attempts",
+      "reason": "Wrong caret placement or test-control mistakes invalidated those attempts. Only the final confirmed blank-paragraph attempt is included."
+    }
+  ],
+  "pendingDecisions": [
+    {
+      "topic": "export-time total labels",
+      "status": "MAINTAINER_ACCEPTANCE_PENDING",
+      "observed": "Lines: 3 and Lines: 2 remain static after reader edits.",
+      "note": "Recorded behavior and checker expectations do not constitute product acceptance."
+    },
+    {
+      "topic": "Enter on a blank numbered code paragraph",
+      "status": "UNRESOLVED",
+      "observed": "Both readers terminate the list; their blank-line and font behavior differs.",
+      "note": "Neither failure is reclassified as accepted behavior."
+    }
+  ],
+  "deferredByApprovedScope": [
+    "Automatic syntax re-highlighting after reader edits",
+    "Additional reader/platform certification including Word for Windows, web and mobile",
+    "A guarantee that copied code excludes numbers in every reader"
+  ],
+  "publicationSanitization": "Only synthetic content, version identities, relative repository paths, hashes and bounded observations are retained. Raw desktop captures, document account metadata, executable installation paths and temporary profiles are not published.",
+  "validatedCandidate": {
+    "local": {
+      "sourceCommit": "20a9915a1adf3a4967ac52d3388841dda6a25e97",
+      "sourceTree": "2801479f9bf30ffdfa30ad0613b1a1080cc8f223",
+      "dirty": false,
+      "vsixSha256": "14dedaceba1ae46876dfd7f6f1770fb4566ead9564ec92a84ddb1ae4625dea41",
+      "packagedRuntimeTest": "PASS",
+      "installedVsCodeVersion": "1.138.0",
+      "installedDocxScenariosPassed": 6,
+      "frozenSourceUnchanged": true
+    },
+    "ci": {
+      "runUrl": "https://github.com/BinaryOutlook/binary-markdown/actions/runs/35531205443",
+      "testedMergeCommit": "d8bbb68d6705329e18e0da8c57e8ae4406c5ae53",
+      "sourceTree": "2801479f9bf30ffdfa30ad0613b1a1080cc8f223",
+      "dirty": false,
+      "vsixSha256": "c78ebabc12523451bd8d0fbeb15469154304c2bdbaca01fbb90628a47623b45b",
+      "checksumVerified": true,
+      "runtimeSettingsTemplateEntriesIdenticalToLocal": 468,
+      "sourceTreeIdenticalToLocal": true,
+      "workflowStatus": "SUCCESS",
+      "completedGates": [
+        "Build candidate",
+        "Validate (ubuntu)",
+        "Validate (macos)",
+        "Validate (windows)",
+        "Validate (vscode-minimum)",
+        "VSIX validation"
+      ]
+    }
+  }
+}

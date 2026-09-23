@@ -39,8 +39,37 @@ exports.activate = async function activate(context) {
         platform: process.platform, arch: process.arch, nodeVersion: process.version,
         uiKind: vscode.env.uiKind, remoteName: vscode.env.remoteName ?? null,
         trusted: vscode.workspace.isTrusted,
-        appearance: Object.fromEntries(['language', 'toolbarMode', 'tableToolbarPosition', 'theme', 'export.pdfWhiteBackground'].map(key =>
-            [key, vscode.workspace.getConfiguration('binary-markdown').get(key)]))
+        simpleFileDialog: vscode.workspace.getConfiguration('files').inspect('simpleDialog.enable').globalValue,
+        appearance: Object.fromEntries(['language', 'toolbarMode', 'tableToolbarPosition', 'editorWidthMode', 'editorMaxWidth', 'editorAlignment', 'editorWidthIndicators', 'codeLanguageOrder', 'mathSourcePosition', 'mathSourceWrap', 'theme', 'export.pdfWhiteBackground'].map(key =>
+            [key, vscode.workspace.getConfiguration('binary-markdown').get(key)])),
+        editorWidthScopes: Object.fromEntries(['editorWidthMode', 'editorMaxWidth', 'editorAlignment', 'editorWidthIndicators'].map(key => {
+            const setting = vscode.workspace.getConfiguration('binary-markdown').inspect(key);
+            return [key, { global: setting.globalValue, workspace: setting.workspaceValue }];
+        })),
+        exportCodeScopes: Object.fromEntries(['export.showCodeLanguage', 'export.codeLanguagePosition', 'export.showCodeLineCount', 'export.showCodeLineNumbers'].map(key => {
+            const setting = vscode.workspace.getConfiguration('binary-markdown').inspect(key);
+            return [key, { global: setting.globalValue, workspace: setting.workspaceValue }];
+        })),
+        mathSourceWrapScopes: (() => {
+            const setting = vscode.workspace.getConfiguration('binary-markdown').inspect('mathSourceWrap');
+            return { global: setting.globalValue, workspace: setting.workspaceValue };
+        })(),
+        mathSourcePositionScopes: (() => {
+            const setting = vscode.workspace.getConfiguration('binary-markdown').inspect('mathSourcePosition');
+            return { global: setting.globalValue, workspace: setting.workspaceValue };
+        })(),
+        languageOrderScopes: (() => {
+            const setting = vscode.workspace.getConfiguration('binary-markdown').inspect('codeLanguageOrder');
+            return { global: setting.globalValue, workspace: setting.workspaceValue };
+        })(),
+        toolbarModeScopes: (() => {
+            const setting = vscode.workspace.getConfiguration('binary-markdown').inspect('toolbarMode');
+            return { global: setting.globalValue, workspace: setting.workspaceValue };
+        })(),
+        tablePositionScopes: (() => {
+            const setting = vscode.workspace.getConfiguration('binary-markdown').inspect('tableToolbarPosition');
+            return { global: setting.globalValue, workspace: setting.workspaceValue };
+        })()
     });
     const respond = value => {
         const temporary = path.join(workspace, 'response.json.tmp');
@@ -98,26 +127,48 @@ exports.activate = async function activate(context) {
                 break;
             }
             case 'config': {
+                // Scope regressions remain inside the sentinel-owned profile/workspace.
+                if (request.scope !== undefined && (request.scope !== 'workspace' || !['tableToolbarPosition', 'toolbarMode', 'editorWidthMode', 'editorMaxWidth', 'editorAlignment', 'editorWidthIndicators', 'codeLanguageOrder', 'mathSourcePosition', 'mathSourceWrap', 'export.showCodeLanguage', 'export.codeLanguagePosition', 'export.showCodeLineCount', 'export.showCodeLineNumbers'].includes(request.key))) {
+                    throw new Error('Only the listed editor preferences permit an isolated workspace override.');
+                }
+                const clearSetting = request.value === null && (request.scope === 'workspace' || ['toolbarMode', 'editorWidthMode', 'editorMaxWidth', 'editorAlignment', 'editorWidthIndicators', 'codeLanguageOrder', 'mathSourcePosition', 'mathSourceWrap', 'export.showCodeLanguage', 'export.codeLanguagePosition', 'export.showCodeLineCount', 'export.showCodeLineNumbers'].includes(request.key));
                 const allowed = {
                     'export.pandocPath': value => typeof value === 'string',
                     'export.browserPath': value => typeof value === 'string',
                     'export.pdfWhiteBackground': value => typeof value === 'boolean',
+                    'export.showCodeLanguage': value => typeof value === 'boolean',
+                    'export.showCodeLineCount': value => typeof value === 'boolean',
+                    'export.showCodeLineNumbers': value => typeof value === 'boolean',
+                    'export.codeLanguagePosition': value => ['top-left', 'top-right', 'bottom-left', 'bottom-right'].includes(value),
                     'math.backslashDelimiters': value => typeof value === 'boolean',
+                    mathSourceWrap: value => typeof value === 'boolean',
+                    mathSourcePosition: value => ['above', 'below'].includes(value),
+                    codeLanguageOrder: value => ['default', 'a-z', 'z-a'].includes(value),
+                    editorWidthIndicators: value => typeof value === 'boolean',
+                    editorAlignment: value => ['left', 'center', 'right'].includes(value),
+                    editorWidthMode: value => ['default', 'custom', 'full'].includes(value),
+                    editorMaxWidth: value => Number.isInteger(value) && value >= 320 && value <= 4000,
                     toolbarMode: value => ['simple', 'full'].includes(value),
                     tableToolbarPosition: value => ['auto', 'top-left', 'top-right', 'bottom-left', 'bottom-right', 'left', 'right', 'top-bar'].includes(value),
                     language: value => ['en', 'zh-CN'].includes(value),
-                    theme: value => ['github', 'night'].includes(value)
+                    theme: value => ['github', 'sepia', 'night', 'dark', 'minimal', 'perplexity', 'things'].includes(value)
                 };
-                if (!Object.hasOwn(allowed, request.key) || !allowed[request.key](request.value)) {
+                if (!Object.hasOwn(allowed, request.key) || (!clearSetting && !allowed[request.key](request.value))) {
                     throw new Error('The driver only changes bounded export/appearance test settings in its isolated profile.');
                 }
-                await vscode.workspace.getConfiguration('binary-markdown').update(request.key, request.value, vscode.ConfigurationTarget.Global);
+                await vscode.workspace.getConfiguration('binary-markdown').update(request.key, clearSetting ? undefined : request.value,
+                    request.scope === 'workspace' ? vscode.ConfigurationTarget.Workspace : vscode.ConfigurationTarget.Global);
                 break;
             }
             case 'autoSave': {
                 if (!['off', 'afterDelay'].includes(request.value)) throw new Error('Invalid isolated Auto Save mode.');
                 await vscode.workspace.getConfiguration('files').update('autoSaveDelay', 200, vscode.ConfigurationTarget.Global);
                 await vscode.workspace.getConfiguration('files').update('autoSave', request.value, vscode.ConfigurationTarget.Global);
+                break;
+            }
+            case 'simpleFileDialog': {
+                if (typeof request.value !== 'boolean' && request.value !== null) throw new Error('Invalid isolated file dialog mode.');
+                await vscode.workspace.getConfiguration('files').update('simpleDialog.enable', request.value === null ? undefined : request.value, vscode.ConfigurationTarget.Global);
                 break;
             }
             case 'untitled': {

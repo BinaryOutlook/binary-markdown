@@ -60,6 +60,7 @@ async function setup(t, initialConfig = {}) {
     const state = {
         text: '# OLD-EDITOR\n', disk: '# OLD-EDITOR\n', captureCalls: 0, saveCalls: 0,
         captures: async () => '# OLD-EDITOR\n', beforeWrite: async () => {}, beforeRead: async () => {}, failedWrite: false,
+        beforeConfigWrite: async () => {},
         controller: undefined, exports: [], links: []
     };
     const file = value => ({ scheme: 'file', fsPath: value, toString: () => 'file://' + value });
@@ -93,16 +94,21 @@ async function setup(t, initialConfig = {}) {
         WorkspaceEdit: class { constructor() { this.edits = []; } replace(_uri, _range, text) { this.edits.push(text); } },
         TextEdit: { replace: (range, newText) => ({ range, newText }) },
         workspace: {
-            getConfiguration: () => ({
-                get: (key, fallback) => key in config ? config[key] : fallback,
-                inspect: key => ({ workspaceValue: workspaceConfig[key], globalValue: config[key] }),
-                update: async (key, value, target) => {
-                    configUpdates.push({ key, value, target });
-                    config[key] = value;
-                    if (target === 2) workspaceConfig[key] = value;
-                    configChanges.fire({ affectsConfiguration: query => query === 'binary-markdown' || query === 'binary-markdown.' + key });
-                }
-            }),
+            getConfiguration: () => {
+                // VS Code configuration objects are snapshots, not live views.
+                const snapshot = { ...config };
+                return {
+                    get: (key, fallback) => key in snapshot ? snapshot[key] : fallback,
+                    inspect: key => ({ workspaceValue: workspaceConfig[key], globalValue: config[key] }),
+                    update: async (key, value, target) => {
+                        configUpdates.push({ key, value, target });
+                        await state.beforeConfigWrite(key, value);
+                        config[key] = value;
+                        if (target === 2) workspaceConfig[key] = value;
+                        configChanges.fire({ affectsConfiguration: query => query === 'binary-markdown' || query === 'binary-markdown.' + key });
+                    }
+                };
+            },
             getWorkspaceFolder: () => undefined,
             onDidChangeTextDocument: changes.listen,
             onDidChangeConfiguration: configChanges.listen,
@@ -365,28 +371,64 @@ test('PDF background and code-label changes do not launch tool probes in open ed
     for (const h of editors) {
         h.configChanged(['binary-markdown.export.pdfWhiteBackground']);
         h.configChanged(['binary-markdown.export.showCodeLanguage']);
+        h.configChanged(['binary-markdown.export.codeLanguagePosition']);
         await h.flushTimers();
         assert.equal(h.state.controller.refreshes, 0, 'Presentation settings do not change tool availability');
         assert.equal(h.renderConfigs.length, 1, 'Export settings preserve the live editor');
     }
 });
 
-test('new editors and appearance rebuilds use the current configured language', async t => {
+test('new editors and layout rebuilds use the current configured language', async t => {
     const h = await setup(t);
     assert.equal(h.renderConfigs[0].webviewMessages.locale, 'en');
     // A later settings value can be visible while handling an earlier event.
     // Rendering must use that snapshot, not depend on a language-event side effect.
     h.config.language = 'zh-CN';
-    h.config.theme = 'night';
-    h.configChanged(['binary-markdown.theme']);
+    h.config.fontSize = 18;
+    h.configChanged(['binary-markdown.fontSize']);
     await h.flushTimers();
     assert.equal(h.renderConfigs.at(-1).webviewMessages.locale, 'zh-CN');
     h.config.language = 'en';
     h.config.toolbarMode = 'simple';
-    h.configChanged(['binary-markdown.toolbarMode']);
+    h.config.fontSize = 16;
+    h.configChanged(['binary-markdown.fontSize', 'binary-markdown.toolbarMode']);
     await h.flushTimers();
     assert.equal(h.renderConfigs.at(-1).webviewMessages.locale, 'en');
     assert.equal(h.renderConfigs.at(-1).toolbarMode, 'simple');
+});
+
+test('unset toolbar mode uses Full and explicit choices update without rebuilding or saving', async t => {
+    for (const initialConfig of [{}, { toolbarMode: 'simple' }, { toolbarMode: 'full' }]) {
+        const h = await setup(t, initialConfig);
+        assert.equal(h.renderConfigs[0].toolbarMode, initialConfig.toolbarMode || 'full');
+        for (const value of ['simple', 'full', undefined]) {
+            if (value === undefined) delete h.config.toolbarMode;
+            else h.config.toolbarMode = value;
+            h.configChanged(['binary-markdown.toolbarMode']);
+            await h.flushTimers();
+            assert.deepEqual(h.posts.at(-1), { type: 'toolbarMode', value: value || 'full' });
+        }
+        assert.equal(h.renderConfigs.length, 1);
+        assert.equal(h.state.captureCalls, 0);
+        assert.equal(h.state.saveCalls, 0);
+        assert.equal(h.document.isDirty, false);
+        assert.equal(h.document.getText(), '# OLD-EDITOR\n');
+    }
+});
+
+test('theme changes update the current editor without saving, capturing or rebuilding', async t => {
+    const h = await setup(t);
+    for (const value of ['night', 'github', 'things']) {
+        h.config.theme = value;
+        h.configChanged(['binary-markdown.theme']);
+        await h.flushTimers();
+        assert.deepEqual(h.posts.at(-1), { type: 'theme', value });
+    }
+    assert.equal(h.renderConfigs.length, 1);
+    assert.equal(h.state.captureCalls, 0);
+    assert.equal(h.state.saveCalls, 0);
+    assert.equal(h.document.isDirty, false);
+    assert.equal(h.document.getText(), '# OLD-EDITOR\n');
 });
 
 test('combined export and appearance/language changes update both integrations', async t => {
@@ -433,7 +475,8 @@ test('settings wait for the active render handshake and ignore stale acknowledge
     const h = await setup(t);
     const initial = h.renderConfigs.at(-1).renderGeneration;
     h.config.toolbarMode = 'full';
-    h.configChanged(['binary-markdown.toolbarMode']);
+    h.config.fontSize = 18;
+    h.configChanged(['binary-markdown.fontSize', 'binary-markdown.toolbarMode']);
     await h.flushTimers(false);
     const pending = h.renderConfigs.at(-1).renderGeneration;
     h.config.language = 'zh-CN';
@@ -504,6 +547,36 @@ test('table position picker persists the existing workspace scope or defaults to
     }
 });
 
+test('rapid placement requests persist in selection order despite asynchronous writes', async t => {
+    const h = await setup(t);
+    const firstWrite = deferred();
+    h.state.beforeConfigWrite = async (_key, value) => { if (value === 'left') await firstWrite.promise; };
+    const first = h.send({ type: 'setTableToolbarPosition', value: 'left' });
+    const second = h.send({ type: 'setTableToolbarPosition', value: 'right' });
+    try {
+        await Promise.resolve();
+        assert.deepEqual(h.configUpdates.map(update => update.value), ['left']);
+    } finally {
+        firstWrite.resolve();
+        await Promise.all([first, second]);
+    }
+    assert.equal(h.config.tableToolbarPosition, 'right');
+    assert.deepEqual(h.posts.at(-1), { type: 'tableToolbarPosition', value: 'right' });
+});
+
+test('failed placement persistence reports failure and permits a later retry', async t => {
+    const h = await setup(t, { tableToolbarPosition: 'auto' });
+    h.state.beforeConfigWrite = async () => { throw new Error('Synthetic settings write failure'); };
+    await h.send({ type: 'setTableToolbarPosition', value: 'left' });
+    assert.equal(h.config.tableToolbarPosition, 'auto');
+    assert.deepEqual(h.posts.at(-1), { type: 'tableToolbarPositionError' });
+    h.state.beforeConfigWrite = async () => {};
+    await h.send({ type: 'setTableToolbarPosition', value: 'right' });
+    assert.deepEqual(h.posts.at(-1), { type: 'tableToolbarPosition', value: 'right' });
+    assert.equal(h.renderConfigs.length, 1);
+    assert.equal(h.document.isDirty, false);
+});
+
 test('combined table, export and appearance settings retain each required update', async t => {
     const h = await setup(t);
     h.config.tableToolbarPosition = 'bottom-right';
@@ -513,6 +586,11 @@ test('combined table, export and appearance settings retain each required update
     assert.equal(h.state.controller.refreshes, 1);
     h.config.theme = 'night';
     h.configChanged(['binary-markdown.tableToolbarPosition', 'binary-markdown.theme']);
+    await h.flushTimers();
+    assert.equal(h.renderConfigs.length, 1);
+    assert.deepEqual(h.posts.findLast(message => message.type === 'theme'), { type: 'theme', value: 'night' });
+    assert.deepEqual(h.posts.findLast(message => message.type === 'tableToolbarPosition'), { type: 'tableToolbarPosition', value: 'bottom-right' });
+    h.configChanged(['binary-markdown.theme', 'binary-markdown.language']);
     await h.flushTimers();
     assert.equal(h.renderConfigs.length, 2);
     assert.equal(h.renderConfigs.at(-1).theme, 'night');

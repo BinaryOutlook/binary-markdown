@@ -1,0 +1,11 @@
+export type EditorAlignment = 'left' | 'center' | 'right';
+export const alignments: readonly EditorAlignment[];
+export function normalizeAlignment(value: unknown): EditorAlignment;
+export type EditorWidthMode = 'default' | 'full' | 'custom';
+export const widthModes: readonly EditorWidthMode[];
+export const defaultWidth: number;
+export const minWidth: number;
+export const maxWidth: number;
+export function normalizeWidthMode(value: unknown): EditorWidthMode;
+export function isValidWidth(value: unknown): value is number;
+export function normalizeMaxWidth(value: unknown): number;

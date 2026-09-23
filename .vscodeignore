@@ -13,6 +13,7 @@ dist/**
 archive/**
 .github/**
 scripts/**
+experiments/**
 CONTRIBUTING.md
 !vendor/**
 test/**
