@@ -34,6 +34,13 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  tableSourceFormatLabel: "표 소스 형식",
+  tableSourceFormatHelp: "시각적 편집 내용을 기록할 때 사용할 표 형식을 선택합니다. 이 설정만 변경하면 편집하지 않은 문서의 형식은 바뀌지 않습니다.",
+  tableSourceFormatAligned: "정렬됨(기본값)",
+  tableSourceFormatCompact: "간결함(기존 방식)",
+  tableSourceFormatSaveFailed: "표 소스 형식을 저장하지 못했습니다. 이전 설정이 유지됩니다.",
+
+
   mathSourceWrapLabel: "수식 소스 자동 줄 바꿈",
   mathSourceWrapHelp: "블록 수식의 편집 가능한 소스를 화면 너비에 맞춰 표시합니다. 소스에 줄 바꿈 문자는 추가되지 않습니다. 렌더링된 수식과 내보내기는 변경되지 않습니다.",
   mathSourceWrapSaveFailed: "수식 줄 바꿈 설정을 저장하지 못했습니다. 이전 설정이 유지됩니다.",

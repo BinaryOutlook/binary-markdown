@@ -62,7 +62,7 @@ test('packaged VSIX contains an isolated export runtime, UI, guidance and locali
         'out/export/docx-numbering.js', 'vendor/xmldom/package.json', 'vendor/xmldom/LICENSE',
         'out/export/pandoc.js', 'out/export/pdf.js', 'out/export/code-language.js', 'out/export/tools.js',
         'out/export/messages.js', 'out/webview/editor.js', 'out/webview/styles.css',
-        'out/shared/document-aux.js', 'out/shared/math-syntax.js',
+        'out/shared/document-aux.js', 'out/shared/math-syntax.js', 'out/shared/table-format.js',
         'out/shared/editor-body-html.js', 'out/shared/host-bridge.js', 'out/shared/vscode-host-bridge.js', 'out/export/language-tab.js', 'out/export/code-lines.js', 'media/export-help.md', 'media/export-reference.docx', 'media/export-reference-top.docx', 'media/export-reference-top-footer.docx',
         'vendor/playwright-core/package.json', 'vendor/playwright-core/LICENSE',
         'vendor/playwright-core/NOTICE', 'vendor/katex.min.css', 'vendor/mermaid.min.js'

@@ -112,6 +112,33 @@ To exit inline formatting, type the closing marker followed by Space:
 | Strikethrough | `~~` + Space | Close strikethrough and move cursor outside |
 | Inline Code | ``` ` ``` + Space | Close inline code and move cursor outside |
 
+### Table source format
+
+Choose **Table Source Format** in VS Code Settings (`binary-markdown.tableSourceFormat`), or **Table source format** in desktop Preferences:
+
+- **Aligned (default)** adds spaces to align column boundaries and adjusts the separator widths. This default applies to new and existing installations without an explicit choice.
+- **Compact (Legacy)** retains the earlier layout with spaces around each cell and fixed separator markers, without padding every column to its longest value.
+
+Both modes use the same table editor and preserve cell contents and column alignment. The setting controls Markdown source spacing, not rendered column widths. For example, Aligned writes:
+
+```markdown
+| Item      | Value |
+| --------- | ----- |
+| Long item | 3     |
+```
+
+Compact writes:
+
+```markdown
+| Item | Value |
+| --- | --- |
+| Long item | 3 |
+```
+
+The choice applies when visual edits are next serialized, including background synchronization before Save. Opening a file, saving an untouched file, or changing the preference alone does not reformat it. Source mode retains the text you enter. Switching modes changes future output; it does not restore the original spacing of an already reformatted file. Use a Workspace setting to share a format for a repository.
+
+A visual edit may normalize every table in the document. Aligned output follows a common padded GFM convention; it does not promise byte-for-byte agreement with every editor. Widening a column can change padding in other rows. Stable settings reduce formatting disagreements, but a smaller displayed diff is not a guarantee of smaller Git object storage.
+
 ### Table operations
 
 Select a table cell to show its controls. **Automatic** is the default: the controls use an available corner or side, based on the visible table and surrounding content, and move into the top bar when there is no room. When space shrinks, complete leading buttons remain visible and **More table actions** (⋯) contains the remaining actions. A top bar with too little room for a leading action and overflow shows a table icon (**Table controls**) containing all actions. The controls keep a usable position while you work and wait for scrolling or resizing to settle before leaving the top bar.
@@ -332,6 +359,7 @@ Open **Settings** (`Cmd+,` on macOS or `Ctrl+,` on Windows/Linux) and search for
 | `binary-markdown.forceRelativeImagePath` | Force relative paths for images | `false` |
 | `binary-markdown.language` | UI language (`default`, `en`, `ja`, `zh-CN`, `zh-TW`, `ko`, `es`, `fr`) | `default` |
 | `binary-markdown.toolbarMode` | Toolbar display mode (`full`, `simple`). Simple shows undo/redo, Insert, and utility buttons; use the Action Palette for other operations | `full` |
+| `binary-markdown.tableSourceFormat` | Use `aligned` or `compact` (Legacy); see [table source format](#table-source-format) | `aligned` |
 | `binary-markdown.tableToolbarPosition` | Use `auto`, any corner, `left`, `right`, or `top-bar`; see [table operations](#table-operations) | `auto` |
 | `binary-markdown.outlineActiveColor` | Outline highlight: `theme`, `blue`, `green`, `orange`, `red`, or `purple` | `theme` |
 | `binary-markdown.outlineStateScope` | Remember outline visibility per Markdown file (`file`) or share it across all Markdown files (`global`) | `file` |

@@ -34,6 +34,13 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  tableSourceFormatLabel: "Table source format",
+  tableSourceFormatHelp: "Choose the table layout used when writing visual edits. Changing this setting does not reformat an untouched document.",
+  tableSourceFormatAligned: "Aligned (default)",
+  tableSourceFormatCompact: "Compact (Legacy)",
+  tableSourceFormatSaveFailed: "Could not save the table source format. The previous setting remains active.",
+
+
   mathSourceWrapLabel: "Wrap equation source",
   mathSourceWrapHelp: "Visually wrap editable block-equation source. No source line breaks are added. Rendered equations and exports stay unchanged.",
   mathSourceWrapSaveFailed: "Could not save the equation wrapping preference. The previous setting remains active.",

@@ -34,6 +34,13 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  tableSourceFormatLabel: "表格原始碼格式",
+  tableSourceFormatHelp: "選擇寫入視覺化編輯時使用的表格格式。僅變更此設定不會重新排版未編輯的文件。",
+  tableSourceFormatAligned: "對齊（預設）",
+  tableSourceFormatCompact: "緊湊（舊版）",
+  tableSourceFormatSaveFailed: "無法儲存表格原始碼格式。原設定仍然有效。",
+
+
   mathSourceWrapLabel: "公式原始碼自動折行",
   mathSourceWrapHelp: "依顯示寬度折行顯示可編輯的區塊公式原始碼，不加入原始碼換行字元。算繪後的公式和匯出保持不變。",
   mathSourceWrapSaveFailed: "無法儲存公式原始碼折行設定。將保留原有設定。",

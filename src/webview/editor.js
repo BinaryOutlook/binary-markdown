@@ -9,6 +9,8 @@
     
     const host = window.hostBridge;
     const mathSyntax = window.BinaryMath;
+    const tableFormat = window.BinaryTableFormat;
+    const emptyTableCell = '<br data-table-placeholder="true">';
     const mathBackslashDelimiters = __MATH_BACKSLASH__;
     var finishInlineMathEdit = null;
     const documentAux = window.documentAux;
@@ -2759,7 +2761,7 @@
                     const align = alignments[colIdx] || 'left';
                     const style = isHeader ? '' : ' style="text-align: ' + align + '"';
                     // Use <br> for empty cells to make them clickable/visible
-                    tableHtml += '<' + tag + style + ' contenteditable="true">' + (cellContent || '<br>') + '</' + tag + '>';
+                    tableHtml += '<' + tag + style + ' data-table-align="' + align + '" contenteditable="true">' + (cellContent || emptyTableCell) + '</' + tag + '>';
                 });
                 tableHtml += '</tr>';
             });
@@ -4645,7 +4647,7 @@
         for (let i = 0; i < colCount; i++) {
             const cell = document.createElement('td');
             cell.setAttribute('contenteditable', 'true');
-            cell.innerHTML = '<br>';
+            cell.innerHTML = emptyTableCell;
             newRow.appendChild(cell);
         }
         
@@ -4690,7 +4692,7 @@
         for (let i = 0; i < colCount; i++) {
             const cell = document.createElement('td');
             cell.setAttribute('contenteditable', 'true');
-            cell.innerHTML = '<br>';
+            cell.innerHTML = emptyTableCell;
             newRow.appendChild(cell);
         }
         
@@ -4733,7 +4735,7 @@
             const isHeader = rowIndex === 0;
             const newCell = document.createElement(isHeader ? 'th' : 'td');
             newCell.setAttribute('contenteditable', 'true');
-            newCell.innerHTML = isHeader ? 'Header' : '<br>';
+            newCell.innerHTML = isHeader ? 'Header' : emptyTableCell;
             
             // Insert after current cell (to the right)
             if (cellIndex + 1 < row.cells.length) {
@@ -4791,7 +4793,7 @@
             const isHeader = rowIndex === 0;
             const newCell = document.createElement(isHeader ? 'th' : 'td');
             newCell.setAttribute('contenteditable', 'true');
-            newCell.innerHTML = isHeader ? 'Header' : '<br>';
+            newCell.innerHTML = isHeader ? 'Header' : emptyTableCell;
             
             // Insert before current cell (to the left)
             row.cells[cellIndex].before(newCell);
@@ -4832,8 +4834,9 @@
         const rows = activeTable.querySelectorAll('tr');
         rows.forEach(row => {
             const cells = row.querySelectorAll('th, td');
-            if (cells[colIndex] && cells[colIndex].tagName === 'TD') {
-                cells[colIndex].style.textAlign = align;
+            if (cells[colIndex]) {
+                cells[colIndex].dataset.tableAlign = align;
+                if (cells[colIndex].tagName === 'TD') cells[colIndex].style.textAlign = align;
             }
         });
         
@@ -5109,7 +5112,7 @@
         cells.forEach(() => {
             const td = document.createElement('td');
             td.setAttribute('contenteditable', 'true');
-            td.innerHTML = '<br>';
+            td.innerHTML = emptyTableCell;
             dataRow.appendChild(td);
         });
         table.appendChild(dataRow);
@@ -7004,11 +7007,6 @@
     function mdProcessTable(table) {
         const rows = table.querySelectorAll('tr');
         if (rows.length === 0) return '';
-        
-        let md = '';
-        let isFirstRow = true;
-        let alignments = [];
-        
         // Escape pipe characters in cell content for markdown output
         // But NOT inside inline code (backticks)
         function escapePipeInCell(text) {
@@ -7025,7 +7023,7 @@
                 } else if (child.nodeType === 1) {
                     const tag = child.tagName.toLowerCase();
                     if (tag === 'br') {
-                        cellText += '<br>';
+                        if (!child.hasAttribute('data-table-placeholder')) cellText += '<br>';
                     } else if (tag === 'code') {
                         // Inline code - do NOT escape pipes inside
                         // Use appropriate number of backticks based on content
@@ -7057,7 +7055,7 @@
             }
             
             if (tag === 'br') {
-                return '<br>';
+                return node.hasAttribute('data-table-placeholder') ? '' : '<br>';
             }
             
             // For other elements, process children and wrap with appropriate markdown
@@ -7087,52 +7085,13 @@
             return innerContent;
         }
         
-        rows.forEach((row, rowIndex) => {
-            const cells = row.querySelectorAll('th, td');
-            const cellContents = [];
-            
-            cells.forEach((cell, colIdx) => {
-                // Get alignment info from td cells (first data row)
-                if (rowIndex === 1 && cell.tagName === 'TD') {
-                    const align = cell.style.textAlign || 'left';
-                    alignments[colIdx] = align;
-                }
-                // For header row, check if there's alignment set (for new tables)
-                if (rowIndex === 0 && alignments.length === 0) {
-                    // Will be filled by data rows
-                }
-                
-                // Process cell content with proper pipe escaping
-                const cellText = processCellContent(cell);
-                cellContents.push(cellText.trim() || ' ');
-            });
-            
-            md += '| ' + cellContents.join(' | ') + ' |\n';
-            
-            // Add separator row after header with alignment markers
-            if (isFirstRow) {
-                // Get alignments from first data row's td cells
-                const firstDataRow = rows[1];
-                if (firstDataRow) {
-                    const dataCells = firstDataRow.querySelectorAll('td');
-                    dataCells.forEach((cell, idx) => {
-                        alignments[idx] = cell.style.textAlign || 'left';
-                    });
-                }
-                
-                const separators = cellContents.map((_, idx) => {
-                    const align = alignments[idx] || 'left';
-                    if (align === 'center') return ':---:';
-                    if (align === 'right') return '---:';
-                    return '---'; // left (default)
-                });
-                md += '| ' + separators.join(' | ') + ' |\n';
-                isFirstRow = false;
-            }
-        });
-        
-        // Return without extra trailing newline - the next element will add its own newline
-        return md;
+        const headers = Array.from(rows[0].querySelectorAll('th, td'));
+        const firstDataCells = rows[1]?.querySelectorAll('td');
+        const alignments = headers.map((cell, i) =>
+            firstDataCells?.[i]?.style.textAlign || cell.dataset.tableAlign || cell.style.textAlign || 'left');
+        const contents = Array.from(rows, row => Array.from(row.querySelectorAll('th, td'),
+            cell => processCellContent(cell).trim()));
+        return tableFormat.format(contents, alignments, document.documentElement.dataset.tableSourceFormat);
     }
 
     function htmlToMarkdown() {
@@ -8010,7 +7969,7 @@
                         for (let i = 0; i < colCount; i++) {
                             const cell = document.createElement('td');
                             cell.setAttribute('contenteditable', 'true');
-                            cell.innerHTML = '<br>';
+                            cell.innerHTML = emptyTableCell;
                             newRow.appendChild(cell);
                         }
                         
@@ -14221,6 +14180,11 @@
             document.documentElement.dataset.theme = message.value;
             mermaidInitialized = false;
             editor.querySelectorAll('.mermaid-wrapper').forEach(wrapper => renderMermaidDiagram(wrapper));
+            return;
+        }
+        if (message.type === 'tableSourceFormat') {
+            // Change future serialization only; retain the DOM, selection and undo.
+            document.documentElement.dataset.tableSourceFormat = tableFormat.normalize(message.value);
             return;
         }
         if (message.type === 'tableToolbarPosition') {

@@ -35,7 +35,7 @@ These features describe the current source. The [changelog](CHANGELOG.md#unrelea
 
 ## Configure the editor
 
-Open **Settings** (`Cmd+,` on macOS or `Ctrl+,` on Windows/Linux) and search for **Binary Markdown**. The [editor settings reference](docs/editor-guide.md#vs-code-settings) lists defaults and explains outline state, table controls, layout, and equation-source options. The [language guide](docs/editor-guide.md#interface-languages) distinguishes editor language from VS Code's settings language.
+Open **Settings** (`Cmd+,` on macOS or `Ctrl+,` on Windows/Linux) and search for **Binary Markdown**. The [editor settings reference](docs/editor-guide.md#vs-code-settings) lists defaults and explains outline state, table controls and source formatting, layout, and equation-source options. The [language guide](docs/editor-guide.md#interface-languages) distinguishes editor language from VS Code's settings language.
 
 ## Everyday commands
 

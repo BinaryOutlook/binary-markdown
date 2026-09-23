@@ -26,15 +26,15 @@ test.describe('《テーブルセル》Shift+Enter改行', () => {
         await page.waitForTimeout(300);
         
         // セルにテキストを入力
-        await editor.type('line1');
+        await page.keyboard.type('line1');
         
         // Shift+Enterで改行
         await editor.shiftPress('Enter');
         await page.waitForTimeout(100);
         
-        await editor.type('line2');
+        await page.keyboard.type('line2');
         
-        const html = await editor.getHtml();
+        const html = await page.locator('#editor td').first().innerHTML();
         expect(html).toContain('line1');
         expect(html).toContain('line2');
         expect(html).toContain('<br>');

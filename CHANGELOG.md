@@ -15,6 +15,7 @@ Target version: **0.4.0**. See the [release-preparation notes](release-notes/0.4
 
 ### Changed
 
+- Default visual table edits to aligned Markdown columns, with Compact (Legacy) available through the [table source format setting](docs/editor-guide.md#table-source-format). Opening or saving an untouched file does not reformat it.
 - Use Full formatting when the toolbar preference is unset, retaining explicit choices and Simple mode; place docked table controls in a contextual second row.
 - Default unset PDF/DOCX label positions to top-left. Keep the initial centered 860 px editor cap and leave counts and numbering off by default.
 - Check `main` daily for automatic VSIX publication after at least three days since the previous official release. Preserve manual releases, validate bot version bumps through PRs, and reuse the exact tested package and source.
