@@ -730,3 +730,34 @@ test('real DOCX native numbering preserves whole-block highlighting and exact au
         assert.equal(saved.markdown, markdown);
     }
 });
+
+test('real DOCX numbered code keeps its paragraph style when readers insert the next line', { skip: !realTools }, async t => {
+    const directory = await temporary(t), status = await discoverTool('pandoc', process.env.EXPORT_PANDOC_PATH || '');
+    assert.equal(status.available, true, status.error);
+    const lines = ['def greet(name):', '\tmessage = "Hello " + name  ', '    return message'];
+    const second = ['SECOND_FIRST = 1', 'SECOND_LAST = 2'];
+    const markdown = [lines, second].map(block => '```python\n' + block.join('\n') + '\n```').join('\n\n');
+    const saved = { sourcePath: path.join(directory, 'editing.md'), markdown, version: 1, theme: 'github', fontSize: 16 };
+    const prepared = { html: '', theme: 'github', fontSize: 16, diagrams: [], warnings: [] };
+    const convert = showCodeLineNumbers => convertPandoc('docx', saved, prepared, status.path, operations(), {
+        showCodeLineNumbers, showCodeLineCount: true, codeLanguagePosition: 'top-left'
+    });
+    const numbered = archiveEntries(await convert(true)), plain = archiveEntries(await convert(false));
+    const numberedStyles = xmlDocument(numbered.get('word/styles.xml'));
+    const plainStyles = xmlDocument(plain.get('word/styles.xml'));
+    const style = document => wordElements(document, 'style').find(element => wordValue(element, 'styleId') === 'SourceCode');
+    const next = wordElements(style(numberedStyles), 'next')[0];
+    assert.equal(wordValue(next), 'SourceCode', 'Enter at line end must not switch numbered code to BodyText');
+    assert.equal(wordValue(wordElements(style(plainStyles), 'next')[0]), 'BodyText', 'numbering-off continuation is unchanged');
+    next.setAttribute('w:val', 'BodyText');
+    assert.equal(numberedStyles.documentElement.outerHTML, plainStyles.documentElement.outerHTML,
+        'the continuation target is the only style change; shading, token styles and unrelated styles survive');
+    const code = wordElements(xmlDocument(numbered.get('word/document.xml')), 'p')
+        .filter(paragraph => wordValue(wordElements(paragraph, 'pStyle')[0]) === 'SourceCode');
+    assert.deepEqual(code.map(wordText), [...lines, ...second]);
+    const ids = code.map(paragraph => wordValue(wordElements(paragraph, 'numId')[0]));
+    assert.ok(ids.every(Boolean));
+    assert.deepEqual(ids.slice(0, 3), [ids[0], ids[0], ids[0]]);
+    assert.deepEqual(ids.slice(3), [ids[3], ids[3]]);
+    assert.notEqual(ids[0], ids[3], 'independent code blocks retain separate native numbering');
+});

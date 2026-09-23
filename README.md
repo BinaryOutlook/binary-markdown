@@ -61,7 +61,7 @@ Save a named Markdown file in a trusted local workspace, then open the sharing-a
 
 Tools are user-installed. Follow [export help](media/export-help.md) for setup, executable paths, output naming, and format-specific settings, or start with the [HTML export tutorial](docs/export-tutorial.md).
 
-Export is unavailable in Remote-SSH and other remote hosts, browser VS Code, and the standalone desktop app. DOCX numbering remains experimental; editing, copying, and reading order need checks in your target reader. PDF gutters can appear in copied text, and long DOCX code footers can paginate separately. Review the [0.4.0 known limitations](release-notes/0.4.0.md#known-limitations), including existing editor save/list limitations, before using a candidate for important documents.
+Export is unavailable in Remote-SSH and other remote hosts, browser VS Code, and the standalone desktop app. DOCX numbering remains experimental: Enter on an empty numbered line can end numbering and change formatting; copying and reading order vary by reader. PDF gutters can appear in copied text. The [reader checkpoint](reports/validation/2026-09-21-docx-reader-checkpoint.md) records tested versions and remaining checks. Review the [0.4.0 known limitations](release-notes/0.4.0.md#known-limitations), including existing editor save/list limitations, before using a candidate for important documents.
 
 ## Build and contribute
 

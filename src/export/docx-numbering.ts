@@ -183,6 +183,22 @@ export function numberDocxCode(bytes: Buffer, models: string[][]): Buffer {
         parts.set(part, Buffer.from(new XMLSerializer().serializeToString(doc)));
     }
     assert(seen.size === models.length, 'not every source block was identified.');
+    if (models.some(lines => lines.length)) {
+        // Word follows w:next on Enter at a paragraph end. The unnumbered
+        // reference returns to BodyText, which drops native code numbering.
+        // Change only this numbered export, preserving the bundled reference.
+        const styles = parse('word/styles.xml');
+        assert(styles.documentElement?.namespaceURI === W && styles.documentElement.localName === 'styles', 'invalid styles root.');
+        const code = children(styles.documentElement).find(style => style.namespaceURI === W && style.localName === 'style'
+            && value(style, 'styleId') === 'SourceCode' && value(style, 'type') === 'paragraph');
+        assert(code, 'source code paragraph style is missing.');
+        const next = child(code, 'next') || styles.createElementNS(W, 'w:next');
+        next.setAttributeNS(W, 'w:val', 'SourceCode');
+        if (!next.parentNode) {
+            code.insertBefore(next, children(code).find(item => !['name', 'aliases', 'basedOn'].includes(item.localName!)) || null);
+        }
+        parts.set('word/styles.xml', Buffer.from(new XMLSerializer().serializeToString(styles)));
+    }
     parts.set('word/numbering.xml', Buffer.from(new XMLSerializer().serializeToString(numbering)));
     const result = writeZip(parts); validateArtifact('docx', result); return result;
 }

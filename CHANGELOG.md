@@ -25,10 +25,11 @@ Target version: **0.4.0**. See the [release-preparation notes](release-notes/0.4
 - Blockquote contrast across themes and table-toolbar placement that required more than one selection.
 - Confusing table settings/overflow controls, inaccessible toolbar actions during resizing, and offscreen cells in wide tables.
 - Inline equation edits closing during delayed outline updates or document synchronization; edits remain open and cancellable.
+- Numbered DOCX code switching to body text when Enter adds a line at the end of a nonempty code paragraph; the new paragraph retains its code style and native numbering.
 
 ### Known limitations
 
-DOCX numbering remains experimental. Reader acceptance, PDF gutter-copying behavior, the unnumbered DOCX footer pagination limit, and existing editor concerns remain documented in the [0.4.0 notes](release-notes/0.4.0.md#known-limitations). Earlier validation applies only to its recorded source and artifacts.
+DOCX numbering remains experimental. Enter on an empty numbered line and static totals after reader edits still require acceptance. The [reader checkpoint](reports/validation/2026-09-21-docx-reader-checkpoint.md) records the named Word/LibreOffice results and remaining checks. Historical DOCX pagination observations, PDF gutter-copying behavior, and existing editor concerns are documented in the [0.4.0 notes](release-notes/0.4.0.md#known-limitations). Earlier validation applies only to its recorded source and artifacts.
 
 ## 0.3.0
 

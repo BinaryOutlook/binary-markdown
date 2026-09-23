@@ -220,7 +220,8 @@ test('DOCX numbering rejects source mismatches, unsafe XML and missing markers',
     const source = '<!--binary-markdown-code-0--><w:p><w:pPr><w:pStyle w:val="SourceCode"/></w:pPr><w:r><w:t>ORIGINAL</w:t></w:r></w:p>';
     const fixture = (content = source, prefix = '') => zip(docx().filter(f => f.name !== 'word/document.xml').concat([
         { name: 'word/document.xml', data: prefix + '<w:document xmlns:w="' + W + '"><w:body>' + content + '</w:body></w:document>' },
-        { name: 'word/numbering.xml', data: '<w:numbering xmlns:w="' + W + '"/>' }
+        { name: 'word/numbering.xml', data: '<w:numbering xmlns:w="' + W + '"/>' },
+        { name: 'word/styles.xml', data: '<w:styles xmlns:w="' + W + '"><w:style w:type="paragraph" w:styleId="SourceCode"><w:name w:val="Source Code"/><w:next w:val="BodyText"/></w:style></w:styles>' }
     ]));
     assert.throws(() => numberDocxCode(fixture(), [['DIFFERENT']]), /differs from saved source/);
     assert.throws(() => numberDocxCode(fixture(''), [['ORIGINAL']]), /not every source block/);
