@@ -37,6 +37,8 @@ Each page should have one primary purpose. Link to related material instead of i
 
 Keep the root README as the entry point: purpose, installation, a short usage example, current limitations, and links to deeper guides. Use CONTRIBUTING for contributor workflow. Give each repeated topic one authoritative page, with short summaries and links elsewhere. Check setting IDs and defaults against the manifest.
 
+For the README, aim for roughly 800–1,000 words when that is enough to orient a new reader. Lead with a brief description, installation, and a small set of feature highlights. Keep release status, essential compatibility limits, upstream credit, and licensing visible. Put complete settings tables, troubleshooting, support procedures, and repository history in their maintained guides; summarize and link from the README. This is an editorial target, not a reason to remove necessary warnings or provenance. Keep existing section anchors where practical and check incoming links when renaming a heading.
+
 Keep architectural decisions in `docs/decisions/`, with status, context, decision, alternatives, and consequences. Preserve superseded decisions and link to their replacements. Keep plans and dated validation records distinct from current guides; preserve requirement IDs and evidence links when reorganizing them.
 
 ## Where material belongs

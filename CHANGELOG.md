@@ -2,19 +2,33 @@
 
 ## Unreleased
 
-The current human-review candidate is **0.4.0 RC1**, with numeric package version `0.4.0`. See the [candidate notes](release-notes/0.4.0-rc.1.md) for installation, review scope and remaining acceptance checks. This is not an official release.
+Target version: **0.4.0**. See the [release-preparation notes](release-notes/0.4.0.md) for scope, changed defaults, and remaining acceptance work. The earlier [0.4.0 RC1](release-notes/0.4.0-rc.1.md) uses numeric package version `0.4.0`; neither that candidate nor this section establishes an official release.
 
-- Fix blockquote contrast across themes and apply table-toolbar placement with one selection.
-- Distinguish table settings from overflow, keep complete toolbar actions reachable during resizing, and scroll wide tables locally to reveal every cell.
-- Show standard formatting by default while retaining explicit choices and Simple mode; place docked table controls in a contextual second row.
-- Add an Insert menu for equations, tables, code blocks, links, images, Mermaid, and a managed TOC.
-- Add source-preserving `<u>` underline in the editor and existing export formats, with documented reader compatibility limits.
-- Add full-width/custom-width visual editing, column alignment, and optional capped-width indicators; retain the initial 860 px centered layout.
-- Add searchable code-language selection and curated or alphabetical browsing orders.
-- Add above/below equation-source placement and optional visual soft wrapping without changing mathematical structure.
-- Add configurable PDF/DOCX code-label placement with a top-left default, optional total line counts, and optional per-line numbering. DOCX numbering remains experimental; reader acceptance and the unnumbered footer pagination limit are recorded in the [integration review](reports/validation/2026-09-20-editor-export-stack.md).
+### Added
+
+- An Insert menu for equations, tables, code blocks, links, images, Mermaid, and a managed TOC.
+- Source-preserving `<u>` underline in the editor and existing export formats, with documented reader compatibility limits.
+- Full-width/custom-width visual editing, column alignment, and optional capped-width indicators.
+- Searchable code-language selection with curated or alphabetical browsing orders.
+- Above/below equation-source placement and visual soft wrapping without changing mathematical structure.
+- Four-corner PDF/DOCX code-label placement, optional total authored-line counts, and optional per-line numbering.
+
+### Changed
+
+- Use Full formatting when the toolbar preference is unset, retaining explicit choices and Simple mode; place docked table controls in a contextual second row.
+- Default unset PDF/DOCX label positions to top-left. Keep the initial centered 860 px editor cap and leave counts and numbering off by default.
 - Check `main` daily for automatic VSIX publication after at least three days since the previous official release. Preserve manual releases, validate bot version bumps through PRs, and reuse the exact tested package and source.
-- Keep inline equation edits open and cancellable while delayed outline updates or document synchronization run.
+- Make the README a concise installation and feature overview, consolidate settings in the editor guide, and require agents to verify current evidence rather than rely on memory.
+
+### Fixed
+
+- Blockquote contrast across themes and table-toolbar placement that required more than one selection.
+- Confusing table settings/overflow controls, inaccessible toolbar actions during resizing, and offscreen cells in wide tables.
+- Inline equation edits closing during delayed outline updates or document synchronization; edits remain open and cancellable.
+
+### Known limitations
+
+DOCX numbering remains experimental. Reader acceptance, PDF gutter-copying behavior, the unnumbered DOCX footer pagination limit, and existing editor concerns remain documented in the [0.4.0 notes](release-notes/0.4.0.md#known-limitations). Earlier validation applies only to its recorded source and artifacts.
 
 ## 0.3.0
 

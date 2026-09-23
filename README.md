@@ -4,119 +4,42 @@
 
 # Binary Markdown Editor
 
-An open-source visual Markdown editor for VS Code, independently maintained by BinaryOutlook. Edit Markdown in a rendered view, switch to source when needed, copy multiline code accurately, and keep the outline the way you prefer.
+An open-source visual Markdown editor for VS Code. Write in a rendered view, switch to source when needed, and work with tables, code, equations, and diagrams in the same document.
 
-Binary Markdown builds on [Any Markdown by raggbal and contributors](https://github.com/raggbal/any-markdown), licensed under MIT. The visual editor and most existing features come from that project. BinaryOutlook maintains this project's changes, releases, and support. See [Acknowledgments](ACKNOWLEDGMENTS.md) and the [changelog](CHANGELOG.md) for provenance.
+[Download a release](https://github.com/BinaryOutlook/binary-markdown/releases) · [Documentation](docs/README.md) · [Changelog](CHANGELOG.md) · [Report an issue](https://github.com/BinaryOutlook/binary-markdown/issues)
 
-Development now continues in this standalone repository. The [original fork](https://github.com/BinaryOutlook/binary-markdown-fork) retains earlier reviews and releases, with **v0.2.1** as its final product release. Original Git history, upstream attribution, and applicable license notices are preserved. See the [repository transition guide](docs/repository-transition.md) for historical links and contributor instructions.
+Built on [Any Markdown by raggbal and contributors](https://github.com/raggbal/any-markdown), which provides the visual editor and much of its existing functionality under MIT. BinaryOutlook independently maintains Binary Markdown's changes, releases, and support. See [Acknowledgments](ACKNOWLEDGMENTS.md) for provenance.
 
-## Open source, releases and support
-
-Binary Markdown is proudly free and open-source software:
-
-- **Free (cost):** Our official releases and all editor features are available at no charge.
-- **Free (freedom):** You may run the software for any purpose, study and modify its source, and redistribute original or modified versions under the applicable licenses.
-
-Our commitment draws on the free software philosophy articulated by Richard Stallman and advanced by the GNU Project and the Free Software Foundation. The [licensing guide](docs/licensing.md#cost-and-software-freedom) explains that heritage, the four freedoms, and AGPL obligations. Commercial redistribution is welcome under the applicable licenses; our no-charge pricing does not bind other distributors.
-
-Official releases are published periodically, when a set of changes has completed release validation; we do not promise a fixed release schedule.
-
-You are welcome to build, study, and modify the extension between releases. For development builds, we recommend starting from `main`, where changes are integrated. Other branches may contain incomplete experiments. An unreleased build has not necessarily undergone the same validation as an official release.
-
-Bug reports from development builds are welcome—even when the affected commit is not the latest release or the current tip of `main`. Please include the full commit ID, whether you made local changes, your environment, and clear reproduction steps. This helps us check out the same revision and investigate.
-
-We will make a reasonable effort to reproduce and diagnose reported problems. We may ask you to test a newer commit, and fixes will normally land in current development rather than being backported to every historical revision.
-
-Access to the source is central to this project. Building your own version is an intended way to use Binary Markdown.
-
-Start with the [documentation index](docs/README.md) for editor guides, export, building and validation. The [reports index](reports/README.md) separates dated findings from current instructions; [release notes](release-notes/README.md) describe individual versions.
+**Development status:** this source is preparing **0.4.0**. The [0.4.0 notes](release-notes/0.4.0.md) describe its features and remaining acceptance work; [RC1](release-notes/0.4.0-rc.1.md) records the earlier review candidate. Neither source versioning nor passing CI establishes an official release. Choose published packages from GitHub Releases and check their own notes.
 
 ## Install
 
-Download a version from [GitHub Releases](https://github.com/BinaryOutlook/binary-markdown/releases), which identifies published builds. The source package version is **0.3.0**; the [version notes](release-notes/0.3.0.md) describe that release. This checkout also contains development changes listed under [Unreleased](CHANGELOG.md#unreleased). They are not part of the published 0.3.0 package. Check the chosen release's notes for supported environments and limitations.
+Use local desktop VS Code **1.85.0 or later**. Validation targets Windows x86-64, macOS ARM64, and Ubuntu x86-64; each release identifies the environments actually tested. Standalone Electron installers and other editors require separate validation.
 
-1. Download the `.vsix` and its SHA-256 checksum from the chosen release, or [build from source](docs/building.md).
-2. In VS Code, open **Extensions**, select **… → Install from VSIX…**, and choose the file.
-3. Open a Markdown document and select **Reopen Editor With… → Binary Markdown**.
+1. Download the `.vsix` and its SHA-256 checksum from [GitHub Releases](https://github.com/BinaryOutlook/binary-markdown/releases), or [build from source](docs/building.md). Follow the [checksum instructions](docs/building.md#inspect-and-install-the-output) before installing.
+2. In VS Code, open **Extensions**, choose **… → Install from VSIX…**, select the package, and reload if prompted.
+3. Open a Markdown file and choose **Reopen Editor With… → Binary Markdown**.
 
-The extension is optional: installing it does not change your default Markdown editor. You can choose **Configure Default Editor…** yourself if you prefer to use it for every Markdown document.
-
-The extension ID is `BinaryOutlook.binary-markdown`. It has separate commands, settings, and editor registration from Any Markdown. Read the [migration guide](docs/migration.md) if you used an earlier test build.
-
-The package declares VS Code 1.85.0 or later. Validation targets local desktop VS Code on Windows x86-64, macOS ARM64 and Ubuntu x86-64; see the [version notes](release-notes/0.3.0.md) for release scope and validation evidence. The [Windows validation guide](docs/testing/windows.md) describes the added checks; historical release records apply only to the platforms they list. Other editors and platforms need their own compatibility checks.
+The extension ID is `BinaryOutlook.binary-markdown`. Installation leaves your default Markdown editor unchanged; use **Configure Default Editor…** if you want Binary Markdown to open every Markdown file. Updating this extension retains its identity and settings. For older Any Markdown or test-build IDs, follow the [migration guide](docs/migration.md).
 
 ## Features
 
-Inherited from Any Markdown:
+- **Visual and source editing:** headings, lists, task lists, links, images, blockquotes, and a navigable outline with remembered visibility.
+- **Formatting and tables:** a Full or Simple toolbar, an Insert menu, HTML-backed underline, responsive table controls, and horizontal scrolling for wide tables.
+- **Code and equations:** syntax highlighting, searchable language selection, accurate multiline code copying, editable KaTeX source, and Mermaid diagrams.
+- **A configurable writing space:** themes, seven interface languages, full or capped column width, column alignment, and optional width guides.
+- **Document structure:** protected YAML front matter and a generated table of contents refreshed on save or on request.
+- **Experimental export:** local HTML, PDF, Word, and EPUB conversion, with PDF/DOCX code labels, optional line counts, and optional numbering.
 
-- Visual editing and a source-mode toggle for `.md` and `.markdown` files.
-- Headings and outline navigation; bold, italic, strikethrough, lists, task lists, and blockquotes.
-- Tables, links, images, code blocks with syntax highlighting, and YAML front matter.
-- Mermaid diagrams and KaTeX expressions in fenced `mermaid` and `math` blocks.
-- An action palette, keyboard shortcuts, multiple themes, and seven interface languages.
-- Synchronization with external file changes, including changes made by coding tools.
-
-Changes developed for Binary Markdown:
-
-- Standard formatting visible by default, with a retained Simple mode, HTML-backed underline, and an Insert menu for equations, tables, code, links, images, Mermaid, and a TOC.
-- Theme-aware blockquotes, responsive table controls, a contextual second toolbar row, and horizontal scrolling that keeps wide table cells reachable.
-- Full-width or capped visual editing, configurable column alignment, and optional width-boundary explanations.
-- A searchable code-language picker with curated, A–Z, and Z–A ordering.
-- Inline and display equations with dollar or backslash delimiters, source-preserving editing, and complete multiline TeX rendering in existing `math` fences. See the [equation guide](docs/editor-guide.md#katex-math-equations).
-- Optional equation-source placement below the preview and visual soft wrapping without changing the equation source.
-- Code-block copying preserves rendered line breaks, indentation, and meaningful blank lines.
-- Outline visibility can be remembered per file or globally, with a configurable initial state.
-- Opening the outline does not mark the Markdown document as edited.
-- Independent Binary Markdown names and identifiers throughout the extension and desktop sources.
-- Experimental HTML, PDF, DOCX and EPUB export, with local conversion and visible progress.
-- Protected YAML front matter and a generated TOC refreshed on save or with its refresh button; see the [front matter and TOC guide](docs/yaml-toc.md).
-- A source-stamped VSIX and **Copy Build Information** command for reproducible bug reports.
-
-These features describe the current source. The [issue-stack review record](reports/validation/2026-09-20-editor-export-stack.md) maps the development work to draft PRs, tests, and remaining acceptance checks. Shared editor changes cover both VS Code and the retained Electron desktop sources; new export work remains in the existing VS Code export host.
-
-The code-copy and outline-state improvements were also proposed upstream as [PR #8](https://github.com/raggbal/any-markdown/pull/8) and [PR #9](https://github.com/raggbal/any-markdown/pull/9). Binary Markdown's release decisions are independent of those PRs.
+These features describe the current source. The [changelog](CHANGELOG.md#unreleased) identifies additions since 0.3.0. In 0.4.0, unset toolbar preferences use Full mode and unset export-label positions use top-left; explicit saved choices remain honored. Width still starts at a centered 860 px cap, and line counts and numbering remain off by default.
 
 ## Configure the editor
 
-Open **Settings** (`Cmd+,` on macOS or `Ctrl+,` on Windows/Linux) and search for **Binary Markdown**. Settings can be applied at User or Workspace scope.
-
-| Setting | Default | Purpose |
-| --- | --- | --- |
-| `binary-markdown.outlineDefaultOpen` | `true` | Start with the outline open when no remembered state exists. |
-| `binary-markdown.outlineStateScope` | `file` | Remember each file separately, or choose `global` to share visibility across files and workspaces. |
-| `binary-markdown.outlineActiveColor` | `theme` | Choose the outline highlight color: theme, blue, green, orange, red, or purple. |
-| `binary-markdown.toolbarMode` | `full` | Show standard formatting; choose `simple` for compact controls. Explicit preferences are retained. |
-| `binary-markdown.tableToolbarPosition` | `auto` | Place table controls in available space, with a top-bar fallback. Explicitly choose any corner, either vertical side, or `top-bar`. The controls also offer a three-choice position menu. |
-| `binary-markdown.editorWidthMode` | `default` | Keep the 860 px cap, use `full` width, or choose a `custom` cap. Visual editor only; export paper layout remains independent. |
-| `binary-markdown.editorMaxWidth` | `860` | Custom maximum outer width in CSS pixels, from 320 to 4000; used in `custom` mode. |
-| `binary-markdown.editorAlignment` | `center` | Align the capped column `left`, `center`, or `right`. |
-| `binary-markdown.editorWidthIndicators` | `true` | Show paired explanatory marks only while the column is capped. |
-| `binary-markdown.codeLanguageOrder` | `default` | Use a curated list with Plain text/Markdown first, or `a-z` / `z-a`; searching still ranks matches by relevance. |
-| `binary-markdown.mathSourcePosition` | `above` | Place editable block-equation source above or `below` its preview. |
-| `binary-markdown.mathSourceWrap` | `false` | Visually wrap equation source without adding newlines. |
-| `binary-markdown.theme` | `things` | Choose `github`, `sepia`, `night`, `dark`, `minimal`, `perplexity`, or `things`. |
-| `binary-markdown.fontSize` | `16` | Editor font size in pixels. |
-| `binary-markdown.language` | `default` | Editor interface language: follow VS Code, or select a supported language. |
-| `binary-markdown.imageDefaultDir` | `""` | Image save directory; empty means the document's directory. |
-| `binary-markdown.forceRelativeImagePath` | `false` | Prefer relative Markdown image paths when an absolute image directory is configured. |
-| `binary-markdown.enableDebugLogging` | `false` | Enable diagnostic logging when investigating an issue. |
-
-Settings descriptions and option explanations follow **VS Code's display language**. English, Japanese, Simplified Chinese, Traditional Chinese, Korean, Spanish, and French are supported; other display languages fall back to English. Use **Configure Display Language** in the Command Palette and restart VS Code to change the display language. The `binary-markdown.language` setting controls the editor interface independently of these settings descriptions.
-
-To start new files with a closed outline:
-
-```json
-{
-  "binary-markdown.outlineDefaultOpen": false,
-  "binary-markdown.outlineStateScope": "file"
-}
-```
-
-A remembered visibility overrides the initial default. Changing the default does not erase previously saved outline states. These settings control the editor's outline, not VS Code's Explorer sidebar.
+Open **Settings** (`Cmd+,` on macOS or `Ctrl+,` on Windows/Linux) and search for **Binary Markdown**. The [editor settings reference](docs/editor-guide.md#vs-code-settings) lists defaults and explains outline state, table controls, layout, and equation-source options. The [language guide](docs/editor-guide.md#interface-languages) distinguishes editor language from VS Code's settings language.
 
 ## Everyday commands
 
-Search for **Binary Markdown** in the Command Palette. Commands include opening the editor, switching source mode, opening as text, comparing as text, inserting tables or a table of contents, and undo/redo.
+With the editor focused:
 
 | Action | macOS | Windows/Linux |
 | --- | --- | --- |
@@ -124,60 +47,33 @@ Search for **Binary Markdown** in the Command Palette. Commands include opening 
 | Toggle source mode | `Cmd+.` | `Ctrl+.` |
 | Open as text | `Cmd+Shift+.` | `Ctrl+Shift+.` |
 
-The [editor guide](docs/editor-guide.md) covers formatting, keyboard operations, and images. Export commands and **Copy Build Information** are also available here.
+Search for **Binary Markdown** in the Command Palette for editing, export, and **Copy Build Information** commands. The [editor guide](docs/editor-guide.md) covers keyboard operations, tables, code, equations, and images.
 
 ## Experimental export
 
-Export supports **HTML, PDF, Word (.docx), and EPUB** in **local desktop VS Code on macOS, Linux and Windows**. HTML/PDF follow supported editor rendering; DOCX/EPUB prioritize editable content and structure. See the [version notes](release-notes/0.3.0.md) and the [export validation history](reports/validation/2026-09-10-export.md) for tested systems and limitations.
+Save a named Markdown file in a trusted local workspace, then open the sharing-arrow **Export** menu. In a narrow pane, find it under **More toolbar actions**. Export shows progress, supports cancellation, and saves beside the source without overwriting existing files.
 
-**Remote-SSH export is not yet supported.** The menu explains this restriction and marks every format unavailable. To export now, open a local copy of the Markdown file and its referenced assets in desktop VS Code on macOS, Linux or Windows. Installing Pandoc or a browser does not enable export in a remote window.
+| Format | Required tool |
+| --- | --- |
+| HTML | None beyond the extension |
+| PDF | Chrome, Chromium, or Microsoft Edge |
+| Word (.docx), EPUB | Pandoc |
 
-Save the named Markdown file, then select the sharing-arrow **Export** button in the toolbar (or **More toolbar actions** in a narrow pane). Choose a format from its dropdown. Unsaved work produces a save-and-retry message; export does not save automatically. The job shows its actual stage, supports cancellation, and reports the saved path and any fallback warnings.
+Tools are user-installed. Follow [export help](media/export-help.md) for setup, executable paths, output naming, and format-specific settings, or start with the [HTML export tutorial](docs/export-tutorial.md).
 
-| Format | Tool to install | Initial output goal |
-| --- | --- | --- |
-| HTML | None beyond the running extension | Standalone supported rendering with embedded resources |
-| PDF | Chrome, Chromium, or Microsoft Edge | Prepared HTML printed by a headless browser with simple pagination; white page by default |
-| Word / EPUB | Pandoc | Editable text and document structure; layout can differ from browser output |
-
-Install Pandoc using its [official instructions](https://pandoc.org/installing.html); Homebrew users can use `brew install pandoc`. For PDF, install [Google Chrome](https://www.google.com/chrome/) or another supported Chromium-family browser. Native tools are user-managed and are not downloaded or bundled by the extension. A browser is the PDF rendering engine; HTML and Pandoc formats do not require it.
-
-Open VS Code Settings and search for `binary-markdown.export`. Leave the following **machine-specific** settings empty for automatic detection, or supply an absolute executable path:
-
-| Setting | Example macOS executable path | Example Linux executable path | Example Windows executable path |
-| --- | --- | --- | --- |
-| `binary-markdown.export.pandocPath` | `/opt/homebrew/bin/pandoc` | `/usr/bin/pandoc` or an absolute user-space installation path | `C:\Program Files\Pandoc\pandoc.exe` |
-| `binary-markdown.export.browserPath` | `/Applications/Google Chrome.app/Contents/MacOS/Google Chrome` | `/usr/bin/google-chrome` | `C:\Program Files\Google\Chrome\Application\chrome.exe` |
-
-An invalid manual path is reported instead of silently selecting a different tool. Reopen the export menu after installing a tool to rescan. The initial workflow requires a trusted workspace; remote hosts, browser VS Code and Electron-app export are deferred.
-
-Files are saved beside the Markdown source with the same filename stem. An occupied name uses the final eight SHA-256 hexadecimal characters of the completed output, then `_2`, `_3`, and so on if needed. An identical hash-named file is reused, and existing files are preserved. No destination dialog is shown.
-
-PDF defaults to a white page with GitHub light appearance. Disable `binary-markdown.export.pdfWhiteBackground` in VS Code settings to fill the entire page, including margins, with the current editor theme. Text keeps its 16 mm inset. This setting does not change the editor, source images or other export formats.
-
-PDF and DOCX code labels default to the top-left, with all four corners selectable. Total logical-line counts and per-line numbering are independently optional and initially off. DOCX numbering is experimental; reader editing/copying and long-block footer attachment still need review. See [export help](media/export-help.md#code-language-tabs) for the settings, source-preservation rules, and reader limitations.
-
-Supported resources retain source resolution; missing or unsupported content receives a visible fallback and warning summary. PDF uses simple block fitting, so blank regions are acceptable. Advanced pagination, templates, compression, custom destinations and unsaved export remain future work. See [export help](media/export-help.md) for the initial format limitations and [the subsystem outline](docs/export-subsystem.md) for the agreed implementation scope.
+Export is unavailable in Remote-SSH and other remote hosts, browser VS Code, and the standalone desktop app. DOCX numbering remains experimental; editing, copying, and reading order need checks in your target reader. PDF gutters can appear in copied text, and long DOCX code footers can paginate separately. Review the [0.4.0 known limitations](release-notes/0.4.0.md#known-limitations), including existing editor save/list limitations, before using a candidate for important documents.
 
 ## Build and contribute
 
-Start development builds from `main`, select the Node version in `.node-version`, then run:
+Source builds, focused fixes, translations, accessibility work, and reproducible bug reports are welcome. Start with the [build guide](docs/building.md), [contributor workflow](CONTRIBUTING.md), and [validation guide](docs/testing/README.md). Use **Copy Build Information** when reporting a problem, with a small non-private example and clear reproduction steps.
 
-```sh
-git clone https://github.com/BinaryOutlook/binary-markdown.git
-cd binary-markdown
-npm ci
-npm run package
-```
+The [documentation index](docs/README.md) organizes current guides. [Release notes](release-notes/README.md) describe individual versions; [reports](reports/README.md) preserve observations for specific revisions. Development builds and older commits are covered by the [support policy](docs/releases-and-support.md).
 
-The package command compiles the extension and writes `dist/<name>-<version>.vsix`, a SHA-256 checksum, and build information. It links installed documentation to the source commit. See [building](docs/building.md) for historical revisions, isolated installation and verification, and [CONTRIBUTING.md](CONTRIBUTING.md) for tests and focused PRs.
+<a id="open-source-releases-and-support"></a>
+<a id="project-history-and-license"></a>
 
-Bug reports, translations, accessibility work and compatibility testing are welcome in [the Binary Markdown issue tracker](https://github.com/BinaryOutlook/binary-markdown/issues). Reports from identifiable older development commits are welcome too.
+## Open source and license
 
-## Project history and license
+**Free (cost):** official releases and all editor features are available at no charge. **Free (freedom):** you may run, study, modify, and redistribute the software under the applicable licenses. This commitment draws on Richard Stallman's, the GNU Project's, and the Free Software Foundation's free software philosophy. See the [licensing guide](docs/licensing.md#cost-and-software-freedom) for the four freedoms and redistribution obligations.
 
-The [reference archive](archive/README.md) preserves superseded README, website, screenshots, and upstream release notes for historical reference. Archived instructions describe the original project and should not be used to install Binary Markdown.
-
-Since the 0.2.0 transition, Binary Markdown is licensed under [GNU AGPL version 3 or later](LICENSE) (`AGPL-3.0-or-later`). Earlier MIT releases retain their original terms. The [retained MIT notice](LICENSES/AnyMarkdown-MIT.txt) covers inherited upstream code and prior MIT contributions; third-party components retain their own licences. See [NOTICE](NOTICE) and the [licensing guide](docs/licensing.md) for scope, retained grants and matching source. Project and dependency licence notices are included in packaged builds. The Electron desktop sources are retained under the Binary Markdown name; desktop installers and their compatibility are a separate release effort.
-
-If you prefer an MIT-licensed starting point, you are welcome to fork [Binary Markdown v0.1.0](https://github.com/BinaryOutlook/binary-markdown/tree/v0.1.0) or an MIT-licensed version of the original [Any Markdown](https://github.com/raggbal/any-markdown). Both are welcome choices. See [MIT-licensed starting points](docs/licensing.md#mit-licensed-starting-points) for the scope of those grants.
+Binary Markdown uses [AGPL-3.0-or-later](LICENSE). Earlier MIT grants, the [upstream MIT notice](LICENSES/AnyMarkdown-MIT.txt), and third-party terms remain intact; see [NOTICE](NOTICE). MIT-licensed starting points include [Binary Markdown v0.1.0 and Any Markdown](docs/licensing.md#mit-licensed-starting-points). The [repository transition guide](docs/repository-transition.md) preserves links to the original fork, reviews, and releases.

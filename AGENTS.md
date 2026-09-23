@@ -11,6 +11,13 @@ These instructions apply to work in this repository. Follow the user's explicit 
 - Start new implementation in a purpose-named worktree on a `feat/` branch from the refreshed remote `main`, unless the task specifies another base or branch. Continue existing task branches without discarding their work. Detached worktrees are suitable for inspection and testing; use a named branch for implementation intended to be retained.
 - Keep diffs focused and stage only intended paths. Do not overwrite another person's or agent's changes, remove their worktree, or include unrelated files.
 
+## Validate against current evidence
+
+- Treat `MEMORY.md`, `memory.md`, persistent memory, prior conversations, and cached summaries as suggestions for investigation, not sources of truth about the current repository or task state.
+- Independently inspect the relevant checkout, source, diff, configuration, and artifacts before changing them or making factual claims. Verify branch, pull-request, CI, and release state against current Git and hosting-service evidence when those states matter.
+- Audit the actual proposed changes and run checks appropriate to their scope before committing, publishing, or declaring work ready. A remembered pass or result for another revision does not validate the current work.
+- Distinguish observed results from inference and unresolved questions. If current verification is unavailable, state the limitation rather than presenting memory as confirmed evidence.
+
 ## Clarify the intended result
 
 - Inspect the existing behavior before proposing a change. Do not assume a feature request conveys the complete design.
