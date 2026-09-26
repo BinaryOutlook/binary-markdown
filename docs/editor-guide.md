@@ -67,6 +67,14 @@ The menu explains unavailable contexts. Switch to the visual editor to insert it
 
 ## Keyboard operations
 
+### Paragraphs and line breaks
+
+In ordinary prose, **Enter** starts a new paragraph and **Shift+Enter** inserts a hard line break inside the current paragraph. Saving uses a blank Markdown separator between paragraphs and two trailing spaces before a hard break. Existing backslash hard breaks are also recognized and retained.
+
+An ordinary source newline wraps the same paragraph. Blank source separators and the final file newline do not create extra editable rows in the visual editor or exports. Spacing comes from the theme's block styles. Extra source separators and unchanged blocks retain their authored spelling; editing a block can normalize its Markdown syntax. Empty positions created while editing provide a caret location and do not become phantom paragraphs after reopening.
+
+Lists retain their starting number, continuation paragraphs and loose spacing. Explicit table column alignment applies to headers and body cells. Block structure uses Markdown parsing, including setext headings and indented code; insert blank separators around a thematic rule when needed to distinguish it from a heading underline. Existing code, quote, list and table keyboard operations below remain context-specific. Equations, managed contents and underline retain their editor extensions; this change does not claim complete CommonMark/GFM inline conformance.
+
 ### General shortcuts
 
 These shortcuts are active when the Binary Markdown editor is focused:

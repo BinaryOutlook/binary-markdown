@@ -24,6 +24,7 @@
     const toolbar = document.getElementById('toolbar');
     const editorWrapper = document.getElementById('editorWrapper');
     let editorRenderRevision = 0;
+    let sourceBlockSequence = 0;
     const widthGuide = document.getElementById('editorWidthGuide');
     const widthBounds = document.getElementById('editorWidthBounds');
     const widthExplanation = document.getElementById('editorWidthExplanation');
@@ -1695,7 +1696,7 @@
         return { tag: 'p', html: parseLineInline(text), consumed: false };
     }
 
-    function parseInline(text, allowMath = true) {
+    function parseInline(text, allowMath = true, prose = false) {
         if (!text) return '';
         const equations = allowMath ? mathSyntax.inline(text, mathBackslashDelimiters) : [];
         let mathMarker = '\x00BMATH';
@@ -1707,7 +1708,7 @@
         let html = escapeHtml(text);
         
         // Restore <br> tags that were escaped (used in table cells for line breaks)
-        html = html.replace(/&lt;br&gt;/gi, '<br>');
+        html = html.replace(/&lt;br\s*\/?&gt;/gi, prose ? '<br data-md-hard-break="html">' : '<br>');
         
         // Use placeholders to protect content from further processing
         const placeholders = [];
@@ -1735,6 +1736,20 @@
             return placeholder;
         });
         
+        if (prose) {
+            // Code and destinations are already protected by placeholders.
+            // Preserve soft breaks as text; hard breaks are explicit inline nodes.
+            html = html.replace(/( {2,}|\\+)\n/g, (match, marker) => {
+                if (marker[0] === '\\' && marker.length % 2 === 0) return match;
+                const prefix = marker[0] === '\\' ? marker.slice(0, -1) : '';
+                const placeholder = '\x00BREAK' + (placeholderIndex++) + '\x00';
+                placeholders.push({ placeholder, html: '<br data-md-hard-break="' + (marker[0] === '\\' ? 'backslash' : 'spaces') + '">' });
+                return prefix + placeholder;
+            });
+            // A source wrap is a space in prose. Store its authored spelling
+            // with the block, while editable text keeps normal caret behavior.
+            html = html.replace(/\n/g, ' ');
+        }
         html = formatInlineText(html);
 
         // Restore placeholders with actual HTML
@@ -2605,458 +2620,86 @@
         });
     }
 
+    function renderMarkdownBlock(block, exportCode = false, parent = null, index = 0) {
+        const children = () => block.children.map((child, i) => renderMarkdownBlock(child, exportCode, block, i)).join('');
+        if (block.type === 'front_matter') return renderFrontMatter(block.content);
+        if (block.type === 'binary_aux') return renderTocBlock(block.content);
+        if (block.type === 'binary_math') return mathBlockHtml(block.meta);
+        if (block.type === 'inline') return parseInline(block.content, true, true);
+        if (block.type === 'paragraph') {
+            const text = block.children.find(child => child.type === 'inline')?.content || '';
+            // Keep the established quote line-editing contract for a simple
+            // quote. Quotes containing several blocks keep those blocks.
+            if (parent?.type === 'blockquote' && parent.level === 0 && parent.children.length === 1) return parseInline(text);
+            if (parent?.type === 'list_item' && index === 0) {
+                const task = /^\[([ xX])\] +(.*)$/s.exec(text);
+                if (task) return '<input type="checkbox"' + (task[1].toLowerCase() === 'x' ? ' checked' : '') + '>' + (parseInline(task[2], true, true) || '<br>');
+                return parseInline(text, true, true) || '<br>';
+            }
+            return '<p>' + children() + '</p>';
+        }
+        if (block.type === 'fence' || block.type === 'code_block') {
+            const lang = (block.info || '').trim();
+            const payload = block.content.replace(/\n$/, '');
+            const trailing = payload.endsWith('\n');
+            const codeHtml = payload ? escapeHtml(payload).replace(/\n/g, '<br>') + (trailing ? '<br>' : '') : '<br>';
+            const trailingAttr = trailing ? ' data-trailing-br="true"' : '';
+            if (lang === 'math') {
+                const fence = block.markup || '\`\`\`';
+                return mathBlockHtml({ tex: payload, raw: block.source || fence + lang + '\n' + block.content + fence,
+                    open: fence + lang, close: fence, singleLine: false });
+            }
+            if (lang === 'mermaid') {
+                return '<div class="mermaid-wrapper" data-mode="display" contenteditable="false">' +
+                    '<pre data-lang="mermaid" contenteditable="true"><code' + trailingAttr + '>' + codeHtml + '</code></pre>' +
+                    '<div class="mermaid-diagram"></div></div>';
+            }
+            const count = block.content ? block.content.split('\n').length - 1 : 0;
+            return '<pre data-lang="' + escapeHtml(lang).replace(/"/g, '&quot;') + '"' +
+                (exportCode ? ' data-export-code-lines="' + count + '"' : '') +
+                ' data-mode="display"><code contenteditable="false"' + trailingAttr + '>' + codeHtml + '</code></pre>';
+        }
+        if (block.type === 'hr') return '<hr>';
+        if (block.type === 'list_item') {
+            const needsCaret = !block.children.length || ['bullet_list', 'ordered_list'].includes(block.children[0].type);
+            return '<li>' + (needsCaret ? '<br>' : '') + children() + '</li>';
+        }
+        if (block.type === 'bullet_list' || block.type === 'ordered_list') {
+            const tag = block.type === 'ordered_list' ? 'ol' : 'ul';
+            const start = block.attrs.start ? ' start="' + Number(block.attrs.start) + '"' : '';
+            const loose = block.children.some(item => item.children.some(child => child.type === 'paragraph' && !child.hidden));
+            return '<' + tag + start + (loose ? ' data-md-loose="true"' : '') + '>' + children() + '</' + tag + '>';
+        }
+        if (block.type === 'th' || block.type === 'td') {
+            const alignment = /text-align:(left|center|right)/.exec(block.attrs.style || '')?.[1];
+            return '<' + block.tag + (alignment ? ' style="text-align:' + alignment + '"' : '') +
+                ' contenteditable="true">' + (children() || '<br>') + '</' + block.tag + '>';
+        }
+        if (['heading', 'blockquote', 'table', 'thead', 'tbody', 'tr'].includes(block.type)) {
+            return '<' + block.tag + '>' + children() + '</' + block.tag + '>';
+        }
+        return children();
+    }
+
     function markdownToHtmlFragment(markdownText, exportCode = false) {
-        // Normalize line endings: \r\n → \n, lone \r → \n
-        const front = documentAux.splitFrontMatter(markdownText.replace(/\r\n?/g, '\n'));
-        let body = front.body;
-        const tocSlots = [];
-        try {
-            const parsed = documentAux.scan(body);
-            for (const block of [...parsed.tocs, ...parsed.markers].sort((a, b) => b.start - a.start)) {
-                const raw = body.slice(block.start, block.end);
-                const slot = tocSlots.length;
-                tocSlots.push(raw);
-                body = body.slice(0, block.start) + '\x00BMTOC' + slot + '\x00' + body.slice(block.end);
-            }
-        } catch (_) { /* Preserve incomplete markers as editable source. */ }
-        const lines = body.split('\n');
-        let html = front.raw ? renderFrontMatter(front.raw) : '';
-        let inCodeBlock = false;
-        let codeContent = '';
-        let codeLang = '';
-        let codeFenceLength = 0; // Track the length of the opening fence
-        let codeFenceChar = ''; // Track the fence character (backtick or tilde)
-        let codeFenceIndent = 0;
-        let codeStart = 0;
-        const metadataEnd = lines[0] === '---' ? lines.findIndex((line, i) => i > 0 && /^(---|\.\.\.)$/.test(line)) : -1;
-        let inTable = false;
-        let tableRows = [];
-        let inBlockquote = false;
-        let blockquoteLines = [];
-        
-        // Stack to track list nesting: [{type: 'ul'|'ol', indent: number}]
-        let listStack = [];
-
-        function appendCodeLine(line) {
-            // Remove only the opening fence's indentation, preserving tabs and
-            // deeper code indentation (including on invalid closing fences).
-            const indent = Math.min(codeFenceIndent, /^ */.exec(line)[0].length);
-            codeContent += line.slice(indent) + '\n';
-        }
-
-        function closeListsToLevel(targetIndent) {
-            let result = '';
-            while (listStack.length > 0 && listStack[listStack.length - 1].indent >= targetIndent) {
-                result += '</li></' + listStack.pop().type + '>';
-            }
-            return result;
-        }
-
-        function closeAllLists() {
-            let result = '';
-            while (listStack.length > 0) {
-                result += '</li></' + listStack.pop().type + '>';
-            }
-            return result;
-        }
-
-        function isTableRow(line) {
-            // Check if line starts with | and ends with |
-            const trimmed = line.trim();
-            return trimmed.startsWith('|') && trimmed.endsWith('|') && trimmed.length > 2;
-        }
-
-        function isTableSeparator(line) {
-            // Check for separator pattern like | --- | --- |
-            const trimmed = line.trim();
-            if (!trimmed.startsWith('|') || !trimmed.endsWith('|')) return false;
-            // Check if content is only dashes, colons, spaces, and pipes
-            // MUST contain at least one dash to be a separator (not just empty cells)
-            const content = trimmed.slice(1, -1);
-            return content.includes('-') && /^[\s\-:|]+$/.test(content);
-        }
-
-        // Split table row by | while respecting:
-        // 1. \| escape sequences
-        // 2. | inside inline code (backticks)
-        // Returns array of cell contents with escaped pipes restored
-        function splitTableRow(row) {
-            // Use placeholders that won't appear in normal text
-            const ESCAPED_PIPE_PLACEHOLDER = '\x00PIPE\x00';
-            const CODE_PLACEHOLDER_PREFIX = '\x00CODE';
-            const CODE_PLACEHOLDER_SUFFIX = 'CODE\x00';
-            
-            let processed = row;
-            
-            // First, protect inline code spans (including multi-backtick spans)
-            // Match backtick sequences of any length and their content
-            const codeSpans = [];
-            let codeIndex = 0;
-            
-            // Match code spans: `...` or ``...`` or ```...``` etc.
-            // This regex finds backtick-delimited spans
-            processed = processed.replace(/(`+)([^`]|`(?!\1))*?\1/g, (match) => {
-                const placeholder = CODE_PLACEHOLDER_PREFIX + codeIndex + CODE_PLACEHOLDER_SUFFIX;
-                codeSpans.push({ placeholder, content: match });
-                codeIndex++;
-                return placeholder;
-            });
-            
-            // Also handle single backtick code spans
-            processed = processed.replace(/`([^`]+)`/g, (match) => {
-                const placeholder = CODE_PLACEHOLDER_PREFIX + codeIndex + CODE_PLACEHOLDER_SUFFIX;
-                codeSpans.push({ placeholder, content: match });
-                codeIndex++;
-                return placeholder;
-            });
-            
-            // Replace \| with placeholder before splitting
-            processed = processed.replace(/\\\|/g, ESCAPED_PIPE_PLACEHOLDER);
-            
-            // Split by | and filter out first/last empty elements
-            const cells = processed.split('|').filter((c, i, arr) => i > 0 && i < arr.length - 1);
-            
-            // Restore everything in each cell
-            return cells.map(cell => {
-                // Restore escaped pipes
-                let result = cell.replace(new RegExp(ESCAPED_PIPE_PLACEHOLDER, 'g'), '|');
-                // Restore code spans
-                for (const { placeholder, content } of codeSpans) {
-                    result = result.replace(placeholder, content);
-                }
-                return result;
-            });
-        }
-
-        function renderTable(rows) {
-            if (rows.length === 0) return '';
-            
-            // Extract alignment info from separator row
-            let alignments = [];
-            const separatorRow = rows.find(row => isTableSeparator(row));
-            if (separatorRow) {
-                const cells = splitTableRow(separatorRow);
-                alignments = cells.map(cell => {
-                    const trimmed = cell.trim();
-                    if (trimmed.startsWith(':') && trimmed.endsWith(':')) return 'center';
-                    if (trimmed.endsWith(':')) return 'right';
-                    return 'left'; // default (--- or :---)
-                });
-            }
-            
-            let tableHtml = '<table>';
-            rows.forEach((row, idx) => {
-                // Skip separator row
-                if (isTableSeparator(row)) return;
-                
-                const cells = splitTableRow(row);
-                const isHeader = idx === 0;
-                tableHtml += '<tr>';
-                cells.forEach((cell, colIdx) => {
-                    const tag = isHeader ? 'th' : 'td';
-                    const cellContent = parseInline(cell.trim());
-                    // th is always center (via CSS), td gets alignment from separator
-                    const align = alignments[colIdx] || 'left';
-                    const style = isHeader ? '' : ' style="text-align: ' + align + '"';
-                    // Use <br> for empty cells to make them clickable/visible
-                    tableHtml += '<' + tag + style + ' contenteditable="true">' + (cellContent || '<br>') + '</' + tag + '>';
-                });
-                tableHtml += '</tr>';
-            });
-            tableHtml += '</table>';
-            return tableHtml;
-        }
-
-        function renderBlockquote(lines) {
-            if (lines.length === 0) return '';
-            if (lines.some((line, index) => /^\s*(?:`{3,}|~{3,})/.test(line) || mathSyntax.display(lines, index, mathBackslashDelimiters))) {
-                return '<blockquote>' + markdownToHtmlFragment(lines.join('\n'), exportCode) + '</blockquote>';
-            }
-            // Join blockquote lines with actual newlines (like code blocks)
-            // CSS white-space: pre-wrap will display them as line breaks
-            // Empty lines need to be preserved - use a space or <br> to ensure they render
-            const content = lines.map(l => {
-                const parsed = parseInline(l);
-                // If line is empty, use a single space to preserve the line
-                return parsed === '' ? ' ' : parsed;
-            }).join('\n');
-            return '<blockquote>' + content + '</blockquote>';
-        }
-
-        for (let i = 0; i < lines.length; i++) {
-            const line = lines[i];
-            const tocSlot = /^\x00BMTOC(\d+)\x00$/.exec(line);
-            if (tocSlot && tocSlots[Number(tocSlot[1])] !== undefined) {
-                if (inBlockquote) { html += renderBlockquote(blockquoteLines); inBlockquote = false; blockquoteLines = []; }
-                if (inTable) { html += renderTable(tableRows); inTable = false; tableRows = []; }
-                html += closeAllLists() + renderTocBlock(tocSlots[Number(tocSlot[1])]);
-                continue;
-            }
-
-            // Handle code blocks (\`\`\`+ or ~~~+)
-            // Match opening/closing fence: 3+ backticks or tildes
-            const fenceMatch = line.match(/^( {0,3})(\`{3,}|~{3,})(.*)?$/);
-            if (fenceMatch) {
-                const fenceStr = fenceMatch[2];
-                const fenceLen = fenceStr.length;
-                const fenceCharacter = fenceStr[0];
-                
-                if (inCodeBlock) {
-                    // Check if this is a valid closing fence:
-                    // - Same character type as opening
-                    // - At least as many characters as opening fence
-                    // - No language specifier (just fence or whitespace after)
-                    const afterFence = fenceMatch[3] || '';
-                    if (fenceCharacter === codeFenceChar && fenceLen >= codeFenceLength && afterFence.trim() === '') {
-                        // Valid closing fence
-                        // The line processing loop appends '\n' to every line, so the
-                        // raw codeContent always has one extra trailing '\n'.
-                        // Strip exactly one trailing '\n' (the loop artifact).
-                        const trimmedContent = codeContent.replace(/\n$/, '');
-                        // In contenteditable, a trailing <br> at the very end of a
-                        // block is treated as a "block closer" and NOT rendered as a
-                        // visible empty line. When the content has trailing empty
-                        // line(s), we add an extra <br> for browser display AND mark
-                        // the code element with data-trailing-br so that
-                        // getCodePlainText / mdProcessNode can strip it back out.
-                        let codeHtml;
-                        let hasTrailingBr = false;
-                        if (!trimmedContent || trimmedContent === '') {
-                            // Empty code block: single <br> for minimum height / cursor
-                            codeHtml = '<br>';
-                        } else if (trimmedContent.endsWith('\n')) {
-                            // Content has trailing empty line(s) — extra <br> needed
-                            codeHtml = escapeHtml(trimmedContent).replace(/\n/g, '<br>') + '<br>';
-                            hasTrailingBr = true;
-                        } else {
-                            // No trailing empty line: no extra <br> (requirement 9A-21)
-                            codeHtml = escapeHtml(trimmedContent).replace(/\n/g, '<br>');
-                        }
-                        const trailingAttr = hasTrailingBr ? ' data-trailing-br="true"' : '';
-                        if (codeLang === 'mermaid') {
-                            html += '<div class="mermaid-wrapper" data-mode="display" contenteditable="false">' +
-                                '<pre data-lang="mermaid" contenteditable="true"><code' + trailingAttr + '>' + codeHtml + '</code></pre>' +
-                                '<div class="mermaid-diagram"></div>' +
-                                '</div>';
-                        } else if (codeLang === 'math') {
-                            html += mathBlockHtml({ tex: trimmedContent, raw: lines.slice(codeStart, i + 1).join('\n'),
-                                open: lines[codeStart], close: line, singleLine: false });
-                        } else {
-                            const countAttr = exportCode ? ' data-export-code-lines="' + (i - codeStart - 1) + '"' : '';
-                            html += '<pre data-lang="' + escapeHtml(codeLang).replace(/"/g, '&quot;') + '"' + countAttr + ' data-mode="display"><code contenteditable="false"' + trailingAttr + '>' + codeHtml + '</code></pre>';
-                        }
-                        inCodeBlock = false;
-                        codeContent = '';
-                        codeLang = '';
-                        codeFenceLength = 0;
-                        codeFenceChar = '';
-                        continue;
-                    } else {
-                        // Not a valid closing fence, treat as code content
-                        appendCodeLine(line);
-                        continue;
-                    }
-                } else {
-                    // Opening fence
-                    if (inBlockquote) {
-                        html += renderBlockquote(blockquoteLines);
-                        inBlockquote = false;
-                        blockquoteLines = [];
-                    }
-                    if (inTable) {
-                        html += renderTable(tableRows);
-                        inTable = false;
-                        tableRows = [];
-                    }
-                    // Close any open lists before starting code block
-                    html += closeAllLists();
-                    inCodeBlock = true;
-                    codeStart = i;
-                    codeFenceLength = fenceLen;
-                    codeFenceChar = fenceCharacter;
-                    codeFenceIndent = fenceMatch[1].length;
-                    codeLang = (fenceMatch[3] || '').trim();
-                    continue;
-                }
-            }
-
-            if (inCodeBlock) {
-                appendCodeLine(line);
-                continue;
-            }
-
-            const equation = i > metadataEnd ? mathSyntax.display(lines, i, mathBackslashDelimiters) : null;
-            if (equation && (equation.indent.length < 4 || listStack.length)) {
-                if (inBlockquote) { html += renderBlockquote(blockquoteLines); inBlockquote = false; blockquoteLines = []; }
-                if (inTable) { html += renderTable(tableRows); inTable = false; tableRows = []; }
-                if (!equation.indent.length) html += closeAllLists();
-                else html += closeListsToLevel(Math.floor(equation.indent.length / 2));
-                html += mathBlockHtml(equation);
-                i = equation.end - 1;
-                continue;
-            }
-
-            // Handle markdown tables
-            if (isTableRow(line) || (inTable && isTableSeparator(line))) {
-                if (inBlockquote) {
-                    html += renderBlockquote(blockquoteLines);
-                    inBlockquote = false;
-                    blockquoteLines = [];
-                }
-                if (!inTable) {
-                    html += closeAllLists();
-                    inTable = true;
-                }
-                tableRows.push(line);
-                continue;
-            } else if (inTable) {
-                html += renderTable(tableRows);
-                inTable = false;
-                tableRows = [];
-            }
-
-            // Handle blockquotes - accumulate consecutive > lines
-            const blockquoteMatch = line.match(/^> ?(.*)$/);
-            if (blockquoteMatch) {
-                if (!inBlockquote) {
-                    html += closeAllLists();
-                    inBlockquote = true;
-                }
-                blockquoteLines.push(blockquoteMatch[1]);
-                continue;
-            } else if (inBlockquote) {
-                html += renderBlockquote(blockquoteLines);
-                inBlockquote = false;
-                blockquoteLines = [];
-            }
-
-            const parsed = parseMarkdownLine(line, i > metadataEnd && (!/^(?: {4}|\t)/.test(line) || listStack.length > 0));
-
-            // Handle list grouping with nesting
-            if (parsed.listType) {
-                const indent = parsed.indent || 0;
-                const indentLevel = Math.floor(indent / 2); // 2 spaces = 1 level
-                
-                if (listStack.length === 0) {
-                    // Start a new top-level list
-                    html += '<' + parsed.listType + '><li>' + parsed.html;
-                    listStack.push({ type: parsed.listType, indent: indentLevel });
-                } else {
-                    const currentLevel = listStack.length - 1;
-
-                    if (indentLevel > currentLevel) {
-                        // Nest deeper - create nested list inside current li
-                        html += '<' + parsed.listType + '><li>' + parsed.html;
-                        listStack.push({ type: parsed.listType, indent: indentLevel });
-                    } else if (indentLevel < listStack.length) {
-                        // Go back up - close lists until we reach the right level
-                        while (listStack.length > indentLevel + 1) {
-                            html += '</li></' + listStack.pop().type + '>';
-                        }
-                        // Check if list type changed at the target level
-                        if (listStack.length > 0 && listStack[listStack.length - 1].type !== parsed.listType) {
-                            // Close ONLY the current level's list and start new sibling list
-                            // of different type under the same parent li.
-                            // (Do NOT close all lists - that would collapse nested type changes to top level)
-                            html += '</li></' + listStack.pop().type + '>';
-                            html += '<' + parsed.listType + '><li>' + parsed.html;
-                            listStack.push({ type: parsed.listType, indent: indentLevel });
-                        } else if (listStack.length > 0) {
-                            html += '</li><li>' + parsed.html;
-                        }
-                    } else {
-                        // Same level - check if list type changed
-                        if (listStack[listStack.length - 1].type !== parsed.listType) {
-                            // Close ONLY the current level's list and start new sibling list
-                            // of different type under the same parent li.
-                            // (Do NOT close all lists - that would collapse nested type changes to top level)
-                            html += '</li></' + listStack.pop().type + '>';
-                            html += '<' + parsed.listType + '><li>' + parsed.html;
-                            listStack.push({ type: parsed.listType, indent: indentLevel });
-                        } else {
-                            html += '</li><li>' + parsed.html;
-                        }
-                    }
-                }
-            } else {
-                // Handle empty lines specially when in a list
-                if (line.trim() === '' && listStack.length > 0) {
-                    // Look ahead to find next non-empty line
-                    let nextListItem = false;
-                    let nextListIndent = 0;
-                    for (let j = i + 1; j < lines.length; j++) {
-                        const nextLine = lines[j];
-                        if (nextLine.trim() !== '') {
-                            if (/^ +/.test(nextLine) && mathSyntax.display(lines, j, mathBackslashDelimiters)) {
-                                nextListItem = true;
-                                nextListIndent = /^ */.exec(nextLine)[0].length;
-                                break;
-                            }
-                            // Found next non-empty line - check if it's a list item
-                            const ulMatch = nextLine.match(/^(\s*)[-*+] /);
-                            const olMatch = nextLine.match(/^(\s*)\d+\. /);
-                            if (ulMatch || olMatch) {
-                                nextListItem = true;
-                                nextListIndent = (ulMatch ? ulMatch[1].length : olMatch[1].length);
-                            }
-                            break;
-                        }
-                    }
-                    
-                    if (nextListItem) {
-                        // Next item is a list item
-                        if (nextListIndent > 0) {
-                            // Next item is nested - skip empty line (collapse)
-                            continue;
-                        } else {
-                            // Next item is top-level - preserve blank line between list blocks
-                            // Close current list, add blank line, new list will start later
-                            html += closeAllLists();
-                            html += '<p><br></p>';
-                            continue;
-                        }
-                    }
-                    // Not within list - fall through to close list and add blank line
-                }
-                
-                // Close all open lists before non-list content
-                html += closeAllLists();
-
-                if (parsed.tag === 'hr') {
-                    html += '<hr>';
-                } else if (line.trim() === '') {
-                    // Empty line - preserve all blank lines
-                    html += '<p><br></p>';
-                } else {
-                    html += '<' + parsed.tag + '>' + parsed.html + '</' + parsed.tag + '>';
-                }
-            }
-        }
-
-        // Close any remaining open lists, tables, and blockquotes
-        html += closeAllLists();
-        if (inBlockquote) html += renderBlockquote(blockquoteLines);
-        if (inTable) html += renderTable(tableRows);
-        if (inCodeBlock) {
-            if (exportCode) {
-                const count = Math.max(0, lines.length - codeStart - 1 - (body.endsWith('\n') ? 1 : 0));
-                // The loop appends one newline per entry, including split()'s
-                // final empty entry. Remove only those parser delimiters.
-                const payload = codeContent.slice(0, -(body.endsWith('\n') ? 2 : 1));
-                const trailing = payload.endsWith('\n');
-                html += '<pre data-lang="' + escapeHtml(codeLang).replace(/"/g, '&quot;') + '" data-export-code-lines="' + count + '"><code' +
-                    (trailing ? ' data-trailing-br="true"' : '') + '>' +
-                    (payload ? escapeHtml(payload).replace(/\n/g, '<br>') + (trailing ? '<br>' : '') : '<br>') + '</code></pre>';
-                return html;
-            }
-            // For empty code blocks, add a <br> for minimum height
-            const codeHtml = (!codeContent || codeContent === '' || codeContent === '\n') 
-                ? '<br>' 
-                : escapeHtml(codeContent).replace(/\n/g, '<br>');
-            html += '<pre data-lang="' + escapeHtml(codeLang) + '" data-mode="display"><code contenteditable="false">' + codeHtml + '</code></pre>';
-        }
-
-        return html;
+        const parsed = window.BinaryMarkdownBlocks.parse(markdownText, { backslashDelimiters: mathBackslashDelimiters });
+        if (exportCode) return parsed.blocks.map(block => renderMarkdownBlock(block, true)).join('');
+        let previousId = '';
+        return parsed.blocks.map((block, index) => {
+            const template = document.createElement('template');
+            template.innerHTML = renderMarkdownBlock(block);
+            const element = template.content.firstElementChild;
+            if (!element) return '';
+            const id = String(++sourceBlockSequence);
+            element.dataset.mdId = id;
+            element.dataset.mdPrevious = previousId;
+            element.dataset.mdBefore = encodeURIComponent(block.before);
+            element.dataset.mdSource = encodeURIComponent(block.source);
+            element.dataset.mdCanonical = encodeURIComponent(mdProcessNode(element).replace(/\n$/, ''));
+            if (index === parsed.blocks.length - 1) element.dataset.mdTrailing = encodeURIComponent(parsed.trailing || '\n');
+            previousId = id;
+            return element.outerHTML;
+        }).join('');
     }
 
     function setupLink(a) {
@@ -4828,11 +4471,11 @@
         const colIndex = activeTableCell.cellIndex;
         if (colIndex < 0) return;
         
-        // Apply alignment to all td cells in this column (th stays center)
+        // Markdown column alignment applies to the header and body alike.
         const rows = activeTable.querySelectorAll('tr');
         rows.forEach(row => {
             const cells = row.querySelectorAll('th, td');
-            if (cells[colIndex] && cells[colIndex].tagName === 'TD') {
+            if (cells[colIndex]) {
                 cells[colIndex].style.textAlign = align;
             }
         });
@@ -6407,11 +6050,11 @@
             case 'h6': return '###### ' + mdGetInlineMarkdown(node) + '\n';
             case 'p': 
                 const pContent = mdGetInlineMarkdown(node);
-                // If p only contains <br> or is empty, it's a blank line marker
+                // Empty paragraphs provide caret positions, not source lines.
                 if (!pContent || pContent === '' || node.innerHTML === '<br>') {
                     return '\n';
                 }
-                // Use single newline for regular paragraphs
+                // Sibling separators are added by serializeMarkdownBlocks.
                 return pContent + '\n';
             case 'div': 
                 if (node.classList.contains('math-wrapper')) return mathBlockMarkdown(node);
@@ -6453,7 +6096,7 @@
                 if (!divContent || divContent === '' || node.innerHTML === '<br>') {
                     return '\n';
                 }
-                // Use single newline for regular divs
+                // Sibling separators are added by serializeMarkdownBlocks.
                 return divContent + '\n';
             case 'br': return '';
             case 'hr': return '---\n';
@@ -6509,15 +6152,17 @@
                 let ulContent = '';
                 for (const li of node.children) {
                     if (li.tagName.toLowerCase() === 'li') {
+                        if (ulContent && node.dataset.mdLoose === 'true') ulContent += '\n';
                         ulContent += mdProcessListItem(li, listPrefix, '-');
                     }
                 }
                 return ulContent;
             case 'ol':
                 let olContent = '';
-                let num = 1;
+                let num = node.hasAttribute('start') ? Number(node.getAttribute('start')) : 1;
                 for (const li of node.children) {
                     if (li.tagName.toLowerCase() === 'li') {
+                        if (olContent && node.dataset.mdLoose === 'true') olContent += '\n';
                         olContent += mdProcessListItem(li, listPrefix, num + '.');
                         num++;
                     }
@@ -6563,46 +6208,35 @@
     }
 
     function mdProcessListItem(li, indent, marker) {
-        let result = '';
         const checkbox = li.querySelector(':scope > input[type="checkbox"]');
-        let nestedContent = '';
-
-        // Collect nested lists separately
+        const continuation = indent + ' '.repeat(marker.length + 1);
+        const segments = [];
+        let inline = document.createElement('span');
+        function flushInline() {
+            if (!inline.childNodes.length) return;
+            segments.push({ text: mdGetInlineMarkdown(inline), kind: 'inline' });
+            inline = document.createElement('span');
+        }
         for (const child of li.childNodes) {
-            if (child.nodeType === 1) {
-                const childTag = child.tagName.toLowerCase();
-                if (child.classList.contains('math-wrapper')) {
-                    nestedContent += mathBlockMarkdown(child).replace(/\n$/, '').split('\n').map(line => indent + '  ' + line).join('\n') + '\n';
-                } else if (childTag === 'ul' || childTag === 'ol') {
-                    // Nested list - process with increased indent
-                    nestedContent += mdProcessNode(child, indent + '  ');
-                }
+            if (child === checkbox) continue;
+            const block = child.nodeType === 1 && (/^(P|DIV|UL|OL|PRE|BLOCKQUOTE|TABLE|H[1-6]|HR)$/.test(child.tagName));
+            if (!block) { inline.appendChild(child.cloneNode(true)); continue; }
+            flushInline();
+            if (child.tagName === 'UL' || child.tagName === 'OL') {
+                segments.push({ text: mdProcessNode(child, continuation).replace(/\n$/, ''), kind: 'list' });
+            } else {
+                segments.push({ text: mdProcessNode(child).replace(/\n$/, ''), kind: 'block' });
             }
         }
-
-        // Use mdGetInlineMarkdown to process inline content (excluding nested lists)
-        // This properly normalizes redundant formatting tags
-        const itemText = mdGetInlineMarkdown(li);
-
-        // Skip empty list items only when they have no content at all
-        // (can happen when selection includes next line's start during copy)
-        // But preserve empty items that have <br> (user-created empty items)
-        const trimmedText = itemText.trim();
-        const hasBr = li.querySelector(':scope > br') !== null;
-        if (!trimmedText && !nestedContent && !checkbox && !hasBr) {
-            return '';
+        flushInline();
+        const first = segments[0]?.kind !== 'list' ? segments.shift()?.text || '' : '';
+        const prefix = checkbox ? '- [' + (checkbox.checked ? 'x' : ' ') + '] ' : marker + ' ';
+        let result = indent + prefix + first.split('\n').join('\n' + continuation);
+        for (const segment of segments) {
+            if (segment.kind === 'list') result += '\n' + segment.text;
+            else result += '\n\n' + continuation + segment.text.split('\n').join('\n' + continuation);
         }
-
-        if (checkbox) {
-            const checked = checkbox.checked ? 'x' : ' ';
-            result = indent + '- [' + checked + '] ' + trimmedText + '\n';
-        } else {
-            result = indent + marker + ' ' + trimmedText + '\n';
-        }
-
-        result += nestedContent;
-        logger.log('mdProcessListItem result:', result.substring(0, 100));
-        return result;
+        return result + '\n';
     }
 
     function mdGetTextContent(node) {
@@ -6701,9 +6335,16 @@
         }
         
         if (tag === 'br') {
-            if (currentStyles.has('underline')) return [{ char: '\n', styles: new Set(currentStyles) }];
-            // Line break - skip (handled at block level)
-            return result;
+            if (node.hasAttribute('data-editor-placeholder')) return result;
+            if (currentStyles.has('underline') && node.closest('blockquote') && !node.dataset.mdHardBreak) {
+                return [{ char: '\n', styles: new Set(currentStyles) }];
+            }
+            if (!node.previousSibling && !node.nextSibling && !node.dataset.mdHardBreak) return result;
+            // A browser's final BR following a real break is a caret sentinel.
+            if (!node.dataset.mdHardBreak && !node.nextSibling && node.previousSibling?.nodeName === 'BR') return result;
+            const kind = node.dataset.mdHardBreak;
+            return [{ char: kind === 'html' ? '<br>' : (kind === 'backslash' ? '\\\n' : '  \n'),
+                styles: new Set(), isBreak: true }];
         }
         
         // Skip nested lists - they are handled separately
@@ -6751,6 +6392,7 @@
         for (const c of chars) {
             // Check if this character can be merged with current group
             const canMerge = currentGroup && 
+                !c.isBreak && !currentGroup.isBreak &&
                 !c.isMath && !currentGroup.isMath &&
                 !c.isImage && !currentGroup.isImage &&
                 !c.isLink && !currentGroup.isLink &&
@@ -6773,7 +6415,8 @@
                     src: c.src,
                     alt: c.alt,
                     isCode: c.isCode,
-                    isMath: c.isMath
+                    isMath: c.isMath,
+                    isBreak: c.isBreak
                 };
             }
         }
@@ -6818,6 +6461,7 @@
      * @returns {string} - Markdown formatted string
      */
     function applyMarkdownStyle(group) {
+        if (group.isBreak) return group.text;
         if (group.isMath) return applyInlineStyles(group.text, group.styles);
         // Handle special cases first
         if (group.isImage) {
@@ -6888,6 +6532,9 @@
         
         // 2. Filter out empty entries (but keep images)
         const filtered = chars.filter(c => c.char !== '' || c.isImage);
+        const boundarySpace = c => c && !c.isBreak && !c.isCode && !c.isMath && !c.isImage && /^\s+$/.test(c.char);
+        while (boundarySpace(filtered[0])) filtered.shift();
+        while (boundarySpace(filtered[filtered.length - 1])) filtered.pop();
         
         // 3. Group consecutive characters with same styles
         const groups = groupByStyle(filtered);
@@ -6895,10 +6542,13 @@
         // 4. Generate minimal Markdown
         const result = groups.map(g => applyMarkdownStyle(g)).join('');
         
-        return result.trim();
+        return result;
     }
 
     function mdProcessBlockquote(bq) {
+        if (Array.from(bq.children).some(child => /^(P|DIV|H[1-6]|UL|OL|PRE|BLOCKQUOTE|TABLE)$/.test(child.tagName))) {
+            return serializeMarkdownBlocks(bq, false).replace(/\n$/, '').split('\n').map(line => '> ' + line).join('\n') + '\n';
+        }
         // Process blockquote content and add > to each line
         // IMPORTANT: Preserve empty lines as "> " in markdown
         // Handle both <br> elements AND actual newline characters in text
@@ -7092,14 +6742,8 @@
             const cellContents = [];
             
             cells.forEach((cell, colIdx) => {
-                // Get alignment info from td cells (first data row)
-                if (rowIndex === 1 && cell.tagName === 'TD') {
-                    const align = cell.style.textAlign || 'left';
-                    alignments[colIdx] = align;
-                }
-                // For header row, check if there's alignment set (for new tables)
-                if (rowIndex === 0 && alignments.length === 0) {
-                    // Will be filled by data rows
+                if (rowIndex === 0) {
+                    alignments[colIdx] = cell.style.textAlign || rows[1]?.cells[colIdx]?.style.textAlign || 'left';
                 }
                 
                 // Process cell content with proper pipe escaping
@@ -7111,19 +6755,11 @@
             
             // Add separator row after header with alignment markers
             if (isFirstRow) {
-                // Get alignments from first data row's td cells
-                const firstDataRow = rows[1];
-                if (firstDataRow) {
-                    const dataCells = firstDataRow.querySelectorAll('td');
-                    dataCells.forEach((cell, idx) => {
-                        alignments[idx] = cell.style.textAlign || 'left';
-                    });
-                }
-                
                 const separators = cellContents.map((_, idx) => {
                     const align = alignments[idx] || 'left';
                     if (align === 'center') return ':---:';
                     if (align === 'right') return '---:';
+                    if (rows[0].cells[idx]?.style.textAlign === 'left') return ':---';
                     return '---'; // left (default)
                 });
                 md += '| ' + separators.join(' | ') + ' |\n';
@@ -7135,17 +6771,55 @@
         return md;
     }
 
-    function htmlToMarkdown() {
-        let md = '';
-
-        for (const child of editor.childNodes) {
-            md += mdProcessNode(child);
+    function serializeMarkdownBlocks(container, preserveLayout = true, visit = null) {
+        let result = '', previous = null;
+        for (const child of container.childNodes) {
+            if (child.nodeType === 3 && !child.textContent.trim()) continue;
+            const canonical = mdProcessNode(child).replace(/\n$/, '');
+            // Empty editing positions are caret scaffolding, not Markdown blocks.
+            if (!canonical.trim()) continue;
+            const data = child.dataset || {};
+            const unchanged = preserveLayout && data.mdCanonical !== undefined && decodeURIComponent(data.mdCanonical) === canonical;
+            const content = unchanged ? decodeURIComponent(data.mdSource) : canonical;
+            const sameBoundary = preserveLayout && data.mdBefore !== undefined &&
+                (!previous || previous.dataset?.mdId) && data.mdPrevious === (previous?.dataset?.mdId || '');
+            result += sameBoundary ? decodeURIComponent(data.mdBefore) : previous ? '\n\n' : '';
+            if (visit) visit(child, result, content);
+            result += content;
+            previous = child;
         }
+        const tail = preserveLayout && previous?.dataset?.mdTrailing;
+        return result + (tail ? decodeURIComponent(tail) : '\n');
+    }
 
-        // Normalize trailing newlines only
-        // Keep at most one trailing newline (standard markdown convention)
-        // Note: Do NOT trim leading whitespace - preserve intentional blank lines at start
-        md = md.replace(/\n{2,}$/, '\n');
+    function clipboardHtml(container) {
+        const copy = container.cloneNode(true);
+        // A partial selection must never copy the unselected source carried
+        // by its surrounding block. Keep only semantic editing attributes.
+        for (const node of copy.querySelectorAll('*')) {
+            for (const name of ['id', 'previous', 'before', 'source', 'canonical', 'trailing']) {
+                node.removeAttribute('data-md-' + name);
+            }
+        }
+        return copy.innerHTML;
+    }
+
+    function serializeMarkdownFragment(container) {
+        const blocks = document.createElement('div');
+        let inline = null;
+        for (const child of container.childNodes) {
+            const isBlock = child.nodeType === 1 && /^(P|DIV|H[1-6]|UL|OL|LI|PRE|BLOCKQUOTE|TABLE|HR)$/.test(child.tagName);
+            if (isBlock) { inline = null; blocks.appendChild(child.cloneNode(true)); }
+            else {
+                if (!inline) { inline = document.createElement('p'); blocks.appendChild(inline); }
+                inline.appendChild(child.cloneNode(true));
+            }
+        }
+        return serializeMarkdownBlocks(blocks, false).trim();
+    }
+
+    function htmlToMarkdown() {
+        let md = serializeMarkdownBlocks(editor);
         
         // Remove zero-width spaces (used for cursor positioning in contenteditable)
         md = md.replace(/\u200B/g, '');
@@ -7865,6 +7539,25 @@
             const blockquoteElement = startElement?.closest?.('blockquote');
             const tableCell = startElement?.closest?.('td, th');
             const listItem = startElement?.closest?.('li');
+
+            if (e.shiftKey && !preElement && !blockquoteElement && !tableCell && !listItem &&
+                !startElement.closest('strong, em, del, code')) {
+                e.preventDefault();
+                const range = sel.getRangeAt(0);
+                range.deleteContents();
+                const br = document.createElement('br');
+                br.dataset.mdHardBreak = 'spaces';
+                range.insertNode(br);
+                if (!br.nextSibling || (br.nextSibling.nodeType === 3 && !br.nextSibling.textContent && !br.nextSibling.nextSibling)) {
+                    const placeholder = document.createElement('br');
+                    placeholder.dataset.editorPlaceholder = 'true';
+                    br.after(placeholder);
+                }
+                range.setStartAfter(br); range.collapse(true);
+                sel.removeAllRanges(); sel.addRange(range);
+                syncMarkdown();
+                return;
+            }
             
             logger.log('Enter pressed, detected:', {
                 pre: !!preElement,
@@ -8491,6 +8184,24 @@
                 e.preventDefault();
                 return;
             }
+
+            // A prose paragraph is a semantic block. Do not encode its boundary
+            // by creating a second, empty paragraph or by a lone source newline.
+            e.preventDefault();
+            const previousBlock = getCurrentLine();
+            document.execCommand('defaultParagraphSeparator', false, 'p');
+            document.execCommand('insertParagraph');
+            const nextBlock = getCurrentLine();
+            if (nextBlock && nextBlock !== previousBlock) {
+                for (const attribute of Array.from(nextBlock.attributes)) {
+                    // The last fragment inherits the original outgoing source
+                    // boundary; its text is newly authored, never a source copy.
+                    if (attribute.name.startsWith('data-md-') && !['data-md-id', 'data-md-trailing'].includes(attribute.name)) {
+                        nextBlock.removeAttribute(attribute.name);
+                    }
+                }
+            }
+            syncMarkdown();
 
         }
 
@@ -13607,6 +13318,8 @@
             // Get 0-indexed line offset of targetLi within a list block
             // Each li = 1 markdown line; nested lis follow their parent
             function getListLineOffset(listEl, targetLi) {
+                const sourceLocation = getSourceListItemLocation(listEl, targetLi);
+                if (sourceLocation) return sourceLocation.offset;
                 var offset = 0;
                 var found = false;
                 function walk(ulOrOl) {
@@ -13641,6 +13354,8 @@
 
             // Get line count for a single li (1 for itself + nested lis)
             function getLiLineCount(li) {
+                const sourceLocation = getSourceListItemLocation(findEditorChild(li), li);
+                if (sourceLocation) return sourceLocation.count;
                 var count = 1;
                 for (var j = 0; j < li.children.length; j++) {
                     var child = li.children[j];
@@ -13648,6 +13363,22 @@
                     if (ct === 'ul' || ct === 'ol') count += countLisInList(child);
                 }
                 return count;
+            }
+
+            function getSourceListItemLocation(listEl, targetLi) {
+                const content = sourceLocations.get(listEl)?.content;
+                if (!content) return null;
+                const items = [];
+                const visit = block => {
+                    if (block.type === 'list_item') items.push(block);
+                    block.children.forEach(visit);
+                };
+                window.BinaryMarkdownBlocks.parse(content).blocks.forEach(visit);
+                const index = Array.from(listEl.querySelectorAll('li')).indexOf(targetLi);
+                const map = items[index]?.map;
+                if (!map) return null;
+                const text = content.split('\n').slice(map[0], map[1]).join('\n').trimEnd();
+                return { offset: map[0], count: text.split('\n').length };
             }
 
             // Get 0-indexed markdown line offset of targetTr within a table
@@ -13688,12 +13419,14 @@
             var startSubEl = findSubBlockEl(chatRange.startContainer);
             var endSubEl = findSubBlockEl(chatRange.endContainer);
 
-            // --- Calculate startLine ---
-            var mdBeforeStartBlock = '';
-            for (var bi = 0; bi < startIdx; bi++) {
-                mdBeforeStartBlock += mdProcessNode(editorChildren[bi]);
-            }
-            var startBaseLine = countLinesTotal(mdBeforeStartBlock);
+            // Source separators live outside the DOM; use the same layout
+            // serializer as saving when mapping a selection back to lines.
+            var sourceLocations = new Map();
+            serializeMarkdownBlocks(editor, true, (node, before, content) => {
+                sourceLocations.set(node, { start: countLinesTotal(before), content });
+            });
+            if (!sourceLocations.has(startBlock) || !sourceLocations.has(endBlock)) return;
+            var startBaseLine = sourceLocations.get(startBlock).start;
 
             var startInBlockOffset = 0;
             var startBlockTag = startBlock.tagName && startBlock.tagName.toLowerCase();
@@ -13708,11 +13441,7 @@
             var startLine = startBaseLine + startInBlockOffset;
 
             // --- Calculate endLine ---
-            var mdBeforeEndBlock = '';
-            for (var bi2 = 0; bi2 < endIdx; bi2++) {
-                mdBeforeEndBlock += mdProcessNode(editorChildren[bi2]);
-            }
-            var endBaseLine = countLinesTotal(mdBeforeEndBlock);
+            var endBaseLine = sourceLocations.get(endBlock).start;
 
             var endLine;
             var endBlockTag = endBlock.tagName && endBlock.tagName.toLowerCase();
@@ -13725,10 +13454,10 @@
                 } else if (esTag === 'tr' && endBlockTag === 'table') {
                     endLine = endBaseLine + getTableLineOffset(endBlock, endSubEl);
                 } else {
-                    endLine = endBaseLine + countContentLines(mdProcessNode(endBlock)) - 1;
+                    endLine = endBaseLine + countContentLines(sourceLocations.get(endBlock).content) - 1;
                 }
             } else {
-                endLine = endBaseLine + countContentLines(mdProcessNode(endBlock)) - 1;
+                endLine = endBaseLine + countContentLines(sourceLocations.get(endBlock).content) - 1;
             }
 
             // --- selectedMarkdown: slice from full document markdown ---
@@ -14775,7 +14504,7 @@
             }
         }
         
-        const selectedHtml = tempDiv.innerHTML;
+        const selectedHtml = clipboardHtml(tempDiv);
         
         logger.log('Copy - selected HTML:', selectedHtml.substring(0, 500));
         logger.log('Copy - tempDiv children count:', tempDiv.childNodes.length);
@@ -15016,11 +14745,7 @@
                     
                     logger.log('Copy - used list item wrapping for text + nested list');
                 } else {
-                    // Normal processing
-                    for (const child of tempDiv.childNodes) {
-                        logger.log('Copy - processing child:', child.nodeName, 'textContent:', (child.textContent || '').substring(0, 50));
-                        md += mdProcessNode(child);
-                    }
+                    md = serializeMarkdownFragment(tempDiv);
                 }
                 md = md.trim();
             }
@@ -15055,15 +14780,11 @@
         const fragment = range.cloneContents();
         const tempDiv = document.createElement('div');
         tempDiv.appendChild(fragment);
-        const selectedHtml = tempDiv.innerHTML;
+        const selectedHtml = clipboardHtml(tempDiv);
         
         // Convert to Markdown using the same logic as htmlToMarkdown()
         try {
-            let md = '';
-            for (const child of tempDiv.childNodes) {
-                md += mdProcessNode(child);
-            }
-            md = md.trim();
+            const md = serializeMarkdownFragment(tempDiv);
             
             e.clipboardData.setData('text/plain', md);
             e.clipboardData.setData('text/html', selectedHtml);

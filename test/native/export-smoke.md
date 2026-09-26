@@ -38,6 +38,8 @@ The dev-only `native-playwright` alias attaches with [`noDefaults`](https://play
 
 Use `--suite document-aux` for metadata preservation, manual TOC refresh, native/keyboard saves in both modes, repeated-save stability and real exports.
 
+Use `--suite paragraph-semantics` for source wraps versus hard breaks, the absence of separator paragraphs, Enter and Shift+Enter typing, native save, Source mode, reopening and an installed HTML export. It checks exact saved file bytes and retains a synthetic screenshot. It uses the same owned-window keyboard and DOM-activation boundaries described below and is included in `all`.
+
 Use `--suite links` for absolute and workspace-relative directory links, absolute files, encoded file URIs, destination tooltips, unavailable-target copying, and unchanged Markdown. The clipboard check restores its original contents and records only a comparison result. This suite is included in `--suite all`.
 
 Use `--suite codeblocks` for indented fences, inactive highlighting restoration, quoted-code colors, the installed source-mode keyboard shortcut immediately after typing, and native save/reopen preservation of quoted code. This suite uses synthetic content and is included in `all`.

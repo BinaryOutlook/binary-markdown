@@ -17,7 +17,7 @@ for (const indent of [0, 1, 2, 3]) {
             await page.locator('.code-copy-btn').click();
             expect((await page.evaluate(() => navigator.clipboard.readText())).replace(/\r\n/g, '\n')).toBe(code);
             const saved = await page.evaluate(() => (window as any).__testApi.getMarkdown());
-            expect(saved).toBe('```' + language + '\n' + code + '\n```\n');
+            expect(saved).toBe(md + '\n');
             await page.evaluate(md => (window as any).__hostMessageHandler({ type: 'prepareExport', requestId: 'indented', markdown: md }), md);
             await expect.poll(() => page.evaluate(() => (window as any).__testApi.messages.find((m: any) => m.type === 'exportPrepared'))).toBeTruthy();
             const html = await page.evaluate(() => (window as any).__testApi.messages.find((m: any) => m.type === 'exportPrepared').html);
@@ -44,9 +44,11 @@ for (const fence of ['```', '~~~~']) {
     });
 }
 
-test('four leading spaces are not recognized as a fenced block', async ({ page }) => {
+test('four leading spaces create indented code with literal fence characters', async ({ page }) => {
     await page.evaluate(() => (window as any).__testApi.setMarkdown('    ```\n    alpha\n    ```'));
-    await expect(page.locator('#editor pre[data-lang]')).toHaveCount(0);
+    await expect(page.locator('#editor pre')).toHaveCount(1);
+    await page.locator('.code-copy-btn').click();
+    expect(await page.evaluate(() => navigator.clipboard.readText())).toBe('```\nalpha\n```');
 });
 
 test('empty and unclosed indented fences retain the existing code editing behavior', async ({ page }) => {
@@ -54,7 +56,7 @@ test('empty and unclosed indented fences retain the existing code editing behavi
     await expect(page.locator('#editor pre')).toHaveCount(2);
     await expect(page.locator('#editor pre').first().locator('code')).toHaveText('');
     const md = await page.evaluate(() => (window as any).__testApi.getMarkdown());
-    expect(md).toContain('```text\nalpha\n  beta');
+    expect(md).toContain('  ~~~text\n  alpha\n    beta');
 });
 
 test('indented special fences preserve math source and Mermaid content', async ({ page }) => {
@@ -65,5 +67,5 @@ test('indented special fences preserve math source and Mermaid content', async (
     await expect(page.locator('#editor .mermaid-diagram svg')).toHaveCount(1);
     const result = await page.evaluate(() => (window as any).__testApi.getMarkdown());
     expect(result).toContain(math);
-    expect(result).toContain('```mermaid\ngraph TD\n  A --> B\n```');
+    expect(result).toContain('   ~~~mermaid\n   graph TD\n     A --> B\n   ~~~');
 });

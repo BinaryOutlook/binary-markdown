@@ -185,8 +185,15 @@ test('HTML paste retains only underline semantics, without attributes', async ({
 
 test('nested and adjacent underline wrappers normalize without accumulating', async ({ page }) => {
     await setup(page, '<u>one <u>二</u></u><u> three</u>\n');
+    // An actual edit normalizes this block; untouched source stays authored.
+    await page.locator('#editor > p').evaluate(p => {
+        (document.getElementById('editor') as HTMLElement).focus();
+        const range = document.createRange(); range.selectNodeContents(p); range.collapse(false);
+        getSelection()!.removeAllRanges(); getSelection()!.addRange(range);
+    });
+    await page.keyboard.type('!');
     const saved = await markdown(page);
-    expect(saved.trim()).toBe('<u>one 二 three</u>');
+    expect(saved.trim()).toBe('<u>one 二 three!</u>');
     for (let repeat = 0; repeat < 3; repeat++) {
         await page.evaluate(saved => (window as any).__testApi.setMarkdown(saved), saved);
         expect(await markdown(page)).toBe(saved);

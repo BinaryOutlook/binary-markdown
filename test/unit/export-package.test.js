@@ -56,6 +56,7 @@ test('packaged VSIX contains an isolated export runtime, UI, guidance and locali
     const required = [
         'build-info.json', 'out/build-info.js',
         'vendor/MERMAID-DEPENDENCIES.json', 'vendor/MERMAID-THIRD-PARTY-LICENSES.txt',
+        'vendor/markdown-blocks.js', 'vendor/MARKDOWN-DEPENDENCIES.json', 'vendor/MARKDOWN-THIRD-PARTY-LICENSES.txt',
         'LICENSE.txt', 'NOTICE', 'LICENSES/AnyMarkdown-MIT.txt', 'ACKNOWLEDGMENTS.md',
         'out/export/controller.js', 'out/export/html.js', 'out/export/resources.js',
         'out/export/output.js', 'out/export/validate.js', 'out/export/webview-rpc.js',

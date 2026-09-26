@@ -86,7 +86,7 @@ const html = `<!DOCTYPE html>
             padding: 20px 40px;
             min-height: 400px;
             outline: none;
-            white-space: pre-wrap;
+            white-space: normal;
         }
         .editor-wrapper {
             height: 420px;
@@ -107,6 +107,7 @@ const html = `<!DOCTYPE html>
         .editor h2 { font-size: 1.5em; border-bottom: 1px solid var(--border-color); }
         .editor h3 { font-size: 1.25em; }
         .editor p { margin: 0.5em 0; min-height: 1.6em; }
+        .editor :is(p, li, h1, h2, h3, h4, h5, h6, blockquote) { white-space: pre-wrap; }
         .editor strong { font-weight: 600; }
         .editor em { font-style: italic; }
         .editor del { text-decoration: line-through; }
@@ -213,6 +214,7 @@ const html = `<!DOCTYPE html>
         <div class="editor" id="editor" contenteditable="true" spellcheck="false"></div>
     </div>
     
+    <script src="vendor/markdown-blocks.js"></script>
     <script src="vendor/turndown.js"></script>
     <script src="vendor/turndown-plugin-gfm.js"></script>
     <script src="vendor/mermaid.min.js"></script>
@@ -238,5 +240,5 @@ const styles = fs.readFileSync(path.join(__dirname, '../src/webview/styles.css')
 fs.writeFileSync(path.join(__dirname, 'html/production-editor.html'), `<!doctype html>
 <html lang="en" data-theme="things" data-toolbar-mode="${require('../package.json').contributes.configuration.properties['binary-markdown.toolbarMode'].default}"><head><meta charset="utf-8"><style>${styles}</style></head>
 <body>${generateEditorBodyHtml(require('../src/i18n/locales/en.ts').webviewMessages, process.platform, { exportEnabled: true, settingsEnabled: true })}
-<script src="vendor/turndown.js"></script><script src="vendor/turndown-plugin-gfm.js"></script>
+<script src="vendor/markdown-blocks.js"></script><script src="vendor/turndown.js"></script><script src="vendor/turndown-plugin-gfm.js"></script>
 <script>${testHostBridgeScript}</script><script>${editorScript}</script></body></html>`);

@@ -39,7 +39,7 @@ test('quoted code fences and blank lines stay separate from surrounding prose an
     const quote = '> Before $x$\n>\n> ````text\n> ```\n>   content\n>\n> ````\n>\n> After\n>\n> ```math\n> x^2\n> ```\n';
     await page.evaluate(md => (window as any).__testApi.setMarkdown(md), quote);
     const result = await page.evaluate(() => (window as any).__testApi.getMarkdown());
-    expect(result).toContain('> ````text\n> ```\n>   content\n> \n> ````');
+    expect(result).toBe(quote);
     expect(result).toContain('> Before $x$');
     expect(result).toContain('> After');
     expect(result).toContain('> ```math\n> x^2\n> ```');

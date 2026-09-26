@@ -318,7 +318,7 @@ test.describe('《引用ブロック》複数行選択 Tab/Shift+Tab', () => {
     test('複数行選択 + Shift+Tab → 全選択行デインデント', async ({ page }) => {
         await page.evaluate(() => {
             const testApi = (window as any).__testApi;
-            testApi.setMarkdown('>     line1\n>     line2\n>     line3');
+            testApi.setMarkdown('> line1\n> line2\n> line3');
         });
         await page.waitForTimeout(200);
 
@@ -345,6 +345,9 @@ test.describe('《引用ブロック》複数行選択 Tab/Shift+Tab', () => {
         await page.keyboard.press('Shift+ArrowDown');
         await page.waitForTimeout(100);
 
+        // Exercise deindent on the editable lines produced by Tab. Four
+        // authored source spaces now correctly represent indented code.
+        await page.keyboard.press('Tab');
         await page.keyboard.press('Shift+Tab');
         await page.waitForTimeout(200);
 

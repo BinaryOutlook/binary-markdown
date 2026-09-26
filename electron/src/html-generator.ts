@@ -106,6 +106,7 @@ export function generateEditorHtml(
 <body>
     ${generateEditorBodyHtml(config.webviewMessages, process.platform)}
 
+    <script src="${vendorFileUri('markdown-blocks.js')}"></script>
     <script src="${vendorFileUri('turndown.js')}"></script>
     <script src="${vendorFileUri('turndown-plugin-gfm.js')}"></script>
     <script src="${vendorFileUri('mermaid.min.js')}"></script>

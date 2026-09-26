@@ -161,6 +161,7 @@ export function getWebviewContent(
 <body>
     ${generateEditorBodyHtml(msg, process.platform, { outlineOpen: safeConfig.outlineOpen, exportEnabled: true, settingsEnabled: true })}
 
+    <script src="${vendorUri('markdown-blocks.js')}"></script>
     <script src="${turndownUri}"></script>
     <script src="${turndownGfmUri}"></script>
     <script src="${mermaidUri}"></script>

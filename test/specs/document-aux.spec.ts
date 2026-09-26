@@ -91,7 +91,8 @@ test('metadata is excluded from export body, while ordinary rules remain visible
     expect(result.html).not.toContain('Hidden title');
     expect(result.html).not.toContain('front-matter');
     expect(result.html).toContain('Visible');
-    await setMarkdown(page, '---\nOrdinary introduction\n---\n');
+    // Blank separators distinguish thematic rules from a setext heading.
+    await setMarkdown(page, '---\n\nOrdinary introduction\n\n---\n');
     await expect(page.locator('.front-matter')).toHaveCount(0);
     await expect(page.locator('#editor > hr')).toHaveCount(2);
 });
