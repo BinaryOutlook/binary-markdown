@@ -86,18 +86,29 @@ for (const [source, selector] of [
     ['| Name |\n| --- |\n| **target** cell |\n', '#editor td'],
     ['> **target** quote\n', '#editor blockquote'],
 ]) {
-    test(`GUI underline preserves ${selector} and nested formatting`, async ({ page }) => {
-        await setup(page, source); await select(page, selector, 'target');
-        const before = await markdown(page); await underline(page);
-        expect(await page.locator(selector).textContent()).toContain('target');
-        expect(await markdown(page)).toContain('<u>');
-        const saved = await markdown(page);
-        await page.evaluate(saved => (window as any).__testApi.setMarkdown(saved), saved);
-        await expect(page.locator(selector + ' u')).toHaveText('target');
-        await expect(page.locator(selector + ' :is(strong,b)')).toHaveText('target');
-        await select(page, selector, 'target'); await underline(page);
-        expect(await markdown(page)).toBe(before);
-    });
+    for (const format of selector === '#editor td' ? ['aligned', 'compact'] : [undefined]) {
+        test(`GUI underline preserves ${selector} and nested formatting${format ? ` (${format})` : ''}`, async ({ page }) => {
+            await setup(page, source); await select(page, selector, 'target');
+            if (format) await page.evaluate(value => (window as any).__hostMessageHandler({ type: 'tableSourceFormat', value }), format);
+            const before = await markdown(page); await underline(page);
+            expect(await page.locator(selector).textContent()).toContain('target');
+            expect(await markdown(page)).toContain('<u>');
+            const saved = await markdown(page);
+            await page.locator('[data-action="undo"]').click(); expect(await markdown(page)).toBe(before);
+            await page.locator('[data-action="redo"]').click(); expect(await markdown(page)).toBe(saved);
+            await page.evaluate(saved => (window as any).__testApi.setMarkdown(saved), saved);
+            await expect(page.locator(selector + ' u')).toHaveText('target');
+            await expect(page.locator(selector + ' :is(strong,b)')).toHaveText('target');
+            await select(page, selector, 'target'); await underline(page);
+            // Toggling underline again edits the table; only Undo restores its old source spacing.
+            const expected = format === 'aligned'
+                ? '| Name            |\n| --------------- |\n| **target** cell |\n'
+                : before;
+            expect(await markdown(page)).toBe(expected);
+            await expect(page.locator(selector + ' u')).toHaveCount(0);
+            await expect(page.locator(selector + ' :is(strong,b)')).toHaveText('target');
+        });
+    }
 }
 
 test('selection across paragraphs gets separate inline wrappers', async ({ page }) => {
@@ -185,8 +196,15 @@ test('HTML paste retains only underline semantics, without attributes', async ({
 
 test('nested and adjacent underline wrappers normalize without accumulating', async ({ page }) => {
     await setup(page, '<u>one <u>二</u></u><u> three</u>\n');
+    // An actual edit normalizes this block; untouched source stays authored.
+    await page.locator('#editor > p').evaluate(p => {
+        (document.getElementById('editor') as HTMLElement).focus();
+        const range = document.createRange(); range.selectNodeContents(p); range.collapse(false);
+        getSelection()!.removeAllRanges(); getSelection()!.addRange(range);
+    });
+    await page.keyboard.type('!');
     const saved = await markdown(page);
-    expect(saved.trim()).toBe('<u>one 二 three</u>');
+    expect(saved.trim()).toBe('<u>one 二 three!</u>');
     for (let repeat = 0; repeat < 3; repeat++) {
         await page.evaluate(saved => (window as any).__testApi.setMarkdown(saved), saved);
         expect(await markdown(page)).toBe(saved);

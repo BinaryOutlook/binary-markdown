@@ -21,6 +21,7 @@ export interface ElectronSettings {
     codeLanguageOrder: 'default' | 'a-z' | 'z-a';
     toolbarMode: string;
     tableToolbarPosition: string;
+    tableSourceFormat: 'aligned' | 'compact';
     language: string;
     imageDefaultDir: string;
     forceRelativeImagePath: boolean;
@@ -41,6 +42,7 @@ const DEFAULTS: ElectronSettings = {
     codeLanguageOrder: 'default',
     toolbarMode: 'full',
     tableToolbarPosition: 'auto',
+    tableSourceFormat: 'aligned',
     language: 'default',
     imageDefaultDir: '',
     forceRelativeImagePath: false,
@@ -69,6 +71,7 @@ export class SettingsManager {
 
     getAll(): ElectronSettings {
         return { ...DEFAULTS, ...this.store.store,
+            tableSourceFormat: this.store.get('tableSourceFormat') === 'compact' ? 'compact' : 'aligned',
             editorWidthMode: normalizeWidthMode(this.store.get('editorWidthMode')),
             editorMaxWidth: normalizeMaxWidth(this.store.get('editorMaxWidth')),
             editorAlignment: normalizeAlignment(this.store.get('editorAlignment')),
@@ -170,6 +173,14 @@ export class SettingsManager {
             <option value="full" ${settings.toolbarMode === 'full' ? 'selected' : ''}>Full</option>
         </select>
     </div>
+    <div class="field">
+        <label for="tableSourceFormat">${messages.tableSourceFormatLabel}</label>
+        <select id="tableSourceFormat" onchange="save('tableSourceFormat', this.value)">
+            <option value="aligned" ${settings.tableSourceFormat === 'aligned' ? 'selected' : ''}>${messages.tableSourceFormatAligned}</option>
+            <option value="compact" ${settings.tableSourceFormat === 'compact' ? 'selected' : ''}>${messages.tableSourceFormatCompact}</option>
+        </select>
+    </div>
+    <p class="field-desc">${messages.tableSourceFormatHelp}</p>
     <div class="field">
         <label>Table controls</label>
         <select id="tableToolbarPosition" onchange="save('tableToolbarPosition', this.value)">

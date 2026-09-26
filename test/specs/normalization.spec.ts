@@ -1,176 +1,40 @@
-/**
- * 正規化テスト
- * フェーズ4: Markdown正規化の確認
- */
-
+/** Source preservation and normalization of edited DOM content. */
 import { test, expect } from '@playwright/test';
 import { EditorTestHelper } from '../utils/editor-test-helper';
 
-test.describe('《順序なしリスト》正規化', () => {
-    let editor: EditorTestHelper;
-
+test.describe('Unchanged blocks retain authored Markdown', () => {
     test.beforeEach(async ({ page }) => {
         await page.goto('/standalone-editor.html');
-        await page.waitForSelector('#editor');
-        await page.waitForTimeout(500); // Wait for script initialization
-        editor = new EditorTestHelper(page);
-        await editor.focus();
+        await page.waitForFunction(() => (window as any).__testApi?.ready);
     });
 
-    test('* マーカー → - に正規化', async ({ page }) => {
-        await editor.setMarkdown('* 項目1\n* 項目2');
-        await page.waitForTimeout(200);
-        
-        const md = await editor.getMarkdown();
-        expect(md).toContain('- 項目1');
-        expect(md).toContain('- 項目2');
-        expect(md).not.toContain('* 項目');
-    });
+    for (const [name, source, selector] of [
+        ['asterisk list', '* 項目1\n* 項目2', 'ul'],
+        ['plus list', '+ 項目1\n+ 項目2', 'ul'],
+        ['ordered numbering', '3. 項目A\n5. 項目B\n7. 項目C', 'ol[start="3"]'],
+        ['nested indentation', '- 親\n    - 子（4スペース）', 'li > ul'],
+        ['bold delimiter', 'これは__太字__です', 'strong'],
+        ['italic delimiter', 'これは_斜体_です', 'em'],
+        ['asterisk rule', '上\n***\n下', 'hr'],
+        ['underscore rule', '上\n___\n下', 'hr'],
+        ['tilde fence', '~~~\ncode\n~~~', 'pre']
+    ]) {
+        test(name, async ({ page }) => {
+            await page.evaluate(source => (window as any).__testApi.setMarkdown(source), source);
+            await expect(page.locator('#editor ' + selector)).toHaveCount(1);
+            expect(await page.evaluate(() => (window as any).__testApi.getMarkdown())).toBe(source + '\n');
+        });
+    }
 
-    test('+ マーカー → - に正規化', async ({ page }) => {
-        await editor.setMarkdown('+ 項目1\n+ 項目2');
-        await page.waitForTimeout(200);
-        
-        const md = await editor.getMarkdown();
-        expect(md).toContain('- 項目1');
-        expect(md).toContain('- 項目2');
-        expect(md).not.toContain('+ 項目');
-    });
-});
-
-test.describe('《順序付きリスト》正規化', () => {
-    let editor: EditorTestHelper;
-
-    test.beforeEach(async ({ page }) => {
-        await page.goto('/standalone-editor.html');
-        await page.waitForSelector('#editor');
-        await page.waitForTimeout(500);
-        editor = new EditorTestHelper(page);
-        await editor.focus();
-    });
-
-    test('番号が1から連番に正規化', async ({ page }) => {
-        await editor.setMarkdown('3. 項目A\n5. 項目B\n7. 項目C');
-        await page.waitForTimeout(200);
-        
-        const md = await editor.getMarkdown();
-        expect(md).toContain('1. 項目A');
-        expect(md).toContain('2. 項目B');
-        expect(md).toContain('3. 項目C');
-    });
-});
-
-test.describe('《ネストリスト》正規化', () => {
-    let editor: EditorTestHelper;
-
-    test.beforeEach(async ({ page }) => {
-        await page.goto('/standalone-editor.html');
-        await page.waitForSelector('#editor');
-        await page.waitForTimeout(500);
-        editor = new EditorTestHelper(page);
-        await editor.focus();
-    });
-
-    test('インデントが2スペースに正規化', async ({ page }) => {
-        await editor.setMarkdown('- 親\n    - 子（4スペース）');
-        await page.waitForTimeout(200);
-        
-        const md = await editor.getMarkdown();
-        // 2スペースインデントに正規化されることを確認
-        expect(md).toMatch(/- 親\n {2}- 子/);
-    });
-});
-
-test.describe('《太字》正規化', () => {
-    let editor: EditorTestHelper;
-
-    test.beforeEach(async ({ page }) => {
-        await page.goto('/standalone-editor.html');
-        await page.waitForSelector('#editor');
-        await page.waitForTimeout(500);
-        editor = new EditorTestHelper(page);
-        await editor.focus();
-    });
-
-    test('__ → ** に正規化', async ({ page }) => {
-        await editor.setMarkdown('これは__太字__です');
-        await page.waitForTimeout(200);
-        
-        const md = await editor.getMarkdown();
-        expect(md).toContain('**太字**');
-        expect(md).not.toContain('__太字__');
-    });
-});
-
-test.describe('《斜体》正規化', () => {
-    let editor: EditorTestHelper;
-
-    test.beforeEach(async ({ page }) => {
-        await page.goto('/standalone-editor.html');
-        await page.waitForSelector('#editor');
-        await page.waitForTimeout(500);
-        editor = new EditorTestHelper(page);
-        await editor.focus();
-    });
-
-    test('_ → * に正規化', async ({ page }) => {
-        await editor.setMarkdown('これは_斜体_です');
-        await page.waitForTimeout(200);
-        
-        const md = await editor.getMarkdown();
-        expect(md).toContain('*斜体*');
-        expect(md).not.toContain('_斜体_');
-    });
-});
-
-test.describe('《水平線》正規化', () => {
-    let editor: EditorTestHelper;
-
-    test.beforeEach(async ({ page }) => {
-        await page.goto('/standalone-editor.html');
-        await page.waitForSelector('#editor');
-        await page.waitForTimeout(500);
-        editor = new EditorTestHelper(page);
-        await editor.focus();
-    });
-
-    test('*** → --- に正規化', async ({ page }) => {
-        await editor.setMarkdown('上\n***\n下');
-        await page.waitForTimeout(200);
-        
-        const md = await editor.getMarkdown();
-        expect(md).toContain('---');
-        expect(md).not.toContain('***');
-    });
-
-    test('___ → --- に正規化', async ({ page }) => {
-        await editor.setMarkdown('上\n___\n下');
-        await page.waitForTimeout(200);
-        
-        const md = await editor.getMarkdown();
-        expect(md).toContain('---');
-        expect(md).not.toContain('___');
-    });
-});
-
-test.describe('《コードブロック》正規化', () => {
-    let editor: EditorTestHelper;
-
-    test.beforeEach(async ({ page }) => {
-        await page.goto('/standalone-editor.html');
-        await page.waitForSelector('#editor');
-        await page.waitForTimeout(500);
-        editor = new EditorTestHelper(page);
-        await editor.focus();
-    });
-
-    test('~~~ → ``` に正規化', async ({ page }) => {
-        await editor.setMarkdown('~~~\ncode\n~~~');
-        await page.waitForTimeout(200);
-        
-        const md = await editor.getMarkdown();
-        expect(md).toContain('```');
-        expect(md).not.toContain('~~~');
+    test('editing normalizes only the changed block', async ({ page }) => {
+        await page.evaluate(() => (window as any).__testApi.setMarkdown('__bold__\n\n* Unchanged\n'));
+        await page.locator('#editor > p').evaluate(p => {
+            (document.getElementById('editor') as HTMLElement).focus();
+            const range = document.createRange(); range.selectNodeContents(p); range.collapse(false);
+            getSelection()!.removeAllRanges(); getSelection()!.addRange(range);
+        });
+        await page.keyboard.type('!');
+        expect(await page.evaluate(() => (window as any).__testApi.getMarkdown())).toBe('**bold!**\n\n* Unchanged\n');
     });
 });
 

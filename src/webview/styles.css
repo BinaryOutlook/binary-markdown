@@ -421,7 +421,7 @@ body {
     padding: 100px 60px;
     min-height: 100%;
     outline: none;
-    white-space: pre-wrap;
+    white-space: normal;
     word-wrap: break-word;
     position: relative;
 }
@@ -576,6 +576,9 @@ body {
 .editor h2 { font-size: 1.5em; border-bottom: 1px solid var(--border-color); padding-bottom: 0.3em; }
 .editor h3 { font-size: 1.25em; }
 .editor p, .editor div.paragraph { margin: 0.5em 0; min-height: 1.6em; }
+.editor :is(p, li, h1, h2, h3, h4, h5, h6, blockquote),
+.editor pre, .editor pre code { white-space: pre-wrap; }
+.editor [data-md-loose="true"] > li { margin-block: 0.5em; }
 .editor a { color: var(--link-color); text-decoration: none; }
 
 /* Perplexity theme overrides */

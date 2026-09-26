@@ -70,5 +70,10 @@
   "config.export.codeLanguagePosition.bottomLeft": "En bas à gauche.",
   "config.export.codeLanguagePosition.bottomRight": "En bas à droite.",
   "config.export.showCodeLineCount.description": "Afficher le nombre total de lignes de code saisies en bas à gauche des blocs PDF et DOCX. Désactivé par défaut, indépendamment des libellés de langue et des numéros de ligne. Réglage capturé une fois par export.",
-  "config.export.showCodeLineNumbers.description": "Afficher les numéros de ligne source dans les blocs de code PDF et DOCX. Le retour visuel ne crée pas de numéro. Indépendant des étiquettes de langage et du nombre total de lignes."
+  "config.export.showCodeLineNumbers.description": "Afficher les numéros de ligne source dans les blocs de code PDF et DOCX. Le retour visuel ne crée pas de numéro. Indépendant des étiquettes de langage et du nombre total de lignes.",
+  "config.tableSourceFormat.description": "Choisissez le format source des tableaux créés ou modifiés. Les tableaux inchangés conservent leur format.",
+  "config.tableSourceFormat.alignedLabel": "Aligné (par défaut)",
+  "config.tableSourceFormat.compactLabel": "Compact (ancien format)",
+  "config.tableSourceFormat.aligned": "Ajoute des espaces et ajuste les séparateurs pour aligner les colonnes du code Markdown.",
+  "config.tableSourceFormat.compact": "Utilise l’ancien espacement compact sans aligner la largeur des colonnes."
 }

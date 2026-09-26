@@ -70,5 +70,10 @@
   "config.export.codeLanguagePosition.bottomLeft": "Bottom left.",
   "config.export.codeLanguagePosition.bottomRight": "Bottom right.",
   "config.export.showCodeLineCount.description": "Show the total number of authored code lines at the bottom-left of PDF and DOCX code blocks. Off by default; independent of language labels and per-line numbers. Captured once per export.",
-  "config.export.showCodeLineNumbers.description": "Show source-line numbers beside PDF and DOCX code blocks. Wrapping does not add numbers. Independent of language labels and total line counts."
+  "config.export.showCodeLineNumbers.description": "Show source-line numbers beside PDF and DOCX code blocks. Wrapping does not add numbers. Independent of language labels and total line counts.",
+  "config.tableSourceFormat.description": "Choose the source layout for new or edited tables. Unchanged tables keep their existing formatting.",
+  "config.tableSourceFormat.alignedLabel": "Aligned (default)",
+  "config.tableSourceFormat.compactLabel": "Compact (Legacy)",
+  "config.tableSourceFormat.aligned": "Pad columns and separator rows to align Markdown source.",
+  "config.tableSourceFormat.compact": "Use the previous compact spacing without padding columns."
 }

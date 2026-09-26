@@ -40,7 +40,7 @@ exports.activate = async function activate(context) {
         uiKind: vscode.env.uiKind, remoteName: vscode.env.remoteName ?? null,
         trusted: vscode.workspace.isTrusted,
         simpleFileDialog: vscode.workspace.getConfiguration('files').inspect('simpleDialog.enable').globalValue,
-        appearance: Object.fromEntries(['language', 'toolbarMode', 'tableToolbarPosition', 'editorWidthMode', 'editorMaxWidth', 'editorAlignment', 'editorWidthIndicators', 'codeLanguageOrder', 'mathSourcePosition', 'mathSourceWrap', 'theme', 'export.pdfWhiteBackground'].map(key =>
+        appearance: Object.fromEntries(['language', 'toolbarMode', 'tableToolbarPosition', 'tableSourceFormat', 'editorWidthMode', 'editorMaxWidth', 'editorAlignment', 'editorWidthIndicators', 'codeLanguageOrder', 'mathSourcePosition', 'mathSourceWrap', 'theme', 'export.pdfWhiteBackground'].map(key =>
             [key, vscode.workspace.getConfiguration('binary-markdown').get(key)])),
         editorWidthScopes: Object.fromEntries(['editorWidthMode', 'editorMaxWidth', 'editorAlignment', 'editorWidthIndicators'].map(key => {
             const setting = vscode.workspace.getConfiguration('binary-markdown').inspect(key);
@@ -68,6 +68,10 @@ exports.activate = async function activate(context) {
         })(),
         tablePositionScopes: (() => {
             const setting = vscode.workspace.getConfiguration('binary-markdown').inspect('tableToolbarPosition');
+            return { global: setting.globalValue, workspace: setting.workspaceValue };
+        })(),
+        tableSourceFormatScopes: (() => {
+            const setting = vscode.workspace.getConfiguration('binary-markdown').inspect('tableSourceFormat');
             return { global: setting.globalValue, workspace: setting.workspaceValue };
         })()
     });
@@ -128,10 +132,10 @@ exports.activate = async function activate(context) {
             }
             case 'config': {
                 // Scope regressions remain inside the sentinel-owned profile/workspace.
-                if (request.scope !== undefined && (request.scope !== 'workspace' || !['tableToolbarPosition', 'toolbarMode', 'editorWidthMode', 'editorMaxWidth', 'editorAlignment', 'editorWidthIndicators', 'codeLanguageOrder', 'mathSourcePosition', 'mathSourceWrap', 'export.showCodeLanguage', 'export.codeLanguagePosition', 'export.showCodeLineCount', 'export.showCodeLineNumbers'].includes(request.key))) {
+                if (request.scope !== undefined && (request.scope !== 'workspace' || !['tableToolbarPosition', 'tableSourceFormat', 'toolbarMode', 'editorWidthMode', 'editorMaxWidth', 'editorAlignment', 'editorWidthIndicators', 'codeLanguageOrder', 'mathSourcePosition', 'mathSourceWrap', 'export.showCodeLanguage', 'export.codeLanguagePosition', 'export.showCodeLineCount', 'export.showCodeLineNumbers'].includes(request.key))) {
                     throw new Error('Only the listed editor preferences permit an isolated workspace override.');
                 }
-                const clearSetting = request.value === null && (request.scope === 'workspace' || ['toolbarMode', 'editorWidthMode', 'editorMaxWidth', 'editorAlignment', 'editorWidthIndicators', 'codeLanguageOrder', 'mathSourcePosition', 'mathSourceWrap', 'export.showCodeLanguage', 'export.codeLanguagePosition', 'export.showCodeLineCount', 'export.showCodeLineNumbers'].includes(request.key));
+                const clearSetting = request.value === null && (request.scope === 'workspace' || ['tableSourceFormat', 'toolbarMode', 'editorWidthMode', 'editorMaxWidth', 'editorAlignment', 'editorWidthIndicators', 'codeLanguageOrder', 'mathSourcePosition', 'mathSourceWrap', 'export.showCodeLanguage', 'export.codeLanguagePosition', 'export.showCodeLineCount', 'export.showCodeLineNumbers'].includes(request.key));
                 const allowed = {
                     'export.pandocPath': value => typeof value === 'string',
                     'export.browserPath': value => typeof value === 'string',
@@ -149,6 +153,7 @@ exports.activate = async function activate(context) {
                     editorWidthMode: value => ['default', 'custom', 'full'].includes(value),
                     editorMaxWidth: value => Number.isInteger(value) && value >= 320 && value <= 4000,
                     toolbarMode: value => ['simple', 'full'].includes(value),
+                    tableSourceFormat: value => ['aligned', 'compact'].includes(value),
                     tableToolbarPosition: value => ['auto', 'top-left', 'top-right', 'bottom-left', 'bottom-right', 'left', 'right', 'top-bar'].includes(value),
                     language: value => ['en', 'zh-CN'].includes(value),
                     theme: value => ['github', 'sepia', 'night', 'dark', 'minimal', 'perplexity', 'things'].includes(value)

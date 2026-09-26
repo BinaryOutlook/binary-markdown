@@ -2,7 +2,21 @@
 
 ## Unreleased
 
-Target version: **0.4.0**. See the [release-preparation notes](release-notes/0.4.0.md) for scope, changed defaults, and remaining acceptance work. The earlier [0.4.0 RC1](release-notes/0.4.0-rc.1.md) uses numeric package version `0.4.0`; neither that candidate nor this section establishes an official release.
+The next release version has not been selected. Development snapshots retain package version `0.4.0` and are identified by their source commit and checksum.
+
+### Changed
+
+- Preserve unchanged tables' source formatting when editing elsewhere. New or modified tables use aligned Markdown columns by default, with Compact (Legacy) available through the [table source format setting](docs/editor-guide.md#table-source-format).
+- Render semantic Markdown blocks while retaining unchanged source and separators. In ordinary prose, Enter creates a paragraph and Shift+Enter creates a hard line break.
+
+### Fixed
+
+- Blank separators and ordinary source wraps no longer create extra visible paragraphs. Paragraph boundaries, explicit hard breaks and loose-list continuation survive saving and reopening.
+- Explicit table alignment applies to headers and body cells, including left-aligned and header-only tables after editing in either source format.
+
+## 0.4.0 — 2026-09-23
+
+See the [published release](https://github.com/BinaryOutlook/binary-markdown/releases/tag/v0.4.0) and [release-preparation notes](release-notes/0.4.0.md). The earlier [0.4.0 RC1](release-notes/0.4.0-rc.1.md) remains a historical candidate record.
 
 ### Added
 
