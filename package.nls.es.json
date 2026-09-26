@@ -71,7 +71,7 @@
   "config.export.codeLanguagePosition.bottomRight": "Abajo a la derecha.",
   "config.export.showCodeLineCount.description": "Mostrar el total de líneas de código escritas en la esquina inferior izquierda de los bloques PDF y DOCX. Desactivado de forma predeterminada e independiente de las etiquetas de lenguaje y los números de línea. Se captura una vez por exportación.",
   "config.export.showCodeLineNumbers.description": "Mostrar números de línea de origen junto a los bloques de código PDF y DOCX. El ajuste visual no añade números. Independiente de las etiquetas de lenguaje y del total de líneas.",
-  "config.tableSourceFormat.description": "Elige el formato de tabla al guardar ediciones visuales. Cambiar este ajuste no reformatea un documento sin editar.",
+  "config.tableSourceFormat.description": "Elige el formato de origen para tablas nuevas o editadas. Las tablas sin cambios conservan su formato.",
   "config.tableSourceFormat.alignedLabel": "Alineado (predeterminado)",
   "config.tableSourceFormat.compactLabel": "Compacto (anterior)",
   "config.tableSourceFormat.aligned": "Rellena las columnas y ajusta los separadores para alinear el código Markdown.",

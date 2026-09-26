@@ -71,7 +71,7 @@
   "config.export.codeLanguagePosition.bottomRight": "右下。",
   "config.export.showCodeLineCount.description": "PDFとDOCXのコードブロックの左下に、入力されたコードの総行数を表示します。初期状態ではオフで、言語ラベルや各行の番号とは独立しています。設定はエクスポート開始時に取得されます。",
   "config.export.showCodeLineNumbers.description": "PDF と DOCX のコードブロックにソース行番号を表示します。折り返しでは番号は増えません。言語ラベルと総行数とは独立しています。",
-  "config.tableSourceFormat.description": "ビジュアル編集の書き込み時に使用する表の形式を選択します。設定の変更だけでは未編集の文書は整形されません。",
+  "config.tableSourceFormat.description": "新規作成または編集した表のソース形式を選択します。変更していない表は元の形式を保持します。",
   "config.tableSourceFormat.alignedLabel": "桁揃え（既定）",
   "config.tableSourceFormat.compactLabel": "コンパクト（従来形式）",
   "config.tableSourceFormat.aligned": "列と区切り行に空白を追加して Markdown ソースの桁を揃えます。",

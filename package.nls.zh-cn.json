@@ -71,7 +71,7 @@
   "config.export.codeLanguagePosition.bottomRight": "右下角。",
   "config.export.showCodeLineCount.description": "在PDF和DOCX代码块左下角显示源代码总行数。默认关闭，与语言标签和逐行行号独立；每次导出时固定此设置。",
   "config.export.showCodeLineNumbers.description": "在 PDF 和 DOCX 代码块旁显示源代码行号。自动换行不增加行号；与语言标签和总行数独立。",
-  "config.tableSourceFormat.description": "选择写入可视化编辑时使用的表格格式。仅更改此设置不会重新排版未编辑的文档。",
+  "config.tableSourceFormat.description": "选择新建或已编辑表格的源代码格式。未修改的表格保留原有格式。",
   "config.tableSourceFormat.alignedLabel": "对齐（默认）",
   "config.tableSourceFormat.compactLabel": "紧凑（旧版）",
   "config.tableSourceFormat.aligned": "填充列并调整分隔行宽度，使 Markdown 源代码对齐。",

@@ -35,7 +35,7 @@ export const messages = {
 
 export const webviewMessages = {
   tableSourceFormatLabel: "Format source des tableaux",
-  tableSourceFormatHelp: "Choisissez le format des tableaux lors de l’enregistrement des modifications visuelles. Changer ce réglage ne reformate pas un document non modifié.",
+  tableSourceFormatHelp: "Choisissez le format source des tableaux créés ou modifiés. Les tableaux inchangés conservent leur format.",
   tableSourceFormatAligned: "Aligné (par défaut)",
   tableSourceFormatCompact: "Compact (ancien format)",
   tableSourceFormatSaveFailed: "Impossible d’enregistrer le format source des tableaux. Le réglage précédent reste actif.",

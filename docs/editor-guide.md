@@ -135,9 +135,11 @@ Compact writes:
 | Long item | 3 |
 ```
 
-The choice applies when visual edits are next serialized, including background synchronization before Save. Opening a file, saving an untouched file, or changing the preference alone does not reformat it. Source mode retains the text you enter. Switching modes changes future output; it does not restore the original spacing of an already reformatted file. Use a Workspace setting to share a format for a repository.
+The choice applies to tables you create or modify in the visual editor, including background synchronization before Save. Editing a paragraph leaves every existing table's source formatting intact. Editing one table applies the selected layout to that table; other tables retain their spacing, separator spelling, and inline Markdown. Subsequent edits elsewhere also leave the previously edited table alone, even if you change this preference.
 
-A visual edit may normalize every table in the document. Aligned output follows a common padded GFM convention; it does not promise byte-for-byte agreement with every editor. Widening a column can change padding in other rows. Stable settings reduce formatting disagreements, but a smaller displayed diff is not a guarantee of smaller Git object storage.
+Opening a file, saving an untouched file, or changing the preference alone does not reformat tables. Source mode retains the text you enter, and returning to visual mode uses that text as the new starting point. Undo restores the earlier table source. Switching formats changes future table edits; it does not restore the original spacing of an already reformatted table. Use a Workspace setting to share a format for a repository.
+
+Preservation applies to tables recognized by the existing Markdown parser. This is not a general source-preservation mode for paragraphs, lists, line endings, or unsupported table syntax. Aligned output follows a common padded GFM convention; it does not promise byte-for-byte agreement with every editor. Widening a column can still change padding throughout the edited table. Smaller diffs reduce history noise, but Git compression determines the actual storage savings.
 
 ### Table operations
 

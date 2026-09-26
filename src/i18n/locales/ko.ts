@@ -35,7 +35,7 @@ export const messages = {
 
 export const webviewMessages = {
   tableSourceFormatLabel: "표 소스 형식",
-  tableSourceFormatHelp: "시각적 편집 내용을 기록할 때 사용할 표 형식을 선택합니다. 이 설정만 변경하면 편집하지 않은 문서의 형식은 바뀌지 않습니다.",
+  tableSourceFormatHelp: "새로 만들거나 편집한 표의 소스 형식을 선택합니다. 변경하지 않은 표는 기존 형식을 유지합니다.",
   tableSourceFormatAligned: "정렬됨(기본값)",
   tableSourceFormatCompact: "간결함(기존 방식)",
   tableSourceFormatSaveFailed: "표 소스 형식을 저장하지 못했습니다. 이전 설정이 유지됩니다.",

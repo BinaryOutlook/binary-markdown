@@ -35,7 +35,7 @@ export const messages = {
 
 export const webviewMessages = {
   tableSourceFormatLabel: "Formato de origen de tablas",
-  tableSourceFormatHelp: "Elige el formato de tabla al guardar ediciones visuales. Cambiar este ajuste no reformatea un documento sin editar.",
+  tableSourceFormatHelp: "Elige el formato de origen para tablas nuevas o editadas. Las tablas sin cambios conservan su formato.",
   tableSourceFormatAligned: "Alineado (predeterminado)",
   tableSourceFormatCompact: "Compacto (anterior)",
   tableSourceFormatSaveFailed: "No se pudo guardar el formato de origen de tablas. Se mantiene el ajuste anterior.",

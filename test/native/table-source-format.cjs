@@ -8,7 +8,8 @@ exports.tableSourceFormatCase = async function tableSourceFormatCase(h, owner, r
     const file = 'table-source-format.md', filePath = path.join(owner.workspace, file);
     const compact = '| Item | Value |\n| --- | --- |\n| Long item | 3 |\n';
     const aligned = '| Item      | Value |\n| --------- | ----- |\n| Long item | 3     |\n';
-    const prefix = '# Table source format\n\nParagraph target.\n\n', source = prefix + compact;
+    const untouched = '|Keep| __Style__ |\n|:------|---------:|\n|neighbor|  original |\n';
+    const prefix = '# Table source format\n\nParagraph target.\n\n', source = prefix + compact + '\n' + untouched;
     const previous = (await h.driver({ action: 'inspect' })).tableSourceFormatScopes;
     const set = (scope, value) => h.driver({ action: 'config', key: 'tableSourceFormat', ...(scope === 'workspace' ? { scope } : {}), value });
     const saved = () => fs.readFileSync(filePath, 'utf8');
@@ -44,6 +45,9 @@ exports.tableSourceFormatCase = async function tableSourceFormatCase(h, owner, r
         // Changing the preference must not replace the existing undo stack.
         await connection.send('Input.insertText', { text: 'replacement' });
         await h.until(async () => (await documentState()).text.includes('replacement'));
+        await h.driver({ action: 'save' });
+        assert.equal(saved(), source.replace('target', 'replacement'), 'A paragraph edit preserves both tables exactly');
+        record('table-source-format-prose', { bothTablesUnchanged: true });
         await set('global', 'compact');
         await h.until(() => connection.evaluate("document.documentElement.dataset.tableSourceFormat === 'compact'"));
         await connection.evaluate('document.querySelector("#toolbar [data-action=undo]").click()');
@@ -53,17 +57,16 @@ exports.tableSourceFormatCase = async function tableSourceFormatCase(h, owner, r
         record('table-source-format-undo', { preferenceChangePreservesUndo: true, exactOriginalRestored: true });
 
         let marks = '';
-        for (const [value, effective, table] of [[null, 'aligned', aligned], ['compact', 'compact', compact]]) {
+        for (const [value, effective, table, cellText] of [[null, 'aligned', aligned, '4'], ['compact', 'compact', compact, '5']]) {
             await set('global', value);
             await h.until(() => connection.evaluate(`document.documentElement.dataset.tableSourceFormat === '${effective}'`));
             await connection.evaluate(`(() => {
-                const paragraph = [...document.querySelectorAll('#editor > p')].find(node => node.textContent.startsWith('Paragraph ')), range = document.createRange();
-                range.selectNodeContents(paragraph); range.collapse(false); document.getElementById('editor').focus();
+                const cell = document.querySelector('#editor table td:last-child'), range = document.createRange();
+                range.selectNodeContents(cell); cell.focus();
                 getSelection().removeAllRanges(); getSelection().addRange(range);
             })()`);
-            marks += '!';
-            await connection.send('Input.insertText', { text: '!' });
-            const expected = prefix.replace('target.', 'target.' + marks) + table;
+            await connection.send('Input.insertText', { text: cellText });
+            let expected = prefix.replace('target.', 'target.' + marks) + table.replace('3', cellText) + '\n' + untouched;
             await h.until(async () => (await documentState()).text === expected, 'visual edit uses the selected table format');
             await h.driver({ action: 'save' });
             assert.equal(saved(), expected);
@@ -75,7 +78,23 @@ exports.tableSourceFormatCase = async function tableSourceFormatCase(h, owner, r
             assert.equal(await connection.evaluate('document.documentElement.dataset.tableSourceFormat'), effective);
             await h.driver({ action: 'save' });
             assert.equal(saved(), expected, 'Reopening preserves the preference and saved bytes');
-            record('table-source-format-save', { effective, exactSpacing: true, repeatedSaveStable: true, reopened: true });
+            record('table-source-format-save', { effective, exactSpacing: true, neighborUnchanged: true, repeatedSaveStable: true, reopened: true });
+
+            const nextFormat = effective === 'aligned' ? 'compact' : 'aligned';
+            await set('global', nextFormat);
+            await h.until(() => connection.evaluate(`document.documentElement.dataset.tableSourceFormat === '${nextFormat}'`));
+            await connection.evaluate(`(() => {
+                const paragraph = [...document.querySelectorAll('#editor > p')].find(node => node.textContent.startsWith('Paragraph ')), range = document.createRange();
+                range.selectNodeContents(paragraph); range.collapse(false); document.getElementById('editor').focus();
+                getSelection().removeAllRanges(); getSelection().addRange(range);
+            })()`);
+            marks += '!';
+            await connection.send('Input.insertText', { text: '!' });
+            expected = prefix.replace('target.', 'target.' + marks) + table.replace('3', cellText) + '\n' + untouched;
+            await h.until(async () => (await documentState()).text === expected, 'later paragraph edits retain both table formats');
+            await h.driver({ action: 'save' });
+            assert.equal(saved(), expected);
+            record('table-source-format-later-edit', { nextFormat, bothTablesUnchanged: true });
         }
     } finally {
         connection?.close();

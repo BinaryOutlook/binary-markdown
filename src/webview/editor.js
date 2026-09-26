@@ -2291,6 +2291,8 @@
      */
     function blocksAreEqual(a, b) {
         if (a.tagName !== b.tagName) return false;
+        // Formatting-only external changes still replace the table's retained source.
+        if (a.tagName === 'TABLE' && a.dataset.tableSource !== b.dataset.tableSource) return false;
         if (a.tagName === 'HR' && b.tagName === 'HR') return true;
         if (a.getAttribute('data-lang') !== b.getAttribute('data-lang')) return false;
         if (a.className !== b.className) return false;
@@ -2766,7 +2768,16 @@
                 tableHtml += '</tr>';
             });
             tableHtml += '</table>';
-            return tableHtml;
+            if (exportCode) return tableHtml;
+
+            // Keep source with this table, including through DOM cloning and undo
+            // re-renders. Compare cell content/alignment, never resize handles or
+            // other presentation details. Detached exports need no editing metadata.
+            const template = document.createElement('template');
+            template.innerHTML = tableHtml;
+            const table = template.content.firstElementChild;
+            rememberTableSource(table, rows.join('\n') + '\n');
+            return table.outerHTML;
         }
 
         function renderBlockquote(lines) {
@@ -7004,9 +7015,9 @@
         return lines.map((line, index) => '> ' + (codeLines.has(index) ? line : line.trim())).join('\n') + '\n';
     }
 
-    function mdProcessTable(table) {
+    function readTableData(table) {
         const rows = table.querySelectorAll('tr');
-        if (rows.length === 0) return '';
+        if (rows.length === 0) return { contents: [], alignments: [] };
         // Escape pipe characters in cell content for markdown output
         // But NOT inside inline code (backticks)
         function escapePipeInCell(text) {
@@ -7091,7 +7102,25 @@
             firstDataCells?.[i]?.style.textAlign || cell.dataset.tableAlign || cell.style.textAlign || 'left');
         const contents = Array.from(rows, row => Array.from(row.querySelectorAll('th, td'),
             cell => processCellContent(cell).trim()));
-        return tableFormat.format(contents, alignments, document.documentElement.dataset.tableSourceFormat);
+        return { contents, alignments };
+    }
+
+    function rememberTableSource(table, source, state = JSON.stringify(readTableData(table))) {
+        table.dataset.tableSource = source;
+        table.dataset.tableState = state;
+    }
+
+    function mdProcessTable(table) {
+        const data = readTableData(table);
+        const state = JSON.stringify(data);
+        if (table.dataset.tableState === state && table.dataset.tableSource !== undefined) {
+            return table.dataset.tableSource;
+        }
+        const source = tableFormat.format(data.contents, data.alignments, document.documentElement.dataset.tableSourceFormat);
+        // This is now the table's latest output. Later edits elsewhere, including
+        // after a format preference change, must not reformat it again.
+        rememberTableSource(table, source, state);
+        return source;
     }
 
     function htmlToMarkdown() {

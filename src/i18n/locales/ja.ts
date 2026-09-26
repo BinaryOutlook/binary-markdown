@@ -35,7 +35,7 @@ export const messages = {
 
 export const webviewMessages = {
   tableSourceFormatLabel: "表のソース形式",
-  tableSourceFormatHelp: "ビジュアル編集の書き込み時に使用する表の形式を選択します。設定の変更だけでは未編集の文書は整形されません。",
+  tableSourceFormatHelp: "新規作成または編集した表のソース形式を選択します。変更していない表は元の形式を保持します。",
   tableSourceFormatAligned: "桁揃え（既定）",
   tableSourceFormatCompact: "コンパクト（従来形式）",
   tableSourceFormatSaveFailed: "表のソース形式を保存できませんでした。以前の設定が引き続き適用されます。",

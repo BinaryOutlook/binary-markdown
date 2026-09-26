@@ -35,7 +35,7 @@ export const messages = {
 
 export const webviewMessages = {
   tableSourceFormatLabel: "表格源代码格式",
-  tableSourceFormatHelp: "选择写入可视化编辑时使用的表格格式。仅更改此设置不会重新排版未编辑的文档。",
+  tableSourceFormatHelp: "选择新建或已编辑表格的源代码格式。未修改的表格保留原有格式。",
   tableSourceFormatAligned: "对齐（默认）",
   tableSourceFormatCompact: "紧凑（旧版）",
   tableSourceFormatSaveFailed: "无法保存表格源代码格式。原设置仍然有效。",

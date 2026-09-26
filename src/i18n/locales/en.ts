@@ -35,7 +35,7 @@ export const messages = {
 
 export const webviewMessages = {
   tableSourceFormatLabel: "Table source format",
-  tableSourceFormatHelp: "Choose the table layout used when writing visual edits. Changing this setting does not reformat an untouched document.",
+  tableSourceFormatHelp: "Choose the source layout for new or edited tables. Unchanged tables keep their existing formatting.",
   tableSourceFormatAligned: "Aligned (default)",
   tableSourceFormatCompact: "Compact (Legacy)",
   tableSourceFormatSaveFailed: "Could not save the table source format. The previous setting remains active.",
