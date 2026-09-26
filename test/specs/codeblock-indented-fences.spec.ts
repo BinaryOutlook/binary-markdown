@@ -48,7 +48,8 @@ test('four leading spaces create indented code with literal fence characters', a
     await page.evaluate(() => (window as any).__testApi.setMarkdown('    ```\n    alpha\n    ```'));
     await expect(page.locator('#editor pre')).toHaveCount(1);
     await page.locator('.code-copy-btn').click();
-    expect(await page.evaluate(() => navigator.clipboard.readText())).toBe('```\nalpha\n```');
+    // Windows clipboard text uses CRLF; preserve content while comparing logical lines.
+    expect((await page.evaluate(() => navigator.clipboard.readText())).replace(/\r\n/g, '\n')).toBe('```\nalpha\n```');
 });
 
 test('empty and unclosed indented fences retain the existing code editing behavior', async ({ page }) => {

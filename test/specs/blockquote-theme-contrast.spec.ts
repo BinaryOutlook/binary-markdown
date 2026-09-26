@@ -51,6 +51,11 @@ test('live theme changes retain the document, selection, DOM and undo history', 
     await page.keyboard.press('End');
     await page.keyboard.type(' edited');
     await expect.poll(() => page.evaluate(() => (window as any).__testApi.getMarkdown())).toContain('After edited');
+    // Reading the DOM does not flush the typing debounce. Observe its host
+    // notification before attributing any subsequent edits to theme changes.
+    const editedMarkdown = await page.evaluate(() => (window as any).__testApi.getMarkdown());
+    await expect.poll(() => page.evaluate(() => (window as any).__testApi.messages
+        .filter((message: any) => message.type === 'edit').at(-1)?.content)).toBe(editedMarkdown);
     const before = await page.evaluate(() => {
         const selection = getSelection()!;
         (window as any).quoteNodeBeforeTheme = document.querySelector('#editor blockquote');
