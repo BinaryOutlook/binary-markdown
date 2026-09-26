@@ -147,7 +147,7 @@ test('header-only table alignment survives a cell edit and reopening', async ({ 
     await expect(page.locator('#editor th').last()).toHaveCSS('text-align', 'right');
     await page.locator('#editor th').last().fill('Changed');
     const source = await getMarkdown(page);
-    expect(source).toContain('| :--- | ---: |');
+    expect(source.split('\n')[1]).toMatch(/^\| :-+ \| -+: \|$/);
     await setMarkdown(page, source);
     await expect(page.locator('#editor th').first()).toHaveCSS('text-align', 'left');
     await expect(page.locator('#editor th').last()).toHaveCSS('text-align', 'right');

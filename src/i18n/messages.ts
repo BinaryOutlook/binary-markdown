@@ -37,6 +37,12 @@ export interface Messages {
 }
 
 export interface WebviewMessages {
+  tableSourceFormatLabel: string;
+  tableSourceFormatHelp: string;
+  tableSourceFormatAligned: string;
+  tableSourceFormatCompact: string;
+  tableSourceFormatSaveFailed: string;
+
   mathSourceWrapLabel: string;
   mathSourceWrapHelp: string;
   mathSourceWrapSaveFailed: string;

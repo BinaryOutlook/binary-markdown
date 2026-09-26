@@ -34,6 +34,13 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  tableSourceFormatLabel: "表格源代码格式",
+  tableSourceFormatHelp: "选择新建或已编辑表格的源代码格式。未修改的表格保留原有格式。",
+  tableSourceFormatAligned: "对齐（默认）",
+  tableSourceFormatCompact: "紧凑（旧版）",
+  tableSourceFormatSaveFailed: "无法保存表格源代码格式。原设置仍然有效。",
+
+
   mathSourceWrapLabel: "公式源码自动折行",
   mathSourceWrapHelp: "按显示宽度折行显示可编辑的块公式源码，不添加源码换行符。渲染后的公式和导出保持不变。",
   mathSourceWrapSaveFailed: "无法保存公式源码折行设置。将保留原有设置。",

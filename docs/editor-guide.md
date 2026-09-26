@@ -1,6 +1,6 @@
 # Binary Markdown editor guide
 
-Adapted from the inherited editor documentation. See [Acknowledgments](../ACKNOWLEDGMENTS.md) for provenance and the [README](../README.md#install) for installation. This guide describes the current source; the [0.4.0 notes](../release-notes/0.4.0.md) distinguish upcoming changes from published releases. Export configuration is maintained in [export help](../media/export-help.md).
+Adapted from the inherited editor documentation. See [Acknowledgments](../ACKNOWLEDGMENTS.md) for provenance and the [README](../README.md#install) for installation. This guide describes the current source; the [changelog](../CHANGELOG.md) distinguishes unreleased changes from published versions. Export configuration is maintained in [export help](../media/export-help.md).
 
 ## Formatting toolbar
 
@@ -119,6 +119,35 @@ To exit inline formatting, type the closing marker followed by Space:
 | Italic | `*` + Space | Close italic and move cursor outside |
 | Strikethrough | `~~` + Space | Close strikethrough and move cursor outside |
 | Inline Code | ``` ` ``` + Space | Close inline code and move cursor outside |
+
+### Table source format
+
+Choose **Table Source Format** in VS Code Settings (`binary-markdown.tableSourceFormat`), or **Table source format** in desktop Preferences:
+
+- **Aligned (default)** adds spaces to align column boundaries and adjusts the separator widths. This default applies to new and existing installations without an explicit choice.
+- **Compact (Legacy)** retains the earlier layout with spaces around each cell and fixed separator markers, without padding every column to its longest value.
+
+Both modes use the same table editor and preserve cell contents and column alignment, including explicit left alignment in headers. The setting controls Markdown source spacing, not rendered column widths. For example, Aligned writes:
+
+```markdown
+| Item      | Value |
+| --------- | ----- |
+| Long item | 3     |
+```
+
+Compact writes:
+
+```markdown
+| Item | Value |
+| --- | --- |
+| Long item | 3 |
+```
+
+The choice applies to tables you create or modify in the visual editor, including background synchronization before Save. Editing a paragraph leaves every existing table's source formatting intact. Editing one table applies the selected layout to that table; other tables retain their spacing, separator spelling, and inline Markdown. Subsequent edits elsewhere also leave the previously edited table alone, even if you change this preference.
+
+Opening a file, saving an untouched file, or changing the preference alone does not reformat tables. Source mode retains the text you enter, and returning to visual mode uses that text as the new starting point. Undo restores the earlier table source. Switching formats changes future table edits; it does not restore the original spacing of an already reformatted table. Use a Workspace setting to share a format for a repository.
+
+Preservation applies to tables recognized by the Markdown parser. The setting controls table layout; the editor separately retains unchanged blocks and their separators as described in [paragraphs and line breaks](#paragraphs-and-line-breaks). Visual edits use LF line endings, and unsupported syntax has no additional preservation guarantee. Aligned output follows a common padded GFM convention; it does not promise byte-for-byte agreement with every editor. Widening a column can still change padding throughout the edited table. Smaller diffs reduce history noise, but Git compression determines the actual storage savings.
 
 ### Table operations
 
@@ -340,6 +369,7 @@ Open **Settings** (`Cmd+,` on macOS or `Ctrl+,` on Windows/Linux) and search for
 | `binary-markdown.forceRelativeImagePath` | Force relative paths for images | `false` |
 | `binary-markdown.language` | UI language (`default`, `en`, `ja`, `zh-CN`, `zh-TW`, `ko`, `es`, `fr`) | `default` |
 | `binary-markdown.toolbarMode` | Toolbar display mode (`full`, `simple`). Simple shows undo/redo, Insert, and utility buttons; use the Action Palette for other operations | `full` |
+| `binary-markdown.tableSourceFormat` | Use `aligned` or `compact` (Legacy); see [table source format](#table-source-format) | `aligned` |
 | `binary-markdown.tableToolbarPosition` | Use `auto`, any corner, `left`, `right`, or `top-bar`; see [table operations](#table-operations) | `auto` |
 | `binary-markdown.outlineActiveColor` | Outline highlight: `theme`, `blue`, `green`, `orange`, `red`, or `purple` | `theme` |
 | `binary-markdown.outlineStateScope` | Remember outline visibility per Markdown file (`file`) or share it across all Markdown files (`global`) | `file` |

@@ -391,6 +391,24 @@
           "default": false,
           "description": "%config.export.showCodeLineNumbers.description%",
           "scope": "resource"
+        },
+        "binary-markdown.tableSourceFormat": {
+          "type": "string",
+          "enum": [
+            "aligned",
+            "compact"
+          ],
+          "default": "aligned",
+          "scope": "resource",
+          "description": "%config.tableSourceFormat.description%",
+          "enumItemLabels": [
+            "%config.tableSourceFormat.alignedLabel%",
+            "%config.tableSourceFormat.compactLabel%"
+          ],
+          "enumDescriptions": [
+            "%config.tableSourceFormat.aligned%",
+            "%config.tableSourceFormat.compact%"
+          ]
         }
       }
     },
@@ -466,7 +484,7 @@
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
     "test:document-aux": "node --test test/unit/document-aux.test.js",
-    "test": "npm run test:table-placement && npm run test:math && npm run test:markdown-blocks && npm run test:document-aux && npm run test:outline-state && npm run test:identity && npm run test:build-info && npm run test:release && npm run test:localization && npm run test:export && npm run test:e2e",
+    "test": "npm run test:table-placement && npm run test:table-format && npm run test:math && npm run test:markdown-blocks && npm run test:document-aux && npm run test:outline-state && npm run test:identity && npm run test:build-info && npm run test:release && npm run test:localization && npm run test:export && npm run test:e2e",
     "lint": "eslint src --ext ts",
     "package": "node scripts/package-vsix.js",
     "test:build": "node test/build-standalone.js",
@@ -482,7 +500,8 @@
     "test:export": "node --test test/unit/export-*.test.js",
     "test:build-info": "node --test test/unit/build-*.test.js",
     "test:release": "node --test test/unit/release-*.test.js",
-    "test:table-placement": "node --test test/unit/table-placement.test.js"
+    "test:table-placement": "node --test test/unit/table-placement.test.js",
+    "test:table-format": "node --test test/unit/table-format.test.js"
   },
   "devDependencies": {
     "@playwright/test": "^1.58.1",

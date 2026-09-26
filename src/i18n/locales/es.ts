@@ -34,6 +34,13 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  tableSourceFormatLabel: "Formato de origen de tablas",
+  tableSourceFormatHelp: "Elige el formato de origen para tablas nuevas o editadas. Las tablas sin cambios conservan su formato.",
+  tableSourceFormatAligned: "Alineado (predeterminado)",
+  tableSourceFormatCompact: "Compacto (anterior)",
+  tableSourceFormatSaveFailed: "No se pudo guardar el formato de origen de tablas. Se mantiene el ajuste anterior.",
+
+
   mathSourceWrapLabel: "Ajustar líneas del código de ecuación",
   mathSourceWrapHelp: "Ajusta visualmente el código editable de las ecuaciones de bloque. No añade saltos de línea al código. Las ecuaciones renderizadas y las exportaciones no cambian.",
   mathSourceWrapSaveFailed: "No se pudo guardar el ajuste de líneas de ecuaciones. Se mantiene la configuración anterior.",

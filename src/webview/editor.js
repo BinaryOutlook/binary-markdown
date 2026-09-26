@@ -9,6 +9,8 @@
     
     const host = window.hostBridge;
     const mathSyntax = window.BinaryMath;
+    const tableFormat = window.BinaryTableFormat;
+    const emptyTableCell = '<br data-table-placeholder="true">';
     const mathBackslashDelimiters = __MATH_BACKSLASH__;
     var finishInlineMathEdit = null;
     const documentAux = window.documentAux;
@@ -2304,6 +2306,8 @@
      */
     function blocksAreEqual(a, b) {
         if (a.tagName !== b.tagName) return false;
+        // Formatting-only external changes still replace the table's retained source.
+        if (a.tagName === 'TABLE' && a.dataset.tableSource !== b.dataset.tableSource) return false;
         if (a.tagName === 'HR' && b.tagName === 'HR') return true;
         if (a.getAttribute('data-lang') !== b.getAttribute('data-lang')) return false;
         if (a.className !== b.className) return false;
@@ -2673,9 +2677,19 @@
         if (block.type === 'th' || block.type === 'td') {
             const alignment = /text-align:(left|center|right)/.exec(block.attrs.style || '')?.[1];
             return '<' + block.tag + (alignment ? ' style="text-align:' + alignment + '"' : '') +
-                ' contenteditable="true">' + (children() || '<br>') + '</' + block.tag + '>';
+                (alignment ? ' data-table-align="' + alignment + '"' : '') +
+                ' contenteditable="true">' + (children() || emptyTableCell) + '</' + block.tag + '>';
         }
-        if (['heading', 'blockquote', 'table', 'thead', 'tbody', 'tr'].includes(block.type)) {
+        if (block.type === 'table') {
+            const html = '<table>' + children() + '</table>';
+            if (exportCode || block.source === undefined) return html;
+            const template = document.createElement('template');
+            template.innerHTML = html;
+            const table = template.content.firstElementChild;
+            rememberTableSource(table, block.source + '\n');
+            return table.outerHTML;
+        }
+        if (['heading', 'blockquote', 'thead', 'tbody', 'tr'].includes(block.type)) {
             return '<' + block.tag + '>' + children() + '</' + block.tag + '>';
         }
         return children();
@@ -4288,7 +4302,7 @@
         for (let i = 0; i < colCount; i++) {
             const cell = document.createElement('td');
             cell.setAttribute('contenteditable', 'true');
-            cell.innerHTML = '<br>';
+            cell.innerHTML = emptyTableCell;
             newRow.appendChild(cell);
         }
         
@@ -4333,7 +4347,7 @@
         for (let i = 0; i < colCount; i++) {
             const cell = document.createElement('td');
             cell.setAttribute('contenteditable', 'true');
-            cell.innerHTML = '<br>';
+            cell.innerHTML = emptyTableCell;
             newRow.appendChild(cell);
         }
         
@@ -4376,7 +4390,7 @@
             const isHeader = rowIndex === 0;
             const newCell = document.createElement(isHeader ? 'th' : 'td');
             newCell.setAttribute('contenteditable', 'true');
-            newCell.innerHTML = isHeader ? 'Header' : '<br>';
+            newCell.innerHTML = isHeader ? 'Header' : emptyTableCell;
             
             // Insert after current cell (to the right)
             if (cellIndex + 1 < row.cells.length) {
@@ -4434,7 +4448,7 @@
             const isHeader = rowIndex === 0;
             const newCell = document.createElement(isHeader ? 'th' : 'td');
             newCell.setAttribute('contenteditable', 'true');
-            newCell.innerHTML = isHeader ? 'Header' : '<br>';
+            newCell.innerHTML = isHeader ? 'Header' : emptyTableCell;
             
             // Insert before current cell (to the left)
             row.cells[cellIndex].before(newCell);
@@ -4476,6 +4490,7 @@
         rows.forEach(row => {
             const cells = row.querySelectorAll('th, td');
             if (cells[colIndex]) {
+                cells[colIndex].dataset.tableAlign = align;
                 cells[colIndex].style.textAlign = align;
             }
         });
@@ -4752,7 +4767,7 @@
         cells.forEach(() => {
             const td = document.createElement('td');
             td.setAttribute('contenteditable', 'true');
-            td.innerHTML = '<br>';
+            td.innerHTML = emptyTableCell;
             dataRow.appendChild(td);
         });
         table.appendChild(dataRow);
@@ -6651,21 +6666,16 @@
         return lines.map((line, index) => '> ' + (codeLines.has(index) ? line : line.trim())).join('\n') + '\n';
     }
 
-    function mdProcessTable(table) {
+    function readTableData(table) {
         const rows = table.querySelectorAll('tr');
-        if (rows.length === 0) return '';
-        
-        let md = '';
-        let isFirstRow = true;
-        let alignments = [];
-        
-        // Escape pipe characters in cell content for markdown output
-        // But NOT inside inline code (backticks)
+        if (rows.length === 0) return { contents: [], alignments: [], explicitLeft: [] };
+        // The block parser splits table columns before inline parsing, so
+        // pipes need escaping even inside code spans and link destinations.
         function escapePipeInCell(text) {
             return text.replace(/\|/g, '\\|');
         }
         
-        // Process cell content, escaping pipes except inside inline code
+        // Process cell content with table delimiter escaping.
         function processCellContent(cell) {
             let cellText = '';
             for (const child of cell.childNodes) {
@@ -6675,14 +6685,12 @@
                 } else if (child.nodeType === 1) {
                     const tag = child.tagName.toLowerCase();
                     if (tag === 'br') {
-                        cellText += '<br>';
+                        if (!child.hasAttribute('data-table-placeholder')) cellText += '<br>';
                     } else if (tag === 'code') {
-                        // Inline code - do NOT escape pipes inside
-                        // Use appropriate number of backticks based on content
-                        cellText += wrapInlineCode(child.textContent);
+                        cellText += escapePipeInCell(wrapInlineCode(child.textContent));
                     } else {
                         // Other inline elements (strong, em, a, img, etc.)
-                        // Need to recursively process and escape pipes in non-code parts
+                        // Recursively process each inline element.
                         cellText += processCellNode(child);
                     }
                 }
@@ -6690,7 +6698,7 @@
             return cellText;
         }
         
-        // Recursively process a node, escaping pipes except in code
+        // Recursively process a node, escaping table delimiters.
         function processCellNode(node) {
             if (node.nodeType === 3) {
                 return escapePipeInCell(node.textContent);
@@ -6701,13 +6709,11 @@
             const tag = node.tagName.toLowerCase();
             
             if (tag === 'code') {
-                // Inline code - preserve as-is without escaping
-                // Use appropriate number of backticks based on content
-                return wrapInlineCode(node.textContent);
+                return escapePipeInCell(wrapInlineCode(node.textContent));
             }
             
             if (tag === 'br') {
-                return '<br>';
+                return node.hasAttribute('data-table-placeholder') ? '' : '<br>';
             }
             
             // For other elements, process children and wrap with appropriate markdown
@@ -6727,48 +6733,45 @@
                 return '<u>' + innerContent + '</u>';
             } else if (tag === 'a') {
                 const href = node.getAttribute('href') || '';
-                return '[' + innerContent + '](' + href + ')';
+                return '[' + innerContent + '](' + escapePipeInCell(href) + ')';
             } else if (tag === 'img') {
                 const src = node.dataset.markdownPath || node.getAttribute('src') || '';
                 const alt = node.getAttribute('alt') || '';
-                return '![' + alt + '](' + src + ')';
+                return '![' + escapePipeInCell(alt) + '](' + escapePipeInCell(src) + ')';
             }
             
             return innerContent;
         }
         
-        rows.forEach((row, rowIndex) => {
-            const cells = row.querySelectorAll('th, td');
-            const cellContents = [];
-            
-            cells.forEach((cell, colIdx) => {
-                if (rowIndex === 0) {
-                    alignments[colIdx] = cell.style.textAlign || rows[1]?.cells[colIdx]?.style.textAlign || 'left';
-                }
-                
-                // Process cell content with proper pipe escaping
-                const cellText = processCellContent(cell);
-                cellContents.push(cellText.trim() || ' ');
-            });
-            
-            md += '| ' + cellContents.join(' | ') + ' |\n';
-            
-            // Add separator row after header with alignment markers
-            if (isFirstRow) {
-                const separators = cellContents.map((_, idx) => {
-                    const align = alignments[idx] || 'left';
-                    if (align === 'center') return ':---:';
-                    if (align === 'right') return '---:';
-                    if (rows[0].cells[idx]?.style.textAlign === 'left') return ':---';
-                    return '---'; // left (default)
-                });
-                md += '| ' + separators.join(' | ') + ' |\n';
-                isFirstRow = false;
-            }
-        });
-        
-        // Return without extra trailing newline - the next element will add its own newline
-        return md;
+        const headers = Array.from(rows[0].querySelectorAll('th, td'));
+        const firstDataCells = rows[1]?.querySelectorAll('td');
+        const alignments = headers.map((cell, i) =>
+            firstDataCells?.[i]?.style.textAlign || cell.dataset.tableAlign || cell.style.textAlign || 'left');
+        const contents = Array.from(rows, row => Array.from(row.querySelectorAll('th, td'),
+            cell => processCellContent(cell).trim()));
+        // An explicit left marker also controls header alignment. Keep it
+        // distinct from a column with no authored alignment.
+        const explicitLeft = headers.map((cell, i) => alignments[i] === 'left' &&
+            (cell.dataset.tableAlign === 'left' || cell.style.textAlign === 'left'));
+        return { contents, alignments, explicitLeft };
+    }
+
+    function rememberTableSource(table, source, state = JSON.stringify(readTableData(table))) {
+        table.dataset.tableSource = source;
+        table.dataset.tableState = state;
+    }
+
+    function mdProcessTable(table) {
+        const data = readTableData(table);
+        const state = JSON.stringify(data);
+        if (table.dataset.tableState === state && table.dataset.tableSource !== undefined) {
+            return table.dataset.tableSource;
+        }
+        const source = tableFormat.format(data.contents, data.alignments, document.documentElement.dataset.tableSourceFormat, data.explicitLeft);
+        // This is now the table's latest output. Later edits elsewhere, including
+        // after a format preference change, must not reformat it again.
+        rememberTableSource(table, source, state);
+        return source;
     }
 
     function serializeMarkdownBlocks(container, preserveLayout = true, visit = null) {
@@ -6797,6 +6800,8 @@
         // A partial selection must never copy the unselected source carried
         // by its surrounding block. Keep only semantic editing attributes.
         for (const node of copy.querySelectorAll('*')) {
+            node.removeAttribute('data-table-source');
+            node.removeAttribute('data-table-state');
             for (const name of ['id', 'previous', 'before', 'source', 'canonical', 'trailing']) {
                 node.removeAttribute('data-md-' + name);
             }
@@ -7703,7 +7708,7 @@
                         for (let i = 0; i < colCount; i++) {
                             const cell = document.createElement('td');
                             cell.setAttribute('contenteditable', 'true');
-                            cell.innerHTML = '<br>';
+                            cell.innerHTML = emptyTableCell;
                             newRow.appendChild(cell);
                         }
                         
@@ -13950,6 +13955,11 @@
             document.documentElement.dataset.theme = message.value;
             mermaidInitialized = false;
             editor.querySelectorAll('.mermaid-wrapper').forEach(wrapper => renderMermaidDiagram(wrapper));
+            return;
+        }
+        if (message.type === 'tableSourceFormat') {
+            // Change future serialization only; retain the DOM, selection and undo.
+            document.documentElement.dataset.tableSourceFormat = tableFormat.normalize(message.value);
             return;
         }
         if (message.type === 'tableToolbarPosition') {

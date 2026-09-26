@@ -498,6 +498,7 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
                         codeLanguageOrder: config.get<string>('codeLanguageOrder', 'default'),
                         toolbarMode: config.get<string>('toolbarMode', 'full'),
                         tableToolbarPosition: normalizeTablePosition(config.get('tableToolbarPosition')),
+                        tableSourceFormat: vscode.workspace.getConfiguration('binary-markdown', document.uri).get('tableSourceFormat', 'aligned'),
                         renderGeneration,
                         documentBaseUri: documentBaseUri,
                         webviewMessages: getWebviewMessages(),
@@ -682,6 +683,11 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
                 void webviewPanel.webview.postMessage({ type: 'theme', value:
                     vscode.workspace.getConfiguration('binary-markdown', document.uri).get('theme', 'things') });
             }
+            const tableFormatChanged = e.affectsConfiguration('binary-markdown.tableSourceFormat', document.uri);
+            if (tableFormatChanged) {
+                void webviewPanel.webview.postMessage({ type: 'tableSourceFormat', value:
+                    vscode.workspace.getConfiguration('binary-markdown', document.uri).get('tableSourceFormat', 'aligned') });
+            }
             const positionChanged = e.affectsConfiguration('binary-markdown.tableToolbarPosition');
             if (positionChanged) {
                 void webviewPanel.webview.postMessage({ type: 'tableToolbarPosition', value:
@@ -722,7 +728,7 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
             const editorSettings = ['fontSize', 'imageDefaultDir', 'forceRelativeImagePath', 'language',
                 'outlineStateScope', 'outlineDefaultOpen', 'outlineActiveColor', 'enableDebugLogging', 'math.backslashDelimiters'];
             const editorChanged = editorSettings.some(key => e.affectsConfiguration('binary-markdown.' + key));
-            if (e.affectsConfiguration('binary-markdown') && (editorChanged || (!exportChanged && !positionChanged && !themeChanged && !toolbarModeChanged && !widthChanged && !languageOrderChanged && !mathSourcePositionChanged && !mathSourceWrapChanged))) {
+            if (e.affectsConfiguration('binary-markdown') && (editorChanged || (!exportChanged && !e.affectsConfiguration('binary-markdown.tableSourceFormat') && !positionChanged && !themeChanged && !toolbarModeChanged && !widthChanged && !languageOrderChanged && !mathSourcePositionChanged && !mathSourceWrapChanged))) {
                 clearTimeout(configurationRefresh);
                 configurationRefresh = setTimeout(() => {
                     configurationRefresh = undefined;

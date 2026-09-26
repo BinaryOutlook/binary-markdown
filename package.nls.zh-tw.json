@@ -70,5 +70,10 @@
   "config.export.codeLanguagePosition.bottomLeft": "左下角。",
   "config.export.codeLanguagePosition.bottomRight": "右下角。",
   "config.export.showCodeLineCount.description": "在PDF和DOCX程式碼區塊左下角顯示原始碼總行數。預設關閉，與語言標籤和逐行行號獨立；每次匯出時固定此設定。",
-  "config.export.showCodeLineNumbers.description": "在 PDF 和 DOCX 程式碼區塊旁顯示原始碼行號。自動換行不增加行號；與語言標籤及總行數獨立。"
+  "config.export.showCodeLineNumbers.description": "在 PDF 和 DOCX 程式碼區塊旁顯示原始碼行號。自動換行不增加行號；與語言標籤及總行數獨立。",
+  "config.tableSourceFormat.description": "選擇新建或已編輯表格的原始碼格式。未修改的表格保留原有格式。",
+  "config.tableSourceFormat.alignedLabel": "對齊（預設）",
+  "config.tableSourceFormat.compactLabel": "緊湊（舊版）",
+  "config.tableSourceFormat.aligned": "填補欄位並調整分隔列寬度，使 Markdown 原始碼對齊。",
+  "config.tableSourceFormat.compact": "使用舊版緊湊間距，不填補欄寬。"
 }
