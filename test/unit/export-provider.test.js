@@ -58,7 +58,7 @@ async function setup(t, initialConfig = {}) {
     const workspaceConfig = {};
     const configUpdates = [];
     const state = {
-        text: '# OLD-EDITOR\n', disk: '# OLD-EDITOR\n', captureCalls: 0, saveCalls: 0,
+        text: '# OLD-EDITOR\n', disk: '# OLD-EDITOR\n', captureCalls: 0, saveCalls: 0, readCalls: 0,
         captures: async () => '# OLD-EDITOR\n', beforeWrite: async () => {}, beforeRead: async () => {}, failedWrite: false,
         beforeConfigWrite: async () => {}, beforeApply: async () => {}, ignoredSaveEdits: 0,
         controller: undefined, exports: [], links: []
@@ -120,7 +120,7 @@ async function setup(t, initialConfig = {}) {
             onWillSaveTextDocument: willSave.listen,
             onDidSaveTextDocument: didSave.listen,
             createFileSystemWatcher: () => ({ onDidChange: watcher.listen, dispose: () => {} }),
-            fs: { readFile: async () => { const bytes = Buffer.from(state.disk); await state.beforeRead(); return bytes; } },
+            fs: { readFile: async () => { state.readCalls++; const bytes = Buffer.from(state.disk); await state.beforeRead(); return bytes; } },
             applyEdit: async edit => {
                 await state.beforeApply(edit.edits);
                 for (const text of edit.edits) { state.text = text; document.version++; document.isDirty = true; }
@@ -466,6 +466,172 @@ test('a new native save supersedes a failed write while existing export waiters 
     await waiting;
     assert.equal(h.state.disk, '# RETRY-SAVED\n');
 });
+
+for (const mode of ['native', 'keyboard']) {
+    test(`a watcher cannot replay a temporary empty file during a ${mode} disk write`, async t => {
+        const h = await setup(t);
+        const writing = deferred(), release = deferred();
+        let writes = 0;
+        h.state.captures = async () => '# SAVING-CONTENT\n';
+        h.state.beforeWrite = async () => { if (++writes === 1) { writing.resolve(); await release.promise; } };
+        const saving = mode === 'native' ? h.document.save() : h.send({ type: 'save', content: '# SAVING-CONTENT\n', revision: 1 });
+        await writing.promise;
+        try {
+            await h.externalChange('');
+            assert.equal(h.document.getText(), '# SAVING-CONTENT\n');
+            assert.equal(h.state.readCalls, 0, 'Do not read a file while its own disk write is active');
+            assert.equal(h.state.saveCalls, 1, 'A watcher must not start a competing save');
+        } finally { release.resolve(); await saving; }
+        await h.flushTimers();
+        assert.equal(h.document.getText(), '# SAVING-CONTENT\n');
+        assert.equal(h.state.disk, '# SAVING-CONTENT\n');
+        assert.equal(h.state.readCalls, 1, 'Deferred notifications are coalesced into a fresh disk read');
+    });
+}
+
+test('cancelling an export wait cannot release a watcher during the native disk write', async t => {
+    const h = await setup(t);
+    const writing = deferred(), release = deferred();
+    let writes = 0;
+    h.state.captures = async () => '# SAVING-CONTENT\n';
+    h.state.beforeWrite = async () => { if (++writes === 1) { writing.resolve(); await release.promise; } };
+    const saving = h.document.save();
+    await writing.promise;
+    await h.externalChange('');
+    const abort = new AbortController();
+    const waiting = h.state.controller.waitForSave(abort.signal);
+    abort.abort();
+    await assert.rejects(waiting, { name: 'AbortError' });
+    try {
+        await h.flushTimers();
+        assert.equal(h.state.readCalls, 0, 'Cancelling export does not finish the host disk write');
+        assert.equal(h.document.getText(), '# SAVING-CONTENT\n');
+    } finally { release.resolve(); await saving; }
+    await h.flushTimers();
+    assert.equal(h.state.disk, '# SAVING-CONTENT\n');
+    assert.equal(h.state.readCalls, 1);
+});
+
+test('deferred watcher notifications reread the latest external bytes after saving', async t => {
+    const h = await setup(t);
+    const writing = deferred(), release = deferred();
+    let writes = 0;
+    h.state.captures = async () => '# SAVED\n';
+    h.state.beforeWrite = async () => { if (++writes === 1) { writing.resolve(); await release.promise; } };
+    const saving = h.document.save();
+    await writing.promise;
+    await h.externalChange('');
+    await h.externalChange('# INTERMEDIATE-DISK\n');
+    release.resolve(); await saving;
+    h.state.disk = '# LATEST-EXTERNAL\n';
+    await h.flushTimers();
+    assert.equal(h.document.getText(), '# LATEST-EXTERNAL\n');
+    assert.equal(h.state.disk, '# LATEST-EXTERNAL\n');
+    assert.equal(h.state.readCalls, 1);
+});
+
+test('an in-flight disk read is deferred when a save starts before it resolves', async t => {
+    const h = await setup(t);
+    const reading = deferred(), finishRead = deferred(), writing = deferred(), finishWrite = deferred();
+    h.state.beforeRead = async () => { if (h.state.readCalls === 1) { reading.resolve(); await finishRead.promise; } };
+    const external = h.externalChange('');
+    await reading.promise;
+    let writes = 0;
+    h.state.captures = async () => '# NEW-SAVE\n';
+    h.state.beforeWrite = async () => { if (++writes === 1) { writing.resolve(); await finishWrite.promise; } };
+    const saving = h.document.save();
+    await writing.promise;
+    finishRead.resolve(); await external;
+    try { assert.equal(h.document.getText(), '# NEW-SAVE\n'); }
+    finally { finishWrite.resolve(); await saving; }
+    await h.flushTimers();
+    assert.equal(h.state.disk, '# NEW-SAVE\n');
+    assert.equal(h.state.readCalls, 2);
+});
+
+test('a legitimate external empty file still synchronizes outside a save', async t => {
+    const h = await setup(t);
+    await h.externalChange('');
+    assert.equal(h.document.getText(), '');
+    assert.equal(h.state.disk, '');
+    assert.equal(h.state.captureCalls, 0);
+    assert.equal(h.state.saveCalls, 1);
+});
+
+test('disposing during a save discards deferred watcher work', async t => {
+    const h = await setup(t);
+    const writing = deferred(), release = deferred();
+    let writes = 0;
+    h.state.beforeWrite = async () => { if (++writes === 1) { writing.resolve(); await release.promise; } };
+    const saving = h.document.save();
+    await writing.promise;
+    await h.externalChange('');
+    h.disposed.fire();
+    release.resolve(); await saving;
+    await h.flushTimers();
+    assert.equal(h.state.readCalls, 0);
+    assert.equal(h.document.getText(), '# OLD-EDITOR\n');
+});
+
+test('a failed keyboard write releases deferred watcher work for a fresh read', async t => {
+    const h = await setup(t);
+    const writing = deferred(), release = deferred();
+    h.state.beforeWrite = async () => { writing.resolve(); await release.promise; };
+    h.state.failedWrite = true;
+    const saving = h.send({ type: 'save', content: '# SAVE-ATTEMPT\n', revision: 1 });
+    await writing.promise;
+    await h.externalChange('# EXTERNAL-AFTER-FAILURE\n');
+    release.resolve(); await saving;
+    h.state.failedWrite = false;
+    await h.flushTimers();
+    assert.equal(h.document.getText(), '# EXTERNAL-AFTER-FAILURE\n');
+    assert.equal(h.state.readCalls, 1);
+});
+
+test('failed native capture keeps watcher work deferred until the host finishes saving', async t => {
+    const h = await setup(t);
+    const captured = deferred(), snapshot = deferred();
+    h.state.captures = () => { captured.resolve(); return snapshot.promise; };
+    const saving = h.document.save();
+    await captured.promise;
+    await h.externalChange('# EXTERNAL-WHILE-CAPTURE-FAILED\n');
+    snapshot.reject(new Error('Capture failed'));
+    await assert.rejects(saving, /Capture failed/);
+    await h.flushTimers();
+    assert.equal(h.state.readCalls, 0, 'Rejecting a save participant does not terminate the host write');
+    h.completeNativeSave();
+    h.state.disk = '# EXTERNAL-AFTER-HOST-WRITE\n';
+    await h.flushTimers();
+    assert.equal(h.document.getText(), '# EXTERNAL-AFTER-HOST-WRITE\n');
+    assert.equal(h.state.readCalls, 1);
+});
+
+for (const cancelExport of [false, true]) {
+    test(`an unreported native write failure defers watcher work until a successful retry${cancelExport ? ' after export cancellation' : ''}`, async t => {
+        const h = await setup(t);
+        h.state.failedWrite = true;
+        await assert.rejects(h.document.save(), /Native disk write failed/);
+        await h.externalChange('# EXTERNAL-PENDING\n');
+        assert.equal(h.state.readCalls, 0, 'No public native save-failed event can prove that the write finished');
+        if (cancelExport) {
+            const abort = new AbortController();
+            const waiting = h.state.controller.waitForSave(abort.signal);
+            abort.abort();
+            await assert.rejects(waiting, { name: 'AbortError' });
+            await h.flushTimers();
+            assert.equal(h.state.readCalls, 0, 'An abandoned export wait is not a disk completion signal');
+        }
+        h.state.failedWrite = false;
+        // Both a later native save and a keyboard save provide didSave.
+        if (cancelExport) await h.send({ type: 'save', content: '# RETRY-SAVED\n', revision: 2 });
+        else { h.state.captures = async () => '# RETRY-SAVED\n'; await h.document.save(); }
+        h.state.disk = '# EXTERNAL-AFTER-RETRY\n';
+        await h.flushTimers();
+        assert.equal(h.document.getText(), '# EXTERNAL-AFTER-RETRY\n');
+        assert.equal(h.state.disk, '# EXTERNAL-AFTER-RETRY\n');
+        assert.equal(h.state.readCalls, 1);
+    });
+}
 
 test('external file synchronization bypasses stale webview capture before saving', async t => {
     const h = await setup(t);

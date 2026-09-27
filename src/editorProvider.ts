@@ -627,50 +627,62 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
             new vscode.RelativePattern(vscode.Uri.joinPath(document.uri, '..'), path.basename(document.uri.fsPath))
         );
 
-        const fileChangeSubscription = fileWatcher.onDidChange(async (uri) => {
-            if (uri.toString() === document.uri.toString()) {
-                setTimeout(async () => {
-                    try {
-                        const readGeneration = diskSaveGeneration;
-                        const fileContent = await vscode.workspace.fs.readFile(uri);
-                        if (disposed || readGeneration !== diskSaveGeneration) { return; }
-                        const newContent = new TextDecoder().decode(fileContent);
-                        // Our own save can notify the watcher after the user has
-                        // already typed again. That disk snapshot is not a new
-                        // external edit and must not replace the newer document.
-                        if (newContent === lastSavedContent) { return; }
-                        const currentContent = document.getText();
+        let diskCheckRequested = false;
+        let diskCheckRunning = false;
+        let diskCheckTimer: ReturnType<typeof setTimeout> | undefined;
+        const resumeDiskCheck = () => {
+            if (disposed || !diskCheckRequested || diskCheckRunning || diskCheckTimer !== undefined || nativeWritePending || ownSaveDepth > 0) { return; }
+            diskCheckTimer = setTimeout(async () => {
+                diskCheckTimer = undefined;
+                if (disposed || nativeWritePending || ownSaveDepth > 0) { return; }
+                diskCheckRequested = false;
+                diskCheckRunning = true;
+                try {
+                    const readGeneration = diskSaveGeneration;
+                    const fileContent = await vscode.workspace.fs.readFile(document.uri);
+                    if (disposed) { return; }
+                    if (nativeWritePending || ownSaveDepth > 0 || readGeneration !== diskSaveGeneration) {
+                        diskCheckRequested = true;
+                        return;
+                    }
+                    const newContent = new TextDecoder().decode(fileContent);
+                    // Our own save can notify the watcher after the user has
+                    // already typed again. That disk snapshot is not a new
+                    // external edit and must not replace the newer document.
+                    if (newContent === lastSavedContent) { return; }
+                    const currentContent = document.getText();
 
-                        if (newContent !== currentContent) {
-                            // Sync VS Code document with file content (triggers onDidChangeTextDocument)
-                            isApplyingOwnEdit = true;
-                            const fullRange = new vscode.Range(
-                                document.positionAt(0),
-                                document.positionAt(currentContent.length)
-                            );
+                    if (newContent !== currentContent) {
+                        isApplyingOwnEdit = true;
+                        try {
+                            const fullRange = new vscode.Range(document.positionAt(0), document.positionAt(currentContent.length));
                             const edit = new vscode.WorkspaceEdit();
                             edit.replace(document.uri, fullRange, newContent);
                             await vscode.workspace.applyEdit(edit);
-                            isApplyingOwnEdit = false;
+                        } finally { isApplyingOwnEdit = false; }
 
-                            // Save immediately to clear dirty state — file on disk is already up to date
-                            // The webview still contains the old external revision.
-                            // This disk-sync save must not capture that stale content.
-                            await saveWithoutSnapshot();
-
-                            // Notify webview directly (since isApplyingOwnEdit suppressed onDidChangeTextDocument)
-                            const content = convertImagePaths(newContent);
-                            webviewPanel.webview.postMessage({
-                                type: 'update',
-                                content: content
-                            });
+                        // Disk already contains this external revision. Saving
+                        // must not recapture the webview's older content.
+                        await saveWithoutSnapshot();
+                        if (!disposed) {
+                            webviewPanel.webview.postMessage({ type: 'update', content: convertImagePaths(newContent) });
                         }
-                    } catch (error) {
-                        isApplyingOwnEdit = false;
-                        console.error('[Binary Markdown] Error reading file after external change:', error);
                     }
-                }, 100);
-            }
+                } catch (error) {
+                    console.error('[Binary Markdown] Error reading file after external change:', error);
+                } finally {
+                    diskCheckRunning = false;
+                    resumeDiskCheck();
+                }
+            }, 100);
+        };
+        const fileChangeSubscription = fileWatcher.onDidChange(uri => {
+            if (uri.toString() !== document.uri.toString() || disposed) { return; }
+            // File notifications can arrive while a save has temporarily
+            // truncated its destination. Read only after the write finishes,
+            // and coalesce notifications without caching those partial bytes.
+            diskCheckRequested = true;
+            resumeDiskCheck();
         });
 
         // Coalesce a settings burst into one HTML replacement. Overlapping
@@ -756,9 +768,15 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
         let ownSaveDepth = 0;
         interface PendingNativeSave { promise: Promise<void>; resolve(): void; reject(error: unknown): void; }
         let nativeSave: PendingNativeSave | undefined;
+        // Cancelling an export wait or rejecting a save participant does not
+        // finish VS Code's disk write. Only didSave proves completion; when a
+        // failed host write has no terminal event, defer reload until a later
+        // successful save or disposal rather than read possibly partial bytes.
+        let nativeWritePending = false;
         const finishNativeSave = (pending: PendingNativeSave, error?: unknown) => {
             if (nativeSave === pending) { nativeSave = undefined; }
             if (error) { pending.reject(error); } else { pending.resolve(); }
+            resumeDiskCheck();
         };
         const postSaveState = (message: Record<string, unknown>) => {
             try { void Promise.resolve(webviewPanel.webview.postMessage(message)).catch(() => undefined); }
@@ -766,7 +784,9 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
         };
         const saveWithoutSnapshot = async (): Promise<boolean> => {
             ownSaveDepth++;
-            try { return await document.save(); } finally { ownSaveDepth--; }
+            diskSaveGeneration++;
+            try { return await document.save(); }
+            finally { ownSaveDepth--; resumeDiskCheck(); }
         };
         const waitForSaves = async (signal?: AbortSignal): Promise<void> => {
             while (true) {
@@ -795,6 +815,8 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
         this.exportControllers.set(webviewPanel, exportController);
         const willSaveSubscription = vscode.workspace.onWillSaveTextDocument(event => {
             if (event.document !== document || ownSaveDepth > 0 || disposed) { return; }
+            nativeWritePending = true;
+            diskSaveGeneration++;
             // A retry supersedes a native write that failed without a didSave event.
             if (nativeSave) { finishNativeSave(nativeSave); }
             let resolve!: () => void;
@@ -828,7 +850,9 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
             if (saved === document) {
                 lastSavedContent = document.getText();
                 diskSaveGeneration++;
+                nativeWritePending = false;
                 if (nativeSave) { finishNativeSave(nativeSave); }
+                resumeDiskCheck();
                 postSaveState({ type: 'documentSaved', content: convertImagePaths(document.getText()) });
             }
         });
@@ -1133,6 +1157,10 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
             disposed = true;
             pendingRender = undefined;
             renderQueued = false;
+            diskCheckRequested = false;
+            nativeWritePending = false;
+            clearTimeout(diskCheckTimer);
+            diskCheckTimer = undefined;
             clearTimeout(configurationRefresh);
             configurationRefresh = undefined;
             if (nativeSave) { finishNativeSave(nativeSave, new Error('The document editor was closed.')); }
