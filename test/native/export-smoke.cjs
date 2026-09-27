@@ -90,6 +90,7 @@ function initialize(settings) {
     fs.copyFileSync(path.join(__dirname, 'export-driver.cjs'), path.join(owner.driver, 'main.cjs'));
     fs.copyFileSync(path.join(__dirname, 'directory-identity.cjs'), path.join(owner.driver, 'directory-identity.cjs'));
     fs.copyFileSync(path.join(__dirname, 'replace-file.cjs'), path.join(owner.driver, 'replace-file.cjs'));
+    fs.copyFileSync(path.join(__dirname, 'close-fixture.cjs'), path.join(owner.driver, 'close-fixture.cjs'));
     fs.writeFileSync(path.join(owner.driver, 'package.json'), JSON.stringify({
         name: 'binary-export-test-driver', publisher: 'local', version: '0.0.1', engines: { vscode: '^1.85.0' },
         activationEvents: ['workspaceContains:' + sentinelName], main: 'main.cjs'

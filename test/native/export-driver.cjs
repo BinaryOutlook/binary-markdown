@@ -6,6 +6,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { sameDirectory } = require('./directory-identity.cjs');
 const { replaceFile } = require('./replace-file.cjs');
+const { closeFixture } = require('./close-fixture.cjs');
 const sentinelName = '.binary-markdown-native-export.json';
 const inside = (base, target) => {
     const relative = path.relative(base, target);
@@ -98,6 +99,7 @@ exports.activate = async function activate(context) {
         if (request.token !== owner.token) throw new Error('Test workspace ownership token mismatch.');
         let buildInformation;
         let linkClipboardMatches;
+        let fixtureClose;
         switch (request.action) {
             case 'linkClipboard': {
                 if (request.phase === 'snapshot') {
@@ -214,11 +216,12 @@ exports.activate = async function activate(context) {
                 await vscode.commands.executeCommand('vscode.openWith', document.uri, 'binary-markdown.editor');
                 break;
             }
+            case 'closeFixture': fixtureClose = await closeFixture(vscode, localFile(request.file, '.md')); break;
             case 'close': await vscode.commands.executeCommand('workbench.action.closeActiveEditor'); break;
             default: throw new Error('Unsupported test-driver action.');
         }
         return { id: request.id, ok: true, documents: inspect(), nativeSave: nativeSaveState(), ...(buildInformation ? { buildInformation } : {}),
-            ...(linkClipboardMatches !== undefined ? { linkClipboardMatches } : {}) };
+            ...(linkClipboardMatches !== undefined ? { linkClipboardMatches } : {}), ...(fixtureClose ? { fixtureClose } : {}) };
     };
     const poll = async () => {
         let request;

@@ -2,8 +2,48 @@
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
+const { randomUUID } = require('node:crypto');
 
 async function listCodePreservationCase(h, owner, record) {
+    // Other suites can leave unsaved editors behind. Keep a real dirty editor
+    // open so every focused run also covers that composition boundary.
+    const file = 'list-background-' + randomUUID() + '.md';
+    const filePath = path.join(owner.workspace, file);
+    const original = 'Background work\n';
+    const expected = 'Background work!\n';
+    fs.writeFileSync(filePath, original, { flag: 'wx' });
+    let connection;
+    let complete = false;
+    const state = async () => (await h.driver({ action: 'inspect' })).documents.find(item => path.relative(owner.workspace, item.path) === file);
+    try {
+        connection = await h.open(file);
+        await connection.evaluate(`(() => {
+            document.getElementById('editor').focus();
+            const range = document.createRange(); range.selectNodeContents(document.querySelector('#editor > p')); range.collapse(false);
+            getSelection().removeAllRanges(); getSelection().addRange(range);
+        })()`);
+        await h.workbench(page => page.keyboard.insertText('!'));
+        await h.until(async () => { const current = await state(); return current?.dirty && current.text === expected; }, 'background fixture is dirty');
+        connection.close(); connection = null;
+        await listFixtures(h, owner, record);
+        const background = await state();
+        assert.equal(background?.text, expected, 'Closing list fixtures preserves the background buffer');
+        assert.equal(background.dirty, true, 'Closing list fixtures does not save the background editor');
+        assert.equal(fs.readFileSync(filePath, 'utf8'), original, 'Background disk bytes stay untouched during the cases');
+        connection = await h.open(file);
+        await h.driver({ action: 'save' });
+        assert.equal(fs.readFileSync(filePath, 'utf8'), expected);
+        assert.equal((await state()).dirty, false);
+        complete = true;
+    } finally {
+        connection?.close();
+        const result = await h.driver({ action: 'closeFixture', file });
+        if (complete) assert.equal(result.fixtureClose.closed, true, 'Close only the saved background fixture');
+    }
+    record('list-fixture-tab-ownership', { dirtyBackgroundPreserved: true, exactFixtureCleanup: true });
+}
+
+async function listFixtures(h, owner, record) {
     const cases = [
         ...[0, 5, 10].map(start => ({
             name: 'ordered-start-' + start,
@@ -31,9 +71,9 @@ async function listCodePreservationCase(h, owner, record) {
     ];
     for (const fixture of cases) {
         const file = fixture.name + '.md', filePath = path.join(owner.workspace, file);
-        await h.driver({ action: 'close' });
         const previousFormat = (await h.driver({ action: 'inspect' })).tableSourceFormatScopes;
         let connection;
+        let complete = false;
         const state = async () => (await h.driver({ action: 'inspect' })).documents.find(item => path.relative(owner.workspace, item.path) === file);
         try {
             if (fixture.compact) await h.driver({ action: 'config', key: 'tableSourceFormat', scope: 'workspace', value: 'compact' });
@@ -67,18 +107,24 @@ async function listCodePreservationCase(h, owner, record) {
             await h.sourceMode(connection);
             assert.equal(await connection.evaluate('document.getElementById("sourceEditor").value'), fixture.expected);
             connection.close(); connection = null;
-            await h.driver({ action: 'close' }); connection = await h.open(file);
+            assert.equal((await h.driver({ action: 'closeFixture', file })).fixtureClose.closed, true, 'Close only the saved fixture before reopening');
+            connection = await h.open(file);
             assert.equal(await connection.evaluate('window.htmlToMarkdown()'), fixture.expected);
             if (fixture.start !== undefined) assert.equal(await connection.evaluate('Number(document.querySelector("#editor > ol").getAttribute("start") || 1)'), fixture.start);
             if (fixture.codes) assert.deepEqual(await connection.evaluate('[...document.querySelectorAll("#editor code")].map(node => node.textContent)'), fixture.codes);
-            record(fixture.codes ? 'inline-code-preservation-native' : 'list-preservation-native', { case: fixture.name, realKeyboardEdit: true, undoRedo: true,
-                sourceMode: true, exactSavedBytes: true, cleanAfterSave: true, reopened: true });
+            complete = true;
         } finally {
-            try { connection?.close(); await h.driver({ action: 'close' }); }
+            try {
+                connection?.close();
+                const result = await h.driver({ action: 'closeFixture', file });
+                if (complete) assert.equal(result.fixtureClose.closed, true, 'Close only the completed fixture');
+            }
             finally {
                 if (fixture.compact) await h.driver({ action: 'config', key: 'tableSourceFormat', scope: 'workspace', value: previousFormat.workspace ?? null });
             }
         }
+        record(fixture.codes ? 'inline-code-preservation-native' : 'list-preservation-native', { case: fixture.name, realKeyboardEdit: true, undoRedo: true,
+            sourceMode: true, exactSavedBytes: true, cleanAfterSave: true, reopened: true });
     }
 }
 
