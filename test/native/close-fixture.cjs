@@ -18,4 +18,10 @@ async function closeFixture(vscode, file) {
     return { closed, reason: closed ? 'closed' : 'refused' };
 }
 
-module.exports = { closeFixture };
+function requireCleanActiveEditor(vscode) {
+    if (vscode.window.tabGroups.activeTabGroup.activeTab?.isDirty) {
+        throw new Error('Refusing an unscoped close of a dirty editor. Close the scenario fixture by URI instead.');
+    }
+}
+
+module.exports = { closeFixture, requireCleanActiveEditor };

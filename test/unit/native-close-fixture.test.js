@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
-const { closeFixture } = require('../native/close-fixture.cjs');
+const { closeFixture, requireCleanActiveEditor } = require('../native/close-fixture.cjs');
 
 function fixture(t) {
     const workspace = fs.mkdtempSync(path.join(os.tmpdir(), 'native-close-fixture-'));
@@ -83,4 +83,17 @@ test('fixture cleanup reports a declined close without closing another tab', asy
     };
     assert.deepEqual(await closeFixture(h.vscode, h.file), { closed: false, reason: 'refused' });
     assert.equal(h.group.activeTab, h.list);
+});
+
+
+test('unscoped close rejects an unrelated dirty editor before requesting native confirmation', async t => {
+    const h = fixture(t);
+    h.vscode.window.tabGroups.activeTabGroup = h.group;
+    assert.doesNotThrow(() => requireCleanActiveEditor(h.vscode));
+    await closeFixture(h.vscode, h.file);
+    assert.equal(h.group.activeTab, h.background);
+    assert.throws(() => requireCleanActiveEditor(h.vscode), /Refusing an unscoped close of a dirty editor/);
+    assert.deepEqual(h.group.tabs, [h.background]);
+    h.group.activeTab = undefined;
+    assert.doesNotThrow(() => requireCleanActiveEditor(h.vscode));
 });

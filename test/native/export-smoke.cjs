@@ -606,7 +606,6 @@ async function codeblockCases(h, owner, record) {
     const quoted = '> ```\n> alpha\n>     beta  \n> \n> ```';
     const source = '   ```javascript\n   const value = 1;\n   ```\n\n' + quoted + '\n\nAfter\n';
     const filePath = path.join(owner.workspace, file);
-    await h.driver({ action: 'close' });
     fs.writeFileSync(filePath, source);
     let connection = await h.open(file);
     try {
@@ -656,7 +655,6 @@ async function textToolbarCase(h, owner, record) {
     const { toolbarGeometry } = require('./text-toolbar.cjs');
     const file = 'text-toolbar.md', source = 'Paragraph target.\n';
     const previous = (await h.driver({ action: 'inspect' })).toolbarModeScopes;
-    await h.driver({ action: 'close' });
     fs.writeFileSync(path.join(owner.workspace, file), source);
     let connection;
     try {
@@ -818,7 +816,7 @@ async function widthIndicatorsCase(h, owner, record) {
     const { installedEditor } = require('./table-toolbar-overflow.cjs');
     const previous = await h.driver({ action: 'inspect' });
     const file = 'width-indicators.md', filePath = path.join(owner.workspace, file);
-    await h.driver({ action: 'close' }); fs.writeFileSync(filePath, source);
+    fs.writeFileSync(filePath, source);
     let connection = await h.open(file);
     try {
         for (const scope of [undefined, 'workspace']) {
@@ -866,7 +864,7 @@ async function editorAlignmentCase(h, owner, record) {
     const { installedEditor } = require('./table-toolbar-overflow.cjs');
     const previous = await h.driver({ action: 'inspect' });
     const file = 'editor-alignment.md', filePath = path.join(owner.workspace, file);
-    await h.driver({ action: 'close' }); fs.writeFileSync(filePath, source);
+    fs.writeFileSync(filePath, source);
     let connection = await h.open(file);
     try {
         for (const scope of [undefined, 'workspace']) {
@@ -912,7 +910,7 @@ async function editorWidthCase(h, owner, record) {
     const { installedEditor } = require('./table-toolbar-overflow.cjs');
     const previous = await h.driver({ action: 'inspect' });
     const file = 'editor-width.md', filePath = path.join(owner.workspace, file);
-    await h.driver({ action: 'close' }); fs.writeFileSync(filePath, source);
+    fs.writeFileSync(filePath, source);
     let connection = await h.open(file);
     try {
         for (const scope of [undefined, 'workspace']) {
@@ -1050,7 +1048,7 @@ async function languageOrderCase(h, owner, record) {
     const { installedEditor } = require('./table-toolbar-overflow.cjs');
     const previous = (await h.driver({ action: 'inspect' })).languageOrderScopes;
     const file = 'language-order.md', filePath = path.join(owner.workspace, file);
-    await h.driver({ action: 'close' }); fs.writeFileSync(filePath, source);
+    fs.writeFileSync(filePath, source);
     let connection;
     try {
         await h.driver({ action: 'config', key: 'codeLanguageOrder', value: null, scope: 'workspace' });
@@ -1092,7 +1090,7 @@ async function languagePickerCase(h, owner, record) {
     const { installedEditor } = require('./table-toolbar-overflow.cjs');
     const previousLanguage = (await h.driver({ action: 'inspect' })).appearance.language;
     const file = 'languages.md', filePath = path.join(owner.workspace, file);
-    await h.driver({ action: 'close' }); fs.writeFileSync(filePath, source);
+    fs.writeFileSync(filePath, source);
     let connection = await h.open(file);
     try {
         let changed;
@@ -1137,7 +1135,7 @@ async function underlineCase(h, owner, record) {
     const { installedEditor } = require('./table-toolbar-overflow.cjs');
     const previous = await h.driver({ action: 'inspect' });
     const file = 'underline.md', filePath = path.join(owner.workspace, file);
-    await h.driver({ action: 'close' }); fs.writeFileSync(filePath, source);
+    fs.writeFileSync(filePath, source);
     await h.driver({ action: 'config', key: 'toolbarMode', scope: 'workspace', value: 'full' });
     let connection = await h.open(file);
     try {
@@ -1282,7 +1280,7 @@ async function insertMenuCase(h, owner, record) {
     const { installedEditor } = require('./table-toolbar-overflow.cjs');
     const previous = await h.driver({ action: 'inspect' });
     const file = 'insert-menu.md', filePath = path.join(owner.workspace, file);
-    await h.driver({ action: 'close' }); fs.writeFileSync(filePath, source);
+    fs.writeFileSync(filePath, source);
     await h.driver({ action: 'simpleFileDialog', value: true });
     let connection = await h.open(file);
     try {
@@ -1352,7 +1350,7 @@ async function tableRowCase(h, owner, record) {
     const { installedEditor } = require('./table-toolbar-overflow.cjs');
     const previous = await h.driver({ action: 'inspect' });
     const file = 'table-row.md', filePath = path.join(owner.workspace, file);
-    await h.driver({ action: 'close' }); fs.writeFileSync(filePath, source);
+    fs.writeFileSync(filePath, source);
     let connection = await h.open(file);
     try {
         await h.workbench(async page => {
@@ -1394,7 +1392,6 @@ async function tableContentCase(h, owner, record) {
     const { source, tableCells, tableContentChecks } = require('./table-content-overflow.cjs');
     const { installedEditor } = require('./table-toolbar-overflow.cjs');
     const file = 'wide-table.md', filePath = path.join(owner.workspace, file);
-    await h.driver({ action: 'close' });
     fs.writeFileSync(filePath, source);
     let connection = await h.open(file);
     try {
@@ -1453,7 +1450,6 @@ async function equationCases(h, owner, record) {
         'EQUATION-LAST-MARKER', ''
     ].join('\n');
     const filePath = path.join(owner.workspace, file);
-    await h.driver({ action: 'close' });
     fs.writeFileSync(filePath, source);
     let connection = await h.open(file);
     try {
