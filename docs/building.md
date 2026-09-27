@@ -57,7 +57,7 @@ npm audit
 npm run package -- --release
 python3 test/fixtures/exports/verify-fixtures.py
 binary_version=$(node -p 'require("./package.json").version')
-EXPORT_REAL_TOOLS=1 EXPORT_VSIX_PATH="dist/binary-markdown-$binary_version.vsix" node --test test/unit/*.test.js
+EXPORT_REAL_TOOLS=1 EXPORT_VSIX_PATH="dist/binary-markdown-$binary_version.vsix" npm run test:unit
 npm run test:build
 CI=1 npx playwright test --workers=2 --retries=0
 ```

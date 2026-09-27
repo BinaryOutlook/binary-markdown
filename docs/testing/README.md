@@ -2,6 +2,12 @@
 
 Use the checkout's [build instructions](../building.md) and [contributor checks](../../CONTRIBUTING.md#checks) before selecting tests for the behavior you changed. [Export verification](../export-verification.md) explains focused checks, real converter tests and installed-extension validation.
 
+## Complete unit suite
+
+From the repository root, run `npm run compile` and `npm run test:unit`. The unit entry point discovers every direct `test/unit/*.test.js` file with Node, so a new suite is included without updating a list or depending on shell wildcard expansion. The same entry point runs in every CI validation lane. Focused `test:*` commands remain available for individual subsystems.
+
+`npm test` compiles and lints first, then runs the complete unit suite and the full browser suite. Ordinary local unit runs explicitly skip real-converter and package checks when their opt-in prerequisites are absent; they do not establish candidate-level validation. Follow the [candidate instructions](../building.md#validate-a-candidate) to enable those checks and identify the tested VSIX.
+
 ## Paragraph and table source regressions
 
 From the repository root, run `npm run compile`, `npm run test:markdown-blocks`, `npm run test:table-format`, and `npm run test:build`, then `CI=1 npx playwright test test/specs/paragraph-semantics.spec.ts test/specs/table-source-format.spec.ts --retries=0`. These suites check semantic blocks, all seven themes, soft source wraps, hard breaks, separator preservation, Enter/Backspace, undo/redo, source switching, copy/paste, list continuation, table headers and export preparation. Combined cases edit tables among wrapped prose, hard breaks and unusual separators, and verify exact saved source after a format change. Run the complete browser suite after changes to the shared parser or serializer.
