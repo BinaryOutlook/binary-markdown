@@ -59,7 +59,7 @@ async function setup(t, initialConfig = {}) {
     const configUpdates = [];
     const state = {
         text: '# OLD-EDITOR\n', disk: '# OLD-EDITOR\n', captureCalls: 0, saveCalls: 0, readCalls: 0,
-        captures: async () => '# OLD-EDITOR\n', beforeWrite: async () => {}, beforeRead: async () => {}, failedWrite: false,
+        captures: async () => '# OLD-EDITOR\n', beforeSaveSnapshot: async () => {}, beforeWrite: async () => {}, beforeRead: async () => {}, failedWrite: false,
         beforeConfigWrite: async () => {}, beforeApply: async () => {}, ignoredSaveEdits: 0,
         controller: undefined, exports: [], links: []
     };
@@ -81,9 +81,14 @@ async function setup(t, initialConfig = {}) {
                 if (edits.length && document.version !== version) { state.ignoredSaveEdits++; continue; }
                 for (const edit of edits) { state.text = edit.newText; document.version++; document.isDirty = true; }
             }
+            await state.beforeSaveSnapshot();
+            const savedContent = state.text;
             await state.beforeWrite();
+            if (state.failedWrite === 'false') return false;
             if (state.failedWrite) throw new Error('Native disk write failed');
-            state.disk = state.text;
+            // VS Code writes a snapshot, so edits during I/O are not in this write.
+            // Its extension-host saved event nevertheless reports isDirty=false.
+            state.disk = savedContent;
             document.isDirty = false;
             didSave.fire(document);
             return true;
@@ -178,9 +183,9 @@ async function setup(t, initialConfig = {}) {
             willSave.fire({ document, waitUntil: promise => preparations.push(promise) });
             return Promise.all(preparations);
         },
-        completeNativeSave: () => {
+        completeNativeSave: (content = state.text) => {
             // Model the host finishing after its save-participant budget expires.
-            state.disk = state.text;
+            state.disk = content;
             document.isDirty = false;
             didSave.fire(document);
         }
@@ -512,6 +517,80 @@ test('cancelling an export wait cannot release a watcher during the native disk 
     assert.equal(h.state.readCalls, 1);
 });
 
+for (const mode of ['native', 'keyboard']) {
+    test(`edits during a ${mode} write survive deferred watcher events until a confirmed save`, async t => {
+        const h = await setup(t);
+        const writing = deferred(), release = deferred();
+        let writes = 0;
+        h.state.captures = async () => '# SAVED-A\n';
+        h.state.beforeWrite = async () => { if (++writes === 1) { writing.resolve(); await release.promise; } };
+        const saving = mode === 'native' ? h.document.save() : h.send({ type: 'save', content: '# SAVED-A\n', revision: 1 });
+        await writing.promise;
+        h.state.text = '# NEWER-B\n'; h.document.version++; h.document.isDirty = true;
+        await h.externalChange('');
+        release.resolve(); await saving;
+        await h.flushTimers();
+        assert.equal(h.document.getText(), '# NEWER-B\n');
+        assert.equal(h.state.disk, '# SAVED-A\n');
+        assert.equal(h.state.readCalls, 0, 'An ambiguous saved version must not replay older disk bytes');
+        assert.ok(!h.posts.some(message => message.type === 'documentSaved'), 'Do not acknowledge the newer unsaved text');
+        h.state.captures = async () => '# NEWER-B\n';
+        await h.document.save();
+        await h.flushTimers();
+        assert.equal(h.document.getText(), '# NEWER-B\n');
+        assert.equal(h.state.disk, '# NEWER-B\n');
+        assert.equal(h.state.readCalls, 1, 'A later confirmed save resumes the retained notification');
+        assert.equal(h.posts.filter(message => message.type === 'documentSaved').at(-1).content, '# NEWER-B\n');
+    });
+}
+
+test('overlapping save attempts cannot attribute an older completion to a newer submitted version', async t => {
+    const h = await setup(t);
+    h.state.captures = async () => '# NATIVE-A\n';
+    await h.beginNativeSavePreparation();
+    const writing = deferred(), release = deferred();
+    h.state.beforeWrite = async () => { writing.resolve(); await release.promise; };
+    const keyboardSave = h.send({ type: 'save', content: '# KEYBOARD-B\n', revision: 2 });
+    await writing.promise;
+    await h.externalChange('');
+    h.completeNativeSave('# NATIVE-A\n');
+    assert.ok(!h.posts.some(message => message.type === 'documentSaved'), 'The first completion cannot confirm the overlapping revision');
+    await h.flushTimers();
+    assert.equal(h.state.readCalls, 0);
+    release.resolve(); await keyboardSave;
+    await h.flushTimers();
+    assert.equal(h.document.getText(), '# KEYBOARD-B\n');
+    assert.equal(h.state.disk, '# KEYBOARD-B\n');
+    assert.equal(h.posts.filter(message => message.type === 'documentSaved').at(-1).content, '# KEYBOARD-B\n');
+});
+
+test('another save participant cannot make a newer version look like the saved snapshot', async t => {
+    const h = await setup(t);
+    const writing = deferred(), release = deferred();
+    let writes = 0;
+    h.state.captures = async () => '# SUBMITTED-A\n';
+    h.state.beforeSaveSnapshot = async () => {
+        h.state.text = '# PARTICIPANT-C\n'; h.document.version++; h.document.isDirty = true;
+    };
+    h.state.beforeWrite = async () => { if (++writes === 1) { writing.resolve(); await release.promise; } };
+    const saving = h.document.save();
+    await writing.promise;
+    h.state.text = '# NEWER-B\n'; h.document.version++; h.document.isDirty = true;
+    await h.externalChange('# PARTICIPANT-C\n');
+    release.resolve(); await saving;
+    await h.flushTimers();
+    assert.equal(h.document.getText(), '# NEWER-B\n');
+    assert.equal(h.state.disk, '# PARTICIPANT-C\n');
+    assert.equal(h.state.readCalls, 0);
+    assert.ok(!h.posts.some(message => message.type === 'documentSaved'));
+    h.state.beforeSaveSnapshot = async () => {};
+    h.state.captures = async () => '# NEWER-B\n';
+    await h.document.save();
+    await h.flushTimers();
+    assert.equal(h.state.readCalls, 1);
+    assert.equal(h.document.getText(), '# NEWER-B\n');
+});
+
 test('deferred watcher notifications reread the latest external bytes after saving', async t => {
     const h = await setup(t);
     const writing = deferred(), release = deferred();
@@ -573,20 +652,30 @@ test('disposing during a save discards deferred watcher work', async t => {
     assert.equal(h.document.getText(), '# OLD-EDITOR\n');
 });
 
-test('a failed keyboard write releases deferred watcher work for a fresh read', async t => {
-    const h = await setup(t);
-    const writing = deferred(), release = deferred();
-    h.state.beforeWrite = async () => { writing.resolve(); await release.promise; };
-    h.state.failedWrite = true;
-    const saving = h.send({ type: 'save', content: '# SAVE-ATTEMPT\n', revision: 1 });
-    await writing.promise;
-    await h.externalChange('# EXTERNAL-AFTER-FAILURE\n');
-    release.resolve(); await saving;
-    h.state.failedWrite = false;
-    await h.flushTimers();
-    assert.equal(h.document.getText(), '# EXTERNAL-AFTER-FAILURE\n');
-    assert.equal(h.state.readCalls, 1);
-});
+for (const failure of ['false', 'reject']) {
+    test(`a keyboard write that ${failure === 'false' ? 'returns false' : 'rejects'} cannot replay partial disk contents`, async t => {
+        const h = await setup(t);
+        const writing = deferred(), release = deferred();
+        h.state.beforeWrite = async () => { writing.resolve(); await release.promise; };
+        h.state.failedWrite = failure === 'false' ? 'false' : true;
+        const saving = h.send({ type: 'save', content: '# SAVE-ATTEMPT\n', revision: 1 });
+        await writing.promise;
+        await h.externalChange('');
+        release.resolve(); await saving;
+        await h.flushTimers();
+        assert.equal(h.document.getText(), '# SAVE-ATTEMPT\n');
+        assert.equal(h.state.disk, '');
+        assert.equal(h.state.readCalls, 0, 'A failed write cannot establish a safe disk baseline');
+        assert.ok(!h.posts.some(message => message.type === 'documentSaved'));
+        assert.equal(h.posts.find(message => message.type === 'saveResult').success, false);
+        h.state.failedWrite = false;
+        await h.send({ type: 'save', content: '# RETRY-SAVED\n', revision: 2 });
+        h.state.disk = '# EXTERNAL-AFTER-RETRY\n';
+        await h.flushTimers();
+        assert.equal(h.document.getText(), '# EXTERNAL-AFTER-RETRY\n');
+        assert.equal(h.state.readCalls, 1, 'A confirmed retry resumes the retained watcher notification');
+    });
+}
 
 test('failed native capture keeps watcher work deferred until the host finishes saving', async t => {
     const h = await setup(t);

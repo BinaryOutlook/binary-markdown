@@ -631,17 +631,17 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
         let diskCheckRunning = false;
         let diskCheckTimer: ReturnType<typeof setTimeout> | undefined;
         const resumeDiskCheck = () => {
-            if (disposed || !diskCheckRequested || diskCheckRunning || diskCheckTimer !== undefined || nativeWritePending || ownSaveDepth > 0) { return; }
+            if (disposed || !diskCheckRequested || diskCheckRunning || diskCheckTimer !== undefined || nativeWritePending || ownSaveDepth > 0 || diskBaselineAmbiguous) { return; }
             diskCheckTimer = setTimeout(async () => {
                 diskCheckTimer = undefined;
-                if (disposed || nativeWritePending || ownSaveDepth > 0) { return; }
+                if (disposed || nativeWritePending || ownSaveDepth > 0 || diskBaselineAmbiguous) { return; }
                 diskCheckRequested = false;
                 diskCheckRunning = true;
                 try {
                     const readGeneration = diskSaveGeneration;
                     const fileContent = await vscode.workspace.fs.readFile(document.uri);
                     if (disposed) { return; }
-                    if (nativeWritePending || ownSaveDepth > 0 || readGeneration !== diskSaveGeneration) {
+                    if (nativeWritePending || ownSaveDepth > 0 || diskBaselineAmbiguous || readGeneration !== diskSaveGeneration) {
                         diskCheckRequested = true;
                         return;
                     }
@@ -773,6 +773,13 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
         // failed host write has no terminal event, defer reload until a later
         // successful save or disposal rather than read possibly partial bytes.
         let nativeWritePending = false;
+        interface SaveAttempt { version: number; }
+        let nativeWrite: SaveAttempt | undefined;
+        const ownWrites = new Set<SaveAttempt>();
+        // didSave carries the current document, not the version written to disk.
+        // A changed version cannot establish a safe disk baseline or acknowledge
+        // newer edits. Retain watcher work until a later unambiguous save.
+        let diskBaselineAmbiguous = false;
         const finishNativeSave = (pending: PendingNativeSave, error?: unknown) => {
             if (nativeSave === pending) { nativeSave = undefined; }
             if (error) { pending.reject(error); } else { pending.resolve(); }
@@ -783,10 +790,26 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
             catch { /* Closing a panel must not turn a completed save into a failure. */ }
         };
         const saveWithoutSnapshot = async (): Promise<boolean> => {
+            const write = { version: document.version };
+            ownWrites.add(write);
             ownSaveDepth++;
             diskSaveGeneration++;
-            try { return await document.save(); }
-            finally { ownSaveDepth--; resumeDiskCheck(); }
+            try {
+                const success = await document.save();
+                if (!success) { diskBaselineAmbiguous = true; }
+                // A successful retry has its own completion promise, unlike an
+                // abandoned native attempt that supplied no terminal event.
+                if (success && !disposed && diskBaselineAmbiguous && write.version === document.version) {
+                    diskBaselineAmbiguous = false;
+                    lastSavedContent = document.getText();
+                    diskSaveGeneration++;
+                    postSaveState({ type: 'documentSaved', content: convertImagePaths(lastSavedContent) });
+                }
+                return success;
+            } catch (error) {
+                diskBaselineAmbiguous = true;
+                throw error;
+            } finally { ownWrites.delete(write); ownSaveDepth--; resumeDiskCheck(); }
         };
         const waitForSaves = async (signal?: AbortSignal): Promise<void> => {
             while (true) {
@@ -816,6 +839,8 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
         const willSaveSubscription = vscode.workspace.onWillSaveTextDocument(event => {
             if (event.document !== document || ownSaveDepth > 0 || disposed) { return; }
             nativeWritePending = true;
+            const write = { version: document.version };
+            nativeWrite = write;
             diskSaveGeneration++;
             // A retry supersedes a native write that failed without a didSave event.
             if (nativeSave) { finishNativeSave(nativeSave); }
@@ -840,6 +865,7 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
                 // edit is in flight. Recheck ownership when this snapshot runs.
                 editQueue.schedule(content, isCurrentSave);
                 await editQueue.flush();
+                if (isCurrentSave() && nativeWrite === write) { write.version = document.version; }
             })();
             void preparation.catch(error => finishNativeSave(pending, error));
             // Keep this listener to source synchronization; rendering and export
@@ -848,12 +874,17 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
         });
         const didSaveSubscription = vscode.workspace.onDidSaveTextDocument(saved => {
             if (saved === document) {
-                lastSavedContent = document.getText();
+                const writes = [...ownWrites, ...(nativeWrite ? [nativeWrite] : [])];
+                diskBaselineAmbiguous = writes.length === 0 || writes.some(write => write.version !== document.version);
+                if (!diskBaselineAmbiguous) {
+                    lastSavedContent = document.getText();
+                    postSaveState({ type: 'documentSaved', content: convertImagePaths(lastSavedContent) });
+                }
                 diskSaveGeneration++;
                 nativeWritePending = false;
+                nativeWrite = undefined;
                 if (nativeSave) { finishNativeSave(nativeSave); }
                 resumeDiskCheck();
-                postSaveState({ type: 'documentSaved', content: convertImagePaths(document.getText()) });
             }
         });
 
@@ -1159,6 +1190,8 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
             renderQueued = false;
             diskCheckRequested = false;
             nativeWritePending = false;
+            nativeWrite = undefined;
+            ownWrites.clear();
             clearTimeout(diskCheckTimer);
             diskCheckTimer = undefined;
             clearTimeout(configurationRefresh);
