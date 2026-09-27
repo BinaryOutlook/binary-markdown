@@ -806,8 +806,12 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
             const preparation = (async () => {
                 await editQueue.flush();
                 const content = normalizeEol(refreshTocs(restoreImagePaths(await exportController.captureForSave())));
-                return content === document.getText() ? [] : [vscode.TextEdit.replace(
-                    new vscode.Range(0, 0, document.lineCount, 0), content)];
+                // A queued WorkspaceEdit can change the document version during
+                // this listener. VS Code then discards any returned TextEdits.
+                // Commit the snapshot through the same ordered edit queue and
+                // let waitUntil delay the disk write without returning edits.
+                editQueue.schedule(content);
+                await editQueue.flush();
             })();
             void preparation.catch(error => finishNativeSave(pending, error));
             // Keep this listener to source synchronization; rendering and export

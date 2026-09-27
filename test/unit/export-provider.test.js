@@ -60,7 +60,7 @@ async function setup(t, initialConfig = {}) {
     const state = {
         text: '# OLD-EDITOR\n', disk: '# OLD-EDITOR\n', captureCalls: 0, saveCalls: 0,
         captures: async () => '# OLD-EDITOR\n', beforeWrite: async () => {}, beforeRead: async () => {}, failedWrite: false,
-        beforeConfigWrite: async () => {},
+        beforeConfigWrite: async () => {}, beforeApply: async () => {}, ignoredSaveEdits: 0,
         controller: undefined, exports: [], links: []
     };
     const file = value => ({ scheme: 'file', fsPath: value, toString: () => 'file://' + value });
@@ -71,9 +71,14 @@ async function setup(t, initialConfig = {}) {
         save: async () => {
             state.saveCalls++;
             const promises = [];
+            const version = document.version;
             willSave.fire({ document, waitUntil: promise => promises.push(promise) });
             for (const promise of promises) {
                 const edits = await promise;
+                // VS Code ignores returned save edits if this listener changed
+                // the document through another WorkspaceEdit while preparing.
+                if (!Array.isArray(edits)) continue;
+                if (edits.length && document.version !== version) { state.ignoredSaveEdits++; continue; }
                 for (const edit of edits) { state.text = edit.newText; document.version++; document.isDirty = true; }
             }
             await state.beforeWrite();
@@ -117,6 +122,7 @@ async function setup(t, initialConfig = {}) {
             createFileSystemWatcher: () => ({ onDidChange: watcher.listen, dispose: () => {} }),
             fs: { readFile: async () => { const bytes = Buffer.from(state.disk); await state.beforeRead(); return bytes; } },
             applyEdit: async edit => {
+                await state.beforeApply(edit.edits);
                 for (const text of edit.edits) { state.text = text; document.version++; document.isDirty = true; }
                 changes.fire({ document, contentChanges: [{ text: state.text }] });
                 return true;
@@ -200,6 +206,60 @@ test('native save refreshes TOC in the same disk write and repeated save is unch
     const saved = h.state.disk;
     await h.document.save();
     assert.equal(h.state.disk, saved);
+});
+
+test('native save persists its newest snapshot when an earlier visual edit is still queued', async t => {
+    const h = await setup(t);
+    await h.send({ type: 'edit', content: 'Before intermediate\n' });
+    h.state.captures = async () => 'Before intermediate\nLATEST';
+    await h.document.save();
+    assert.equal(h.state.disk, 'Before intermediate\nLATEST');
+    assert.equal(h.document.getText(), h.state.disk);
+    assert.equal(h.document.isDirty, false);
+    assert.equal(h.state.saveCalls, 1);
+    assert.equal(h.state.ignoredSaveEdits, 0);
+});
+
+test('native save waits for an in-flight host edit and then persists the captured revision', { timeout: 2000 }, async t => {
+    const h = await setup(t);
+    const applying = deferred();
+    const release = deferred();
+    h.state.beforeApply = async edits => {
+        if (edits.includes('Before intermediate\n')) { applying.resolve(); await release.promise; }
+    };
+    await h.send({ type: 'edit', content: 'Before intermediate\n' });
+    await applying.promise;
+    h.state.captures = async () => 'Before intermediate\nLATEST';
+    const save = h.document.save();
+    release.resolve();
+    await save;
+    assert.equal(h.state.disk, 'Before intermediate\nLATEST');
+    assert.equal(h.document.getText(), h.state.disk);
+    assert.equal(h.document.isDirty, false);
+    assert.equal(h.state.ignoredSaveEdits, 0);
+});
+
+test('an edit after native capture remains ordered after the saved snapshot', { timeout: 2000 }, async t => {
+    const h = await setup(t);
+    const committing = deferred();
+    const release = deferred();
+    const laterApplied = deferred();
+    h.state.beforeApply = async edits => {
+        if (edits.includes('# CAPTURED\n')) { committing.resolve(); await release.promise; }
+        if (edits.includes('# TYPED-AFTER-CAPTURE\n')) laterApplied.resolve();
+    };
+    h.state.captures = async () => '# CAPTURED\n';
+    const save = h.document.save();
+    await committing.promise;
+    await h.send({ type: 'edit', content: '# TYPED-AFTER-CAPTURE\n' });
+    release.resolve();
+    await save;
+    assert.equal(h.state.disk, '# CAPTURED\n');
+    await laterApplied.promise;
+    await Promise.resolve();
+    assert.equal(h.document.getText(), '# TYPED-AFTER-CAPTURE\n');
+    assert.equal(h.document.isDirty, true);
+    assert.equal(h.state.disk, '# CAPTURED\n');
 });
 
 test('keyboard save refreshes explicit snapshot before the disk write', async t => {
