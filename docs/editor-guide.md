@@ -477,10 +477,8 @@ Export commands are listed in [export help](../media/export-help.md#export-a-sav
 
 ## External file changes
 
-When another tool (e.g., AI coding assistants like Claude Code, Cursor, etc.) modifies the same markdown file while you have it open in Binary Markdown:
+Binary Markdown supports reloading external updates to a clean file. If another editor or tool writes the same file while you have unsaved changes, those writes can replace your local edits. Finish and save your edits before letting another tool modify that file.
 
-- **Block-level DOM diff**: Only changed blocks are updated — your cursor position and in-progress edits are preserved.
-- **Toast notification**: A notification appears allowing you to review and accept or dismiss external changes.
-- **Unsaved changes warning**: If you have unsaved edits, a confirmation dialog prevents accidental overwrites.
+A review, accept or dismiss flow and an overwrite confirmation for conflicting changes are not yet implemented. This limitation is tracked in [issue #81](https://github.com/BinaryOutlook/binary-markdown/issues/81).
 
 ---

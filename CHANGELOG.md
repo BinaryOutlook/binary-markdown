@@ -13,6 +13,10 @@ The next release version has not been selected. Development snapshots retain pac
 
 - Blank separators and ordinary source wraps no longer create extra visible paragraphs. Paragraph boundaries, explicit hard breaks and loose-list continuation survive saving and reopening.
 - Explicit table alignment applies to headers and body cells, including left-aligned and header-only tables after editing in either source format.
+- Retain ordered-list starts, including zero, and ordered checklist markers after visual edits, including mixed and nested lists.
+- Preserve literal `<br>`, meaningful padding, space-only spans and embedded backticks in inline code, including table cells.
+- Native Save writes the latest captured editor snapshot even when an earlier queued edit changes the host document during save preparation.
+- Immediate Undo followed by Redo retains the latest typed changes before background synchronization finishes.
 
 ## 0.4.0 — 2026-09-23
 
