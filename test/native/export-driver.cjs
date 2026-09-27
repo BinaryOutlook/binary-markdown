@@ -90,6 +90,10 @@ exports.activate = async function activate(context) {
     let last = '';
     try { last = JSON.parse(fs.readFileSync(path.join(workspace, 'request.json'), 'utf8')).id; } catch { /* Fresh workspace. */ }
     let linkClipboardBefore;
+    let pendingNativeSave;
+    const nativeSaveState = () => pendingNativeSave ? {
+        file: pendingNativeSave.file, state: pendingNativeSave.state, error: pendingNativeSave.error
+    } : null;
     const execute = async request => {
         if (request.token !== owner.token) throw new Error('Test workspace ownership token mismatch.');
         let buildInformation;
@@ -123,6 +127,35 @@ exports.activate = async function activate(context) {
                 await vscode.commands.executeCommand('vscode.openWith', vscode.Uri.file(localFile(request.file, '.md')), 'binary-markdown.editor');
                 break;
             case 'text': await vscode.window.showTextDocument(vscode.Uri.file(localFile(request.file, '.txt'))); break;
+            case 'startNativeSave': {
+                if (pendingNativeSave) throw new Error('Finish the previous controlled native save first.');
+                const file = localFile(request.file, '.md');
+                const active = vscode.window.tabGroups.activeTabGroup.activeTab?.input;
+                if (!(active instanceof vscode.TabInputCustom) || active.viewType !== 'binary-markdown.editor' ||
+                    !sameDirectory(path.dirname(active.uri.fsPath), path.dirname(file)) || path.basename(active.uri.fsPath) !== path.basename(file)) {
+                    throw new Error('The controlled save must target the active owned Binary Markdown fixture.');
+                }
+                const document = vscode.workspace.textDocuments.find(value => value.uri.toString() === active.uri.toString());
+                if (!document?.isDirty) throw new Error('The controlled native save requires a dirty document.');
+                const operation = { file: request.file, state: 'running', promise: undefined, error: undefined };
+                pendingNativeSave = operation;
+                // Return control to the harness while the real native command
+                // waits for its source snapshot; inspect remains available.
+                operation.promise = Promise.resolve().then(() => vscode.commands.executeCommand('workbench.action.files.save')).then(
+                    () => { operation.state = 'complete'; },
+                    error => { operation.state = 'failed'; operation.error = String(error); }
+                );
+                break;
+            }
+            case 'finishNativeSave': {
+                const operation = pendingNativeSave;
+                if (!operation || request.file !== operation.file) throw new Error('No matching controlled native save is active.');
+                try {
+                    await operation.promise;
+                    if (operation.error) throw new Error(operation.error);
+                } finally { if (pendingNativeSave === operation) pendingNativeSave = undefined; }
+                break;
+            }
             case 'save': await vscode.commands.executeCommand('workbench.action.files.save'); break;
             case 'export': {
                 const suffix = { html: 'Html', pdf: 'Pdf', docx: 'Docx', epub: 'Epub' }[request.format];
@@ -184,7 +217,7 @@ exports.activate = async function activate(context) {
             case 'close': await vscode.commands.executeCommand('workbench.action.closeActiveEditor'); break;
             default: throw new Error('Unsupported test-driver action.');
         }
-        return { id: request.id, ok: true, documents: inspect(), ...(buildInformation ? { buildInformation } : {}),
+        return { id: request.id, ok: true, documents: inspect(), nativeSave: nativeSaveState(), ...(buildInformation ? { buildInformation } : {}),
             ...(linkClipboardMatches !== undefined ? { linkClipboardMatches } : {}) };
     };
     const poll = async () => {

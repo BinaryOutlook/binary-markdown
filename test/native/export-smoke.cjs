@@ -327,7 +327,7 @@ async function run(settings, owner) {
         fs.writeFileSync(report, JSON.stringify({ harness: harnessIdentity(), host: receipt(owner), packageSha256: hash(fs.readFileSync(settings.package)), receipts }, null, 2));
         console.log(name, JSON.stringify(details));
     };
-    const available = ['identity', 'filesystem', 'formats', 'saves', 'edges', 'ui', 'equations', 'pdf-background', 'selection', 'immutable', 'offline', 'document-aux', 'links', 'codeblocks', 'table-placement', 'table-source-format', 'table-content', 'table-row', 'text-toolbar', 'insert-menu', 'underline', 'underline-exports', 'editor-width', 'editor-alignment', 'width-indicators', 'language-picker', 'language-order', 'equation-source-position', 'equation-source-wrap', 'code-label-position', 'code-line-count', 'pdf-code-numbers', 'docx-code-numbers', 'blockquotes', 'paragraph-semantics'];
+    const available = ['identity', 'filesystem', 'formats', 'saves', 'save-correctness', 'list-code-preservation', 'edges', 'ui', 'equations', 'pdf-background', 'selection', 'immutable', 'offline', 'document-aux', 'links', 'codeblocks', 'table-placement', 'table-source-format', 'table-content', 'table-row', 'text-toolbar', 'insert-menu', 'underline', 'underline-exports', 'editor-width', 'editor-alignment', 'width-indicators', 'language-picker', 'language-order', 'equation-source-position', 'equation-source-wrap', 'code-label-position', 'code-line-count', 'pdf-code-numbers', 'docx-code-numbers', 'blockquotes', 'paragraph-semantics'];
     const groups = settings.suite === 'all' ? available : [settings.suite];
     assert.ok(groups.every(value => available.includes(value)), 'Suite must be all, ' + available.join(', '));
     const htmlExports = [];
@@ -507,6 +507,8 @@ async function run(settings, owner) {
         if (groups.includes('table-content')) await tableContentCase(h, owner, record);
         if (groups.includes('table-row')) await tableRowCase(h, owner, record);
         if (groups.includes('insert-menu')) await insertMenuCase(h, owner, record);
+        if (groups.includes('save-correctness')) await require('./save-correctness.cjs').saveCorrectnessCase(h, owner, record);
+        if (groups.includes('list-code-preservation')) await require('./list-code-preservation.cjs').listCodePreservationCase(h, owner, record);
         if (groups.includes('width-indicators')) await widthIndicatorsCase(h, owner, record);
         if (groups.includes('language-picker')) await languagePickerCase(h, owner, record);
         if (groups.includes('equation-source-wrap')) await equationWrapCase(h, owner, record);
@@ -1275,7 +1277,7 @@ async function underlineExportCase(h, owner, record) {
 }
 
 async function insertMenuCase(h, owner, record) {
-    const { source, insertMenuChecks, selectTarget, openInsert } = require('./insert-menu.cjs');
+    const { source, insertMenuChecks, selectTarget, openInsert, selectQuickInputItem } = require('./insert-menu.cjs');
     const { installedEditor } = require('./table-toolbar-overflow.cjs');
     const previous = await h.driver({ action: 'inspect' });
     const file = 'insert-menu.md', filePath = path.join(owner.workspace, file);
@@ -1310,9 +1312,7 @@ async function insertMenuCase(h, owner, record) {
                             // directory listing until the path is accepted.
                             await input().fill(path.join(owner.workspace, 'assets') + path.sep);
                             await page.keyboard.press('Enter');
-                            const image = page.locator('.quick-input-widget:visible .monaco-list-row').filter({ hasText: imageName });
-                            await image.waitFor({ state: 'visible' });
-                            await image.click();
+                            await selectQuickInputItem(page, imageName, h.until);
                         }
                     }
                     await page.locator('.quick-input-widget:visible').waitFor({ state: 'hidden' });
