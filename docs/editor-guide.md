@@ -461,15 +461,15 @@ Available in Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`):
 | --- | --- |
 | `Binary Markdown: Open with Binary Markdown Editor` | Open markdown file in WYSIWYG editor |
 | `Binary Markdown: Insert Table` | Insert a new table |
-| `Binary Markdown: Insert TOC` | Insert table of contents |
-| `Binary Markdown: Open as Text` | Open in standard text editor |
+| `Binary Markdown: Insert Table of Contents` | Insert table of contents |
+| `Binary Markdown: Open as Text Editor` | Open in standard text editor |
 | `Binary Markdown: Compare as Text` | Compare with text version |
 | `Binary Markdown: Toggle Source Mode` | Switch between WYSIWYG and source mode |
 | `Binary Markdown: Undo` | Undo last edit |
 | `Binary Markdown: Redo` | Redo last undone edit |
 | `Binary Markdown: Copy Build Information` | Copy source and host identity for a reproducible bug report |
 
-Export commands are listed in [export help](../media/export-help.md#export-a-saved-document). Command labels follow the configured interface language.
+Export commands are listed in [export help](../media/export-help.md#export-a-saved-document). This table uses the English Command Palette labels. Commands with translations, including export and build information, follow VS Code's display language; the editor language setting controls the editor interface separately.
 
 ---
 

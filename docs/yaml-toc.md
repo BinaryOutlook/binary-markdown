@@ -1,6 +1,6 @@
 # Front matter and a TOC refreshed on save
 
-Available in the next-version integration candidate. This is development work, not a published release.
+YAML front matter and managed tables of contents are available from [version 0.2.1](../release-notes/0.2.1.md). Use the [published release page](https://github.com/BinaryOutlook/binary-markdown/releases) to select an identified package; development snapshots can contain later changes.
 
 ## Front matter
 
@@ -52,4 +52,4 @@ HTML/PDF include the list and internal links. PDF page-numbered contents and sid
 
 Source tests cover metadata preservation, ordinary rules, incomplete delimiters, fences, duplicate/Unicode anchors, idempotence and stale detection. Browser tests cover metadata/body editing, disclosure state, undo/redo, manual refresh, save-time refresh, source-mode snapshots and export destinations. Host tests exercise both save paths, stale-export refusal and active-editor command routing.
 
-Run `npm run test:document-aux`, the normal unit suite, and `test/specs/document-aux.spec.ts` plus `test/specs/export-editor.spec.ts`. The installed extension harness adds `--suite document-aux`, with native/keyboard saves in visual/source modes and real HTML/PDF/DOCX/EPUB output. See the [branch validation receipt](../reports/validation/2026-09-14-yaml-toc.md) for observed results and limitations.
+Run `npm run test:document-aux`, the normal unit suite, and `test/specs/document-aux.spec.ts` plus `test/specs/export-editor.spec.ts`. The installed extension harness adds `--suite document-aux`, with native/keyboard saves in visual/source modes and real HTML/PDF/DOCX/EPUB output. See the [dated validation receipt](../reports/validation/2026-09-14-yaml-toc.md) for observed results and limitations.
