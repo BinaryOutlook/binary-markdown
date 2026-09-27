@@ -16,10 +16,38 @@ async function selectTarget(editor, selector = '#editor > p') {
 }
 
 async function openInsert(editor) {
-    await editor.waitForFunction(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve(true)))));
-    if (!await editor.locator('#insertButton').isVisible()) await editor.locator('#toolbarMore').click();
-    await editor.locator('#insertButton').click();
-    await editor.waitForFunction(() => !document.getElementById('insertMenu').hidden);
+    try {
+        // The installed webview can stop delivering animation frames while CDP
+        // still evaluates DOM state. Poll an actionable control instead of
+        // awaiting a frame promise that prevents the watchdog from polling.
+        await editor.waitForFunction(() => {
+            const visible = node => node && !node.disabled && node.getClientRects().length > 0 &&
+                getComputedStyle(node).visibility !== 'hidden';
+            return Boolean(document.getElementById('insertMenu') &&
+                (visible(document.getElementById('insertButton')) || visible(document.getElementById('toolbarMore'))));
+        });
+        if (!await editor.locator('#insertButton').isVisible()) await editor.locator('#toolbarMore').click();
+        await editor.locator('#insertButton').click();
+        await editor.waitForFunction(() => {
+            const menu = document.getElementById('insertMenu');
+            return Boolean(menu && !menu.hidden && menu.getClientRects().length);
+        });
+    } catch (error) {
+        let state;
+        try {
+            state = await editor.evaluate(() => ({
+                readyState: document.readyState, visibility: document.visibilityState,
+                focused: document.hasFocus(), activeElement: document.activeElement?.id,
+                mode: document.documentElement.dataset.toolbarMode,
+                controls: ['insertButton', 'toolbarMore', 'insertMenu'].map(id => {
+                    const node = document.getElementById(id);
+                    return { id, present: Boolean(node), visible: Boolean(node?.getClientRects().length),
+                        disabled: node?.disabled, hidden: node?.hidden };
+                })
+            }));
+        } catch (inspectionError) { state = { inspectionError: inspectionError.message }; }
+        throw new Error('Insert-menu readiness failed: ' + error.message + '. Frame state: ' + JSON.stringify(state), { cause: error });
+    }
 }
 
 async function insertMenuChecks({ editor, keyboard, setMode, dialog, save, record, capture = async () => {} }) {
