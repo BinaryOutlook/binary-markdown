@@ -86,7 +86,22 @@ Update affected documentation in the same PR as a behavior change, or explain wh
 
 AI can draft, translate, and check consistency. Maintainer review should focus on support commitments, intended behavior, and design rationale that code cannot establish. Validate important beginner instructions through a reader walkthrough; use representative document-reader checks for export appearance claims.
 
-Run `node scripts/check-docs.cjs` to check local links/anchors, JSON evidence and common private-data patterns in maintained pages and curated records. The candidate-build job runs this offline check. It excludes inherited upstream archives and does not replace manual review of prose, screenshots or image metadata. Suspected private values are reported by location and category, without printing the value. Markdown lint and manifest/reference consistency checks can be added incrementally; external link availability is separate from the local check.
+### Offline documentation check
+
+From the repository root after `npm ci`, run `node scripts/check-docs.cjs`. The candidate-build job runs the same offline check. A passing result covers the following existing files:
+
+| Included files | Scan depth |
+| --- | --- |
+| Root `AGENTS.md`, `README.md`, `CONTRIBUTING.md`, and `CHANGELOG.md` | Named files |
+| `docs/`, `reports/`, `release-notes/`, and `archive/development/` | All `.md`, `.html`, and `.json` files recursively |
+| `media/export-help.md`, `archive/README.md`, and `test/fixtures/manual/copy-paste.md` | Named files |
+| `test/native/` | Direct `.md` files |
+
+Other root files, inherited upstream archives, arbitrary test fixtures, source code, dependencies, images, and other binary assets are outside this check. Links from included pages still require their local targets to exist, even when those targets are outside the scanned set. Change the allowlist in `scripts/doc-checks.cjs` and its fixture test together when adding a maintained documentation location.
+
+Markdown link and heading extraction uses the installed Markdown parser, including reference definitions, Setext headings, balanced destinations, URL encoding, and duplicate heading suffixes. Fenced, indented, and inline code examples are not live links. HTML `href` and `src` attributes are checked, and fragments in Markdown or HTML targets must match a heading anchor, explicit `id`, or legacy `<a name>` anchor. HTML comments and escaped markup do not create targets. External URLs and site-root URLs are outside the offline link check.
+
+The check also validates included JSON and scans all included raw text, including code examples, for common private-data patterns. Suspected values are reported by file and category, with a line or containing Markdown block where available, without printing the value. The checker is not an exhaustive secrets scanner and does not validate release claims, external-link availability, unclosed fences, rendered layout, screenshots, or image metadata. Complete the separate source and rendered Markdown review before committing, and manually review prose accuracy and public evidence. Run `node --test test/unit/docs-checker.test.js` for the positive and negative checker fixtures.
 
 ## Adoption
 
