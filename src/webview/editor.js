@@ -2670,7 +2670,7 @@
         }
         if (block.type === 'bullet_list' || block.type === 'ordered_list') {
             const tag = block.type === 'ordered_list' ? 'ol' : 'ul';
-            const start = block.attrs.start ? ' start="' + Number(block.attrs.start) + '"' : '';
+            const start = block.attrs.start !== undefined ? ' start="' + Number(block.attrs.start) + '"' : '';
             const loose = block.children.some(item => item.children.some(child => child.type === 'paragraph' && !child.hidden));
             return '<' + tag + start + (loose ? ' data-md-loose="true"' : '') + '>' + children() + '</' + tag + '>';
         }
@@ -6238,17 +6238,19 @@
             if (!block) { inline.appendChild(child.cloneNode(true)); continue; }
             flushInline();
             if (child.tagName === 'UL' || child.tagName === 'OL') {
-                segments.push({ text: mdProcessNode(child, continuation).replace(/\n$/, ''), kind: 'list' });
+                // A non-1 ordered marker cannot interrupt the preceding paragraph.
+                const needsBlankLine = child.tagName === 'OL' && child.hasAttribute('start') && Number(child.getAttribute('start')) !== 1;
+                segments.push({ text: mdProcessNode(child, continuation).replace(/\n$/, ''), kind: 'list', needsBlankLine });
             } else {
                 segments.push({ text: mdProcessNode(child).replace(/\n$/, ''), kind: 'block' });
             }
         }
         flushInline();
         const first = segments[0]?.kind !== 'list' ? segments.shift()?.text || '' : '';
-        const prefix = checkbox ? '- [' + (checkbox.checked ? 'x' : ' ') + '] ' : marker + ' ';
+        const prefix = marker + ' ' + (checkbox ? '[' + (checkbox.checked ? 'x' : ' ') + '] ' : '');
         let result = indent + prefix + first.split('\n').join('\n' + continuation);
         for (const segment of segments) {
-            if (segment.kind === 'list') result += '\n' + segment.text;
+            if (segment.kind === 'list') result += (segment.needsBlankLine ? '\n\n' : '\n') + segment.text;
             else result += '\n\n' + continuation + segment.text.split('\n').join('\n' + continuation);
         }
         return result + '\n';
