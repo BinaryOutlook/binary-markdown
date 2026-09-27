@@ -479,7 +479,7 @@ Export commands are listed in [export help](../media/export-help.md#export-a-sav
 
 Binary Markdown supports reloading external updates to a clean file. If another editor or tool writes the same file while you have unsaved changes, those writes can replace your local edits. Finish and save your edits before letting another tool modify that file.
 
-File-change notifications received during a save are reread after the host reports completion. If a native save fails without a completion event, reload remains deferred until a later successful save or the editor is closed and reopened. Cancelling an export does not cancel that disk write or release this protection.
+File-change notifications received during a save are reread after the saved revision is confirmed. If the document changes while saving, reload remains deferred until a later save completes without intervening changes, or the editor is closed and reopened. The same deferral applies when a save fails, because the disk may contain only part of the document. Cancelling an export does not cancel that disk write or release this protection.
 
 A review, accept or dismiss flow and an overwrite confirmation for conflicting changes are not yet implemented. This limitation is tracked in [issue #81](https://github.com/BinaryOutlook/binary-markdown/issues/81).
 

@@ -16,7 +16,7 @@ The next release version has not been selected. Development snapshots retain pac
 - Retain ordered-list starts, including zero, and ordered checklist markers after visual edits, including mixed and nested lists.
 - Preserve literal `<br>`, meaningful padding, space-only spans and embedded backticks in inline code, including table cells.
 - Native Save writes the latest captured editor snapshot even when an earlier queued edit changes the host document during save preparation.
-- Coalesce file-watcher notifications and reread after saving, so temporary partial disk contents cannot replace the document during its own save.
+- Defer file-watcher reloads during saving and whenever newer edits make the saved revision uncertain, protecting local text from partial or older disk contents.
 - Immediate Undo followed by Redo retains the latest typed changes before background synchronization finishes.
 
 ## 0.4.0 — 2026-09-23
