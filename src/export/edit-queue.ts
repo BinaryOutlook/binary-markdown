@@ -1,6 +1,6 @@
 /** Debounced host edits with an explicit save barrier and observable failure. */
 export class EditQueue {
-    private pending: string | undefined;
+    private pending: { content: string; shouldApply?: () => boolean } | undefined;
     private timer: NodeJS.Timeout | undefined;
     private tail: Promise<void> = Promise.resolve();
     private failure: unknown;
@@ -8,9 +8,9 @@ export class EditQueue {
 
     constructor(private readonly apply: (content: string) => Promise<void>, private readonly delay = 100) {}
 
-    schedule(content: string): void {
+    schedule(content: string, shouldApply?: () => boolean): void {
         if (this.disposed) { return; }
-        this.pending = content;
+        this.pending = { content, shouldApply };
         clearTimeout(this.timer);
         this.timer = setTimeout(() => this.enqueue(), this.delay);
     }
@@ -18,13 +18,14 @@ export class EditQueue {
     private enqueue(): void {
         clearTimeout(this.timer);
         this.timer = undefined;
-        const content = this.pending;
+        const edit = this.pending;
         this.pending = undefined;
-        if (content === undefined) { return; }
+        if (edit === undefined) { return; }
         this.tail = this.tail.then(async () => {
             if (this.disposed) { return; }
             try {
-                await this.apply(content);
+                if (edit.shouldApply && !edit.shouldApply()) { return; }
+                await this.apply(edit.content);
                 this.failure = undefined;
             } catch (error) {
                 this.failure = error;

@@ -172,7 +172,18 @@ async function setup(t, initialConfig = {}) {
         state, document, panel, provider, config, workspaceConfig, configUpdates, posts, notices, commands, renderConfigs, locales, disposed, flushTimers,
         configChanged: keys => configChanges.fire({ affectsConfiguration: query => keys.some(key => key === query || key.startsWith(query + '.')) }),
         externalChange: async content => { state.disk = content; watcher.fire(document.uri); await flushTimers(); },
-        send: message => Promise.all(incoming.fire(message))
+        send: message => Promise.all(incoming.fire(message)),
+        beginNativeSavePreparation: () => {
+            const preparations = [];
+            willSave.fire({ document, waitUntil: promise => preparations.push(promise) });
+            return Promise.all(preparations);
+        },
+        completeNativeSave: () => {
+            // Model the host finishing after its save-participant budget expires.
+            state.disk = state.text;
+            document.isDirty = false;
+            didSave.fire(document);
+        }
     };
 }
 
@@ -260,6 +271,94 @@ test('an edit after native capture remains ordered after the saved snapshot', { 
     assert.equal(h.document.getText(), '# TYPED-AFTER-CAPTURE\n');
     assert.equal(h.document.isDirty, true);
     assert.equal(h.state.disk, '# CAPTURED\n');
+});
+
+test('a superseded native capture cannot overwrite a newer successful save', async t => {
+    const h = await setup(t);
+    const captured = deferred(), release = deferred();
+    h.state.captures = () => { captured.resolve(); return release.promise; };
+    const earlier = h.beginNativeSavePreparation();
+    await captured.promise;
+    h.state.captures = async () => '# NEWER-SAVE\n';
+    await h.document.save();
+    const version = h.document.version;
+    release.resolve('# STALE-CAPTURE\n');
+    await earlier;
+    assert.equal(h.document.getText(), '# NEWER-SAVE\n');
+    assert.equal(h.state.disk, '# NEWER-SAVE\n');
+    assert.equal(h.document.version, version);
+    assert.equal(h.document.isDirty, false);
+});
+
+test('a late native capture cannot mutate a document after didSave', async t => {
+    const h = await setup(t);
+    const captured = deferred(), release = deferred();
+    h.state.captures = () => { captured.resolve(); return release.promise; };
+    const preparation = h.beginNativeSavePreparation();
+    await captured.promise;
+    h.completeNativeSave();
+    const version = h.document.version;
+    release.resolve('# LATE-CAPTURE\n');
+    await preparation;
+    assert.equal(h.document.getText(), '# OLD-EDITOR\n');
+    assert.equal(h.state.disk, '# OLD-EDITOR\n');
+    assert.equal(h.document.version, version);
+    assert.equal(h.document.isDirty, false);
+});
+
+test('a queued native snapshot expires while an ordinary edit remains in flight', { timeout: 2000 }, async t => {
+    const h = await setup(t);
+    const captured = deferred(), snapshot = deferred(), applying = deferred(), release = deferred();
+    h.state.captures = () => { captured.resolve(); return snapshot.promise; };
+    const preparation = h.beginNativeSavePreparation();
+    await captured.promise;
+    h.state.beforeApply = async edits => {
+        if (edits.includes('# ORDINARY-EDIT\n')) { applying.resolve(); await release.promise; }
+    };
+    await h.send({ type: 'edit', content: '# ORDINARY-EDIT\n' });
+    await applying.promise;
+    snapshot.resolve('# CAPTURE-QUEUED-BEHIND-EDIT\n');
+    await new Promise(resolve => setImmediate(resolve));
+    h.completeNativeSave();
+    release.resolve();
+    await preparation;
+    assert.equal(h.document.getText(), '# ORDINARY-EDIT\n');
+    assert.equal(h.document.isDirty, true);
+    assert.equal(h.state.disk, '# OLD-EDITOR\n');
+});
+
+test('a capture resolving after panel disposal leaves the document unchanged', async t => {
+    const h = await setup(t);
+    const captured = deferred(), release = deferred();
+    h.state.captures = () => { captured.resolve(); return release.promise; };
+    const preparation = h.beginNativeSavePreparation();
+    await captured.promise;
+    h.disposed.fire();
+    release.resolve('# CLOSED-EDITOR-CAPTURE\n');
+    await preparation;
+    assert.equal(h.document.getText(), '# OLD-EDITOR\n');
+    assert.equal(h.state.disk, '# OLD-EDITOR\n');
+    assert.equal(h.document.isDirty, false);
+});
+
+test('failed native snapshot application rejects the save barrier and a retry recovers', async t => {
+    const h = await setup(t);
+    h.state.captures = async () => '# REFUSED-SNAPSHOT\n';
+    h.state.beforeApply = async edits => {
+        if (edits.includes('# REFUSED-SNAPSHOT\n')) throw new Error('Snapshot apply refused');
+    };
+    const save = h.document.save();
+    const barrier = h.state.controller.waitForSave();
+    await Promise.all([
+        assert.rejects(save, /Snapshot apply refused/),
+        assert.rejects(barrier, /Snapshot apply refused/)
+    ]);
+    assert.equal(h.state.disk, '# OLD-EDITOR\n');
+    h.state.captures = async () => '# RECOVERED-SNAPSHOT\n';
+    // The queue retains failed-apply state until a fresh edit succeeds.
+    await h.send({ type: 'save', content: '# RECOVERED-SNAPSHOT\n', revision: 1 });
+    assert.equal(h.state.disk, '# RECOVERED-SNAPSHOT\n');
+    assert.equal(h.document.isDirty, false);
 });
 
 test('keyboard save refreshes explicit snapshot before the disk write', async t => {

@@ -803,14 +803,20 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
             const pending = { promise, resolve, reject };
             nativeSave = pending;
             void promise.catch(() => undefined); // A save may happen without any export waiter.
+            const isCurrentSave = () => !disposed && nativeSave === pending;
             const preparation = (async () => {
                 await editQueue.flush();
-                const content = normalizeEol(refreshTocs(restoreImagePaths(await exportController.captureForSave())));
+                if (!isCurrentSave()) { return; }
+                const snapshot = await exportController.captureForSave();
+                if (!isCurrentSave()) { return; }
+                const content = normalizeEol(refreshTocs(restoreImagePaths(snapshot)));
                 // A queued WorkspaceEdit can change the document version during
                 // this listener. VS Code then discards any returned TextEdits.
                 // Commit the snapshot through the same ordered edit queue and
                 // let waitUntil delay the disk write without returning edits.
-                editQueue.schedule(content);
+                // The host can finish or supersede this save while a previous
+                // edit is in flight. Recheck ownership when this snapshot runs.
+                editQueue.schedule(content, isCurrentSave);
                 await editQueue.flush();
             })();
             void preparation.catch(error => finishNativeSave(pending, error));
