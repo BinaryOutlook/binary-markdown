@@ -61,7 +61,8 @@
           "table-placement.js",
           "document-aux.js",
           "math-syntax.js",
-          "editor-layout.js"
+          "editor-layout.js",
+          "table-format.js"
         ]
       },
       {

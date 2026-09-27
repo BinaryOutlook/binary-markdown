@@ -48,6 +48,7 @@ export type ExportWebviewResponse =
 /** Incoming message types: host → editor.js. */
 export type HostMessage =
     | { type: 'tableToolbarPosition'; value: string }
+    | { type: 'tableSourceFormat'; value: string }
     | { type: 'validateExportImage'; requestId: string; dataUri: string }
     | { type: 'documentSaved'; content: string }
     | { type: 'saveResult'; revision: number; success: boolean }

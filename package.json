@@ -391,6 +391,24 @@
           "default": false,
           "description": "%config.export.showCodeLineNumbers.description%",
           "scope": "resource"
+        },
+        "binary-markdown.tableSourceFormat": {
+          "type": "string",
+          "enum": [
+            "aligned",
+            "compact"
+          ],
+          "default": "aligned",
+          "scope": "resource",
+          "description": "%config.tableSourceFormat.description%",
+          "enumItemLabels": [
+            "%config.tableSourceFormat.alignedLabel%",
+            "%config.tableSourceFormat.compactLabel%"
+          ],
+          "enumDescriptions": [
+            "%config.tableSourceFormat.aligned%",
+            "%config.tableSourceFormat.compact%"
+          ]
         }
       }
     },
@@ -466,11 +484,12 @@
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
     "test:document-aux": "node --test test/unit/document-aux.test.js",
-    "test": "npm run test:table-placement && npm run test:math && npm run test:document-aux && npm run test:outline-state && npm run test:identity && npm run test:build-info && npm run test:release && npm run test:localization && npm run test:export && npm run test:e2e",
+    "test": "npm run test:table-placement && npm run test:table-format && npm run test:math && npm run test:markdown-blocks && npm run test:document-aux && npm run test:outline-state && npm run test:identity && npm run test:build-info && npm run test:release && npm run test:localization && npm run test:export && npm run test:e2e",
     "lint": "eslint src --ext ts",
     "package": "node scripts/package-vsix.js",
     "test:build": "node test/build-standalone.js",
     "test:math": "node --test test/unit/math-syntax.test.js",
+    "test:markdown-blocks": "node --test test/unit/markdown-blocks.test.js",
     "test:outline-state": "node --test test/unit/outline-state.test.js",
     "test:e2e": "npm run test:build && playwright test",
     "test:e2e:ui": "npm run test:build && playwright test --ui",
@@ -481,7 +500,8 @@
     "test:export": "node --test test/unit/export-*.test.js",
     "test:build-info": "node --test test/unit/build-*.test.js",
     "test:release": "node --test test/unit/release-*.test.js",
-    "test:table-placement": "node --test test/unit/table-placement.test.js"
+    "test:table-placement": "node --test test/unit/table-placement.test.js",
+    "test:table-format": "node --test test/unit/table-format.test.js"
   },
   "devDependencies": {
     "@playwright/test": "^1.58.1",
@@ -500,6 +520,7 @@
   "dependencies": {
     "@xmldom/xmldom": "0.9.12",
     "katex": "^0.16.9",
+    "markdown-it": "14.3.1",
     "mermaid": "10.9.8",
     "turndown": "^7.2.2",
     "turndown-plugin-gfm": "^1.0.2"

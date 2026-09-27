@@ -2,6 +2,12 @@
 
 Use the checkout's [build instructions](../building.md) and [contributor checks](../../CONTRIBUTING.md#checks) before selecting tests for the behavior you changed. [Export verification](../export-verification.md) explains focused checks, real converter tests and installed-extension validation.
 
+## Paragraph and table source regressions
+
+From the repository root, run `npm run compile`, `npm run test:markdown-blocks`, `npm run test:table-format`, and `npm run test:build`, then `CI=1 npx playwright test test/specs/paragraph-semantics.spec.ts test/specs/table-source-format.spec.ts --retries=0`. These suites check semantic blocks, all seven themes, soft source wraps, hard breaks, separator preservation, Enter/Backspace, undo/redo, source switching, copy/paste, list continuation, table headers and export preparation. Combined cases edit tables among wrapped prose, hard breaks and unusual separators, and verify exact saved source after a format change. Run the complete browser suite after changes to the shared parser or serializer.
+
+For actual file persistence, build and install a new development VSIX in the [isolated native harness](../../test/native/export-smoke.md), then run its `paragraph-semantics` and `table-source-format` suites against that same package. They measure the installed view, type both kinds of break, save through VS Code, reopen files, check exact source bytes, exercise both table layouts and setting precedence, and export HTML. Both suites also run with `--suite all`. A browser pass alone does not establish installed-host saving or another operating system's behavior.
+
 ## Required candidate validation
 
 The [VSIX workflow](../../.github/workflows/ci-vsix.yml) builds one identified candidate on Ubuntu. Every validation lane checks the same package bytes against the source revision before exercising the installed extension.

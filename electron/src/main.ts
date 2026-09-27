@@ -113,6 +113,7 @@ function createWindow(filePath?: string): BrowserWindow {
             codeLanguageOrder: settings.codeLanguageOrder,
             toolbarMode: settings.toolbarMode,
             tableToolbarPosition: settings.tableToolbarPosition,
+            tableSourceFormat: settings.tableSourceFormat,
             documentBaseUri: `file://${docDir}/`,
             webviewMessages: getI18nMessages(),
             enableDebugLogging: settings.enableDebugLogging,
@@ -300,6 +301,18 @@ ipcMain.on('settings-save', async (event, key: string, value: unknown) => {
         settingsManager.set('theme', value as string);
         for (const [win] of windows) {
             if (!win.isDestroyed()) win.webContents.send('host-message', { type: 'theme', value });
+        }
+        return;
+    }
+    if (key === 'tableSourceFormat') {
+        if (value !== 'aligned' && value !== 'compact') return;
+        try { settingsManager.set(key, value); } catch {
+            settingsManager.refreshSetting(key, getI18nMessages().tableSourceFormatSaveFailed);
+            return;
+        }
+        settingsManager.refreshSetting(key);
+        for (const [win] of windows) {
+            if (!win.isDestroyed()) win.webContents.send('host-message', { type: 'tableSourceFormat', value });
         }
         return;
     }

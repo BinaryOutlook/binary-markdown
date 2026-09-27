@@ -10,7 +10,7 @@ An open-source visual Markdown editor for VS Code. Write in a rendered view, swi
 
 Built on [Any Markdown by raggbal and contributors](https://github.com/raggbal/any-markdown), which provides the visual editor and much of its existing functionality under MIT. BinaryOutlook independently maintains Binary Markdown's changes, releases, and support. See [Acknowledgments](ACKNOWLEDGMENTS.md) for provenance.
 
-**Development status:** this source is preparing **0.4.0**. The [0.4.0 notes](release-notes/0.4.0.md) describe its features and remaining acceptance work; [RC1](release-notes/0.4.0-rc.1.md) records the earlier review candidate. Neither source versioning nor passing CI establishes an official release. Choose published packages from GitHub Releases and check their own notes.
+**Development status:** the latest published baseline is [0.4.0](https://github.com/BinaryOutlook/binary-markdown/releases/tag/v0.4.0). This source also includes unreleased paragraph-rendering and table-source-formatting changes described in the [changelog](CHANGELOG.md#unreleased). Locally built packages are development snapshots; choose published packages from GitHub Releases and check their own notes.
 
 ## Install
 
@@ -24,18 +24,18 @@ The extension ID is `BinaryOutlook.binary-markdown`. Installation leaves your de
 
 ## Features
 
-- **Visual and source editing:** headings, lists, task lists, links, images, blockquotes, and a navigable outline with remembered visibility.
-- **Formatting and tables:** a Full or Simple toolbar, an Insert menu, HTML-backed underline, responsive table controls, and horizontal scrolling for wide tables.
+- **Visual and source editing:** semantic paragraphs and lists, preserved source for unchanged blocks, links, images, blockquotes, and a navigable outline with remembered visibility.
+- **Formatting and tables:** a Full or Simple toolbar, an Insert menu, HTML-backed underline, responsive table controls, horizontal scrolling for wide tables, and aligned or compact source formatting for edited tables.
 - **Code and equations:** syntax highlighting, searchable language selection, accurate multiline code copying, editable KaTeX source, and Mermaid diagrams.
 - **A configurable writing space:** themes, seven interface languages, full or capped column width, column alignment, and optional width guides.
 - **Document structure:** protected YAML front matter and a generated table of contents refreshed on save or on request.
 - **Experimental export:** local HTML, PDF, Word, and EPUB conversion, with PDF/DOCX code labels, optional line counts, and optional numbering.
 
-These features describe the current source. The [changelog](CHANGELOG.md#unreleased) identifies additions since 0.3.0. In 0.4.0, unset toolbar preferences use Full mode and unset export-label positions use top-left; explicit saved choices remain honored. Width still starts at a centered 860 px cap, and line counts and numbering remain off by default.
+These features describe the current source. The [changelog](CHANGELOG.md) separates unreleased changes from published versions. In 0.4.0, unset toolbar preferences use Full mode and unset export-label positions use top-left; explicit saved choices remain honored. Width still starts at a centered 860 px cap, and line counts and numbering remain off by default.
 
 ## Configure the editor
 
-Open **Settings** (`Cmd+,` on macOS or `Ctrl+,` on Windows/Linux) and search for **Binary Markdown**. The [editor settings reference](docs/editor-guide.md#vs-code-settings) lists defaults and explains outline state, table controls, layout, and equation-source options. The [language guide](docs/editor-guide.md#interface-languages) distinguishes editor language from VS Code's settings language.
+Open **Settings** (`Cmd+,` on macOS or `Ctrl+,` on Windows/Linux) and search for **Binary Markdown**. The [editor settings reference](docs/editor-guide.md#vs-code-settings) lists defaults and explains outline state, table controls and source formatting, layout, and equation-source options. The [language guide](docs/editor-guide.md#interface-languages) distinguishes editor language from VS Code's settings language.
 
 ## Everyday commands
 

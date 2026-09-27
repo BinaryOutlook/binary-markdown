@@ -32,6 +32,7 @@ for (const { src, dest } of files) {
 }
 
 require('./bundle-mermaid')(ROOT, VENDOR);
+require('./bundle-markdown')(ROOT, VENDOR);
 
 // Copy only KaTeX WOFF2 fonts; omit the legacy WOFF and TTF variants.
 const katexFontsDir = path.join(NODE_MODULES, 'katex/dist/fonts');

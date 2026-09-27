@@ -19,14 +19,15 @@ test('language picker strings reach the editor webview dictionary in every local
             'codeLanguageOrderLabel', 'codeLanguageOrderHelp', 'codeLanguageOrderDefault', 'codeLanguageOrderAscending',
             'codeLanguageOrderDescending', 'codeLanguageOrderSaveFailed',
             'mathSourcePositionLabel', 'mathSourcePositionHelp', 'mathSourcePositionAbove', 'mathSourcePositionBelow', 'mathSourcePositionSaveFailed',
-            'mathSourceWrapLabel', 'mathSourceWrapHelp', 'mathSourceWrapSaveFailed']) {
+            'mathSourceWrapLabel', 'mathSourceWrapHelp', 'mathSourceWrapSaveFailed',
+            'tableSourceFormatLabel', 'tableSourceFormatHelp', 'tableSourceFormatAligned', 'tableSourceFormatCompact', 'tableSourceFormatSaveFailed']) {
             assert.ok(webviewMessages[key]?.trim(), locale + ': editor dictionary missing ' + key);
         }
     }
 });
 
 function settingsStrings() {
-    return Object.values(properties).flatMap(schema => [schema.description, ...(schema.enumDescriptions || [])]);
+    return Object.values(properties).flatMap(schema => [schema.description, ...(schema.enumDescriptions || []), ...(schema.enumItemLabels || [])]);
 }
 
 test('PDF exports default to a white page with a user-configurable setting', () => {
@@ -39,7 +40,7 @@ test('every settings description and option explanation uses a manifest translat
     for (const text of settingsStrings()) {
         assert.match(text, /^%[\w.]+%$/, `Hard-coded or missing settings text: ${text}`);
     }
-    for (const setting of ['language', 'toolbarMode', 'tableToolbarPosition', 'codeLanguageOrder', 'mathSourcePosition', 'export.codeLanguagePosition', 'outlineStateScope', 'outlineActiveColor']) {
+    for (const setting of ['language', 'toolbarMode', 'tableToolbarPosition', 'tableSourceFormat', 'codeLanguageOrder', 'mathSourcePosition', 'export.codeLanguagePosition', 'outlineStateScope', 'outlineActiveColor']) {
         const schema = properties[`binary-markdown.${setting}`];
         assert.equal(schema.enumDescriptions?.length, schema.enum.length, `${setting}: explain every option`);
     }

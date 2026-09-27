@@ -6,7 +6,7 @@ Start here for maintained Binary Markdown guidance. These pages describe the sou
 | --- | --- | --- |
 | Install or update the extension | [Installation](../README.md#install) | [Migration](migration.md) |
 | Find the original fork or update Git remotes | [Repository transition](repository-transition.md) | [Historical releases](https://github.com/BinaryOutlook/binary-markdown-fork/releases) |
-| Review the upcoming 0.4.0 version | [Release-preparation notes](../release-notes/0.4.0.md) | [Changelog](../CHANGELOG.md#unreleased), [RC1 record](../release-notes/0.4.0-rc.1.md) |
+| Review unreleased changes | [Changelog](../CHANGELOG.md#unreleased) | [Published 0.4.0](https://github.com/BinaryOutlook/binary-markdown/releases/tag/v0.4.0), [historical RC1 record](../release-notes/0.4.0-rc.1.md) |
 | Write and format Markdown | [Editor guide](editor-guide.md) | [Front matter and table of contents](yaml-toc.md) |
 | Configure the editor | [Settings reference](editor-guide.md#vs-code-settings) | [Outline state](editor-guide.md#outline-state), [interface languages](editor-guide.md#interface-languages) |
 | Export a document | [First HTML export](export-tutorial.md) | [Export help and settings](../media/export-help.md) |

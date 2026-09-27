@@ -91,7 +91,7 @@ test('source layout and export preparation stay independent of editor width', as
     expect(outputs[0]).toBe(outputs[1]); expect(outputs[1]).toBe(outputs[2]);
 });
 
-test('a visible caret retains its screen position after a width change', async ({ page }) => {
+test('a visible caret retains its screen position within the available scroll range', async ({ page }) => {
     await setup(page);
     await page.locator('#editor p').filter({ hasText: 'End marker.' }).scrollIntoViewIfNeeded();
     const before = await page.evaluate(() => {
@@ -102,5 +102,14 @@ test('a visible caret retains its screen position after a width change', async (
     });
     await set(page, 'custom', 320);
     const after = await page.evaluate(() => getSelection()!.getRangeAt(0).getBoundingClientRect().top);
-    expect(Math.abs(after - before)).toBeLessThan(2);
+    const layout = await page.evaluate(() => {
+        const wrapper = document.getElementById('editorWrapper')!;
+        return { top: wrapper.scrollTop, maximum: wrapper.scrollHeight - wrapper.clientHeight, bounds: wrapper.getBoundingClientRect().toJSON(), caret: getSelection()!.getRangeAt(0).getBoundingClientRect().toJSON() };
+    });
+    // With separator paragraphs removed, a shorter document can reach the
+    // scroll boundary. Check the nearest physically attainable position.
+    const wanted = layout.top + after - before;
+    expect(Math.abs(layout.top - Math.max(0, Math.min(layout.maximum, wanted)))).toBeLessThan(2);
+    expect(layout.caret.top).toBeGreaterThanOrEqual(layout.bounds.top);
+    expect(layout.caret.bottom).toBeLessThanOrEqual(layout.bounds.bottom);
 });

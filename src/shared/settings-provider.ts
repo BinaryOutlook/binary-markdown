@@ -19,6 +19,7 @@ export interface EditorSettings {
     codeLanguageOrder: 'default' | 'a-z' | 'z-a';
     toolbarMode: 'full' | 'simple';
     tableToolbarPosition: TableToolbarPosition;
+    tableSourceFormat: 'aligned' | 'compact';
     language: 'default' | 'en' | 'ja' | 'zh-TW' | 'zh-CN' | 'ko' | 'es' | 'fr';
     imageDefaultDir: string;
     forceRelativeImagePath: boolean;
@@ -37,6 +38,7 @@ export const DEFAULT_SETTINGS: EditorSettings = {
     codeLanguageOrder: 'default',
     toolbarMode: 'full',
     tableToolbarPosition: 'auto',
+    tableSourceFormat: 'aligned',
     language: 'default',
     imageDefaultDir: '',
     forceRelativeImagePath: false,

@@ -34,6 +34,13 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  tableSourceFormatLabel: "Format source des tableaux",
+  tableSourceFormatHelp: "Choisissez le format source des tableaux créés ou modifiés. Les tableaux inchangés conservent leur format.",
+  tableSourceFormatAligned: "Aligné (par défaut)",
+  tableSourceFormatCompact: "Compact (ancien format)",
+  tableSourceFormatSaveFailed: "Impossible d’enregistrer le format source des tableaux. Le réglage précédent reste actif.",
+
+
   mathSourceWrapLabel: "Retour visuel du code des équations",
   mathSourceWrapHelp: "Adapte visuellement le code modifiable des équations en bloc à la largeur disponible, sans ajouter de sauts de ligne. Le rendu et les exports restent inchangés.",
   mathSourceWrapSaveFailed: "Impossible d’enregistrer le retour visuel des équations. Le réglage précédent reste actif.",

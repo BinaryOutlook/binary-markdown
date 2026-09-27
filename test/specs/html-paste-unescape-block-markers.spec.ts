@@ -105,9 +105,10 @@ test.describe('HTMLペースト - ブロックレベルMarkdown構文のエス�
         console.log('Markdown output (\\+ unescape):', JSON.stringify(md));
 
         expect(md).not.toContain('\\+');
-        // + は - に正規化される
-        expect(md).toContain('- item1');
-        expect(md).toContain('- item2');
+        // Parsed Markdown retains its marker while rendering actual list items.
+        expect(md).toContain('+ item1');
+        expect(md).toContain('+ item2');
+        await expect(page.locator('#editor ul > li')).toHaveCount(2);
     });
 
     test('行頭の数字\\. が順序付きリストとして解釈される', async ({ page }) => {

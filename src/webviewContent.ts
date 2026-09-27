@@ -1,4 +1,5 @@
 import { normalize as normalizeTablePosition } from './shared/table-placement';
+import { normalize as normalizeTableFormat } from './shared/table-format';
 import { normalizeWidthMode, normalizeMaxWidth, normalizeAlignment } from './shared/editor-layout';
 import * as vscode from 'vscode';
 import * as fs from 'fs';
@@ -30,6 +31,7 @@ interface EditorConfig {
     codeLanguageOrder?: string;
     toolbarMode?: string;
     tableToolbarPosition?: string;
+    tableSourceFormat?: string;
     documentBaseUri?: string;
     webviewMessages?: WebviewMessages;
     enableDebugLogging?: boolean;
@@ -96,6 +98,7 @@ export function getWebviewContent(
         mathSourcePosition: config?.mathSourcePosition === 'below' ? 'below' : 'above',
         toolbarMode: config?.toolbarMode ?? 'full',
         tableToolbarPosition: normalizeTablePosition(config?.tableToolbarPosition),
+        tableSourceFormat: normalizeTableFormat(config?.tableSourceFormat),
         documentBaseUri: config?.documentBaseUri ?? '',
         webviewMessages: config?.webviewMessages,
         enableDebugLogging: config?.enableDebugLogging ?? false,
@@ -137,7 +140,8 @@ export function getWebviewContent(
     const katexCssUri = vendorUri('katex.min.css');
 
     const mathScript = fs.readFileSync(path.join(__dirname, 'shared', 'math-syntax.js'), 'utf8');
-    const editorScript = (fs.readFileSync(path.join(__dirname, 'shared', 'editor-layout.js'), 'utf8') + '\n' + fs.readFileSync(path.join(__dirname, 'shared', 'table-placement.js'), 'utf8') + '\n' + fs.readFileSync(path.join(__dirname, 'webview', 'table-toolbar.js'), 'utf8') + '\n' + mathScript + '\n' + fs.readFileSync(editorScriptPath, 'utf8'))
+    const tableFormatScript = fs.readFileSync(path.join(__dirname, 'shared', 'table-format.js'), 'utf8');
+    const editorScript = (tableFormatScript + '\n' + fs.readFileSync(path.join(__dirname, 'shared', 'editor-layout.js'), 'utf8') + '\n' + fs.readFileSync(path.join(__dirname, 'shared', 'table-placement.js'), 'utf8') + '\n' + fs.readFileSync(path.join(__dirname, 'webview', 'table-toolbar.js'), 'utf8') + '\n' + mathScript + '\n' + fs.readFileSync(editorScriptPath, 'utf8'))
         .replace('__MATH_BACKSLASH__', String(safeConfig.mathBackslashDelimiters))
         .replace('__DEBUG_MODE__', String(safeConfig.enableDebugLogging ?? false))
         .replace('__I18N__', JSON.stringify(msg))
@@ -145,7 +149,7 @@ export function getWebviewContent(
         .replace('__CONTENT__', `'${base64Content}'`);
 
     return `<!DOCTYPE html>
-<html lang="en" data-theme="${safeConfig.theme}" data-editor-width-mode="${safeConfig.editorWidthMode}" data-editor-max-width="${safeConfig.editorMaxWidth}" data-editor-alignment="${safeConfig.editorAlignment}" data-editor-width-indicators="${safeConfig.editorWidthIndicators}" data-math-source-wrap="${safeConfig.mathSourceWrap}" data-math-source-position="${safeConfig.mathSourcePosition}" data-code-language-order="${safeConfig.codeLanguageOrder}" data-toolbar-mode="${safeConfig.toolbarMode}" data-table-toolbar-position="${safeConfig.tableToolbarPosition}">
+<html lang="en" data-theme="${safeConfig.theme}" data-editor-width-mode="${safeConfig.editorWidthMode}" data-editor-max-width="${safeConfig.editorMaxWidth}" data-editor-alignment="${safeConfig.editorAlignment}" data-editor-width-indicators="${safeConfig.editorWidthIndicators}" data-math-source-wrap="${safeConfig.mathSourceWrap}" data-math-source-position="${safeConfig.mathSourcePosition}" data-code-language-order="${safeConfig.codeLanguageOrder}" data-toolbar-mode="${safeConfig.toolbarMode}" data-table-toolbar-position="${safeConfig.tableToolbarPosition}" data-table-source-format="${safeConfig.tableSourceFormat}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -161,6 +165,7 @@ export function getWebviewContent(
 <body>
     ${generateEditorBodyHtml(msg, process.platform, { outlineOpen: safeConfig.outlineOpen, exportEnabled: true, settingsEnabled: true })}
 
+    <script src="${vendorUri('markdown-blocks.js')}"></script>
     <script src="${turndownUri}"></script>
     <script src="${turndownGfmUri}"></script>
     <script src="${mermaidUri}"></script>

@@ -54,10 +54,8 @@ test.describe('Round-trip変換', () => {
             return (window as any).__testApi.getMarkdown();
         });
         
-        // 出力: すべて - に正規化
-        expect(result).toContain('- アイテム1');
-        expect(result).toContain('- アイテム2');
-        expect(result).toContain('- アイテム3');
+        // Unchanged blocks retain the author's markers.
+        expect(result).toBe(markdown + '\n');
     });
 
     test('《太字》のRound-trip（正規化）', async ({ page }) => {
@@ -72,8 +70,7 @@ test.describe('Round-trip変換', () => {
             return (window as any).__testApi.getMarkdown();
         });
         
-        // 出力: ** に正規化
-        expect(result).toContain('**太字テキスト**');
+        expect(result).toBe(markdown + '\n');
     });
 
     test('《斜体》のRound-trip（正規化）', async ({ page }) => {
@@ -88,8 +85,7 @@ test.describe('Round-trip変換', () => {
             return (window as any).__testApi.getMarkdown();
         });
         
-        // 出力: * に正規化
-        expect(result).toContain('*斜体テキスト*');
+        expect(result).toBe(markdown + '\n');
     });
 
     test('《コードブロック》のRound-trip（言語タグ保持）', async ({ page }) => {
@@ -185,8 +181,7 @@ test.describe('Round-trip変換', () => {
             return (window as any).__testApi.getMarkdown();
         });
         
-        // 出力: --- に正規化
-        expect(result).toContain('---');
+        expect(result).toBe(markdown + '\n');
     });
 
     test('《リンク》のRound-trip', async ({ page }) => {
@@ -259,13 +254,17 @@ test.describe('ファイルベースRound-trip変換', () => {
         await page.waitForFunction(() => (window as any).__testApi?.ready);
     });
 
-    test('committed mixed document matches its independently authored canonical Markdown', async ({ page }) => {
+    test('committed mixed document retains its authored source', async ({ page }) => {
         const fixture = path.join(__dirname, '../fixtures/roundtrip');
         const inputMarkdown = fs.readFileSync(path.join(fixture, 'mixed-input.md'), 'utf8');
-        const expectedMarkdown = fs.readFileSync(path.join(fixture, 'mixed-expected.md'), 'utf8');
         await page.evaluate(md => (window as any).__testApi.setMarkdown(md), inputMarkdown);
         const result = await page.evaluate(() => (window as any).__testApi.getMarkdown());
-        expect(result).toBe(expectedMarkdown);
+        expect(result).toBe(inputMarkdown);
+        // Newly authored DOM has no captured source baseline. Keep the
+        // independent canonical-serializer check alongside source retention.
+        await page.evaluate(() => document.querySelectorAll('#editor > *').forEach(node => node.removeAttribute('data-md-canonical')));
+        const canonical = await page.evaluate(() => (window as any).__testApi.getMarkdown());
+        expect(canonical).toBe(fs.readFileSync(path.join(fixture, 'mixed-expected.md'), 'utf8'));
     });
 
     test('Round-tripを2回実行しても空行が増えない', async ({ page }) => {
