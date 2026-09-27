@@ -684,8 +684,10 @@
         var TYPING_DEBOUNCE = 500;
         var _isUndoRedo = false;
 
-        function capture() {
-            return { markdown: markdown, cursor: saveCursorState() };
+        function capture(current = false) {
+            // Input snapshots need the previous Markdown; undo/redo must retain
+            // the latest committed DOM even before its delayed sync runs.
+            return { markdown: current ? readCommittedMarkdown() : markdown, cursor: saveCursorState() };
         }
 
         function saveSnapshot() {
@@ -712,7 +714,7 @@
                 clearTimeout(syncTimeout);
                 syncTimeout = null;
                 pendingSync = false;
-                redoStack.push(capture());
+                redoStack.push(capture(true));
                 var state = undoStack.pop();
                 markdown = state.markdown;
                 renderFromMarkdown();
@@ -733,7 +735,7 @@
                 clearTimeout(syncTimeout);
                 syncTimeout = null;
                 pendingSync = false;
-                undoStack.push(capture());
+                undoStack.push(capture(true));
                 var state = redoStack.pop();
                 markdown = state.markdown;
                 renderFromMarkdown();
