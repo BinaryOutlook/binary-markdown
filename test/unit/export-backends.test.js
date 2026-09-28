@@ -17,6 +17,22 @@ async function temporary(t) {
 
 const { toolFixture: executable } = require('../utils/tool-fixture.cjs');
 
+async function waitForWorkerPid(pidFile, timeoutMs = 10000) {
+    const deadline = Date.now() + timeoutMs;
+    while (true) {
+        const receipt = await fs.readFile(pidFile, 'utf8').catch(error => {
+            if (error.code === 'ENOENT') return '';
+            throw error;
+        });
+        // The final newline is published after signal handling is ready. File
+        // existence alone can expose an empty or partially written PID.
+        const pid = Number(receipt);
+        if (/^[1-9]\d*\n$/.test(receipt) && Number.isSafeInteger(pid) && pid !== process.pid) return pid;
+        if (Date.now() >= deadline) throw new Error('Worker did not publish a complete positive child PID before the deadline.');
+        await new Promise(resolve => setTimeout(resolve, 10));
+    }
+}
+
 function operations(loadResource = async () => { throw new Error('Unavailable test image'); }) {
     const controller = new AbortController();
     const stages = [];
@@ -75,16 +91,32 @@ test('Pandoc discovery rejects an executable that lacks required conversion capa
     assert.match(result.error, /DOCX, and EPUB support/);
 });
 
+test('worker readiness rejects empty and partial PID receipts before accepting a complete child identity', async t => {
+    const directory = await temporary(t);
+    const pidFile = path.join(directory, 'pid');
+    for (const content of ['', '12', '0\n', '-1\n', `${process.pid}\n`, '9007199254740992\n']) {
+        await fs.writeFile(pidFile, content);
+        await assert.rejects(waitForWorkerPid(pidFile, 0), /complete positive child PID/);
+    }
+    const expectedPid = process.pid + 1;
+    await fs.writeFile(pidFile, `${expectedPid}\n`);
+    assert.equal(await waitForWorkerPid(pidFile, 0), expectedPid);
+});
+
+test('worker readiness times out when its receipt never arrives', async t => {
+    const directory = await temporary(t);
+    await assert.rejects(waitForWorkerPid(path.join(directory, 'missing'), 0), /complete positive child PID/);
+});
+
 test('process cancellation terminates an uncooperative worker and retains cancellation identity', async t => {
     const directory = await temporary(t);
     const pidFile = path.join(directory, 'pid');
     const file = await executable(directory, 'hang');
     const controller = new AbortController();
     const pending = runTool(file, [pidFile], { signal: controller.signal });
-    while (!(await fs.stat(pidFile).catch(() => undefined))) {
-        await new Promise(resolve => setTimeout(resolve, 10));
-    }
-    const pid = Number(await fs.readFile(pidFile, 'utf8'));
+    t.after(async () => { controller.abort(); await pending.catch(() => {}); });
+    const pid = await waitForWorkerPid(pidFile);
+    assert.doesNotThrow(() => process.kill(pid, 0), 'the identified worker is alive before cancellation');
     controller.abort();
     await assert.rejects(pending, { name: 'AbortError' });
     assert.throws(() => process.kill(pid, 0), { code: 'ESRCH' });

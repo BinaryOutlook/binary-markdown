@@ -126,7 +126,7 @@ jobs:
         if: runner.os != 'Windows'
         run: |
           mkdir -p ci-results
-          node --test test/unit/*.test.js | tee ci-results/unit-tests.txt
+          npm run test:unit | tee ci-results/unit-tests.txt
       # Git Bash enables backup/restore privileges for administrator tokens,
       # allowing its children to bypass the denied-directory test's ACL.
       - name: Units, real converters and archive parity (Windows)
@@ -134,7 +134,7 @@ jobs:
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force ci-results | Out-Null
-          node --test test/unit/*.test.js | Tee-Object -FilePath ci-results/unit-tests.txt
+          npm.cmd run test:unit | Tee-Object -FilePath ci-results/unit-tests.txt
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Installed VSIX user flows and artifact integrity
         if: runner.os != 'Windows'

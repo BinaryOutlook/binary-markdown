@@ -16,7 +16,7 @@ async function toolFixture(directory, kind, receipt = '', ast = null) {
     const programs = {
         echo: 'process.stdout.write(JSON.stringify(process.argv.slice(2)));',
         'incomplete-pandoc': `const argument = process.argv[2]; process.stdout.write(argument === '--version' ? 'pandoc 3.8.3\\n' : argument === '--list-input-formats' ? 'commonmark_x\\njson\\n' : 'html\\n');`,
-        hang: `if (process.argv[2]) require('node:fs').writeFileSync(process.argv[2], String(process.pid)); process.on('SIGTERM', () => {}); setInterval(() => {}, 1000);`,
+        hang: `process.on('SIGTERM', () => {}); if (process.argv[2]) require('node:fs').writeFileSync(process.argv[2], String(process.pid) + '\\n'); setInterval(() => {}, 1000);`,
         'fail-pandoc': `require('node:fs').writeFileSync(${JSON.stringify(receipt)}, process.cwd()); process.stderr.write('Controlled converter failure'); process.exitCode = 4;`,
         'controlled-pandoc': controlled + 'process.stdin.resume();setInterval(()=>{},1000)}',
         'controlled-pandoc-fail': controlled + "console.error('CONTROLLED-WRITER-FAILURE');process.exit(2)}",

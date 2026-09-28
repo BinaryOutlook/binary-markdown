@@ -16,10 +16,76 @@ async function selectTarget(editor, selector = '#editor > p') {
 }
 
 async function openInsert(editor) {
-    await editor.waitForFunction(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve(true)))));
-    if (!await editor.locator('#insertButton').isVisible()) await editor.locator('#toolbarMore').click();
-    await editor.locator('#insertButton').click();
-    await editor.waitForFunction(() => !document.getElementById('insertMenu').hidden);
+    try {
+        // The installed webview can stop delivering animation frames while CDP
+        // still evaluates DOM state. Poll an actionable control instead of
+        // awaiting a frame promise that prevents the watchdog from polling.
+        await editor.waitForFunction(() => {
+            const visible = node => node && !node.disabled && node.getClientRects().length > 0 &&
+                getComputedStyle(node).visibility !== 'hidden';
+            return Boolean(document.getElementById('insertMenu') &&
+                (visible(document.getElementById('insertButton')) || visible(document.getElementById('toolbarMore'))));
+        });
+        if (!await editor.locator('#insertButton').isVisible()) await editor.locator('#toolbarMore').click();
+        await editor.locator('#insertButton').click();
+        await editor.waitForFunction(() => {
+            const menu = document.getElementById('insertMenu');
+            return Boolean(menu && !menu.hidden && menu.getClientRects().length);
+        });
+    } catch (error) {
+        let state;
+        try {
+            state = await editor.evaluate(() => ({
+                readyState: document.readyState, visibility: document.visibilityState,
+                focused: document.hasFocus(), activeElement: document.activeElement?.id,
+                mode: document.documentElement.dataset.toolbarMode,
+                controls: ['insertButton', 'toolbarMore', 'insertMenu'].map(id => {
+                    const node = document.getElementById(id);
+                    return { id, present: Boolean(node), visible: Boolean(node?.getClientRects().length),
+                        disabled: node?.disabled, hidden: node?.hidden };
+                })
+            }));
+        } catch (inspectionError) { state = { inspectionError: inspectionError.message }; }
+        throw new Error('Insert-menu readiness failed: ' + error.message + '. Frame state: ' + JSON.stringify(state), { cause: error });
+    }
+}
+
+// Native Quick Input can remain interactive while pointer stability waits
+// receive no animation frames. Select an observed exact row through its normal
+// keyboard handler, with a bounded number of navigation actions.
+async function selectQuickInputItem(page, label, until) {
+    const inspect = () => page.evaluate(() => {
+        const widget = [...document.querySelectorAll('.quick-input-widget')].find(node => node.getClientRects().length);
+        if (!widget) return { visible: false, rows: [], focusedId: null };
+        const rows = [...widget.querySelectorAll('.monaco-list-row')].filter(node => node.getClientRects().length);
+        const activeIds = [...widget.querySelectorAll('[aria-activedescendant]')].map(node => node.getAttribute('aria-activedescendant'));
+        const focused = rows.find(node => node.classList.contains('focused') || activeIds.includes(node.id));
+        return { visible: true, rows: rows.map(node => ({ id: node.id, label: node.getAttribute('aria-label') })), focusedId: focused?.id || null };
+    });
+    try {
+        let state = await until(async () => {
+            const value = await inspect();
+            return value.rows.some(row => row.label === label) ? value : undefined;
+        }, 'exact Quick Input row: ' + label, inspect);
+        await page.locator('.quick-input-widget:visible input:not([type="checkbox"]):visible').first().focus();
+        const navigationLimit = state.rows.length + 1;
+        for (let step = 0; step < navigationLimit; step++) {
+            const target = state.rows.find(row => row.label === label);
+            if (!target) throw new Error('The requested Quick Input row disappeared');
+            if (state.focusedId === target.id) { await page.keyboard.press('Enter'); return; }
+            const previous = state.focusedId;
+            await page.keyboard.press('ArrowDown');
+            state = await until(async () => {
+                const value = await inspect();
+                return value.focusedId && value.focusedId !== previous ? value : undefined;
+            }, 'Quick Input keyboard focus advances', inspect);
+        }
+        throw new Error('Quick Input navigation did not reach the requested row');
+    } catch (error) {
+        let state;
+        try { state = await inspect(); } catch (inspectionError) { state = { inspectionError: inspectionError.message }; }
+        throw new Error('Quick Input selection failed: ' + error.message + '. Picker state: ' + JSON.stringify(state), { cause: error });
+    }
 }
 
 async function insertMenuChecks({ editor, keyboard, setMode, dialog, save, record, capture = async () => {} }) {
@@ -98,4 +164,4 @@ async function insertMenuChecks({ editor, keyboard, setMode, dialog, save, recor
     return before;
 }
 
-module.exports = { source, selectTarget, openInsert, insertMenuChecks };
+module.exports = { source, selectTarget, openInsert, selectQuickInputItem, insertMenuChecks };

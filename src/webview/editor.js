@@ -684,8 +684,10 @@
         var TYPING_DEBOUNCE = 500;
         var _isUndoRedo = false;
 
-        function capture() {
-            return { markdown: markdown, cursor: saveCursorState() };
+        function capture(current = false) {
+            // Input snapshots need the previous Markdown; undo/redo must retain
+            // the latest committed DOM even before its delayed sync runs.
+            return { markdown: current ? readCommittedMarkdown() : markdown, cursor: saveCursorState() };
         }
 
         function saveSnapshot() {
@@ -712,7 +714,7 @@
                 clearTimeout(syncTimeout);
                 syncTimeout = null;
                 pendingSync = false;
-                redoStack.push(capture());
+                redoStack.push(capture(true));
                 var state = undoStack.pop();
                 markdown = state.markdown;
                 renderFromMarkdown();
@@ -733,7 +735,7 @@
                 clearTimeout(syncTimeout);
                 syncTimeout = null;
                 pendingSync = false;
-                undoStack.push(capture());
+                undoStack.push(capture(true));
                 var state = redoStack.pop();
                 markdown = state.markdown;
                 renderFromMarkdown();
@@ -1709,9 +1711,6 @@
         }
         let html = escapeHtml(text);
         
-        // Restore <br> tags that were escaped (used in table cells for line breaks)
-        html = html.replace(/&lt;br\s*\/?&gt;/gi, prose ? '<br data-md-hard-break="html">' : '<br>');
-        
         // Use placeholders to protect content from further processing
         const placeholders = [];
         let placeholderIndex = 0;
@@ -1719,6 +1718,9 @@
         // IMPORTANT: Process inline code FIRST to protect code content from other formatting
         // Code spans should not have their contents processed as markdown
         html = parseInlineCode(html, placeholders, () => placeholderIndex++);
+
+        // Only prose/table breaks become HTML; code payloads are already protected.
+        html = html.replace(/&lt;br\s*\/?&gt;/gi, prose ? '<br data-md-hard-break="html">' : '<br>');
         
         // IMPORTANT: Process images and links SECOND to protect their paths from inline formatting
         // Images MUST be processed BEFORE links (otherwise link regex matches the [alt](src) part)
@@ -1756,7 +1758,7 @@
 
         // Restore placeholders with actual HTML
         for (const { placeholder, html: replacement } of placeholders) {
-            html = html.replace(placeholder, replacement);
+            html = html.replace(placeholder, () => replacement);
         }
         equations.forEach((equation, i) => {
             html = html.replace(mathMarker + i + '\x00', () => inlineMathHtml(equation));
@@ -1820,9 +1822,9 @@
                         
                         if (closeLen === openLen) {
                             // Found matching closing sequence
-                            let content = text.substring(contentStart, closeStart);
-                            // Strip one leading and one trailing space if both exist (CommonMark rule)
-                            if (content.startsWith(' ') && content.endsWith(' ') && content.length > 1) {
+                            let content = text.substring(contentStart, closeStart).replace(/\r\n?|\n/g, ' ');
+                            // Strip one padding space at each edge, except for all-space payloads.
+                            if (content.startsWith(' ') && content.endsWith(' ') && /[^ ]/.test(content)) {
                                 content = content.slice(1, -1);
                             }
                             // Use placeholder to protect code content from further processing
@@ -2670,7 +2672,7 @@
         }
         if (block.type === 'bullet_list' || block.type === 'ordered_list') {
             const tag = block.type === 'ordered_list' ? 'ol' : 'ul';
-            const start = block.attrs.start ? ' start="' + Number(block.attrs.start) + '"' : '';
+            const start = block.attrs.start !== undefined ? ' start="' + Number(block.attrs.start) + '"' : '';
             const loose = block.children.some(item => item.children.some(child => child.type === 'paragraph' && !child.hidden));
             return '<' + tag + start + (loose ? ' data-md-loose="true"' : '') + '>' + children() + '</' + tag + '>';
         }
@@ -6018,8 +6020,9 @@
         }
         
         if (maxBackticks === 0) {
-            // No backticks in content, use single backticks
-            return '`' + content + '`';
+            // Protect meaningful edge spaces from code-span padding normalization.
+            const needsPadding = content.startsWith(' ') && content.endsWith(' ') && /[^ ]/.test(content);
+            return '`' + (needsPadding ? ' ' + content + ' ' : content) + '`';
         }
         
         // Use at least 2 more backticks than the longest sequence found
@@ -6238,17 +6241,19 @@
             if (!block) { inline.appendChild(child.cloneNode(true)); continue; }
             flushInline();
             if (child.tagName === 'UL' || child.tagName === 'OL') {
-                segments.push({ text: mdProcessNode(child, continuation).replace(/\n$/, ''), kind: 'list' });
+                // A non-1 ordered marker cannot interrupt the preceding paragraph.
+                const needsBlankLine = child.tagName === 'OL' && child.hasAttribute('start') && Number(child.getAttribute('start')) !== 1;
+                segments.push({ text: mdProcessNode(child, continuation).replace(/\n$/, ''), kind: 'list', needsBlankLine });
             } else {
                 segments.push({ text: mdProcessNode(child).replace(/\n$/, ''), kind: 'block' });
             }
         }
         flushInline();
         const first = segments[0]?.kind !== 'list' ? segments.shift()?.text || '' : '';
-        const prefix = checkbox ? '- [' + (checkbox.checked ? 'x' : ' ') + '] ' : marker + ' ';
+        const prefix = marker + ' ' + (checkbox ? '[' + (checkbox.checked ? 'x' : ' ') + '] ' : '');
         let result = indent + prefix + first.split('\n').join('\n' + continuation);
         for (const segment of segments) {
-            if (segment.kind === 'list') result += '\n' + segment.text;
+            if (segment.kind === 'list') result += (segment.needsBlankLine ? '\n\n' : '\n') + segment.text;
             else result += '\n\n' + continuation + segment.text.split('\n').join('\n' + continuation);
         }
         return result + '\n';

@@ -16,7 +16,6 @@ exports.tableSourceFormatCase = async function tableSourceFormatCase(h, owner, r
     const documentState = async () => (await h.driver({ action: 'inspect' })).documents.find(document => path.basename(document.path) === file);
     let connection;
     try {
-        await h.driver({ action: 'close' });
         fs.writeFileSync(filePath, source);
         for (const scope of ['workspace', 'global']) await set(scope, null);
         connection = await h.open(file);

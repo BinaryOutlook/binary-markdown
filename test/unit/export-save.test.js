@@ -43,3 +43,44 @@ test('failed apply prevents save success and a successful retry recovers', async
     await queue.flush();
     queue.dispose();
 });
+
+
+test('an expired queued save snapshot is skipped while its flush resolves', async () => {
+    let release, current = true;
+    const gate = new Promise(resolve => { release = resolve; });
+    const applied = [];
+    const queue = new EditQueue(async content => {
+        if (content === 'ordinary edit') await gate;
+        applied.push(content);
+    });
+    queue.schedule('ordinary edit');
+    const earlier = queue.flush();
+    queue.schedule('expired save snapshot', () => current);
+    const save = queue.flush();
+    await Promise.resolve();
+    current = false;
+    release();
+    await Promise.all([earlier, save]);
+    assert.deepEqual(applied, ['ordinary edit']);
+    queue.dispose();
+});
+
+test('an ordinary replacement edit does not inherit a cancelled save predicate', async () => {
+    const applied = [];
+    const queue = new EditQueue(async content => { applied.push(content); }, 1000);
+    queue.schedule('same content', () => false);
+    queue.schedule('same content');
+    await queue.flush();
+    assert.deepEqual(applied, ['same content']);
+    queue.dispose();
+});
+
+
+test('skipping an expired snapshot does not hide an earlier apply failure', async () => {
+    const queue = new EditQueue(async () => { throw new Error('ordinary edit refused'); });
+    queue.schedule('ordinary edit');
+    await assert.rejects(queue.flush(), /ordinary edit refused/);
+    queue.schedule('expired snapshot', () => false);
+    await assert.rejects(queue.flush(), /ordinary edit refused/);
+    queue.dispose();
+});

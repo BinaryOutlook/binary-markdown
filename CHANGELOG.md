@@ -2,21 +2,38 @@
 
 ## Unreleased
 
-The next release version has not been selected. Development snapshots retain package version `0.4.0` and are identified by their source commit and checksum.
+No additional changes.
+
+## 0.4.1
+
+Improve paragraph and table source preservation, ordered lists, inline code, and Save/Undo reliability. See the [version notes](release-notes/0.4.1.md) for details and the [pre-release validation record](reports/validation/2026-09-29-0.4.1-readiness.md) for its recorded evidence. [GitHub Releases](https://github.com/BinaryOutlook/binary-markdown/releases) identifies published packages and their final validation.
 
 ### Changed
 
 - Preserve unchanged tables' source formatting when editing elsewhere. New or modified tables use aligned Markdown columns by default, with Compact (Legacy) available through the [table source format setting](docs/editor-guide.md#table-source-format).
 - Render semantic Markdown blocks while retaining unchanged source and separators. In ordinary prose, Enter creates a paragraph and Shift+Enter creates a hard line break.
+- Align installation, settings, export help, testing and release guidance with the 0.4.1 scope, current command labels and known limitations.
 
 ### Fixed
 
 - Blank separators and ordinary source wraps no longer create extra visible paragraphs. Paragraph boundaries, explicit hard breaks and loose-list continuation survive saving and reopening.
 - Explicit table alignment applies to headers and body cells, including left-aligned and header-only tables after editing in either source format.
+- Retain ordered-list starts, including zero, and ordered checklist markers after visual edits, including mixed and nested lists.
+- Preserve literal `<br>`, meaningful padding, space-only spans and embedded backticks in inline code, including table cells.
+- Native Save writes the latest captured editor snapshot even when an earlier queued edit changes the host document during save preparation.
+- Defer file-watcher reloads during saving and whenever newer edits make the saved revision uncertain, protecting local text from partial or older disk contents.
+- Immediate Undo followed by Redo retains the latest typed changes before background synchronization finishes.
+- Run every intended unit suite through the same shell-independent entry point locally and in CI.
+- Bound native Insert-menu readiness checks and preserve unrelated dirty editors when cleaning up owned test fixtures.
+- Parse documentation links and anchors structurally, including reference links, balanced destinations, Setext headings and HTML fragments; make checker coverage explicit.
+
+### Known limitations
+
+External programs can still overwrite unsaved local edits outside the protected own-save path ([#81](https://github.com/BinaryOutlook/binary-markdown/issues/81)). Broader parser and typography work and export-reader acceptance remain open. See the [0.4.1 limitations](release-notes/0.4.1.md#known-limitations); passing this correction batch does not resolve every outstanding issue.
 
 ## 0.4.0 — 2026-09-23
 
-See the [published release](https://github.com/BinaryOutlook/binary-markdown/releases/tag/v0.4.0) and [release-preparation notes](release-notes/0.4.0.md). The earlier [0.4.0 RC1](release-notes/0.4.0-rc.1.md) remains a historical candidate record.
+See the [published release](https://github.com/BinaryOutlook/binary-markdown/releases/tag/v0.4.0) and [version notes](release-notes/0.4.0.md). The earlier [0.4.0 RC1](release-notes/0.4.0-rc.1.md) remains a historical candidate record.
 
 ### Added
 

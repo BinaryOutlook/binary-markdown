@@ -90,6 +90,7 @@ function initialize(settings) {
     fs.copyFileSync(path.join(__dirname, 'export-driver.cjs'), path.join(owner.driver, 'main.cjs'));
     fs.copyFileSync(path.join(__dirname, 'directory-identity.cjs'), path.join(owner.driver, 'directory-identity.cjs'));
     fs.copyFileSync(path.join(__dirname, 'replace-file.cjs'), path.join(owner.driver, 'replace-file.cjs'));
+    fs.copyFileSync(path.join(__dirname, 'close-fixture.cjs'), path.join(owner.driver, 'close-fixture.cjs'));
     fs.writeFileSync(path.join(owner.driver, 'package.json'), JSON.stringify({
         name: 'binary-export-test-driver', publisher: 'local', version: '0.0.1', engines: { vscode: '^1.85.0' },
         activationEvents: ['workspaceContains:' + sentinelName], main: 'main.cjs'
@@ -327,7 +328,7 @@ async function run(settings, owner) {
         fs.writeFileSync(report, JSON.stringify({ harness: harnessIdentity(), host: receipt(owner), packageSha256: hash(fs.readFileSync(settings.package)), receipts }, null, 2));
         console.log(name, JSON.stringify(details));
     };
-    const available = ['identity', 'filesystem', 'formats', 'saves', 'edges', 'ui', 'equations', 'pdf-background', 'selection', 'immutable', 'offline', 'document-aux', 'links', 'codeblocks', 'table-placement', 'table-source-format', 'table-content', 'table-row', 'text-toolbar', 'insert-menu', 'underline', 'underline-exports', 'editor-width', 'editor-alignment', 'width-indicators', 'language-picker', 'language-order', 'equation-source-position', 'equation-source-wrap', 'code-label-position', 'code-line-count', 'pdf-code-numbers', 'docx-code-numbers', 'blockquotes', 'paragraph-semantics'];
+    const available = ['identity', 'filesystem', 'formats', 'saves', 'save-correctness', 'list-code-preservation', 'edges', 'ui', 'equations', 'pdf-background', 'selection', 'immutable', 'offline', 'document-aux', 'links', 'codeblocks', 'table-placement', 'table-source-format', 'table-content', 'table-row', 'text-toolbar', 'insert-menu', 'underline', 'underline-exports', 'editor-width', 'editor-alignment', 'width-indicators', 'language-picker', 'language-order', 'equation-source-position', 'equation-source-wrap', 'code-label-position', 'code-line-count', 'pdf-code-numbers', 'docx-code-numbers', 'blockquotes', 'paragraph-semantics'];
     const groups = settings.suite === 'all' ? available : [settings.suite];
     assert.ok(groups.every(value => available.includes(value)), 'Suite must be all, ' + available.join(', '));
     const htmlExports = [];
@@ -507,6 +508,8 @@ async function run(settings, owner) {
         if (groups.includes('table-content')) await tableContentCase(h, owner, record);
         if (groups.includes('table-row')) await tableRowCase(h, owner, record);
         if (groups.includes('insert-menu')) await insertMenuCase(h, owner, record);
+        if (groups.includes('save-correctness')) await require('./save-correctness.cjs').saveCorrectnessCase(h, owner, record);
+        if (groups.includes('list-code-preservation')) await require('./list-code-preservation.cjs').listCodePreservationCase(h, owner, record);
         if (groups.includes('width-indicators')) await widthIndicatorsCase(h, owner, record);
         if (groups.includes('language-picker')) await languagePickerCase(h, owner, record);
         if (groups.includes('equation-source-wrap')) await equationWrapCase(h, owner, record);
@@ -603,7 +606,6 @@ async function codeblockCases(h, owner, record) {
     const quoted = '> ```\n> alpha\n>     beta  \n> \n> ```';
     const source = '   ```javascript\n   const value = 1;\n   ```\n\n' + quoted + '\n\nAfter\n';
     const filePath = path.join(owner.workspace, file);
-    await h.driver({ action: 'close' });
     fs.writeFileSync(filePath, source);
     let connection = await h.open(file);
     try {
@@ -653,7 +655,6 @@ async function textToolbarCase(h, owner, record) {
     const { toolbarGeometry } = require('./text-toolbar.cjs');
     const file = 'text-toolbar.md', source = 'Paragraph target.\n';
     const previous = (await h.driver({ action: 'inspect' })).toolbarModeScopes;
-    await h.driver({ action: 'close' });
     fs.writeFileSync(path.join(owner.workspace, file), source);
     let connection;
     try {
@@ -815,7 +816,7 @@ async function widthIndicatorsCase(h, owner, record) {
     const { installedEditor } = require('./table-toolbar-overflow.cjs');
     const previous = await h.driver({ action: 'inspect' });
     const file = 'width-indicators.md', filePath = path.join(owner.workspace, file);
-    await h.driver({ action: 'close' }); fs.writeFileSync(filePath, source);
+    fs.writeFileSync(filePath, source);
     let connection = await h.open(file);
     try {
         for (const scope of [undefined, 'workspace']) {
@@ -863,7 +864,7 @@ async function editorAlignmentCase(h, owner, record) {
     const { installedEditor } = require('./table-toolbar-overflow.cjs');
     const previous = await h.driver({ action: 'inspect' });
     const file = 'editor-alignment.md', filePath = path.join(owner.workspace, file);
-    await h.driver({ action: 'close' }); fs.writeFileSync(filePath, source);
+    fs.writeFileSync(filePath, source);
     let connection = await h.open(file);
     try {
         for (const scope of [undefined, 'workspace']) {
@@ -909,7 +910,7 @@ async function editorWidthCase(h, owner, record) {
     const { installedEditor } = require('./table-toolbar-overflow.cjs');
     const previous = await h.driver({ action: 'inspect' });
     const file = 'editor-width.md', filePath = path.join(owner.workspace, file);
-    await h.driver({ action: 'close' }); fs.writeFileSync(filePath, source);
+    fs.writeFileSync(filePath, source);
     let connection = await h.open(file);
     try {
         for (const scope of [undefined, 'workspace']) {
@@ -1047,7 +1048,7 @@ async function languageOrderCase(h, owner, record) {
     const { installedEditor } = require('./table-toolbar-overflow.cjs');
     const previous = (await h.driver({ action: 'inspect' })).languageOrderScopes;
     const file = 'language-order.md', filePath = path.join(owner.workspace, file);
-    await h.driver({ action: 'close' }); fs.writeFileSync(filePath, source);
+    fs.writeFileSync(filePath, source);
     let connection;
     try {
         await h.driver({ action: 'config', key: 'codeLanguageOrder', value: null, scope: 'workspace' });
@@ -1089,7 +1090,7 @@ async function languagePickerCase(h, owner, record) {
     const { installedEditor } = require('./table-toolbar-overflow.cjs');
     const previousLanguage = (await h.driver({ action: 'inspect' })).appearance.language;
     const file = 'languages.md', filePath = path.join(owner.workspace, file);
-    await h.driver({ action: 'close' }); fs.writeFileSync(filePath, source);
+    fs.writeFileSync(filePath, source);
     let connection = await h.open(file);
     try {
         let changed;
@@ -1134,7 +1135,7 @@ async function underlineCase(h, owner, record) {
     const { installedEditor } = require('./table-toolbar-overflow.cjs');
     const previous = await h.driver({ action: 'inspect' });
     const file = 'underline.md', filePath = path.join(owner.workspace, file);
-    await h.driver({ action: 'close' }); fs.writeFileSync(filePath, source);
+    fs.writeFileSync(filePath, source);
     await h.driver({ action: 'config', key: 'toolbarMode', scope: 'workspace', value: 'full' });
     let connection = await h.open(file);
     try {
@@ -1275,11 +1276,11 @@ async function underlineExportCase(h, owner, record) {
 }
 
 async function insertMenuCase(h, owner, record) {
-    const { source, insertMenuChecks, selectTarget, openInsert } = require('./insert-menu.cjs');
+    const { source, insertMenuChecks, selectTarget, openInsert, selectQuickInputItem } = require('./insert-menu.cjs');
     const { installedEditor } = require('./table-toolbar-overflow.cjs');
     const previous = await h.driver({ action: 'inspect' });
     const file = 'insert-menu.md', filePath = path.join(owner.workspace, file);
-    await h.driver({ action: 'close' }); fs.writeFileSync(filePath, source);
+    fs.writeFileSync(filePath, source);
     await h.driver({ action: 'simpleFileDialog', value: true });
     let connection = await h.open(file);
     try {
@@ -1310,9 +1311,7 @@ async function insertMenuCase(h, owner, record) {
                             // directory listing until the path is accepted.
                             await input().fill(path.join(owner.workspace, 'assets') + path.sep);
                             await page.keyboard.press('Enter');
-                            const image = page.locator('.quick-input-widget:visible .monaco-list-row').filter({ hasText: imageName });
-                            await image.waitFor({ state: 'visible' });
-                            await image.click();
+                            await selectQuickInputItem(page, imageName, h.until);
                         }
                     }
                     await page.locator('.quick-input-widget:visible').waitFor({ state: 'hidden' });
@@ -1351,7 +1350,7 @@ async function tableRowCase(h, owner, record) {
     const { installedEditor } = require('./table-toolbar-overflow.cjs');
     const previous = await h.driver({ action: 'inspect' });
     const file = 'table-row.md', filePath = path.join(owner.workspace, file);
-    await h.driver({ action: 'close' }); fs.writeFileSync(filePath, source);
+    fs.writeFileSync(filePath, source);
     let connection = await h.open(file);
     try {
         await h.workbench(async page => {
@@ -1393,7 +1392,6 @@ async function tableContentCase(h, owner, record) {
     const { source, tableCells, tableContentChecks } = require('./table-content-overflow.cjs');
     const { installedEditor } = require('./table-toolbar-overflow.cjs');
     const file = 'wide-table.md', filePath = path.join(owner.workspace, file);
-    await h.driver({ action: 'close' });
     fs.writeFileSync(filePath, source);
     let connection = await h.open(file);
     try {
@@ -1452,7 +1450,6 @@ async function equationCases(h, owner, record) {
         'EQUATION-LAST-MARKER', ''
     ].join('\n');
     const filePath = path.join(owner.workspace, file);
-    await h.driver({ action: 'close' });
     fs.writeFileSync(filePath, source);
     let connection = await h.open(file);
     try {

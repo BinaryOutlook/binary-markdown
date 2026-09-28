@@ -18,7 +18,7 @@ class ToolWorker {
                 Console.Write(argument == "--version" ? "pandoc 3.8.3\n" : argument == "--list-input-formats" ? "commonmark_x\njson\n" : "html\n");
                 return 0;
             case "hang":
-                if (args.Length > 0) File.WriteAllText(args[0], Process.GetCurrentProcess().Id.ToString());
+                if (args.Length > 0) File.WriteAllText(args[0], Process.GetCurrentProcess().Id.ToString() + "\n");
                 Thread.Sleep(Timeout.Infinite);
                 return 0;
             case "fail-pandoc":

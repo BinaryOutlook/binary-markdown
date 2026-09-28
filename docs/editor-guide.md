@@ -461,15 +461,15 @@ Available in Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`):
 | --- | --- |
 | `Binary Markdown: Open with Binary Markdown Editor` | Open markdown file in WYSIWYG editor |
 | `Binary Markdown: Insert Table` | Insert a new table |
-| `Binary Markdown: Insert TOC` | Insert table of contents |
-| `Binary Markdown: Open as Text` | Open in standard text editor |
+| `Binary Markdown: Insert Table of Contents` | Insert table of contents |
+| `Binary Markdown: Open as Text Editor` | Open in standard text editor |
 | `Binary Markdown: Compare as Text` | Compare with text version |
 | `Binary Markdown: Toggle Source Mode` | Switch between WYSIWYG and source mode |
 | `Binary Markdown: Undo` | Undo last edit |
 | `Binary Markdown: Redo` | Redo last undone edit |
 | `Binary Markdown: Copy Build Information` | Copy source and host identity for a reproducible bug report |
 
-Export commands are listed in [export help](../media/export-help.md#export-a-saved-document). Command labels follow the configured interface language.
+Export commands are listed in [export help](../media/export-help.md#export-a-saved-document). This table uses the English Command Palette labels. Commands with translations, including export and build information, follow VS Code's display language; the editor language setting controls the editor interface separately.
 
 ---
 
@@ -477,10 +477,10 @@ Export commands are listed in [export help](../media/export-help.md#export-a-sav
 
 ## External file changes
 
-When another tool (e.g., AI coding assistants like Claude Code, Cursor, etc.) modifies the same markdown file while you have it open in Binary Markdown:
+Binary Markdown supports reloading external updates to a clean file. If another editor or tool writes the same file while you have unsaved changes, those writes can replace your local edits. Finish and save your edits before letting another tool modify that file.
 
-- **Block-level DOM diff**: Only changed blocks are updated — your cursor position and in-progress edits are preserved.
-- **Toast notification**: A notification appears allowing you to review and accept or dismiss external changes.
-- **Unsaved changes warning**: If you have unsaved edits, a confirmation dialog prevents accidental overwrites.
+File-change notifications received during a save are reread after the saved revision is confirmed. If the document changes while saving, reload remains deferred until a later save completes without intervening changes, or the editor is closed and reopened. The same deferral applies when a save fails, because the disk may contain only part of the document. Cancelling an export does not cancel that disk write or release this protection.
+
+A review, accept or dismiss flow and an overwrite confirmation for conflicting changes are not yet implemented. This limitation is tracked in [issue #81](https://github.com/BinaryOutlook/binary-markdown/issues/81).
 
 ---

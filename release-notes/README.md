@@ -2,7 +2,8 @@
 
 Version-specific notes are source material for release preparation. The [published release page](https://github.com/BinaryOutlook/binary-markdown/releases) identifies actual publication, source and downloadable artifacts; a file here does not publish a release.
 
-- [0.4.0](0.4.0.md): unreleased editor/export integration; features, changed defaults, and remaining acceptance work.
+- [0.4.1](0.4.1.md): paragraph/table source preservation, ordered-list and inline-code fixes, reliable Save/Undo, and updated documentation with known limitations.
+- [0.4.0](0.4.0.md): published on 2026-09-23; editor/export integration, changed defaults, and disclosed acceptance limits.
 - [0.4.0 RC1](0.4.0-rc.1.md): the earlier human-review candidate record; numeric package version `0.4.0`.
 - [0.3.0](0.3.0.md): code-block preservation, configurable table controls, outline tracking, local links, and Windows export-tool handling.
 - [0.2.1](0.2.1.md): equation editing, YAML/TOC support, export presentation, Windows validation and documentation cleanup.

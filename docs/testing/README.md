@@ -2,11 +2,21 @@
 
 Use the checkout's [build instructions](../building.md) and [contributor checks](../../CONTRIBUTING.md#checks) before selecting tests for the behavior you changed. [Export verification](../export-verification.md) explains focused checks, real converter tests and installed-extension validation.
 
+## Complete unit suite
+
+From the repository root, run `npm run compile` and `npm run test:unit`. The unit entry point discovers every direct `test/unit/*.test.js` file with Node, so a new suite is included without updating a list or depending on shell wildcard expansion. The same entry point runs in every CI validation lane. Focused `test:*` commands remain available for individual subsystems.
+
+`npm test` compiles and lints first, then runs the complete unit suite and the full browser suite. Ordinary local unit runs explicitly skip real-converter and package checks when their opt-in prerequisites are absent; they do not establish candidate-level validation. Follow the [candidate instructions](../building.md#validate-a-candidate) to enable those checks and identify the tested VSIX.
+
 ## Paragraph and table source regressions
 
 From the repository root, run `npm run compile`, `npm run test:markdown-blocks`, `npm run test:table-format`, and `npm run test:build`, then `CI=1 npx playwright test test/specs/paragraph-semantics.spec.ts test/specs/table-source-format.spec.ts --retries=0`. These suites check semantic blocks, all seven themes, soft source wraps, hard breaks, separator preservation, Enter/Backspace, undo/redo, source switching, copy/paste, list continuation, table headers and export preparation. Combined cases edit tables among wrapped prose, hard breaks and unusual separators, and verify exact saved source after a format change. Run the complete browser suite after changes to the shared parser or serializer.
 
 For actual file persistence, build and install a new development VSIX in the [isolated native harness](../../test/native/export-smoke.md), then run its `paragraph-semantics` and `table-source-format` suites against that same package. They measure the installed view, type both kinds of break, save through VS Code, reopen files, check exact source bytes, exercise both table layouts and setting precedence, and export HTML. Both suites also run with `--suite all`. A browser pass alone does not establish installed-host saving or another operating system's behavior.
+
+## Save, list and inline-code regressions
+
+The installed harness includes `save-correctness` and `list-code-preservation` in `--suite all`. Run them against a newly packaged and installed VSIX using the [focused procedure](../../test/native/export-smoke.md#save-list-and-inline-code-preservation). The save check controls delivery of actual editor messages during native Save and compares the captured snapshot, host buffer, disk and reopened Source view. The preservation check covers ordered starts and checklists, literal and padded inline code, Undo/Redo, Source mode and save/reopen. The guide describes their controlled inputs and coverage boundaries; retain results for the exact package tested.
 
 ## Required candidate validation
 

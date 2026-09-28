@@ -19,6 +19,7 @@ Compilation builds TypeScript and translations, copies webview/shared modules, a
 
 ```sh
 npm run lint
+npm run test:unit
 npm run test:outline-state
 npm run test:identity
 npm run test:build-info
@@ -26,6 +27,8 @@ npm run test:release
 npm run test:localization
 npm run test:e2e -- test/specs/codeblock-copy.spec.ts test/specs/sidebar-state.spec.ts test/specs/copy-paste.spec.ts
 ```
+
+`npm run test:unit` discovers all `test/unit/*.test.js` files without shell wildcard expansion; compile first when running it directly. The additional focused commands above are useful when selecting checks for a small change. See the [testing guide](docs/testing/README.md#complete-unit-suite) for converter/package prerequisites and the CI entry point.
 
 The browser tests need Playwright Chromium. On a new machine, install it with `npx playwright install chromium`. `npm test` runs compilation, lint, unit checks, and the full browser suite. Report failing tests and distinguish existing failures from changes introduced by your patch.
 
