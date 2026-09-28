@@ -64,7 +64,7 @@ The new unset default moves visible labels to top-left for both new and existing
 
 DOCX code remains editable and uses a light background, with a border in the default unnumbered layout; PDF code and labels remain selectable text. Common language aliases use readable names; unknown names remain literal text, and unlabeled blocks receive no invented label. PDF tabs use the export appearance. HTML, EPUB and inline code keep their existing behavior.
 
-Long code blocks can span pages. A top label stays with the start of its block, and a bottom label stays with its end; labels are not repeated on continuation pages. In DOCX, keeping a footer attached can move a long block to a fresh page and leave space on the previous page. Reader-specific pagination and final visual appearance require inspection in your target reader.
+Long code blocks can span pages. A top label stays with the start of its block, and a bottom label stays with its end; labels are not repeated on continuation pages. In DOCX, keeping a footer attached can move a long block to a fresh page and leave space on the previous page. Reader-specific pagination and final visual appearance require inspection in your target reader. A long custom language name extended below its bottom-left tab in Word 16.113.1 during the [0.4.1 reader review](../reports/validation/2026-09-29-0.4.1-readiness.md#reader-observations). This remains open under [#35](https://github.com/BinaryOutlook/binary-markdown/issues/35). Inspect long labels before sharing a DOCX, or disable language tabs with `binary-markdown.export.showCodeLanguage`.
 
 ## Total code-line counts
 
@@ -98,7 +98,7 @@ The editor's paired, attribute-free `<u>text</u>` representation is supported in
 
 HTML/PDF retain the editor's existing visible backslashes in escaped tag examples such as `\<u>text\</u>`. DOCX/EPUB remove those Markdown escapes while keeping the tags literal. Use code spans or fences when you need consistent literal examples across formats.
 
-Conversion checks verify structure and source preservation. Appearance, interactive editing, copying, and accessibility can vary by reader; inspect the exported document in the reader you use. In particular, converter/XML checks alone do not establish Microsoft Word or a dedicated EPUB reader's behavior.
+Conversion checks verify structure and source preservation. Appearance, interactive editing, copying, and accessibility can vary by reader; inspect the exported document in the reader you use. The [0.4.1 reader observations](../reports/validation/2026-09-29-0.4.1-readiness.md#reader-observations) record passing visual underline cases in Word and Preview. EPUB visual acceptance remains unverified because Books displayed blank pages during inspection; this does not establish an EPUB conversion defect. The HTML reader review and the remaining editing, copying and accessibility checks are also incomplete. Converter/XML checks alone do not establish those results.
 
 ## Output and progress
 

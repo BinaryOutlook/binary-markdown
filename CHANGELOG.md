@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-The next release version has not been selected. Development snapshots retain package version `0.4.0` and are identified by their source commit and checksum.
+The selected release target is **0.4.1**. Its correctness work is ready for final release review; see the [draft release notes](release-notes/0.4.1.md) and [validation and issue-closure recommendations](reports/validation/2026-09-29-0.4.1-readiness.md). No 0.4.1 package or release has been published. The validated development snapshot retains package version `0.4.0`; its source commit and checksum distinguish it from the published 0.4.0 release.
 
 ### Changed
 
@@ -19,9 +19,20 @@ The next release version has not been selected. Development snapshots retain pac
 - Defer file-watcher reloads during saving and whenever newer edits make the saved revision uncertain, protecting local text from partial or older disk contents.
 - Immediate Undo followed by Redo retains the latest typed changes before background synchronization finishes.
 
+### Validation and documentation
+
+- Run every intended unit suite through the same shell-independent entry point locally and in CI.
+- Bound native Insert-menu readiness checks and preserve unrelated dirty editors when cleaning up owned test fixtures.
+- Parse documentation links and anchors structurally, including reference links, balanced destinations, Setext headings and HTML fragments; make checker coverage explicit.
+- Align release status, feature availability and command labels across the maintained guides. Record the 0.4.1 scope, human and automated evidence, and remaining issue acceptance separately.
+
+### Known limitations
+
+External programs can still overwrite unsaved local edits outside the protected own-save path ([#81](https://github.com/BinaryOutlook/binary-markdown/issues/81)). Broader parser and typography work and export-reader acceptance remain open. See the [0.4.1 limitations](release-notes/0.4.1.md#known-limitations); passing this correction batch does not resolve every outstanding issue.
+
 ## 0.4.0 — 2026-09-23
 
-See the [published release](https://github.com/BinaryOutlook/binary-markdown/releases/tag/v0.4.0) and [release-preparation notes](release-notes/0.4.0.md). The earlier [0.4.0 RC1](release-notes/0.4.0-rc.1.md) remains a historical candidate record.
+See the [published release](https://github.com/BinaryOutlook/binary-markdown/releases/tag/v0.4.0) and [version notes](release-notes/0.4.0.md). The earlier [0.4.0 RC1](release-notes/0.4.0-rc.1.md) remains a historical candidate record.
 
 ### Added
 
