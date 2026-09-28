@@ -1,6 +1,6 @@
 # Roadmap and scope
 
-Binary Markdown aims to be a useful, free, open-source Markdown editor that users can build, adapt and improve. Work follows completed changes and validation rather than a fixed release calendar. The selected next version is **0.4.1**, with its correctness work ready for final release review. The [draft version notes](../release-notes/0.4.1.md) define its scope; the [readiness record](../reports/validation/2026-09-29-0.4.1-readiness.md) separates passing checks from remaining issue acceptance.
+Binary Markdown aims to be a useful, free, open-source Markdown editor that users can build, adapt and improve. Work follows completed changes and validation rather than a fixed release calendar. Version **0.4.1** focuses on source preservation and editing correctness. The [version notes](../release-notes/0.4.1.md) define its scope; the [pre-release readiness record](../reports/validation/2026-09-29-0.4.1-readiness.md) separates passing checks from remaining issue acceptance.
 
 | Workstream | In this checkout | Later work |
 | --- | --- | --- |

@@ -2,12 +2,17 @@
 
 ## Unreleased
 
-The selected release target is **0.4.1**. Its correctness work is ready for final release review; see the [draft release notes](release-notes/0.4.1.md) and [validation and issue-closure recommendations](reports/validation/2026-09-29-0.4.1-readiness.md). No 0.4.1 package or release has been published. The validated development snapshot retains package version `0.4.0`; its source commit and checksum distinguish it from the published 0.4.0 release.
+No additional changes.
+
+## 0.4.1
+
+Improve paragraph and table source preservation, ordered lists, inline code, and Save/Undo reliability. See the [version notes](release-notes/0.4.1.md) for details and the [pre-release validation record](reports/validation/2026-09-29-0.4.1-readiness.md) for its recorded evidence. [GitHub Releases](https://github.com/BinaryOutlook/binary-markdown/releases) identifies published packages and their final validation.
 
 ### Changed
 
 - Preserve unchanged tables' source formatting when editing elsewhere. New or modified tables use aligned Markdown columns by default, with Compact (Legacy) available through the [table source format setting](docs/editor-guide.md#table-source-format).
 - Render semantic Markdown blocks while retaining unchanged source and separators. In ordinary prose, Enter creates a paragraph and Shift+Enter creates a hard line break.
+- Align installation, settings, export help, testing and release guidance with the 0.4.1 scope, current command labels and known limitations.
 
 ### Fixed
 
@@ -18,13 +23,9 @@ The selected release target is **0.4.1**. Its correctness work is ready for fina
 - Native Save writes the latest captured editor snapshot even when an earlier queued edit changes the host document during save preparation.
 - Defer file-watcher reloads during saving and whenever newer edits make the saved revision uncertain, protecting local text from partial or older disk contents.
 - Immediate Undo followed by Redo retains the latest typed changes before background synchronization finishes.
-
-### Validation and documentation
-
 - Run every intended unit suite through the same shell-independent entry point locally and in CI.
 - Bound native Insert-menu readiness checks and preserve unrelated dirty editors when cleaning up owned test fixtures.
 - Parse documentation links and anchors structurally, including reference links, balanced destinations, Setext headings and HTML fragments; make checker coverage explicit.
-- Align release status, feature availability and command labels across the maintained guides. Record the 0.4.1 scope, human and automated evidence, and remaining issue acceptance separately.
 
 ### Known limitations
 
