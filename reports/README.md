@@ -16,6 +16,7 @@ These records preserve observations about particular revisions and environments.
 
 | Recorded scope | Report | Evidence boundary |
 | --- | --- | --- |
+| 2026-10-01 selected UI/UX implementation | [Selected designs, screenshots, and security audit](validation/2026-10-01-selected-ui-ux/report.md) | All 12 selected directions, synthetic browser visuals, local regression results, scoped security review, and pending maintainer acceptance |
 | 2026-09-29 0.4.1 readiness draft | [Validation and issue-closure recommendations](validation/2026-09-29-0.4.1-readiness.md) | Exact PR #91 source and development package, passing CI, maintainer-reported manual checks, and unresolved acceptance; not a 0.4.1 release artifact |
 | 2026-09-21 DOCX reader checkpoint | [Accepted scope and reader evidence](validation/2026-09-21-docx-reader-checkpoint.md) | Native paragraphs retained; two named readers, reproducible fixtures and explicit acceptance status |
 | 2026-09-20 editor/export issue stack | [Integration review](validation/2026-09-20-editor-export-stack.md) | All 22 issues and 10 correction PRs, exact dependency heads, local checks and unresolved reader/manual acceptance; development work, not a release |
