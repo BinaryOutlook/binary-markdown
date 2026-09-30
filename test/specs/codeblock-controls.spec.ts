@@ -36,3 +36,40 @@ test('horizontal code scrolling keeps the toolbar anchored and the first line un
     }
     expect(await page.evaluate(() => (window as any).__testApi.getMarkdown())).toBe(source);
 });
+
+test('the copy icon supports keyboard activation and stable success feedback', async ({ page }) => {
+    await page.addInitScript(() => {
+        (window as any).__copied = [];
+        Object.defineProperty(navigator.clipboard, 'writeText', { value: async (text: string) => (window as any).__copied.push(text) });
+    });
+    await setup(page);
+    const button = page.getByRole('button', { name: 'Copy code', exact: true });
+    await expect(button).toHaveAttribute('title', 'Copy code');
+    await expect(button.locator('svg')).toHaveAttribute('aria-hidden', 'true');
+    await expect(button).toHaveText('');
+    const before = await button.boundingBox();
+    await button.focus();
+    await page.keyboard.press('Enter');
+    await expect(button).toHaveAttribute('data-copy-state', 'copied');
+    await expect(page.getByRole('status').filter({ hasText: 'Copied' })).toHaveCount(1);
+    const after = await button.boundingBox();
+    expect(after!.width).toBe(before!.width);
+    expect(after!.x).toBe(before!.x);
+    expect(await page.evaluate(() => (window as any).__copied)).toEqual([longCode]);
+    expect(await page.evaluate(() => (window as any).__testApi.getMarkdown())).toBe(source);
+    await expect(button).toHaveAttribute('data-copy-state', 'idle');
+    await expect(button.locator('svg')).toHaveCount(1);
+});
+
+test('clipboard rejection announces failure without showing copied feedback', async ({ page }) => {
+    await page.addInitScript(() => {
+        Object.defineProperty(navigator.clipboard, 'writeText', { value: async () => { throw new Error('Synthetic clipboard denial'); } });
+    });
+    await setup(page);
+    const button = page.getByRole('button', { name: 'Copy code', exact: true });
+    await button.click();
+    await expect(button).toHaveAttribute('data-copy-state', 'error');
+    await expect(button).toHaveAttribute('title', 'Could not copy code. Try again.');
+    await expect(button.locator('svg rect')).toHaveCount(1);
+    expect(await page.evaluate(() => (window as any).__testApi.getMarkdown())).toBe(source);
+});

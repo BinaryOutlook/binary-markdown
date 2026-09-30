@@ -119,6 +119,8 @@
 
     // Lucide Icons (inline SVG) - unified icon set for all toolbars
     const LUCIDE_ICONS = {
+        'copy': '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>',
+        'check': '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m20 6-11 11-5-5"/></svg>',
         // Undo/Redo
         'undo': '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>',
         'redo': '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 7v6h-6"/><path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3L21 13"/></svg>',
@@ -3417,8 +3419,14 @@
         const copyBtn = document.createElement('button');
         copyBtn.type = 'button';
         copyBtn.className = 'code-copy-btn';
-        copyBtn.textContent = i18n.copy || 'Copy';
+        copyBtn.innerHTML = LUCIDE_ICONS.copy;
+        copyBtn.title = i18n.copyCode || 'Copy code';
+        copyBtn.setAttribute('aria-label', copyBtn.title);
+        copyBtn.dataset.copyState = 'idle';
         copyBtn.setAttribute('contenteditable', 'false');
+        copyBtn.addEventListener('keydown', event => {
+            if (!event.ctrlKey && !event.metaKey) event.stopPropagation();
+        });
         copyBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             // Switch to display mode if in edit mode
@@ -3488,6 +3496,12 @@
         header.appendChild(langTag);
         header.appendChild(copyBtn);
         header.appendChild(deleteBtn);
+        const status = document.createElement('span');
+        status.className = 'code-block-status';
+        status.setAttribute('role', 'status');
+        status.setAttribute('aria-live', 'polite');
+        status.setAttribute('aria-atomic', 'true');
+        header.appendChild(status);
         pre.insertBefore(header, pre.firstChild);
         
         // Apply syntax highlighting for display mode
@@ -4112,6 +4126,20 @@
         render(); input.focus({ preventScroll: true });
     }
     
+    function setCodeCopyState(pre, state) {
+        const button = pre.querySelector('.code-copy-btn');
+        const status = pre.querySelector('.code-block-status');
+        if (!button || !status) return;
+        clearTimeout(button.copyFeedbackTimer);
+        button.dataset.copyState = state;
+        button.innerHTML = state === 'copied' ? LUCIDE_ICONS.check : LUCIDE_ICONS.copy;
+        const message = state === 'copied' ? (i18n.copiedCode || 'Copied') :
+            state === 'error' ? (i18n.copyCodeFailed || 'Could not copy code. Try again.') : '';
+        status.textContent = message;
+        button.title = message || (i18n.copyCode || 'Copy code');
+        if (state !== 'idle') button.copyFeedbackTimer = setTimeout(() => setCodeCopyState(pre, 'idle'), 2000);
+    }
+
     // Copy code block content to clipboard
     function copyCodeBlock(pre) {
         const code = pre.querySelector('code');
@@ -4124,16 +4152,11 @@
         const text = isEmptyCodeBlock
             ? ''
             : stripTrailingNewlines(getCodePlainText(code), code, pre);
+        setCodeCopyState(pre, 'idle');
         navigator.clipboard.writeText(text).then(() => {
-            const copyBtn = pre.querySelector('.code-copy-btn');
-            if (copyBtn) {
-                const originalText = copyBtn.textContent;
-                copyBtn.textContent = i18n.copied || 'Copied!';
-                setTimeout(() => {
-                    copyBtn.textContent = originalText;
-                }, 2000);
-            }
+            setCodeCopyState(pre, 'copied');
         }).catch((err) => {
+            setCodeCopyState(pre, 'error');
             logger.error('Failed to copy to clipboard:', err);
         });
     }
@@ -13031,7 +13054,7 @@
     function updateWordCount() {
         const plain = editor.cloneNode(true);
         plain.querySelectorAll('.math-inline').forEach(span => { span.textContent = inlineMathMarkdown(span); });
-        plain.querySelectorAll('.math-display,.mermaid-diagram,.document-aux').forEach(display => display.remove());
+        plain.querySelectorAll('.math-display,.mermaid-diagram,.document-aux,.code-block-header').forEach(display => display.remove());
         const text = plain.textContent || '';
         const words = text.trim().split(/\s+/).filter(w => w.length > 0).length;
         const chars = text.length;

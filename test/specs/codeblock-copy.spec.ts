@@ -71,7 +71,7 @@ test.describe('Code block copy preserves source text', () => {
 
                 const copyButton = block.locator('.code-copy-btn');
                 await copyButton.click();
-                await expect(copyButton).toHaveText('Copied!');
+                await expect(copyButton).toHaveAttribute('data-copy-state', 'copied');
                 await expect(block).toHaveAttribute('data-mode', 'display');
 
                 // Copying must leave the document intact, including blank lines.
@@ -90,7 +90,7 @@ test.describe('Code block copy preserves source text', () => {
         await page.keyboard.press(lineEndKey);
         await page.keyboard.type(' updated');
         await block.locator('.code-copy-btn').click();
-        await expect(block.locator('.code-copy-btn')).toHaveText('Copied!');
+        await expect(block.locator('.code-copy-btn')).toHaveAttribute('data-copy-state', 'copied');
 
         const expectedText = 'echo one updated\necho two';
         expect(await page.evaluate(() => (window as unknown as CopyTestWindow).__testApi.getMarkdown())).toBe('```bash\n' + expectedText + '\n```\n');

@@ -169,7 +169,7 @@ test.describe('《コードブロック》UI機能', () => {
             expect(clipboardText).toContain('const x = 1;');
         });
 
-        test('コピー後にボタンテキストが変わる', async ({ page, context }) => {
+        test('copy feedback changes the icon without resizing the button', async ({ page, context }) => {
             // クリップボードの権限を付与
             await context.grantPermissions(['clipboard-read', 'clipboard-write']);
             
@@ -184,13 +184,14 @@ test.describe('《コードブロック》UI機能', () => {
             
             // コピーボタンをクリック
             const copyBtn = page.locator('.code-copy-btn').first();
-            const originalText = await copyBtn.textContent();
+            const originalWidth = (await copyBtn.boundingBox())!.width;
             await copyBtn.click();
             await page.waitForTimeout(100);
             
             // ボタンテキストが変わっていることを確認
-            const newText = await copyBtn.textContent();
-            expect(newText).not.toBe(originalText);
+            await expect(copyBtn).toHaveAttribute('data-copy-state', 'copied');
+            await expect(copyBtn.locator('svg')).toHaveCount(1);
+            expect((await copyBtn.boundingBox())!.width).toBe(originalWidth);
         });
     });
 
