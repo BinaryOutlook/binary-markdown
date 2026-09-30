@@ -1,0 +1,69 @@
+{
+  "overview": {
+    "markdown": "# Research notes\n\nA focused writing space for a small technical report.\n\n## Method\n\nUse a representative sample, record assumptions, and compare the results.\n\n```javascript\nconst message = \"Ready to review\";\nconst count = 24;\n// Keep the original data unchanged.\nconsole.log(message, count);\n```\n\n## Results\n\n| Experiment | Accuracy | Duration |\n| --- | ---: | ---: |\n| Baseline | 91% | 120 ms |\n| Optimized | 95% | 82 ms |\n\n## Review checklist\n\n- [x] Collect measurements\n- [ ] Review the explanation\n- [ ] Export the report\n\n> The results are preliminary and need independent review.\n"
+  },
+  "night": {
+    "markdown": "# Research notes\n\nA focused writing space for a small technical report.\n\n## Method\n\nUse a representative sample, record assumptions, and compare the results.\n\n```javascript\nconst message = \"Ready to review\";\nconst count = 24;\n// Keep the original data unchanged.\nconsole.log(message, count);\n```\n\n## Results\n\n| Experiment | Accuracy | Duration |\n| --- | ---: | ---: |\n| Baseline | 91% | 120 ms |\n| Optimized | 95% | 82 ms |\n\n## Review checklist\n\n- [x] Collect measurements\n- [ ] Review the explanation\n- [ ] Export the report\n\n> The results are preliminary and need independent review.\n",
+    "theme": "night"
+  },
+  "empty": {
+    "markdown": ""
+  },
+  "table": {
+    "markdown": "# Results table\n\nCompare a small set of experiments.\n\n| Experiment | Accuracy | Duration | Notes |\n| --- | ---: | ---: | --- |\n| Baseline | 91% | 120 ms | Reference |\n| Optimized | 95% | 82 ms | Candidate |\n| Validation | 94% | 88 ms | Follow-up |\n\nContinue the analysis below the table.\n"
+  },
+  "code": {
+    "markdown": "# Implementation notes\n\n```javascript\nconst message = \"Ready to review\";\nconst count = 24;\n// Keep the original data unchanged.\nconsole.log(message, count);\n```\n\nCheck readability before copying the example.\n",
+    "theme": "night"
+  },
+  "equation": {
+    "markdown": "# Equation notes\n\nThe estimate uses $x^2 + 1$ as a simple example.\n\n$$\n\\frac{a+b}{c} + \\unknowncommand{x}\n$$\n\nContinue the explanation here.\n"
+  },
+  "mermaid": {
+    "markdown": "# Process sketch\n\n```mermaid\nflowchart LR\n  A[Draft] --> B[Review]\n  B --> C[Export]\n```\n\n## Invalid example\n\n```mermaid\nflowchart LR\n  A[Draft -->\n```\n"
+  },
+  "find": {
+    "markdown": "# Review notes\n\nReview the draft before publication. The draft has two examples.\n\n## Draft checklist\n\n- Review the measurements\n- Review the language\n- Review the final export\n"
+  },
+  "metadata": {
+    "markdown": "---\ntitle: \"Research notes\"\nauthor: \"Example Author\"\ntags: [research, review]\n---\n\n# Research notes\n\n<!-- binary-markdown:toc:start -->\n**Contents**\n\n- [Method](#method)\n- [Results](#results)\n\n<!-- binary-markdown:toc:end -->\n\n## Method\n\nWrite a short explanation.\n\n## Results\n\nReview the comparison.\n"
+  },
+  "export": {
+    "markdown": "# Research notes\n\nA focused writing space for a small technical report.\n\n## Method\n\nUse a representative sample, record assumptions, and compare the results.\n\n```javascript\nconst message = \"Ready to review\";\nconst count = 24;\n// Keep the original data unchanged.\nconsole.log(message, count);\n```\n\n## Results\n\n| Experiment | Accuracy | Duration |\n| --- | ---: | ---: |\n| Baseline | 91% | 120 ms |\n| Optimized | 95% | 82 ms |\n\n## Review checklist\n\n- [x] Collect measurements\n- [ ] Review the explanation\n- [ ] Export the report\n\n> The results are preliminary and need independent review.\n"
+  },
+  "export-failure": {
+    "markdown": "# Research notes\n\nA focused writing space for a small technical report.\n\n## Method\n\nUse a representative sample, record assumptions, and compare the results.\n\n```javascript\nconst message = \"Ready to review\";\nconst count = 24;\n// Keep the original data unchanged.\nconsole.log(message, count);\n```\n\n## Results\n\n| Experiment | Accuracy | Duration |\n| --- | ---: | ---: |\n| Baseline | 91% | 120 ms |\n| Optimized | 95% | 82 ms |\n\n## Review checklist\n\n- [x] Collect measurements\n- [ ] Review the explanation\n- [ ] Export the report\n\n> The results are preliminary and need independent review.\n",
+    "exportStatus": {
+      "type": "exportStatus",
+      "state": "failed",
+      "message": "Export failed: a referenced image could not be read.",
+      "warnings": [
+        {
+          "code": "RESOURCE_UNAVAILABLE",
+          "message": "An image resource is unavailable. Check its path and try again."
+        },
+        {
+          "code": "MATH_FALLBACK",
+          "message": "An unsupported equation uses a source fallback."
+        }
+      ]
+    }
+  },
+  "export-complete": {
+    "markdown": "# Research notes\n\nA focused writing space for a small technical report.\n\n## Method\n\nUse a representative sample, record assumptions, and compare the results.\n\n```javascript\nconst message = \"Ready to review\";\nconst count = 24;\n// Keep the original data unchanged.\nconsole.log(message, count);\n```\n\n## Results\n\n| Experiment | Accuracy | Duration |\n| --- | ---: | ---: |\n| Baseline | 91% | 120 ms |\n| Optimized | 95% | 82 ms |\n\n## Review checklist\n\n- [x] Collect measurements\n- [ ] Review the explanation\n- [ ] Export the report\n\n> The results are preliminary and need independent review.\n",
+    "exportStatus": {
+      "type": "exportStatus",
+      "state": "complete",
+      "outputPath": "exports/research-notes.pdf",
+      "warnings": [
+        {
+          "code": "CODE_LABEL",
+          "message": "A long code language label may extend beyond its tab."
+        }
+      ]
+    }
+  },
+  "outline": {
+    "markdown": "# Research notes\n\nA short overview.\n\n## Method and assumptions\n\nDocument the sampling procedure.\n\n### Inputs\n\nUse synthetic examples.\n\n### Measurements\n\nCapture the results.\n\n## Results and a deliberately long descriptive heading\n\nCompare the models.\n\n### Accuracy\n\nExplain the score.\n\n### Duration\n\nExplain the timing.\n\n## Limitations\n\nDescribe the boundary.\n\n## Next steps\n\nPlan another review.\n"
+  }
+}
