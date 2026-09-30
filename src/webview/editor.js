@@ -3376,6 +3376,7 @@
         
         const code = pre.querySelector('code');
         if (!code) return;
+        pre.classList.add('code-block-with-toolbar');
         
         // Ensure display mode attributes
         if (!pre.hasAttribute('data-mode')) {

@@ -681,6 +681,16 @@ body {
 .editor pre {
     position: relative;
 }
+.editor pre.code-block-with-toolbar {
+    overflow: visible;
+    white-space: normal;
+}
+.editor pre.code-block-with-toolbar > code {
+    overflow-x: auto;
+    min-height: 1lh;
+    white-space: pre;
+    word-wrap: normal;
+}
 .editor pre[data-mode="display"] code {
     cursor: pointer;
 }
@@ -688,12 +698,14 @@ body {
     /* No outline - cursor is visible */
 }
 .code-block-header {
-    position: absolute;
-    top: 4px;
-    right: 8px;
     display: flex;
+    justify-content: flex-end;
+    flex-wrap: wrap;
     gap: 8px;
     align-items: center;
+    margin-bottom: 8px;
+    white-space: normal;
+    line-height: 1.4;
     z-index: 10;
 }
 .code-lang-tag {
