@@ -65,7 +65,8 @@
     ],
     "rawReview": "Full affected files and proposed changes reviewed for paragraphs, tables, links, lists and fences",
     "renderedReview": "Final local Markdown previews inspected; report table, sharing guide, option order, legends and rationale",
-    "renderer": "markdown-it with relative asset rewriting; not native VS Code preview"
+    "renderer": "markdown-it with relative asset rewriting; not native VS Code preview",
+    "githubNavigation": "Native GitHub heading fragments replace custom table jump links; standalone appendix maps them to gallery area IDs"
   },
   "checks": {
     "documentation": "node scripts/check-docs.cjs passed; 77 text files, 965 local links, no common private-data patterns",

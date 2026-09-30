@@ -54,7 +54,9 @@ for(const name of fs.readdirSync(path.join(folder,'evidence')).filter(n=>n.endsW
  const pre=doc.createElement('pre');pre.textContent=fs.readFileSync(path.join(folder,'evidence',name),'utf8');details.appendChild(pre);section.appendChild(details);doc.querySelector('main').appendChild(section);
 }
 for(const link of doc.querySelectorAll('a[href]')){
- const href=link.getAttribute('href');
+ let href=link.getAttribute('href');
+ const area=data.items.find((item,index)=>href==='#'+String(index+1).padStart(2,'0')+'--'+item.title.toLowerCase().replace(/[^a-z0-9 -]/g,'').replaceAll(' ','-'));
+ if(area){href='#'+area.id;link.href=href;}
  if(href.startsWith('images/')){link.dataset.assetOpen=href;link.href='#'+imageIds[href];link.removeAttribute('target');}
  else if(href==='report.md'||href==='index.html')link.href=href==='report.md'?'#full-report':'#overview';
  else if(href==='SHARING.md')link.href='#reviewer-guide';
