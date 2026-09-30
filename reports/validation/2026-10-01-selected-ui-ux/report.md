@@ -8,7 +8,7 @@ This report records the implementation of the 12 choices selected from the [visu
 
 The feature branch is `feat/selected-ui-ux-redesign`, based on canonical `main` at `092e712baa7080ac492c7c4714c485a19e8ab2fa`. Existing stationary code copy/wrap controls from PR #93 are retained. The branch keeps the extension identifier, package version, command IDs, and saved setting defaults.
 
-Implementation and security changes are separated into focused commits. The code and regression-test revision for the local checks is `3c582f603b3dd3189775d146581c915594fc27b2`; subsequent documentation records those checks. The local environment uses Node **24.21.0** on **macOS ARM64**, Playwright **1.58.1**, and bundled Chromium **145.0.7632.6**. The implementation PR's exact head and **Checks** identify hosted CI results, including installed-VSIX and converter checks; this local record does not replace those results.
+Implementation and security changes are separated into focused commits. The code and regression-test revision for the full local checks is `3c582f603b3dd3189775d146581c915594fc27b2`; subsequent documentation records those checks. Supplemental shared-native table preflight applies to test revision `6475f1ceb1dbdcf2301a61e586cb40acd007c597`, which changes test assumptions and adds two shared-harness browser cases without changing product code. The local environment uses Node **24.21.0** on **macOS ARM64**, Playwright **1.58.1**, and bundled Chromium **145.0.7632.6**. The implementation PR's exact head and **Checks** identify hosted CI results, including installed-VSIX and converter checks; this local record does not replace those results.
 
 Pull-request CI packages GitHub's test merge revision of the PR head with `main`. Its candidate artifact name and build information record that tested revision, which can differ from the branch head. Use the source identity of the matching successful CI candidate when installing and reporting manual results.
 
@@ -54,6 +54,8 @@ No spreadsheet formulas, table merging, multi-cell editing, dual-editable Split 
 ![Implemented table inspector with directional insertion diamond, row and column navigation, and selected-cell feedback](images/03-spatial-table-tools.jpg)
 
 **Pointers:** The diamond encodes insertion direction spatially. Rows/Columns select a destination without editing; shaded row/column context and small boundary **+** buttons identify the target of an edit. This screenshot intentionally selects the existing **Always in top bar** placement. Automatic and fixed placements remain available, with compact menus in narrow panes.
+
+**Manual-review limit:** Fixed floating placements retain the existing viewport-clamping behavior. In a narrow 500 px pane, the enlarged fixed **Left** inspector can overlap the first table cell and obstruct a pointer click. Inspect this case during visual acceptance; **Automatic** or **Always in top bar** provides an alternative placement. The installed harness's DOM activation checks do not establish pointer reachability for this case.
 
 ### Code, equations, and diagrams
 
@@ -118,12 +120,15 @@ Strict Mermaid rendering deliberately restricts callback/HTML interactions that 
 
 The final local validation results are recorded after the clean regression run. Earlier runs exposed stale broad test selectors and old toolbar/palette assumptions, plus a real table row-number reflow issue that shifted focused inline-equation targets. The implementation makes row/column numbers out-of-flow so focusing a cell no longer moves its content. Those earlier failures are not counted as passes.
 
+An [initial hosted run](https://github.com/BinaryOutlook/binary-markdown/actions/runs/36776653882) passed packaging, units, real converters, and archive parity, but all four installed-extension lanes stopped at the shared table-overflow watchdog. That helper expected **More** at 520 px, where the directional controls now fit inline. The correction uses the existing browser regression's 420 px pane and updated action order, retains all reachability/selection/undo assertions, and adds shared overflow and contextual-row preflight cases. Its final focused run passed all 35 checks; the current implementation PR's checks establish the replacement candidate's hosted result.
+
 | Check | Result and limit |
 | --- | --- |
 | `npm run compile` | Pass, including TypeScript, seven locales, shared/browser assets, and vendor copying. |
 | `npm run lint` | Pass with 0 errors and 11 existing warnings. |
 | `npm run test:unit` | 360 tests: 341 passed and 19 explicit prerequisite-dependent skips. Local skips do not establish real-converter/package validation. |
 | `npx playwright test --workers=2 --max-failures=5` | **1,220 passed**, 0 failures, and no retries in the clean full local run (7.0 minutes), including the selected-design and legacy editing regressions. |
+| Supplemental table preflight | **35 passed**, including two new cases that reuse the shared native overflow/contextual-row checks. Pointer checks use the existing browser cases; the shared contextual-row preflight uses the installed harness's DOM activation contract. |
 | `npm audit --json` | 0 known vulnerabilities after the DOMPurify patch. |
 | Markdown/privacy and whitespace checks | Repository checker passed: 65 text files and 533 local links, with no common private-data patterns. `git diff --check` passed. Six affected Markdown files received separate complete raw-source/diff and rendered-browser reviews. Tables, images, paragraphs, lists, and code fences were checked; no remaining layout issue was identified. |
 | Hosted CI | Check the implementation PR's exact head and per-lane results. The required **VSIX validation** gate includes Linux, macOS, Windows, and minimum-supported VS Code. |
