@@ -24,6 +24,9 @@
         requestExportCapabilities: function() {
             api.postMessage({ type: 'exportCapabilities' });
         },
+        openExportOutput: function() {
+            api.postMessage({ type: 'openExportOutput' });
+        },
         cancelExport: function() {
             api.postMessage({ type: 'cancelExport' });
         },

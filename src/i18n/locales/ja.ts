@@ -34,6 +34,20 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  tableRows: "行",
+  tableColumns: "列",
+  searchSourceScope: "Markdownソースを検索します。置換は一致したテキストだけに適用します。",
+  searchResults: "検索結果",
+  replaceSelected: "選択した項目を置換",
+  selectAllMatches: "すべての一致を選択",
+  selectMatch: "一致を選択",
+  showMoreMatches: "一致をさらに表示",
+  noSearchMatches: "一致なし",
+  invalidSearch: "正規表現が無効です",
+  searchTimeout: "検索時間が長すぎます。正規表現を簡単にしてください。",
+  searchUnavailable: "検索を開始できません。エディターを開き直してください。",
+  searchLimit: "一致が10,000件を超えています。すべて置換する前に検索を絞り込んでください。",
+
   modeVisual: "ビジュアル",
   modeSource: "ソース",
   modeSplit: "分割",
@@ -43,6 +57,7 @@ export const webviewMessages = {
   outlineTitle: "アウトライン",
   documentTab: "文書",
   readingProgress: "閲覧位置",
+  viewDescription: "文書を変更せずに移動、検索、ビューの表示を行います。",
   formatActions: "書式",
   contextualTools: "選択時のツール",
   sourceLabel: "ソース",

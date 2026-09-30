@@ -20,6 +20,7 @@
         controls.className = 'table-toolbar';
         controls.setAttribute('role', 'toolbar');
         controls.setAttribute('aria-label', label('tableControls', 'Table controls'));
+        const direction = document.createElement('div'); direction.className = 'table-insert-direction'; controls.appendChild(direction);
         const items = [
             ['add-col-left', 'addColLeft', 'Insert column left', '←Col'],
             ['add-col-right', 'addColRight', 'Insert column right', 'Col→'],
@@ -49,8 +50,21 @@
             if (text) { button.textContent = text; button.className = 'text-btn'; }
             else button.innerHTML = icons[action];
             if (action === 'placement') { button.setAttribute('aria-haspopup', 'menu'); button.setAttribute('aria-expanded', 'false'); }
-            controls.appendChild(button);
+            if (action.startsWith('add-')) { button.textContent = ({ 'add-row-above': '↑', 'add-col-left': '←', 'add-col-right': '→', 'add-row-below': '↓' })[action]; direction.appendChild(button); }
+            else controls.appendChild(button);
         }
+        const selectionInspector = document.createElement('div'); selectionInspector.className = 'table-selection-inspector';
+        const navigator = key => {
+            const field = document.createElement('label'); field.textContent = label(key, key === 'tableRows' ? 'Rows' : 'Columns');
+            const select = document.createElement('select'); select.setAttribute('aria-label', field.textContent); field.appendChild(select); selectionInspector.appendChild(field); return select;
+        };
+        const rowSelect = navigator('tableRows'), columnSelect = navigator('tableColumns');
+        controls.prepend(selectionInspector);
+        const boundaries = document.createElement('div'); boundaries.className = 'table-boundary-actions'; boundaries.hidden = true;
+        for (const [action, key] of [['add-col-right','addColRight'], ['add-row-below','addRowBelow']]) {
+            const button = document.createElement('button'); button.type = 'button'; button.dataset.action = action; button.textContent = '+'; button.setAttribute('aria-label', label(key, action)); button.title = button.getAttribute('aria-label'); boundaries.appendChild(button);
+        }
+        document.body.appendChild(boundaries);
         controls.querySelector('button').tabIndex = 0;
         document.body.appendChild(controls);
         const dock = document.createElement('div');
@@ -122,7 +136,7 @@
         const mutations = new MutationObserver(() => schedule());
         mutations.observe(editor, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['style', 'class'] });
 
-        function owns(node) { return controls.contains(node) || dock.contains(node) || picker.contains(node) || overflow.contains(node); }
+        function owns(node) { return controls.contains(node) || boundaries.contains(node) || dock.contains(node) || picker.contains(node) || overflow.contains(node); }
         function valid() { return table && cell && editor.contains(table) && table.contains(cell) && !options.isSourceMode(); }
         function closeMenus() {
             picker.hidden = true;
@@ -135,6 +149,7 @@
             controls.querySelector('[data-action="placement"]').setAttribute('aria-expanded', 'false');
         }
         function hide() {
+            boundaries.hidden = true;
             const changed = !dock.hidden || !row.hidden;
             closeMenus();
             controls.classList.remove('visible');
@@ -143,6 +158,7 @@
             if (changed) options.onLayout();
         }
         function clear() {
+            if (table) { table.classList.remove('table-inspected'); table.querySelectorAll('.table-context-row,.table-context-column').forEach(node => node.classList.remove('table-context-row','table-context-column')); }
             if (table) resize.unobserve(table);
             table = cell = savedRange = current = null;
             hovering = false;
@@ -159,6 +175,19 @@
                 closeMenus();
             }
             cell = nextCell;
+            table.classList.add('table-inspected');
+            table.querySelectorAll('tr').forEach((row, r) => [...row.cells].forEach((item, c) => {
+                item.dataset.tableRow = String(r + 1); item.dataset.tableColumn = String(c + 1);
+                item.classList.toggle('table-context-row', r === cell.parentElement.rowIndex);
+                item.classList.toggle('table-context-column', c === cell.cellIndex);
+            }));
+            const fill = (select, length, selected) => {
+                select.replaceChildren();
+                for (let i = 0; i < length; i++) { const option = document.createElement('option'); option.value = String(i); option.textContent = String(i + 1); select.appendChild(option); }
+                select.value = String(selected);
+            };
+            fill(rowSelect, table.rows.length, cell.parentElement.rowIndex);
+            fill(columnSelect, table.rows[0].cells.length, cell.cellIndex);
             const headerRow = cell.parentElement === table.rows[0];
             controls.querySelector('[data-action="add-row-above"]').disabled = headerRow;
             controls.querySelector('[data-action="del-row"]').disabled = headerRow;
@@ -167,16 +196,24 @@
             if (selection.rangeCount && cell.contains(selection.anchorNode)) savedRange = selection.getRangeAt(0).cloneRange();
             schedule();
         }
+        for (const field of [rowSelect, columnSelect]) field.addEventListener('change', event => {
+            if (!valid()) return;
+            const next = table.rows[Number(rowSelect.value)]?.cells[Number(columnSelect.value)];
+            if (!next) return;
+            savedRange = null; options.onContext(next); show(table, next); restore(true);
+        });
         function restore(reveal = false) {
             if (!valid()) return;
+            const target = cell;
+            const range = savedRange && target.contains(savedRange.startContainer) ? savedRange : document.createRange();
+            if (range !== savedRange) { range.selectNodeContents(target); range.collapse(false); }
             editor.focus({ preventScroll: true });
-            const range = savedRange && cell.contains(savedRange.startContainer) ? savedRange : document.createRange();
-            if (range !== savedRange) { range.selectNodeContents(cell); range.collapse(false); }
             const selection = window.getSelection();
             selection.removeAllRanges();
             selection.addRange(range);
+            if (cell !== target) { options.onContext(target); show(target.closest('table'), target); }
             if (reveal) {
-                cell.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+                target.scrollIntoView({ block: 'nearest', inline: 'nearest' });
                 options.onReveal?.(cell);
             }
         }
@@ -248,6 +285,9 @@
                     count++;
                 }
             }
+            if (count < 4) count = 0; // Keep the four directional controls together.
+            direction.hidden = count === 0;
+            selectionInspector.hidden = width < 180 && !compactMenu;
             const focused = document.activeElement;
             const focusedAction = actions.indexOf(focused) >= 0 ? actions.indexOf(focused) : overflowActions.indexOf(focused);
             actions.forEach((button, index) => {
@@ -299,6 +339,15 @@
             return Math.max(28, header.clientWidth - fixed - 12);
         }
         function render() {
+            if (valid()) {
+                const bounds = wrapper.getBoundingClientRect(), rect = cell.getBoundingClientRect();
+                boundaries.hidden = rect.bottom < bounds.top || rect.top > bounds.bottom || rect.right < bounds.left || rect.left > bounds.right;
+                if (!boundaries.hidden) {
+                    const right = boundaries.children[0], below = boundaries.children[1];
+                    right.style.left = Math.max(bounds.left + 4, Math.min(rect.right - 12, bounds.right - 28)) + 'px'; right.style.top = Math.max(bounds.top + 4, Math.min(rect.top + rect.height / 2 - 12, bounds.bottom - 28)) + 'px';
+                    below.style.left = Math.max(bounds.left + 4, Math.min(rect.left + rect.width / 2 - 12, bounds.right - 28)) + 'px'; below.style.top = Math.max(bounds.top + 4, Math.min(rect.bottom - 12, bounds.bottom - 28)) + 'px';
+                }
+            } else boundaries.hidden = true;
             if (!valid()) return clear();
             const palette = document.querySelector('.command-palette');
             if (palette?.getClientRects().length) return hide();
@@ -351,7 +400,7 @@
                 available = dockWidth();
                 dock.hidden = false;
                 dock.style.maxWidth = available + 'px';
-                const compact = sizes[0].querySelector('button').getBoundingClientRect().width + 46 > available;
+                const compact = sizes[0].querySelector('.table-selection-inspector').getBoundingClientRect().width + 90 + 46 > available;
                 toggle.hidden = !compact;
                 if (compact) {
                     document.body.appendChild(controls);
@@ -406,8 +455,8 @@
             picker.firstElementChild.tabIndex = 0;
             picker.firstElementChild.focus({ preventScroll: true });
         }
-        for (const node of [controls, dock, picker, overflow]) {
-            listen(node, 'mousedown', event => { event.preventDefault(); event.stopPropagation(); });
+        for (const node of [controls, dock, picker, overflow, boundaries]) {
+            listen(node, 'mousedown', event => { if (!event.target.closest('select')) event.preventDefault(); event.stopPropagation(); });
             listen(node, 'click', event => event.stopPropagation());
         }
         function activate(event) {
@@ -430,6 +479,7 @@
             schedule();
         }
         listen(controls, 'click', activate);
+        listen(boundaries, 'click', activate);
         listen(overflow, 'click', activate);
         listen(picker, 'click', event => {
             const value = event.target.closest('button')?.dataset.position;
@@ -447,6 +497,7 @@
             if (menuOpen) { placeMenu(controls, toggle); controls.querySelector('button').focus({ preventScroll: true }); }
         });
         function keyboard(event) {
+            if (event.target.closest('select')) return;
             const container = picker.contains(event.target) ? picker : overflow.contains(event.target) ? overflow : controls;
             if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); closeMenus(); restore(true); hovering = false; schedule(); return; }
             const vertical = container !== controls || controls.dataset.vertical === 'true';
@@ -504,7 +555,7 @@
             disposed = true;
             cancelAnimationFrame(frame); clearTimeout(settleTimer);
             resize.disconnect(); mutations.disconnect(); listeners.forEach(remove => remove());
-            [controls, dock, row, picker, overflow, ...sizes].forEach(node => node.remove());
+            [controls, dock, row, picker, overflow, boundaries, ...sizes].forEach(node => node.remove());
         }
         listen(window, 'pagehide', dispose);
         return { show, clear, schedule, dispose, owns, setPreference(value) {

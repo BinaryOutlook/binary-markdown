@@ -277,7 +277,7 @@ function harness(settings, owner) {
         if (expectSuccess) output(result, file, format);
         return { ...result, stages: (await connection.evaluate('window.__nativeExportEvents')).filter(event => event.stage).map(event => event.stage) };
     };
-    const sourceMode = connection => connection.evaluate(`if(getComputedStyle(document.getElementById('sourceEditor')).display==='none')document.querySelector('[data-action="source"]').click();const e=document.getElementById('sourceEditor');e.focus();e.setSelectionRange(e.value.length,e.value.length)`);
+    const sourceMode = connection => connection.evaluate(`if(getComputedStyle(document.getElementById('sourceEditor')).display==='none')document.querySelector('[data-editor-mode="source"]').click();const e=document.getElementById('sourceEditor');e.focus();e.setSelectionRange(e.value.length,e.value.length)`);
     const diagnose = () => workbench(async page => {
         await page.screenshot({ path: path.join(owner.base, 'evidence', 'failure-window.png'), timeout: 10000 });
         const frames = [];
@@ -1418,7 +1418,7 @@ async function tableContentCase(h, owner, record) {
         assert.equal((await h.driver({ action: 'inspect' })).documents.find(document => samePath(document.path, filePath)).dirty, false);
         await h.sourceMode(connection);
         assert.equal(await connection.evaluate('document.getElementById("sourceEditor").value'), source);
-        await connection.evaluate('document.querySelector(\'[data-action="source"]\').click()');
+        await connection.evaluate('document.querySelector(\'[data-editor-mode="visual"]\').click()');
         await h.until(() => connection.evaluate('document.querySelectorAll("#editor td").length === 16'));
         await connection.evaluate(`(() => {
             const paragraph = [...document.querySelectorAll('#editor > p')].find(node => node.textContent === 'After.');
@@ -1458,7 +1458,7 @@ async function equationCases(h, owner, record) {
         assert.equal(await connection.evaluate('document.querySelectorAll("#editor .katex-error, #editor .math-error").length'), 0);
         await h.sourceMode(connection);
         assert.equal(await connection.evaluate('document.getElementById("sourceEditor").value'), source);
-        await connection.evaluate('document.querySelector(\'[data-action="source"]\').click()');
+        await connection.evaluate('document.querySelector(\'[data-editor-mode="visual"]\').click()');
         await h.until(() => connection.evaluate('document.querySelectorAll("#editor .katex").length === 10'));
         await connection.evaluate(`Array.from(document.querySelectorAll('#editor .math-inline')).find(span => span.dataset.mathOpen !== '$').click(); document.querySelector('.math-inline-input').value='b^4'`);
         // Native Save must flush the active equation source input too.

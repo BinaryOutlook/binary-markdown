@@ -37,6 +37,20 @@ export interface Messages {
 }
 
 export interface WebviewMessages {
+  tableRows: string;
+  tableColumns: string;
+  searchSourceScope: string;
+  searchResults: string;
+  replaceSelected: string;
+  selectAllMatches: string;
+  selectMatch: string;
+  showMoreMatches: string;
+  noSearchMatches: string;
+  invalidSearch: string;
+  searchTimeout: string;
+  searchUnavailable: string;
+  searchLimit: string;
+
   modeVisual: string;
   modeSource: string;
   modeSplit: string;
@@ -46,6 +60,7 @@ export interface WebviewMessages {
   outlineTitle: string;
   documentTab: string;
   readingProgress: string;
+  viewDescription: string;
   formatActions: string;
   contextualTools: string;
   sourceLabel: string;

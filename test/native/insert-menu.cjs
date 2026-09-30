@@ -99,7 +99,8 @@ async function insertMenuChecks({ editor, keyboard, setMode, dialog, save, recor
         await setMode(mode);
         await editor.waitForFunction(mode => document.documentElement.dataset.toolbarMode === mode, mode);
         await selectTarget(editor); await openInsert(editor);
-        assert.equal(await editor.evaluate(() => document.querySelectorAll('#insertMenu button').length), 8);
+        assert.equal(await editor.evaluate(() => document.querySelectorAll('#insertMenu button[data-insert-action]').length), 8);
+        await keyboard.press('ArrowDown');
         await keyboard.press('End');
         assert.equal(await editor.evaluate(() => document.activeElement.dataset.insertAction), 'toc');
         await capture(mode + '-insert');

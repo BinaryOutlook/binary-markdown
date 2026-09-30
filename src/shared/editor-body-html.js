@@ -17,24 +17,24 @@ function generateEditorBodyHtml(messages, platform, options) {
     const openButtonClass = outlineOpen ? 'menu-btn hidden' : 'menu-btn';
     const settingsButton = options && options.settingsEnabled ? `<button type="button" class="sidebar-footer-action" id="extensionSettingsBtn" title="${m('openExtensionSettings')}" aria-label="${m('openExtensionSettings')}"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg></button>` : '';
     const exportEnabled = Boolean(options && options.exportEnabled);
-    const exportButton = exportEnabled ? `<button type="button" data-action="export" id="exportButton" title="Export" aria-label="Export" aria-haspopup="menu" aria-expanded="false" aria-controls="exportMenu"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 4 6 6-6 6"/><path d="M21 10H11a8 8 0 0 0-8 8v2"/></svg></button>` : '';
+    const exportButton = exportEnabled ? `<button type="button" data-action="export" id="exportButton" title="Export" aria-label="Export" aria-haspopup="dialog" aria-expanded="false" aria-controls="exportMenu"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 4 6 6-6 6"/><path d="M21 10H11a8 8 0 0 0-8 8v2"/></svg></button>` : '';
     const exportPanels = exportEnabled ? `
-            <div id="exportMenu" class="export-menu" role="menu" aria-label="Export" aria-describedby="exportLimitations" hidden>
+            <div id="exportMenu" class="export-menu" role="dialog" aria-label="Export" aria-describedby="exportLimitations" hidden>
+                <h3 id="exportPanelTitle">Export</h3>
                 <strong id="exportExperimental" class="export-experimental"></strong>
-                <p id="exportLimitations" class="export-limitations"></p>
+                <details class="export-support"><summary id="exportSupportSummary"></summary><p id="exportLimitations" class="export-limitations"></p></details>
                 <button type="button" role="menuitem" data-export-format="html"><span>HTML</span><span data-export-tool-status="html"></span></button>
                 <button type="button" role="menuitem" data-export-format="pdf"><span>PDF</span><span data-export-tool-status="pdf"></span></button>
                 <button type="button" role="menuitem" data-export-format="docx"><span>DOCX</span><span data-export-tool-status="docx"></span></button>
                 <button type="button" role="menuitem" data-export-format="epub"><span>EPUB</span><span data-export-tool-status="epub"></span></button>
-                <button type="button" role="menuitem" data-export-action="settings" id="exportSettings"></button>
+                <h4 id="exportSetupHeading"></h4><button type="button" role="menuitem" data-export-action="settings" id="exportSettings"></button>
                 <button type="button" role="menuitem" data-export-action="pandoc" id="exportPandocSetup" hidden></button>
                 <button type="button" role="menuitem" data-export-action="browser" id="exportBrowserSetup" hidden></button>
-            </div>
             <section id="exportStatus" class="export-status" role="status" aria-live="polite" aria-atomic="false" hidden>
                 <div class="export-status-row"><span id="exportSpinner" class="export-spinner" aria-hidden="true" hidden></span><span id="exportStatusMessage"></span><button type="button" data-export-action="cancel" id="exportCancel" hidden></button></div>
-                <div id="exportOutputPath" class="export-output-path"></div>
+                <div id="exportOutputPath" class="export-output-path"></div><button type="button" id="exportOpenOutput" hidden></button>
                 <details id="exportWarnings" hidden><summary id="exportWarningsSummary"></summary><ul id="exportWarningsList"></ul></details>
-            </section>` : '';
+            </section></div>` : '';
 
     return `<div class="container">
         <aside class="${sidebarClass}" id="sidebar">
@@ -69,9 +69,9 @@ function generateEditorBodyHtml(messages, platform, options) {
                         <button data-action="undo" title="${m('undo')}"></button>
                         <button data-action="redo" title="${m('redo')}"></button>
                     </div>
-                    <button type="button" data-action="insertMenu" class="toolbar-insert" id="insertButton" title="${m('commandPaletteInsert')}" aria-haspopup="menu" aria-expanded="false" aria-controls="insertMenu"><span class="toolbar-insert-title">${m('commandPaletteInsert')}</span><span aria-hidden="true">▾</span></button>
+                    <button type="button" data-action="insertMenu" class="toolbar-insert" id="insertButton" title="${m('commandPaletteInsert')}" aria-haspopup="dialog" aria-expanded="false" aria-controls="insertMenu"><span class="toolbar-insert-title">${m('commandPaletteInsert')}</span><span aria-hidden="true">▾</span></button>
                 </div>
-                <button type="button" id="formatButton" title="${m('formatActions')}" aria-haspopup="dialog">${m('formatActions')}</button><button type="button" id="contextToolbarToggle" title="${m('contextualTools')}" aria-pressed="false">${m('contextualTools')}</button><div class="toolbar-inner" id="toolbarInner">
+                <div class="toolbar-fixed toolbar-fixed--tools"><button type="button" data-action="formatActions" id="formatButton" title="${m('formatActions')}" aria-haspopup="dialog">${m('formatActions')}</button><button type="button" data-action="contextToolbar" id="contextToolbarToggle" title="${m('contextualTools')}" aria-pressed="false">${m('contextualTools')}</button></div><div class="toolbar-inner" id="toolbarInner">
                     <div class="toolbar-group" data-group="inline">
                         <button data-action="bold" title="${m('bold')}"></button>
                         <button data-action="italic" title="${m('italic')}"></button>
@@ -124,23 +124,27 @@ function generateEditorBodyHtml(messages, platform, options) {
             <div id="modeHelp" class="mode-help" hidden></div><div class="editor-wrapper" id="editorWrapper">
                 <div class="search-replace-box" id="searchReplaceBox" style="display: none;">
                     <div class="search-row">
-                        <input type="text" id="searchInput" placeholder="${m('searchPlaceholder')}" />
-                        <span class="search-count" id="searchCount">0/0</span>
+                        <input type="search" id="searchInput" aria-label="${m('searchPlaceholder')}" placeholder="${m('searchPlaceholder')}" />
+                        <span class="search-count" id="searchCount" role="status" aria-live="polite">0/0</span>
                         <button id="searchPrev" title="${m('searchPrev')}">&#9650;</button>
                         <button id="searchNext" title="${m('searchNext')}">&#9660;</button>
                         <button id="toggleReplace" title="${m('toggleReplace')}">&#8693;</button>
                         <button id="closeSearch" title="${m('closeSearch')}">&#10005;</button>
                     </div>
                     <div class="replace-row" id="replaceRow" style="display: none;">
-                        <input type="text" id="replaceInput" placeholder="${m('replacePlaceholder')}" />
+                        <input type="text" id="replaceInput" aria-label="${m('replacePlaceholder')}" placeholder="${m('replacePlaceholder')}" />
                         <button id="replaceOne" title="${m('replace')}">${m('replace')}</button>
                         <button id="replaceAll" title="${m('replaceAll')}">${m('replaceAll')}</button>
                     </div>
+                    <p class="search-scope">${m('searchSourceScope')}</p>
                     <div class="search-options">
                         <label><input type="checkbox" id="searchCaseSensitive" /> ${m('caseSensitive')}</label>
                         <label><input type="checkbox" id="searchWholeWord" /> ${m('wholeWord')}</label>
                         <label><input type="checkbox" id="searchRegex" /> ${m('regex')}</label>
                     </div>
+                    <div class="search-results-controls"><label><input type="checkbox" id="searchSelectAll" /> ${m('selectAllMatches')}</label><button type="button" id="replaceSelected">${m('replaceSelected')}</button></div>
+                    <p id="searchFeedback" role="status" aria-live="polite"></p>
+                    <div id="searchResults" class="search-results" aria-label="${m('searchResults')}"></div>
                 </div>
                 <div class="editor" id="editor" contenteditable="true" spellcheck="true"></div>
                 <textarea class="source-editor" id="sourceEditor" aria-label="${m('sourceLabel')}" spellcheck="false" style="display: none;"></textarea>

@@ -34,6 +34,20 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  tableRows: "행",
+  tableColumns: "열",
+  searchSourceScope: "Markdown 소스를 검색합니다. 일치한 텍스트만 바꿉니다.",
+  searchResults: "검색 결과",
+  replaceSelected: "선택 항목 바꾸기",
+  selectAllMatches: "모든 일치 항목 선택",
+  selectMatch: "일치 항목 선택",
+  showMoreMatches: "일치 항목 더 보기",
+  noSearchMatches: "일치 항목 없음",
+  invalidSearch: "잘못된 정규식",
+  searchTimeout: "검색 시간이 너무 깁니다. 정규식을 단순화하세요.",
+  searchUnavailable: "검색을 시작할 수 없습니다. 편집기를 다시 여세요.",
+  searchLimit: "일치 항목이 10,000개를 넘습니다. 모두 바꾸기 전에 검색 범위를 줄이세요.",
+
   modeVisual: "시각",
   modeSource: "소스",
   modeSplit: "분할",
@@ -43,6 +57,7 @@ export const webviewMessages = {
   outlineTitle: "개요",
   documentTab: "문서",
   readingProgress: "읽기 위치",
+  viewDescription: "문서를 변경하지 않고 탐색, 검색 또는 보기 열기를 수행합니다.",
   formatActions: "서식",
   contextualTools: "문맥 도구",
   sourceLabel: "소스",

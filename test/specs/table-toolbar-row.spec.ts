@@ -118,7 +118,10 @@ test('second-row overflow responds to sidebar changes and clears with table cont
 test('docking leaves one undo step for the actual table edit and both rows are keyboard reachable', async ({ page }) => {
     await setup(page);
     const before = await page.evaluate(() => (window as any).htmlToMarkdown());
-    await page.locator('#toolbar [data-action="source"]').focus();
+    await page.locator('#toolbar button[data-editor-mode="split"]').focus();
+    await page.keyboard.press('Tab');
+    await expect(page.locator(`${controls} select`).first()).toBeFocused();
+    await page.keyboard.press('Tab');
     await page.keyboard.press('Tab');
     await expect(page.locator(`${controls} [data-action="add-col-left"]`)).toBeFocused();
     await page.keyboard.press('ArrowRight');

@@ -1,3 +1,4 @@
+import { toggleEditorView } from '../utils/view-mode';
 import { test, expect, Page } from '@playwright/test';
 
 const set = (page: Page, value: string) => page.evaluate(value => (window as any).__hostMessageHandler({ type: 'mathSourcePosition', value }), value);
@@ -34,8 +35,8 @@ for (const block of ['$$x^2$$', '$$\nx^2\ny^3\n$$', '\\[\nx^2\n\\]', '```math\nx
             expect(await markdown(page)).toBe(source); await expect(page.locator('[data-action="undo"]')).toBeDisabled();
         }
         expect(await page.evaluate(() => (window as any).__testApi.messages.filter((m: any) => m.type === 'edit'))).toEqual([]);
-        await page.locator('[data-action="source"]').click(); await expect(page.locator('#sourceEditor')).toHaveValue(source);
-        await page.locator('[data-action="source"]').click(); await page.locator('.math-wrapper').click(); await position(page, 'below');
+        await toggleEditorView(page); await expect(page.locator('#sourceEditor')).toHaveValue(source);
+        await toggleEditorView(page); await page.locator('.math-wrapper').click(); await position(page, 'below');
     });
 }
 

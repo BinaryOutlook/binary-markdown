@@ -34,6 +34,20 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  tableRows: "Lignes",
+  tableColumns: "Colonnes",
+  searchSourceScope: "Rechercher dans la source Markdown. Le remplacement modifie le texte exact trouvé.",
+  searchResults: "Résultats",
+  replaceSelected: "Remplacer la sélection",
+  selectAllMatches: "Sélectionner toutes les occurrences",
+  selectMatch: "Sélectionner l’occurrence",
+  showMoreMatches: "Afficher davantage d’occurrences",
+  noSearchMatches: "Aucune occurrence",
+  invalidSearch: "Expression régulière invalide",
+  searchTimeout: "La recherche est trop longue. Simplifiez l’expression régulière.",
+  searchUnavailable: "La recherche n’a pas démarré. Rouvrez l’éditeur.",
+  searchLimit: "Plus de 10 000 occurrences. Affinez la recherche avant de tout remplacer.",
+
   modeVisual: "Visuel",
   modeSource: "Source",
   modeSplit: "Divisé",
@@ -43,6 +57,7 @@ export const webviewMessages = {
   outlineTitle: "Plan",
   documentTab: "Document",
   readingProgress: "Position de lecture",
+  viewDescription: "Naviguer, rechercher ou ouvrir une vue sans modifier le document.",
   formatActions: "Format",
   contextualTools: "Outils contextuels",
   sourceLabel: "Source",

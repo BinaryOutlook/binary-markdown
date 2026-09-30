@@ -67,9 +67,9 @@ async function main() {
                 const bytes = await application.evaluate(async ({ BrowserWindow }) => (await BrowserWindow.getAllWindows().find(window => window.__fileManager).webContents.capturePage()).toPNG().toString('base64'));
                 fs.writeFileSync(path.join(evidence, name + '.png'), Buffer.from(bytes, 'base64'));
             }, record: (name, details) => receipts.push({ name, ...details }) });
-        await page.locator('[data-action="source"]').click();
+        await page.locator('[data-editor-mode="source"]').click();
         assert.equal(await page.locator('#sourceEditor').inputValue(), changed);
-        await page.locator('[data-action="source"]').click();
+        await page.locator('[data-editor-mode="visual"]').click();
         assert.equal(await application.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows().find(window => window.__fileManager).__fileManager.isDirtyState()), false);
         await preferences.bringToFront(); await control.scrollIntoViewIfNeeded();
         await preferences.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));

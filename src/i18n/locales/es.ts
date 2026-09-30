@@ -34,6 +34,20 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  tableRows: "Filas",
+  tableColumns: "Columnas",
+  searchSourceScope: "Buscar en la fuente Markdown. Se reemplaza el texto exacto encontrado.",
+  searchResults: "Resultados",
+  replaceSelected: "Reemplazar seleccionados",
+  selectAllMatches: "Seleccionar todas las coincidencias",
+  selectMatch: "Seleccionar coincidencia",
+  showMoreMatches: "Mostrar más coincidencias",
+  noSearchMatches: "Sin coincidencias",
+  invalidSearch: "Expresión regular no válida",
+  searchTimeout: "La búsqueda tardó demasiado. Simplifique la expresión regular.",
+  searchUnavailable: "No se pudo iniciar la búsqueda. Reabra el editor.",
+  searchLimit: "Más de 10.000 coincidencias. Acote la búsqueda antes de reemplazar todas.",
+
   modeVisual: "Visual",
   modeSource: "Fuente",
   modeSplit: "Dividir",
@@ -43,6 +57,7 @@ export const webviewMessages = {
   outlineTitle: "Esquema",
   documentTab: "Documento",
   readingProgress: "Posición de lectura",
+  viewDescription: "Navega, busca o abre una vista sin cambiar el documento.",
   formatActions: "Formato",
   contextualTools: "Herramientas contextuales",
   sourceLabel: "Fuente",

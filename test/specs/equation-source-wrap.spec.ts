@@ -1,3 +1,4 @@
+import { toggleEditorView } from '../utils/view-mode';
 import { test, expect, Page } from '@playwright/test';
 import { lineStartKey, lineEndKey } from '../utils/editor-test-helper';
 
@@ -47,8 +48,8 @@ for (const position of ['above', 'below']) {
             await set(page, false); expect((await metrics(page)).scroll).toBeGreaterThan((await metrics(page)).width);
             expect(await markdown(page)).toBe(block);
             expect(await page.evaluate(() => (window as any).__testApi.messages.filter((m: any) => m.type === 'edit'))).toEqual([]);
-            await page.locator('[data-action="source"]').click(); await expect(page.locator('#sourceEditor')).toHaveValue(block);
-            await page.locator('[data-action="source"]').click(); expect(await markdown(page)).toBe(block);
+            await toggleEditorView(page); await expect(page.locator('#sourceEditor')).toHaveValue(block);
+            await toggleEditorView(page); expect(await markdown(page)).toBe(block);
         });
     }
 }

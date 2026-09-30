@@ -34,6 +34,20 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  tableRows: "行",
+  tableColumns: "列",
+  searchSourceScope: "搜索 Markdown 源码。替换仅修改精确匹配的文本。",
+  searchResults: "搜索结果",
+  replaceSelected: "替换所选",
+  selectAllMatches: "选择所有匹配",
+  selectMatch: "选择匹配",
+  showMoreMatches: "显示更多匹配",
+  noSearchMatches: "无匹配",
+  invalidSearch: "正则表达式无效",
+  searchTimeout: "搜索耗时过长。请简化正则表达式。",
+  searchUnavailable: "无法开始搜索。请重新打开编辑器再试。",
+  searchLimit: "超过 10,000 个匹配。全部替换前请缩小搜索范围。",
+
   modeVisual: "可视化",
   modeSource: "源码",
   modeSplit: "分栏",
@@ -43,6 +57,7 @@ export const webviewMessages = {
   outlineTitle: "大纲",
   documentTab: "文档",
   readingProgress: "阅读位置",
+  viewDescription: "导航、搜索或打开视图，不更改文档。",
   formatActions: "格式",
   contextualTools: "上下文工具",
   sourceLabel: "源码",

@@ -37,7 +37,7 @@ async function codeBlockControlsCase(h, owner, record) {
         await h.driver({ action: 'save' }); assert.equal(fs.readFileSync(filePath, 'utf8'), source);
         await h.sourceMode(connection);
         assert.equal(await connection.evaluate('document.getElementById("sourceEditor").value'), source);
-        await connection.evaluate('document.querySelector("[data-action=source]").click()');
+        await connection.evaluate('document.querySelector("[data-editor-mode=visual]").click()');
         assert.equal(await connection.evaluate('document.querySelector(".code-wrap-btn").getAttribute("aria-pressed")'), 'true');
         record('code-controls-wrap', { persistentNotice: true, sourceAndUndoUnchanged: true, nativeSaveAndSourceRoundTrip: true, clean: true });
 

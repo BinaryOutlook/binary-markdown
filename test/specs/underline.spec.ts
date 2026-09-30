@@ -1,3 +1,4 @@
+import { toggleEditorView } from '../utils/view-mode';
 import { test, expect, Page } from '@playwright/test';
 
 async function setup(page: Page, source: string) {
@@ -43,12 +44,12 @@ for (const [name, source, selector] of [
         await expect(page.locator(selector)).toHaveText('marked');
         await page.locator('#editor > p').filter({ hasText: 'End paragraph.' }).click();
         await page.keyboard.press('End'); await page.keyboard.type(' edited');
-        await page.locator('[data-action="source"]').click();
+        await toggleEditorView(page);
         const saved = await page.locator('#sourceEditor').inputValue();
         expect(saved).toContain('<u>'); expect(saved).toContain('End paragraph. edited');
         await page.keyboard.press('Control+s');
         await expect.poll(() => page.evaluate(() => (window as any).__testApi.messages.findLast((m: any) => m.type === 'save')?.content)).toBe(saved);
-        await page.locator('[data-action="source"]').click();
+        await toggleEditorView(page);
         await page.evaluate(saved => (window as any).__testApi.setMarkdown(saved), saved);
         await expect(page.locator('#editor u')).toHaveText('marked');
         expect(await markdown(page)).toBe(saved);
@@ -157,7 +158,7 @@ test('keyboard shortcut and caret typing preserve underline through source mode'
     await page.evaluate(() => getSelection()!.collapseToEnd());
     await page.keyboard.press('Control+u');
     await page.keyboard.type(' added');
-    await page.locator('[data-action="source"]').click();
+    await toggleEditorView(page);
     expect(await page.locator('#sourceEditor').inputValue()).toContain('<u> added</u>');
 });
 

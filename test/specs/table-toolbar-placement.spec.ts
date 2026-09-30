@@ -1,3 +1,4 @@
+import { toggleEditorView } from '../utils/view-mode';
 import { test, expect, Page } from '@playwright/test';
 
 const documentText = '# Table\n\n| Item | State | Owner |\n| --- | --- | --- |\n| One | Ready | A |\n| Two | Draft | B |\n\nAfter table.\n';
@@ -45,10 +46,10 @@ test('Full mode gives docked column insertion its own row in a narrow editor', a
 test('source mode and selection outside a table invalidate controls', async ({ page }) => {
     await setup(page, 'top-bar');
     await expect(page.locator(controls)).toBeVisible();
-    await page.locator('#toolbar [data-action="source"]').click();
+    await toggleEditorView(page);
     await expect(page.locator(controls)).not.toBeVisible();
     await expect(page.locator('.table-toolbar-dock')).not.toBeVisible();
-    await page.locator('#toolbar [data-action="source"]').click();
+    await toggleEditorView(page);
     await page.locator('#editor td').first().click();
     await expect(page.locator(controls)).toBeVisible();
     await page.locator('#editor p').last().click();
@@ -117,6 +118,7 @@ for (const variant of ['floating', 'docked', 'compact']) {
                 const selected = (node?.nodeType === 3 ? node.parentElement : node as Element)?.closest('td,th');
                 return selected === (window as any).activeTableCell;
             })).toBe(true);
+            if (!await page.locator('#toolbar [data-action="undo"]').isVisible()) await page.locator('#toolbarMore').click();
             await page.locator('#toolbar [data-action="undo"]').click();
             await expect(page.locator('#editor tr')).toHaveCount(3);
             await expect(page.locator('#editor th')).toHaveCount(3);
@@ -140,7 +142,7 @@ test('chooser has three initial choices, persists a fixed choice, and closes on 
         .toEqual([{ type: 'setTableToolbarPosition', value: 'bottom-right' }]);
     await expect(page.locator('#toolbar [data-action="undo"]')).toBeDisabled();
     await page.locator(`${controls} [data-action="placement"]`).click();
-    await page.locator('#toolbar [data-action="source"]').focus();
+    await page.locator('#toolbar button[data-editor-mode="split"]').focus();
     await expect(picker).not.toBeVisible();
 });
 
@@ -163,7 +165,7 @@ test('Automatic docks around occupied content and returns after space becomes av
     await page.addStyleTag({ content: '#editor{padding:8px} #editor table{width:100%;margin:0} #editor h1,#editor p{margin:0} #editorWrapper{scrollbar-gutter:stable}' });
     await page.mouse.move(1, 1);
     await expect(page.locator(controls)).toHaveAttribute('data-placement', 'top-bar');
-    await page.addStyleTag({ content: '#editor table{width:300px;margin:100px auto}' });
+    await page.addStyleTag({ content: '#editor table{width:300px;margin:160px auto}' });
     await expect(page.locator(controls)).not.toHaveAttribute('data-placement', 'top-bar');
     const selected = await page.locator(controls).getAttribute('data-placement');
     await page.setViewportSize({ width: 1250, height: 790 });
@@ -193,7 +195,7 @@ for (const width of [420, 900, 1280]) {
         await page.setViewportSize({ width, height: 800 });
         await setup(page, 'top-bar', 'full');
         await page.mouse.move(1, 1);
-        const source = page.locator('#toolbar [data-action="source"]');
+        const source = page.locator('#toolbar button[data-editor-mode="split"]');
         if (!await source.isVisible()) await page.locator('#toolbarMore').click();
         await expect(source).toBeVisible();
         await page.keyboard.press('Escape');

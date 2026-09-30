@@ -80,6 +80,50 @@
                 }
             });
         });
+        function decorateBlocks() {
+            for (const block of editor.querySelectorAll('.math-wrapper,.mermaid-wrapper')) {
+                const diagram = block.classList.contains('mermaid-wrapper');
+                let chrome = block.querySelector('.block-chrome');
+                if (!chrome) {
+                    chrome = document.createElement('div'); chrome.className = 'block-chrome'; chrome.contentEditable = 'false';
+                    const title = document.createElement('strong'); title.textContent = diagram ? 'Mermaid' : i18n.equationTitle; chrome.appendChild(title);
+                    if (diagram) for (const mode of ['display','edit']) {
+                        const toggle = button(mode === 'display' ? i18n.previewLabel : i18n.sourceLabel, event => {
+                            event.stopPropagation(); if (options.isSourceMode()) return;
+                            block.dataset.mode = mode;
+                            if (mode === 'edit') {
+                                const source = block.querySelector('pre code'); source.focus({ preventScroll: true });
+                                const range = document.createRange(); range.selectNodeContents(source); range.collapse(false);
+                                window.getSelection().removeAllRanges(); window.getSelection().addRange(range);
+                            }
+                            decorateBlocks();
+                        });
+                        toggle.dataset.blockMode = mode;
+                        toggle.addEventListener('mousedown', event => event.preventDefault());
+                        chrome.appendChild(toggle);
+                    }
+                    const hint = document.createElement('small'); hint.textContent = i18n.blockExitHint; chrome.appendChild(hint);
+                    const status = document.createElement('span'); status.className = 'block-status'; status.setAttribute('role', 'status'); chrome.appendChild(status);
+                    const diagnostic = document.createElement('details'); diagnostic.className = 'block-diagnostic';
+                    const summary = document.createElement('summary'); summary.textContent = diagram ? i18n.diagramSyntaxError : i18n.equationUnsupported;
+                    const detail = document.createElement('div'); detail.className = 'block-diagnostic-text'; diagnostic.append(summary, detail); chrome.appendChild(diagnostic);
+                    block.prepend(chrome);
+                }
+                const pre = block.querySelector(diagram ? 'pre[data-lang="mermaid"]' : 'pre[data-lang="math"]');
+                if (pre) pre.dataset.sourceLabel = i18n.sourceLabel + (block.dataset.errorLine ? ' · ' + i18n.sourceLine + ' ' + block.dataset.errorLine : '');
+                const preview = block.querySelector(diagram ? '.mermaid-diagram' : '.math-display');
+                if (preview) preview.dataset.previewLabel = i18n.previewLabel;
+                chrome.querySelectorAll('[data-block-mode]').forEach(toggle => { toggle.disabled = options.isSourceMode(); toggle.setAttribute('aria-pressed', String(block.dataset.mode === toggle.dataset.blockMode)); });
+                const error = block.dataset.renderError || '';
+                const status = chrome.querySelector('.block-status');
+                const text = error ? (diagram ? i18n.diagramNeedsAttention : i18n.equationUnsupported) + (block.dataset.errorLine ? ' · ' + i18n.sourceLine + ' ' + block.dataset.errorLine : '') : '';
+                if (status.textContent !== text) status.textContent = text;
+                status.hidden = !error;
+                const diagnostic = chrome.querySelector('.block-diagnostic'); diagnostic.hidden = !error;
+                if (diagnostic.lastChild.textContent !== error) diagnostic.lastChild.textContent = error;
+                block.classList.toggle('block-needs-attention', Boolean(error));
+            }
+        }
         function refresh() {
             const stats = byId('documentStatistics');
             const text = options.statistics();
@@ -88,6 +132,7 @@
             const progress = byId('readingProgress');
             if (progress) progress.value = owner.scrollHeight > owner.clientHeight ? Math.round(100 * owner.scrollTop / (owner.scrollHeight - owner.clientHeight)) : 0;
             positionContext();
+            decorateBlocks();
         }
         sourceEditor.addEventListener('scroll', refresh);
         wrapper.addEventListener('scroll', refresh);

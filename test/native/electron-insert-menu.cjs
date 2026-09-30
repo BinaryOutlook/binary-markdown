@@ -65,9 +65,9 @@ async function main() {
                 }
             }
         });
-        await page.locator('[data-action="source"]').click();
+        await page.locator('[data-editor-mode="source"]').click();
         assert.equal(await page.locator('#sourceEditor').inputValue(), source);
-        await page.locator('[data-action="source"]').click();
+        await page.locator('[data-editor-mode="visual"]').click();
         await page.keyboard.press(process.platform === 'darwin' ? 'Meta+s' : 'Control+s');
         const started = Date.now();
         while (await application.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows().find(window => window.__fileManager).__fileManager.isDirtyState())) {

@@ -34,6 +34,20 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  tableRows: "列",
+  tableColumns: "欄",
+  searchSourceScope: "搜尋 Markdown 原始碼。取代僅修改精確符合的文字。",
+  searchResults: "搜尋結果",
+  replaceSelected: "取代所選",
+  selectAllMatches: "選取所有符合項目",
+  selectMatch: "選取符合項目",
+  showMoreMatches: "顯示更多符合項目",
+  noSearchMatches: "沒有符合項目",
+  invalidSearch: "正規表示式無效",
+  searchTimeout: "搜尋耗時過長。請簡化正規表示式。",
+  searchUnavailable: "無法開始搜尋。請重新開啟編輯器再試。",
+  searchLimit: "超過 10,000 個符合項目。全部取代前請縮小搜尋範圍。",
+
   modeVisual: "視覺",
   modeSource: "原始碼",
   modeSplit: "分割",
@@ -43,6 +57,7 @@ export const webviewMessages = {
   outlineTitle: "大綱",
   documentTab: "文件",
   readingProgress: "閱讀位置",
+  viewDescription: "導覽、搜尋或開啟檢視，不變更文件。",
   formatActions: "格式",
   contextualTools: "情境工具",
   sourceLabel: "原始碼",

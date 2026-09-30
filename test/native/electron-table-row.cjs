@@ -36,9 +36,9 @@ async function main() {
             record: (name, details) => receipts.push({ name, ...details }),
         });
         assert.equal(fs.readFileSync(fixture, 'utf8'), source);
-        await page.locator('#toolbar [data-action="source"]').click();
+        await page.locator('#toolbar [data-editor-mode="source"]').click();
         assert.equal(await page.locator('#sourceEditor').inputValue(), source);
-        await page.locator('#toolbar [data-action="source"]').click();
+        await page.locator('#toolbar [data-editor-mode="visual"]').click();
         // The table action and its undo are saved through the real file manager.
         await page.keyboard.press(process.platform === 'darwin' ? 'Meta+s' : 'Control+s');
         const started = Date.now();
