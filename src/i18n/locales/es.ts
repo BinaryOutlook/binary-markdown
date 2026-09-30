@@ -57,6 +57,7 @@ export const webviewMessages = {
   outlineTitle: "Esquema",
   documentTab: "Documento",
   readingProgress: "Posición de lectura",
+  historyDescription: "Deshaz o rehace cambios del documento con el historial compartido.",
   viewDescription: "Navega, busca o abre una vista sin cambiar el documento.",
   formatActions: "Formato",
   contextualTools: "Herramientas contextuales",

@@ -57,6 +57,7 @@ export const webviewMessages = {
   outlineTitle: "大纲",
   documentTab: "文档",
   readingProgress: "阅读位置",
+  historyDescription: "使用共享历史撤销或重做文档编辑。",
   viewDescription: "导航、搜索或打开视图，不更改文档。",
   formatActions: "格式",
   contextualTools: "上下文工具",

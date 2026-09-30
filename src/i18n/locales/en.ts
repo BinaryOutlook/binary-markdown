@@ -57,6 +57,7 @@ export const webviewMessages = {
   outlineTitle: "Outline",
   documentTab: "Document",
   readingProgress: "Reading position",
+  historyDescription: "Undo or redo document edits using the shared history.",
   viewDescription: "Navigate, search, or open a view without changing the document.",
   formatActions: "Format",
   contextualTools: "Contextual tools",

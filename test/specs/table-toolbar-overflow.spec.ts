@@ -42,7 +42,7 @@ for (const position of ['top-left', 'left']) {
             const visible = (selector: string) => [...document.querySelectorAll<HTMLButtonElement>(selector)].filter(button => button.getClientRects().length).map(button => button.dataset.action);
             return { main: visible(`${controls} button:not([data-action="more"])`), menu: visible(`${overflow} button`) };
         }, { controls, overflow });
-        const actions = ['add-col-left', 'add-col-right', 'del-col', 'add-row-above', 'add-row-below', 'del-row', 'align-left', 'align-center', 'align-right', 'placement'];
+        const actions = ['add-col-left', 'add-col-right', 'add-row-above', 'add-row-below', 'del-col', 'del-row', 'align-left', 'align-center', 'align-right', 'placement'];
         expect([...distribution.main, ...distribution.menu]).toEqual(actions);
         await page.keyboard.press('Escape');
         await page.setViewportSize({ width: 1280, height: 900 });
@@ -85,9 +85,9 @@ test('a focused action follows overflow in both directions without editing', asy
 
 test('docked controls retain leading actions and resize an open overflow menu', async ({ page }) => {
     await setup(page, 'top-bar');
-    // Leave room for the persistent Insert control while still overflowing
-    // table actions; the narrower compact-menu state has its own check below.
-    await page.setViewportSize({ width: 720, height: 800 });
+    // Leave room for the complete directional diamond and row/column navigation
+    // while overflowing secondary actions; the compact menu is checked below.
+    await page.setViewportSize({ width: 1100, height: 800 });
     const more = page.locator(`${controls} [data-action="more"]`);
     await expect(more).toBeVisible();
     await expect(page.locator(`${controls} [data-action="add-col-left"]`)).toBeVisible();

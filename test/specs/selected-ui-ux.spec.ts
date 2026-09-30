@@ -44,6 +44,28 @@ test('Split source edits share Undo with Visual and the preview is read only', a
     expect((await snapshot(page)).content).toBe(authored);
 });
 
+test('a narrow pane conceals the rail without changing its stored state and can open an overlay', async ({ page }) => {
+    await setup(page);
+    await expect(page.locator('#sidebar')).toBeVisible();
+    const before = await page.evaluate(() => ({
+        hidden: document.getElementById('sidebar')!.classList.contains('hidden'),
+        reports: (window as any).__testApi.messages.filter((m: any) => m.type === 'outlineStateChanged').length,
+    }));
+    await page.setViewportSize({ width: 600, height: 800 });
+    await expect(page.locator('#sidebar')).toBeHidden();
+    expect(await page.evaluate(() => ({
+        hidden: document.getElementById('sidebar')!.classList.contains('hidden'),
+        reports: (window as any).__testApi.messages.filter((m: any) => m.type === 'outlineStateChanged').length,
+    }))).toEqual(before);
+    await page.getByRole('button', { name: 'Open Outline', exact: true }).click();
+    await expect(page.locator('#sidebar')).toBeVisible();
+    await expect(page.locator('#sidebar')).toHaveAttribute('data-overlay-open', 'true');
+    await page.locator('#closeSidebar').click();
+    await expect(page.locator('#sidebar')).toBeHidden();
+    expect(await snapshot(page)).toMatchObject({ content: authored, pending: false });
+    await expect(page.locator('[data-action="undo"]')).toBeDisabled();
+});
+
 test('Outline navigates to the corresponding source heading in Split', async ({ page }) => {
     await setup(page);
     await page.locator('button[data-editor-mode="split"]').click();
@@ -263,7 +285,8 @@ test('Split preview cannot open an inline equation editor or modify a task check
 });
 
 test('inline-code formatting escapes selected HTML text', async ({ page }) => {
-    await setup(page, 'Literal &lt;img src=x onerror=alert(1)&gt;.\n');
+    await setup(page, 'Literal <img src=x onerror=alert(1)>.\n');
+    await expect(page.locator('#editor p')).toHaveText('Literal <img src=x onerror=alert(1)>.');
     await page.evaluate(() => {
         const node = document.querySelector('#editor p')!.firstChild!;
         const value = node.textContent!; const start = value.indexOf('<img');

@@ -786,6 +786,8 @@
             redo: redo,
             updateButtons: updateButtons,
             clear: clear,
+            get canUndo() { return undoStack.length > 0; },
+            get canRedo() { return redoStack.length > 0; },
             get isUndoRedo() { return _isUndoRedo; }
         };
     })();
@@ -12416,6 +12418,10 @@
         { group: 'insert', action: 'image', i18nKey: 'insertImage', icon: 'image' },
         { group: 'insert', action: 'toc', i18nKey: 'insertToc', icon: 'ul' },
         { group: 'insert', action: 'table', i18nKey: 'insertTable', icon: 'table' },
+        { group: 'view', action: 'viewUndo', i18nKey: 'undo', icon: 'undo' },
+        { group: 'view', action: 'viewRedo', i18nKey: 'redo', icon: 'redo' },
+        { group: 'view', action: 'viewInsert', i18nKey: 'commandPaletteInsert', icon: 'table' },
+        { group: 'view', action: 'viewContextual', i18nKey: 'contextualTools', icon: 'code' },
         { group: 'view', action: 'viewVisual', i18nKey: 'modeVisual' },
         { group: 'view', action: 'viewSource', i18nKey: 'modeSource' },
         { group: 'view', action: 'viewSplit', i18nKey: 'modeSplit' },
@@ -12444,7 +12450,7 @@
 
     const insertCategory = { inlineMath: 'equationsCategory', math: 'equationsCategory', table: 'structureCategory', toc: 'structureCategory', codeblock: 'codeCategory', mermaid: 'codeCategory', link: 'mediaCategory', image: 'mediaCategory' };
     const insertSamples = { inlineMath: '$x^2$', math: '$$\\frac{a+b}{c}$$', table: '| A | B |\n| --- | --- |', codeblock: '```javascript\nconst value = 1;\n```', link: '[text](https://example.com)', image: '![description](image.png)', mermaid: 'graph TD\n  A --> B', toc: '[TOC]' };
-    const actionDescription = action => action.startsWith('view') ? i18n.viewDescription : i18n['insertDescription' + action[0].toUpperCase() + action.slice(1)] || (['bold','italic','underline','strikethrough','code'].includes(action) ? i18n.formatDescription : i18n.blockDescription);
+    const actionDescription = action => ['viewUndo','viewRedo'].includes(action) ? i18n.historyDescription : action.startsWith('view') ? i18n.viewDescription : i18n['insertDescription' + action[0].toUpperCase() + action.slice(1)] || (['bold','italic','underline','strikethrough','code'].includes(action) ? i18n.formatDescription : i18n.blockDescription);
     let insertSearch = null, insertCategorySelection = 'allCategory';
     function filterInsertWorkspace() {
         const query = (insertSearch?.value || '').trim().toLocaleLowerCase();
@@ -12752,6 +12758,8 @@
             el.className = 'command-palette-item';
             if (visibleIndex === 0) el.classList.add('selected');
             el.dataset.action = item.action;
+            if (item.action === 'viewUndo') el.disabled = !undoManager.canUndo;
+            if (item.action === 'viewRedo') el.disabled = !undoManager.canRedo;
 
             // Icon
             var iconSpan = document.createElement('span');
@@ -12788,7 +12796,7 @@
     }
 
     function moveCommandPaletteSelection(direction) {
-        var items = commandPaletteList.querySelectorAll('.command-palette-item');
+        var items = commandPaletteList.querySelectorAll('.command-palette-item:not(:disabled)');
         if (items.length === 0) return;
 
         var currentIdx = -1;
@@ -12933,6 +12941,7 @@
     }
 
     function executeCommandPaletteAction(action) {
+        if ((action === 'viewUndo' && !undoManager.canUndo) || (action === 'viewRedo' && !undoManager.canRedo)) return;
         // Close palette
         commandPalette.style.display = 'none';
         commandPaletteVisible = false;
@@ -12953,6 +12962,8 @@
         }
 
         const views = {
+            viewUndo: () => undoManager.undo(), viewRedo: () => undoManager.redo(),
+            viewInsert: () => insertButton?.click(), viewContextual: () => document.getElementById('contextToolbarToggle')?.click(),
             viewVisual: () => setEditorMode('visual'), viewSource: () => setEditorMode('source'), viewSplit: () => setEditorMode('split'),
             viewOutline: openSidebar, viewFind: () => openSearchBox(false), viewReplace: () => openSearchBox(true),
             viewTextEditor: () => host.openInTextEditor(), viewExport: () => document.getElementById('exportButton')?.click(),

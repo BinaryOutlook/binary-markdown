@@ -25,7 +25,7 @@ async function languageOrderChecks({ editor, keyboard, set, record }) {
     assert.deepEqual(await ids(), ['typescript', 'javascript']);
     assert.deepEqual(await editor.evaluate(() => {
         const input = document.querySelector('.lang-selector-search');
-        return [input.value, input.selectionStart, input.selectionEnd, document.querySelector('[aria-selected="true"]').dataset.language];
+        return [input.value, input.selectionStart, input.selectionEnd, document.querySelector('.lang-selector-item[aria-selected="true"]').dataset.language];
     }), ['script', 1, 4, 'typescript']);
     assert.equal(await editor.evaluate(() => window.__orderCode === document.querySelector('pre code')), true);
     await keyboard.press('Escape');

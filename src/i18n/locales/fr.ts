@@ -57,6 +57,7 @@ export const webviewMessages = {
   outlineTitle: "Plan",
   documentTab: "Document",
   readingProgress: "Position de lecture",
+  historyDescription: "Annuler ou rétablir les modifications avec l’historique partagé.",
   viewDescription: "Naviguer, rechercher ou ouvrir une vue sans modifier le document.",
   formatActions: "Format",
   contextualTools: "Outils contextuels",

@@ -57,6 +57,7 @@ export const webviewMessages = {
   outlineTitle: "アウトライン",
   documentTab: "文書",
   readingProgress: "閲覧位置",
+  historyDescription: "共有履歴で文書の編集を元に戻したり、やり直したりします。",
   viewDescription: "文書を変更せずに移動、検索、ビューの表示を行います。",
   formatActions: "書式",
   contextualTools: "選択時のツール",

@@ -60,6 +60,7 @@ export interface WebviewMessages {
   outlineTitle: string;
   documentTab: string;
   readingProgress: string;
+  historyDescription: string;
   viewDescription: string;
   formatActions: string;
   contextualTools: string;

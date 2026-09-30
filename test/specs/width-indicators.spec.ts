@@ -36,7 +36,10 @@ for (const mode of ['default', 'custom']) for (const alignment of ['left', 'cent
             });
             expect(new Set(states).size).toBe(1);
         }
-        await page.locator('#sidebar').evaluate(node => { node.classList.remove('hidden'); node.style.width = '200px'; });
+        // Desktop rails reduce the available column. Narrow panes use an overlay
+        // instead, so test the width cap above the overlay breakpoint.
+        await page.setViewportSize({ width: cap + 300, height: 800 });
+        await page.locator('#sidebar').evaluate(node => { node.classList.remove('hidden'); node.style.width = '400px'; });
         await expect(page.locator('#editorWidthGuide')).toHaveAttribute('data-capped', 'false');
     });
 }

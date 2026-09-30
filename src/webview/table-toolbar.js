@@ -17,7 +17,7 @@
             listeners.push(() => node.removeEventListener(type, handler, capture));
         };
         const controls = document.createElement('div');
-        controls.className = 'table-toolbar';
+        controls.className = 'table-toolbar'; controls.hidden = true;
         controls.setAttribute('role', 'toolbar');
         controls.setAttribute('aria-label', label('tableControls', 'Table controls'));
         const direction = document.createElement('div'); direction.className = 'table-insert-direction'; controls.appendChild(direction);
@@ -93,7 +93,7 @@
         document.body.appendChild(picker);
         const sizes = [false, true].map(vertical => {
             const clone = controls.cloneNode(true);
-            clone.className = 'table-toolbar visible table-toolbar-measure';
+            clone.className = 'table-toolbar visible table-toolbar-measure'; clone.hidden = false;
             clone.dataset.vertical = String(vertical);
             clone.setAttribute('aria-hidden', 'true');
             clone.inert = true;
@@ -144,7 +144,7 @@
             more.setAttribute('aria-expanded', 'false');
             overflowActions[overflowActions.length - 1].setAttribute('aria-expanded', 'false');
             menuOpen = false;
-            if (current === 'top-bar' && !toggle.hidden) controls.classList.remove('visible');
+            if (current === 'top-bar' && !toggle.hidden) { controls.classList.remove('visible'); controls.hidden = true; }
             toggle.setAttribute('aria-expanded', 'false');
             controls.querySelector('[data-action="placement"]').setAttribute('aria-expanded', 'false');
         }
@@ -152,7 +152,7 @@
             boundaries.hidden = true;
             const changed = !dock.hidden || !row.hidden;
             closeMenus();
-            controls.classList.remove('visible');
+            controls.classList.remove('visible'); controls.hidden = true;
             dock.hidden = true;
             row.hidden = true;
             if (changed) options.onLayout();
@@ -392,7 +392,7 @@
             controls.setAttribute('aria-orientation', next.vertical ? 'vertical' : 'horizontal');
             controls.setAttribute('role', 'toolbar');
             controls.querySelectorAll('button').forEach(button => button.removeAttribute('role'));
-            controls.classList.add('visible');
+            controls.classList.add('visible'); controls.hidden = false;
             controls.style.maxWidth = '';
             controls.style.maxHeight = '';
             let available = next.width;
@@ -405,7 +405,7 @@
                 if (compact) {
                     document.body.appendChild(controls);
                     controls.dataset.docked = 'false';
-                    controls.classList.toggle('visible', menuOpen);
+                    controls.classList.toggle('visible', menuOpen); controls.hidden = !menuOpen;
                     controls.dataset.vertical = 'true';
                     controls.setAttribute('role', 'menu');
                     controls.setAttribute('aria-orientation', 'vertical');
@@ -493,7 +493,7 @@
             if (!valid()) return;
             menuOpen = !menuOpen;
             toggle.setAttribute('aria-expanded', String(menuOpen));
-            controls.classList.toggle('visible', menuOpen);
+            controls.classList.toggle('visible', menuOpen); controls.hidden = !menuOpen;
             if (menuOpen) { placeMenu(controls, toggle); controls.querySelector('button').focus({ preventScroll: true }); }
         });
         function keyboard(event) {

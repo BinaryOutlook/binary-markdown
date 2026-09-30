@@ -57,6 +57,7 @@ export const webviewMessages = {
   outlineTitle: "大綱",
   documentTab: "文件",
   readingProgress: "閱讀位置",
+  historyDescription: "使用共用歷史復原或重做文件編輯。",
   viewDescription: "導覽、搜尋或開啟檢視，不變更文件。",
   formatActions: "格式",
   contextualTools: "情境工具",

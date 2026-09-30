@@ -45,9 +45,9 @@ test('unknown language, empty results and repeated cancellation preserve source 
 
 test('keyboard confirmation preserves whitespace, copy, Source and one-step undo/redo', async ({ page, context }) => {
     await setup(page); await open(page); await page.keyboard.insertText('java');
-    await expect(page.locator('[aria-selected="true"]')).toHaveAttribute('data-language', 'java');
+    await expect(page.locator('.lang-selector-item[aria-selected="true"]')).toHaveAttribute('data-language', 'java');
     await page.keyboard.press('ArrowDown');
-    await expect(page.locator('[aria-selected="true"]')).toHaveAttribute('data-language', 'javascript');
+    await expect(page.locator('.lang-selector-item[aria-selected="true"]')).toHaveAttribute('data-language', 'javascript');
     await page.keyboard.press('Enter');
     const changed = source.replace('```custom-lang', '```javascript');
     expect(await markdown(page)).toBe(changed);

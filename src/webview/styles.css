@@ -1447,3 +1447,6 @@ button.command-palette-item { border: 0; width: 100%; text-align: start; font: i
     .sidebar[data-overlay-open="true"]:not(.hidden) { display: flex; }
     .toolbar .menu-btn.hidden { display: flex; }
 }
+
+.table-toolbar[hidden] { display: none !important; }
+.command-palette-item:disabled { opacity: .5; cursor: default; }
