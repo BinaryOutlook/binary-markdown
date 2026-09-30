@@ -3,7 +3,7 @@ import { test, expect, Page } from '@playwright/test';
 const source = '# Table\n\n| Item | State | Owner |\n| --- | --- | --- |\n| One | Ready | A |\n| Two | Draft | B |\n\nAfter table.\n';
 const controls = '.table-toolbar:not(.table-toolbar-measure)';
 const overflow = '.table-overflow-menu';
-const { tableOverflowChecks } = require('../native/table-toolbar-overflow.cjs');
+const { tableOverflowChecks, installedEditor } = require('../native/table-toolbar-overflow.cjs');
 
 async function setup(page: Page, position: string) {
     await page.setViewportSize({ width: 1280, height: 900 });
@@ -42,6 +42,25 @@ test('shared native overflow checks exercise reachable actions and undo', async 
     });
     expect(receipts).toEqual(['table-overflow', 'table-overflow', 'table-overflow-action']);
 });
+
+for (const classicScrollbars of [false, true]) {
+    test(`installed overflow checks preserve complete actions in a pane that cannot grow beyond 458px (${classicScrollbars ? 'classic' : 'overlay'} scrollbars)`, async ({ page }) => {
+        await setup(page, 'top-left');
+        if (classicScrollbars) await page.addStyleTag({ content: '::-webkit-scrollbar { width: 17px; height: 17px; }' });
+        const nativeSource = '# Table controls\n\n| Item | State |\n| --- | --- |\n| One | Ready |\n| Two | Draft |\n';
+        await page.evaluate(source => (window as any).__testApi.setMarkdown(source), nativeSource);
+        const until = (probe: () => Promise<boolean>, message: string) => expect.poll(probe, { message }).toBe(true);
+        const editor = installedEditor({ evaluate: (expression: string) => page.evaluate(expression) }, { until });
+        const receipts: string[] = [];
+        await tableOverflowChecks({
+            editor, keyboard: page.keyboard, canEnlargeWindow: false,
+            resize: (width: number, height: number) => page.setViewportSize({ width: Math.min(458, width), height: Math.min(664, height) }),
+            setPosition: (value: string) => page.evaluate(value => (window as any).__hostMessageHandler({ type: 'tableToolbarPosition', value }), value),
+            record: (name: string) => receipts.push(name),
+        });
+        expect(receipts).toEqual(['table-overflow', 'table-overflow', 'table-overflow-action']);
+    });
+}
 
 for (const position of ['top-left', 'left']) {
     test(`${position}: shrink and expand keep complete leading actions and preserve the document`, async ({ page }) => {

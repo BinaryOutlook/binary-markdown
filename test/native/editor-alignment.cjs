@@ -42,15 +42,20 @@ async function alignmentChecks({ editor, set, until, record }) {
     record('editor-alignment-equation', { retainedInputAndSelection: true, sourceUnchanged: true });
     await editor.locator('#editor td').first().click();
     await until(async () => editor.evaluate(() => {
-        const controls = document.querySelector('.table-toolbar:not(.table-toolbar-measure)');
-        return controls && controls.getClientRects().length > 0;
+        return ['.table-toolbar:not(.table-toolbar-measure)', '.table-toolbar-toggle'].some(selector => {
+            const controls = document.querySelector(selector);
+            return controls?.getClientRects().length > 0 && getComputedStyle(controls).visibility !== 'hidden';
+        });
     }), 'visible table controls');
     for (const alignment of ['left', 'center', 'right']) {
         await set('editorAlignment', alignment);
         await until(async () => editor.evaluate(value => {
             if (document.documentElement.dataset.editorAlignment !== value) return false;
             const table = document.querySelector('#editor table').getBoundingClientRect();
-            const controls = document.querySelector('.table-toolbar:not(.table-toolbar-measure)').getBoundingClientRect();
+            // Automatic placement can dock a compact menu trigger instead of
+            // the full inspector. Measure the visible entry point in that case.
+            const toggle = document.querySelector('.table-toolbar-toggle');
+            const controls = (toggle?.getClientRects().length ? toggle : document.querySelector('.table-toolbar:not(.table-toolbar-measure)')).getBoundingClientRect();
             const pane = document.getElementById('editorWrapper').getBoundingClientRect();
             return controls.width > 0 && controls.left >= pane.left && controls.right <= pane.right + 1 && table.left >= pane.left;
         }, alignment), 'table controls follow aligned column');

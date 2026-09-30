@@ -113,7 +113,20 @@ function installedEditor(connection, h) {
         };
         return result;
     };
-    return { evaluate, locator, waitForFunction: (fn, argument) => h.until(() => evaluate(fn, argument), 'installed overflow state') };
+    return { evaluate, locator, waitForFunction: (fn, argument) => h.until(() => evaluate(fn, argument),
+        'installed editor condition: ' + fn.toString().replace(/\s+/g, ' ').slice(0, 180),
+        () => evaluate(() => {
+            const rect = node => {
+                if (!node) return null;
+                const { x, y, width, height } = node.getBoundingClientRect();
+                return { x, y, width, height };
+            };
+            const bar = document.querySelector('.table-toolbar:not(.table-toolbar-measure)');
+            return { viewport: { width: innerWidth, height: innerHeight }, placement: bar?.dataset.placement,
+                bar: rect(bar), client: bar && { width: bar.clientWidth, height: bar.clientHeight, scrollWidth: bar.scrollWidth, scrollHeight: bar.scrollHeight },
+                buttons: [...(bar?.querySelectorAll('button') || [])].filter(button => button.getClientRects().length).map(button => ({ action: button.dataset.action, ...rect(button) })),
+                picker: rect(document.querySelector('.table-placement-menu')) };
+        })) };
 }
 
 module.exports = { tableOverflowChecks, installedEditor };
