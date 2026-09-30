@@ -360,6 +360,11 @@
     const documentBaseUri = '__DOCUMENT_BASE_URI__';
 
     let isSourceMode = false;
+    let isSplitMode = false;
+    let splitRenderTimer = null;
+    let visualModeCursor = null;
+    let sourceModeSelection = { start: 0, end: 0, scroll: 0 };
+    let workspaceUi = null;
     // Decode Base64-encoded content to avoid escaping issues with special characters
     let markdown = '';
     try {
@@ -694,7 +699,7 @@
         function capture(current = false) {
             // Input snapshots need the previous Markdown; undo/redo must retain
             // the latest committed DOM even before its delayed sync runs.
-            return { markdown: current ? readCommittedMarkdown() : markdown, cursor: saveCursorState(), codeViews: captureCodeViews() };
+            return { markdown: current ? readCommittedMarkdown() : markdown, cursor: saveCursorState(), sourceCursor: isSourceMode ? { start: sourceEditor.selectionStart, end: sourceEditor.selectionEnd } : null, codeViews: captureCodeViews() };
         }
 
         function saveSnapshot() {
@@ -725,7 +730,8 @@
                 var state = undoStack.pop();
                 markdown = state.markdown;
                 renderFromMarkdown(state.codeViews);
-                if (state.cursor) restoreCursorState(state.cursor);
+                if (isSourceMode && state.sourceCursor) sourceEditor.setSelectionRange(state.sourceCursor.start, state.sourceCursor.end);
+                else if (!isSourceMode && state.cursor) restoreCursorState(state.cursor);
                 hasUserEdited = true;
                 clientRevision++;
                 notifyChangeImmediate();
@@ -746,7 +752,8 @@
                 var state = redoStack.pop();
                 markdown = state.markdown;
                 renderFromMarkdown(state.codeViews);
-                if (state.cursor) restoreCursorState(state.cursor);
+                if (isSourceMode && state.sourceCursor) sourceEditor.setSelectionRange(state.sourceCursor.start, state.sourceCursor.end);
+                else if (!isSourceMode && state.cursor) restoreCursorState(state.cursor);
                 hasUserEdited = true;
                 clientRevision++;
                 notifyChangeImmediate();
@@ -1872,6 +1879,7 @@
         closeLanguageSelector();
         editorRenderRevision++;
         if (tableControls) tableControls.clear();
+        if (isSourceMode) sourceEditor.value = markdown;
         // Remove IMAGE_DIR and FORCE_RELATIVE_PATH directives before rendering (they're stored in variables)
         let markdownToRender = removeDirectivesFromMarkdown(markdown);
         logger.log('[Binary Markdown] renderFromMarkdown: markdown length:', markdown.length, 'after directive removal:', markdownToRender.length);
@@ -1883,6 +1891,8 @@
         setupInteractiveElements();
         assignHeadingAnchors(editor, markdown);
         updatePlaceholder();
+        applyPreviewReadOnly();
+        if (workspaceUi) workspaceUi.refresh();
     }
 
     // Export uses the same parser/highlighter on a separate document tree. It
@@ -12049,12 +12059,18 @@
         logger.log('convertListItemToParagraph: done');
     }
 
+    // Both editable views share the document undo manager.
+    sourceEditor.addEventListener('beforeinput', () => {
+        if (isSourceMode) undoManager.saveSnapshotDebounced();
+    });
     // Source mode input
     sourceEditor.addEventListener('input', function() {
         if (isSourceMode) {
             markAsEdited(); // User has made an edit
             markdown = sourceEditor.value;
             notifyChange();
+            scheduleSplitPreview();
+            updateOutline();
         }
     });
 
@@ -12124,7 +12140,7 @@
         closeToolbarOverflow(false);
 
         // View-only actions do not change Markdown content
-        if (!['source', 'openOutline', 'link', 'image', 'underline'].includes(action)) {
+        if (!['source', 'openOutline', 'openInTextEditor', 'link', 'image', 'underline'].includes(action)) {
             markAsEdited(); // User has made an edit
         }
 
@@ -12138,7 +12154,7 @@
         }
 
         // Save snapshot before structural toolbar actions (not for undo/redo/source/openOutline)
-        if (!['undo', 'redo', 'source', 'openOutline', 'link', 'image', 'underline'].includes(action)) {
+        if (!['undo', 'redo', 'source', 'openOutline', 'openInTextEditor', 'link', 'image', 'underline'].includes(action)) {
             undoManager.saveSnapshot();
         }
 
@@ -12390,6 +12406,22 @@
     var insertMenuRange = null;
     var insertActions = ['inlineMath', 'math', 'table', 'codeblock', 'link', 'image', 'mermaid', 'toc'];
 
+    const insertCategory = { inlineMath: 'equationsCategory', math: 'equationsCategory', table: 'structureCategory', toc: 'structureCategory', codeblock: 'codeCategory', mermaid: 'codeCategory', link: 'mediaCategory', image: 'mediaCategory' };
+    const insertSamples = { inlineMath: '$x^2$', math: '$$\\frac{a+b}{c}$$', table: '| A | B |\n| --- | --- |', codeblock: '```javascript\nconst value = 1;\n```', link: '[text](https://example.com)', image: '![description](image.png)', mermaid: 'graph TD\n  A --> B', toc: '[TOC]' };
+    const actionDescription = action => i18n['insertDescription' + action[0].toUpperCase() + action.slice(1)] || (['bold','italic','underline','strikethrough','code'].includes(action) ? i18n.formatDescription : i18n.blockDescription);
+    let insertSearch = null, insertCategorySelection = 'allCategory';
+    function filterInsertWorkspace() {
+        const query = (insertSearch?.value || '').trim().toLocaleLowerCase();
+        let visible = 0;
+        insertMenu.querySelectorAll('[data-insert-action]').forEach(item => {
+            item.hidden = Boolean((insertCategorySelection !== 'allCategory' && insertCategory[item.dataset.insertAction] !== insertCategorySelection) || (query && !(item.textContent + ' ' + item.dataset.insertAction).toLocaleLowerCase().includes(query)));
+            if (!item.hidden) visible++;
+        });
+        const empty = insertMenu.querySelector('.insert-empty');
+        if (empty) empty.hidden = visible > 0;
+        insertMenu.querySelectorAll('[data-insert-category]').forEach(item => item.setAttribute('aria-pressed', String(item.dataset.insertCategory === insertCategorySelection)));
+    }
+
     function editorRange(range) {
         return range && range.startContainer.isConnected && range.endContainer.isConnected &&
             editor.contains(range.startContainer) && editor.contains(range.endContainer);
@@ -12415,11 +12447,11 @@
 
     function positionInsertMenu() {
         const rect = insertTrigger().getBoundingClientRect();
-        const width = Math.min(320, Math.max(0, window.innerWidth - 16));
+        const width = Math.min(640, Math.max(0, window.innerWidth - 16));
         insertMenu.style.width = width + 'px';
         insertMenu.style.left = Math.max(8, Math.min(rect.left, window.innerWidth - width - 8)) + 'px';
-        insertMenu.style.top = Math.min(rect.bottom + 4, Math.max(8, window.innerHeight - 44)) + 'px';
-        insertMenu.style.maxHeight = Math.max(28, window.innerHeight - rect.bottom - 12) + 'px';
+        insertMenu.style.top = Math.max(8, Math.min(rect.bottom + 4, window.innerHeight - 320)) + 'px';
+        insertMenu.style.maxHeight = Math.max(80, window.innerHeight - parseFloat(insertMenu.style.top) - 8) + 'px';
     }
 
     function restoreInsertRange() {
@@ -12449,21 +12481,40 @@
             insertMenuRange.collapse(false);
         }
         insertButton.dispatchEvent(new CustomEvent('toolbar-submenu-open', { bubbles: true }));
-        for (const item of insertMenu.querySelectorAll('button')) {
+        for (const item of insertMenu.querySelectorAll('button[data-insert-action]')) {
             const reason = insertUnavailable(item.dataset.insertAction, insertMenuRange);
             item.setAttribute('aria-disabled', String(Boolean(reason)));
             const description = item.querySelector('small');
-            description.textContent = reason;
-            description.hidden = !reason;
+            description.textContent = reason || actionDescription(item.dataset.insertAction);
+            description.hidden = false;
         }
         insertMenu.hidden = false;
         insertButton.setAttribute('aria-expanded', 'true');
         positionInsertMenu();
-        const choices = [...insertMenu.querySelectorAll('button')];
-        (last ? choices.at(-1) : choices[0]).focus({ preventScroll: true });
+        insertSearch.value = ''; insertCategorySelection = 'allCategory'; filterInsertWorkspace();
+        const choices = [...insertMenu.querySelectorAll('button[data-insert-action]')];
+        (last ? choices.at(-1) : insertSearch).focus({ preventScroll: true });
     }
 
     if (insertButton && insertMenu) {
+        const searchBar = document.createElement('div'); searchBar.className = 'insert-search';
+        insertSearch = document.createElement('input'); insertSearch.type = 'search';
+        insertSearch.placeholder = i18n.commandPaletteFilter; insertSearch.setAttribute('aria-label', i18n.commandPaletteFilter);
+        insertSearch.addEventListener('input', filterInsertWorkspace);
+        const clear = document.createElement('button'); clear.type = 'button'; clear.textContent = i18n.clearSearch;
+        clear.addEventListener('click', () => { insertSearch.value = ''; insertCategorySelection = 'allCategory'; filterInsertWorkspace(); insertSearch.focus(); });
+        searchBar.append(insertSearch, clear); insertMenu.appendChild(searchBar);
+        const workspace = document.createElement('div'); workspace.className = 'insert-workspace';
+        const categories = document.createElement('div'); categories.className = 'insert-categories';
+        for (const category of ['allCategory','structureCategory','equationsCategory','codeCategory','mediaCategory']) {
+            const choice = document.createElement('button'); choice.type = 'button'; choice.textContent = i18n[category]; choice.dataset.insertCategory = category;
+            choice.addEventListener('click', () => { insertCategorySelection = category; filterInsertWorkspace(); });
+            categories.appendChild(choice);
+        }
+        const list = document.createElement('div'); list.className = 'insert-options'; list.setAttribute('role', 'menu'); list.setAttribute('aria-label', i18n.commandPaletteInsert);
+        workspace.append(categories, list); insertMenu.appendChild(workspace);
+        const empty = document.createElement('div'); empty.className = 'insert-empty'; empty.setAttribute('role', 'status'); empty.hidden = true;
+        empty.textContent = i18n.noMatchingActions + '. ' + i18n.searchRecovery; list.appendChild(empty);
         for (const action of insertActions) {
             const command = COMMAND_PALETTE_ITEMS.find(item => item.action === action);
             const button = document.createElement('button');
@@ -12476,8 +12527,9 @@
             reason.id = 'insert-reason-' + action;
             reason.hidden = true;
             button.setAttribute('aria-describedby', reason.id);
-            button.append(label, reason);
-            insertMenu.appendChild(button);
+            const preview = document.createElement('code'); preview.className = 'insert-preview'; preview.textContent = insertSamples[action]; preview.setAttribute('aria-hidden', 'true');
+            button.append(label, reason, preview);
+            list.appendChild(button);
         }
         insertButton.addEventListener('mousedown', event => { captureToolbarSelection(event); event.preventDefault(); });
         insertButton.addEventListener('click', event => {
@@ -12490,21 +12542,23 @@
                 openInsertMenu(event.key === 'ArrowUp');
             }
         });
-        insertMenu.addEventListener('mousedown', event => event.preventDefault());
+        insertMenu.addEventListener('mousedown', event => { if (event.target !== insertSearch) event.preventDefault(); });
         insertMenu.addEventListener('keydown', event => {
-            const choices = [...insertMenu.querySelectorAll('button')];
+            const choices = [...insertMenu.querySelectorAll('button[data-insert-action]:not([hidden])')];
             const index = choices.indexOf(document.activeElement);
             let next;
             if (event.key === 'ArrowDown') next = (index + 1) % choices.length;
-            if (event.key === 'ArrowUp') next = (index + choices.length - 1) % choices.length;
-            if (event.key === 'Home') next = 0;
-            if (event.key === 'End') next = choices.length - 1;
-            if (next !== undefined) {
+            if (event.key === 'ArrowUp') next = index < 0 ? choices.length - 1 : (index + choices.length - 1) % choices.length;
+            if (event.target !== insertSearch && event.key === 'Home') next = 0;
+            if (event.target !== insertSearch && event.key === 'End') next = choices.length - 1;
+            if (next !== undefined && choices.length) {
                 event.preventDefault(); event.stopPropagation();
                 choices[next].focus({ preventScroll: true });
                 choices[next].scrollIntoView({ block: 'nearest' });
-            } else if (event.key === 'Escape' || event.key === 'Tab') {
-                if (event.key === 'Escape') event.preventDefault();
+            } else if (event.key === 'Enter' && event.target === insertSearch && choices.length) {
+                event.preventDefault(); event.stopPropagation(); choices[0].click();
+            } else if (event.key === 'Escape') {
+                event.preventDefault();
                 event.stopPropagation(); closeInsertMenu(true);
             }
         });
@@ -12559,6 +12613,7 @@
 
         commandPalette = document.createElement('div');
         commandPalette.className = 'command-palette';
+        commandPalette.setAttribute('role', 'dialog'); commandPalette.setAttribute('aria-label', i18n.formatActions);
         commandPalette.style.display = 'none';
 
         // Search area
@@ -12566,6 +12621,7 @@
         searchDiv.className = 'command-palette-search';
         commandPaletteInput = document.createElement('input');
         commandPaletteInput.type = 'text';
+        commandPaletteInput.setAttribute('aria-label', i18n.commandPaletteFilter);
         commandPaletteInput.className = 'command-palette-input';
         commandPaletteInput.placeholder = i18n.commandPaletteFilter || 'Type to filter...';
         searchDiv.appendChild(commandPaletteInput);
@@ -12655,7 +12711,7 @@
             }
 
             // Create item element
-            var el = document.createElement('div');
+            var el = document.createElement('button'); el.type = 'button';
             el.className = 'command-palette-item';
             if (visibleIndex === 0) el.classList.add('selected');
             el.dataset.action = item.action;
@@ -12670,6 +12726,8 @@
             var labelSpan = document.createElement('span');
             labelSpan.className = 'command-palette-label';
             labelSpan.textContent = parsed.label;
+            const description = document.createElement('small'); description.textContent = actionDescription(item.action);
+            labelSpan.appendChild(description);
             el.appendChild(labelSpan);
 
             // Shortcut
@@ -12682,6 +12740,13 @@
 
             commandPaletteList.appendChild(el);
             visibleIndex++;
+        }
+        if (!visibleIndex) {
+            const empty = document.createElement('p'); empty.className = 'command-palette-empty'; empty.setAttribute('role', 'status');
+            empty.textContent = i18n.noMatchingActions + '. ' + i18n.searchRecovery; commandPaletteList.appendChild(empty);
+            const clear = document.createElement('button'); clear.type = 'button'; clear.className = 'command-palette-clear'; clear.textContent = i18n.clearSearch;
+            clear.addEventListener('click', () => { commandPaletteInput.value = ''; renderCommandPaletteItems(''); commandPaletteInput.focus(); });
+            commandPaletteList.appendChild(clear);
         }
     }
 
@@ -12761,7 +12826,7 @@
 
         // Position below cursor line (or above if not enough space below)
         var paletteHeight = 360;
-        var paletteWidth = 280;
+        var paletteWidth = Math.min(360, window.innerWidth - 16);
         var top, left;
 
         if (anchorRect.bottom + paletteHeight + 4 <= window.innerHeight) {
@@ -12935,29 +13000,106 @@
         }
     });
 
-    function toggleSourceMode() {
+    function applyPreviewReadOnly() {
+        editor.contentEditable = isSourceMode ? 'false' : 'true';
+        if (!isSourceMode) return;
+        editor.querySelectorAll('[contenteditable]').forEach(node => { node.contentEditable = 'false'; });
+        editor.querySelectorAll('button,input,textarea,select').forEach(node => { node.disabled = true; });
+    }
+
+    function scheduleSplitPreview() {
+        clearTimeout(splitRenderTimer);
+        if (!isSplitMode) return;
+        splitRenderTimer = setTimeout(() => {
+            const scroll = editor.scrollTop;
+            markdown = sourceEditor.value;
+            renderFromMarkdown();
+            editor.scrollTop = scroll;
+            updateOutline();
+            updateSourceCorrespondence(false);
+        }, 150);
+    }
+
+    function sourceHeadings() {
+        const headings = [];
+        const frontLines = documentAux.splitFrontMatter(readCommittedMarkdown()).raw.split('\n').length - 1;
+        const visit = block => {
+            if (block.type === 'heading' && block.map) {
+                const text = block.children.find(child => child.type === 'inline')?.content || '';
+                headings.push({ text, level: Number(block.tag?.slice(1)) || 1, line: block.map[0] + frontLines });
+            }
+            block.children.forEach(visit);
+        };
+        window.BinaryMarkdownBlocks.parse(readCommittedMarkdown(), { backslashDelimiters: mathBackslashDelimiters }).blocks.forEach(visit);
+        return headings;
+    }
+
+    function sourceOffset(line) {
+        const lines = sourceEditor.value.split('\n');
+        return lines.slice(0, line).reduce((offset, text) => offset + text.length + 1, 0);
+    }
+
+    function updateSourceCorrespondence(scroll = true) {
+        if (!isSourceMode) return;
+        const line = sourceEditor.value.slice(0, sourceEditor.selectionStart || 0).split('\n').length - 1;
+        const headings = sourceHeadings();
+        let index = -1;
+        headings.forEach((heading, i) => { if (heading.line <= line) index = i; });
+        const nodes = [...editor.querySelectorAll('h1,h2,h3,h4,h5,h6')];
+        nodes.forEach((node, i) => node.classList.toggle('source-correspondence', isSplitMode && i === index));
+        if (index >= 0) setActiveOutlineItem(index, false);
+        if (isSplitMode && scroll && nodes[index]) nodes[index].scrollIntoView({ block: 'nearest' });
+        const position = document.getElementById('documentPosition');
+        if (position) position.textContent = (i18n.sourceLine || 'Source line') + ' ' + (line + 1);
+    }
+
+    function setEditorMode(mode) {
+        if (!['visual', 'source', 'split'].includes(mode)) return;
+        const previous = isSplitMode ? 'split' : isSourceMode ? 'source' : 'visual';
+        if (mode === previous) return;
         closeInsertMenu(false);
         closeLanguageSelector();
         hideTableToolbar();
-        // Read while the current mode still owns the latest edits. The host
-        // command can arrive before blur or the delayed visual sync runs.
+        if (typeof closeSearchBox === 'function' && searchReplaceBox.style.display !== 'none') closeSearchBox();
         markdown = readCurrentMarkdown();
         cancelScheduledSync();
-        isSourceMode = !isSourceMode;
+        clearTimeout(splitRenderTimer);
+        if (!isSourceMode) visualModeCursor = saveCursorState();
+        else sourceModeSelection = { start: sourceEditor.selectionStart, end: sourceEditor.selectionEnd, scroll: sourceEditor.scrollTop };
+        isSourceMode = mode !== 'visual';
+        isSplitMode = mode === 'split';
+        document.documentElement.dataset.editorMode = mode;
+        sourceEditor.style.display = isSourceMode ? 'block' : 'none';
+        editor.style.display = mode === 'source' ? 'none' : 'block';
         if (isSourceMode) {
             sourceEditor.value = markdown;
-            sourceEditor.style.display = 'block';
-            editor.style.display = 'none';
-            updateActiveOutlineItem();
+            if (isSplitMode) renderFromMarkdown();
+            sourceEditor.focus({ preventScroll: true });
+            sourceEditor.setSelectionRange(sourceModeSelection.start, sourceModeSelection.end);
+            sourceEditor.scrollTop = sourceModeSelection.scroll;
         } else {
-            markdown = sourceEditor.value;
             renderFromMarkdown();
-            sourceEditor.style.display = 'none';
-            editor.style.display = 'block';
-            updateOutline();
+            editor.focus({ preventScroll: true });
+            if (visualModeCursor) restoreCursorState(visualModeCursor);
         }
-        notifyChangeImmediate();
+        document.querySelectorAll('button[data-editor-mode]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.editorMode === mode)));
+        toolbarActions.filter(item => item.formatting || item.button.dataset.action === 'insertMenu').forEach(item => { item.button.disabled = isSourceMode; });
+        const format = document.getElementById('formatButton');
+        if (format) format.disabled = isSourceMode;
+        const help = document.getElementById('modeHelp');
+        if (help) { help.hidden = !isSourceMode; help.textContent = isSplitMode ? i18n.splitHelp : i18n.insertUnavailableSource; }
+        updateOutline();
+        updateWidthIndicators();
+        updateSourceCorrespondence();
+        if (workspaceUi) workspaceUi.refresh();
     }
+
+    function toggleSourceMode() { setEditorMode(isSourceMode ? 'visual' : 'source'); }
+    document.querySelectorAll('button[data-editor-mode]').forEach(button => button.addEventListener('click', () => setEditorMode(button.dataset.editorMode)));
+    for (const type of ['click', 'beforeinput']) editor.addEventListener(type, event => {
+        if (isSourceMode) { event.preventDefault(); event.stopImmediatePropagation(); }
+    }, true);
+    for (const type of ['select', 'keyup']) sourceEditor.addEventListener(type, () => updateSourceCorrespondence());
 
     // Immediate notification - called after debounce in debouncedSync
     function notifyChangeImmediate() {
@@ -13051,10 +13193,11 @@
         assignHeadingAnchors(editor, readCommittedMarkdown());
         const headings = editor.querySelectorAll('h1, h2, h3, h4, h5, h6');
         const headingsArray = Array.from(headings);
+        const sourceItems = isSourceMode ? sourceHeadings() : null;
         outlineHeadings = headingsArray;
-        outline.innerHTML = headingsArray.map((h, i) => {
-            const level = h.tagName[1];
-            return '<a class="outline-item" data-level="' + level + '" data-index="' + i + '">' + escapeHtml(h.textContent) + '</a>';
+        outline.innerHTML = (sourceItems || headingsArray).map((h, i) => {
+            const level = sourceItems ? h.level : h.tagName[1];
+            return '<button type="button" class="outline-item" data-level="' + level + '" data-index="' + i + '">' + escapeHtml(sourceItems ? h.text : h.textContent) + '</button>';
         }).join('');
         // The links were recreated, so reapply the active state even if the
         // numerical heading index did not change.
@@ -13063,6 +13206,16 @@
         outline.querySelectorAll('.outline-item').forEach(item => {
             item.addEventListener('click', () => {
                 const idx = parseInt(item.dataset.index);
+                if (isSourceMode && sourceItems[idx]) {
+                    const offset = sourceOffset(sourceItems[idx].line);
+                    sourceEditor.focus({ preventScroll: true });
+                    sourceEditor.setSelectionRange(offset, offset);
+                    // A textarea's selection is not automatically revealed by setSelectionRange.
+                    const lineHeight = parseFloat(getComputedStyle(sourceEditor).lineHeight) || 21;
+                    sourceEditor.scrollTop = Math.max(0, sourceItems[idx].line * lineHeight - sourceEditor.clientHeight / 3);
+                    updateSourceCorrespondence();
+                    return;
+                }
                 if (headingsArray[idx]) {
                     setActiveOutlineItem(idx, false);
                     const wrapper = editorWrapper || editor.closest('.editor-wrapper');
@@ -13078,6 +13231,8 @@
         });
 
         updateActiveOutlineItem();
+        if (isSourceMode) updateSourceCorrespondence(false);
+        if (workspaceUi) workspaceUi.refresh();
     }
 
     function setActiveOutlineItem(index, ensureVisible = true) {
@@ -13228,7 +13383,7 @@
         if (isMod && !e.shiftKey && e.key === 'z') {
             e.preventDefault();
             e.stopPropagation();
-            if (!isSourceMode) undoManager.undo();
+            undoManager.undo();
             return;
         }
 
@@ -13236,7 +13391,7 @@
         if (isMod && ((e.shiftKey && e.key.toLowerCase() === 'z') || (!e.shiftKey && e.key === 'y'))) {
             e.preventDefault();
             e.stopPropagation();
-            if (!isSourceMode) undoManager.redo();
+            undoManager.redo();
             return;
         }
 
@@ -14182,11 +14337,11 @@
             return;
         }
         if (message.type === 'performUndo') {
-            if (!isSourceMode) undoManager.undo();
+            undoManager.undo();
             return;
         }
         if (message.type === 'performRedo') {
-            if (!isSourceMode) undoManager.redo();
+            undoManager.redo();
             return;
         }
         if (message.type === 'insertToc') { insertManagedToc(); return; }
@@ -16037,6 +16192,20 @@
             e.stopPropagation();
             openSearchBox(true);
         }
+    });
+
+    workspaceUi = window.BinaryWorkspaceUi?.create({
+        editor, sourceEditor, sidebar, outline, wrapper: editorWrapper, toolbar, i18n,
+        icons: LUCIDE_ICONS, isSourceMode: () => isSourceMode,
+        openActions: openCommandPalette, layout: scheduleToolbarLayout,
+        selection: () => savedToolbarRange,
+        format: action => {
+            if (isSourceMode) return;
+            const original = toolbarActions.find(item => item.button.dataset.action === action)?.button;
+            if (original) original.click();
+        },
+        openTextEditor: () => host.openInTextEditor(),
+        statistics: () => wordCount.textContent
     });
 
     // Expose htmlToMarkdown globally for Electron's executeJavaScript

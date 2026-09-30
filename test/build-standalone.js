@@ -36,7 +36,7 @@ if (fs.existsSync(vendorSrc)) {
 }
 
 // editor.jsを読み込み
-let editorScript = fs.readFileSync(path.join(__dirname, '../src/shared/document-aux.js'), 'utf8') + '\n' + fs.readFileSync(editorJsPath, 'utf-8');
+let editorScript = fs.readFileSync(path.join(__dirname, '../src/webview/workspace-ui.js'), 'utf8') + '\n' + fs.readFileSync(path.join(__dirname, '../src/shared/document-aux.js'), 'utf8') + '\n' + fs.readFileSync(editorJsPath, 'utf-8');
 
 editorScript = fs.readFileSync(path.join(__dirname, '../src/shared/table-format.js'), 'utf8') + '\n' + editorScript;
 
@@ -203,7 +203,7 @@ const html = `<!DOCTYPE html>
     <div id="statusLeft" style="display:none;"></div>
     <div id="statusImageDir" style="display:none;"></div>
     <div id="wordCount" style="display:none;"></div>
-    <div id="sourceEditor" style="display:none;"></div>
+    <textarea id="sourceEditor" style="display:none;"></textarea>
     <!-- Search & Replace elements (hidden, required by script) -->
     <div id="searchReplaceBox" style="display:none;">
         <input id="searchInput" type="text">

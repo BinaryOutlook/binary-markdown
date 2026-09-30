@@ -39,10 +39,10 @@ function generateEditorBodyHtml(messages, platform, options) {
     return `<div class="container">
         <aside class="${sidebarClass}" id="sidebar">
             <div class="sidebar-header">
-                <h3>Outline</h3>
+                <div class="sidebar-tabs" role="tablist" aria-label="${m('documentTab')}"><button type="button" role="tab" id="outlineTab" aria-selected="true" aria-controls="outline">${m('outlineTitle')}</button><button type="button" role="tab" id="documentTab" aria-selected="false" aria-controls="documentInfo" tabindex="-1">${m('documentTab')}</button></div>
                 <button class="sidebar-toggle" id="closeSidebar" title="${m('closeOutline')}">&#9776;</button>
             </div>
-            <nav class="outline" id="outline"></nav>
+            <div class="reading-progress"><progress id="readingProgress" max="100" value="0" aria-label="${m('readingProgress')}"></progress></div><nav class="outline" id="outline" role="tabpanel" aria-labelledby="outlineTab"></nav><section id="documentInfo" class="document-info" role="tabpanel" aria-labelledby="documentTab" hidden><p id="documentStatistics"></p><p id="documentPosition"></p></section>
             <div class="sidebar-footer">
                 <div class="word-count" id="wordCount"></div>
                 <div class="sidebar-status-imagedir" id="statusImageDir">
@@ -71,7 +71,7 @@ function generateEditorBodyHtml(messages, platform, options) {
                     </div>
                     <button type="button" data-action="insertMenu" class="toolbar-insert" id="insertButton" title="${m('commandPaletteInsert')}" aria-haspopup="menu" aria-expanded="false" aria-controls="insertMenu"><span class="toolbar-insert-title">${m('commandPaletteInsert')}</span><span aria-hidden="true">▾</span></button>
                 </div>
-                <div class="toolbar-inner" id="toolbarInner">
+                <button type="button" id="formatButton" title="${m('formatActions')}" aria-haspopup="dialog">${m('formatActions')}</button><button type="button" id="contextToolbarToggle" title="${m('contextualTools')}" aria-pressed="false">${m('contextualTools')}</button><div class="toolbar-inner" id="toolbarInner">
                     <div class="toolbar-group" data-group="inline">
                         <button data-action="bold" title="${m('bold')}"></button>
                         <button data-action="italic" title="${m('italic')}"></button>
@@ -107,12 +107,12 @@ function generateEditorBodyHtml(messages, platform, options) {
                     <div class="toolbar-group" data-group="utility">
                         <button data-action="openInTextEditor" title="${m('openInTextEditor')} (${mod}+Shift+.)"></button>
                         ${exportButton}
-                        <button data-action="source" title="${m('toggleSourceMode')} (${mod}+.)"></button>
+                        <div class="editor-mode-switch" role="group" aria-label="${m('editorModes')}"><button type="button" data-editor-mode="visual" aria-pressed="true">${m('modeVisual')}</button><button type="button" data-editor-mode="source" aria-pressed="false">${m('modeSource')}</button><button type="button" data-editor-mode="split" aria-pressed="false">${m('modeSplit')}</button></div>
                     </div>
                 </div>
                 <div id="toolbarOverflow" class="toolbar-overflow" role="menu" aria-label="${m('toolbarMoreActions')}" hidden></div>
             </div>
-            <div id="insertMenu" class="insert-menu" role="menu" aria-label="${m('commandPaletteInsert')}" hidden></div>
+            <div id="insertMenu" class="insert-menu" role="dialog" aria-label="${m('commandPaletteInsert')}" hidden></div>
             ${exportPanels}
             <div class="editor-width-guide" id="editorWidthGuide" hidden data-capped="false">
                 <div class="editor-width-bounds" id="editorWidthBounds">
@@ -121,7 +121,7 @@ function generateEditorBodyHtml(messages, platform, options) {
                 </div>
                 <div class="editor-width-explanation" id="editorWidthExplanation" role="tooltip" hidden>${m('widthBoundaryExplanation')}</div>
             </div>
-            <div class="editor-wrapper" id="editorWrapper">
+            <div id="modeHelp" class="mode-help" hidden></div><div class="editor-wrapper" id="editorWrapper">
                 <div class="search-replace-box" id="searchReplaceBox" style="display: none;">
                     <div class="search-row">
                         <input type="text" id="searchInput" placeholder="${m('searchPlaceholder')}" />
@@ -143,7 +143,7 @@ function generateEditorBodyHtml(messages, platform, options) {
                     </div>
                 </div>
                 <div class="editor" id="editor" contenteditable="true" spellcheck="true"></div>
-                <textarea class="source-editor" id="sourceEditor" style="display: none;"></textarea>
+                <textarea class="source-editor" id="sourceEditor" aria-label="${m('sourceLabel')}" spellcheck="false" style="display: none;"></textarea>
             </div>
         </main>
     </div>`;
