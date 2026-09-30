@@ -66,6 +66,7 @@ async function tableOverflowChecks({ editor, keyboard, resize, setPosition, reco
     }
     await resize(420, 260);
     await editor.locator('#editor td').first().scrollIntoViewIfNeeded();
+    await editor.waitForFunction(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve(true)))));
     const action = editor.locator(`${controls} [data-action="add-row-below"]`);
     if (await action.isVisible()) await action.click();
     else {

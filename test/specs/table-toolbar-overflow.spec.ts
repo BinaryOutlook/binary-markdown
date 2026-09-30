@@ -46,7 +46,9 @@ test('shared native overflow checks exercise reachable actions and undo', async 
 for (const classicScrollbars of [false, true]) {
     test(`installed overflow checks preserve complete actions in a pane that cannot grow beyond 458px (${classicScrollbars ? 'classic' : 'overlay'} scrollbars)`, async ({ page }) => {
         await setup(page, 'top-left');
-        if (classicScrollbars) await page.addStyleTag({ content: '::-webkit-scrollbar { width: 17px; height: 17px; }' });
+        // Simulate platform form controls whose populated selects have a larger
+        // intrinsic minimum than the empty measuring copies.
+        if (classicScrollbars) await page.addStyleTag({ content: '::-webkit-scrollbar { width: 17px; height: 17px; } .table-selection-inspector select:has(option) { min-width: 48px; }' });
         const nativeSource = '# Table controls\n\n| Item | State |\n| --- | --- |\n| One | Ready |\n| Two | Draft |\n';
         await page.evaluate(source => (window as any).__testApi.setMarkdown(source), nativeSource);
         const until = (probe: () => Promise<boolean>, message: string) => expect.poll(probe, { message }).toBe(true);
@@ -89,6 +91,26 @@ for (const position of ['top-left', 'left']) {
         await expect(page.locator('html')).toHaveAttribute('data-table-toolbar-position', position);
     });
 }
+
+test('populated row selectors keep whole arrows with classic scrollbars across narrow widths', async ({ page }) => {
+    await setup(page, 'top-left');
+    await page.addStyleTag({ content: '::-webkit-scrollbar { width: 17px; height: 17px; }' });
+    const manyRows = '| Item | State |\n| --- | --- |\n' + Array.from({ length: 100 }, (_, i) => `| Row ${i + 1} | Ready |`).join('\n') + '\n';
+    await page.evaluate(source => {
+        (window as any).__testApi.setMarkdown(source);
+        const cell = document.querySelector('#editor td')!;
+        document.getElementById('editor')!.focus();
+        const range = document.createRange(); range.selectNodeContents(cell); range.collapse(true);
+        getSelection()!.removeAllRanges(); getSelection()!.addRange(range); (cell as HTMLElement).click();
+    }, manyRows);
+    for (const width of [420, 410, 400, 390, 380, 370, 360]) {
+        await page.setViewportSize({ width, height: 260 });
+        await page.locator('#editor td').first().scrollIntoViewIfNeeded();
+        await wholeButtons(page);
+    }
+    expect(await page.evaluate(() => (window as any).htmlToMarkdown())).toBe(manyRows);
+    await expect(page.locator('#toolbar [data-action="undo"]')).toBeDisabled();
+});
 
 test('a focused action follows overflow in both directions without editing', async ({ page }) => {
     await setup(page, 'top-left');

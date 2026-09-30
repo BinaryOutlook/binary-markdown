@@ -1,5 +1,7 @@
 import { toggleEditorView } from '../utils/view-mode';
 import { test, expect, Page } from '@playwright/test';
+const { source: nativeSource, underlineChecks } = require('../native/underline.cjs');
+const { installedEditor } = require('../native/table-toolbar-overflow.cjs');
 
 async function setup(page: Page, source: string) {
     await page.setViewportSize({ width: 1500, height: 900 });
@@ -27,6 +29,24 @@ async function select(page: Page, selector: string, text?: string) {
 
 async function markdown(page: Page) { return page.evaluate(() => (window as any).htmlToMarkdown()); }
 async function underline(page: Page) { await page.locator('#toolbar [data-action="underline"]').click(); }
+
+for (const width of [458, 720]) {
+    test(`shared installed underline checks exercise toolbar overflow at ${width}px`, async ({ page }) => {
+        await setup(page, nativeSource);
+        await page.setViewportSize({ width, height: 900 });
+        await page.evaluate(() => (window as any).__hostMessageHandler({ type: 'toolbarMode', value: 'full' }));
+        const until = (probe: () => Promise<boolean>, message: string) => expect.poll(probe, { message }).toBe(true);
+        const editor = installedEditor({ evaluate: (expression: string) => page.evaluate(expression) }, { until });
+        const receipts: string[] = [];
+        await underlineChecks({ editor, keyboard: page.keyboard, modifier: 'Control', record: (name: string) => receipts.push(name),
+            save: async (expected: string) => {
+                await page.keyboard.press('Control+s');
+                await expect.poll(() => page.evaluate(() => (window as any).__testApi.messages.findLast((m: any) => m.type === 'save')?.content)).toBe(expected);
+            } });
+        expect(receipts.filter(name => name === 'underline-context')).toHaveLength(5);
+        expect(await markdown(page)).toBe(nativeSource);
+    });
+}
 
 for (const [name, source, selector] of [
     ['paragraph', 'Before <u>marked</u> after.\n', '#editor > p u'],

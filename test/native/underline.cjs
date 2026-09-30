@@ -6,22 +6,27 @@ const source = '# Underline checks\n\nPlain target.\n\n**Bold target.**\n\nAlrea
 
 async function underlineChecks({ editor, keyboard, modifier, save, record, capture = async () => {} }) {
     await editor.evaluate(() => document.getElementById('closeSidebar').click());
+    const toolbarAction = async action => {
+        const button = editor.locator('#toolbar [data-action="' + action + '"]');
+        if (!await button.isVisible()) await editor.locator('#toolbarMore').click();
+        await button.click();
+    };
     const before = await editor.evaluate(() => window.htmlToMarkdown());
     assert.equal(await editor.evaluate(() => document.querySelectorAll('#editor u').length), 1);
     for (const selector of ['#editor > p', '#editor > p strong', '#editor li', '#editor td', '#editor blockquote']) {
         await selectTarget(editor, selector);
-        await editor.locator('#toolbar [data-action="underline"]').click();
+        await toolbarAction('underline');
         const after = await editor.evaluate(() => window.htmlToMarkdown());
         assert.notEqual(after, before);
         assert.equal(await editor.evaluate(() => document.querySelectorAll('#editor u').length), 2);
         assert.ok(after.includes('```text\ncode target\n\n```'));
         await save(after);
-        await editor.locator('[data-action="undo"]').click();
+        await toolbarAction('undo');
         assert.equal(await editor.evaluate(() => window.htmlToMarkdown()), before);
-        await editor.locator('[data-action="redo"]').click();
+        await toolbarAction('redo');
         assert.equal(await editor.evaluate(() => window.htmlToMarkdown()), after);
         await capture(selector.replace(/[^a-z]+/gi, '-'));
-        await editor.locator('[data-action="undo"]').click();
+        await toolbarAction('undo');
         record('underline-context', { selector, nativeSave: true, undo: true, redo: true, codePreserved: true });
     }
     await selectTarget(editor, '#editor > p');
@@ -29,9 +34,9 @@ async function underlineChecks({ editor, keyboard, modifier, save, record, captu
     const keyboardResult = await editor.evaluate(() => window.htmlToMarkdown());
     assert.ok(keyboardResult.includes('Plain <u>target</u>.'));
     await save(keyboardResult);
-    await editor.locator('[data-action="undo"]').click();
+    await toolbarAction('undo');
     await selectTarget(editor, '#editor pre code');
-    await editor.locator('#toolbar [data-action="underline"]').click();
+    await toolbarAction('underline');
     assert.equal(await editor.evaluate(() => window.htmlToMarkdown()), before);
     await save(before);
     record('underline-keyboard-and-literal', { keyboard: modifier + '+u', codeRejected: true, originalRestored: true });

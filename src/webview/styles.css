@@ -1369,7 +1369,8 @@ button.command-palette-item { border: 0; width: 100%; text-align: start; font: i
 .table-insert-direction [data-action="add-row-below"] { grid-area: below; }
 .table-selection-inspector { display: grid; gap: 8px; padding: 4px 8px; font-size: 11px; }
 .table-selection-inspector label { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.table-selection-inspector select { max-width: 64px; background: var(--bg-color); color: var(--text-color); border: 1px solid var(--border-color); border-radius: 4px; font: inherit; padding: 3px; }
+/* Keep populated native selects and the empty measuring copies equally wide. */
+.table-selection-inspector select { width: 64px; max-width: 64px; background: var(--bg-color); color: var(--text-color); border: 1px solid var(--border-color); border-radius: 4px; font: inherit; padding: 3px; }
 .table-toolbar[data-vertical="true"] .table-selection-inspector { padding: 4px; }
 .table-inspected tr > :first-child, .table-inspected th { position: relative; }
 .table-inspected tr > :first-child::before { content: attr(data-table-row); position: absolute; left: 2px; top: 2px; font: 9px var(--font-mono); color: var(--text-color); opacity: .7; pointer-events: none; }
