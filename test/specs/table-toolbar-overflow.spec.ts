@@ -3,6 +3,7 @@ import { test, expect, Page } from '@playwright/test';
 const source = '# Table\n\n| Item | State | Owner |\n| --- | --- | --- |\n| One | Ready | A |\n| Two | Draft | B |\n\nAfter table.\n';
 const controls = '.table-toolbar:not(.table-toolbar-measure)';
 const overflow = '.table-overflow-menu';
+const { tableOverflowChecks } = require('../native/table-toolbar-overflow.cjs');
 
 async function setup(page: Page, position: string) {
     await page.setViewportSize({ width: 1280, height: 900 });
@@ -26,6 +27,21 @@ async function wholeButtons(page: Page) {
         });
     })).toBe(true);
 }
+
+test('shared native overflow checks exercise reachable actions and undo', async ({ page }) => {
+    await setup(page, 'top-left');
+    const receipts: string[] = [];
+    await tableOverflowChecks({
+        editor: page,
+        keyboard: page.keyboard,
+        resize: (width: number, height: number) => page.setViewportSize({ width, height }),
+        setPosition: (value: string) => page.evaluate(value => {
+            (window as any).__hostMessageHandler({ type: 'tableToolbarPosition', value });
+        }, value),
+        record: (name: string) => receipts.push(name),
+    });
+    expect(receipts).toEqual(['table-overflow', 'table-overflow', 'table-overflow-action']);
+});
 
 for (const position of ['top-left', 'left']) {
     test(`${position}: shrink and expand keep complete leading actions and preserve the document`, async ({ page }) => {
