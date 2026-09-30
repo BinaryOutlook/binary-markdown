@@ -32,7 +32,7 @@ test('unknown language, empty results and repeated cancellation preserve source 
     for (let i = 0; i < 3; i++) {
         await open(page); await expect(page.locator('.lang-selector-current')).toContainText('custom-lang');
         await page.keyboard.insertText('no-such-language');
-        await expect(page.getByRole('status')).toHaveText('No matching languages.');
+        await expect(page.locator('.lang-selector').getByRole('status')).toHaveText('No matching languages.');
         await expect(page.getByRole('option')).toHaveCount(0);
         await page.keyboard.press('ArrowDown'); await page.keyboard.press('Enter');
         await expect(page.locator('.lang-selector')).toBeVisible();
@@ -90,7 +90,8 @@ test('the current language is a no-op and keyboard activation/Tab stay usable', 
     await expect(page.getByRole('combobox')).toBeFocused(); await page.keyboard.press('Enter');
     expect(await markdown(page)).toBe(original); await expect(page.locator('[data-action="undo"]')).toBeDisabled();
     await open(page); await page.keyboard.press('Tab'); await expect(page.locator('.lang-selector')).toHaveCount(0);
-    await expect(page.locator('.code-copy-btn')).toBeFocused();
+    await expect(page.locator('.code-wrap-btn')).toBeFocused();
+    await page.keyboard.press('Tab'); await expect(page.locator('.code-copy-btn')).toBeFocused();
 });
 
 test('narrow and short panes keep the input and selectable results in view', async ({ page }) => {

@@ -43,6 +43,14 @@ editorScript = fs.readFileSync(path.join(__dirname, '../src/shared/table-format.
 // テスト用HostBridgeを読み込み
 const testHostBridgeScript = fs.readFileSync(testHostBridgePath, 'utf-8');
 
+// Share the code-control CSS with the production fixture so scrolling and
+// editing tests exercise the same contenteditable layout.
+const productionStyles = fs.readFileSync(path.join(__dirname, '../src/webview/styles.css'), 'utf8');
+const codeControlStyles = productionStyles.slice(
+    productionStyles.indexOf('/* Code block display/edit mode styles */'),
+    productionStyles.indexOf('.lang-selector {')
+);
+
 // プレースホルダーを置換
 editorScript = fs.readFileSync(path.join(__dirname, '../src/shared/math-syntax.js'), 'utf8') + '\n' + editorScript;
 editorScript = fs.readFileSync(path.join(__dirname, '../src/shared/editor-layout.js'), 'utf8') + '\n' + fs.readFileSync(path.join(__dirname, '../src/shared/table-placement.js'), 'utf8') + '\n' + fs.readFileSync(path.join(__dirname, '../src/webview/table-toolbar.js'), 'utf8') + '\n' + editorScript;
@@ -180,6 +188,7 @@ const html = `<!DOCTYPE html>
         .lang-selector-item:hover {
             background: var(--selection-bg);
         }
+        ${codeControlStyles}
     </style>
 </head>
 <body>
