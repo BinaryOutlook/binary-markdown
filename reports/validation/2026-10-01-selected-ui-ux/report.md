@@ -10,6 +10,8 @@ The feature branch is `feat/selected-ui-ux-redesign`, based on canonical `main` 
 
 Implementation and security changes are separated into focused commits. The code and regression-test revision for the local checks is `3c582f603b3dd3189775d146581c915594fc27b2`; subsequent documentation records those checks. The local environment uses Node **24.21.0** on **macOS ARM64**, Playwright **1.58.1**, and bundled Chromium **145.0.7632.6**. The implementation PR's exact head and **Checks** identify hosted CI results, including installed-VSIX and converter checks; this local record does not replace those results.
 
+Pull-request CI packages GitHub's test merge revision of the PR head with `main`. Its candidate artifact name and build information record that tested revision, which can differ from the branch head. Use the source identity of the matching successful CI candidate when installing and reporting manual results.
+
 The screenshots were captured from the compiled feature-branch browser fixture at 1280 × 720 using a synthetic document. They show implemented interfaces rather than generated concepts. The fixture does not have a VS Code export controller, so its Export screenshot honestly shows **Checking tools…**; completed exports and output opening are covered by the automated host/UI checks and require installed-extension review. No real document, account, image directory, conversion output path, or machine identifier appears in the images. All ten JPEGs were inspected for content and contain no EXIF or XMP metadata.
 
 ## Selection-to-implementation mapping
@@ -131,7 +133,7 @@ See the [testing guide](../../../docs/testing/README.md) for the complete gate d
 
 ## Manual review checklist
 
-Install the development VSIX from the implementation PR's successful CI artifact, or follow the [source build and installation guide](../../../docs/building.md). Inspect **Binary Markdown: Copy Build Information** and compare its source commit with the PR head before reporting a result. Save a disposable document and test with non-private inputs. See [export help](../../../media/export-help.md) for local tools and workspace prerequisites.
+Install the development VSIX from the implementation PR's successful CI artifact, or follow the [source build and installation guide](../../../docs/building.md). Inspect **Binary Markdown: Copy Build Information** and compare its source commit with the revision encoded in that CI candidate's artifact name before reporting a result. For a source build, compare it with the clean local build revision. Save a disposable document and test with non-private inputs. See [export help](../../../media/export-help.md) for local tools and workspace prerequisites.
 
 | Item | Suggested acceptance check |
 | --- | --- |
