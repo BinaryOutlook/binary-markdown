@@ -27,6 +27,11 @@
     const editorWrapper = document.getElementById('editorWrapper');
     let editorRenderRevision = 0;
     let sourceBlockSequence = 0;
+    // View identities survive Markdown-driven rebuilds. Wrap preferences live
+    // outside document snapshots, so Undo changes content without undoing a view.
+    let codeViewSequence = 0;
+    const codeViewIds = new WeakMap();
+    const codeViewStates = new Map();
     const widthGuide = document.getElementById('editorWidthGuide');
     const widthBounds = document.getElementById('editorWidthBounds');
     const widthExplanation = document.getElementById('editorWidthExplanation');
@@ -689,7 +694,7 @@
         function capture(current = false) {
             // Input snapshots need the previous Markdown; undo/redo must retain
             // the latest committed DOM even before its delayed sync runs.
-            return { markdown: current ? readCommittedMarkdown() : markdown, cursor: saveCursorState() };
+            return { markdown: current ? readCommittedMarkdown() : markdown, cursor: saveCursorState(), codeViews: captureCodeViews() };
         }
 
         function saveSnapshot() {
@@ -719,7 +724,7 @@
                 redoStack.push(capture(true));
                 var state = undoStack.pop();
                 markdown = state.markdown;
-                renderFromMarkdown();
+                renderFromMarkdown(state.codeViews);
                 if (state.cursor) restoreCursorState(state.cursor);
                 hasUserEdited = true;
                 clientRevision++;
@@ -740,7 +745,7 @@
                 undoStack.push(capture(true));
                 var state = redoStack.pop();
                 markdown = state.markdown;
-                renderFromMarkdown();
+                renderFromMarkdown(state.codeViews);
                 if (state.cursor) restoreCursorState(state.cursor);
                 hasUserEdited = true;
                 clientRevision++;
@@ -1862,7 +1867,7 @@
         return text.replace(/[&<>]/g, char => escapeMap[char]);
     }
 
-    function renderFromMarkdown() {
+    function renderFromMarkdown(codeViews = captureCodeViews()) {
         closeInsertMenu(false);
         closeLanguageSelector();
         editorRenderRevision++;
@@ -1874,6 +1879,7 @@
         logger.log('[Binary Markdown] renderFromMarkdown: html length:', html.length, 'first 100 chars:', html.substring(0, 100));
         editor.innerHTML = html || '<p><br></p>';
         visualSourceCurrent = true;
+        restoreCodeViews(codeViews);
         setupInteractiveElements();
         assignHeadingAnchors(editor, markdown);
         updatePlaceholder();
@@ -2424,6 +2430,7 @@
 
         // 1. Save cursor state
         const cursorState = saveCursorState();
+        const codeViews = captureCodeViews();
 
         // 2. Generate new HTML into a temporary container
         let markdownToRender = removeDirectivesFromMarkdown(markdown);
@@ -2467,6 +2474,7 @@
 
         if (changed) {
             // Re-setup interactive elements for the updated DOM
+            restoreCodeViews(codeViews);
             setupInteractiveElements();
             logger.log('[Binary Markdown] updateFromMarkdown: DOM patched');
         } else {
@@ -3371,6 +3379,74 @@
         });
     }
 
+    function ordinaryCodeBlocks() {
+        return Array.from(editor.querySelectorAll('pre')).filter(pre =>
+            pre.querySelector('code') && !pre.closest('.math-wrapper,.mermaid-wrapper') &&
+            !['math', 'mermaid'].includes(pre.getAttribute('data-lang')));
+    }
+
+    function codeViewId(pre) {
+        if (!codeViewIds.has(pre)) codeViewIds.set(pre, ++codeViewSequence);
+        return codeViewIds.get(pre);
+    }
+
+    function captureCodeViews() {
+        return ordinaryCodeBlocks().map(pre => ({ id: codeViewId(pre), source: mdProcessNode(pre) }));
+    }
+
+    function restoreCodeViews(previous) {
+        const blocks = ordinaryCodeBlocks();
+        const unused = new Set(previous);
+        const pending = [];
+        for (const [index, pre] of blocks.entries()) {
+            const existing = codeViewIds.get(pre);
+            if (existing) {
+                const match = previous.find(view => view.id === existing);
+                unused.delete(match);
+            } else pending.push({ pre, index, source: mdProcessNode(pre) });
+        }
+        // Match unchanged blocks first, including nested blocks and duplicates.
+        // Positional fallback retains the identity of a source-edited block when
+        // the number of blocks is unchanged, without assigning it to an insertion.
+        for (const item of pending) {
+            const match = previous.find(view => unused.has(view) && view.source === item.source);
+            if (match) { codeViewIds.set(item.pre, match.id); unused.delete(match); }
+        }
+        for (const { pre, index } of pending) {
+            if (codeViewIds.has(pre)) continue;
+            const match = blocks.length === previous.length && unused.has(previous[index]) ? previous[index] : null;
+            if (match) { codeViewIds.set(pre, match.id); unused.delete(match); }
+            else codeViewId(pre);
+        }
+    }
+
+    function applyCodeWrap(pre) {
+        const state = codeViewStates.get(codeViewId(pre));
+        const wrapped = state?.wrapped === true;
+        pre.classList.toggle('code-wrapped', wrapped);
+        pre.querySelector('.code-wrap-btn')?.setAttribute('aria-pressed', String(wrapped));
+        const notice = pre.querySelector('.code-wrap-notice');
+        if (notice) notice.hidden = !wrapped;
+    }
+
+    function toggleCodeWrap(pre) {
+        const code = pre.querySelector('code');
+        if (!code) return;
+        const id = codeViewId(pre);
+        const state = codeViewStates.get(id) || { wrapped: false, scrollLeft: 0 };
+        const selection = window.getSelection();
+        const range = selection?.rangeCount && code.contains(selection.anchorNode) ? selection.getRangeAt(0) : null;
+        const caret = range?.getBoundingClientRect();
+        const pane = editorWrapper.getBoundingClientRect();
+        const keepCaret = caret?.height && caret.top >= pane.top && caret.bottom <= pane.bottom;
+        if (!state.wrapped) state.scrollLeft = code.scrollLeft;
+        state.wrapped = !state.wrapped;
+        codeViewStates.set(id, state);
+        applyCodeWrap(pre);
+        code.scrollLeft = state.wrapped ? 0 : state.scrollLeft;
+        if (keepCaret) editorWrapper.scrollTop += range.getBoundingClientRect().top - caret.top;
+    }
+
     // Setup UI for a single code block (header, highlight)
     function setupCodeBlockUI(pre) {
         // Skip if already setup
@@ -3435,6 +3511,24 @@
             }
             copyCodeBlock(pre);
         });
+
+        const wrapBtn = document.createElement('button');
+        wrapBtn.type = 'button';
+        wrapBtn.className = 'code-wrap-btn';
+        wrapBtn.title = i18n.wrapCode || 'Wrap code';
+        wrapBtn.setAttribute('aria-label', wrapBtn.title);
+        wrapBtn.setAttribute('aria-pressed', 'false');
+        wrapBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M3 12h14a4 4 0 0 1 0 8h-4m3-3-3 3 3 3M3 18h4"/></svg>';
+        wrapBtn.addEventListener('pointerdown', event => event.preventDefault());
+        wrapBtn.addEventListener('keydown', event => {
+            if (!event.ctrlKey && !event.metaKey) event.stopPropagation();
+        });
+        wrapBtn.addEventListener('click', event => { event.stopPropagation(); toggleCodeWrap(pre); });
+        const wrapNotice = document.createElement('span');
+        wrapNotice.className = 'code-wrap-notice';
+        wrapNotice.textContent = i18n.codeWrapped || 'Wrapped';
+        wrapNotice.title = i18n.codeWrappedHelp || 'Visual wrapping only. Source line breaks are unchanged.';
+        wrapNotice.hidden = true;
         
         // Expand/collapse button
         const expandBtn = document.createElement('button');
@@ -3494,6 +3588,8 @@
         
         header.appendChild(expandBtn);
         header.appendChild(langTag);
+        header.appendChild(wrapNotice);
+        header.appendChild(wrapBtn);
         header.appendChild(copyBtn);
         header.appendChild(deleteBtn);
         const status = document.createElement('span');
@@ -3503,6 +3599,7 @@
         status.setAttribute('aria-atomic', 'true');
         header.appendChild(status);
         pre.insertBefore(header, pre.firstChild);
+        applyCodeWrap(pre);
         
         // Apply syntax highlighting for display mode
         if (pre.getAttribute('data-mode') === 'display') {
@@ -3524,7 +3621,10 @@
                 // Suppress during arrow-key navigation into this block
                 if (isNavigatingIntoBlock) return;
                 const activeEl = document.activeElement;
-                if (!pre.contains(activeEl) && !document.querySelector('.lang-selector')) {
+                // Nested contenteditable code can retain the outer editor's
+                // focus. A view toggle must not end that active code selection.
+                const selectionInCode = activeEl === editor && code.contains(window.getSelection()?.anchorNode);
+                if (!pre.contains(activeEl) && !selectionInCode && !document.querySelector('.lang-selector')) {
                     if (pre.getAttribute('data-mode') === 'edit') {
                         enterDisplayMode(pre);
                     }
@@ -9099,10 +9199,11 @@
                 // Check if this block is inside a mermaid-wrapper or math-wrapper
                 const specialWrapperBlock = blockNode.closest('.mermaid-wrapper') || blockNode.closest('.math-wrapper');
 
-                // Source lines can span several visual rows when TeX wrapping is on.
+                // Wrapped source lines can span several visual rows.
                 // Let Chromium keep the caret column while moving within those rows;
                 // retain the existing block-exit behavior at the visual boundaries.
-                if (specialWrapperBlock?.classList.contains('math-wrapper') && document.documentElement.dataset.mathSourceWrap === 'true') {
+                if (blockNode.classList.contains('code-wrapped') ||
+                    (specialWrapperBlock?.classList.contains('math-wrapper') && document.documentElement.dataset.mathSourceWrap === 'true')) {
                     const code = blockNode.querySelector('code') || blockNode;
                     const caret = sel.getRangeAt(0).getBoundingClientRect();
                     const bounds = code.getBoundingClientRect();

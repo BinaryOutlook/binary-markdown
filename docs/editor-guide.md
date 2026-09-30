@@ -238,11 +238,23 @@ The preference persists and applies immediately to open pickers, retaining the q
 
 <a id="display-mode--edit-mode"></a>
 
+### Code controls and soft wrapping
+
+Each ordinary code block has a toolbar above its code. The controls remain at the visible block's right edge while long code scrolls horizontally below them. In a narrow pane, the toolbar can occupy multiple rows without covering code.
+
+Click **Copy code** (the overlapping-pages icon) to copy the code's original text, including indentation, tabs, authored line breaks, and trailing blank lines. A checkmark briefly confirms success; the button keeps the same size. Keyboard users can focus the button and press Enter or Space. If copying fails, the tooltip and accessible status explain the failure so you can retry.
+
+Click **Wrap code** to fit long lines within that block's available width. Wrapping starts off for every new block and newly opened editor. While enabled, the toggle stays highlighted and a persistent **Wrapped** badge appears beside it; its tooltip explains that wrapping changes only the display. Actual source lines can span multiple visible rows, including long tokens without spaces.
+
+The choice applies to that block during the current editor session. It survives display/edit changes, resizing, expansion, source-mode round trips, and content Undo/Redo. Unchanged blocks retain their choice when source edits add other blocks; new blocks start unwrapped. Closing and reopening the editor resets wrapping. No document setting or source marker is written.
+
+Wrapping preserves the active code node, selection, and editing mode. It adds no source line breaks and creates no document edit or undo step. Copy, Save, Source mode, and export retain authored content. Export layout follows its own format-specific rules rather than the block's temporary wrap choice. Turning wrapping off restores that block's previous horizontal scroll position.
+
 ### Display and edit modes
 
-- **Display Mode**: Shows syntax-highlighted code with language tag and copy button
-- **Edit Mode**: Plain text editing (click on code block to enter)
-- **Expand Button**: Open code in a separate VS Code editor tab for larger editing
+- **Display mode:** syntax-highlighted code with the toolbar above it.
+- **Edit mode:** plain text editing; click the code to enter. Wrapped Up/Down navigation moves through visible rows and leaves the block at its outer boundaries.
+- **Expand:** widen the block within the editor pane; click again to restore its normal width.
 
 ### Mermaid diagrams
 

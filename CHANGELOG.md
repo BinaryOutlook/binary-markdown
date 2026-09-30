@@ -2,7 +2,17 @@
 
 ## Unreleased
 
-No additional changes.
+### Fixed
+
+- Keep code-block controls anchored above the visible block while long code scrolls horizontally, without covering its first line.
+
+### Changed
+
+- Replace the code Copy text with an accessible icon and stable-size success feedback.
+
+### Added
+
+- Optional per-block soft wrapping, off by default, with a persistent **Wrapped** notice. Wrapping preserves code content, editing state, source/save/copy behavior, and independent export layout. See [code controls and soft wrapping](docs/editor-guide.md#code-controls-and-soft-wrapping).
 
 ## 0.4.1
 
