@@ -1,0 +1,69 @@
+{
+  "method": "Computed CSS foreground/background colors; sRGB relative luminance; measurements of one Night-theme JavaScript fixture, not all themes or accessibility certification.",
+  "sample": {
+    "theme": "night",
+    "background": "#24283B",
+    "image": "images/current/06-code-night.jpg"
+  },
+  "tokens": [
+    {
+      "token": "string",
+      "foreground": "#032F62",
+      "background": "#24283B",
+      "contrastRatio": 1.1006895961366963,
+      "normalTextTarget": 4.5
+    },
+    {
+      "token": "number",
+      "foreground": "#005CC5",
+      "background": "#24283B",
+      "contrastRatio": 2.314725479819126,
+      "normalTextTarget": 4.5
+    },
+    {
+      "token": "keyword",
+      "foreground": "#D73A49",
+      "background": "#24283B",
+      "contrastRatio": 3.1843634376090355,
+      "normalTextTarget": 4.5
+    },
+    {
+      "token": "comment",
+      "foreground": "#6A737D",
+      "background": "#24283B",
+      "contrastRatio": 3.0251167207757526,
+      "normalTextTarget": 4.5
+    }
+  ],
+  "canvas": {
+    "image": "images/current/01-overview.jpg",
+    "viewport": {
+      "width": 1280,
+      "height": 720
+    },
+    "editorTop": 64,
+    "firstHeadingTop": 189.99,
+    "firstHeadingInset": 125.99,
+    "sourcePaddingTop": 100
+  },
+  "findInputs": [
+    {
+      "id": "searchInput",
+      "placeholder": "Search...",
+      "ariaLabel": null,
+      "ariaLabelledby": null,
+      "associatedLabels": []
+    },
+    {
+      "id": "replaceInput",
+      "placeholder": "Replace...",
+      "ariaLabel": null,
+      "ariaLabelledby": null,
+      "associatedLabels": []
+    }
+  ],
+  "refs": [
+    "https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html",
+    "https://code.visualstudio.com/api/ux-guidelines/webviews"
+  ]
+}

@@ -1,0 +1,55 @@
+{
+  "date": "2026-10-01",
+  "status": "Completed publication-content audit; no disclosure findings in reviewed scope",
+  "scope": "Report content, screenshots/concepts and metadata, portable artifacts, sharing scripts and intended Git paths; not an application-wide penetration test",
+  "publicationTarget": "Public canonical BinaryOutlook/binary-markdown repository, review branch and draft PR",
+  "sourceCommit": "944b4dd2781c906ee9a912295c814e77a0a9f3f0",
+  "canonicalMainAtPackaging": "092e712baa7080ac492c7c4714c485a19e8ab2fa",
+  "checks": {
+    "content": [
+      "Report, evidence, prompts, fixtures, builders and report index checked for private locations, local account data, private keys, common provider tokens and credential assignments",
+      "Synthetic visible document text and host states retained; original visual review preserved",
+      "No credentials, real user documents or private account details found"
+    ],
+    "images": {
+      "manifestImageHashesMatched": 64,
+      "totalManifestImages": 64,
+      "screenshotsAndFinalConcepts": 56,
+      "supersededProvenanceConcepts": 8,
+      "exifOrTextMetadataEntriesFound": 0,
+      "ancillaryPNGMetadata": "C2PA provenance retained; no private path, account or credential patterns found",
+      "boundary": "Prior visual inspection plus unchanged image hashes and repeated binary/metadata scan"
+    },
+    "HTML": [
+      "All 56 embedded assets match the original bytes",
+      "Exact inline-script hashes validated against CSP",
+      "No external scripts, fonts, frames, forms, inline handlers, fetches, trackers or automatic feedback transmission",
+      "Notes written via input values/textContent; plain-text output, no HTML execution of reviewer notes",
+      "CSP blocks network connections, object loading and form submission"
+    ],
+    "PDF": {
+      "pages": 75,
+      "javascript": false,
+      "embeddedFiles": false,
+      "unexpectedAnnotationActions": 0,
+      "optionalLinks": "Public project snapshot and primary UX/contrast reference sites only",
+      "metadata": "Generic project review author/title; no private paths or account data"
+    },
+    "git": [
+      "Canonical public remote and branch target verified",
+      "Remote branch name unused before publication; no prior PR found",
+      "Configured commit-author email is a GitHub no-reply address",
+      "Only report folder and reports/README.md are intended; no application-source changes, ignored exports or package build staged"
+    ],
+    "documentation": "77 text files and 965 local links passed; no common private-data patterns"
+  },
+  "disclosureFindings": [],
+  "limitations": [
+    "Publication-content review does not certify application security or implemented UI behavior",
+    "Offline local-file browser execution and browser file-download delivery were not observed; fully embedded structure and copyable feedback fallback were checked"
+  ],
+  "recommendationOwnership": "Consultant proposals, awaiting owner selection",
+  "sourceDrift": "Canonical main advanced after the 30 September capture, including code-block toolbar/wrap changes; recheck current behavior before implementation, especially area 06",
+  "publicationFilesReviewed": 85,
+  "symlinksFound": 0
+}

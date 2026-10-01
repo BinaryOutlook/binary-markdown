@@ -1,0 +1,86 @@
+{
+  "status": "Visual design review prepared for owner choice",
+  "reviewDate": "2026-09-30",
+  "sourceCommit": "944b4dd2781c906ee9a912295c814e77a0a9f3f0",
+  "branch": "feat/ui-ux-visual-review",
+  "nodeVersion": "v24.21.0",
+  "compile": {
+    "command": "npm run compile",
+    "result": "passed on unchanged application source",
+    "boundary": "Produces preview assets; does not implement or validate proposed interaction behavior"
+  },
+  "documentationChecks": {
+    "command": "node scripts/check-docs.cjs",
+    "result": "passed",
+    "textFiles": 74,
+    "localLinks": 960,
+    "commonPrivateDataPatterns": "none found"
+  },
+  "rawMarkdownReview": {
+    "files": [
+      "reports/README.md",
+      "reports/investigations/2026-09-30-ui-ux-visual-review/report.md"
+    ],
+    "result": "completed",
+    "scope": "Full raw files and proposed changes; tables, paragraph boundaries, links, lists, anchors and fenced command block reviewed"
+  },
+  "renderedMarkdownReview": {
+    "result": "completed",
+    "renderer": "Installed markdown-it with local image/link rewriting",
+    "browser": "Local browser",
+    "scope": "Both affected Markdown files; table layout, paragraph flow, heading separation, image scaling, option order, numbered legends and rationale inspected",
+    "correction": "Preview stylesheet keeps dates and area identifiers together",
+    "boundary": "Not native VS Code Markdown preview or exported-reader acceptance"
+  },
+  "galleryReview": {
+    "result": "completed",
+    "areas": 12,
+    "options": 36,
+    "order": [
+      "Recommended",
+      "Moderate",
+      "Experimental"
+    ],
+    "checks": [
+      "Section and option navigation",
+      "All / Recommended / Moderate / Experimental filters",
+      "Hidden-option link restores all options",
+      "Image zoom and Close",
+      "Current and generated image loading",
+      "Numbered annotation legends"
+    ],
+    "screenshots": [
+      "evidence/gallery-preview.jpg",
+      "evidence/gallery-code-concept.jpg"
+    ]
+  },
+  "imageInventory": {
+    "current": 20,
+    "finalConcepts": 36,
+    "superseded": 8,
+    "hashesMatched": 64,
+    "formatChecks": "PNG/JPEG dimensions and hashes recorded without raster editing",
+    "pngAncillaryMetadata": [
+      "caBX"
+    ],
+    "privacyReview": "Visual synthetic-content inspection and binary/text checks; no common private-path, local-account or credential-assignment patterns found"
+  },
+  "sourcePreservation": {
+    "result": "passed",
+    "recordedSourceHashesMatched": 20,
+    "applicationDiff": "git diff --exit-code HEAD -- src package.json package-lock.json test vendor scripts: passed",
+    "scope": "Only report folder and reports/README.md changed"
+  },
+  "gitBaseline": {
+    "canonicalMainRefreshed": true,
+    "canonicalMainCommit": "944b4dd2781c906ee9a912295c814e77a0a9f3f0",
+    "primaryCheckout": "clean main, aligned with origin/main"
+  },
+  "applicationChangesImplemented": false,
+  "nativeHostAcceptance": "not performed",
+  "outputReaderAcceptance": "not performed",
+  "assistiveTechnologyAudit": "not performed",
+  "publication": "local uncommitted report; no push, pull request, merge or release",
+  "historicalReceipt": true,
+  "receiptBoundary": "Original 30 September local preparation; consult sharing-validation.json and publication-security-audit.json for subsequent packaging and publication checks"
+}
