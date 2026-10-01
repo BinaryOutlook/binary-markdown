@@ -837,10 +837,13 @@ body {
     cursor: pointer;
     font-size: 12px;
 }
-.lang-selector-item small { font-size: 10px; }
+.lang-selector-item small { font-size: 10px; margin-left: auto; }
+.lang-selector-item[data-current-language="true"] { color: var(--link-color); background: color-mix(in srgb, var(--link-color) 12%, var(--bg-color)); box-shadow: inset 2px 0 var(--link-color); }
+.lang-selector-current-mark { flex: 0 0 auto; font-weight: 600; }
 .lang-selector-item:hover, .lang-selector-item[aria-selected="true"] {
     background: var(--selection-bg);
 }
+.lang-selector-item[data-current-language="true"]:hover, .lang-selector-item[data-current-language="true"][aria-selected="true"] { background: color-mix(in srgb, var(--link-color) 20%, var(--bg-color)); }
 
 /* Mermaid diagram styles */
 .editor .mermaid-wrapper {
@@ -1463,7 +1466,8 @@ button.command-palette-item { border: 0; width: 100%; text-align: start; font: i
 .export-support { font-size: 12px; padding: 4px 0 8px; }
 .export-menu .export-status { position: static; margin: 12px 0 0; padding: 12px 0 0; border: 0; border-top: 1px solid var(--border-color); box-shadow: none; background: transparent; }
 .export-status-row { flex-wrap: wrap; }
-#exportOpenOutput { margin-top: 8px; background: var(--selection-bg); border: 1px solid var(--border-color); border-radius: 4px; padding: 6px 8px; color: var(--text-color); font: inherit; cursor: pointer; }
+#exportOpenOutput { margin-top: 8px; background: var(--link-color); border: 1px solid var(--link-color); border-radius: 4px; padding: 6px 8px; color: var(--bg-color); font: inherit; cursor: pointer; }
+#exportOpenOutput:hover, #exportOpenOutput:focus-visible { background: var(--link-color); color: var(--bg-color); outline-offset: 2px; }
 #exportOpenOutput[hidden] { display: none; }
 #editor > :first-child { margin-top: 0; }
 .reading-progress progress::-webkit-progress-bar { background: var(--sidebar-border); }
@@ -1636,6 +1640,12 @@ html[data-table-toolbar-position="bottom-left"] .editor table, html[data-table-t
 #exportStatusMessage { font-weight: 600; }
 #exportRetry { margin-top: 10px; border: 1px solid var(--link-color); background: var(--selection-bg); border-radius: 4px; }
 .export-menu button:disabled { opacity: .5; cursor: default; }
+.export-menu [data-export-format] { margin: 4px 0; border: 1px solid var(--border-color); background: var(--code-bg); }
+.export-menu [data-export-format][aria-disabled="false"] > span:first-child { color: var(--link-color); font-weight: 600; }
+.export-menu [data-export-format][aria-disabled="false"]::after { content: '›'; color: var(--link-color); }
+.export-menu [data-export-format] [data-export-tool-status] { margin-left: auto; }
+.export-menu [data-export-format][aria-disabled="true"] { border-style: dashed; background: transparent; cursor: default; }
+.export-menu [data-export-format][aria-disabled="false"]:hover, .export-menu [data-export-format][aria-disabled="false"]:focus-visible { border-color: var(--link-color); }
 .export-output-path { font-weight: 600; margin: 8px 0; overflow-wrap: anywhere; }
 #exportWarnings { margin-top: 12px; padding: 8px; border: 1px solid #bd8d2c; border-radius: 4px; background: #fff8e3; color: #5d4519; font-size: 12px; }
 #exportWarningsList { padding-left: 20px; max-height: 120px; overflow: auto; }

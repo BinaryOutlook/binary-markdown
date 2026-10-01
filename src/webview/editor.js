@@ -4171,6 +4171,7 @@
             ? selection.getRangeAt(0).cloneRange() : null;
         const wasEditing = pre.getAttribute('data-mode') === 'edit';
         const current = pre.getAttribute('data-lang') || 'plaintext';
+        const currentId = LANGUAGE_ALIASES[current.toLowerCase()] || current.toLowerCase();
         const selector = document.createElement('div');
         selector.className = 'lang-selector';
         const input = document.createElement('input');
@@ -4241,15 +4242,21 @@
             for (const id of results) {
                 const item = document.createElement('div'); item.className = 'lang-selector-item';
                 item.id = 'codeLanguageOption-' + id; item.dataset.language = id; item.setAttribute('role', 'option');
+                item.dataset.currentLanguage = String(id === currentId);
                 const name = document.createElement('span'); name.textContent = codeLanguageName(id);
                 const identifier = document.createElement('small'); identifier.textContent = id;
                 item.append(name, identifier);
+                if (id === currentId) {
+                    const mark = document.createElement('span'); mark.className = 'lang-selector-current-mark';
+                    mark.textContent = '✓'; mark.setAttribute('aria-hidden', 'true'); item.appendChild(mark);
+                    item.setAttribute('aria-label', codeLanguageName(id) + ': ' + (i18n.languagePickerCurrent || 'Current language'));
+                }
                 item.addEventListener('mousedown', event => event.preventDefault());
                 item.addEventListener('click', () => choose(id)); list.appendChild(item);
             }
             empty.hidden = results.length > 0;
             activate(selected && results.includes(selected) ? results.indexOf(selected) :
-                query ? (results.length ? 0 : -1) : Math.max(0, results.indexOf(LANGUAGE_ALIASES[current.toLowerCase()] || current.toLowerCase())));
+                query ? (results.length ? 0 : -1) : Math.max(0, results.indexOf(currentId)));
             positionLanguageSelector();
         };
         input.addEventListener('input', () => render());

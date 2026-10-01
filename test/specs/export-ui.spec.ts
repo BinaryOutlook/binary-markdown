@@ -157,6 +157,34 @@ test.describe('Export toolbar and job status', () => {
         expect(await outbound(page, 'export')).toEqual([]);
     });
 
+    test('available exports and the completed output remain visible actions in a narrow pane', async ({ page }) => {
+        await page.setViewportSize({ width: 480, height: 1000 }); await setup(page);
+        await page.locator('#exportButton').click();
+        await hostMessage(page, { type: 'exportCapabilities', host: { available: true }, pandoc: { available: false }, browser: { available: true } });
+        const html = page.locator('[data-export-format="html"]');
+        await expect(html).toHaveAttribute('aria-disabled', 'false');
+        await expect(html).toHaveCSS('border-top-style', 'solid');
+        await expect(page.locator('[data-export-format="docx"]')).toHaveCSS('border-top-style', 'dashed');
+        await page.locator('[data-export-format="docx"]').focus(); await page.keyboard.press('Enter');
+        expect(await outbound(page, 'export')).toEqual([]);
+        await html.focus(); await page.keyboard.press('Enter');
+        expect(await outbound(page, 'export')).toEqual([{ type: 'export', format: 'html' }]);
+        await hostMessage(page, { type: 'exportStatus', state: 'complete', outputPath: '/documents/report.html', warnings: [{ code: 'test-warning', message: 'Review image resolution.' }] });
+        const output = page.locator('#exportOpenOutput');
+        await expect(output).toBeVisible(); await expect(output).toBeEnabled();
+        const colors = await output.evaluate(element => {
+            const style = getComputedStyle(element); const probe = document.createElement('span');
+            probe.style.color = 'var(--link-color)'; element.appendChild(probe);
+            const accent = getComputedStyle(probe).color; probe.remove();
+            return { text: style.color, background: style.backgroundColor, accent };
+        });
+        expect(colors.text).not.toBe(colors.background); expect(colors.background).toBe(colors.accent);
+        await output.focus(); await page.keyboard.press('Enter');
+        expect(await outbound(page, 'openExportOutput')).toEqual([{ type: 'openExportOutput' }]);
+        await expect(page.locator('#exportWarnings')).toBeVisible();
+        expect(await outbound(page, 'edit')).toEqual([]);
+    });
+
     for (const reason of [getExportMessages().unsupportedRemote, getExportMessages().trustRequired]) {
         test('host restriction blocks every format and explains recovery: ' + reason, async ({ page }) => {
             await setup(page);

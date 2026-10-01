@@ -64,6 +64,29 @@ test('keyboard confirmation preserves whitespace, copy, Source and one-step undo
     await page.locator('[data-action="redo"]').click(); expect(await markdown(page)).toBe(changed);
 });
 
+test('filtered keyboard navigation distinguishes the committed language from the pending choice', async ({ page }) => {
+    const original = source.replace('custom-lang', 'javascript');
+    await setup(page, original); await open(page); await page.keyboard.insertText('java');
+    const current = page.locator('[role="option"][data-current-language="true"]');
+    await expect(current).toHaveAttribute('data-language', 'javascript');
+    await expect(current).toHaveAccessibleName('JavaScript: Current language');
+    await expect(current.locator('.lang-selector-current-mark')).toBeVisible();
+    await expect(page.getByRole('combobox')).toHaveAttribute('aria-activedescendant', 'codeLanguageOption-java');
+    await page.keyboard.press('ArrowDown');
+    await expect(page.getByRole('combobox')).toHaveAttribute('aria-activedescendant', 'codeLanguageOption-javascript');
+    await page.keyboard.press('ArrowUp');
+    await expect(current).toHaveAttribute('data-language', 'javascript');
+    expect(await markdown(page)).toBe(original);
+    await page.keyboard.press('Escape');
+    await expect(page.locator('[data-action="undo"]')).toBeDisabled();
+    await open(page); await page.keyboard.insertText('java'); await page.keyboard.press('Enter');
+    expect(await markdown(page)).toBe(original.replace('```javascript', '```java'));
+    await open(page);
+    await expect(page.locator('[role="option"][data-current-language="true"]')).toHaveAttribute('data-language', 'java');
+    await page.keyboard.press('Escape');
+    await page.locator('[data-action="undo"]').click(); expect(await markdown(page)).toBe(original);
+});
+
 test('opening from active code retains its caret and editing mode; the choice has a separate undo step', async ({ page }) => {
     await setup(page);
     await page.locator('pre code').click();
