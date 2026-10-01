@@ -196,9 +196,14 @@ async function capture(root, sectionId, caseFilter) {
             const full = directory + '/' + item.id + '-full.png', component = directory + '/' + item.id + '-target.png';
             await page.screenshot({ path: core.safePath(root, full), animations: 'disabled' });
             await page.screenshot({ path: core.safePath(root, component), clip: bounds, animations: 'disabled' });
+            const observedThemeTokens = await page.evaluate(() => {
+                const style = getComputedStyle(document.documentElement);
+                return Object.fromEntries(['--bg-color', '--text-color', '--link-color', '--outline-active-color', '--selection-bg']
+                    .map(name => [name, style.getPropertyValue(name).trim()]));
+            });
             captures.push({ id: item.id, state: item.state, comparison: item.comparison, targetBounds: bounds,
                 inputHash: core.hash(await page.evaluate(() => window.__testApi.getMarkdown())),
-                viewport: page.viewportSize(), theme: item.theme || 'minimal', locale: 'en-US', zoom: 1, images: [full, component] });
+                viewport: page.viewportSize(), theme: item.theme || 'minimal', observedThemeTokens, locale: 'en-US', zoom: 1, images: [full, component] });
             await page.close();
         }
         if (core.sourceIdentity(root).productHash !== before.productHash) throw new Error('Source changed during capture');

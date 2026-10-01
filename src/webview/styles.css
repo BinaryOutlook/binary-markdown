@@ -73,7 +73,7 @@
     --bg-color: #fafafa;
     --text-color: #333333;
     --heading-color: #111111;
-    --link-color: #333333;
+    --link-color: #4266b0;
     --code-bg: #f0f0f0;
     --code-text: #333333;
     --border-color: #e0e0e0;
@@ -1335,7 +1335,7 @@ html[data-math-source-position="below"] .editor .math-wrapper[data-mode="edit"] 
 .sidebar-tabs button { border: 0; border-bottom: 2px solid transparent; padding: 8px 4px; background: transparent; color: var(--text-color); font: inherit; font-size: 12px; cursor: pointer; }
 .sidebar-tabs button[aria-selected="true"] { border-color: var(--link-color); font-weight: 600; }
 .reading-progress { height: 3px; }
-.reading-progress progress { display: block; width: 100%; height: 3px; border: 0; accent-color: var(--link-color); }
+.reading-progress progress { display: block; width: 100%; height: 3px; border: 0; accent-color: var(--outline-active-color, var(--link-color)); }
 .document-info { padding: 16px; font-size: 12px; overflow-wrap: anywhere; }
 .document-info[hidden], .outline[hidden] { display: none; }
 button.outline-item { width: 100%; text-align: start; border: 0; font: inherit; font-size: 13px; background: transparent; color: var(--text-color); cursor: pointer; }
@@ -1465,7 +1465,7 @@ button.command-palette-item { border: 0; width: 100%; text-align: start; font: i
 #exportOpenOutput[hidden] { display: none; }
 #editor > :first-child { margin-top: 0; }
 .reading-progress progress::-webkit-progress-bar { background: var(--sidebar-border); }
-.reading-progress progress::-webkit-progress-value { background: var(--link-color); }
+.reading-progress progress::-webkit-progress-value { background: var(--outline-active-color, var(--link-color)); }
 .block-diagnostic-text { white-space: pre-wrap; font: 11px/1.5 var(--font-mono); padding: 8px; max-height: 160px; overflow: auto; }
 [data-math-source-position="below"] .math-wrapper[data-mode="edit"] .block-chrome { order: 1; }
 /* The spatial inspector is taller than the former one-line toolbar. Reserve

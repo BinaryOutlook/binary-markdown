@@ -168,6 +168,10 @@ function harness(settings, owner) {
             const matches = [];
             for (const page of pages) if ((await page.title()).includes(owner.token)) matches.push(page);
             assert.equal(matches.length, 1, 'Exactly one window must match the owned profile token');
+            // Re-establish the visible-window precondition for each native
+            // interaction, including callbacks after a converter or another app
+            // has taken focus. Bring only the ownership-matched window forward.
+            await matches[0].bringToFront();
             return await callback(matches[0]);
         } finally { await browser.close(); }
     };
@@ -1289,8 +1293,16 @@ async function insertMenuCase(h, owner, record) {
         await h.workbench(async page => {
             const frame = page.locator('iframe.webview:visible');
             const before = await frame.evaluate(node => ({ maxWidth: node.style.maxWidth, maxHeight: node.style.maxHeight }));
+            const contentFrame = page.frameLocator('iframe.webview:visible').locator('#active-frame');
+            const contentBefore = await contentFrame.evaluate(node => ({ maxWidth: node.style.maxWidth, maxHeight: node.style.maxHeight }));
             try {
                 await frame.evaluate(node => {
+                    node.style.maxWidth = '500px'; node.style.maxHeight = '450px';
+                });
+                // VS Code can retain its inner content frame's old layout size
+                // after the outer host frame is constrained. Constrain both
+                // owned frames, then verify the actual editor viewport below.
+                await contentFrame.evaluate(node => {
                     node.style.maxWidth = '500px'; node.style.maxHeight = '450px';
                 });
                 // The outer workbench and inner webview deliver resize at
@@ -1352,7 +1364,10 @@ async function insertMenuCase(h, owner, record) {
                 assert.equal(await editor.evaluate(() => document.querySelector('[data-action="undo"]').disabled), true);
                 record('insert-link-second-prompt', { cancelledWithoutEdit: true });
                 record('insert-narrow-reachability', { ...size, everyAction: true, wholeCardKeyboardNavigation: true, savedContentVerified: true });
-            } finally { await frame.evaluate((node, before) => Object.assign(node.style, before), before); }
+            } finally {
+                await contentFrame.evaluate((node, before) => Object.assign(node.style, before), contentBefore);
+                await frame.evaluate((node, before) => Object.assign(node.style, before), before);
+            }
         });
         await h.sourceMode(connection);
         assert.equal(await connection.evaluate('document.getElementById("sourceEditor").value'), source);
