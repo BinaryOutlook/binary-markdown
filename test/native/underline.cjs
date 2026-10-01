@@ -8,7 +8,15 @@ async function underlineChecks({ editor, keyboard, modifier, save, record, captu
     await editor.evaluate(() => document.getElementById('closeSidebar').click());
     const toolbarAction = async action => {
         const button = editor.locator('#toolbar [data-action="' + action + '"]');
-        if (!await button.isVisible()) await editor.locator('#toolbarMore').click();
+        // Resizing or switching toolbar mode can move this control between the
+        // primary row and overflow after an earlier visibility observation.
+        // Poll the live route and use the normal More control when it is needed.
+        await editor.waitForFunction(action => {
+            const node = document.querySelector('#toolbar [data-action="' + action + '"]');
+            const visible = node && node.getClientRects().length && getComputedStyle(node).visibility !== 'hidden';
+            if (!visible && node?.closest('#toolbarOverflow')?.hidden) document.getElementById('toolbarMore').click();
+            return Boolean(visible);
+        }, action);
         await button.click();
     };
     const before = await editor.evaluate(() => window.htmlToMarkdown());

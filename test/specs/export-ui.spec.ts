@@ -198,7 +198,8 @@ test.describe('Export toolbar and job status', () => {
         await expect(page.locator('#exportSpinner')).toBeVisible();
         await expect(page.locator('#exportStatus')).toHaveAttribute('data-state', 'running');
         await expect(page.getByRole('progressbar', { name: 'Export', exact: true })).toBeVisible();
-        await expect(page.locator('#exportStatusMessage')).toHaveText('Preparing referenced resources…');
+        await expect(page.locator('#exportStatusMessage')).toHaveText(getExportMessages().running);
+        await expect(page.locator('#exportStages [aria-current="step"] .export-stage-label')).toHaveText('Preparing referenced resources…');
         await page.getByRole('button', { name: 'Cancel export', exact: true }).click();
         expect(await outbound(page, 'cancelExport')).toHaveLength(1);
         await hostMessage(page, { type: 'exportStatus', state: 'complete', message: 'Export complete', outputPath: '/documents/report.html', warnings: [{ code: 'asset-missing', message: '<script>bad()</script> image unavailable' }] });
@@ -225,12 +226,16 @@ test.describe('Export toolbar and job status', () => {
         await hostMessage(page, { type: 'exportStatus', state: 'running', stage: 'resources' });
         await expect(page.locator('#exportStages li')).toHaveCount(1);
         await expect(page.locator('#exportStages li')).toContainText('Preparing referenced resources');
+        await expect(page.locator('#exportStatusMessage')).toHaveText(getExportMessages().running);
+        await expect(page.locator('#exportStages [aria-current="step"] .export-stage-state')).toHaveText(getExportMessages().stageCurrent);
         await page.locator('#exportCancel').click();
         await expect(page.locator('#exportStatus')).toHaveAttribute('data-state', 'running');
         await expect(page.locator('#exportStatusMessage')).toHaveText(getExportMessages().cancelPending);
         await expect(page.locator('#exportCancel')).toBeDisabled();
         await hostMessage(page, { type: 'exportStatus', state: 'running', stage: 'rendering' });
         await expect(page.locator('#exportStages li')).toHaveCount(2);
+        await expect(page.locator('#exportStages [data-state="complete"] .export-stage-state')).toHaveText(getExportMessages().stageCompleted);
+        await expect(page.locator('#exportStages [aria-current="step"] .export-stage-label')).toHaveText(getExportMessages().rendering);
         await expect(page.locator('#exportStatusMessage')).toHaveText(getExportMessages().cancelPending);
         await expect(page.locator('#exportOpenOutput')).toBeHidden();
         await hostMessage(page, { type: 'exportStatus', state: 'cancelled' });

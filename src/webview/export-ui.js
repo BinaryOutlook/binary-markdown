@@ -21,6 +21,7 @@
     let previousFocus = null;
     let lastFormat = null, cancelPending = false;
     const stages = new Map();
+    const stageMessages = new Map();
     const retry = document.getElementById('exportRetry');
     document.getElementById('exportFormatHeading').textContent = text('formatOptions');
     document.getElementById('exportJobHeading').textContent = text('jobStatus');
@@ -29,7 +30,7 @@
     document.getElementById('exportIdleResults').textContent = text('idleResults');
     retry.textContent = text('retry');
     function requestFormat(format) {
-        lastFormat = format; cancelPending = false; stages.clear();
+        lastFormat = format; cancelPending = false; stages.clear(); stageMessages.clear();
         document.getElementById('exportStages').replaceChildren();
         retry.hidden = true; host.requestExport(format);
     }
@@ -219,7 +220,7 @@
             if (message.state === 'running' && !running) {
                 // Exports can also start through a host command. Never carry a
                 // previous job's completed stages into that independent run.
-                stages.clear(); cancelPending = false;
+                stages.clear(); stageMessages.clear(); cancelPending = false;
             }
             running = message.state === 'running';
             if (!running) cancelPending = false;
@@ -235,20 +236,28 @@
             cancel.hidden = !running;
             cancel.disabled = cancelPending;
             const stateKey = message.state === 'complete' ? 'completed' : message.state;
-            statusMessage.textContent = cancelPending ? text('cancelPending') : message.message || text(message.stage || stateKey);
+            const knownStages = ['checking','dependencies','resources','rendering','converting','saving'];
+            const hasKnownStage = knownStages.includes(message.stage);
+            // A host stage belongs in the observed timeline once. The headline
+            // describes the job state, including cancellation awaiting the host.
+            statusMessage.textContent = cancelPending ? text('cancelPending') : running && hasKnownStage
+                ? text('running') : message.message || text(stateKey);
             document.getElementById('exportIdleStatus').hidden = true;
             document.getElementById('exportIdleResults').hidden = message.state === 'complete';
             retry.hidden = message.state !== 'failed' || !lastFormat;
-            const knownStages = ['checking','dependencies','resources','rendering','converting','saving'];
-            if (running && knownStages.includes(message.stage)) {
+            if (running && hasKnownStage) {
                 for (const stage of stages.keys()) stages.set(stage, 'complete');
                 stages.set(message.stage, 'running');
+                stageMessages.set(message.stage, message.message || text(message.stage));
             } else if (!running && stages.size) stages.set([...stages.keys()].at(-1), message.state);
             const stageList = document.getElementById('exportStages'); stageList.replaceChildren();
             for (const [key, state] of stages) {
                 const row = document.createElement('li'); row.dataset.state = state;
-                const indicator = document.createElement('span'); indicator.setAttribute('aria-hidden', 'true'); indicator.textContent = state === 'complete' ? '✓' : state === 'running' ? '•' : '–';
-                row.append(indicator, document.createTextNode(text(key))); stageList.appendChild(row);
+                if (state === 'running') row.setAttribute('aria-current', 'step');
+                const indicator = document.createElement('span'); indicator.className = 'export-stage-indicator'; indicator.setAttribute('aria-hidden', 'true'); indicator.textContent = state === 'complete' ? '✓' : state === 'running' ? '•' : '–';
+                const label = document.createElement('span'); label.className = 'export-stage-label'; label.textContent = stageMessages.get(key) || text(key);
+                const stateLabel = document.createElement('span'); stateLabel.className = 'export-stage-state'; stateLabel.textContent = text(state === 'complete' ? 'stageCompleted' : state === 'running' ? 'stageCurrent' : state);
+                row.append(indicator, label, stateLabel); stageList.appendChild(row);
             }
             outputPath.textContent = message.outputPath || '';
             openOutput.hidden = message.state !== 'complete' || typeof message.outputPath !== 'string' || !message.outputPath;

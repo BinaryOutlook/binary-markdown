@@ -145,6 +145,9 @@ async function prepare(page, section, item) {
         await page.locator('#exportButton').click();
         await exportMessage(page, { type: 'exportCapabilities', host: { available: true }, pandoc: { available: id !== 'missing' }, browser: { available: true } });
         if (id === 'running' || id === 'canceling') {
+            // Reproduce the host's actual checking -> dependencies -> resources
+            // sequence rather than starting a screenshot midway through a job.
+            for (const stage of ['checking', 'dependencies']) await exportMessage(page, { type: 'exportStatus', state: 'running', stage });
             await exportMessage(page, { type: 'exportStatus', state: 'running', stage: 'resources', message: 'Preparing referenced resources…' });
             if (id === 'canceling') await page.locator('#exportCancel').click();
         }

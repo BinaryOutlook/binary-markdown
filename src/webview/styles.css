@@ -1614,7 +1614,10 @@ html[data-table-toolbar-position="bottom-left"] .editor table, html[data-table-t
 .export-menu .export-status { max-height: none; margin: 0; padding: 0; border: 0; }
 .export-stages { list-style: none; padding: 0; margin: 8px 0; font-size: 12px; }
 .export-stages li { display: flex; align-items: center; gap: 8px; padding: 6px 0; }
-.export-stages li span { flex: 0 0 16px; text-align: center; }
+.export-stage-indicator { flex: 0 0 16px; text-align: center; }
+.export-stage-label { flex: 1 1 auto; min-width: 0; }
+.export-stage-state { flex: 0 0 auto; font-size: 11px; font-weight: 400; padding: 2px 5px; border: 1px solid var(--border-color); border-radius: 4px; }
+.export-stages [aria-current="step"] .export-stage-state { color: var(--link-color); background: var(--selection-bg); }
 .export-stages [data-state="running"] { font-weight: 600; }
 #exportStatusMessage { font-weight: 600; }
 #exportRetry { margin-top: 10px; border: 1px solid var(--link-color); background: var(--selection-bg); border-radius: 4px; }

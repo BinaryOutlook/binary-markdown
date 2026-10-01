@@ -1140,6 +1140,7 @@ async function underlineCase(h, owner, record) {
     await h.driver({ action: 'config', key: 'toolbarMode', scope: 'workspace', value: 'full' });
     let connection = await h.open(file);
     try {
+        await h.until(() => connection.evaluate('document.documentElement.dataset.toolbarMode === "full"'), 'full toolbar delivered before underline checks');
         let before;
         await h.workbench(async page => {
             before = await underlineChecks({ editor: installedEditor(connection, h), keyboard: page.keyboard,
@@ -1289,12 +1290,23 @@ async function insertMenuCase(h, owner, record) {
             const frame = page.locator('iframe.webview:visible');
             const before = await frame.evaluate(node => ({ maxWidth: node.style.maxWidth, maxHeight: node.style.maxHeight }));
             try {
-                const size = await frame.evaluate(async node => {
+                await frame.evaluate(node => {
                     node.style.maxWidth = '500px'; node.style.maxHeight = '450px';
-                    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-                    return { width: node.clientWidth, height: node.clientHeight };
                 });
-                await h.until(() => connection.evaluate(`innerWidth === ${size.width} && innerHeight === ${size.height}`));
+                // The outer workbench and inner webview deliver resize at
+                // different times. Poll their current measurements; a snapshot
+                // taken before delivery can retain the previous window size.
+                // Do not await animation frames in a backgrounded native window.
+                const inspectSize = async () => ({
+                    outer: await frame.evaluate(node => ({ width: node.clientWidth, height: node.clientHeight })),
+                    inner: await connection.evaluate('({ width: innerWidth, height: innerHeight })')
+                });
+                const delivered = await h.until(async () => {
+                    const value = await inspectSize();
+                    return value.outer.width > 0 && value.outer.width <= 500 && value.outer.height > 0 && value.outer.height <= 450 &&
+                        value.inner.width === value.outer.width && value.inner.height === value.outer.height ? value : null;
+                }, 'narrow Insert viewport delivered to the installed webview', inspectSize);
+                const size = delivered.inner;
                 const editor = installedEditor(connection, h);
                 // VS Code 1.85 also mounts a hidden select-all checkbox here.
                 const input = () => page.locator('.quick-input-widget:visible input:not([type="checkbox"]):visible').first();
