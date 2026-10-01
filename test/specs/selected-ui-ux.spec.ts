@@ -77,6 +77,20 @@ test('Outline navigates to the corresponding source heading in Split', async ({ 
     expect((await snapshot(page)).pending).toBe(false);
 });
 
+test('Outline uses one thin active marker and retains the configured accent', async ({ page }) => {
+    const content = '# One\n\nBefore target after.\n';
+    await setup(page, content);
+    await page.evaluate(() => {
+        (window as any).__testApi.updateOutline();
+        document.documentElement.style.setProperty('--outline-active-color', '#087f5b');
+    });
+    const item = page.locator('#outline .is-active');
+    await expect(item).toHaveCount(1);
+    expect(await item.evaluate(node => ({ border: getComputedStyle(node).borderLeftWidth, shadow: getComputedStyle(node).boxShadow })))
+        .toEqual({ border: '0px', shadow: 'rgb(8, 127, 91) 2px 0px 0px 0px inset' });
+    expect(await snapshot(page)).toMatchObject({ content, pending: false });
+});
+
 test('source mode disables visual formatting and retains explicit mode labels', async ({ page }) => {
     await setup(page);
     await page.locator('button[data-editor-mode="source"]').click();

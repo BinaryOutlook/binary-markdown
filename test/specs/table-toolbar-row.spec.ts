@@ -176,6 +176,30 @@ test('Automatic docking remains stable after the contextual row changes viewport
     await geometry(page);
 });
 
+for (const width of [458, 500]) {
+    test(`a ${width}px native-sized Full row retains complete actions with populated selects`, async ({ page }) => {
+        await setup(page, 'full', 'top-bar', width);
+        await page.addStyleTag({ content: '::-webkit-scrollbar { width: 17px; height: 17px; } .table-selection-inspector select:has(option) { min-width: 48px; }' });
+        await page.evaluate(() => window.dispatchEvent(new Event('resize')));
+        await expect.poll(() => page.locator(controls).evaluate(toolbar => {
+            const bounds = toolbar.getBoundingClientRect();
+            return [...toolbar.querySelectorAll('button')].filter(button => button.getClientRects().length).every(button => {
+                const rect = button.getBoundingClientRect();
+                return rect.left >= bounds.left && rect.right <= bounds.right + 1;
+            });
+        })).toBe(true);
+        const more = page.locator(`${controls} [data-action="more"]`);
+        if (await more.isVisible()) {
+            await more.click();
+            await expect(page.locator('.table-overflow-menu [data-action="placement"]')).toBeVisible();
+            await page.keyboard.press('Escape');
+        } else {
+            await expect(page.locator(`${controls} [data-action="placement"]`)).toBeVisible();
+        }
+        expect(await page.evaluate(() => (window as any).htmlToMarkdown())).toBe(source);
+    });
+}
+
 test('layout changes retain the primary More button focus with a contextual row', async ({ page }) => {
     await setup(page, 'full', 'top-bar', 600);
     const more = page.locator('#toolbarMore');

@@ -78,6 +78,10 @@ test('the labeled copy control supports keyboard activation and stable success f
     await page.keyboard.press('Enter');
     await expect(button).toHaveAttribute('data-copy-state', 'copied');
     await expect(page.getByRole('status').filter({ hasText: 'Copied' })).toHaveCount(1);
+    const announcement = page.getByRole('status').filter({ hasText: 'Copied' });
+    expect(await announcement.evaluate(node => ({ width: node.getBoundingClientRect().width, clip: getComputedStyle(node).clipPath })))
+        .toEqual({ width: 1, clip: 'inset(50%)' });
+    await expect(button.locator('.code-action-label')).toHaveText('Copied');
     const after = await button.boundingBox();
     expect(after!.width).toBe(before!.width);
     expect(after!.x).toBe(before!.x);

@@ -1339,7 +1339,7 @@ html[data-math-source-position="below"] .editor .math-wrapper[data-mode="edit"] 
 .document-info { padding: 16px; font-size: 12px; overflow-wrap: anywhere; }
 .document-info[hidden], .outline[hidden] { display: none; }
 button.outline-item { width: 100%; text-align: start; border: 0; font: inherit; font-size: 13px; background: transparent; color: var(--text-color); cursor: pointer; }
-button.outline-item.is-active { background: var(--selection-bg); border-left: 3px solid var(--outline-active-color); }
+button.outline-item.is-active { background: color-mix(in srgb, var(--outline-active-color) 8%, transparent); border-left: 0; box-shadow: inset 2px 0 var(--outline-active-color); }
 .mode-help { padding: 8px 16px; border-bottom: 1px solid var(--border-color); font-size: 12px; color: var(--text-color); background: var(--toolbar-bg); }
 [data-editor-mode="split"] #editorWrapper { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); overflow: hidden; }
 [data-editor-mode="split"] #sourceEditor { order: 0; height: 100%; min-height: 0; max-width: none; margin: 0; padding: 24px; overflow: auto; line-height: 1.5; border-right: 1px solid var(--border-color); }
@@ -1537,9 +1537,7 @@ html[data-table-toolbar-position="bottom-left"] .editor table, html[data-table-t
 .code-lang-tag::after { content: ' ▾'; }
 .code-block-header .code-copy-btn, .code-block-header .code-wrap-btn, .code-block-header .code-open-btn { width: auto; min-height: 28px; gap: 6px; padding: 4px 8px; font: 12px/1.4 var(--font-family); white-space: nowrap; }
 .code-action-label { font-size: 12px; }
-.code-block-status { position: static; width: auto; height: auto; clip-path: none; white-space: normal; font: 12px/1.4 var(--font-family); }
-.code-block-status:empty { display: none; }
-.code-copy-btn[data-copy-state="copied"] + .code-block-status { color: var(--link-color); }
+.code-block-status[data-copy-state="error"] { position: static; width: auto; height: auto; clip-path: none; white-space: normal; font: 12px/1.4 var(--font-family); }
 @media (max-width: 760px) { .code-block-header .code-open-btn .code-action-label { display: none; } .code-block-header { flex-wrap: wrap; } }
 
 .block-chrome { background: var(--toolbar-bg); padding: 12px 16px; font-size: 13px; }

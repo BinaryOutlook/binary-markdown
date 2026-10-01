@@ -76,6 +76,15 @@ test('live placement updates preserve document, cell selection and clean state',
     await expect(page.locator('#toolbar [data-action="undo"]')).toBeDisabled();
 });
 
+test('an explicit placement applies while the pointer remains over the old dock', async ({ page }) => {
+    await setup(page, 'top-bar', 'full');
+    await page.locator(controls).hover();
+    await page.evaluate(() => (window as any).__hostMessageHandler({ type: 'tableToolbarPosition', value: 'top-left' }));
+    await expect(page.locator(controls)).toHaveAttribute('data-placement', 'top-left');
+    expect(await page.evaluate(() => document.querySelector('#editor td')?.contains(getSelection()?.anchorNode || null))).toBe(true);
+    expect(await page.evaluate(() => (window as any).__testApi.messages.filter((message: any) => ['edit', 'save'].includes(message.type)))).toEqual([]);
+});
+
 test('a failed placement save reports the failure without moving or editing the table', async ({ page }) => {
     await setup(page, 'top-left');
     const before = await page.locator('#editor').innerHTML();

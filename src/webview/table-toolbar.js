@@ -320,6 +320,9 @@
             }
             if (count < 4) count = 0; // Keep the four directional controls together.
             if (count > 4 && count < 7) count = 4; // Keep Alignment together.
+            // Advanced is a three-column grid even when individual buttons are
+            // hidden; overflow the whole group to leave room for More.
+            if (count > 7 && count < actions.length) count = 7;
             direction.hidden = count === 0;
             const focused = document.activeElement;
             const focusedAction = actions.indexOf(focused) >= 0 ? actions.indexOf(focused) : overflowActions.indexOf(focused);
@@ -453,7 +456,9 @@
             const bounds = geometry.box(left, top,
                 Math.max(0, Math.min(innerWidth, rect.left + wrapper.clientWidth + laneRight) - left),
                 Math.max(0, Math.min(innerHeight, rect.top + wrapper.clientHeight) - top));
-            if (pointerDown || hovering || owns(document.activeElement) || !picker.hidden) {
+            // An explicit preference clears current and must receive a first
+            // placement even if layout changes put the pointer over old controls.
+            if (current && (pointerDown || hovering || owns(document.activeElement) || !picker.hidden)) {
                 // Keep the chosen placement stable during interaction, but never
                 // strand a focused menu outside a pane that has just shrunk.
                 if (controls.dataset.docked !== 'true' && controls.classList.contains('visible')) {

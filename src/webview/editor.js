@@ -4282,6 +4282,7 @@
             state === 'error' ? (i18n.copyCodeFailed || 'Could not copy code. Try again.') : '';
         const label = document.createElement('span'); label.className = 'code-action-label'; label.textContent = state === 'copied' ? message : i18n.copyCode; button.appendChild(label);
         status.textContent = message;
+        status.dataset.copyState = state;
         button.title = message || (i18n.copyCode || 'Copy code');
         if (state !== 'idle') button.copyFeedbackTimer = setTimeout(() => setCodeCopyState(pre, 'idle'), 2000);
     }
