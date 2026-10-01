@@ -11,6 +11,7 @@
     const statusMessage = document.getElementById('exportStatusMessage');
     const outputPath = document.getElementById('exportOutputPath');
     const spinner = document.getElementById('exportSpinner');
+    const openOutput = document.getElementById('exportOpenOutput');
     const warningDetails = document.getElementById('exportWarnings');
     const warningList = document.getElementById('exportWarningsList');
     let capabilities = null;
@@ -24,6 +25,11 @@
     const toolbarLabel = button.querySelector('.toolbar-action-label');
     if (toolbarLabel) toolbarLabel.textContent = text('title');
     menu.setAttribute('aria-label', text('title'));
+    document.getElementById('exportPanelTitle').textContent = text('title');
+    document.getElementById('exportSupportSummary').textContent = text('experimental');
+    document.getElementById('exportSetupHeading').textContent = text('setup');
+    openOutput.textContent = text('openOutput');
+    openOutput.addEventListener('click', event => { event.stopPropagation(); if (!openOutput.hidden) host.openExportOutput?.(); });
     document.getElementById('exportExperimental').textContent = text('experimental');
     document.getElementById('exportLimitations').textContent = text('limitations');
     document.getElementById('exportSettings').textContent = text('setup');
@@ -53,7 +59,7 @@
     }
 
     function items() {
-        return Array.from(menu.querySelectorAll('[role="menuitem"]')).filter(item => !item.hidden);
+        return Array.from(menu.querySelectorAll('[role="menuitem"], #exportCancel, #exportOpenOutput')).filter(item => !item.hidden);
     }
 
     function visibleButton() {
@@ -132,10 +138,7 @@
             closeMenu(true);
             return;
         }
-        if (event.key === 'Tab') {
-            closeMenu(true);
-            return;
-        }
+        if (event.key === 'Tab') return;
         const choices = items();
         const index = choices.indexOf(document.activeElement);
         let next;
@@ -154,10 +157,10 @@
         const format = item.dataset.exportFormat;
         if (format) {
             if (item.getAttribute('aria-disabled') === 'true') return;
-            closeMenu(false);
             host.requestExport(format);
         } else {
             const tool = item.dataset.exportAction;
+            if (!['settings','pandoc','browser'].includes(tool)) return;
             closeMenu(false);
             host.openExportSettings(tool === 'settings' ? undefined : tool);
         }
@@ -166,7 +169,8 @@
         }
         restoreSelection();
     });
-    cancel.addEventListener('click', () => {
+    cancel.addEventListener('click', event => {
+        event.stopPropagation();
         if (running) host.cancelExport();
     });
     document.addEventListener('keydown', event => {
@@ -186,7 +190,9 @@
             capabilities = message;
             updateCapabilities();
         } else if (message.type === 'exportStatus') {
+            if (!['running','complete','failed','cancelled'].includes(message.state)) return;
             running = message.state === 'running';
+            if (running && menu.hidden) openMenu(false);
             status.hidden = false;
             status.dataset.state = message.state;
             // Keep the live region announceable during work; aria-busy on it
@@ -199,6 +205,7 @@
             const stateKey = message.state === 'complete' ? 'completed' : message.state;
             statusMessage.textContent = message.message || text(message.stage || stateKey);
             outputPath.textContent = message.outputPath || '';
+            openOutput.hidden = message.state !== 'complete' || typeof message.outputPath !== 'string' || !message.outputPath;
             warningList.replaceChildren();
             const warnings = Array.isArray(message.warnings) ? message.warnings : [];
             warningDetails.hidden = warnings.length === 0;

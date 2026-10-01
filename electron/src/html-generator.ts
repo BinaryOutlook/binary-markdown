@@ -86,7 +86,8 @@ export function generateEditorHtml(
 
     const mathScript = fs.readFileSync(getResourcePath('src/shared/math-syntax.js'), 'utf8');
     const tableFormatScript = fs.readFileSync(getResourcePath('src/shared/table-format.js'), 'utf8');
-    const editorScript = (tableFormatScript + '\n' + fs.readFileSync(getResourcePath('src/shared/editor-layout.js'), 'utf8') + '\n' + fs.readFileSync(getResourcePath('src/shared/table-placement.js'), 'utf8') + '\n' + fs.readFileSync(getResourcePath('src/webview/table-toolbar.js'), 'utf8') + '\n' + mathScript + '\n' + fs.readFileSync(editorScriptPath, 'utf8'))
+    const editorScript = (fs.readFileSync(getResourcePath('src/webview/workspace-ui.js'), 'utf8') + '\n' + tableFormatScript + '\n' + fs.readFileSync(getResourcePath('src/shared/editor-layout.js'), 'utf8') + '\n' + fs.readFileSync(getResourcePath('src/shared/table-placement.js'), 'utf8') + '\n' + fs.readFileSync(getResourcePath('src/webview/table-toolbar.js'), 'utf8') + '\n' + mathScript + '\n' + fs.readFileSync(editorScriptPath, 'utf8'))
+        .replace('__SEARCH_WORKER__', () => JSON.stringify(fs.readFileSync(getResourcePath('src/shared/document-search.js'), 'utf8')).replace(/</g, '\\u003c'))
         .replace('__MATH_BACKSLASH__', 'true')
         .replace('__DEBUG_MODE__', String(config.enableDebugLogging))
         .replace('__I18N__', JSON.stringify(config.webviewMessages))

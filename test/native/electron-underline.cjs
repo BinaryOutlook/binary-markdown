@@ -38,9 +38,9 @@ async function main() {
             },
             record: (name, details) => receipts.push({ name, ...details })
         });
-        await page.locator('[data-action="source"]').click();
+        await page.locator('[data-editor-mode="source"]').click();
         assert.equal(await page.locator('#sourceEditor').inputValue(), before);
-        await page.locator('[data-action="source"]').click();
+        await page.locator('[data-editor-mode="visual"]').click();
         assert.equal(await page.locator('#editor u').count(), 1);
         assert.equal(fs.readFileSync(fixture, 'utf8'), before);
         receipts.push({ versions: await application.evaluate(() => ({ electron: process.versions.electron, chromium: process.versions.chrome })), sourceRoundTrip: true, nativeSave: true });

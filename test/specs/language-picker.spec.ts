@@ -1,3 +1,4 @@
+import { toggleEditorView } from '../utils/view-mode';
 import { test, expect, Page } from '@playwright/test';
 
 const body = '  const value = 1;\n\t// β\n\n';
@@ -44,9 +45,9 @@ test('unknown language, empty results and repeated cancellation preserve source 
 
 test('keyboard confirmation preserves whitespace, copy, Source and one-step undo/redo', async ({ page, context }) => {
     await setup(page); await open(page); await page.keyboard.insertText('java');
-    await expect(page.locator('[aria-selected="true"]')).toHaveAttribute('data-language', 'java');
+    await expect(page.locator('.lang-selector-item[aria-selected="true"]')).toHaveAttribute('data-language', 'java');
     await page.keyboard.press('ArrowDown');
-    await expect(page.locator('[aria-selected="true"]')).toHaveAttribute('data-language', 'javascript');
+    await expect(page.locator('.lang-selector-item[aria-selected="true"]')).toHaveAttribute('data-language', 'javascript');
     await page.keyboard.press('Enter');
     const changed = source.replace('```custom-lang', '```javascript');
     expect(await markdown(page)).toBe(changed);
@@ -55,9 +56,9 @@ test('keyboard confirmation preserves whitespace, copy, Source and one-step undo
     await page.locator('.code-copy-btn').click();
     // Windows clipboard reads expose CRLF; retain all tabs and blank lines.
     await expect.poll(() => page.evaluate(async () => (await navigator.clipboard.readText()).replace(/\r\n/g, '\n'))).toBe(body);
-    await page.locator('[data-action="source"]').click();
+    await toggleEditorView(page);
     await expect(page.locator('#sourceEditor')).toHaveValue(changed);
-    await page.locator('[data-action="source"]').click();
+    await toggleEditorView(page);
     await page.locator('[data-action="undo"]').click(); expect(await markdown(page)).toBe(source);
     await expect(page.locator('[data-action="undo"]')).toBeDisabled();
     await page.locator('[data-action="redo"]').click(); expect(await markdown(page)).toBe(changed);

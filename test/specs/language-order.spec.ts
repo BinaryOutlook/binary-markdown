@@ -31,12 +31,12 @@ test('live ordering preserves the input, active language, editable DOM and undo 
     const input = page.getByRole('combobox'); await input.fill('script');
     await page.evaluate(() => { (window as any).__beforeCode = document.querySelector('pre code'); });
     await input.press('ArrowDown');
-    await expect(page.locator('[aria-selected="true"]')).toHaveAttribute('data-language', 'typescript');
+    await expect(page.locator('.lang-selector-item[aria-selected="true"]')).toHaveAttribute('data-language', 'typescript');
     await input.evaluate((node: HTMLInputElement) => node.setSelectionRange(1, 4));
     await order(page, 'z-a');
     await expect(input).toBeFocused(); await expect(input).toHaveValue('script');
     expect(await input.evaluate((node: HTMLInputElement) => [node.selectionStart, node.selectionEnd])).toEqual([1, 4]);
-    await expect(page.locator('[aria-selected="true"]')).toHaveAttribute('data-language', 'typescript');
+    await expect(page.locator('.lang-selector-item[aria-selected="true"]')).toHaveAttribute('data-language', 'typescript');
     expect(await page.evaluate(() => (window as any).__beforeCode === document.querySelector('pre code'))).toBe(true);
     expect(await page.evaluate(() => (window as any).__testApi.messages.filter((m: any) => m.type === 'edit'))).toEqual([]);
     await page.keyboard.press('Enter');

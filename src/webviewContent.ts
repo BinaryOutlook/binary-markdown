@@ -141,7 +141,8 @@ export function getWebviewContent(
 
     const mathScript = fs.readFileSync(path.join(__dirname, 'shared', 'math-syntax.js'), 'utf8');
     const tableFormatScript = fs.readFileSync(path.join(__dirname, 'shared', 'table-format.js'), 'utf8');
-    const editorScript = (tableFormatScript + '\n' + fs.readFileSync(path.join(__dirname, 'shared', 'editor-layout.js'), 'utf8') + '\n' + fs.readFileSync(path.join(__dirname, 'shared', 'table-placement.js'), 'utf8') + '\n' + fs.readFileSync(path.join(__dirname, 'webview', 'table-toolbar.js'), 'utf8') + '\n' + mathScript + '\n' + fs.readFileSync(editorScriptPath, 'utf8'))
+    const editorScript = (fs.readFileSync(path.join(__dirname, 'webview', 'workspace-ui.js'), 'utf8') + '\n' + tableFormatScript + '\n' + fs.readFileSync(path.join(__dirname, 'shared', 'editor-layout.js'), 'utf8') + '\n' + fs.readFileSync(path.join(__dirname, 'shared', 'table-placement.js'), 'utf8') + '\n' + fs.readFileSync(path.join(__dirname, 'webview', 'table-toolbar.js'), 'utf8') + '\n' + mathScript + '\n' + fs.readFileSync(editorScriptPath, 'utf8'))
+        .replace('__SEARCH_WORKER__', () => JSON.stringify(fs.readFileSync(path.join(__dirname, 'shared', 'document-search.js'), 'utf8')).replace(/</g, '\\u003c'))
         .replace('__MATH_BACKSLASH__', String(safeConfig.mathBackslashDelimiters))
         .replace('__DEBUG_MODE__', String(safeConfig.enableDebugLogging ?? false))
         .replace('__I18N__', JSON.stringify(msg))
@@ -153,7 +154,7 @@ export function getWebviewContent(
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource} 'unsafe-inline' https://fonts.googleapis.com; script-src 'nonce-${nonce}' ${webview.cspSource}; img-src ${webview.cspSource} https: http: data: file:; font-src ${webview.cspSource} https: https://fonts.gstatic.com data:; connect-src http://127.0.0.1:7244;">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource} 'unsafe-inline' https://fonts.googleapis.com; script-src 'nonce-${nonce}' ${webview.cspSource}; img-src ${webview.cspSource} https: http: data: file:; font-src ${webview.cspSource} https: https://fonts.gstatic.com data:; connect-src http://127.0.0.1:7244; worker-src blob:;">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">

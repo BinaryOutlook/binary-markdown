@@ -11,9 +11,9 @@ Use a workspace you trust and a local folder you can write to. The source must h
 ## Export a saved document
 
 1. Open the intended document in Binary Markdown and save it.
-2. Open the sharing-arrow **Export** menu. At narrow widths, find it under **More toolbar actions**.
+2. Open the **Export** panel. At narrow widths, find it under **More toolbar actions**.
 3. Choose **HTML**, **PDF**, **DOCX** (Word), or **EPUB**.
-4. Wait for completion, then open the output path shown in the result. Review any warnings about content that needed a fallback.
+4. Wait for completion, then select **Open exported file** in the result. Review any warnings about content that needed a fallback.
 
 With the Binary Markdown editor active, you can also use **Binary Markdown: Export to HTML**, **Export to PDF**, **Export to Word**, or **Export to EPUB** from the Command Palette. These are the English command labels; interface labels follow your configured language.
 
@@ -104,7 +104,7 @@ Conversion checks verify structure and source preservation. Appearance, interact
 
 The output is saved beside the Markdown file: `report.md` becomes `report.pdf`, for example. If that name is occupied, the filename uses the final eight lowercase SHA-256 hexadecimal characters of the completed output, such as `report_7c91a2ef.pdf`. An identical hash-named file is reused. If its bytes differ, numbered suffixes start at `report_7c91a2ef_2.pdf`. Existing files are never overwritten. Unchanged Markdown does not guarantee identical output bytes across conversions.
 
-The editor displays the actual stage and an indeterminate activity indicator. Completion shows the output location and warnings. Missing engines, failed conversions, and unwritable output folders produce a failure result.
+The anchored Export panel keeps format availability, setup actions, and job status together. It displays the actual stage and an indeterminate activity indicator. Completion shows the output location, **Open exported file**, and expandable warnings. The open action uses only the host-recorded completed output; the panel cannot supply an arbitrary file path. Missing engines, failed conversions, and unwritable output folders produce a failure result.
 
 ## Initial format limitations
 

@@ -52,8 +52,8 @@ async function main() {
         });
         await page.locator('.code-copy-btn').click();
         assert.equal(await application.evaluate(({ clipboard }) => clipboard.readText()), body);
-        await page.locator('[data-action="source"]').click(); assert.equal(await page.locator('#sourceEditor').inputValue(), changed);
-        await page.locator('[data-action="source"]').click(); assert.equal(await page.locator('pre').getAttribute('data-lang'), 'cpp');
+        await page.locator('[data-editor-mode="source"]').click(); assert.equal(await page.locator('#sourceEditor').inputValue(), changed);
+        await page.locator('[data-editor-mode="visual"]').click(); assert.equal(await page.locator('pre').getAttribute('data-lang'), 'cpp');
         for (const zoom of [1, 2]) {
             await application.evaluate(({ BrowserWindow }, zoom) => {
                 const window = BrowserWindow.getAllWindows().find(window => window.__fileManager); window.webContents.setZoomFactor(zoom); window.setSize(520, 420);

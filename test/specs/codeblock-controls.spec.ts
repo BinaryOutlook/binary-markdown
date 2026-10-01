@@ -1,3 +1,4 @@
+import { toggleEditorView } from '../utils/view-mode';
 import { test, expect, Page } from '@playwright/test';
 import { lineStartKey, lineEndKey } from '../utils/editor-test-helper';
 
@@ -186,9 +187,9 @@ test('wrapping survives source mode, content undo/redo, deletion and restoration
     await setup(page);
     const block = page.locator('#editor pre').first();
     await block.locator('.code-wrap-btn').click();
-    await page.locator('[data-action="source"]').click();
+    await toggleEditorView(page);
     await expect(page.locator('#sourceEditor')).toHaveValue(source);
-    await page.locator('[data-action="source"]').click();
+    await toggleEditorView(page);
     await expect(block.locator('.code-wrap-btn')).toHaveAttribute('aria-pressed', 'true');
     await block.locator('code').click();
     await page.keyboard.insertText('new_');
@@ -215,10 +216,10 @@ test('wrapping survives source mode, content undo/redo, deletion and restoration
 test('new source blocks default off while an existing wrapped block retains its view', async ({ page }) => {
     await setup(page);
     await page.locator('.code-wrap-btn').click();
-    await page.locator('[data-action="source"]').click();
+    await toggleEditorView(page);
     const changed = '```text\nnew block\n```\n\n' + source;
     await page.locator('#sourceEditor').fill(changed);
-    await page.locator('[data-action="source"]').click();
+    await toggleEditorView(page);
     await expect(page.locator('.code-wrap-btn').nth(0)).toHaveAttribute('aria-pressed', 'false');
     await expect(page.locator('.code-wrap-btn').nth(1)).toHaveAttribute('aria-pressed', 'true');
     expect(await page.evaluate(() => (window as any).__testApi.getMarkdown())).toBe(changed);

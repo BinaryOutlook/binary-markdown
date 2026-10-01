@@ -37,6 +37,63 @@ export interface Messages {
 }
 
 export interface WebviewMessages {
+  tableRows: string;
+  tableColumns: string;
+  searchSourceScope: string;
+  searchResults: string;
+  replaceSelected: string;
+  selectAllMatches: string;
+  selectMatch: string;
+  showMoreMatches: string;
+  noSearchMatches: string;
+  invalidSearch: string;
+  searchTimeout: string;
+  searchUnavailable: string;
+  searchLimit: string;
+
+  modeVisual: string;
+  modeSource: string;
+  modeSplit: string;
+  editorModes: string;
+  splitHelp: string;
+  sourceLine: string;
+  outlineTitle: string;
+  documentTab: string;
+  readingProgress: string;
+  historyDescription: string;
+  viewDescription: string;
+  formatActions: string;
+  contextualTools: string;
+  sourceLabel: string;
+  previewLabel: string;
+  clearSearch: string;
+  noMatchingActions: string;
+  searchRecovery: string;
+  allCategory: string;
+  structureCategory: string;
+  mediaCategory: string;
+  equationsCategory: string;
+  codeCategory: string;
+  frontMatterYaml: string;
+  tocGenerated: string;
+  refreshOnSave: string;
+  refreshLabel: string;
+  equationTitle: string;
+  equationUnsupported: string;
+  blockExitHint: string;
+  diagramNeedsAttention: string;
+  diagramSyntaxError: string;
+  formatDescription: string;
+  blockDescription: string;
+  insertDescriptionInlineMath: string;
+  insertDescriptionMath: string;
+  insertDescriptionTable: string;
+  insertDescriptionCodeblock: string;
+  insertDescriptionLink: string;
+  insertDescriptionImage: string;
+  insertDescriptionMermaid: string;
+  insertDescriptionToc: string;
+
   tableSourceFormatLabel: string;
   tableSourceFormatHelp: string;
   tableSourceFormatAligned: string;

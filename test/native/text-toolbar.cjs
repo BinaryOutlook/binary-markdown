@@ -12,10 +12,10 @@ function toolbarGeometry() {
         if (menu.contains(button) || button.closest('.table-toolbar, .table-toolbar-dock') || !button.getClientRects().length) continue;
         const rect = button.getBoundingClientRect();
         const area = inner.contains(button) ? inner.getBoundingClientRect() : bounds;
-        if (rect.left < area.left - 1 || rect.right > area.right + 1 || rect.top < bounds.top - 1 || rect.bottom > bounds.bottom + 1) clipped.push(button.dataset.action || button.id);
-        rects.push({ action: button.dataset.action || button.id, left: rect.left, right: rect.right });
+        if (rect.left < area.left - 1 || rect.right > area.right + 1 || rect.top < bounds.top - 1 || rect.bottom > bounds.bottom + 1) clipped.push(button.dataset.action || (button.dataset.editorMode ? "mode:" + button.dataset.editorMode : button.id));
+        rects.push({ action: button.dataset.action || (button.dataset.editorMode ? "mode:" + button.dataset.editorMode : button.id), left: rect.left, right: rect.right, top: rect.top, bottom: rect.bottom });
     }
-    const overlaps = rects.slice(1).filter((rect, i) => rect.left < rects[i].right - 1).map(rect => rect.action);
+    const overlaps = rects.slice(1).filter((rect, i) => rect.left < rects[i].right - 1 && rect.top < rects[i].bottom - 1 && rect.bottom > rects[i].top + 1).map(rect => rect.action);
     return { clipped, overlaps, visible: rects.map(rect => rect.action), overflow: [...menu.querySelectorAll('button')].map(button => button.dataset.action), width: bounds.width };
 }
 

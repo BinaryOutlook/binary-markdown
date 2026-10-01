@@ -28,6 +28,7 @@ export class ExportController implements vscode.Disposable {
     private capabilities?: Promise<{ pandoc: ToolStatus; browser: ToolStatus }>;
     private capabilityRefresh = 0;
     private disposed = false;
+    private completedOutput?: string;
 
     constructor(
         private readonly context: vscode.ExtensionContext,
@@ -79,6 +80,14 @@ export class ExportController implements vscode.Disposable {
             if (['html', 'pdf', 'docx', 'epub'].includes(message.format)) { void this.export(message.format); }
             return true;
         }
+        if (message.type === 'openExportOutput') {
+            // The client supplies no path. Only this controller's completed artifact
+            // can be opened, and the normal local/trusted-host gate still applies.
+            if (!this.disposed && !exportAvailabilityError() && this.completedOutput) {
+                void vscode.env.openExternal(vscode.Uri.file(this.completedOutput));
+            }
+            return true;
+        }
         if (message.type === 'cancelExport') { this.running?.abort(); return true; }
         if (message.type === 'exportCapabilities') { this.refreshCapabilities(); return true; }
         if (message.type === 'exportSettings') {
@@ -103,6 +112,7 @@ export class ExportController implements vscode.Disposable {
         if (this.running) { void vscode.window.showInformationMessage(messages.busy); return; }
         const abort = new AbortController();
         this.running = abort;
+        this.completedOutput = undefined;
         await vscode.window.withProgress({
             location: vscode.ProgressLocation.Notification, title: messages.title + ': ' + format.toUpperCase(), cancellable: true
         }, async (progress, cancellation) => {
@@ -204,6 +214,7 @@ export class ExportController implements vscode.Disposable {
                 validateArtifact(format, bytes);
                 operations.report('saving');
                 const result = await finalizeExport(source.sourcePath, format, bytes, abort.signal);
+                this.completedOutput = result.outputPath;
                 const message = (result.reused ? messages.reused : messages.completed) + ': ' + result.outputPath;
                 await this.postStatus({ type: 'exportStatus', state: 'complete', message, outputPath: result.outputPath, warnings });
                 const detail = warnings.length ? '\n' + messages.warnings + ':\n' + warnings.map(warning => warning.message).join('\n') : '';

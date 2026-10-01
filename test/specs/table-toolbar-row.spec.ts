@@ -1,5 +1,7 @@
 import { test, expect, Page } from '@playwright/test';
 const { toolbarGeometry } = require('../native/text-toolbar.cjs');
+const { source: nativeRowSource, tableRowChecks } = require('../native/table-toolbar-row.cjs');
+const { installedEditor } = require('../native/table-toolbar-overflow.cjs');
 
 const source = '# Table context\n\nBefore.\n\n| Item | State |\n| --- | --- |\n| One | Ready |\n| Two | Draft |\n\nAfter.\n';
 const controls = '.table-toolbar:not(.table-toolbar-measure)';
@@ -41,6 +43,31 @@ async function geometry(page: Page) {
     })).toEqual({ wrapperBelow: true, rowBelow: true, buttonsFit: true });
     await expect.poll(() => page.evaluate(toolbarGeometry).then((state: any) => [state.clipped, state.overlaps])).toEqual([[], []]);
 }
+
+test('shared native contextual-row checks preserve focus, source and undo', async ({ page }) => {
+    await setup(page);
+    await page.evaluate(source => (window as any).__testApi.setMarkdown(source), nativeRowSource);
+    const receipts: string[] = [];
+    // Exercise the installed harness's CDP activation contract. Existing browser
+    // cases below separately exercise real pointer hit testing.
+    const editor = installedEditor({ evaluate: (expression: string) => page.evaluate(expression) }, {
+        until: (condition: () => Promise<boolean>, message: string) => expect.poll(condition, { message }).toBe(true),
+    });
+    await tableRowChecks({
+        editor,
+        keyboard: page.keyboard,
+        resize: (width: number, height: number) => page.setViewportSize({ width, height }),
+        setMode: (value: string) => page.evaluate(value => {
+            (window as any).__hostMessageHandler({ type: 'toolbarMode', value });
+        }, value),
+        setPosition: (value: string) => page.evaluate(value => {
+            (window as any).__hostMessageHandler({ type: 'tableToolbarPosition', value });
+        }, value),
+        record: (name: string) => receipts.push(name),
+    });
+    expect(receipts.filter(name => name === 'contextual-row')).toHaveLength(12);
+    expect(receipts.at(-1)).toBe('contextual-row-action');
+});
 
 for (const mode of ['simple', 'full']) {
     for (const position of ['auto', 'top-bar', 'left']) {
@@ -118,7 +145,10 @@ test('second-row overflow responds to sidebar changes and clears with table cont
 test('docking leaves one undo step for the actual table edit and both rows are keyboard reachable', async ({ page }) => {
     await setup(page);
     const before = await page.evaluate(() => (window as any).htmlToMarkdown());
-    await page.locator('#toolbar [data-action="source"]').focus();
+    await page.locator('#toolbar button[data-editor-mode="split"]').focus();
+    await page.keyboard.press('Tab');
+    await expect(page.locator(`${controls} select`).first()).toBeFocused();
+    await page.keyboard.press('Tab');
     await page.keyboard.press('Tab');
     await expect(page.locator(`${controls} [data-action="add-col-left"]`)).toBeFocused();
     await page.keyboard.press('ArrowRight');

@@ -1,4 +1,7 @@
+import { toggleEditorView } from '../utils/view-mode';
 import { test, expect, Page } from '@playwright/test';
+const { source: nativeSource, underlineChecks } = require('../native/underline.cjs');
+const { installedEditor } = require('../native/table-toolbar-overflow.cjs');
 
 async function setup(page: Page, source: string) {
     await page.setViewportSize({ width: 1500, height: 900 });
@@ -27,6 +30,24 @@ async function select(page: Page, selector: string, text?: string) {
 async function markdown(page: Page) { return page.evaluate(() => (window as any).htmlToMarkdown()); }
 async function underline(page: Page) { await page.locator('#toolbar [data-action="underline"]').click(); }
 
+for (const width of [458, 720]) {
+    test(`shared installed underline checks exercise toolbar overflow at ${width}px`, async ({ page }) => {
+        await setup(page, nativeSource);
+        await page.setViewportSize({ width, height: 900 });
+        await page.evaluate(() => (window as any).__hostMessageHandler({ type: 'toolbarMode', value: 'full' }));
+        const until = (probe: () => Promise<boolean>, message: string) => expect.poll(probe, { message }).toBe(true);
+        const editor = installedEditor({ evaluate: (expression: string) => page.evaluate(expression) }, { until });
+        const receipts: string[] = [];
+        await underlineChecks({ editor, keyboard: page.keyboard, modifier: 'Control', record: (name: string) => receipts.push(name),
+            save: async (expected: string) => {
+                await page.keyboard.press('Control+s');
+                await expect.poll(() => page.evaluate(() => (window as any).__testApi.messages.findLast((m: any) => m.type === 'save')?.content)).toBe(expected);
+            } });
+        expect(receipts.filter(name => name === 'underline-context')).toHaveLength(5);
+        expect(await markdown(page)).toBe(nativeSource);
+    });
+}
+
 for (const [name, source, selector] of [
     ['paragraph', 'Before <u>marked</u> after.\n', '#editor > p u'],
     ['bold', '<u>**marked**</u>\n', '#editor u :is(strong,b)'],
@@ -43,12 +64,12 @@ for (const [name, source, selector] of [
         await expect(page.locator(selector)).toHaveText('marked');
         await page.locator('#editor > p').filter({ hasText: 'End paragraph.' }).click();
         await page.keyboard.press('End'); await page.keyboard.type(' edited');
-        await page.locator('[data-action="source"]').click();
+        await toggleEditorView(page);
         const saved = await page.locator('#sourceEditor').inputValue();
         expect(saved).toContain('<u>'); expect(saved).toContain('End paragraph. edited');
         await page.keyboard.press('Control+s');
         await expect.poll(() => page.evaluate(() => (window as any).__testApi.messages.findLast((m: any) => m.type === 'save')?.content)).toBe(saved);
-        await page.locator('[data-action="source"]').click();
+        await toggleEditorView(page);
         await page.evaluate(saved => (window as any).__testApi.setMarkdown(saved), saved);
         await expect(page.locator('#editor u')).toHaveText('marked');
         expect(await markdown(page)).toBe(saved);
@@ -157,7 +178,7 @@ test('keyboard shortcut and caret typing preserve underline through source mode'
     await page.evaluate(() => getSelection()!.collapseToEnd());
     await page.keyboard.press('Control+u');
     await page.keyboard.type(' added');
-    await page.locator('[data-action="source"]').click();
+    await toggleEditorView(page);
     expect(await page.locator('#sourceEditor').inputValue()).toContain('<u> added</u>');
 });
 

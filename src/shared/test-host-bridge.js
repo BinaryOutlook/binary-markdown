@@ -32,6 +32,9 @@
         requestExportCapabilities: function() {
             window.__testApi.messages.push({ type: 'exportCapabilities' });
         },
+        openExportOutput: function() {
+            window.__testApi.messages.push({ type: 'openExportOutput' });
+        },
         cancelExport: function() {
             window.__testApi.messages.push({ type: 'cancelExport' });
         },

@@ -23,6 +23,7 @@ async function setup(page: Page, exportEnabled = true) {
         await page.addScriptTag({ content: fs.readFileSync(path.join(root, file), 'utf8') });
     }
     const editor = fs.readFileSync(path.join(root, 'src/webview/editor.js'), 'utf8')
+        .replace('__SEARCH_WORKER__', () => JSON.stringify(fs.readFileSync(path.join(root, 'src/shared/document-search.js'), 'utf8')).replace(/</g, '\\u003c'))
         .replace('__MATH_BACKSLASH__', 'true')
         .replace('__DEBUG_MODE__', 'false').replace('__I18N__', '{}')
         .replace('__DOCUMENT_BASE_URI__', '').replace('__CONTENT__', JSON.stringify(Buffer.from(original).toString('base64')));
@@ -108,7 +109,7 @@ test.describe('Export toolbar and job status', () => {
         });
         expect(await page.locator('#exportButton').evaluate(element => element.previousElementSibling?.getAttribute('data-action'))).toBe('openInTextEditor');
         await page.getByRole('button', { name: 'Export', exact: true }).click();
-        await expect(page.getByRole('menu', { name: 'Export', exact: true })).toBeVisible();
+        await expect(page.getByRole('dialog', { name: 'Export', exact: true })).toBeVisible();
         await expect(page.locator('[data-export-format]')).toHaveCount(4);
         expect(await outbound(page, 'exportCapabilities')).toHaveLength(1);
         await page.screenshot({ path: testInfo.outputPath('export-menu.png') });
@@ -132,7 +133,7 @@ test.describe('Export toolbar and job status', () => {
         await expect(page.locator('[data-export-format="pdf"]')).toBeFocused();
         await page.keyboard.press('Enter');
         expect(await outbound(page, 'export')).toEqual([{ type: 'export', format: 'pdf' }]);
-        await page.locator('#exportButton').click();
+        await expect(page.locator('#exportMenu')).toBeVisible();
         await page.locator('#exportPandocSetup').click();
         expect(await outbound(page, 'exportSettings')).toEqual([{ type: 'exportSettings', tool: 'pandoc' }]);
     });
@@ -198,6 +199,8 @@ test.describe('Export toolbar and job status', () => {
         await expect(page.locator('#exportSpinner')).toBeHidden();
         await expect(page.locator('#exportCancel')).toBeHidden();
         await expect(page.locator('#exportOutputPath')).toHaveText('/documents/report.html');
+        await page.locator('#exportOpenOutput').click();
+        expect(await outbound(page, 'openExportOutput')).toEqual([{ type: 'openExportOutput' }]);
         await expect(page.locator('#exportWarningsSummary')).toHaveText('Export warnings (1)');
         await page.locator('#exportWarningsSummary').click();
         await expect(page.locator('#exportWarningsList li')).toHaveText('<script>bad()</script> image unavailable');

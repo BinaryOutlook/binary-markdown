@@ -15,7 +15,9 @@ async function tableOverflowChecks({ editor, keyboard, resize, setPosition, reco
         await editor.waitForFunction(value => document.documentElement.dataset.tableToolbarPosition === value, position);
         await editor.locator('#editor td').first().click();
         await editor.waitForFunction(({ controls, position }) => document.querySelector(controls).dataset.placement === position, { controls, position });
-        await resize(520, 360);
+        // The compact directional diamond fits in the old 520px test pane.
+        // Use the same narrow pane as the browser overflow regression.
+        await resize(420, 260);
         await editor.locator('#editor td').first().scrollIntoViewIfNeeded();
         const more = editor.locator(`${controls} [data-action="more"]`);
         await more.waitFor({ state: 'visible' });
@@ -30,12 +32,12 @@ async function tableOverflowChecks({ editor, keyboard, resize, setPosition, reco
         await editor.locator(overflow).waitFor({ state: 'visible' });
         const actions = await editor.evaluate(({ controls, overflow }) => [controls, overflow].flatMap(selector =>
             [...document.querySelectorAll(`${selector} button:not([data-action="more"])`)].filter(button => button.getClientRects().length).map(button => button.dataset.action)), { controls, overflow });
-        assert.deepEqual(actions, ['add-col-left', 'add-col-right', 'del-col', 'add-row-above', 'add-row-below', 'del-row', 'align-left', 'align-center', 'align-right', 'placement']);
+        assert.deepEqual(actions, ['add-col-left', 'add-col-right', 'add-row-above', 'add-row-below', 'del-col', 'del-row', 'align-left', 'align-center', 'align-right', 'placement']);
         await keyboard.press('End');
         assert.equal(await editor.evaluate(() => document.activeElement.dataset.action), 'placement');
         await keyboard.press('Enter');
         await editor.locator('.table-placement-menu').waitFor({ state: 'visible' });
-        await resize(490, 330);
+        await resize(390, 240);
         await editor.waitForFunction(() => {
             const rect = document.querySelector('.table-placement-menu').getBoundingClientRect();
             return rect.left >= 0 && rect.top >= 0 && rect.right <= innerWidth + .5 && rect.bottom <= innerHeight + .5;
@@ -62,8 +64,9 @@ async function tableOverflowChecks({ editor, keyboard, resize, setPosition, reco
         record('table-overflow', { position, wholeButtons: true, allActionsReachable: true, openPickerResized: true, sourceUnchanged: true,
             smallestViewport, restoredViewport, actualWindowResize: canEnlargeWindow });
     }
-    await resize(520, 360);
+    await resize(420, 260);
     await editor.locator('#editor td').first().scrollIntoViewIfNeeded();
+    await editor.waitForFunction(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve(true)))));
     const action = editor.locator(`${controls} [data-action="add-row-below"]`);
     if (await action.isVisible()) await action.click();
     else {
@@ -111,7 +114,20 @@ function installedEditor(connection, h) {
         };
         return result;
     };
-    return { evaluate, locator, waitForFunction: (fn, argument) => h.until(() => evaluate(fn, argument), 'installed overflow state') };
+    return { evaluate, locator, waitForFunction: (fn, argument) => h.until(() => evaluate(fn, argument),
+        'installed editor condition: ' + fn.toString().replace(/\s+/g, ' ').slice(0, 180),
+        () => evaluate(() => {
+            const rect = node => {
+                if (!node) return null;
+                const { x, y, width, height } = node.getBoundingClientRect();
+                return { x, y, width, height };
+            };
+            const bar = document.querySelector('.table-toolbar:not(.table-toolbar-measure)');
+            return { viewport: { width: innerWidth, height: innerHeight }, placement: bar?.dataset.placement,
+                bar: rect(bar), client: bar && { width: bar.clientWidth, height: bar.clientHeight, scrollWidth: bar.scrollWidth, scrollHeight: bar.scrollHeight },
+                buttons: [...(bar?.querySelectorAll('button') || [])].filter(button => button.getClientRects().length).map(button => ({ action: button.dataset.action, ...rect(button) })),
+                picker: rect(document.querySelector('.table-placement-menu')) };
+        })) };
 }
 
 module.exports = { tableOverflowChecks, installedEditor };

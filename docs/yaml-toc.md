@@ -4,7 +4,7 @@ YAML front matter and managed tables of contents are available from [version 0.2
 
 ## Front matter
 
-Leading YAML mapping metadata is displayed in a collapsible **Front matter** panel. Expand it to edit the original source. Opening or closing the panel is view-only. The editor preserves comments, quotes, field order and indentation rather than parsing and reformatting YAML. Document line endings follow the existing host policy.
+Leading YAML mapping metadata is displayed in a collapsible **Front matter · YAML** panel. Expand it to edit the original source. Opening or closing the panel is view-only. The editor preserves comments, quotes, field order and indentation rather than parsing and reformatting YAML. Document line endings follow the existing host policy.
 
 ```markdown
 ---
@@ -21,7 +21,9 @@ Metadata is excluded from the outline, prose statistics and visible HTML/PDF bod
 
 ## Managed table of contents
 
-Use **Binary Markdown: Insert Table of Contents**, the editor's action palette, or place `[TOC]` on its own line. The command inserts at a block boundary near the current position; an existing TOC is refreshed instead of duplicated. In source mode, insertion uses the source cursor. Save or click **↻** beside **Contents** to regenerate it.
+The visual block is labeled **Contents · Generated**. **Refresh** updates it on request; the nearby help explains that it also refreshes on save.
+
+Use **Binary Markdown: Insert Table of Contents**, the editor's action palette, or place `[TOC]` on its own line. The command inserts at a block boundary near the current position; an existing TOC is refreshed instead of duplicated. In source mode, insertion uses the source cursor. Save or click **Refresh** beside **Contents · Generated** to regenerate it.
 
 The TOC is a snapshot between refreshes. Renaming a heading does not rebuild the list while typing. Saving refreshes it before the write. The same generator is used for the button, save preparation and export freshness checks. Repeated saves with unchanged headings do not rewrite the list.
 

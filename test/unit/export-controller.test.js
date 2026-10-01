@@ -575,3 +575,22 @@ for (const [name, options] of [
         await assertSourceIntact(h);
     });
 }
+
+test('output action ignores client paths and opens only the completed artifact under the trusted host gate', async t => {
+    const h = await harness(t);
+    assert.equal(h.controller.handleMessage({ type: 'openExportOutput', path: '/untrusted-file' }), true);
+    assert.equal(h.commands.length, 0);
+    await h.controller.export('html');
+    const complete = h.terminal().find(message => message.state === 'complete');
+    assert.ok(complete?.outputPath);
+    h.controller.handleMessage({ type: 'openExportOutput', path: '/untrusted-file' });
+    assert.deepEqual(h.commands.at(-1), ['openExternal', complete.outputPath]);
+    const count = h.commands.length;
+    h.vscode.workspace.isTrusted = false;
+    h.controller.handleMessage({ type: 'openExportOutput' });
+    assert.equal(h.commands.length, count);
+    h.vscode.workspace.isTrusted = true;
+    h.dispose();
+    h.controller.handleMessage({ type: 'openExportOutput' });
+    assert.equal(h.commands.length, count);
+});

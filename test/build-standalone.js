@@ -36,7 +36,7 @@ if (fs.existsSync(vendorSrc)) {
 }
 
 // editor.jsを読み込み
-let editorScript = fs.readFileSync(path.join(__dirname, '../src/shared/document-aux.js'), 'utf8') + '\n' + fs.readFileSync(editorJsPath, 'utf-8');
+let editorScript = fs.readFileSync(path.join(__dirname, '../src/webview/workspace-ui.js'), 'utf8') + '\n' + fs.readFileSync(path.join(__dirname, '../src/shared/document-aux.js'), 'utf8') + '\n' + fs.readFileSync(editorJsPath, 'utf-8');
 
 editorScript = fs.readFileSync(path.join(__dirname, '../src/shared/table-format.js'), 'utf8') + '\n' + editorScript;
 
@@ -55,7 +55,8 @@ const codeControlStyles = productionStyles.slice(
 editorScript = fs.readFileSync(path.join(__dirname, '../src/shared/math-syntax.js'), 'utf8') + '\n' + editorScript;
 editorScript = fs.readFileSync(path.join(__dirname, '../src/shared/editor-layout.js'), 'utf8') + '\n' + fs.readFileSync(path.join(__dirname, '../src/shared/table-placement.js'), 'utf8') + '\n' + fs.readFileSync(path.join(__dirname, '../src/webview/table-toolbar.js'), 'utf8') + '\n' + editorScript;
 editorScript = editorScript
-    .replace('__MATH_BACKSLASH__', 'true')
+    .replace('__SEARCH_WORKER__', () => JSON.stringify(fs.readFileSync(path.join(__dirname, '../src/shared/document-search.js'), 'utf8')).replace(/</g, '\\u003c'))
+        .replace('__MATH_BACKSLASH__', 'true')
     .replace('__DEBUG_MODE__', 'false')
     .replace('__I18N__', JSON.stringify(require('../src/i18n/locales/en.ts').webviewMessages))
     .replace('__DOCUMENT_BASE_URI__', '')
@@ -203,7 +204,7 @@ const html = `<!DOCTYPE html>
     <div id="statusLeft" style="display:none;"></div>
     <div id="statusImageDir" style="display:none;"></div>
     <div id="wordCount" style="display:none;"></div>
-    <div id="sourceEditor" style="display:none;"></div>
+    <textarea id="sourceEditor" style="display:none;"></textarea>
     <!-- Search & Replace elements (hidden, required by script) -->
     <div id="searchReplaceBox" style="display:none;">
         <input id="searchInput" type="text">
@@ -249,7 +250,7 @@ const styles = fs.readFileSync(path.join(__dirname, '../src/webview/styles.css')
     .replace('__FONT_SIZE__', '16')
     .replace('__OUTLINE_ACTIVE_COLOR__', 'var(--link-color)');
 fs.writeFileSync(path.join(__dirname, 'html/production-editor.html'), `<!doctype html>
-<html lang="en" data-theme="things" data-toolbar-mode="${require('../package.json').contributes.configuration.properties['binary-markdown.toolbarMode'].default}"><head><meta charset="utf-8"><style>${styles}</style></head>
+<html lang="en" data-theme="things" data-toolbar-mode="${require('../package.json').contributes.configuration.properties['binary-markdown.toolbarMode'].default}"><head><meta charset="utf-8"><link rel="stylesheet" href="vendor/katex.min.css"><style>${styles}</style></head>
 <body>${generateEditorBodyHtml(require('../src/i18n/locales/en.ts').webviewMessages, process.platform, { exportEnabled: true, settingsEnabled: true })}
 <script src="vendor/markdown-blocks.js"></script><script src="vendor/turndown.js"></script><script src="vendor/turndown-plugin-gfm.js"></script>
-<script>${testHostBridgeScript}</script><script>${editorScript}</script></body></html>`);
+<script src="vendor/katex.min.js"></script><script src="vendor/mermaid.min.js"></script><script>${testHostBridgeScript}</script><script>${editorScript}</script><script>window.exportMessages=${JSON.stringify(require('../out/export/messages.js').getExportMessages())};${fs.readFileSync(path.join(__dirname, '../src/webview/export-ui.js'), 'utf8')}</script></body></html>`);

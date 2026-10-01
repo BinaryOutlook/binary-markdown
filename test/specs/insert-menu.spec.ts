@@ -1,3 +1,4 @@
+import { toggleEditorView } from '../utils/view-mode';
 import { test, expect, Page } from '@playwright/test';
 
 const source = '# Heading\n\nBefore target after.\n\nEnd paragraph.\n';
@@ -41,6 +42,8 @@ for (const mode of ['full', 'simple']) {
         await open(page);
         await expect(page.locator('#insertMenu [role="menuitem"]')).toHaveCount(8);
         await expect(page.locator('#insertMenu [aria-disabled="true"]')).toHaveCount(0);
+        await expect(page.locator('.insert-search input')).toBeFocused();
+        await page.keyboard.press('ArrowDown');
         await expect(page.locator('[data-insert-action="inlineMath"]')).toBeFocused();
         await page.keyboard.press('End');
         await expect(page.locator('[data-insert-action="toc"]')).toBeFocused();
@@ -103,11 +106,9 @@ for (const [content, selector] of [
 
 test('Source mode explains why insertion is unavailable', async ({ page }) => {
     await setup(page);
-    await page.locator('[data-action="source"]').click();
-    await open(page);
-    await expect(page.locator('#insertMenu [aria-disabled="true"]')).toHaveCount(8);
-    await expect(page.locator('#insertMenu small').first()).toHaveText(/visual editor/);
-    await page.keyboard.press('Escape');
+    await toggleEditorView(page);
+    await expect(page.locator('#insertButton')).toBeDisabled();
+    await expect(page.locator('#modeHelp')).toContainText('visual editor');
     expect(await page.locator('#sourceEditor').inputValue()).toBe(source);
 });
 
@@ -121,6 +122,7 @@ test('Insert remains reachable in a narrow pane and its menu stays on screen', a
     expect(bounds!.x).toBeGreaterThanOrEqual(0);
     expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(300);
     expect(bounds!.y + bounds!.height).toBeLessThanOrEqual(480);
+    await page.keyboard.press('ArrowDown');
     await page.keyboard.press('End');
     await expect(page.locator('[data-insert-action="toc"]')).toBeFocused();
     await page.keyboard.press('Escape');
@@ -133,7 +135,11 @@ for (const action of ['link', 'image']) {
             await setup(page);
             await select(page);
             if (route === 'menu') { await open(page); await page.locator(`[data-insert-action="${action}"]`).click(); }
-            else await page.locator(`#toolbar [data-action="${action}"]`).click();
+            else {
+                const control = page.locator(`#toolbar [data-action="${action}"]`);
+                if (!await control.isVisible()) await page.locator('#toolbarMore').click();
+                await control.click();
+            }
             const request = await page.evaluate(action => (window as any).__testApi.messages.findLast((m: any) => m.type === (action === 'link' ? 'insertLink' : 'insertImage')), action);
             expect(request.requestId).toMatch(/^insert-/);
             // Moving focus while the host dialog is open must not lose the bookmark.
@@ -227,12 +233,12 @@ for (const context of ['empty', 'caret']) {
                     : { type: 'insertImageHtml', markdownPath: 'images/example.png', displayUri: '/missing-fixture.png', requestId });
             }, action);
             await expect(page.locator(selector)).toHaveCount(1);
-            await page.locator('[data-action="source"]').click();
+            await toggleEditorView(page);
             const saved = await page.locator('#sourceEditor').inputValue();
             expect(saved.trim()).not.toBe('');
             await page.keyboard.press('Control+s');
             await expect.poll(() => page.evaluate(() => (window as any).__testApi.messages.findLast((m: any) => m.type === 'save')?.content)).toBe(saved);
-            await page.locator('[data-action="source"]').click();
+            await toggleEditorView(page);
             await page.evaluate(content => (window as any).__testApi.setMarkdown(content), saved);
             await expect(page.locator(selector)).toHaveCount(1);
             if (context === 'caret') {

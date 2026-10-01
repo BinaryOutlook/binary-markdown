@@ -3,6 +3,7 @@ import { test, expect, Page } from '@playwright/test';
 const source = '# Table\n\n| Item | State | Owner |\n| --- | --- | --- |\n| One | Ready | A |\n| Two | Draft | B |\n\nAfter table.\n';
 const controls = '.table-toolbar:not(.table-toolbar-measure)';
 const overflow = '.table-overflow-menu';
+const { tableOverflowChecks, installedEditor } = require('../native/table-toolbar-overflow.cjs');
 
 async function setup(page: Page, position: string) {
     await page.setViewportSize({ width: 1280, height: 900 });
@@ -27,6 +28,42 @@ async function wholeButtons(page: Page) {
     })).toBe(true);
 }
 
+test('shared native overflow checks exercise reachable actions and undo', async ({ page }) => {
+    await setup(page, 'top-left');
+    const receipts: string[] = [];
+    await tableOverflowChecks({
+        editor: page,
+        keyboard: page.keyboard,
+        resize: (width: number, height: number) => page.setViewportSize({ width, height }),
+        setPosition: (value: string) => page.evaluate(value => {
+            (window as any).__hostMessageHandler({ type: 'tableToolbarPosition', value });
+        }, value),
+        record: (name: string) => receipts.push(name),
+    });
+    expect(receipts).toEqual(['table-overflow', 'table-overflow', 'table-overflow-action']);
+});
+
+for (const classicScrollbars of [false, true]) {
+    test(`installed overflow checks preserve complete actions in a pane that cannot grow beyond 458px (${classicScrollbars ? 'classic' : 'overlay'} scrollbars)`, async ({ page }) => {
+        await setup(page, 'top-left');
+        // Simulate platform form controls whose populated selects have a larger
+        // intrinsic minimum than the empty measuring copies.
+        if (classicScrollbars) await page.addStyleTag({ content: '::-webkit-scrollbar { width: 17px; height: 17px; } .table-selection-inspector select:has(option) { min-width: 48px; }' });
+        const nativeSource = '# Table controls\n\n| Item | State |\n| --- | --- |\n| One | Ready |\n| Two | Draft |\n';
+        await page.evaluate(source => (window as any).__testApi.setMarkdown(source), nativeSource);
+        const until = (probe: () => Promise<boolean>, message: string) => expect.poll(probe, { message }).toBe(true);
+        const editor = installedEditor({ evaluate: (expression: string) => page.evaluate(expression) }, { until });
+        const receipts: string[] = [];
+        await tableOverflowChecks({
+            editor, keyboard: page.keyboard, canEnlargeWindow: false,
+            resize: (width: number, height: number) => page.setViewportSize({ width: Math.min(458, width), height: Math.min(664, height) }),
+            setPosition: (value: string) => page.evaluate(value => (window as any).__hostMessageHandler({ type: 'tableToolbarPosition', value }), value),
+            record: (name: string) => receipts.push(name),
+        });
+        expect(receipts).toEqual(['table-overflow', 'table-overflow', 'table-overflow-action']);
+    });
+}
+
 for (const position of ['top-left', 'left']) {
     test(`${position}: shrink and expand keep complete leading actions and preserve the document`, async ({ page }) => {
         await setup(page, position);
@@ -42,7 +79,7 @@ for (const position of ['top-left', 'left']) {
             const visible = (selector: string) => [...document.querySelectorAll<HTMLButtonElement>(selector)].filter(button => button.getClientRects().length).map(button => button.dataset.action);
             return { main: visible(`${controls} button:not([data-action="more"])`), menu: visible(`${overflow} button`) };
         }, { controls, overflow });
-        const actions = ['add-col-left', 'add-col-right', 'del-col', 'add-row-above', 'add-row-below', 'del-row', 'align-left', 'align-center', 'align-right', 'placement'];
+        const actions = ['add-col-left', 'add-col-right', 'add-row-above', 'add-row-below', 'del-col', 'del-row', 'align-left', 'align-center', 'align-right', 'placement'];
         expect([...distribution.main, ...distribution.menu]).toEqual(actions);
         await page.keyboard.press('Escape');
         await page.setViewportSize({ width: 1280, height: 900 });
@@ -54,6 +91,26 @@ for (const position of ['top-left', 'left']) {
         await expect(page.locator('html')).toHaveAttribute('data-table-toolbar-position', position);
     });
 }
+
+test('populated row selectors keep whole arrows with classic scrollbars across narrow widths', async ({ page }) => {
+    await setup(page, 'top-left');
+    await page.addStyleTag({ content: '::-webkit-scrollbar { width: 17px; height: 17px; }' });
+    const manyRows = '| Item | State |\n| --- | --- |\n' + Array.from({ length: 100 }, (_, i) => `| Row ${i + 1} | Ready |`).join('\n') + '\n';
+    await page.evaluate(source => {
+        (window as any).__testApi.setMarkdown(source);
+        const cell = document.querySelector('#editor td')!;
+        document.getElementById('editor')!.focus();
+        const range = document.createRange(); range.selectNodeContents(cell); range.collapse(true);
+        getSelection()!.removeAllRanges(); getSelection()!.addRange(range); (cell as HTMLElement).click();
+    }, manyRows);
+    for (const width of [420, 410, 400, 390, 380, 370, 360]) {
+        await page.setViewportSize({ width, height: 260 });
+        await page.locator('#editor td').first().scrollIntoViewIfNeeded();
+        await wholeButtons(page);
+    }
+    expect(await page.evaluate(() => (window as any).htmlToMarkdown())).toBe(manyRows);
+    await expect(page.locator('#toolbar [data-action="undo"]')).toBeDisabled();
+});
 
 test('a focused action follows overflow in both directions without editing', async ({ page }) => {
     await setup(page, 'top-left');
@@ -85,9 +142,9 @@ test('a focused action follows overflow in both directions without editing', asy
 
 test('docked controls retain leading actions and resize an open overflow menu', async ({ page }) => {
     await setup(page, 'top-bar');
-    // Leave room for the persistent Insert control while still overflowing
-    // table actions; the narrower compact-menu state has its own check below.
-    await page.setViewportSize({ width: 720, height: 800 });
+    // Leave room for the complete directional diamond and row/column navigation
+    // while overflowing secondary actions; the compact menu is checked below.
+    await page.setViewportSize({ width: 1100, height: 800 });
     const more = page.locator(`${controls} [data-action="more"]`);
     await expect(more).toBeVisible();
     await expect(page.locator(`${controls} [data-action="add-col-left"]`)).toBeVisible();

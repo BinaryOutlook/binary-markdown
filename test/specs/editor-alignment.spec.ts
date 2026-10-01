@@ -1,6 +1,7 @@
 import { test, expect, Page } from '@playwright/test';
 const { source, alignmentChecks } = require('../native/editor-alignment.cjs');
 const { geometry } = require('../native/editor-width.cjs');
+const { installedEditor } = require('../native/table-toolbar-overflow.cjs');
 
 async function setup(page: Page, width = 1700) {
     await page.setViewportSize({ width, height: 1000 });
@@ -48,6 +49,20 @@ test('alignment retains text/table formatting, selection, an active equation, an
     await page.locator('[data-action="redo"]').click();
     expect(await page.evaluate(() => (window as any).htmlToMarkdown())).toBe(edited);
 });
+
+for (const width of [458, 720, 785]) {
+    test(`installed alignment checks retain reachable table controls in a ${width}px simple pane`, async ({ page }) => {
+        await setup(page, width);
+        await page.evaluate(() => (window as any).__hostMessageHandler({ type: 'toolbarMode', value: 'simple' }));
+        const until = (probe: () => Promise<boolean>, message: string) => expect.poll(probe, { message }).toBe(true);
+        const editor = installedEditor({ evaluate: (expression: string) => page.evaluate(expression) }, { until });
+        const receipts: string[] = [];
+        await alignmentChecks({ editor, set: (key: string, value: unknown) => set(page, key, value), until, record: (name: string) => receipts.push(name) });
+        expect(receipts).toContain('editor-alignment-table');
+        await expect(page.locator('#toolbar [data-action="undo"]')).toBeDisabled();
+        expect(await page.evaluate(() => (window as any).__testApi.messages.filter((m: any) => m.type === 'edit'))).toEqual([]);
+    });
+}
 
 test('an open language menu follows its tag through alignment and sidebar changes', async ({ page }) => {
     await setup(page); await set(page, 'editorMaxWidth', 600); await set(page, 'editorWidthMode', 'custom');
