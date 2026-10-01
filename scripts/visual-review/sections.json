@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "sections": [
+    {
+      "id": "03-commands",
+      "targetRegions": [
+        { "id": "insert", "description": "Entire Insert workspace: search, category rail, command rows, descriptions, separate shortcuts and rendered previews. Experimental reference central workspace only." },
+        { "id": "palette", "description": "Entire Moderate Action Palette: search, groups, icons, titles, descriptions, shortcuts and empty recovery." }
+      ],
+      "excludedRegions": ["main toolbar", "outline", "authored canvas outside the workspace", "desktop chrome", "reference caption bands and numbered pins"],
+      "cases": [
+        { "id": "all", "state": "All and a category", "selector": "#insertMenu", "comparison": "Direct reference: All Insert workspace with Table, Equation and Code visual previews." },
+        { "id": "category", "state": "All and a category", "selector": "#insertMenu", "comparison": "Derived: same category/list hierarchy with Equations selected; previews remain visual." },
+        { "id": "search", "state": "Search with results", "selector": "#insertMenu", "comparison": "Derived: same workspace, code search shows readable matching rows and previews." },
+        { "id": "empty", "state": "No results", "selector": "#insertMenu", "comparison": "Derived: clear empty guidance and available Clear search action; retain workspace composition." },
+        { "id": "unavailable", "state": "Unavailable action", "selector": "#insertMenu", "comparison": "Derived: preserve rows/previews and expose unavailable reasons in protected code context." },
+        { "id": "narrow", "state": "Narrow workspace", "selector": "#insertMenu", "width": 480, "comparison": "Derived: stack or compact categories without clipped search/labels/actions or authored-content obstruction." },
+        { "id": "narrow-end", "state": "Narrow workspace", "selector": "#insertMenu", "width": 480, "comparison": "Derived: scrolled narrow results must show complete Mermaid/Contents rows and a clear internal scrolling affordance, with search and categories retained." },
+        { "id": "palette", "state": "Search with results", "selector": ".command-palette", "comparison": "Direct Moderate companion reference: grouped Action Palette with icons, descriptions and separate shortcuts; previews belong only to Insert." }
+      ]
+    }
+  ]
+}
