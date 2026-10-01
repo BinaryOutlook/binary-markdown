@@ -37,6 +37,13 @@ dark/narrow/error states use the recorded derived requirements. If the artwork
 does not depict the submitted state, evaluate its explicit comparison contract
 without pretending it is a direct image match. Do not invent interactions from
 a static image, a similarity percentage, or new exceptions to the contract.
+Apply each criterion to the visible properties expected in the named state.
+Do not demand authored headings in a deliberately empty document or a valid
+preview in an invalid-source state. Such deliberate absence is part of that
+state's comparison contract, not missing evidence. Use observed capture state
+metadata to identify focus/theme/viewport; judge their actual appearance from
+the images. Preserve every case and criterion, and explain the state-specific
+visible evidence rather than substituting a different state or waiving a defect.
 
 Return only the requested structured JSON. Echo the packetDigest and sectionId.
 openedImages must contain the SHA-256 of EVERY inspected image, including full

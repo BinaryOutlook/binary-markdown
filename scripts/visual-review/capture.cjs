@@ -77,7 +77,7 @@ async function prepare(page, section, item) {
         if (id === 'overflow') await page.locator('#toolbarMore').click();
     } else if (section === '04-outline') {
         const long = '# Research notes\n\n## Background\n\n### A deliberately long heading explaining the relationship between readable structure and a focused writing workflow\n\n#### Observations\n\n## Findings\n\n';
-        await loadDocument(page, id === 'long' ? long : PROSE + Array.from({ length: 8 }, (_, i) => '\n## Study ' + (i + 1) + '\n\n' + 'A synthetic paragraph records observations and keeps the discussion readable. '.repeat(10)).join('\n'));
+        await loadDocument(page, id === 'long' ? long : long + Array.from({ length: 8 }, (_, i) => '\n## Study ' + (i + 1) + '\n\n' + 'A synthetic paragraph records observations and keeps the discussion readable. '.repeat(10)).join('\n'));
         if (id === 'document') await page.locator('#documentTab').click();
         if (id === 'scrolled') await page.locator('#editorWrapper').evaluate(node => { node.scrollTop = node.scrollHeight / 2; });
         if (id === 'narrow') await page.locator('#openSidebarBtn').click();
@@ -205,6 +205,7 @@ async function capture(root, sectionId, caseFilter) {
                     .map(name => [name, style.getPropertyValue(name).trim()]));
             });
             captures.push({ id: item.id, state: item.state, comparison: item.comparison, targetBounds: bounds,
+                observedEditorFocus: await page.evaluate(() => document.getElementById('editor').contains(document.activeElement)),
                 inputHash: core.hash(await page.evaluate(() => window.__testApi.getMarkdown())),
                 viewport: page.viewportSize(), theme: item.theme || 'minimal', observedThemeTokens, locale: 'en-US', zoom: 1, images: [full, component] });
             await page.close();
