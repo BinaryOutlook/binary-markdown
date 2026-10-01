@@ -414,7 +414,9 @@
                     document.body.appendChild(hint); scrollHints.set(target, hint); scrollResize.observe(target);
                 }
                 const box = target.getBoundingClientRect();
-                hint.hidden = options.isSourceMode() || target.scrollWidth <= target.clientWidth + 1 || box.bottom + 32 > viewport.bottom || box.bottom < viewport.top || box.left >= viewport.right || box.right <= viewport.left;
+                // A column's resize handle can extend a few pixels beyond a
+                // fitted table. It does not make another column unreachable.
+                hint.hidden = options.isSourceMode() || target.scrollWidth <= target.clientWidth + 4 || box.bottom + 32 > viewport.bottom || box.bottom < viewport.top || box.left >= viewport.right || box.right <= viewport.left;
                 if (hint.hidden) continue;
                 Object.assign(hint.style, { left: Math.max(viewport.left, box.left) + 'px', top: (box.bottom + 6) + 'px', width: Math.max(0, Math.min(viewport.right, box.right) - Math.max(viewport.left, box.left)) + 'px' });
                 const buttons = hint.querySelectorAll('button');

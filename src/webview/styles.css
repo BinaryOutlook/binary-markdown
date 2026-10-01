@@ -1028,6 +1028,11 @@ html[data-math-source-position="below"] .editor .math-wrapper[data-mode="edit"] 
 .editor th { background: var(--code-bg); font-weight: 600; text-align: center; }
 .editor td { text-align: left; vertical-align: top; }
 .editor td:focus, .editor th:focus { outline: 2px solid var(--link-color); outline-offset: -2px; }
+@media (max-width: 700px) {
+    /* Preserve the reader's font size while letting ordinary small tables fit.
+       Larger tables retain their own horizontal scrolling and external controls. */
+    .editor[contenteditable="true"] th, .editor[contenteditable="true"] td { min-width: 0; padding: 8px 6px; }
+}
 
 /* Table column resize handle */
 .table-col-resize-handle {

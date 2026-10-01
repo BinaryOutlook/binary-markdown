@@ -122,7 +122,9 @@ for (const language of ['math', 'mermaid']) {
 
 test('outside click and source replacement remove the picker without stale choices', async ({ page }) => {
     await setup(page); await open(page);
-    await page.locator('#editor > p').last().click(); await expect(page.locator('.lang-selector')).toHaveCount(0);
+    // Click the paragraph's exposed leading edge; its center can legitimately
+    // sit underneath the anchored language popup after header layout changes.
+    await page.locator('#editor > p').last().click({ position: { x: 4, y: 4 } }); await expect(page.locator('.lang-selector')).toHaveCount(0);
     await open(page); await page.evaluate(() => (window as any).__testApi.setMarkdown('Replacement.\n'));
     await expect(page.locator('.lang-selector')).toHaveCount(0);
     expect(await markdown(page)).toBe('Replacement.\n');

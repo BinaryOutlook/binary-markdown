@@ -244,7 +244,7 @@ test('palette categories expose the complete command set and filtering is view o
 });
 
 test('overflowing tables offer explicit scrolling without editing or leaking controls into export', async ({ page }) => {
-    const source = '# Table\n\n| Experiment | Accuracy | Duration | Status |\n| --- | --- | --- | --- |\n| Baseline | 91% | 120 ms | Reviewed |\n';
+    const source = '# Table\n\n| Experiment | Accuracy | Duration | Status | Further observation |\n| --- | --- | --- | --- | --- |\n| Baseline | 91% | 120 ms | Reviewed | Additional result |\n';
     await setup(page, source);
     await page.setViewportSize({ width: 480, height: 1000 });
     const hint = page.locator('.table-scroll-hint');
@@ -263,6 +263,32 @@ test('overflowing tables offer explicit scrolling without editing or leaking con
     await page.locator('button[data-editor-mode="visual"]').click();
     await page.setViewportSize({ width: 1440, height: 1000 });
     await expect(hint).toBeHidden();
+});
+
+test('a small narrow table keeps complete cells readable without changing its source', async ({ page }) => {
+    const source = '# Results\n\n| Experiment | Accuracy | Duration | Status |\n| --- | --- | --- | --- |\n| Baseline | 91% | 120 ms | Reviewed |\n| Optimized | 95% | 82 ms | Pending |\n';
+    await setup(page, source);
+    await page.setViewportSize({ width: 480, height: 1000 });
+    await expect.poll(() => page.locator('#editor table').evaluate(table => {
+        const bounds = table.getBoundingClientRect();
+        return [...table.querySelectorAll('th, td')].every(cell => {
+            const box = cell.getBoundingClientRect();
+            return box.left >= bounds.left - 1 && box.right <= bounds.right + 1;
+        });
+    })).toBe(true);
+    await expect(page.locator('.table-scroll-hint')).toBeHidden();
+    expect(await snapshot(page)).toMatchObject({ content: source, pending: false });
+    await expect(page.locator('#toolbar [data-action="undo"]')).toBeDisabled();
+});
+
+test('canvas guides disappear when reading outside the writing focus', async ({ page }) => {
+    await setup(page);
+    await page.locator('#editor p').first().click();
+    expect(await page.locator('#editor').evaluate(node => getComputedStyle(node).backgroundImage)).not.toBe('none');
+    await page.locator('#outlineTab').focus();
+    expect(await page.locator('#editor').evaluate(node => getComputedStyle(node).backgroundImage)).toBe('none');
+    expect(await page.locator('.editor-width-bounds').evaluate(node => getComputedStyle(node).opacity)).toBe('0');
+    expect(await snapshot(page)).toMatchObject({ content: authored, pending: false });
 });
 
 test('contextual formatting uses the retained selection and shared Undo', async ({ page }) => {

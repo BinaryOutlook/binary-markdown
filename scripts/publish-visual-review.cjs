@@ -21,7 +21,7 @@ const records = registry.sections.map(section => {
     if (receipt.verdict !== 'PASS' || section.cases.some(c => !packet.cases.some(actual => actual.id === c.id))) throw new Error('Incomplete visual acceptance: ' + section.id);
     return { section, packet, receipt, original };
 });
-if (new Set(records.map(r => r.packet.source.productHash)).size !== 1 || new Set(records.map(r => r.packet.contractHash)).size !== 1) throw new Error('Mixed source or contract evidence');
+if (new Set(records.map(r => r.packet.source.productHash)).size !== 1 || new Set(records.map(r => r.packet.contractHash)).size !== 1 || new Set(records.map(r => r.packet.source.commit)).size !== 1) throw new Error('Mixed source or contract evidence');
 const mapping = new Map();
 function copy(from, to) {
     const source = core.safePath(root, from), target = core.safePath(root, output + '/' + to);
@@ -40,8 +40,9 @@ const before = {
     '07-equations': '04-code-equation-diagram', '08-diagrams': '04-code-equation-diagram', '09-find': '06-find-replace',
     '10-metadata': '10-front-matter', '11-source': '05-split-document-rail', '12-export': '07-export-submenu',
 };
+const representative = { '01-canvas': 'focused', '02-toolbar': 'selection', '03-commands': 'all', '04-outline': 'nested', '05-tables': 'body', '06-code': 'dark', '07-equations': 'unsupported', '08-diagrams': 'invalid', '09-find': 'filled', '10-metadata': 'expanded', '11-source': 'split', '12-export': 'complete' };
 const rationale = {
-    '01-canvas': 'Quiet heading hierarchy and focused width guidance retain the configured reading measure. Narrow tables expose explicit scrolling without changing their content.',
+    '01-canvas': 'Quiet heading hierarchy and focused width guidance retain the configured reading measure. Small narrow tables use compact cell padding; larger tables expose explicit scrolling without changing their content.',
     '02-toolbar': 'Permanent essentials, optional near-selection formatting, searchable categories and one label per overflow command keep actions discoverable in small panes.',
     '03-commands': 'Rendered previews, distinct icons, descriptions and shortcuts communicate insertion outcomes. Categories and clear-search recovery support discovery; whole-card navigation supports narrow panes.',
     '04-outline': 'Explicit Outline/Document tabs and a shared title, counts and section-position footer keep navigation and reading context visible without duplicate statistics.',
@@ -57,6 +58,7 @@ const rationale = {
 let md = '# Scoped AI visual fidelity review\n\nRecorded 2026-10-02. This report compares the twelve authorized concepts with fresh production-browser renders and retains independent section verdicts. It is a development review for owner testing; no merge, release or owner acceptance is claimed.\n\n';
 md += 'The first task commit, `a00646ab23ffe1693d65918d082c3930d3eb39d6`, contains the system design. The chosen artwork is unchanged from design commit `' + manifest.designCommit + '`. The [workflow guide](../../../docs/testing/visual-review.md) explains builder inspection, fresh one-section evaluation, FAIL corrections and stale-evidence rejection. The [implementation adaptations](../../plans/2026-10-01-ui-ux-visual-fidelity/implementation-notes.md) record placement and host boundaries.\n\n';
 md += '## Evidence identity\n\n| Field | Value |\n| --- | --- |\n| Reviewed source | `' + records[0].packet.source.commit + '` |\n| Recorded local-change status | `' + records[0].packet.source.dirty + '` |\n| Product input SHA-256 | `' + records[0].packet.source.productHash + '` |\n| Review contract SHA-256 | `' + records[0].packet.contractHash + '` |\n| Renderer | ' + core.escapeMd(records[0].packet.capture.browser) + '; Node ' + core.escapeMd(records[0].packet.capture.node) + ' |\n| Captures | Synthetic notes; en-US; explicit Minimal theme, separate dark-code state; scale 1 |\n| AI boundary | Fresh ephemeral read-only Codex CLI invocation per section, existing authenticated OpenAI account; no builder chat or source tree supplied |\n\n';
+md += 'The recorded local-change flag is true because capture rebuilds the tracked standalone test fixture. The reviewed product inputs are committed at the source revision above; the regenerated fixture is separately identified by its capture hash. This flag is retained verbatim in each sealed packet rather than rewritten after capture.\n\n';
 md += 'Full application images establish placement and obstruction. Target images provide legibility. Each verdict grades only its declared target regions; surrounding UI is excluded unless it obstructs that target. Narrow/error/theme cases use explicit derived-state criteria. An AI PASS does not guarantee identical pixels or correct behavior across every platform. Functional, installed-host, security and owner results remain separate.\n\n';
 md += '## Section verdicts\n\n| Section | Chosen direction | Current verdict | Cases | Required state groups |\n| --- | --- | --- | --- | --- |\n';
 for (const { packet } of records) md += '| [' + packet.sectionId + '](#' + packet.sectionId + ') | ' + packet.references.map(r => core.escapeMd(r.level)).join('; ') + ' | PASS | ' + packet.cases.length + ' | ' + packet.requiredStates.length + ' |\n';
@@ -79,7 +81,7 @@ for (const { packet, receipt, original } of records) {
     md += '[Sealed packet](' + evidence + '/packet.json) · [Full AI assessment and prior resolutions](' + evidence + '/receipt.json)\n\n';
     md += '| Criterion | Scope |\n| --- | --- |\n' + packet.criteria.map(c => '| ' + c.id + ' | ' + core.escapeMd(c.description) + ' |').join('\n') + '\n\n';
     for (const item of packet.cases) {
-        md += '<details>\n<summary>' + escape(item.id + ' — ' + item.state + ' — PASS') + '</summary>\n\n' + core.escapeMd(item.comparison) + '\n\n';
+        md += '<details' + (item.id === representative[id] ? ' open' : '') + '>\n<summary>' + escape(item.id + ' — ' + item.state + ' — PASS') + '</summary>\n\n' + core.escapeMd(item.comparison) + '\n\n';
         for (const [index, image] of item.images.entries()) {
             const published = copy(image.path, 'images/current/' + id + '/' + path.posix.basename(image.path));
             md += '**' + (index ? 'Target region' : 'Full application') + ':**\n\n![' + id + ' ' + item.id + (index ? ' target' : ' full application') + '](' + published + ')\n\n';

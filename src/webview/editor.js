@@ -4273,11 +4273,14 @@
         const status = pre.querySelector('.code-block-status');
         if (!button || !status) return;
         clearTimeout(button.copyFeedbackTimer);
+        // Temporary feedback must not shift neighboring controls. Keep long
+        // failure details in the tooltip/status rather than in the button row.
+        button.style.minWidth = state === 'idle' ? '' : button.getBoundingClientRect().width + 'px';
         button.dataset.copyState = state;
         button.innerHTML = state === 'copied' ? LUCIDE_ICONS.check : LUCIDE_ICONS.copy;
         const message = state === 'copied' ? (i18n.copiedCode || 'Copied') :
             state === 'error' ? (i18n.copyCodeFailed || 'Could not copy code. Try again.') : '';
-        const label = document.createElement('span'); label.className = 'code-action-label'; label.textContent = message || i18n.copyCode; button.appendChild(label);
+        const label = document.createElement('span'); label.className = 'code-action-label'; label.textContent = state === 'copied' ? message : i18n.copyCode; button.appendChild(label);
         status.textContent = message;
         button.title = message || (i18n.copyCode || 'Copy code');
         if (state !== 'idle') button.copyFeedbackTimer = setTimeout(() => setCodeCopyState(pre, 'idle'), 2000);
