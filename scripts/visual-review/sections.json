@@ -2,21 +2,761 @@
   "schemaVersion": 1,
   "sections": [
     {
+      "id": "01-canvas",
+      "targetRegions": [
+        {
+          "id": "canvas",
+          "description": "Writing column, heading hierarchy, prose rhythm and focus-only width guides."
+        }
+      ],
+      "excludedRegions": [
+        "toolbar",
+        "outline",
+        "code/table control redesign",
+        "desktop chrome",
+        "reference caption bands and numbered pins"
+      ],
+      "cases": [
+        {
+          "id": "focused",
+          "state": "Focused and unfocused writing",
+          "selector": "#editorWrapper",
+          "comparison": "Direct Recommended canvas intent with heading, prose, code and table; focus-only guidance."
+        },
+        {
+          "id": "unfocused",
+          "state": "Focused and unfocused writing",
+          "selector": "#editorWrapper",
+          "comparison": "Same canvas without focus; width assistance must be quiet."
+        },
+        {
+          "id": "empty",
+          "state": "Empty document",
+          "selector": "#editorWrapper",
+          "comparison": "Derived: clear empty writing surface without disproportionate top inset."
+        },
+        {
+          "id": "short",
+          "state": "Short and narrow panes",
+          "selector": "#editorWrapper",
+          "comparison": "Derived: preserve readable measure and hierarchy in a short pane.",
+          "height": 540
+        },
+        {
+          "id": "narrow",
+          "state": "Short and narrow panes",
+          "selector": "#editorWrapper",
+          "comparison": "Derived: adapt writing measure within narrow pane without clipping.",
+          "width": 480
+        }
+      ]
+    },
+    {
+      "id": "02-toolbar",
+      "targetRegions": [
+        {
+          "id": "toolbar",
+          "description": "Optional contextual toolbar mode: permanent essentials, modes/utilities and overflow."
+        },
+        {
+          "id": "context",
+          "description": "Compact selection formatting strip and reachable Moderate all-actions panel."
+        }
+      ],
+      "excludedRegions": [
+        "outline",
+        "authored canvas typography",
+        "Insert workspace",
+        "export panel interior",
+        "desktop chrome",
+        "reference caption bands and numbered pins"
+      ],
+      "cases": [
+        {
+          "id": "idle",
+          "state": "No selection",
+          "selector": "#toolbar",
+          "comparison": "Direct Experimental toolbar, optional session mode enabled without selection."
+        },
+        {
+          "id": "selection",
+          "state": "Selected prose",
+          "selector": ".editor-container",
+          "comparison": "Same mode with selected prose and compact contextual tools."
+        },
+        {
+          "id": "actions",
+          "state": "No selection",
+          "selector": ".command-palette",
+          "comparison": "Direct Moderate companion: optional contextual mode retains searchable, grouped all-actions access with readable labels and shortcuts."
+        },
+        {
+          "id": "protected",
+          "state": "Protected/source contexts",
+          "selector": "#toolbar",
+          "comparison": "Derived: protected code context cannot show prose formatting strip."
+        },
+        {
+          "id": "source",
+          "state": "Protected/source contexts",
+          "selector": "#toolbar",
+          "comparison": "Derived: Source selected, visual-only actions communicate availability."
+        },
+        {
+          "id": "narrow",
+          "state": "Narrow overflow",
+          "selector": "#toolbar",
+          "comparison": "Derived: essentials and utilities remain keyboard reachable through narrow overflow.",
+          "width": 480
+        },
+        {
+          "id": "overflow",
+          "state": "Narrow overflow",
+          "selector": "#toolbarOverflow",
+          "comparison": "Derived: overflow items are labeled and reachable.",
+          "width": 480
+        }
+      ]
+    },
+    {
       "id": "03-commands",
       "targetRegions": [
-        { "id": "insert", "description": "Entire Insert workspace: search, category rail, command rows, descriptions, separate shortcuts and rendered previews. Experimental reference central workspace only." },
-        { "id": "palette", "description": "Entire Moderate Action Palette: search, groups, icons, titles, descriptions, shortcuts and empty recovery." }
+        {
+          "id": "insert",
+          "description": "Entire Insert workspace: search, category rail, command rows, descriptions, separate shortcuts and rendered previews. Experimental reference central workspace only."
+        },
+        {
+          "id": "palette",
+          "description": "Entire Moderate Action Palette: search, groups, icons, titles, descriptions, shortcuts and empty recovery."
+        }
       ],
-      "excludedRegions": ["main toolbar", "outline", "authored canvas outside the workspace", "desktop chrome", "reference caption bands and numbered pins"],
+      "excludedRegions": [
+        "main toolbar",
+        "outline",
+        "authored canvas outside the workspace",
+        "desktop chrome",
+        "reference caption bands and numbered pins"
+      ],
       "cases": [
-        { "id": "all", "state": "All and a category", "selector": "#insertMenu", "comparison": "Direct reference: All Insert workspace with Table, Equation and Code visual previews." },
-        { "id": "category", "state": "All and a category", "selector": "#insertMenu", "comparison": "Derived: same category/list hierarchy with Equations selected; previews remain visual." },
-        { "id": "search", "state": "Search with results", "selector": "#insertMenu", "comparison": "Derived: same workspace, code search shows readable matching rows and previews." },
-        { "id": "empty", "state": "No results", "selector": "#insertMenu", "comparison": "Derived: clear empty guidance and available Clear search action; retain workspace composition." },
-        { "id": "unavailable", "state": "Unavailable action", "selector": "#insertMenu", "comparison": "Derived: preserve rows/previews and expose unavailable reasons in protected code context." },
-        { "id": "narrow", "state": "Narrow workspace", "selector": "#insertMenu", "width": 480, "comparison": "Derived: stack or compact categories without clipped search/labels/actions or authored-content obstruction." },
-        { "id": "narrow-end", "state": "Narrow workspace", "selector": "#insertMenu", "width": 480, "comparison": "Derived: scrolled narrow results must show complete Mermaid/Contents rows and a clear internal scrolling affordance, with search and categories retained." },
-        { "id": "palette", "state": "Search with results", "selector": ".command-palette", "comparison": "Direct Moderate companion reference: grouped Action Palette with icons, descriptions and separate shortcuts; previews belong only to Insert." }
+        {
+          "id": "all",
+          "state": "All and a category",
+          "selector": "#insertMenu",
+          "comparison": "Direct reference: All Insert workspace with Table, Equation and Code visual previews."
+        },
+        {
+          "id": "category",
+          "state": "All and a category",
+          "selector": "#insertMenu",
+          "comparison": "Derived: same category/list hierarchy with Equations selected; previews remain visual."
+        },
+        {
+          "id": "search",
+          "state": "Search with results",
+          "selector": "#insertMenu",
+          "comparison": "Derived: same workspace, code search shows readable matching rows and previews."
+        },
+        {
+          "id": "empty",
+          "state": "No results",
+          "selector": "#insertMenu",
+          "comparison": "Derived: clear empty guidance and available Clear search action; retain workspace composition."
+        },
+        {
+          "id": "unavailable",
+          "state": "Unavailable action",
+          "selector": "#insertMenu",
+          "comparison": "Derived: preserve rows/previews and expose unavailable reasons in protected code context."
+        },
+        {
+          "id": "narrow",
+          "state": "Narrow workspace",
+          "selector": "#insertMenu",
+          "width": 480,
+          "comparison": "Derived: stack or compact categories without clipped search/labels/actions or authored-content obstruction."
+        },
+        {
+          "id": "narrow-end",
+          "state": "Narrow workspace",
+          "selector": "#insertMenu",
+          "width": 480,
+          "comparison": "Derived: scrolled narrow results must show complete Mermaid/Contents rows and a clear internal scrolling affordance, with search and categories retained."
+        },
+        {
+          "id": "palette",
+          "state": "Search with results",
+          "selector": ".command-palette",
+          "comparison": "Direct Moderate companion reference: grouped Action Palette with icons, descriptions and separate shortcuts; previews belong only to Insert."
+        }
+      ]
+    },
+    {
+      "id": "04-outline",
+      "targetRegions": [
+        {
+          "id": "rail",
+          "description": "Entire Outline/Document rail: tabs, nested heading navigation, reading cue, unified statistics/progress and utility footer."
+        }
+      ],
+      "excludedRegions": [
+        "main toolbar",
+        "authored canvas",
+        "other workspace panels",
+        "desktop chrome",
+        "reference caption bands and numbered pins"
+      ],
+      "cases": [
+        {
+          "id": "nested",
+          "state": "Nested headings",
+          "selector": "#sidebar",
+          "comparison": "Direct Experimental nested outline and explicit tabs."
+        },
+        {
+          "id": "long",
+          "state": "Long headings",
+          "selector": "#sidebar",
+          "comparison": "Derived: long headings wrap without losing their tree level."
+        },
+        {
+          "id": "document",
+          "state": "Outline and Document tabs",
+          "selector": "#sidebar",
+          "comparison": "Derived: Document tab organizes document details without duplicate statistics."
+        },
+        {
+          "id": "outline",
+          "state": "Outline and Document tabs",
+          "selector": "#sidebar",
+          "comparison": "Direct Outline tab; compact footer with current section progress."
+        },
+        {
+          "id": "scrolled",
+          "state": "Scrolled document",
+          "selector": "#sidebar",
+          "comparison": "Derived: active heading and reading cue correspond to scrolled document."
+        },
+        {
+          "id": "narrow",
+          "state": "Narrow overlay",
+          "selector": "#sidebar",
+          "comparison": "Derived: narrow overlay retains full rail hierarchy and can close.",
+          "width": 480
+        }
+      ]
+    },
+    {
+      "id": "05-tables",
+      "targetRegions": [
+        {
+          "id": "table",
+          "description": "Selected table, readable external row/column coordinates and boundary insertion targets."
+        },
+        {
+          "id": "inspector",
+          "description": "Existing placement-aware selection inspector: Rows/Columns navigation, Alignment group, requested diamond, destructive/placement utilities."
+        }
+      ],
+      "excludedRegions": [
+        "main toolbar independent design",
+        "outline",
+        "unrelated authored prose",
+        "desktop chrome",
+        "reference caption bands and numbered pins"
+      ],
+      "cases": [
+        {
+          "id": "body",
+          "state": "Body and header selection",
+          "selector": "#editorWrapper",
+          "comparison": "Direct Experimental inspector and selected body cell, with owner-required insertion diamond."
+        },
+        {
+          "id": "header",
+          "state": "Body and header selection",
+          "selector": "#editorWrapper",
+          "comparison": "Derived: header selection coordinates are readable and distinct."
+        },
+        {
+          "id": "coordinates",
+          "state": "Coordinates and boundary insertion",
+          "selector": "#editorWrapper",
+          "comparison": "Direct: coordinate gutters and external boundary insertion targets stay outside authored content."
+        },
+        {
+          "id": "wide",
+          "state": "Wide table scrolling",
+          "selector": "#editorWrapper",
+          "comparison": "Derived: horizontal table scroll moves column coordinates together; gutters/controls stay visible."
+        },
+        {
+          "id": "narrow",
+          "state": "Narrow pane",
+          "selector": "#editorWrapper",
+          "comparison": "Derived: narrow pane keeps readable coordinates and available selection/alignment controls.",
+          "width": 480
+        },
+        {
+          "id": "narrow-scrolled",
+          "state": "Narrow pane",
+          "selector": "#editorWrapper",
+          "comparison": "Derived: visibly scrollable narrow table at its right edge exposes complete final-column cells with corresponding coordinate labels.",
+          "width": 480
+        },
+        {
+          "id": "placement-auto",
+          "state": "Each saved placement",
+          "selector": "#editorWrapper",
+          "comparison": "Derived: auto stored placement retains grouped inspector and owner-required diamond without document obstruction.",
+          "placement": "auto"
+        },
+        {
+          "id": "placement-top-bar",
+          "state": "Each saved placement",
+          "selector": "#editorWrapper",
+          "comparison": "Derived: top-bar stored placement retains grouped inspector and owner-required diamond without document obstruction.",
+          "placement": "top-bar"
+        },
+        {
+          "id": "placement-top-left",
+          "state": "Each saved placement",
+          "selector": "#editorWrapper",
+          "comparison": "Derived: top-left stored placement retains grouped inspector and owner-required diamond without document obstruction.",
+          "placement": "top-left"
+        },
+        {
+          "id": "placement-top-right",
+          "state": "Each saved placement",
+          "selector": "#editorWrapper",
+          "comparison": "Derived: top-right stored placement retains grouped inspector and owner-required diamond without document obstruction.",
+          "placement": "top-right"
+        },
+        {
+          "id": "placement-bottom-left",
+          "state": "Each saved placement",
+          "selector": "#editorWrapper",
+          "comparison": "Derived: bottom-left stored placement retains grouped inspector and owner-required diamond without document obstruction.",
+          "placement": "bottom-left"
+        },
+        {
+          "id": "placement-bottom-right",
+          "state": "Each saved placement",
+          "selector": "#editorWrapper",
+          "comparison": "Derived: bottom-right stored placement retains grouped inspector and owner-required diamond without document obstruction.",
+          "placement": "bottom-right"
+        },
+        {
+          "id": "placement-left",
+          "state": "Each saved placement",
+          "selector": "#editorWrapper",
+          "comparison": "Derived: left stored placement retains grouped inspector and owner-required diamond without document obstruction.",
+          "placement": "left"
+        },
+        {
+          "id": "placement-right",
+          "state": "Each saved placement",
+          "selector": "#editorWrapper",
+          "comparison": "Derived: right stored placement retains grouped inspector and owner-required diamond without document obstruction.",
+          "placement": "right"
+        }
+      ]
+    },
+    {
+      "id": "06-code",
+      "targetRegions": [
+        {
+          "id": "block",
+          "description": "Code block and stationary header with language, wrap, copy feedback and host text-editor action."
+        },
+        {
+          "id": "picker",
+          "description": "Language search and selected language rows."
+        }
+      ],
+      "excludedRegions": [
+        "main toolbar",
+        "outline",
+        "canvas heading/prose styling",
+        "desktop chrome",
+        "reference caption bands and numbered pins"
+      ],
+      "cases": [
+        {
+          "id": "unwrapped",
+          "state": "Unwrapped horizontal scroll",
+          "selector": "#editor pre",
+          "comparison": "Direct Moderate: explicit controls and readable syntax; long source scrolls under stationary header."
+        },
+        {
+          "id": "scrolled",
+          "state": "Unwrapped horizontal scroll",
+          "selector": "#editor pre",
+          "comparison": "Derived horizontal-scroll state: source is deliberately offset while the complete labeled header remains stationary; clipped line beginnings are expected only after user scrolling."
+        },
+        {
+          "id": "wrapped",
+          "state": "Wrapped lines",
+          "selector": "#editor pre",
+          "comparison": "Derived: view-only wrapping exposes long source without changing source line breaks."
+        },
+        {
+          "id": "language",
+          "state": "Language search and selected language",
+          "selector": ".lang-selector",
+          "comparison": "Direct Moderate language chooser with selected language; visible full application provides block header."
+        },
+        {
+          "id": "search",
+          "state": "Language search and selected language",
+          "selector": ".lang-selector",
+          "comparison": "Derived: filtering language names/aliases retains readable result rows."
+        },
+        {
+          "id": "copied",
+          "state": "Copied feedback",
+          "selector": "#editor pre",
+          "comparison": "Direct Moderate: actual browser clipboard operation produces explicit temporary feedback."
+        },
+        {
+          "id": "light",
+          "state": "Light and dark themes",
+          "selector": "#editor pre",
+          "comparison": "Derived: supported light palette remains readable."
+        },
+        {
+          "id": "dark",
+          "state": "Light and dark themes",
+          "selector": "#editor pre",
+          "comparison": "Direct Moderate charcoal code block with readable syntax.",
+          "theme": "dark"
+        }
+      ]
+    },
+    {
+      "id": "07-equations",
+      "targetRegions": [
+        {
+          "id": "equation",
+          "description": "Equation header, distinct Source/Preview panes, local unsupported-command warning/source cue and Shift+Enter guidance."
+        }
+      ],
+      "excludedRegions": [
+        "main toolbar",
+        "outline",
+        "authored prose outside equation",
+        "desktop chrome",
+        "reference caption bands and numbered pins"
+      ],
+      "cases": [
+        {
+          "id": "preview",
+          "state": "Valid preview",
+          "selector": ".math-wrapper",
+          "comparison": "Derived valid equation with calm labeled Preview."
+        },
+        {
+          "id": "source",
+          "state": "Active source",
+          "selector": ".math-wrapper",
+          "comparison": "Direct Recommended active Source and Preview with exit guidance."
+        },
+        {
+          "id": "unsupported",
+          "state": "Unsupported command",
+          "selector": ".math-wrapper",
+          "comparison": "Direct Recommended unsupported command, concise local warning and honest source cue."
+        },
+        {
+          "id": "long",
+          "state": "Long source",
+          "selector": ".math-wrapper",
+          "comparison": "Derived long authored TeX retains usable source/preview treatment."
+        },
+        {
+          "id": "narrow",
+          "state": "Narrow pane",
+          "selector": ".math-wrapper",
+          "comparison": "Derived narrow equation panes/diagnostics remain readable.",
+          "width": 480
+        }
+      ]
+    },
+    {
+      "id": "08-diagrams",
+      "targetRegions": [
+        {
+          "id": "diagram",
+          "description": "Mermaid block: explicit Source/Preview modes, render status, local concise diagnostic/source cue and valid diagram styling."
+        }
+      ],
+      "excludedRegions": [
+        "main toolbar",
+        "outline",
+        "authored prose outside Mermaid",
+        "desktop chrome",
+        "reference caption bands and numbered pins"
+      ],
+      "cases": [
+        {
+          "id": "preview",
+          "state": "Valid preview",
+          "selector": ".mermaid-wrapper",
+          "comparison": "Direct Moderate valid diagram in Preview."
+        },
+        {
+          "id": "invalid",
+          "state": "Invalid diagram",
+          "selector": ".mermaid-wrapper",
+          "comparison": "Direct Moderate local error beside visible authored Source, with reliable line cue."
+        },
+        {
+          "id": "source",
+          "state": "Source editing",
+          "selector": ".mermaid-wrapper",
+          "comparison": "Direct Moderate source-editing mode with explicit selected control."
+        },
+        {
+          "id": "diagnostic",
+          "state": "Long diagnostic",
+          "selector": ".mermaid-wrapper",
+          "comparison": "Derived parser diagnostic is bounded and expandable, retains honest location."
+        },
+        {
+          "id": "narrow",
+          "state": "Narrow pane",
+          "selector": ".mermaid-wrapper",
+          "comparison": "Derived narrow source/diagnostic treatment without clipping.",
+          "width": 480
+        }
+      ]
+    },
+    {
+      "id": "09-find",
+      "targetRegions": [
+        {
+          "id": "find",
+          "description": "Find/Replace submenu only: persistent field labels, replacement hierarchy, scope/selected count, contextual result cards."
+        },
+        {
+          "id": "highlights",
+          "description": "Only the association of Find result selection with document match highlights; ignore canvas styling."
+        }
+      ],
+      "excludedRegions": [
+        "main toolbar",
+        "outline",
+        "export",
+        "canvas typography/content except target highlights",
+        "desktop chrome",
+        "reference caption bands and numbered pins"
+      ],
+      "cases": [
+        {
+          "id": "filled",
+          "state": "Filled Find and Replace fields",
+          "selector": "#searchReplaceBox",
+          "comparison": "Direct Experimental internal hierarchy: filled Find/Replace fields retain visible purpose labels."
+        },
+        {
+          "id": "selected",
+          "state": "Several results and selected targets",
+          "selector": "#searchReplaceBox",
+          "comparison": "Direct Experimental context rows, selected target and associated document highlights."
+        },
+        {
+          "id": "empty",
+          "state": "No results",
+          "selector": "#searchReplaceBox",
+          "comparison": "Derived: no-results feedback provides useful recovery."
+        },
+        {
+          "id": "regex",
+          "state": "Invalid or expensive regex",
+          "selector": "#searchReplaceBox",
+          "comparison": "Derived: invalid regex diagnostic is concise and does not hide field labels."
+        },
+        {
+          "id": "expensive",
+          "state": "Invalid or expensive regex",
+          "selector": "#searchReplaceBox",
+          "comparison": "Derived: bounded expensive regex produces recovery feedback."
+        },
+        {
+          "id": "narrow",
+          "state": "Narrow pane",
+          "selector": "#searchReplaceBox",
+          "comparison": "Derived: narrow submenu preserves labeled fields, actions and contextual rows.",
+          "width": 480
+        }
+      ]
+    },
+    {
+      "id": "10-metadata",
+      "targetRegions": [
+        {
+          "id": "metadata",
+          "description": "Authored front matter disclosure/source and Generated contents header/help/Refresh; subordinate to prose."
+        }
+      ],
+      "excludedRegions": [
+        "main toolbar",
+        "outline",
+        "authored prose independent typography",
+        "desktop chrome",
+        "reference caption bands and numbered pins"
+      ],
+      "cases": [
+        {
+          "id": "collapsed",
+          "state": "Collapsed and expanded YAML",
+          "selector": "#editor",
+          "comparison": "Derived: compact authored YAML disclosure and Generated contents."
+        },
+        {
+          "id": "expanded",
+          "state": "Collapsed and expanded YAML",
+          "selector": "#editor",
+          "comparison": "Direct Recommended authored raw YAML and compact Generated contents."
+        },
+        {
+          "id": "generated",
+          "state": "Generated contents",
+          "selector": "#editor",
+          "comparison": "Direct Recommended Contents ownership label and readable links."
+        },
+        {
+          "id": "pending",
+          "state": "Pending refresh",
+          "selector": "#editor",
+          "comparison": "Derived: heading changed, generated entries remain until explicit refresh/save with clear help."
+        },
+        {
+          "id": "refreshed",
+          "state": "Refresh action",
+          "selector": "#editor",
+          "comparison": "Derived: actual Refresh updates generated heading without changing raw YAML."
+        }
+      ]
+    },
+    {
+      "id": "11-source",
+      "targetRegions": [
+        {
+          "id": "modes",
+          "description": "Explicit Visual/Source/Split mode selector and distinct host text-editor action."
+        },
+        {
+          "id": "panes",
+          "description": "Source/preview composition, editing authority and selected-heading correspondence."
+        }
+      ],
+      "excludedRegions": [
+        "outline",
+        "other panel interiors",
+        "authored content aesthetic outside correspondence",
+        "desktop chrome",
+        "reference caption bands and numbered pins"
+      ],
+      "cases": [
+        {
+          "id": "visual",
+          "state": "Visual",
+          "selector": ".editor-container",
+          "comparison": "Recommended companion Visual selection and distinct host text-editor action."
+        },
+        {
+          "id": "source",
+          "state": "Source",
+          "selector": ".editor-container",
+          "comparison": "Direct Recommended Source selected, visual formatting unavailable, readable source."
+        },
+        {
+          "id": "split",
+          "state": "Split",
+          "selector": ".editor-container",
+          "comparison": "Direct Moderate balanced Source and read-only Preview with explicit pane labels."
+        },
+        {
+          "id": "correspondence",
+          "state": "Corresponding selected heading",
+          "selector": ".editor-container",
+          "comparison": "Direct Moderate selected source heading matches cue in read-only Preview."
+        },
+        {
+          "id": "editing",
+          "state": "Live source editing",
+          "selector": ".editor-container",
+          "comparison": "Derived: live source edit updates same preview, single editing authority."
+        },
+        {
+          "id": "narrow",
+          "state": "Narrow stacked panes",
+          "selector": ".editor-container",
+          "comparison": "Derived: narrow stacked Source/Preview retains labels and usable panes.",
+          "width": 480
+        }
+      ]
+    },
+    {
+      "id": "12-export",
+      "targetRegions": [
+        {
+          "id": "export",
+          "description": "Export submenu only: distinct Format/setup, actual job status, results/warnings and output/recovery actions."
+        }
+      ],
+      "excludedRegions": [
+        "main toolbar independent styling",
+        "outline",
+        "canvas",
+        "desktop chrome outside submenu",
+        "desktop chrome",
+        "reference caption bands and numbered pins"
+      ],
+      "cases": [
+        {
+          "id": "available",
+          "state": "Available and missing tools",
+          "selector": "#exportMenu",
+          "comparison": "Direct Moderate internal format/setup hierarchy with available tools."
+        },
+        {
+          "id": "missing",
+          "state": "Available and missing tools",
+          "selector": "#exportMenu",
+          "comparison": "Direct Moderate setup-required DOCX/EPUB status and configuration/install actions."
+        },
+        {
+          "id": "running",
+          "state": "Running and canceling",
+          "selector": "#exportMenu",
+          "comparison": "Derived: actual host-message stage shown with activity/cancel; no invented progress."
+        },
+        {
+          "id": "canceling",
+          "state": "Running and canceling",
+          "selector": "#exportMenu",
+          "comparison": "Derived: cancellation requested, truthful awaiting-host status and controls."
+        },
+        {
+          "id": "failure",
+          "state": "Failure",
+          "selector": "#exportMenu",
+          "comparison": "Derived: host-reported failure with legible retry/setup recovery."
+        },
+        {
+          "id": "complete",
+          "state": "Completion with warnings",
+          "selector": "#exportMenu",
+          "comparison": "Direct Moderate completed host message: bounded warnings and recorded output/Open action."
+        },
+        {
+          "id": "narrow",
+          "state": "Narrow panel",
+          "selector": "#exportMenu",
+          "comparison": "Derived: narrow completed panel retains grouped sections and output/warning actions.",
+          "width": 480
+        }
       ]
     }
   ]

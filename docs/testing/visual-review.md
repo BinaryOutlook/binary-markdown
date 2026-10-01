@@ -12,7 +12,7 @@ Capture and status commands are local and make no AI calls. The explicit `review
 
 1. Read the active section in the manifest and the [builder prompt](../../reports/plans/2026-10-01-ui-ux-visual-fidelity/builder-prompt.md). Open the chosen artwork and a current real UI capture. Identify the target's composition, hierarchy and visible gaps before coding. Keep that visual reading separate from the evaluator packet.
 2. Implement within the approved component scope. Rebuild after webview/shared/localization changes, inspect actual fresh renders during changes, and preserve content, settings, selection and shared editing history. A remembered description or CSS intention does not substitute for opening the images.
-3. Capture and seal a new iteration, then run the fresh independent evaluator. The example below evaluates Insert and the Moderate Action Palette companion. Use an optional list of case IDs after the section ID to review a smaller subset; the packet and status must still show that remaining states are pending.
+3. Capture and seal a new iteration, then run the fresh independent evaluator. Capture recipes cover all twelve selected sections in the [state registry](../../scripts/visual-review/sections.json). The example below evaluates Insert and the Moderate Action Palette companion. Use an optional list of case IDs after the section ID to review a smaller subset; the packet and status must still show that remaining states are pending.
 
 ```sh
 npm run compile
@@ -22,6 +22,25 @@ node scripts/visual-review/cli.cjs status
 ```
 
 The capture command prints the new packet path. Use that exact path for review; subsequent captures increment the iteration number. Local output stays under ignored `.vscode-test/visual-review/<section>/iteration-NNN/`. Each capture retains full and component PNGs, measured target bounds, viewport/theme/locale/scale, fixture/input hashes, source revision/local-change status, renderer-input hash, section criteria, fixed references and prior failures. Source or contract changes invalidate older verdicts; a documentation-only commit may retain the same product input hash while its recorded reviewed revision remains explicit.
+
+To prepare a consistent set after shared layout changes, use `node scripts/visual-review/cli.cjs capture all`. It captures sections sequentially and prints one packet path for each. Review each packet separately: `all` is a capture convenience, not a combined evaluator judgment. Freeze product and coordinator inputs during review; changes require fresh captures and verdicts for the final handoff. Partial captures, interrupted preparation and missing receipts remain pending or BLOCKED in status.
+
+Capture rebuilds the shared standalone browser fixture. Run captures sequentially, and finish them before starting browser tests or another fixture build in the same worktree. Concurrent readers can otherwise see a partially rewritten fixture; that harness error cannot establish a product failure or pass.
+
+| Section | Selected concept | Required evidence |
+| --- | --- | --- |
+| 01 Canvas | Recommended | Focused/unfocused guides, empty document, short and narrow panes. |
+| 02 Toolbar | Experimental | Idle and selected context, protected code, Source, all-actions panel and narrow overflow. |
+| 03 Commands | Experimental Insert; Moderate palette | Categories, filled/empty search, unavailable context, both ends of narrow navigation and palette. |
+| 04 Outline | Experimental | Nested/long headings, both tabs, reading position and narrow overlay. |
+| 05 Tables | Experimental with the owner's insertion diamond | Body/header selection, external gutters/boundaries, horizontal scroll, narrow pane and all eight saved placements. |
+| 06 Code | Moderate | Stationary controls at rest and while scrolled, wrap, language search, copied feedback and light/dark rendering. |
+| 07 Equations | Recommended | Preview/source, unsupported command, long source and narrow layout. |
+| 08 Diagrams | Moderate | Valid preview, invalid source, local diagnostic, expanded details and narrow layout. |
+| 09 Find | Experimental submenu | Persistent labels, selected results, no matches, invalid/expensive regex and narrow layout. |
+| 10 Metadata | Recommended | Collapsed/expanded raw YAML, generated contents, pending changes and explicit refresh. |
+| 11 Views | Moderate Split; Recommended Visual/Source | Mode controls, individual pane labels, correspondence, shared source editing and narrow layout. |
+| 12 Export | Moderate submenu | Availability/setup, observed running stages, cancellation request, failure/retry, completion/output/warnings and narrow layout. |
 
 4. Read `next.md` beside the packet. On FAIL, fix the prioritized discrepancies and reopen the fixed reference and new real render before submitting another iteration. Keep earlier FAIL evidence. Re-evaluation must resolve every earlier major failure and inspect the new images afresh. Do not change artwork, exclusions, case requirements or tolerances to make a failure disappear.
 5. On BLOCKED, restore the named missing evidence or evaluation prerequisite, then capture another iteration. A failed process, malformed model output or missing authentication cannot produce PASS. On PASS, record the section and states reviewed; continue remaining state cases and the other chosen sections. Recheck affected sections after shared layout changes.

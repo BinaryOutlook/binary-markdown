@@ -44,11 +44,11 @@ for (const mode of ['full', 'simple']) {
         await expect(page.locator('#insertMenu [aria-disabled="true"]')).toHaveCount(0);
         await expect(page.locator('.insert-search input')).toBeFocused();
         await page.keyboard.press('ArrowDown');
-        await expect(page.locator('[data-insert-action="inlineMath"]')).toBeFocused();
+        await expect(page.locator('[data-insert-action="table"]')).toBeFocused();
         await page.keyboard.press('End');
         await expect(page.locator('[data-insert-action="toc"]')).toBeFocused();
         await page.keyboard.press('ArrowDown');
-        await expect(page.locator('[data-insert-action="inlineMath"]')).toBeFocused();
+        await expect(page.locator('[data-insert-action="table"]')).toBeFocused();
         await page.keyboard.press('Escape');
         await expect(page.locator('#insertMenu')).toBeHidden();
         await expect(page.locator('#insertButton')).toBeFocused();

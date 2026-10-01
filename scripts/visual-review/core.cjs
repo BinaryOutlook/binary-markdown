@@ -59,7 +59,7 @@ function walk(root, relative, result) {
 }
 function sourceIdentity(root) {
     const files = [];
-    for (const relative of ['src', 'vendor', 'package.json', 'package-lock.json', '.node-version', 'test/build-standalone.js', 'scripts/build-locales.cjs', 'scripts/copy-webview.js']) walk(root, relative, files);
+    for (const relative of ['src', 'vendor', 'package.json', 'package-lock.json', '.node-version', 'test/build-standalone.js', 'build-locales.js', 'scripts/copy-webview.js', 'scripts/copy-vendor.js']) walk(root, relative, files);
     return { commit: git(root, 'rev-parse', 'HEAD').toString().trim(), dirty: Boolean(git(root, 'status', '--porcelain').length), productHash: hash(canonical(files)) };
 }
 function contract(root) {
@@ -104,7 +104,9 @@ function newIteration(root, section) {
     const next = names.length ? Number(names.at(-1).slice(-3)) + 1 : 1;
     if (next > 999) throw new Error('Iteration limit reached');
     const relative = OUTPUT + '/' + section + '/iteration-' + String(next).padStart(3, '0');
-    fs.mkdirSync(safePath(root, relative), { recursive: true });
+    fs.mkdirSync(safePath(root, OUTPUT + '/' + section), { recursive: true });
+    // Exclusive directory creation prevents simultaneous captures from sharing or overwriting evidence.
+    fs.mkdirSync(safePath(root, relative));
     return relative;
 }
 function priorFailures(root, section) {

@@ -196,8 +196,9 @@
             if (button.title) button.setAttribute('aria-label', button.title);
             const label = document.createElement('span');
             label.className = 'toolbar-action-label';
-            label.textContent = button.title;
-            button.appendChild(label);
+            label.textContent = button.dataset.action === 'openInTextEditor'
+                ? i18n[button.dataset.hostEditor === 'vscode' ? 'openInVsCode' : 'openInTextEditor'] : button.title;
+            if (!['formatActions', 'contextToolbar'].includes(button.dataset.action)) button.appendChild(label);
             toolbarActions.push({ button, home, formatting: toolbarInner.contains(button) });
         });
     }
@@ -3061,8 +3062,8 @@
     function setBlockDiagnostic(wrapper, error, source = '') {
         wrapper.dataset.renderError = error ? String(error.message || error).slice(0, 1000) : '';
         const reported = error?.hash?.loc?.first_line;
-        const match = /(?:on )?line\s+(\d+)/i.exec(wrapper.dataset.renderError);
-        const line = Number.isInteger(reported) ? reported + 1 : match ? Number(match[1]) : Number.isInteger(error?.position) ? source.slice(0, error.position).split('\n').length : null;
+        // Jison locations are one-based. Plain message text is not a reliable authored-source coordinate.
+        const line = Number.isInteger(reported) && reported > 0 && reported <= source.split('\n').length ? reported : Number.isInteger(error?.position) && error.position >= 0 && error.position <= source.length ? source.slice(0, error.position).split('\n').length : null;
         if (line) wrapper.dataset.errorLine = String(line); else delete wrapper.dataset.errorLine;
         if (workspaceUi) workspaceUi.refresh();
     }
@@ -3530,6 +3531,7 @@
         copyBtn.type = 'button';
         copyBtn.className = 'code-copy-btn';
         copyBtn.innerHTML = LUCIDE_ICONS.copy;
+        const copyLabel = document.createElement('span'); copyLabel.className = 'code-action-label'; copyLabel.textContent = i18n.copyCode; copyBtn.appendChild(copyLabel);
         copyBtn.title = i18n.copyCode || 'Copy code';
         copyBtn.setAttribute('aria-label', copyBtn.title);
         copyBtn.dataset.copyState = 'idle';
@@ -3553,6 +3555,7 @@
         wrapBtn.setAttribute('aria-label', wrapBtn.title);
         wrapBtn.setAttribute('aria-pressed', 'false');
         wrapBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M3 12h14a4 4 0 0 1 0 8h-4m3-3-3 3 3 3M3 18h4"/></svg>';
+        const wrapLabel = document.createElement('span'); wrapLabel.className = 'code-action-label'; wrapLabel.textContent = i18n.wrapCode; wrapBtn.appendChild(wrapLabel);
         wrapBtn.addEventListener('pointerdown', event => event.preventDefault());
         wrapBtn.addEventListener('keydown', event => {
             if (!event.ctrlKey && !event.metaKey) event.stopPropagation();
@@ -3626,6 +3629,7 @@
         header.appendChild(wrapBtn);
         header.appendChild(copyBtn);
         const openCode = document.createElement('button'); openCode.type = 'button'; openCode.className = 'code-open-btn'; openCode.title = i18n.openInTextEditor; openCode.setAttribute('aria-label', openCode.title); openCode.innerHTML = LUCIDE_ICONS.openInTextEditor || LUCIDE_ICONS.code;
+        const openLabel = document.createElement('span'); openLabel.className = 'code-action-label'; openLabel.textContent = i18n.openInTextEditor; openCode.appendChild(openLabel);
         openCode.addEventListener('mousedown', event => event.preventDefault());
         openCode.addEventListener('click', event => { event.stopPropagation(); host.openInTextEditor(); });
         header.appendChild(openCode);
@@ -4273,6 +4277,7 @@
         button.innerHTML = state === 'copied' ? LUCIDE_ICONS.check : LUCIDE_ICONS.copy;
         const message = state === 'copied' ? (i18n.copiedCode || 'Copied') :
             state === 'error' ? (i18n.copyCodeFailed || 'Could not copy code. Try again.') : '';
+        const label = document.createElement('span'); label.className = 'code-action-label'; label.textContent = message || i18n.copyCode; button.appendChild(label);
         status.textContent = message;
         button.title = message || (i18n.copyCode || 'Copy code');
         if (state !== 'idle') button.copyFeedbackTimer = setTimeout(() => setCodeCopyState(pre, 'idle'), 2000);
@@ -12535,12 +12540,14 @@
                     - insertMenu.querySelector('.insert-search').getBoundingClientRect().height
                     - insertMenu.querySelector('.insert-categories').getBoundingClientRect().height - 64;
                 let used = 16;
-                for (const row of options.querySelectorAll('.insert-command:not([hidden])')) {
+                const rows = [...options.querySelectorAll('.insert-command:not([hidden])')];
+                for (const row of rows) {
                     const pitch = row.getBoundingClientRect().height + 8;
                     if (used + pitch > available) break;
                     used += pitch;
                 }
-                options.style.maxHeight = Math.max(80, used > 16 ? used : available) + 'px';
+                const tallest = Math.max(0, ...rows.map(row => row.getBoundingClientRect().height)) + 16;
+                options.style.maxHeight = Math.max(80, Math.min(available, Math.max(used, tallest))) + 'px';
             }
         }
         requestAnimationFrame(updateInsertScroll);
@@ -12551,6 +12558,8 @@
         const footer = insertMenu.querySelector('.insert-scroll');
         if (!list || !footer) return;
         const rows = [...list.querySelectorAll('.insert-command:not([hidden])')];
+        const overflow = list.scrollHeight > list.clientHeight + 1;
+        footer.hidden = !overflow;
         const bounds = list.getBoundingClientRect();
         const narrow = window.innerWidth <= 760;
         const visible = [];
@@ -12560,8 +12569,6 @@
             row.classList.toggle('insert-command-clipped', narrow && !complete);
             if (complete) visible.push(index);
         });
-        const overflow = list.scrollHeight > list.clientHeight + 1;
-        footer.hidden = !overflow;
         footer.querySelector('[data-direction="previous"]').disabled = list.scrollTop <= 1;
         footer.querySelector('[data-direction="next"]').disabled = list.scrollTop + list.clientHeight >= list.scrollHeight - 1;
         footer.querySelector('output').textContent = visible.length ? (visible[0] + 1) + '–' + (visible.at(-1) + 1) + ' / ' + rows.length : String(rows.length);
@@ -12573,6 +12580,16 @@
         selection.removeAllRanges();
         selection.addRange(insertMenuRange);
         return true;
+    }
+
+    function focusInsertChoice(choice) {
+        const list = insertMenu.querySelector('.insert-options');
+        const bounds = list.getBoundingClientRect(), rect = choice.getBoundingClientRect();
+        if (rect.top < bounds.top + 8) list.scrollTop += rect.top - bounds.top - 8;
+        else if (rect.bottom > bounds.bottom - 8) list.scrollTop += rect.bottom - bounds.bottom + 8;
+        // Reveal the whole card before focusing: a visibility-hidden partial
+        // card cannot accept keyboard focus in a narrow workspace.
+        updateInsertScroll(); choice.focus({ preventScroll: true });
     }
 
     function closeInsertMenu(restoreFocus) {
@@ -12606,7 +12623,8 @@
         insertSearch.value = ''; insertCategorySelection = 'allCategory'; filterInsertWorkspace();
         positionInsertMenu();
         const choices = [...insertMenu.querySelectorAll('button[data-insert-action]')];
-        (last ? choices.at(-1) : insertSearch).focus({ preventScroll: true });
+        if (last) focusInsertChoice(choices.at(-1));
+        else insertSearch.focus({ preventScroll: true });
     }
 
     if (insertButton && insertMenu) {
@@ -12699,8 +12717,7 @@
             if (event.target !== insertSearch && event.key === 'End') next = choices.length - 1;
             if (next !== undefined && choices.length) {
                 event.preventDefault(); event.stopPropagation();
-                choices[next].focus({ preventScroll: true });
-                choices[next].scrollIntoView({ block: 'nearest' });
+                focusInsertChoice(choices[next]);
             } else if (event.key === 'Enter' && event.target === insertSearch && choices.length) {
                 event.preventDefault(); event.stopPropagation(); choices[0].click();
             } else if (event.key === 'Escape') {
@@ -12744,6 +12761,8 @@
     var commandPaletteList = null;
     var commandPaletteSavedRange = null;
     var commandPaletteVisible = false;
+    var commandPaletteCategory = '';
+    var commandPaletteCount = null;
 
     function parseI18nLabel(i18nKey) {
         var fullText = i18n[i18nKey] || i18nKey;
@@ -12773,10 +12792,22 @@
         searchDiv.appendChild(commandPaletteInput);
         commandPalette.appendChild(searchDiv);
 
+        const categories = document.createElement('div'); categories.className = 'command-palette-categories';
+        categories.setAttribute('role', 'group'); categories.setAttribute('aria-label', i18n.commandPaletteFilter);
+        for (const key of ['', ...Object.keys(COMMAND_PALETTE_GROUPS)]) {
+            const category = document.createElement('button'); category.type = 'button'; category.dataset.paletteCategory = key;
+            category.textContent = key ? COMMAND_PALETTE_GROUPS[key]() : i18n.allCategory;
+            category.addEventListener('click', () => { commandPaletteCategory = key; renderCommandPaletteItems(commandPaletteInput.value); commandPaletteInput.focus(); });
+            categories.appendChild(category);
+        }
+        commandPalette.appendChild(categories);
+
         // List area
         commandPaletteList = document.createElement('div');
         commandPaletteList.className = 'command-palette-list';
         commandPalette.appendChild(commandPaletteList);
+        commandPaletteCount = document.createElement('output'); commandPaletteCount.className = 'command-palette-count';
+        commandPaletteCount.setAttribute('aria-live', 'polite'); commandPalette.appendChild(commandPaletteCount);
 
         // Prevent focus loss when clicking palette (except input)
         commandPalette.addEventListener('mousedown', function(e) {
@@ -12839,6 +12870,7 @@
 
         for (var idx = 0; idx < COMMAND_PALETTE_ITEMS.length; idx++) {
             var item = COMMAND_PALETTE_ITEMS[idx];
+            if (commandPaletteCategory && item.group !== commandPaletteCategory) continue;
             if (item.action === 'viewExport' && !document.getElementById('exportButton')) continue;
             var parsed = item.action === 'viewExport' ? { label: document.getElementById('exportButton').getAttribute('aria-label'), shortcut: '' } : parseI18nLabel(item.i18nKey);
 
@@ -12894,9 +12926,11 @@
             const empty = document.createElement('p'); empty.className = 'command-palette-empty'; empty.setAttribute('role', 'status');
             empty.textContent = i18n.noMatchingActions + '. ' + i18n.searchRecovery; commandPaletteList.appendChild(empty);
             const clear = document.createElement('button'); clear.type = 'button'; clear.className = 'command-palette-clear'; clear.textContent = i18n.clearSearch;
-            clear.addEventListener('click', event => { event.stopPropagation(); commandPaletteInput.value = ''; renderCommandPaletteItems(''); commandPaletteInput.focus(); });
+            clear.addEventListener('click', event => { event.stopPropagation(); commandPaletteInput.value = ''; commandPaletteCategory = ''; renderCommandPaletteItems(''); commandPaletteInput.focus(); });
             commandPaletteList.appendChild(clear);
         }
+        commandPalette.querySelectorAll('[data-palette-category]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.paletteCategory === commandPaletteCategory)));
+        commandPaletteCount.textContent = (i18n.paletteActionCount || '{count} actions').replace('{count}', String(visibleIndex));
     }
 
     function moveCommandPaletteSelection(direction) {
@@ -12974,7 +13008,10 @@
         }
 
         // Position below cursor line (or above if not enough space below)
-        var paletteHeight = 360;
+        commandPaletteCategory = ''; commandPaletteInput.value = ''; renderCommandPaletteItems('');
+        commandPalette.style.maxHeight = Math.max(120, window.innerHeight - 16) + 'px';
+        commandPalette.style.display = 'flex';
+        var paletteHeight = commandPalette.getBoundingClientRect().height;
         var paletteWidth = Math.min(360, window.innerWidth - 16);
         var top, left;
 
@@ -12997,10 +13034,6 @@
         commandPalette.style.left = left + 'px';
         commandPalette.style.display = 'flex';
         commandPaletteVisible = true;
-
-        // Clear filter and render all items
-        commandPaletteInput.value = '';
-        renderCommandPaletteItems('');
 
         // Show selection highlight via CSS Custom Highlight API (persists when input gets focus)
         if (commandPaletteSavedRange && !commandPaletteSavedRange.collapsed && CSS.highlights) {
@@ -13271,6 +13304,7 @@
         document.documentElement.dataset.editorMode = mode;
         sourceEditor.style.display = isSourceMode ? 'block' : 'none';
         editor.style.display = mode === 'source' ? 'none' : 'block';
+        for (const id of ['sourcePaneHeading', 'previewPaneHeading']) { const label = document.getElementById(id); if (label) label.hidden = !isSplitMode; }
         if (isSourceMode) {
             sourceEditor.value = markdown;
             if (isSplitMode) renderFromMarkdown();
@@ -13454,6 +13488,7 @@
                 else item.removeAttribute('aria-current');
             });
             activeOutlineIndex = boundedIndex;
+            if (workspaceUi) workspaceUi.refresh();
         }
 
         if (!ensureVisible) return;
@@ -16138,8 +16173,16 @@
     const selectedSearchMatches = new Set();
     const searchResults = document.getElementById('searchResults');
     const searchFeedback = document.getElementById('searchFeedback');
-    const replaceSelected = document.getElementById('replaceSelected');
+    let replaceSelected = document.getElementById('replaceSelected');
     const selectAllSearch = document.getElementById('searchSelectAll');
+    const replacementScope = document.getElementById('replaceScope');
+    const searchSelectedCount = document.getElementById('searchSelectedCount');
+    // Keep the two scope-sensitive replacement commands beside one another.
+    const replacementActions = document.getElementById('searchReplacementActions');
+    if (replacementActions) {
+        const selected = document.createElement('button'); selected.type = 'button'; selected.id = 'replaceSelected'; selected.textContent = i18n.replaceSelected;
+        replacementActions.append(selected, replaceAll); replaceSelected = selected;
+    }
     function stopSearchWorker() { clearTimeout(searchWorkerTimer); searchWorker?.terminate(); searchWorker = null; }
     function openSearchBox(showReplace = false) {
         if (searchReplaceBox.style.display === 'none') {
@@ -16216,8 +16259,10 @@
         updateSearchActions();
     }
     function updateSearchActions() {
-        replaceOne.disabled = currentMatchIndex < 0;
-        replaceAll.disabled = !searchMatches.length || searchTruncated;
+        const selectedOnly = replacementScope?.value === 'selected';
+        replaceOne.disabled = currentMatchIndex < 0 || (selectedOnly && !selectedSearchMatches.has(currentMatchIndex));
+        replaceAll.disabled = selectedOnly || !searchMatches.length || searchTruncated;
+        if (searchSelectedCount) searchSelectedCount.textContent = (i18n.selectedMatchCount || '{count} selected').replace('{count}', String(selectedSearchMatches.size));
         if (replaceSelected) replaceSelected.disabled = !selectedSearchMatches.size;
         if (selectAllSearch) {
             selectAllSearch.checked = Boolean(searchMatches.length && selectedSearchMatches.size === searchMatches.length);
@@ -16291,8 +16336,9 @@
         else renderFromMarkdown();
         visualSourceCurrent = true; notifyChangeImmediate(); performSearch();
     }
-    function replaceCurrentMatch() { if (currentMatchIndex >= 0) replaceMatchIndices([currentMatchIndex]); }
-    function replaceAllMatches() { if (!searchTruncated) replaceMatchIndices(searchMatches.map((_, index) => index)); }
+    function replaceCurrentMatch() { if (!replaceOne.disabled && currentMatchIndex >= 0) replaceMatchIndices([currentMatchIndex]); }
+    function replaceAllMatches() { if (!replaceAll.disabled && !searchTruncated) replaceMatchIndices(searchMatches.map((_, index) => index)); }
+    if (replacementScope) replacementScope.addEventListener('change', updateSearchActions);
     if (replaceSelected) replaceSelected.addEventListener('click', () => replaceMatchIndices([...selectedSearchMatches]));
     if (selectAllSearch) selectAllSearch.addEventListener('change', () => {
         selectedSearchMatches.clear(); if (selectAllSearch.checked) searchMatches.forEach((_, index) => selectedSearchMatches.add(index));

@@ -32,7 +32,7 @@ async function tableOverflowChecks({ editor, keyboard, resize, setPosition, reco
         await editor.locator(overflow).waitFor({ state: 'visible' });
         const actions = await editor.evaluate(({ controls, overflow }) => [controls, overflow].flatMap(selector =>
             [...document.querySelectorAll(`${selector} button:not([data-action="more"])`)].filter(button => button.getClientRects().length).map(button => button.dataset.action)), { controls, overflow });
-        assert.deepEqual(actions, ['add-col-left', 'add-col-right', 'add-row-above', 'add-row-below', 'del-col', 'del-row', 'align-left', 'align-center', 'align-right', 'placement']);
+        assert.deepEqual(actions, ['add-col-left', 'add-col-right', 'add-row-above', 'add-row-below', 'align-left', 'align-center', 'align-right', 'del-col', 'del-row', 'placement']);
         await keyboard.press('End');
         assert.equal(await editor.evaluate(() => document.activeElement.dataset.action), 'placement');
         await keyboard.press('Enter');

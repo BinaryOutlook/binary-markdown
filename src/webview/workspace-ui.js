@@ -105,18 +105,29 @@
                     const hint = document.createElement('small'); hint.textContent = i18n.blockExitHint; chrome.appendChild(hint);
                     const status = document.createElement('span'); status.className = 'block-status'; status.setAttribute('role', 'status'); chrome.appendChild(status);
                     const diagnostic = document.createElement('details'); diagnostic.className = 'block-diagnostic';
-                    const summary = document.createElement('summary'); summary.textContent = diagram ? i18n.diagramSyntaxError : i18n.equationUnsupported;
+                    const summary = document.createElement('summary'); summary.textContent = i18n.diagnosticDetails;
                     const detail = document.createElement('div'); detail.className = 'block-diagnostic-text'; diagnostic.append(summary, detail); chrome.appendChild(diagnostic);
                     block.prepend(chrome);
                 }
                 const pre = block.querySelector(diagram ? 'pre[data-lang="mermaid"]' : 'pre[data-lang="math"]');
-                if (pre) pre.dataset.sourceLabel = i18n.sourceLabel + (block.dataset.errorLine ? ' · ' + i18n.sourceLine + ' ' + block.dataset.errorLine : '');
+                if (pre) {
+                    pre.dataset.sourceLabel = i18n.sourceLabel + (block.dataset.errorLine ? ' · ' + i18n.sourceLine + ' ' + block.dataset.errorLine : '');
+                    let cue = pre.querySelector('.block-error-line');
+                    if (!cue) { cue = document.createElement('span'); cue.className = 'block-error-line'; cue.contentEditable = 'false'; cue.setAttribute('aria-hidden', 'true'); pre.appendChild(cue); }
+                    cue.hidden = !block.dataset.errorLine || block.dataset.mode !== 'edit';
+                    if (!cue.hidden) {
+                        const code = pre.querySelector('code'), lineHeight = parseFloat(getComputedStyle(code).lineHeight) || 22;
+                        cue.style.top = (code.getBoundingClientRect().top - pre.getBoundingClientRect().top + (Number(block.dataset.errorLine) - 1) * lineHeight) + 'px';
+                        cue.style.height = lineHeight + 'px';
+                    }
+                }
                 const preview = block.querySelector(diagram ? '.mermaid-diagram' : '.math-display');
                 if (preview) preview.dataset.previewLabel = i18n.previewLabel;
                 chrome.querySelectorAll('[data-block-mode]').forEach(toggle => { toggle.disabled = options.isSourceMode(); toggle.setAttribute('aria-pressed', String(block.dataset.mode === toggle.dataset.blockMode)); });
                 const error = block.dataset.renderError || '';
                 const status = chrome.querySelector('.block-status');
-                const text = error ? (diagram ? i18n.diagramNeedsAttention : i18n.equationUnsupported) + (block.dataset.errorLine ? ' · ' + i18n.sourceLine + ' ' + block.dataset.errorLine : '') : '';
+                const unknown = /Undefined control sequence:\s*(\\[A-Za-z]+)/.exec(error);
+                const text = error ? (diagram ? i18n.diagramNeedsAttention : unknown ? i18n.unknownEquationCommand + ' ' + unknown[1] : i18n.equationUnsupported) : '';
                 if (status.textContent !== text) status.textContent = text;
                 status.hidden = !error;
                 const diagnostic = chrome.querySelector('.block-diagnostic'); diagnostic.hidden = !error;
@@ -125,17 +136,34 @@
             }
         }
         function refresh() {
-            const stats = byId('documentStatistics');
-            const text = options.statistics();
-            if (stats && stats.textContent !== text) stats.textContent = text;
-            const owner = options.isSourceMode() ? sourceEditor : wrapper;
+            const headings = [...outline.querySelectorAll('.outline-item')];
+            const active = headings.findIndex(node => node.classList.contains('is-active'));
+            const current = Math.max(0, active);
+            const title = byId('documentTitle');
+            if (title) title.textContent = headings[0]?.textContent || i18n.documentTab;
             const progress = byId('readingProgress');
-            if (progress) progress.value = owner.scrollHeight > owner.clientHeight ? Math.round(100 * owner.scrollTop / (owner.scrollHeight - owner.clientHeight)) : 0;
+            if (progress) progress.value = headings.length ? Math.round(100 * (current + 1) / headings.length) : 0;
+            const position = byId('sectionProgress');
+            if (position) position.textContent = (headings.length ? current + 1 : 0) + ' / ' + headings.length + ' ' + i18n.sectionsLabel;
+            const documentPosition = byId('documentPosition');
+            if (documentPosition) documentPosition.textContent = i18n.readingProgress + ': ' + (headings[current]?.textContent || '—');
+            const navigation = byId('documentNavigation');
+            if (navigation && !byId('documentInfo').hidden) {
+                const signature = headings.map(node => node.textContent + ':' + node.classList.contains('is-active')).join('|');
+                if (navigation.dataset.signature !== signature) {
+                    navigation.dataset.signature = signature; navigation.replaceChildren();
+                    headings.filter(node => Number(node.dataset.level) <= 2).forEach(original => {
+                        const entry = button(original.textContent, () => original.click());
+                        entry.className = 'document-heading'; entry.classList.toggle('is-active', original === headings[current]); navigation.appendChild(entry);
+                    });
+                }
+            }
             positionContext();
             decorateBlocks();
         }
         sourceEditor.addEventListener('scroll', refresh);
         wrapper.addEventListener('scroll', refresh);
+        window.addEventListener('resize', refresh);
         refresh();
         return { refresh };
     }

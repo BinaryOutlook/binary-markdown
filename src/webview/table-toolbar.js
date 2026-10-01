@@ -12,6 +12,7 @@
         let frame = 0, settleTimer = 0, settled = true, pointerDown = false, hovering = false, disposed = false;
         let menuOpen = false;
         const listeners = [];
+        const scrollHints = new Map();
         const listen = (node, type, handler, capture = false) => {
             node.addEventListener(type, handler, capture);
             listeners.push(() => node.removeEventListener(type, handler, capture));
@@ -60,6 +61,22 @@
         };
         const rowSelect = navigator('tableRows'), columnSelect = navigator('tableColumns');
         controls.prepend(selectionInspector);
+        const group = (className, key, fallback) => {
+            const node = document.createElement('div'); node.className = className;
+            node.setAttribute('role', 'group'); node.setAttribute('aria-label', label(key, fallback));
+            const title = document.createElement('strong'); title.textContent = label(key, fallback); node.appendChild(title); return node;
+        };
+        const insertGroup = group('table-direction-group', 'insertTableGroup', 'Insert'); insertGroup.appendChild(direction); controls.appendChild(insertGroup);
+        const alignmentGroup = group('table-alignment-group', 'tableAlignment', 'Alignment');
+        const advancedGroup = group('table-advanced-group', 'tableAdvanced', 'Advanced');
+        for (const button of [...controls.querySelectorAll('button')]) {
+            if (button.dataset.action.startsWith('align-')) alignmentGroup.appendChild(button);
+            else if (!button.dataset.action.startsWith('add-')) advancedGroup.appendChild(button);
+        }
+        controls.querySelectorAll('.separator').forEach(node => node.remove());
+        controls.append(alignmentGroup, advancedGroup);
+        const gutters = document.createElement('div'); gutters.className = 'table-coordinate-gutters'; gutters.hidden = true;
+        gutters.setAttribute('aria-hidden', 'true'); document.body.appendChild(gutters);
         const boundaries = document.createElement('div'); boundaries.className = 'table-boundary-actions'; boundaries.hidden = true;
         for (const [action, key] of [['add-col-right','addColRight'], ['add-row-below','addRowBelow']]) {
             const button = document.createElement('button'); button.type = 'button'; button.dataset.action = action; button.textContent = '+'; button.setAttribute('aria-label', label(key, action)); button.title = button.getAttribute('aria-label'); boundaries.appendChild(button);
@@ -91,10 +108,11 @@
         picker.setAttribute('aria-label', label('tablePlacement', 'Table toolbar position'));
         picker.hidden = true;
         document.body.appendChild(picker);
-        const sizes = [false, true].map(vertical => {
+        const sizes = [false, true, 'dock'].map(layout => {
             const clone = controls.cloneNode(true);
             clone.className = 'table-toolbar visible table-toolbar-measure'; clone.hidden = false;
-            clone.dataset.vertical = String(vertical);
+            clone.dataset.vertical = String(layout === true);
+            clone.dataset.docked = String(layout === 'dock');
             clone.setAttribute('aria-hidden', 'true');
             clone.inert = true;
             document.body.appendChild(clone);
@@ -132,11 +150,12 @@
         document.body.appendChild(overflow);
         let pickerAnchor = actions[actions.length - 1];
         const resize = new ResizeObserver(() => schedule());
+        const scrollResize = new ResizeObserver(() => schedule());
         for (const element of new Set([editor, wrapper, header, row])) resize.observe(element);
         const mutations = new MutationObserver(() => schedule());
         mutations.observe(editor, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['style', 'class'] });
 
-        function owns(node) { return controls.contains(node) || boundaries.contains(node) || dock.contains(node) || picker.contains(node) || overflow.contains(node); }
+        function owns(node) { return controls.contains(node) || boundaries.contains(node) || dock.contains(node) || picker.contains(node) || overflow.contains(node) || [...scrollHints.values()].some(hint => hint.contains(node)); }
         function valid() { return table && cell && editor.contains(table) && table.contains(cell) && !options.isSourceMode(); }
         function closeMenus() {
             picker.hidden = true;
@@ -150,6 +169,7 @@
         }
         function hide() {
             boundaries.hidden = true;
+            gutters.hidden = true;
             const changed = !dock.hidden || !row.hidden;
             closeMenus();
             controls.classList.remove('visible'); controls.hidden = true;
@@ -218,7 +238,7 @@
             }
         }
         function schedule() {
-            if (disposed || !table) return;
+            if (disposed) return;
             settled = false;
             clearTimeout(settleTimer);
             settleTimer = setTimeout(() => { settled = true; request(); }, 200);
@@ -262,7 +282,7 @@
         }
         function fitActions(width, height) {
             const vertical = controls.dataset.vertical === 'true';
-            const measure = sizes[Number(vertical)];
+            const measure = sizes[controls.dataset.docked === 'true' ? 2 : Number(vertical)];
             const natural = measure.getBoundingClientRect();
             const measured = [...measure.querySelectorAll('button')];
             const style = getComputedStyle(controls);
@@ -274,20 +294,33 @@
             const gap = parseFloat(vertical ? style.rowGap : style.columnGap);
             const limit = vertical ? height : width;
             const compactMenu = controls.getAttribute('role') === 'menu';
+            const selectionSize = measure.querySelector('.table-selection-inspector').getBoundingClientRect();
+            // Keep the insertion diamond reachable before falling back to the
+            // complete compact menu. Measure hidden navigation consistently.
+            const navigationInOverflow = !compactMenu && width < (vertical ? 150 : selectionSize.width + 158);
+            const focusedNavigation = selectionInspector.contains(document.activeElement) ? document.activeElement : null;
+            const navigationParent = navigationInOverflow ? overflow : controls;
+            if (selectionInspector.parentElement !== navigationParent) {
+                navigationParent.prepend(selectionInspector);
+                if (focusedNavigation) focusedNavigation.focus({ preventScroll: true });
+            }
+            selectionInspector.hidden = false;
+            const omitted = navigationInOverflow ? (vertical ? selectionSize.height : selectionSize.width) + gap : 0;
             let count = actions.length;
-            if (!compactMenu && (natural.width > width || natural.height > height)) {
+            const navigationTrigger = navigationInOverflow ? moreSize + gap : 0;
+            if (!compactMenu && (natural.width - (vertical ? 0 : omitted) + (vertical ? 0 : navigationTrigger) > width || natural.height - (vertical ? omitted : 0) + (vertical ? navigationTrigger : 0) > height)) {
                 count = 0;
                 for (const button of measured) {
                     const rect = button.getBoundingClientRect();
-                    const end = vertical ? rect.bottom - natural.top : rect.right - natural.left;
+                    const end = (vertical ? rect.bottom - natural.top : rect.right - natural.left) - omitted;
                     // Reserve the overflow trigger before accepting another whole action.
                     if (end + gap + moreSize + endPadding > limit || rect.width > width - horizontalPadding || rect.height > height - verticalPadding) break;
                     count++;
                 }
             }
             if (count < 4) count = 0; // Keep the four directional controls together.
+            if (count > 4 && count < 7) count = 4; // Keep Alignment together.
             direction.hidden = count === 0;
-            selectionInspector.hidden = width < 180 && !compactMenu;
             const focused = document.activeElement;
             const focusedAction = actions.indexOf(focused) >= 0 ? actions.indexOf(focused) : overflowActions.indexOf(focused);
             actions.forEach((button, index) => {
@@ -299,7 +332,7 @@
                 const next = separator.nextElementSibling;
                 separator.hidden = !next || next.hidden;
             }
-            more.hidden = count === actions.length;
+            more.hidden = count === actions.length && !navigationInOverflow;
             if (more.hidden) { overflow.hidden = true; more.setAttribute('aria-expanded', 'false'); }
             if (focusedAction >= 0 && focused.hidden) {
                 if (actions[focusedAction].hidden) {
@@ -338,24 +371,85 @@
             const fixed = Number(header.dataset.utilityWidth) || [...header.querySelectorAll('.toolbar-fixed')].reduce((total, node) => total + node.getBoundingClientRect().width, 0);
             return Math.max(28, header.clientWidth - fixed - 12);
         }
+        function renderGutters(bounds, rect) {
+            const left = rect.left - 32, top = rect.top - 28;
+            gutters.hidden = rect.bottom < bounds.top || rect.top > bounds.bottom;
+            if (gutters.hidden) return;
+            gutters.style.left = left + 'px'; gutters.style.top = top + 'px';
+            gutters.style.width = (rect.width + 32) + 'px'; gutters.style.height = (rect.height + 28) + 'px';
+            gutters.replaceChildren();
+            const coordinate = (value, x, y, width, height, active) => {
+                const node = document.createElement('span'); node.textContent = value; node.classList.toggle('is-active', active);
+                Object.assign(node.style, { left: x + 'px', top: y + 'px', width: width + 'px', height: height + 'px' }); gutters.appendChild(node);
+            };
+            const letters = index => { let result = ''; for (let n = index + 1; n; n = Math.floor((n - 1) / 26)) result = String.fromCharCode(65 + (n - 1) % 26) + result; return result; };
+            for (const [index, heading] of [...table.rows[0].cells].entries()) {
+                const box = heading.getBoundingClientRect();
+                if (box.left >= rect.left - 1 && box.right <= rect.right + 1) coordinate(letters(index), box.left - left, 0, box.width, 28, index === cell.cellIndex);
+            }
+            for (const [index, row] of [...table.rows].entries()) {
+                const box = row.getBoundingClientRect();
+                if (box.top >= bounds.top && box.bottom <= bounds.bottom) coordinate(String(index + 1), 0, box.top - top, 32, box.height, index === cell.parentElement.rowIndex);
+            }
+        }
+        function renderScrollHints() {
+            for (const [target, hint] of scrollHints) {
+                if (editor.contains(target)) continue;
+                scrollResize.unobserve(target); hint.remove(); scrollHints.delete(target);
+            }
+            const viewport = wrapper.getBoundingClientRect();
+            for (const target of editor.querySelectorAll('table')) {
+                let hint = scrollHints.get(target);
+                if (!hint) {
+                    hint = document.createElement('div'); hint.className = 'table-scroll-hint';
+                    hint.setAttribute('role', 'group'); hint.setAttribute('aria-label', label('tableScrollHint', 'Scroll columns'));
+                    const title = document.createElement('span'); title.textContent = hint.getAttribute('aria-label'); hint.appendChild(title);
+                    for (const [delta, key, fallback, symbol] of [[-1, 'tableScrollLeft', 'Scroll table left', '←'], [1, 'tableScrollRight', 'Scroll table right', '→']]) {
+                        const button = document.createElement('button'); button.type = 'button'; button.textContent = symbol;
+                        button.setAttribute('aria-label', label(key, fallback));
+                        button.addEventListener('click', () => { target.scrollLeft += delta * Math.max(80, target.clientWidth * .65); schedule(); });
+                        hint.appendChild(button);
+                    }
+                    hint.addEventListener('mousedown', event => event.preventDefault());
+                    document.body.appendChild(hint); scrollHints.set(target, hint); scrollResize.observe(target);
+                }
+                const box = target.getBoundingClientRect();
+                hint.hidden = options.isSourceMode() || target.scrollWidth <= target.clientWidth + 1 || box.bottom + 32 > viewport.bottom || box.bottom < viewport.top || box.left >= viewport.right || box.right <= viewport.left;
+                if (hint.hidden) continue;
+                Object.assign(hint.style, { left: Math.max(viewport.left, box.left) + 'px', top: (box.bottom + 6) + 'px', width: Math.max(0, Math.min(viewport.right, box.right) - Math.max(viewport.left, box.left)) + 'px' });
+                const buttons = hint.querySelectorAll('button');
+                buttons[0].disabled = target.scrollLeft <= 1;
+                buttons[1].disabled = target.scrollLeft >= target.scrollWidth - target.clientWidth - 1;
+            }
+        }
         function render() {
+            renderScrollHints();
             if (valid()) {
-                const bounds = wrapper.getBoundingClientRect(), rect = cell.getBoundingClientRect();
-                boundaries.hidden = rect.bottom < bounds.top || rect.top > bounds.bottom || rect.right < bounds.left || rect.left > bounds.right;
+                const bounds = wrapper.getBoundingClientRect(), rect = table.getBoundingClientRect(), selected = cell.getBoundingClientRect();
+                document.documentElement.style.setProperty('--table-inspector-height', sizes[0].getBoundingClientRect().height + 'px');
+                document.documentElement.style.setProperty('--table-inspector-width', sizes[1].getBoundingClientRect().width + 'px');
+                renderGutters(bounds, rect);
+                boundaries.hidden = rect.bottom < bounds.top || rect.top > bounds.bottom;
                 if (!boundaries.hidden) {
                     const right = boundaries.children[0], below = boundaries.children[1];
-                    right.style.left = Math.max(bounds.left + 4, Math.min(rect.right - 12, bounds.right - 28)) + 'px'; right.style.top = Math.max(bounds.top + 4, Math.min(rect.top + rect.height / 2 - 12, bounds.bottom - 28)) + 'px';
-                    below.style.left = Math.max(bounds.left + 4, Math.min(rect.left + rect.width / 2 - 12, bounds.right - 28)) + 'px'; below.style.top = Math.max(bounds.top + 4, Math.min(rect.bottom - 12, bounds.bottom - 28)) + 'px';
+                    right.style.left = (rect.right + 6) + 'px'; right.style.top = Math.max(bounds.top + 4, Math.min(selected.top + selected.height / 2 - 12, bounds.bottom - 28)) + 'px';
+                    below.style.left = (rect.left - 30) + 'px'; below.style.top = (rect.bottom + 8) + 'px';
+                    right.hidden = rect.right + 30 > Math.min(innerWidth, bounds.right);
+                    below.hidden = rect.bottom + 32 > Math.min(innerHeight, bounds.bottom);
                 }
-            } else boundaries.hidden = true;
+            } else { boundaries.hidden = true; gutters.hidden = true; }
             if (!valid()) return clear();
             const palette = document.querySelector('.command-palette');
             if (palette?.getClientRects().length) return hide();
             updateDockHost(current === 'top-bar');
             const rect = wrapper.getBoundingClientRect();
-            const top = Math.max(0, rect.top, header.getBoundingClientRect().bottom);
-            const bounds = geometry.box(Math.max(0, rect.left), top,
-                Math.max(0, Math.min(innerWidth, rect.left + wrapper.clientWidth) - Math.max(0, rect.left)),
+            const wrapperStyle = getComputedStyle(wrapper);
+            const laneLeft = parseFloat(wrapperStyle.marginLeft), laneRight = parseFloat(wrapperStyle.marginRight);
+            const laneTop = parseFloat(wrapperStyle.marginTop);
+            const left = Math.max(0, rect.left - laneLeft);
+            const top = Math.max(0, rect.top - laneTop, header.getBoundingClientRect().bottom);
+            const bounds = geometry.box(left, top,
+                Math.max(0, Math.min(innerWidth, rect.left + wrapper.clientWidth + laneRight) - left),
                 Math.max(0, Math.min(innerHeight, rect.top + wrapper.clientHeight) - top));
             if (pointerDown || hovering || owns(document.activeElement) || !picker.hidden) {
                 // Keep the chosen placement stable during interaction, but never
@@ -384,6 +478,13 @@
             const horizontal = sizes[0].getBoundingClientRect(), vertical = sizes[1].getBoundingClientRect();
             const next = geometry.choose({ preference, table: table.getBoundingClientRect(), cell: cell.getBoundingClientRect(), bounds,
                 horizontal, vertical, obstacles: obstacles(bounds), current, allowUndock: settled });
+            // Explicit inspectors use reserved, non-editable lanes. The preference
+            // stays unchanged while scrolling cannot clamp the panel over content.
+            if (next.placement !== 'hidden' && next.placement !== 'top-bar') {
+                if (laneTop && preference.startsWith('top-')) next.top = bounds.top + 6;
+                if (laneLeft && preference === 'left') next.left = bounds.left + 6;
+                if (laneRight && preference === 'right') next.left = bounds.right - next.width - 6;
+            }
             current = next.placement;
             if (current === 'hidden') return hide();
             updateDockHost(current === 'top-bar');
@@ -400,7 +501,12 @@
                 available = dockWidth();
                 dock.hidden = false;
                 dock.style.maxWidth = available + 'px';
-                const compact = sizes[0].querySelector('.table-selection-inspector').getBoundingClientRect().width + 90 + 46 > available;
+                const dockStyle = getComputedStyle(sizes[2]);
+                const minimumDock = sizes[2].querySelector('.table-direction-group').getBoundingClientRect().width
+                    + parseFloat(getComputedStyle(more).width) + parseFloat(dockStyle.columnGap)
+                    + parseFloat(dockStyle.paddingLeft) + parseFloat(dockStyle.paddingRight)
+                    + parseFloat(dockStyle.borderLeftWidth) + parseFloat(dockStyle.borderRightWidth);
+                const compact = available < minimumDock;
                 toggle.hidden = !compact;
                 if (compact) {
                     document.body.appendChild(controls);
@@ -474,6 +580,10 @@
             }
             if (button.dataset.action === 'placement') return openPicker(false, button);
             closeMenus();
+            if (boundaries.contains(button)) {
+                const edge = button.dataset.action === 'add-col-right' ? table.rows[cell.parentElement.rowIndex].cells[table.rows[0].cells.length - 1] : table.rows[table.rows.length - 1].cells[cell.cellIndex];
+                savedRange = null; options.onContext(edge); show(table, edge);
+            }
             restore();
             options.onAction(button.dataset.action);
             schedule();
@@ -554,10 +664,13 @@
         function dispose() {
             disposed = true;
             cancelAnimationFrame(frame); clearTimeout(settleTimer);
-            resize.disconnect(); mutations.disconnect(); listeners.forEach(remove => remove());
-            [controls, dock, row, picker, overflow, boundaries, ...sizes].forEach(node => node.remove());
+            resize.disconnect(); scrollResize.disconnect(); mutations.disconnect(); listeners.forEach(remove => remove());
+            for (const hint of scrollHints.values()) hint.remove();
+            scrollHints.clear();
+            [controls, dock, row, picker, overflow, boundaries, gutters, ...sizes].forEach(node => node.remove());
         }
         listen(window, 'pagehide', dispose);
+        request();
         return { show, clear, schedule, dispose, owns, setPreference(value) {
             preference = geometry.normalize(value);
             document.documentElement.dataset.tableToolbarPosition = preference;

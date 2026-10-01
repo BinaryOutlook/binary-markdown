@@ -213,6 +213,53 @@ test.describe('Export toolbar and job status', () => {
         await expect(page.locator('#exportMenu')).toHaveCount(0);
         await expect(page.locator('#exportStatus')).toHaveCount(0);
     });
+
+    test('only observed host stages appear and cancellation stays pending until confirmation', async ({ page }) => {
+        await setup(page);
+        await hostMessage(page, { type: 'exportStatus', state: 'running', stage: 'resources' });
+        await expect(page.locator('#exportStages li')).toHaveCount(1);
+        await expect(page.locator('#exportStages li')).toContainText('Preparing referenced resources');
+        await page.locator('#exportCancel').click();
+        await expect(page.locator('#exportStatus')).toHaveAttribute('data-state', 'running');
+        await expect(page.locator('#exportStatusMessage')).toHaveText(getExportMessages().cancelPending);
+        await expect(page.locator('#exportCancel')).toBeDisabled();
+        await hostMessage(page, { type: 'exportStatus', state: 'running', stage: 'rendering' });
+        await expect(page.locator('#exportStages li')).toHaveCount(2);
+        await expect(page.locator('#exportStatusMessage')).toHaveText(getExportMessages().cancelPending);
+        await expect(page.locator('#exportOpenOutput')).toBeHidden();
+        await hostMessage(page, { type: 'exportStatus', state: 'cancelled' });
+        await expect(page.locator('#exportStatus')).toHaveAttribute('data-state', 'cancelled');
+        expect(await outbound(page, 'cancelExport')).toHaveLength(1);
+        expect(await outbound(page, 'edit')).toHaveLength(0);
+    });
+
+    test('Retry requests the failed format again without inventing stages or editing source', async ({ page }) => {
+        await setup(page);
+        await page.locator('#exportButton').click();
+        await hostMessage(page, { type: 'exportCapabilities', host: { available: true }, pandoc: { available: false }, browser: { available: false } });
+        await page.locator('[data-export-format="html"]').click();
+        await hostMessage(page, { type: 'exportStatus', state: 'failed', message: 'Synthetic output could not be saved.' });
+        await expect(page.locator('#exportRetry')).toBeVisible();
+        await expect(page.locator('#exportStages li')).toHaveCount(0);
+        await page.locator('#exportRetry').click();
+        expect(await outbound(page, 'export')).toEqual([{ type: 'export', format: 'html' }, { type: 'export', format: 'html' }]);
+        await expect(page.locator('#exportRetry')).toBeHidden();
+        await expect(page.locator('#exportStages li')).toHaveCount(0);
+        expect(await outbound(page, 'edit')).toHaveLength(0);
+    });
+
+    test('a later host-command export starts with only its own observed stages', async ({ page }) => {
+        await setup(page);
+        await hostMessage(page, { type: 'exportStatus', state: 'running', stage: 'resources' });
+        await hostMessage(page, { type: 'exportStatus', state: 'running', stage: 'saving' });
+        await hostMessage(page, { type: 'exportStatus', state: 'complete', outputPath: '/documents/report.html' });
+        await expect(page.locator('#exportStages li')).toHaveCount(2);
+        await hostMessage(page, { type: 'exportStatus', state: 'running', stage: 'checking' });
+        await expect(page.locator('#exportStages li')).toHaveCount(1);
+        await expect(page.locator('#exportStages li')).toContainText(getExportMessages().checking);
+        await expect(page.locator('#exportOpenOutput')).toBeHidden();
+        expect(await outbound(page, 'edit')).toHaveLength(0);
+    });
 });
 
 test('export opens from text-toolbar overflow with mouse or keyboard and restores visible focus', async ({ page }) => {

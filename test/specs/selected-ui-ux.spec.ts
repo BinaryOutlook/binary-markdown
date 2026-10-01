@@ -30,6 +30,8 @@ test('Split source edits share Undo with Visual and the preview is read only', a
     await page.locator('button[data-editor-mode="split"]').click();
     await expect(page.locator('#sourceEditor')).toHaveValue(authored);
     await expect(page.locator('#editor')).toHaveAttribute('contenteditable', 'false');
+    await expect(page.locator('#sourcePaneHeading')).toHaveText('Source (Markdown)');
+    await expect(page.locator('#previewPaneHeading')).toHaveText('Preview (Read only)');
     await expect(page.locator('#editor [contenteditable="true"]')).toHaveCount(0);
     await page.locator('#sourceEditor').press('ControlOrMeta+a');
     await page.keyboard.press('ArrowRight');
@@ -121,6 +123,27 @@ test('Find handles invalid, empty and pathological regex without holding editing
     expect((await snapshot(page)).pending).toBe(false);
 });
 
+test('selected replacement scope retains labels, selection counts and literal replacement', async ({ page }) => {
+    const content = '# Review\n\nalpha alpha alpha\n';
+    await setup(page, content);
+    await page.locator('#editor').click();
+    await page.keyboard.press('ControlOrMeta+h');
+    await page.locator('#searchInput').fill('alpha');
+    await page.locator('#replaceInput').fill('$&');
+    await expect(page.locator('label[for="searchInput"]')).toHaveText('Find');
+    await expect(page.locator('label[for="replaceInput"]')).toHaveText('Replace with');
+    await page.locator('#replaceScope').selectOption('selected');
+    await expect(page.locator('#replaceAll')).toBeDisabled();
+    await expect(page.locator('#replaceSelected')).toBeDisabled();
+    await page.locator('.search-result input').nth(1).check();
+    await expect(page.locator('#searchSelectedCount')).toHaveText('1 selected');
+    await page.locator('#replaceSelected').click();
+    expect((await snapshot(page)).content).toBe('# Review\n\nalpha $& alpha\n');
+    await page.locator('#closeSearch').click();
+    await page.locator('[data-action="undo"]').click();
+    expect((await snapshot(page)).content).toBe(content);
+});
+
 test('Find Source replacement retains exact spelling and participates in shared Undo', async ({ page }) => {
     await setup(page);
     await page.locator('button[data-editor-mode="source"]').click();
@@ -201,6 +224,47 @@ test('mode switches preserve the selected inline text through Markdown source of
     expect(await page.evaluate(() => getSelection()!.toString())).toBe('target');
 });
 
+test('palette categories expose the complete command set and filtering is view only', async ({ page }) => {
+    await setup(page);
+    await page.locator('#formatButton').click();
+    const all = await page.locator('.command-palette-item').count();
+    await expect(page.locator('.command-palette-count')).toHaveText(`${all} actions`);
+    await page.locator('[data-palette-category="insert"]').click();
+    await expect(page.locator('[data-palette-category="insert"]')).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.locator('.command-palette-item[data-action="table"]')).toBeVisible();
+    await expect(page.locator('.command-palette-item[data-action="bold"]')).toHaveCount(0);
+    await page.locator('[data-palette-category=""]').click();
+    await expect(page.locator('.command-palette-item')).toHaveCount(all);
+    await page.locator('.command-palette-input').fill('unmatched-command');
+    await page.locator('.command-palette-clear').click();
+    await expect(page.locator('.command-palette-item')).toHaveCount(all);
+    await page.keyboard.press('Escape');
+    expect(await snapshot(page)).toMatchObject({ content: authored, pending: false });
+    await expect(page.locator('#toolbar [data-action="undo"]')).toBeDisabled();
+});
+
+test('overflowing tables offer explicit scrolling without editing or leaking controls into export', async ({ page }) => {
+    const source = '# Table\n\n| Experiment | Accuracy | Duration | Status |\n| --- | --- | --- | --- |\n| Baseline | 91% | 120 ms | Reviewed |\n';
+    await setup(page, source);
+    await page.setViewportSize({ width: 480, height: 1000 });
+    const hint = page.locator('.table-scroll-hint');
+    await expect(hint).toBeVisible();
+    await expect(hint.getByRole('button', { name: 'Scroll table left', exact: true })).toBeDisabled();
+    await hint.getByRole('button', { name: 'Scroll table right', exact: true }).click();
+    await expect.poll(() => page.locator('#editor table').evaluate(table => table.scrollLeft)).toBeGreaterThan(0);
+    await hint.getByRole('button', { name: 'Scroll table left', exact: true }).click();
+    await expect.poll(() => page.locator('#editor table').evaluate(table => table.scrollLeft)).toBe(0);
+    expect(await snapshot(page)).toMatchObject({ content: source, pending: false });
+    await expect(page.locator('#toolbar [data-action="undo"]')).toBeDisabled();
+    await expect(page.locator('#editor .table-scroll-hint')).toHaveCount(0);
+    await page.locator('button[data-editor-mode="source"]').click();
+    await expect(hint).toBeHidden();
+    await expect(page.locator('#sourceEditor')).toHaveValue(source);
+    await page.locator('button[data-editor-mode="visual"]').click();
+    await page.setViewportSize({ width: 1440, height: 1000 });
+    await expect(hint).toBeHidden();
+});
+
 test('contextual formatting uses the retained selection and shared Undo', async ({ page }) => {
     await setup(page);
     await page.locator('#contextToolbarToggle').click();
@@ -248,7 +312,7 @@ test('table directions, boundary insertion and cell navigation retain one edit h
 test('equation and diagram diagnostics are readable without changing the source', async ({ page }) => {
     const content = '# Blocks\n\n$$\n\\unknownCommand{x}\n$$\n\n```mermaid\ngraph TD\n A --> B\n```\n';
     await setup(page, content);
-    await expect(page.locator('.math-wrapper .block-status')).toContainText('Unsupported');
+    await expect(page.locator('.math-wrapper .block-status')).toContainText('Unknown command:');
     await expect(page.locator('.math-wrapper .block-chrome')).toContainText('Shift+Enter');
     await expect(page.locator('.mermaid-diagram svg')).toHaveCount(1);
     await page.locator('.mermaid-wrapper [data-block-mode="edit"]').click();
@@ -259,6 +323,28 @@ test('equation and diagram diagnostics are readable without changing the source'
     await expect(page.locator('.mermaid-wrapper .block-status')).toContainText('Needs attention');
     await page.locator('.block-diagnostic summary').click();
     await expect(page.locator('.block-diagnostic-text')).toContainText('line');
+});
+
+test('table coordinates remain outside authored cells and boundary plus appends at the edge', async ({ page }) => {
+    const content = '| A | B |\n| --- | --- |\n| one | two |\n| three | four |\n';
+    await setup(page, content);
+    await page.locator('#editor td').first().click();
+    await expect(page.locator('.table-coordinate-gutters')).toContainText('A');
+    await expect(page.locator('#editor .table-coordinate-gutters')).toHaveCount(0);
+    expect(await snapshot(page)).toMatchObject({ content, pending: false });
+    await page.locator('.table-boundary-actions [data-action="add-col-right"]').click();
+    await expect(page.locator('#editor th')).toHaveCount(3);
+    await expect(page.locator('#editor th').nth(0)).toHaveText('A');
+    await expect(page.locator('#editor th').nth(1)).toHaveText('B');
+    await expect(page.locator('#editor tr').nth(1).locator('td').nth(1)).toHaveText('two');
+    await page.locator('[data-action="undo"]').click();
+    expect((await snapshot(page)).content).toBe(content);
+    await page.locator('#editor td').first().click();
+    await page.locator('.table-boundary-actions [data-action="add-row-below"]').click();
+    await expect(page.locator('#editor tr')).toHaveCount(4);
+    await expect(page.locator('#editor tr').nth(2)).toContainText('three');
+    await page.locator('[data-action="undo"]').click();
+    expect((await snapshot(page)).content).toBe(content);
 });
 
 test('front matter disclosure and Contents help preserve YAML comments and key order', async ({ page }) => {

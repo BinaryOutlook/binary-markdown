@@ -36,16 +36,18 @@ async function review(root, relative, options = {}) {
             const child = (options.spawn || spawn)(options.executable || process.env.VISUAL_REVIEW_CODEX || 'codex', args,
                 { cwd: stage, stdio: ['pipe','pipe','pipe'], shell: false });
             let stopped = false;
-            const timer = setTimeout(() => { stopped = true; child.kill('SIGTERM'); }, options.timeoutMs || 12 * 60 * 1000);
+            let forceTimer;
+            const stop = () => { stopped = true; child.kill('SIGTERM'); forceTimer = setTimeout(() => child.kill('SIGKILL'), 2000); forceTimer.unref(); };
+            const timer = setTimeout(stop, options.timeoutMs || 12 * 60 * 1000);
             timer.unref();
             const collect = chunk => {
                 logBytes += chunk.length;
-                if (logBytes > 4 * 1024 * 1024) { stopped = true; child.kill('SIGTERM'); }
+                if (logBytes > 4 * 1024 * 1024) { if (!stopped) stop(); }
                 else stream.write(chunk);
             };
             child.stdout.on('data', collect); child.stderr.on('data', collect);
-            child.on('error', () => { clearTimeout(timer); resolve({ error: 'Evaluator executable could not start; inspect the ignored evaluator log' }); });
-            child.on('close', code => { clearTimeout(timer); resolve(code === 0 && !stopped ? {} : { error: stopped ? 'Evaluator exceeded time or output limit' : 'Evaluator process failed; inspect the ignored evaluator log' }); });
+            child.on('error', () => { clearTimeout(timer); clearTimeout(forceTimer); resolve({ error: 'Evaluator executable could not start; inspect the ignored evaluator log' }); });
+            child.on('close', code => { clearTimeout(timer); clearTimeout(forceTimer); resolve(code === 0 && !stopped ? {} : { error: stopped ? 'Evaluator exceeded time or output limit' : 'Evaluator process failed; inspect the ignored evaluator log' }); });
             child.stdin.on('error', () => {}); child.stdin.end(prompt);
         });
         await new Promise(resolve => stream.end(resolve));

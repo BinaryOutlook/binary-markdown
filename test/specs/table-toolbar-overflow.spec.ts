@@ -79,7 +79,7 @@ for (const position of ['top-left', 'left']) {
             const visible = (selector: string) => [...document.querySelectorAll<HTMLButtonElement>(selector)].filter(button => button.getClientRects().length).map(button => button.dataset.action);
             return { main: visible(`${controls} button:not([data-action="more"])`), menu: visible(`${overflow} button`) };
         }, { controls, overflow });
-        const actions = ['add-col-left', 'add-col-right', 'add-row-above', 'add-row-below', 'del-col', 'del-row', 'align-left', 'align-center', 'align-right', 'placement'];
+        const actions = ['add-col-left', 'add-col-right', 'add-row-above', 'add-row-below', 'align-left', 'align-center', 'align-right', 'del-col', 'del-row', 'placement'];
         expect([...distribution.main, ...distribution.menu]).toEqual(actions);
         await page.keyboard.press('Escape');
         await page.setViewportSize({ width: 1280, height: 900 });
@@ -178,6 +178,20 @@ test('compact menu reveals its last action with the keyboard in a short pane', a
     await expect(page.locator('.table-placement-menu')).toBeVisible();
     await page.keyboard.press('Escape');
     expect(await page.evaluate(() => document.querySelector('#editor td')?.contains(getSelection()?.anchorNode || null))).toBe(true);
+});
+
+test('a narrow dock retains row and column navigation in its overflow without editing', async ({ page }) => {
+    await setup(page, 'top-bar');
+    const before = await page.evaluate(() => (window as any).htmlToMarkdown());
+    await page.setViewportSize({ width: 1100, height: 800 });
+    await expect(page.locator(`${controls} [data-action="add-row-below"]`)).toBeVisible();
+    await page.locator(`${controls} [data-action="more"]`).click();
+    const rows = page.locator(overflow).getByRole('combobox', { name: 'Rows', exact: true });
+    await expect(rows).toBeVisible();
+    await rows.selectOption('3');
+    expect(await page.evaluate(() => (window as any).activeTableCell.parentElement.rowIndex)).toBe(2);
+    expect(await page.evaluate(() => (window as any).htmlToMarkdown())).toBe(before);
+    await expect(page.locator('#toolbar [data-action="undo"]')).toBeDisabled();
 });
 
 test('overflow respects header restrictions and closes on Source mode', async ({ page }) => {

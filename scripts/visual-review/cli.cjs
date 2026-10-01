@@ -9,8 +9,10 @@ async function main() {
     const [command, argument, ...extra] = process.argv.slice(2);
     if (command === 'capture') {
         const { capture } = require('./capture.cjs');
-        const result = await capture(root, argument, extra.length ? extra : undefined);
-        console.log(result.path);
+        for (const id of argument === 'all' ? core.contract(root).registry.sections.map(s => s.id) : [argument]) {
+            const result = await capture(root, id, extra.length ? extra : undefined);
+            console.log(result.path);
+        }
     } else if (command === 'review') {
         const receipt = await require('./review.cjs').review(root, argument);
         console.log(receipt.sectionId + ': ' + receipt.verdict + '\nBuilder handoff: ' + path.posix.dirname(argument) + '/next.md');
@@ -28,7 +30,7 @@ async function main() {
             let verdict = 'PENDING';
             for (const name of records) {
                 const directory = core.OUTPUT + '/' + section.id + '/' + name;
-                if (!fs.existsSync(core.safePath(root, directory + '/packet.json'))) continue;
+                if (!fs.existsSync(core.safePath(root, directory + '/packet.json'))) { verdict = 'BLOCKED (capture incomplete)'; continue; }
                 try {
                     const packet = core.loadPacket(root, directory + '/packet.json');
                     verdict = 'PENDING';
