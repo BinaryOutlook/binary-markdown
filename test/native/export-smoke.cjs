@@ -214,18 +214,19 @@ function harness(settings, owner) {
         });
         try {
             await send('Runtime.enable');
-            let contextId;
+            let contextId, contentOwner;
             lastEditorFrames = [];
             for (const context of contexts.filter(value => value.auxData?.isDefault)) {
                 const found = await send('Runtime.evaluate', {
                     expression: `({ editor:!!document.querySelector('#editor'), ready:document.getElementById('exportButton')?.dataset.exportReady, label:document.getElementById('exportButton')?.getAttribute('aria-label'), mode:document.documentElement.dataset.toolbarMode, loading:document.readyState, childFrames:Array.from(document.querySelectorAll('iframe')).map(frame=>frame.id) })`,
                     contextId: context.id, returnByValue: true
                 });
-                let frame = 'outer';
+                let frame = 'outer', frameOwner;
                 if (context.auxData.frameId !== target.id) {
                     // CDP identifies the owner even when older Electron hides
                     // window.frameElement across the JavaScript boundary.
                     const ownerNode = await send('DOM.getFrameOwner', { frameId: context.auxData.frameId });
+                    frameOwner = ownerNode.backendNodeId;
                     const { node } = await send('DOM.describeNode', { backendNodeId: ownerNode.backendNodeId });
                     const attributes = node.attributes || [];
                     for (let index = 0; index < attributes.length; index += 2) {
@@ -237,11 +238,28 @@ function harness(settings, owner) {
                 if (frame === 'active-frame' && found.result.value?.editor && found.result.value.ready === 'true') {
                     assert.equal(contextId, undefined, 'Only one active editor context is permitted');
                     contextId = context.id;
+                    contentOwner = frameOwner;
                 }
             }
             assert.ok(contextId, 'The active editor context must be ready');
             return {
                 send, close: () => socket.close(),
+                // Resolve the already verified active frame's owner through
+                // CDP. Older VS Code exposes this frame to CDP but not through
+                // Playwright's outer frame locator hierarchy.
+                contentFrameStyle: async style => {
+                    assert.ok(contentOwner, 'The active editor must have an identified owner');
+                    const { object } = await send('DOM.resolveNode', { backendNodeId: contentOwner });
+                    try {
+                        const result = await send('Runtime.callFunctionOn', {
+                            objectId: object.objectId,
+                            functionDeclaration: 'function(style) { const before = { maxWidth: this.style.maxWidth, maxHeight: this.style.maxHeight }; if (style) Object.assign(this.style, style); return before; }',
+                            arguments: [{ value: style || null }], returnByValue: true
+                        });
+                        if (result.exceptionDetails) throw new Error('Could not constrain the owned content frame');
+                        return result.result.value;
+                    } finally { await send('Runtime.releaseObject', { objectId: object.objectId }); }
+                },
                 evaluate: async expression => {
                     const result = await send('Runtime.evaluate', { expression, contextId, returnByValue: true, awaitPromise: true });
                     if (result.exceptionDetails) throw new Error(JSON.stringify(result.exceptionDetails));
@@ -1293,8 +1311,7 @@ async function insertMenuCase(h, owner, record) {
         await h.workbench(async page => {
             const frame = page.locator('iframe.webview:visible');
             const before = await frame.evaluate(node => ({ maxWidth: node.style.maxWidth, maxHeight: node.style.maxHeight }));
-            const contentFrame = page.frameLocator('iframe.webview:visible').locator('#active-frame');
-            const contentBefore = await contentFrame.evaluate(node => ({ maxWidth: node.style.maxWidth, maxHeight: node.style.maxHeight }));
+            const contentBefore = await connection.contentFrameStyle();
             try {
                 await frame.evaluate(node => {
                     node.style.maxWidth = '500px'; node.style.maxHeight = '450px';
@@ -1302,9 +1319,7 @@ async function insertMenuCase(h, owner, record) {
                 // VS Code can retain its inner content frame's old layout size
                 // after the outer host frame is constrained. Constrain both
                 // owned frames, then verify the actual editor viewport below.
-                await contentFrame.evaluate(node => {
-                    node.style.maxWidth = '500px'; node.style.maxHeight = '450px';
-                });
+                await connection.contentFrameStyle({ maxWidth: '500px', maxHeight: '450px' });
                 // The outer workbench and inner webview deliver resize at
                 // different times. Poll their current measurements; a snapshot
                 // taken before delivery can retain the previous window size.
@@ -1365,7 +1380,7 @@ async function insertMenuCase(h, owner, record) {
                 record('insert-link-second-prompt', { cancelledWithoutEdit: true });
                 record('insert-narrow-reachability', { ...size, everyAction: true, wholeCardKeyboardNavigation: true, savedContentVerified: true });
             } finally {
-                await contentFrame.evaluate((node, before) => Object.assign(node.style, before), contentBefore);
+                await connection.contentFrameStyle(contentBefore);
                 await frame.evaluate((node, before) => Object.assign(node.style, before), before);
             }
         });

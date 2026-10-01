@@ -61,7 +61,10 @@ async function prepare(page, section, item) {
     if (section === '01-canvas') {
         await loadDocument(page, id === 'empty' ? '' : CANVAS);
         if (id === 'focused') await page.locator('#editor p').first().click();
-        else await page.locator('#outlineTab').focus();
+        else await page.locator('#insertButton').focus();
+        // The rail may be hidden. A hidden tab cannot transfer actual focus,
+        // so verify the requested state through the live active element.
+        await page.waitForFunction(focused => document.getElementById('editor').contains(document.activeElement) === focused, id === 'focused');
     } else if (section === '02-toolbar') {
         await loadDocument(page, id === 'protected' ? '```javascript\nconst value = 42;\n```\n' : PROSE);
         if (!await page.locator('#contextToolbarToggle').isVisible()) await page.locator('#toolbarMore').click();
