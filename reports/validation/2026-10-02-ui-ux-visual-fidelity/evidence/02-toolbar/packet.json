@@ -1,0 +1,386 @@
+{
+  "schemaVersion": 1,
+  "sectionId": "02-toolbar",
+  "title": "Toolbar hierarchy and narrow-pane overflow",
+  "designCommit": "a798921f7e5a9b01a88360315b035a391f69da47",
+  "contractHash": "6a49fa68b56b31cae2ecb755cf2986d4dc9e20fc4f48b544e02c0560c95bb13c",
+  "designBrief": "Consistent minimalist Binary Markdown desktop-editor language. Flat off-white canvas #FAFAF8, pale neutral rail #F3F4F5, charcoal text #242830, one restrained blue accent #4266B0. For dark subjects use charcoal #1B1E26 and slate surfaces #272D38 with legible pale tokens and the same blue accent. Familiar system sans typography and monospace only for source. Crisp 1px dividers, 6px corner radii, 8px spacing increments, no decorative gradients, no glass, no giant cards, no marketing art, no invented logo. Preserve the real Markdown-editor identity and useful commands. This is a proposed static design concept, not a working product. Show one option only, with readable exact short labels and synthetic research-note content.",
+  "ownerAdjustments": [
+    "Contextual mode is optional and session-only; retain saved Full/Simple and complete command access.",
+    "Commands outside Insert use the separately selected Moderate palette."
+  ],
+  "targetRegions": [
+    {
+      "id": "toolbar",
+      "description": "Optional contextual toolbar mode: permanent essentials, modes/utilities and overflow."
+    },
+    {
+      "id": "context",
+      "description": "Compact selection formatting strip and reachable Moderate all-actions panel."
+    }
+  ],
+  "excludedRegions": [
+    "outline",
+    "authored canvas typography",
+    "Insert workspace",
+    "export panel interior",
+    "desktop chrome",
+    "reference caption bands and numbered pins"
+  ],
+  "obstructionException": "Excluded UI matters only if it clips or obstructs this target. Never grade its independent design.",
+  "criteria": [
+    {
+      "id": "C1",
+      "description": "Essential command hierarchy"
+    },
+    {
+      "id": "C2",
+      "description": "Compact near-selection tools"
+    },
+    {
+      "id": "C3",
+      "description": "Legible mode and utility actions"
+    }
+  ],
+  "requiredStates": [
+    "No selection",
+    "Selected prose",
+    "Protected/source contexts",
+    "Narrow overflow"
+  ],
+  "references": [
+    {
+      "path": ".vscode-test/visual-fidelity/references/02-toolbar-experimental.png",
+      "sha256": "f63cf1e70e556c1a2fc2c4ffd85c8f38707c1b2758de1571ee9665af8f45f1d6",
+      "width": 1536,
+      "height": 1024,
+      "bytes": 1273484,
+      "level": "Experimental",
+      "intent": "Explore a user-selectable context-aware toolbar: concise permanent Insert, Format, Visual/Source, Export controls; a contextual formatting strip near selected text; a searchable all-actions panel that stays keyboard reachable. Pins: 1 permanent essential commands; 2 selection-specific tools; 3 search exposes the complete command set. Show this as an optional workflow, not forced automatic personalization.",
+      "annotations": [
+        "Permanent essential commands",
+        "Selection-specific tools",
+        "Search exposes the complete command set"
+      ]
+    }
+  ],
+  "source": {
+    "commit": "9941d02028b4989a2af4d7647c6b972d11ff5529",
+    "dirty": true,
+    "productHash": "334c1575ab0be09973a26f60ff320f2ab673b05cc2538bcb6cef79f15096c344"
+  },
+  "capture": {
+    "kind": "production browser fixture",
+    "hostBoundary": "Synthetic test bridge; no installed-host or converter result is claimed.",
+    "browser": "Chromium 145.0.7632.6",
+    "node": "v24.21.0",
+    "inputHash": "0c35cc55c5aa77490c82a55f8e0ef8baea12d5342608d60b8009c6d14ae00afb",
+    "fixtureHash": "23c0726bf4671e05c7c6242815d292a5989ee4acc06821858c800a64c68360a1",
+    "deviceScaleFactor": 1
+  },
+  "cases": [
+    {
+      "id": "idle",
+      "state": "No selection",
+      "comparison": "Direct Experimental toolbar, optional session mode enabled without selection.",
+      "targetBounds": {
+        "x": 260,
+        "y": 0,
+        "width": 1180,
+        "height": 44.1875
+      },
+      "observedEditorFocus": false,
+      "inputHash": "0c35cc55c5aa77490c82a55f8e0ef8baea12d5342608d60b8009c6d14ae00afb",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "minimal",
+      "observedThemeTokens": {
+        "--bg-color": "#fafafa",
+        "--text-color": "#333333",
+        "--link-color": "#4266b0",
+        "--outline-active-color": "#4266b0",
+        "--selection-bg": "#d0d0d0"
+      },
+      "locale": "en-US",
+      "zoom": 1,
+      "images": [
+        {
+          "path": ".vscode-test/visual-review/02-toolbar/iteration-030/idle-full.png",
+          "sha256": "d2ea16ead9312459f38920d41590d7e0a84ca87af3c95691c079d5910edfb4c0",
+          "width": 1440,
+          "height": 1000,
+          "bytes": 68613
+        },
+        {
+          "path": ".vscode-test/visual-review/02-toolbar/iteration-030/idle-target.png",
+          "sha256": "2054aefcfe7630190f30f0d6a4b608b4fd361875a07ade41b1ab816af9a70a69",
+          "width": 1180,
+          "height": 44,
+          "bytes": 7336
+        }
+      ]
+    },
+    {
+      "id": "selection",
+      "state": "Selected prose",
+      "comparison": "Same mode with selected prose and compact contextual tools.",
+      "targetBounds": {
+        "x": 260,
+        "y": 0,
+        "width": 1180,
+        "height": 1000
+      },
+      "observedEditorFocus": true,
+      "inputHash": "0c35cc55c5aa77490c82a55f8e0ef8baea12d5342608d60b8009c6d14ae00afb",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "minimal",
+      "observedThemeTokens": {
+        "--bg-color": "#fafafa",
+        "--text-color": "#333333",
+        "--link-color": "#4266b0",
+        "--outline-active-color": "#4266b0",
+        "--selection-bg": "#d0d0d0"
+      },
+      "locale": "en-US",
+      "zoom": 1,
+      "images": [
+        {
+          "path": ".vscode-test/visual-review/02-toolbar/iteration-030/selection-full.png",
+          "sha256": "0e66047cc5c620a70c9f7442cc6becc507c3edb8e17f85212bef0b4aee9023a7",
+          "width": 1440,
+          "height": 1000,
+          "bytes": 71652
+        },
+        {
+          "path": ".vscode-test/visual-review/02-toolbar/iteration-030/selection-target.png",
+          "sha256": "4804994c0044184e8b20fa1e14261261cab46184eff03e01d5b282c5dde2e7b4",
+          "width": 1180,
+          "height": 1000,
+          "bytes": 53605
+        }
+      ]
+    },
+    {
+      "id": "actions",
+      "state": "No selection",
+      "comparison": "Direct Moderate companion: optional contextual mode retains searchable, grouped all-actions access with readable labels and shortcuts.",
+      "targetBounds": {
+        "x": 260,
+        "y": 48.1875,
+        "width": 360,
+        "height": 555.1875
+      },
+      "observedEditorFocus": false,
+      "inputHash": "0c35cc55c5aa77490c82a55f8e0ef8baea12d5342608d60b8009c6d14ae00afb",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "minimal",
+      "observedThemeTokens": {
+        "--bg-color": "#fafafa",
+        "--text-color": "#333333",
+        "--link-color": "#4266b0",
+        "--outline-active-color": "#4266b0",
+        "--selection-bg": "#d0d0d0"
+      },
+      "locale": "en-US",
+      "zoom": 1,
+      "images": [
+        {
+          "path": ".vscode-test/visual-review/02-toolbar/iteration-030/actions-full.png",
+          "sha256": "00ec0029bb6c8727f1f31fcfdfef445790ba045c9264b54aacc2ad716ab34adf",
+          "width": 1440,
+          "height": 1000,
+          "bytes": 85427
+        },
+        {
+          "path": ".vscode-test/visual-review/02-toolbar/iteration-030/actions-target.png",
+          "sha256": "3ab5284912f9d946f9385b1ee3a8030eea689eb26c0bc10166bb9c8f49001ee6",
+          "width": 360,
+          "height": 555,
+          "bytes": 28328
+        }
+      ]
+    },
+    {
+      "id": "protected",
+      "state": "Protected/source contexts",
+      "comparison": "Derived: protected code context cannot show prose formatting strip.",
+      "targetBounds": {
+        "x": 260,
+        "y": 0,
+        "width": 1180,
+        "height": 44.1875
+      },
+      "observedEditorFocus": true,
+      "inputHash": "cf12a0a50e46e7e2975734bb4389132cea731f22abb7be1fb639a4db7229ef54",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "minimal",
+      "observedThemeTokens": {
+        "--bg-color": "#fafafa",
+        "--text-color": "#333333",
+        "--link-color": "#4266b0",
+        "--outline-active-color": "#4266b0",
+        "--selection-bg": "#d0d0d0"
+      },
+      "locale": "en-US",
+      "zoom": 1,
+      "images": [
+        {
+          "path": ".vscode-test/visual-review/02-toolbar/iteration-030/protected-full.png",
+          "sha256": "c52fcb14cbe65ea551e96300b6aff0dd86576036d7b6e79824447ef1b24891ab",
+          "width": 1440,
+          "height": 1000,
+          "bytes": 32729
+        },
+        {
+          "path": ".vscode-test/visual-review/02-toolbar/iteration-030/protected-target.png",
+          "sha256": "bb501d66d99978e288802596c41169a7481ff4284d205c5b190e87353cd39009",
+          "width": 1180,
+          "height": 44,
+          "bytes": 7332
+        }
+      ]
+    },
+    {
+      "id": "source",
+      "state": "Protected/source contexts",
+      "comparison": "Derived: Source selected, visual-only actions communicate availability.",
+      "targetBounds": {
+        "x": 260,
+        "y": 0,
+        "width": 1180,
+        "height": 44.1875
+      },
+      "observedEditorFocus": false,
+      "inputHash": "0c35cc55c5aa77490c82a55f8e0ef8baea12d5342608d60b8009c6d14ae00afb",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "minimal",
+      "observedThemeTokens": {
+        "--bg-color": "#fafafa",
+        "--text-color": "#333333",
+        "--link-color": "#4266b0",
+        "--outline-active-color": "#4266b0",
+        "--selection-bg": "#d0d0d0"
+      },
+      "locale": "en-US",
+      "zoom": 1,
+      "images": [
+        {
+          "path": ".vscode-test/visual-review/02-toolbar/iteration-030/source-full.png",
+          "sha256": "158245d085f92e1c3f0935f8199749a39aa387b7697a82e9b47f412a115303e7",
+          "width": 1440,
+          "height": 1000,
+          "bytes": 64334
+        },
+        {
+          "path": ".vscode-test/visual-review/02-toolbar/iteration-030/source-target.png",
+          "sha256": "358550ce9294d1cf425062d49f0e78588822e02661c47545578dacb716a3cd25",
+          "width": 1180,
+          "height": 44,
+          "bytes": 7454
+        }
+      ]
+    },
+    {
+      "id": "narrow",
+      "state": "Narrow overflow",
+      "comparison": "Derived: essentials and utilities remain keyboard reachable through narrow overflow.",
+      "targetBounds": {
+        "x": 0,
+        "y": 0,
+        "width": 480,
+        "height": 44.1875
+      },
+      "observedEditorFocus": false,
+      "inputHash": "0c35cc55c5aa77490c82a55f8e0ef8baea12d5342608d60b8009c6d14ae00afb",
+      "viewport": {
+        "width": 480,
+        "height": 1000
+      },
+      "theme": "minimal",
+      "observedThemeTokens": {
+        "--bg-color": "#fafafa",
+        "--text-color": "#333333",
+        "--link-color": "#4266b0",
+        "--outline-active-color": "#4266b0",
+        "--selection-bg": "#d0d0d0"
+      },
+      "locale": "en-US",
+      "zoom": 1,
+      "images": [
+        {
+          "path": ".vscode-test/visual-review/02-toolbar/iteration-030/narrow-full.png",
+          "sha256": "541baca96f405773a768ac9eab3e8f77046e451cc0bcd239a881b53c497c4f3d",
+          "width": 480,
+          "height": 1000,
+          "bytes": 43882
+        },
+        {
+          "path": ".vscode-test/visual-review/02-toolbar/iteration-030/narrow-target.png",
+          "sha256": "0e6653a97266bafc65871846aeff3932573fe2584aabae0bfe88aa620c1a1f12",
+          "width": 480,
+          "height": 44,
+          "bytes": 4150
+        }
+      ]
+    },
+    {
+      "id": "overflow",
+      "state": "Narrow overflow",
+      "comparison": "Derived: overflow items are labeled and reachable.",
+      "targetBounds": {
+        "x": 172,
+        "y": 40.09375,
+        "width": 300,
+        "height": 123.1875
+      },
+      "observedEditorFocus": false,
+      "inputHash": "0c35cc55c5aa77490c82a55f8e0ef8baea12d5342608d60b8009c6d14ae00afb",
+      "viewport": {
+        "width": 480,
+        "height": 1000
+      },
+      "theme": "minimal",
+      "observedThemeTokens": {
+        "--bg-color": "#fafafa",
+        "--text-color": "#333333",
+        "--link-color": "#4266b0",
+        "--outline-active-color": "#4266b0",
+        "--selection-bg": "#d0d0d0"
+      },
+      "locale": "en-US",
+      "zoom": 1,
+      "images": [
+        {
+          "path": ".vscode-test/visual-review/02-toolbar/iteration-030/overflow-full.png",
+          "sha256": "3a5b0a883af5af305de2a4082e016ef5f98cd9e085ba9f68d6744c60ec834e68",
+          "width": 480,
+          "height": 1000,
+          "bytes": 48026
+        },
+        {
+          "path": ".vscode-test/visual-review/02-toolbar/iteration-030/overflow-target.png",
+          "sha256": "7d21f62db68f9e069ea1488fee08017c10befdef378e6e201902e42b89a7996b",
+          "width": 300,
+          "height": 123,
+          "bytes": 5853
+        }
+      ]
+    }
+  ],
+  "priorFailures": [],
+  "packetDigest": "82fd2d56aaae42d16db7f0fd8de703d5c608466c00700204b81636403d6d28ac"
+}

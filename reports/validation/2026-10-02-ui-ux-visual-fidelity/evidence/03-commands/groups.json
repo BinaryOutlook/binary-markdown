@@ -1,0 +1,278 @@
+{
+  "schemaVersion": 2,
+  "parentPacketDigest": "c9db750dab4b520e21da766bf624718c7bfd95ba813d254e93c1c97597b35d3b",
+  "groups": [
+    {
+      "caseIds": [
+        "all",
+        "category"
+      ],
+      "evaluation": {
+        "packetDigest": "c9db750dab4b520e21da766bf624718c7bfd95ba813d254e93c1c97597b35d3b",
+        "sectionId": "03-commands",
+        "verdict": "PASS",
+        "summary": "Both submitted Insert workspace states are fully visible and visually coherent. The All view preserves a balanced category rail, readable command hierarchy, separate shortcut hints, and useful table/equation/code previews. The Equations category clearly shows selection and retains strong visual previews. This pass applies only to the submitted all and category cases; omitted checklist states remain pending elsewhere.",
+        "openedImages": [
+          "5ed871f5a099692cefa9ca2c9b248ee365d1f97e901b378a186376882cffc273",
+          "a332410af0c4d892c3ce050f6aafd091c02255a84ebdccbef0c979ceed5729d0",
+          "fd9f413a7de2ab191c1fce424a9f85f68034b170abadcd3f144576968480902c",
+          "37478da2e74dcbb1c6190ac4d917648078c9f6b1f481cfe1aee4434f38cb791d",
+          "ab992de229416bceb20255d55385594b27b3465e1df16e6396db4f6545b3e198",
+          "3f0f31cb4bb77b5471edea91a43f751088bd421623ab0c390c3eeb54d0ca4177"
+        ],
+        "caseAssessments": [
+          {
+            "caseId": "all",
+            "assessable": true,
+            "criteria": [
+              {
+                "criterionId": "C1",
+                "result": "met",
+                "evidence": "The full and target renders show the complete Insert workspace with a proportionate five-item category rail and eight consistently sized command rows. Search, categories, and results form a clear two-column hierarchy without clipping or obstruction."
+              },
+              {
+                "criterionId": "C2",
+                "result": "met",
+                "evidence": "Icons, titles, and concise descriptions are legible throughout. Keyboard hints such as Cmd+T, Cmd+Shift+K, Cmd+K, and Cmd+Shift+I occupy distinct right-edge badges rather than merging with descriptions or previews; commands without shortcuts use a separate dash badge."
+              },
+              {
+                "criterionId": "C3",
+                "result": "met",
+                "evidence": "Table has a recognizable grid preview, Inline Equation and Math Block use rendered mathematical previews, and Code Block shows syntax-styled source. Link, image, Mermaid, and contents previews are also distinct and readable."
+              }
+            ]
+          },
+          {
+            "caseId": "category",
+            "assessable": true,
+            "criteria": [
+              {
+                "criterionId": "C1",
+                "result": "met",
+                "evidence": "The Equations selection is clearly highlighted in the retained category rail, and the two filtered rows are evenly spaced and aligned within the complete target region."
+              },
+              {
+                "criterionId": "C2",
+                "result": "met",
+                "evidence": "Both equation commands retain readable sigma icons, titles, and descriptions. Their right-edge dash badges remain visually separate from the preview surfaces."
+              },
+              {
+                "criterionId": "C3",
+                "result": "met",
+                "evidence": "Inline Equation visibly renders E = mc², while Math Block renders a stacked fraction, making the distinction between inline and display insertion immediately understandable."
+              }
+            ]
+          }
+        ],
+        "discrepancies": [],
+        "priorResolutions": [],
+        "missingEvidence": []
+      },
+      "error": null
+    },
+    {
+      "caseIds": [
+        "search",
+        "empty"
+      ],
+      "evaluation": {
+        "packetDigest": "c9db750dab4b520e21da766bf624718c7bfd95ba813d254e93c1c97597b35d3b",
+        "sectionId": "03-commands",
+        "verdict": "PASS",
+        "summary": "Both submitted Insert workspace states are complete, readable, and visually consistent with the Experimental concept. The results state preserves category navigation, command detail, a distinct shortcut, and a compact code preview; the empty state retains the same composition with clear recovery guidance. This pass applies only to the submitted search and empty cases.",
+        "openedImages": [
+          "5ed871f5a099692cefa9ca2c9b248ee365d1f97e901b378a186376882cffc273",
+          "a332410af0c4d892c3ce050f6aafd091c02255a84ebdccbef0c979ceed5729d0",
+          "4de34722b5fa1a24d255117cd4fa92eed0721ef167fe76b8c21498be226ea3b1",
+          "681fd5a0d8f2f49b505a9cf3fe13027a384489d2a705f5883f377388dfe1853a",
+          "3eeae0f37975e667c512c01264b3ff17f1cb7c9f9c49e5133e0c44ef3536f6d0",
+          "0a3bcc09a8d8d874000a0384b4dfa88cb645f604f734de78a7b65f2f920037a3"
+        ],
+        "caseAssessments": [
+          {
+            "caseId": "search",
+            "assessable": true,
+            "criteria": [
+              {
+                "criterionId": "C1",
+                "result": "met",
+                "evidence": "The complete target shows a balanced two-column workspace: a stable category rail at left and one spacious, clearly bounded matching command row at right."
+              },
+              {
+                "criterionId": "C2",
+                "result": "met",
+                "evidence": "The Code Block icon, title, description, monospace preview, and Cmd+Shift+K shortcut are legible and visually separated; the focused search query and Clear search control are also clear."
+              },
+              {
+                "criterionId": "C3",
+                "result": "met",
+                "evidence": "The matching Code Block row includes a compact but readable rendered code sample, visually distinct from its title, description, and shortcut."
+              }
+            ]
+          },
+          {
+            "caseId": "empty",
+            "assessable": true,
+            "criteria": [
+              {
+                "criterionId": "C1",
+                "result": "met",
+                "evidence": "The empty state retains the same balanced search header, category rail, divider, and main results area without clipping or obstruction."
+              },
+              {
+                "criterionId": "C2",
+                "result": "met",
+                "evidence": "The search query, category icons and labels, centered “No matching actions” message, suggested alternatives, and both Clear search controls are readable and distinctly grouped."
+              },
+              {
+                "criterionId": "C3",
+                "result": "met",
+                "evidence": "No command preview is appropriate in this explicit no-results state; the vacant results area is replaced by clear guidance and an available recovery action without implying a valid preview."
+              }
+            ]
+          }
+        ],
+        "discrepancies": [],
+        "priorResolutions": [],
+        "missingEvidence": []
+      },
+      "error": null
+    },
+    {
+      "caseIds": [
+        "unavailable",
+        "narrow"
+      ],
+      "evaluation": {
+        "packetDigest": "c9db750dab4b520e21da766bf624718c7bfd95ba813d254e93c1c97597b35d3b",
+        "sectionId": "03-commands",
+        "verdict": "PASS",
+        "summary": "Both submitted states meet the section’s visual criteria. The unavailable state preserves the full category-and-command workspace, clearly exposes protected-context reasons, retains separate shortcut badges, and shows useful previews. The narrow state compacts categories above the command list, keeps search and recovery controls visible, presents five complete rows without clipping, and provides clear internal pagination for the remaining commands.",
+        "openedImages": [
+          "5ed871f5a099692cefa9ca2c9b248ee365d1f97e901b378a186376882cffc273",
+          "a332410af0c4d892c3ce050f6aafd091c02255a84ebdccbef0c979ceed5729d0",
+          "34b6fa0a036c2f6b28040fc381784358350ceb606b57a6e5efee2cd934cabad1",
+          "f5a88a83ff00b8c921452a10a01d739842ba396de32a53665532450af962bd70",
+          "7bdc83aaa816eea9f85a0e7b98e7bc6cf0e1df36ddf665100794cfdd4fe95d40",
+          "24031d54bf6eb74fa6348c333010828ed610c52c2baf2bf87d3e817c52c8243f"
+        ],
+        "caseAssessments": [
+          {
+            "caseId": "unavailable",
+            "assessable": true,
+            "criteria": [
+              {
+                "criterionId": "C1",
+                "result": "met",
+                "evidence": "The complete target shows a balanced left category rail and eight consistently sized command rows with orderly spacing and alignment."
+              },
+              {
+                "criterionId": "C2",
+                "result": "met",
+                "evidence": "Icons, command titles, protected-context explanations, and shortcut badges are readable and visually separated. Unavailable commands without shortcuts use a distinct dash badge."
+              },
+              {
+                "criterionId": "C3",
+                "result": "met",
+                "evidence": "Table, inline equation, code, math, link, image, Mermaid, and table-of-contents previews remain visible and recognizable despite the unavailable state."
+              }
+            ]
+          },
+          {
+            "caseId": "narrow",
+            "assessable": true,
+            "criteria": [
+              {
+                "criterionId": "C1",
+                "result": "met",
+                "evidence": "Categories compact into a wrapped horizontal group above the results, while five command cards retain consistent spacing and balanced proportions within the narrow target."
+              },
+              {
+                "criterionId": "C2",
+                "result": "met",
+                "evidence": "All visible icons, titles, descriptions, and shortcut badges are legible and unclipped; search, Clear search, and More commands remain clearly available."
+              },
+              {
+                "criterionId": "C3",
+                "result": "met",
+                "evidence": "The visible table, inline-equation, code-block, math-block, and link previews are readable, appropriately scaled, and preserve their distinct visual forms."
+              }
+            ]
+          }
+        ],
+        "discrepancies": [],
+        "priorResolutions": [],
+        "missingEvidence": []
+      },
+      "error": null
+    },
+    {
+      "caseIds": [
+        "narrow-end",
+        "palette"
+      ],
+      "evaluation": {
+        "packetDigest": "c9db750dab4b520e21da766bf624718c7bfd95ba813d254e93c1c97597b35d3b",
+        "sectionId": "03-commands",
+        "verdict": "PASS",
+        "summary": "Both submitted states are visually assessable and satisfy their comparison contracts. The narrow workspace retains search and category controls while fully presenting the final Mermaid and table-of-contents commands with readable previews and clear internal pagination/scroll affordances. The Action Palette presents two relevant table results in a compact grouped layout with readable titles, descriptions, icons, selection state, and a separate shortcut where applicable.",
+        "openedImages": [
+          "5ed871f5a099692cefa9ca2c9b248ee365d1f97e901b378a186376882cffc273",
+          "a332410af0c4d892c3ce050f6aafd091c02255a84ebdccbef0c979ceed5729d0",
+          "92d31ef885d1bc466c396c2fe802949cc4412561bf7c9e261afb144e19d17eea",
+          "e9958abe4a4f10fb6e0da11866e96b631a494dfc80bd7e9a0a1342a95d240844",
+          "1079407b2fcdb9ba1d0ae97e17ed9c45a17e93a76c995a62bd54503c15d1ce8d",
+          "76a4dd63497996a834b21219fc0c7b381173da9c5fcd2325a6088bb2e4c45f24"
+        ],
+        "caseAssessments": [
+          {
+            "caseId": "narrow-end",
+            "assessable": true,
+            "criteria": [
+              {
+                "criterionId": "C1",
+                "result": "met",
+                "evidence": "The target visibly retains the focused search field and compact category strip above four evenly spaced, complete command cards. The Mermaid and table-of-contents rows are fully visible, and the footer clearly indicates the internal position as 5–8 / 8 with Previous commands and More commands affordances."
+              },
+              {
+                "criterionId": "C2",
+                "result": "met",
+                "evidence": "Link, image, Mermaid, and contents icons are distinct; every title and description is readable. Cmd+K and Cmd+Shift+I appear as separate shortcut badges, while commands without shortcuts show a separate dash badge."
+              },
+              {
+                "criterionId": "C3",
+                "result": "met",
+                "evidence": "The scrolled narrow state shows useful, legible command previews: Markdown link syntax, a visual image placeholder, Mermaid source structure, and a generated hierarchical contents outline. No required row or preview is clipped."
+              }
+            ]
+          },
+          {
+            "caseId": "palette",
+            "assessable": true,
+            "criteria": [
+              {
+                "criterionId": "C1",
+                "result": "met",
+                "evidence": "The compact palette preserves a clear search-to-category-to-results hierarchy. The table query yields exactly two balanced rows under the INSERT group, with the selected table-of-contents row clearly distinguished."
+              },
+              {
+                "criterionId": "C2",
+                "result": "met",
+                "evidence": "Both results have readable list/table icons, titles, and concise purpose descriptions. The Insert Table keyboard hint is isolated at the row edge as a separate Cmd+T label rather than mixed into its description."
+              },
+              {
+                "criterionId": "C3",
+                "result": "met",
+                "evidence": "The palette correctly omits insertion previews under this case’s Moderate comparison contract; the visible table-related commands remain identifiable through their icons, names, and descriptions, while previews remain reserved for Insert."
+              }
+            ]
+          }
+        ],
+        "discrepancies": [],
+        "priorResolutions": [],
+        "missingEvidence": []
+      },
+      "error": null
+    }
+  ]
+}

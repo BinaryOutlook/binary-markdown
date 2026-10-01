@@ -16,12 +16,13 @@ These records preserve observations about particular revisions and environments.
 
 | Date | Plan | Scope and status |
 | --- | --- | --- |
-| 2026-10-01 | [Scoped AI visual review system](plans/2026-10-01-ui-ux-visual-fidelity/system-design.md) | Authorized builder/evaluator loop, fixed chosen references, section-only verdicts, and executable evidence design; implementation and new product verdicts follow separately |
+| 2026-10-01 | [Scoped AI visual review system](plans/2026-10-01-ui-ux-visual-fidelity/system-design.md) | System design retained in the first task commit; the [implemented workflow](../docs/testing/visual-review.md) and dated validation report record subsequent execution |
 
 ## Validation
 
 | Recorded scope | Report | Evidence boundary |
 | --- | --- | --- |
+| 2026-10-02 scoped AI visual fidelity | [Chosen concepts, current renders and independent verdicts](validation/2026-10-02-ui-ux-visual-fidelity/report.md) | Fixed artwork, all 82 required visual cases, retained iteration history, exact development build and separate functional/security/installed-host evidence; owner acceptance remains pending |
 | 2026-10-01 selected UI/UX implementation | [Selected designs, screenshots, and security audit](validation/2026-10-01-selected-ui-ux/report.md) | All 12 selected directions, synthetic browser visuals, local regression results, scoped security review, and pending maintainer acceptance |
 | 2026-09-29 0.4.1 readiness draft | [Validation and issue-closure recommendations](validation/2026-09-29-0.4.1-readiness.md) | Exact PR #91 source and development package, passing CI, maintainer-reported manual checks, and unresolved acceptance; not a 0.4.1 release artifact |
 | 2026-09-21 DOCX reader checkpoint | [Accepted scope and reader evidence](validation/2026-09-21-docx-reader-checkpoint.md) | Native paragraphs retained; two named readers, reproducible fixtures and explicit acceptance status |

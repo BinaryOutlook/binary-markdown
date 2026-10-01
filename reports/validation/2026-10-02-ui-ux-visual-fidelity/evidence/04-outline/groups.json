@@ -1,0 +1,207 @@
+{
+  "schemaVersion": 2,
+  "parentPacketDigest": "67d8ff35ca8e674bde501c006981a75f08d3f4825c4c4896e95460ebd72fdc39",
+  "groups": [
+    {
+      "caseIds": [
+        "nested",
+        "long"
+      ],
+      "evaluation": {
+        "packetDigest": "67d8ff35ca8e674bde501c006981a75f08d3f4825c4c4896e95460ebd72fdc39",
+        "sectionId": "04-outline",
+        "verdict": "PASS",
+        "summary": "Both submitted rail states visibly satisfy the immutable outline concept. The hierarchy remains legible through indentation and wrapping, the Outline and Document tabs are explicit, the active Findings row carries a thin blue reading-position cue, and document statistics plus section progress are consolidated in one footer area. This pass applies only to the submitted nested and long-heading cases.",
+        "openedImages": [
+          "604360efc429d7ef4aad3ddde5d1a4d134fcf07673cf26cdde42ffc59bb70808",
+          "3e17506f0aaddeb9f029e39362a381188fc14d7400a26d9b1e690a6656556677",
+          "369b0266c62dd58585f0c4ba7ea91abb9a4f1cc6750216220a5b1b4b400284c0",
+          "6de84429826ff95a04d930726fec62fae7000bcc6cb81447b8d10c14b856005a",
+          "aaeb9d60192d2b770943c203a17a7a04252af0a9bee27d2d034a5529c3807bd2"
+        ],
+        "caseAssessments": [
+          {
+            "caseId": "nested",
+            "assessable": true,
+            "criteria": [
+              {
+                "criterionId": "C1",
+                "result": "met",
+                "evidence": "The current nested full and target renders show explicit Outline and Document tabs and a readable semantic hierarchy: Research notes is the root, Background and Findings are aligned as peer sections, and the long subsection, Observations, and Study 1–8 entries retain progressively indented levels."
+              },
+              {
+                "criterionId": "C2",
+                "result": "met",
+                "evidence": "The active Findings row is visibly marked by a restrained thin blue line at the rail's left edge, paired with blue active text and a pale selection surface."
+              },
+              {
+                "criterionId": "C3",
+                "result": "met",
+                "evidence": "A single organized footer contains the document title, word/character/line counts, one progress bar, and the 5 / 13 sections value; it is separated from the navigation by a crisp divider and does not obstruct the tree."
+              }
+            ]
+          },
+          {
+            "caseId": "long",
+            "assessable": true,
+            "criteria": [
+              {
+                "criterionId": "C1",
+                "result": "met",
+                "evidence": "The current long-heading full and target renders retain explicit Outline and Document tabs. The deliberately long heading wraps cleanly across four lines while preserving its indentation beneath Background, with Observations remaining visibly nested below it and Findings remaining a peer section."
+              },
+              {
+                "criterionId": "C2",
+                "result": "met",
+                "evidence": "The active Findings row retains the thin blue left-edge reading cue, blue label, and pale active background in both the full and target captures."
+              },
+              {
+                "criterionId": "C3",
+                "result": "met",
+                "evidence": "The rail uses one consolidated footer for the Research notes label, 16-word/157-character/11-line statistics, progress bar, and 5 / 5 sections status; the area is complete and unobstructed."
+              }
+            ]
+          }
+        ],
+        "discrepancies": [],
+        "priorResolutions": [],
+        "missingEvidence": []
+      },
+      "error": null
+    },
+    {
+      "caseIds": [
+        "document",
+        "outline"
+      ],
+      "evaluation": {
+        "packetDigest": "67d8ff35ca8e674bde501c006981a75f08d3f4825c4c4896e95460ebd72fdc39",
+        "sectionId": "04-outline",
+        "verdict": "PASS",
+        "summary": "Both submitted tab states visibly satisfy the rail concept: explicit Outline/Document modes, clear current-position cues, readable navigation including wrapped hierarchical headings, and a single compact footer containing document statistics and section progress. This pass applies only to the submitted document and outline cases.",
+        "openedImages": [
+          "604360efc429d7ef4aad3ddde5d1a4d134fcf07673cf26cdde42ffc59bb70808",
+          "8d07d58e7989a272141bd4d0a72cfce489e45d5c51d9d5b026c324da771ec871",
+          "36dfaa985e77653068c01b4c388b90d85505b786362c4dd969e52db9aa39b1e1",
+          "3e17506f0aaddeb9f029e39362a381188fc14d7400a26d9b1e690a6656556677",
+          "369b0266c62dd58585f0c4ba7ea91abb9a4f1cc6750216220a5b1b4b400284c0"
+        ],
+        "caseAssessments": [
+          {
+            "caseId": "document",
+            "assessable": true,
+            "criteria": [
+              {
+                "criterionId": "C1",
+                "result": "met",
+                "evidence": "The full and target renders show explicit Outline and Document tabs with Document visibly active. The compact section list remains readable and provides direct navigation from Research notes through Background, Findings, and Study 1–8."
+              },
+              {
+                "criterionId": "C2",
+                "result": "met",
+                "evidence": "A thin blue vertical cue appears beside “Reading position: Findings,” and Findings has a restrained blue leading edge within its selected row, clearly tying the navigation state to the visible document position."
+              },
+              {
+                "criterionId": "C3",
+                "result": "met",
+                "evidence": "The bottom rail contains one consolidated footer with the document title, word/character/line counts, a single progress bar, “5 / 13 sections,” and compact utility controls; no duplicate statistics area is visible."
+              }
+            ]
+          },
+          {
+            "caseId": "outline",
+            "assessable": true,
+            "criteria": [
+              {
+                "criterionId": "C1",
+                "result": "met",
+                "evidence": "The full and target renders show explicit Outline and Document tabs with Outline visibly active. Heading levels are communicated through indentation, and the long heading wraps across several lines while retaining its level beneath Background; Observations, Findings, and Study 1–8 remain legible in the hierarchy."
+              },
+              {
+                "criterionId": "C2",
+                "result": "met",
+                "evidence": "The active Findings row is marked by a thin blue left rule and blue label within a restrained selection surface, providing a clear reading-position cue without obscuring the hierarchy."
+              },
+              {
+                "criterionId": "C3",
+                "result": "met",
+                "evidence": "A single organized footer consolidates the title, word/character/line totals, progress bar, “5 / 13 sections,” and utility icons at the bottom of the rail, leaving the navigation area uncluttered."
+              }
+            ]
+          }
+        ],
+        "discrepancies": [],
+        "priorResolutions": [],
+        "missingEvidence": []
+      },
+      "error": null
+    },
+    {
+      "caseIds": [
+        "scrolled",
+        "narrow"
+      ],
+      "evaluation": {
+        "packetDigest": "67d8ff35ca8e674bde501c006981a75f08d3f4825c4c4896e95460ebd72fdc39",
+        "sectionId": "04-outline",
+        "verdict": "PASS",
+        "summary": "Both submitted states visibly satisfy the rail criteria. The scrolled view marks Study 5 consistently with the document position, while the narrow overlay preserves the complete hierarchy, explicit tabs, active-section cue, compact statistics/progress footer, and a visible drawer control.",
+        "openedImages": [
+          "604360efc429d7ef4aad3ddde5d1a4d134fcf07673cf26cdde42ffc59bb70808",
+          "4b28c492df6c21c3a7458c7490f97ec4c93e0ac6f551cdaf72d007a9fe815813",
+          "0b6080a40f22e0c44516179386bbf6ad19fff3ee5fbe28367f4a81e19125f753",
+          "fe3ec8c38e5fff82cf042180675a6984b885fb4f1b12e0bb645e6169b85b5893",
+          "159588c76f7447db4b39cae79683d4b929867b75da1c2b96b0e7dd8495a2c65a"
+        ],
+        "caseAssessments": [
+          {
+            "caseId": "scrolled",
+            "assessable": true,
+            "criteria": [
+              {
+                "criterionId": "C1",
+                "result": "met",
+                "evidence": "The target shows explicit Outline and Document tabs and a readable semantic hierarchy: Research notes, Background, a wrapped nested heading, Observations, Findings, and Studies 1–8. Indentation remains clear through the long wrapped label."
+              },
+              {
+                "criterionId": "C2",
+                "result": "met",
+                "evidence": "Study 5 is marked by a restrained thin blue left cue and blue label on a pale selection row. The full render visibly places Study 5 at the current reading position, so the rail and document agree."
+              },
+              {
+                "criterionId": "C3",
+                "result": "met",
+                "evidence": "A single organized footer contains the document title, word/character/line counts, one progress bar, and the 10 / 13 sections label, with utilities grouped below and no duplicate statistics area."
+              }
+            ]
+          },
+          {
+            "caseId": "narrow",
+            "assessable": true,
+            "criteria": [
+              {
+                "criterionId": "C1",
+                "result": "met",
+                "evidence": "The 260px overlay retains explicit Outline and Document tabs, the complete nested heading hierarchy, readable wrapping for the long heading, and a visible drawer toggle at the upper right."
+              },
+              {
+                "criterionId": "C2",
+                "result": "met",
+                "evidence": "Findings is visibly identified by the thin blue left marker, blue text, and pale active row; the full narrow render shows the corresponding Findings content behind the overlay."
+              },
+              {
+                "criterionId": "C3",
+                "result": "met",
+                "evidence": "The narrow overlay preserves one compact footer with title, word/character/line statistics, progress bar, 5 / 13 sections status, and grouped utilities without clipping or obstructing required rail content."
+              }
+            ]
+          }
+        ],
+        "discrepancies": [],
+        "priorResolutions": [],
+        "missingEvidence": []
+      },
+      "error": null
+    }
+  ]
+}

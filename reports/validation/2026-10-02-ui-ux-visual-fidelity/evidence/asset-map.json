@@ -1,0 +1,894 @@
+{
+  "reports/validation/2026-10-01-selected-ui-ux/images/01-canvas-outline.jpg": {
+    "publishedPath": "images/before/01-canvas-outline.jpg",
+    "sha256": "faf28a1a0a79864e499b0c571c7c9ae0a561c7d51f9be3a808a78160d0a2064e"
+  },
+  ".vscode-test/visual-fidelity/references/01-canvas-recommended.png": {
+    "publishedPath": "images/generated/01-canvas-recommended.png",
+    "sha256": "05a2b26218a1bdb28cc467168c188809a8898c352c9b5124a42dbce9fa82008d"
+  },
+  ".vscode-test/visual-review/01-canvas/iteration-027/packet.json": {
+    "publishedPath": "evidence/01-canvas/packet.json",
+    "sha256": "8f6654d43d395b5891dc34b46dc1430c4fbb41a62999cf42948cf25feed34154"
+  },
+  ".vscode-test/visual-review/01-canvas/iteration-027/receipt.json": {
+    "publishedPath": "evidence/01-canvas/receipt.json",
+    "sha256": "2808545c1aa2144aced49666ddc9007624007609d941d37aea66e91e028c67c7"
+  },
+  ".vscode-test/visual-review/01-canvas/iteration-027/groups.json": {
+    "publishedPath": "evidence/01-canvas/groups.json",
+    "sha256": "0bbd0844b8ecd219c43e3dd4573d2ff10d249fc652d7583f14a2a154e9e2ed09"
+  },
+  ".vscode-test/visual-review/01-canvas/iteration-027/focused-full.png": {
+    "publishedPath": "images/current/01-canvas/focused-full.png",
+    "sha256": "8fb5ed955f5b5062381c6d850d4237e5c25018318f3cb574f6c4473ff0adca6a"
+  },
+  ".vscode-test/visual-review/01-canvas/iteration-027/focused-target.png": {
+    "publishedPath": "images/current/01-canvas/focused-target.png",
+    "sha256": "72b914e08c027727076b550f3aa8ecff3f11eb497468c466b4242dff818301ce"
+  },
+  ".vscode-test/visual-review/01-canvas/iteration-027/unfocused-full.png": {
+    "publishedPath": "images/current/01-canvas/unfocused-full.png",
+    "sha256": "9920c886186b08c3e7a1594f459bc71635611711434ac03b4c66fab31dfb19d8"
+  },
+  ".vscode-test/visual-review/01-canvas/iteration-027/unfocused-target.png": {
+    "publishedPath": "images/current/01-canvas/unfocused-target.png",
+    "sha256": "e029b292a4d875eb7d39e3ab647fb552557b16015b611413de293a91cf7a29b0"
+  },
+  ".vscode-test/visual-review/01-canvas/iteration-027/empty-full.png": {
+    "publishedPath": "images/current/01-canvas/empty-full.png",
+    "sha256": "1d24592f4475d8ef4e890f2589e28a1fb09c8d98939bedf94409c5721926128e"
+  },
+  ".vscode-test/visual-review/01-canvas/iteration-027/empty-target.png": {
+    "publishedPath": "images/current/01-canvas/empty-target.png",
+    "sha256": "04a8beba4f94f69b30fede91e7940e0ae102bfbe54f410ded3fc03928d2fac0b"
+  },
+  ".vscode-test/visual-review/01-canvas/iteration-027/short-full.png": {
+    "publishedPath": "images/current/01-canvas/short-full.png",
+    "sha256": "8dbef9cf8c54f9239653228f7834073316ad5ee4c4c541d5f216f06961ffa943"
+  },
+  ".vscode-test/visual-review/01-canvas/iteration-027/short-target.png": {
+    "publishedPath": "images/current/01-canvas/short-target.png",
+    "sha256": "7381727ec78f20adbd71bf7f0c12023f4bf5fbf5085cb32a69738a1fd1d2416e"
+  },
+  ".vscode-test/visual-review/01-canvas/iteration-027/narrow-full.png": {
+    "publishedPath": "images/current/01-canvas/narrow-full.png",
+    "sha256": "4d7e256b2c41c88979ebca0249f2888e0621b252ee2514c9458157bd122717ab"
+  },
+  ".vscode-test/visual-review/01-canvas/iteration-027/narrow-target.png": {
+    "publishedPath": "images/current/01-canvas/narrow-target.png",
+    "sha256": "9305aaa44b257108f75942c3c0ab2182314c6e27b3cdf9166fc5bd0c3c89f5b2"
+  },
+  "reports/validation/2026-10-01-selected-ui-ux/images/08-contextual-toolbar.jpg": {
+    "publishedPath": "images/before/08-contextual-toolbar.jpg",
+    "sha256": "9d3fa32e006921640a6c80a53c2a07f44124a7420c3c83366ae3edd30b074001"
+  },
+  ".vscode-test/visual-fidelity/references/02-toolbar-experimental.png": {
+    "publishedPath": "images/generated/02-toolbar-experimental.png",
+    "sha256": "f63cf1e70e556c1a2fc2c4ffd85c8f38707c1b2758de1571ee9665af8f45f1d6"
+  },
+  ".vscode-test/visual-review/02-toolbar/iteration-030/packet.json": {
+    "publishedPath": "evidence/02-toolbar/packet.json",
+    "sha256": "15ccf6c61b9777a16f69e00262abc043d02e6d711b6c1ca578d607777c94ef2d"
+  },
+  ".vscode-test/visual-review/02-toolbar/iteration-030/receipt.json": {
+    "publishedPath": "evidence/02-toolbar/receipt.json",
+    "sha256": "bf558223d29550a81e2dcd050e388bc967601f8424500d8d22f0e0c21a862cf3"
+  },
+  ".vscode-test/visual-review/02-toolbar/iteration-030/groups.json": {
+    "publishedPath": "evidence/02-toolbar/groups.json",
+    "sha256": "30b72dc8b1d30b003caa6938e3cf1aacda5ec10110f12ffd6d3561fec6a77cb1"
+  },
+  ".vscode-test/visual-review/02-toolbar/iteration-030/idle-full.png": {
+    "publishedPath": "images/current/02-toolbar/idle-full.png",
+    "sha256": "d2ea16ead9312459f38920d41590d7e0a84ca87af3c95691c079d5910edfb4c0"
+  },
+  ".vscode-test/visual-review/02-toolbar/iteration-030/idle-target.png": {
+    "publishedPath": "images/current/02-toolbar/idle-target.png",
+    "sha256": "2054aefcfe7630190f30f0d6a4b608b4fd361875a07ade41b1ab816af9a70a69"
+  },
+  ".vscode-test/visual-review/02-toolbar/iteration-030/selection-full.png": {
+    "publishedPath": "images/current/02-toolbar/selection-full.png",
+    "sha256": "0e66047cc5c620a70c9f7442cc6becc507c3edb8e17f85212bef0b4aee9023a7"
+  },
+  ".vscode-test/visual-review/02-toolbar/iteration-030/selection-target.png": {
+    "publishedPath": "images/current/02-toolbar/selection-target.png",
+    "sha256": "4804994c0044184e8b20fa1e14261261cab46184eff03e01d5b282c5dde2e7b4"
+  },
+  ".vscode-test/visual-review/02-toolbar/iteration-030/actions-full.png": {
+    "publishedPath": "images/current/02-toolbar/actions-full.png",
+    "sha256": "00ec0029bb6c8727f1f31fcfdfef445790ba045c9264b54aacc2ad716ab34adf"
+  },
+  ".vscode-test/visual-review/02-toolbar/iteration-030/actions-target.png": {
+    "publishedPath": "images/current/02-toolbar/actions-target.png",
+    "sha256": "3ab5284912f9d946f9385b1ee3a8030eea689eb26c0bc10166bb9c8f49001ee6"
+  },
+  ".vscode-test/visual-review/02-toolbar/iteration-030/protected-full.png": {
+    "publishedPath": "images/current/02-toolbar/protected-full.png",
+    "sha256": "c52fcb14cbe65ea551e96300b6aff0dd86576036d7b6e79824447ef1b24891ab"
+  },
+  ".vscode-test/visual-review/02-toolbar/iteration-030/protected-target.png": {
+    "publishedPath": "images/current/02-toolbar/protected-target.png",
+    "sha256": "bb501d66d99978e288802596c41169a7481ff4284d205c5b190e87353cd39009"
+  },
+  ".vscode-test/visual-review/02-toolbar/iteration-030/source-full.png": {
+    "publishedPath": "images/current/02-toolbar/source-full.png",
+    "sha256": "158245d085f92e1c3f0935f8199749a39aa387b7697a82e9b47f412a115303e7"
+  },
+  ".vscode-test/visual-review/02-toolbar/iteration-030/source-target.png": {
+    "publishedPath": "images/current/02-toolbar/source-target.png",
+    "sha256": "358550ce9294d1cf425062d49f0e78588822e02661c47545578dacb716a3cd25"
+  },
+  ".vscode-test/visual-review/02-toolbar/iteration-030/narrow-full.png": {
+    "publishedPath": "images/current/02-toolbar/narrow-full.png",
+    "sha256": "541baca96f405773a768ac9eab3e8f77046e451cc0bcd239a881b53c497c4f3d"
+  },
+  ".vscode-test/visual-review/02-toolbar/iteration-030/narrow-target.png": {
+    "publishedPath": "images/current/02-toolbar/narrow-target.png",
+    "sha256": "0e6653a97266bafc65871846aeff3932573fe2584aabae0bfe88aa620c1a1f12"
+  },
+  ".vscode-test/visual-review/02-toolbar/iteration-030/overflow-full.png": {
+    "publishedPath": "images/current/02-toolbar/overflow-full.png",
+    "sha256": "3a5b0a883af5af305de2a4082e016ef5f98cd9e085ba9f68d6744c60ec834e68"
+  },
+  ".vscode-test/visual-review/02-toolbar/iteration-030/overflow-target.png": {
+    "publishedPath": "images/current/02-toolbar/overflow-target.png",
+    "sha256": "7d21f62db68f9e069ea1488fee08017c10befdef378e6e201902e42b89a7996b"
+  },
+  "reports/validation/2026-10-01-selected-ui-ux/images/02-insert-workspace.jpg": {
+    "publishedPath": "images/before/02-insert-workspace.jpg",
+    "sha256": "07d19410351b873a971e9b40cc29b8fa03577f251fafc12b7398d34bd8710190"
+  },
+  ".vscode-test/visual-fidelity/references/03-commands-moderate.png": {
+    "publishedPath": "images/generated/03-commands-moderate.png",
+    "sha256": "a332410af0c4d892c3ce050f6aafd091c02255a84ebdccbef0c979ceed5729d0"
+  },
+  ".vscode-test/visual-fidelity/references/03-commands-experimental.png": {
+    "publishedPath": "images/generated/03-commands-experimental.png",
+    "sha256": "5ed871f5a099692cefa9ca2c9b248ee365d1f97e901b378a186376882cffc273"
+  },
+  ".vscode-test/visual-review/03-commands/iteration-031/packet.json": {
+    "publishedPath": "evidence/03-commands/packet.json",
+    "sha256": "8b8d020edc6d7f2940d58e198ba609bcca73963cc9beed28b78a5cc6d99c5b43"
+  },
+  ".vscode-test/visual-review/03-commands/iteration-031/receipt.json": {
+    "publishedPath": "evidence/03-commands/receipt.json",
+    "sha256": "65c120fb324e3ce92d7a5cba01196fccdcd8fe6c8a617d7978bfb2dd03bbff37"
+  },
+  ".vscode-test/visual-review/03-commands/iteration-031/groups.json": {
+    "publishedPath": "evidence/03-commands/groups.json",
+    "sha256": "d379f51072174c577f606ec41568298afaa538354b1d60017e56effe8c0f5f21"
+  },
+  ".vscode-test/visual-review/03-commands/iteration-031/all-full.png": {
+    "publishedPath": "images/current/03-commands/all-full.png",
+    "sha256": "fd9f413a7de2ab191c1fce424a9f85f68034b170abadcd3f144576968480902c"
+  },
+  ".vscode-test/visual-review/03-commands/iteration-031/all-target.png": {
+    "publishedPath": "images/current/03-commands/all-target.png",
+    "sha256": "37478da2e74dcbb1c6190ac4d917648078c9f6b1f481cfe1aee4434f38cb791d"
+  },
+  ".vscode-test/visual-review/03-commands/iteration-031/category-full.png": {
+    "publishedPath": "images/current/03-commands/category-full.png",
+    "sha256": "ab992de229416bceb20255d55385594b27b3465e1df16e6396db4f6545b3e198"
+  },
+  ".vscode-test/visual-review/03-commands/iteration-031/category-target.png": {
+    "publishedPath": "images/current/03-commands/category-target.png",
+    "sha256": "3f0f31cb4bb77b5471edea91a43f751088bd421623ab0c390c3eeb54d0ca4177"
+  },
+  ".vscode-test/visual-review/03-commands/iteration-031/search-full.png": {
+    "publishedPath": "images/current/03-commands/search-full.png",
+    "sha256": "4de34722b5fa1a24d255117cd4fa92eed0721ef167fe76b8c21498be226ea3b1"
+  },
+  ".vscode-test/visual-review/03-commands/iteration-031/search-target.png": {
+    "publishedPath": "images/current/03-commands/search-target.png",
+    "sha256": "681fd5a0d8f2f49b505a9cf3fe13027a384489d2a705f5883f377388dfe1853a"
+  },
+  ".vscode-test/visual-review/03-commands/iteration-031/empty-full.png": {
+    "publishedPath": "images/current/03-commands/empty-full.png",
+    "sha256": "3eeae0f37975e667c512c01264b3ff17f1cb7c9f9c49e5133e0c44ef3536f6d0"
+  },
+  ".vscode-test/visual-review/03-commands/iteration-031/empty-target.png": {
+    "publishedPath": "images/current/03-commands/empty-target.png",
+    "sha256": "0a3bcc09a8d8d874000a0384b4dfa88cb645f604f734de78a7b65f2f920037a3"
+  },
+  ".vscode-test/visual-review/03-commands/iteration-031/unavailable-full.png": {
+    "publishedPath": "images/current/03-commands/unavailable-full.png",
+    "sha256": "34b6fa0a036c2f6b28040fc381784358350ceb606b57a6e5efee2cd934cabad1"
+  },
+  ".vscode-test/visual-review/03-commands/iteration-031/unavailable-target.png": {
+    "publishedPath": "images/current/03-commands/unavailable-target.png",
+    "sha256": "f5a88a83ff00b8c921452a10a01d739842ba396de32a53665532450af962bd70"
+  },
+  ".vscode-test/visual-review/03-commands/iteration-031/narrow-full.png": {
+    "publishedPath": "images/current/03-commands/narrow-full.png",
+    "sha256": "7bdc83aaa816eea9f85a0e7b98e7bc6cf0e1df36ddf665100794cfdd4fe95d40"
+  },
+  ".vscode-test/visual-review/03-commands/iteration-031/narrow-target.png": {
+    "publishedPath": "images/current/03-commands/narrow-target.png",
+    "sha256": "24031d54bf6eb74fa6348c333010828ed610c52c2baf2bf87d3e817c52c8243f"
+  },
+  ".vscode-test/visual-review/03-commands/iteration-031/narrow-end-full.png": {
+    "publishedPath": "images/current/03-commands/narrow-end-full.png",
+    "sha256": "92d31ef885d1bc466c396c2fe802949cc4412561bf7c9e261afb144e19d17eea"
+  },
+  ".vscode-test/visual-review/03-commands/iteration-031/narrow-end-target.png": {
+    "publishedPath": "images/current/03-commands/narrow-end-target.png",
+    "sha256": "e9958abe4a4f10fb6e0da11866e96b631a494dfc80bd7e9a0a1342a95d240844"
+  },
+  ".vscode-test/visual-review/03-commands/iteration-031/palette-full.png": {
+    "publishedPath": "images/current/03-commands/palette-full.png",
+    "sha256": "1079407b2fcdb9ba1d0ae97e17ed9c45a17e93a76c995a62bd54503c15d1ce8d"
+  },
+  ".vscode-test/visual-review/03-commands/iteration-031/palette-target.png": {
+    "publishedPath": "images/current/03-commands/palette-target.png",
+    "sha256": "76a4dd63497996a834b21219fc0c7b381173da9c5fcd2325a6088bb2e4c45f24"
+  },
+  "reports/validation/2026-10-01-selected-ui-ux/images/05-split-document-rail.jpg": {
+    "publishedPath": "images/before/05-split-document-rail.jpg",
+    "sha256": "07ff13781642cea06e0df125848baa61924f8e037604f5736e7ec4080d7a8132"
+  },
+  ".vscode-test/visual-fidelity/references/04-outline-experimental.png": {
+    "publishedPath": "images/generated/04-outline-experimental.png",
+    "sha256": "604360efc429d7ef4aad3ddde5d1a4d134fcf07673cf26cdde42ffc59bb70808"
+  },
+  ".vscode-test/visual-review/04-outline/iteration-026/packet.json": {
+    "publishedPath": "evidence/04-outline/packet.json",
+    "sha256": "8ee6a2a22f7b37051e3d557a37787c21182f4740f8a3ac25ccefc32436da96ad"
+  },
+  ".vscode-test/visual-review/04-outline/iteration-026/receipt.json": {
+    "publishedPath": "evidence/04-outline/receipt.json",
+    "sha256": "a9ebd242605ed7d364ef299501f7d8cdff580536590b116b4f09a1d1aa4d3fcf"
+  },
+  ".vscode-test/visual-review/04-outline/iteration-026/groups.json": {
+    "publishedPath": "evidence/04-outline/groups.json",
+    "sha256": "dbd7b7a841f5b29b6ea98095aa2d6692d8223af02a0c71a82d641b76b7d27968"
+  },
+  ".vscode-test/visual-review/04-outline/iteration-026/nested-full.png": {
+    "publishedPath": "images/current/04-outline/nested-full.png",
+    "sha256": "3e17506f0aaddeb9f029e39362a381188fc14d7400a26d9b1e690a6656556677"
+  },
+  ".vscode-test/visual-review/04-outline/iteration-026/nested-target.png": {
+    "publishedPath": "images/current/04-outline/nested-target.png",
+    "sha256": "369b0266c62dd58585f0c4ba7ea91abb9a4f1cc6750216220a5b1b4b400284c0"
+  },
+  ".vscode-test/visual-review/04-outline/iteration-026/long-full.png": {
+    "publishedPath": "images/current/04-outline/long-full.png",
+    "sha256": "6de84429826ff95a04d930726fec62fae7000bcc6cb81447b8d10c14b856005a"
+  },
+  ".vscode-test/visual-review/04-outline/iteration-026/long-target.png": {
+    "publishedPath": "images/current/04-outline/long-target.png",
+    "sha256": "aaeb9d60192d2b770943c203a17a7a04252af0a9bee27d2d034a5529c3807bd2"
+  },
+  ".vscode-test/visual-review/04-outline/iteration-026/document-full.png": {
+    "publishedPath": "images/current/04-outline/document-full.png",
+    "sha256": "8d07d58e7989a272141bd4d0a72cfce489e45d5c51d9d5b026c324da771ec871"
+  },
+  ".vscode-test/visual-review/04-outline/iteration-026/document-target.png": {
+    "publishedPath": "images/current/04-outline/document-target.png",
+    "sha256": "36dfaa985e77653068c01b4c388b90d85505b786362c4dd969e52db9aa39b1e1"
+  },
+  ".vscode-test/visual-review/04-outline/iteration-026/outline-full.png": {
+    "publishedPath": "images/current/04-outline/outline-full.png",
+    "sha256": "3e17506f0aaddeb9f029e39362a381188fc14d7400a26d9b1e690a6656556677"
+  },
+  ".vscode-test/visual-review/04-outline/iteration-026/outline-target.png": {
+    "publishedPath": "images/current/04-outline/outline-target.png",
+    "sha256": "369b0266c62dd58585f0c4ba7ea91abb9a4f1cc6750216220a5b1b4b400284c0"
+  },
+  ".vscode-test/visual-review/04-outline/iteration-026/scrolled-full.png": {
+    "publishedPath": "images/current/04-outline/scrolled-full.png",
+    "sha256": "4b28c492df6c21c3a7458c7490f97ec4c93e0ac6f551cdaf72d007a9fe815813"
+  },
+  ".vscode-test/visual-review/04-outline/iteration-026/scrolled-target.png": {
+    "publishedPath": "images/current/04-outline/scrolled-target.png",
+    "sha256": "0b6080a40f22e0c44516179386bbf6ad19fff3ee5fbe28367f4a81e19125f753"
+  },
+  ".vscode-test/visual-review/04-outline/iteration-026/narrow-full.png": {
+    "publishedPath": "images/current/04-outline/narrow-full.png",
+    "sha256": "fe3ec8c38e5fff82cf042180675a6984b885fb4f1b12e0bb645e6169b85b5893"
+  },
+  ".vscode-test/visual-review/04-outline/iteration-026/narrow-target.png": {
+    "publishedPath": "images/current/04-outline/narrow-target.png",
+    "sha256": "159588c76f7447db4b39cae79683d4b929867b75da1c2b96b0e7dd8495a2c65a"
+  },
+  "reports/validation/2026-10-01-selected-ui-ux/images/03-spatial-table-tools.jpg": {
+    "publishedPath": "images/before/03-spatial-table-tools.jpg",
+    "sha256": "e44ea139da815015459dbb570f840adeead5ed356c1ded3f06a44f163e3b5922"
+  },
+  ".vscode-test/visual-fidelity/references/05-tables-experimental.png": {
+    "publishedPath": "images/generated/05-tables-experimental.png",
+    "sha256": "bba8162ee5cbf9e4c8a13c68030b78a1457193e52e650808bb06af3118e975ad"
+  },
+  ".vscode-test/visual-review/05-tables/iteration-026/packet.json": {
+    "publishedPath": "evidence/05-tables/packet.json",
+    "sha256": "3b0c2963f0a9d13ff5bce572a02ba7837c24d254ac090b8e3f7f7e41c52272d8"
+  },
+  ".vscode-test/visual-review/05-tables/iteration-026/receipt.json": {
+    "publishedPath": "evidence/05-tables/receipt.json",
+    "sha256": "902d5f900edd348534e36e2dbc59911472eaa66585bedc5d99a15f808b73f0cf"
+  },
+  ".vscode-test/visual-review/05-tables/iteration-026/groups.json": {
+    "publishedPath": "evidence/05-tables/groups.json",
+    "sha256": "7a179ce22f7850871aa0694f7373bf1d3483987aeabd6ad28a7866c3b38dba1d"
+  },
+  ".vscode-test/visual-review/05-tables/iteration-026/body-full.png": {
+    "publishedPath": "images/current/05-tables/body-full.png",
+    "sha256": "b1f129a190e92cb29de6569fee50945c51416d89ba937eafb75c9317a7d16520"
+  },
+  ".vscode-test/visual-review/05-tables/iteration-026/body-target.png": {
+    "publishedPath": "images/current/05-tables/body-target.png",
+    "sha256": "3fbf23587499c62c67eb79db84cc825cb7b31305111eebb9fccd3cbd45d80bca"
+  },
+  ".vscode-test/visual-review/05-tables/iteration-026/header-full.png": {
+    "publishedPath": "images/current/05-tables/header-full.png",
+    "sha256": "af7769901c90a44470ede510626c09083cbf9194e51852e7e7925bda12c65ae5"
+  },
+  ".vscode-test/visual-review/05-tables/iteration-026/header-target.png": {
+    "publishedPath": "images/current/05-tables/header-target.png",
+    "sha256": "078d59d8d26d4017cc2f4d8069f06cfd47b4a225c420f5318e2f082de8f449d9"
+  },
+  ".vscode-test/visual-review/05-tables/iteration-026/coordinates-full.png": {
+    "publishedPath": "images/current/05-tables/coordinates-full.png",
+    "sha256": "b1f129a190e92cb29de6569fee50945c51416d89ba937eafb75c9317a7d16520"
+  },
+  ".vscode-test/visual-review/05-tables/iteration-026/coordinates-target.png": {
+    "publishedPath": "images/current/05-tables/coordinates-target.png",
+    "sha256": "3fbf23587499c62c67eb79db84cc825cb7b31305111eebb9fccd3cbd45d80bca"
+  },
+  ".vscode-test/visual-review/05-tables/iteration-026/wide-full.png": {
+    "publishedPath": "images/current/05-tables/wide-full.png",
+    "sha256": "2e804511124897f0343cbe43b45cb997195e3aea1715b6cbcc5aa4c0775039de"
+  },
+  ".vscode-test/visual-review/05-tables/iteration-026/wide-target.png": {
+    "publishedPath": "images/current/05-tables/wide-target.png",
+    "sha256": "9eccd4369e042e5946f4b45652f29950da016fb64ca6dd2c9c0f1e52ea3782fc"
+  },
+  ".vscode-test/visual-review/05-tables/iteration-026/narrow-full.png": {
+    "publishedPath": "images/current/05-tables/narrow-full.png",
+    "sha256": "a9c143677869859d1a727788ac95f6cf6d825a9bc85103368da5d4d40ceac7cb"
+  },
+  ".vscode-test/visual-review/05-tables/iteration-026/narrow-target.png": {
+    "publishedPath": "images/current/05-tables/narrow-target.png",
+    "sha256": "6b4e4727c753dca8bf810cf75be78d48324f82595880993532757256ef0d71db"
+  },
+  ".vscode-test/visual-review/05-tables/iteration-026/narrow-scrolled-full.png": {
+    "publishedPath": "images/current/05-tables/narrow-scrolled-full.png",
+    "sha256": "fdf66d96870a6eeb4ee4f6c22a74a817aa5de1cf95eef457e8e27abd65c16f39"
+  },
+  ".vscode-test/visual-review/05-tables/iteration-026/narrow-scrolled-target.png": {
+    "publishedPath": "images/current/05-tables/narrow-scrolled-target.png",
+    "sha256": "d583b8b09c5b906164881c9ff7eb58b943685993017c1843866c795626e259b0"
+  },
+  ".vscode-test/visual-review/05-tables/iteration-026/placement-auto-full.png": {
+    "publishedPath": "images/current/05-tables/placement-auto-full.png",
+    "sha256": "b1f129a190e92cb29de6569fee50945c51416d89ba937eafb75c9317a7d16520"
+  },
+  ".vscode-test/visual-review/05-tables/iteration-026/placement-auto-target.png": {
+    "publishedPath": "images/current/05-tables/placement-auto-target.png",
+    "sha256": "3fbf23587499c62c67eb79db84cc825cb7b31305111eebb9fccd3cbd45d80bca"
+  },
+  ".vscode-test/visual-review/05-tables/iteration-026/placement-top-bar-full.png": {
+    "publishedPath": "images/current/05-tables/placement-top-bar-full.png",
+    "sha256": "b1f129a190e92cb29de6569fee50945c51416d89ba937eafb75c9317a7d16520"
+  },
+  ".vscode-test/visual-review/05-tables/iteration-026/placement-top-bar-target.png": {
+    "publishedPath": "images/current/05-tables/placement-top-bar-target.png",
+    "sha256": "3fbf23587499c62c67eb79db84cc825cb7b31305111eebb9fccd3cbd45d80bca"
+  },
+  ".vscode-test/visual-review/05-tables/iteration-026/placement-top-left-full.png": {
+    "publishedPath": "images/current/05-tables/placement-top-left-full.png",
+    "sha256": "38643ab6e627d91b6ee12f40fab2309c02ffbb159afe75db9a50e5fc05e695a4"
+  },
+  ".vscode-test/visual-review/05-tables/iteration-026/placement-top-left-target.png": {
+    "publishedPath": "images/current/05-tables/placement-top-left-target.png",
+    "sha256": "996a0ebff385b9a7b01d863dc33ec3c4375ca88a7379b0424da03cb6529492bc"
+  },
+  ".vscode-test/visual-review/05-tables/iteration-026/placement-top-right-full.png": {
+    "publishedPath": "images/current/05-tables/placement-top-right-full.png",
+    "sha256": "08a9d8d9006960154b16867666a87953e25fd9e6cf58a8a560766c46c48842e3"
+  },
+  ".vscode-test/visual-review/05-tables/iteration-026/placement-top-right-target.png": {
+    "publishedPath": "images/current/05-tables/placement-top-right-target.png",
+    "sha256": "b6b1b053b389676dd5a49bb853ac2f254e36be57dbb2bb80fd8c21bbda0d5702"
+  },
+  ".vscode-test/visual-review/05-tables/iteration-026/placement-bottom-left-full.png": {
+    "publishedPath": "images/current/05-tables/placement-bottom-left-full.png",
+    "sha256": "f31e79bca06205d721d0758461d4b79c237089b9780d41e2e8030973814589d5"
+  },
+  ".vscode-test/visual-review/05-tables/iteration-026/placement-bottom-left-target.png": {
+    "publishedPath": "images/current/05-tables/placement-bottom-left-target.png",
+    "sha256": "ec67c51f1fe228e2c90d9b632a7654ea52e70956917ac921d05d62efbf8fe238"
+  },
+  ".vscode-test/visual-review/05-tables/iteration-026/placement-bottom-right-full.png": {
+    "publishedPath": "images/current/05-tables/placement-bottom-right-full.png",
+    "sha256": "44d0ce1590d764ce762b139fc617f86700cf0cff22f0159daa89314b2f883169"
+  },
+  ".vscode-test/visual-review/05-tables/iteration-026/placement-bottom-right-target.png": {
+    "publishedPath": "images/current/05-tables/placement-bottom-right-target.png",
+    "sha256": "09d1b56efdca0c79efe84344f2ab3fe24194a49d3cb1ecb65b593f3f67755944"
+  },
+  ".vscode-test/visual-review/05-tables/iteration-026/placement-left-full.png": {
+    "publishedPath": "images/current/05-tables/placement-left-full.png",
+    "sha256": "fee78f7234a65b4697293c712c580cc47cb70b0b4f8b5d86ce9f13748ef097da"
+  },
+  ".vscode-test/visual-review/05-tables/iteration-026/placement-left-target.png": {
+    "publishedPath": "images/current/05-tables/placement-left-target.png",
+    "sha256": "936f63af8bdaf1ba09f5a04b2fb7162d64076e62dad00119f6c590c3455e77f3"
+  },
+  ".vscode-test/visual-review/05-tables/iteration-026/placement-right-full.png": {
+    "publishedPath": "images/current/05-tables/placement-right-full.png",
+    "sha256": "2f4f76505b3bccf8c1bb43cd014ee87a029e2b7697751e919c7980a820f2785e"
+  },
+  ".vscode-test/visual-review/05-tables/iteration-026/placement-right-target.png": {
+    "publishedPath": "images/current/05-tables/placement-right-target.png",
+    "sha256": "26360b8160910a6facd05afc904e2b40bc6a00dd8e379e8504125a1d0952e603"
+  },
+  "reports/validation/2026-10-01-selected-ui-ux/images/04-code-equation-diagram.jpg": {
+    "publishedPath": "images/before/04-code-equation-diagram.jpg",
+    "sha256": "343029b56ab3972a9177748ef452927312c5c0d8fff707bc0099ef112ac9d523"
+  },
+  ".vscode-test/visual-fidelity/references/06-code-moderate.png": {
+    "publishedPath": "images/generated/06-code-moderate.png",
+    "sha256": "f04de57191c5bb998e75a02e35c64f415775829397d274c51589cf58fa633c02"
+  },
+  ".vscode-test/visual-review/06-code/iteration-026/packet.json": {
+    "publishedPath": "evidence/06-code/packet.json",
+    "sha256": "bebaf9ea13723261bf05aae62ff787add9f66808f36073aa55dc7ccbfa3ad218"
+  },
+  ".vscode-test/visual-review/06-code/iteration-026/receipt.json": {
+    "publishedPath": "evidence/06-code/receipt.json",
+    "sha256": "029f89ba4aba53c66e196394e27593b990fa2eb8020989aa570a0b9fd65b81c1"
+  },
+  ".vscode-test/visual-review/06-code/iteration-026/groups.json": {
+    "publishedPath": "evidence/06-code/groups.json",
+    "sha256": "1d19f351e328ecc75b5e5204345f23726078d4075ac7838b9d8acd021ed2667f"
+  },
+  ".vscode-test/visual-review/06-code/iteration-026/unwrapped-full.png": {
+    "publishedPath": "images/current/06-code/unwrapped-full.png",
+    "sha256": "cf37a8545db99725d7ea6df13b0c08eb1c8718fc7a527494cc102f2e60478dcf"
+  },
+  ".vscode-test/visual-review/06-code/iteration-026/unwrapped-target.png": {
+    "publishedPath": "images/current/06-code/unwrapped-target.png",
+    "sha256": "143af17870bcd88ea2781575d2fcb27788894eb0a9e1e518ce6118fd7d9a393b"
+  },
+  ".vscode-test/visual-review/06-code/iteration-026/scrolled-full.png": {
+    "publishedPath": "images/current/06-code/scrolled-full.png",
+    "sha256": "ab8745bd0ef4a1df313b9bd018a43f700580babaddf5499ff037d905910bfbde"
+  },
+  ".vscode-test/visual-review/06-code/iteration-026/scrolled-target.png": {
+    "publishedPath": "images/current/06-code/scrolled-target.png",
+    "sha256": "b36f35b97dafeb42d737d41db9f5824d2c9a2cd05e137cf251e8fb8dfbc2b041"
+  },
+  ".vscode-test/visual-review/06-code/iteration-026/wrapped-full.png": {
+    "publishedPath": "images/current/06-code/wrapped-full.png",
+    "sha256": "c2fa5f8156a0ccd0a1d68b35a5c78e8f19e70ec0c74641ff67d2b5747cf6fabb"
+  },
+  ".vscode-test/visual-review/06-code/iteration-026/wrapped-target.png": {
+    "publishedPath": "images/current/06-code/wrapped-target.png",
+    "sha256": "c603a7dbbe7e083589ca335cced96dcdfef12766f17065fc3df983faeb33da1e"
+  },
+  ".vscode-test/visual-review/06-code/iteration-026/language-full.png": {
+    "publishedPath": "images/current/06-code/language-full.png",
+    "sha256": "6315211a142ac6104ce0bc66ea25441d6df300664f832494ef595638885208fb"
+  },
+  ".vscode-test/visual-review/06-code/iteration-026/language-target.png": {
+    "publishedPath": "images/current/06-code/language-target.png",
+    "sha256": "7b48468938012d3f913f80cfeaf1a3393cc9fc88bc0ad4820fd8d9faf4bcc4f9"
+  },
+  ".vscode-test/visual-review/06-code/iteration-026/search-full.png": {
+    "publishedPath": "images/current/06-code/search-full.png",
+    "sha256": "3104a7545c7d4f6a67c333280041897b83d803a22fc6784334f322afc1683e75"
+  },
+  ".vscode-test/visual-review/06-code/iteration-026/search-target.png": {
+    "publishedPath": "images/current/06-code/search-target.png",
+    "sha256": "626b8d3237216676ffe9dafa8e8d95d8b16b56689f541ade10cbb831a54334c9"
+  },
+  ".vscode-test/visual-review/06-code/iteration-026/copied-full.png": {
+    "publishedPath": "images/current/06-code/copied-full.png",
+    "sha256": "d4eea45e440a2955ce69f0d63bd225f0bb1b597d8fd04ffb73c048cabc52b875"
+  },
+  ".vscode-test/visual-review/06-code/iteration-026/copied-target.png": {
+    "publishedPath": "images/current/06-code/copied-target.png",
+    "sha256": "50fe92a342b3419d354f40b7151e777a9db590e53b8ce30f3bba8b87785831d0"
+  },
+  ".vscode-test/visual-review/06-code/iteration-026/light-full.png": {
+    "publishedPath": "images/current/06-code/light-full.png",
+    "sha256": "cf37a8545db99725d7ea6df13b0c08eb1c8718fc7a527494cc102f2e60478dcf"
+  },
+  ".vscode-test/visual-review/06-code/iteration-026/light-target.png": {
+    "publishedPath": "images/current/06-code/light-target.png",
+    "sha256": "143af17870bcd88ea2781575d2fcb27788894eb0a9e1e518ce6118fd7d9a393b"
+  },
+  ".vscode-test/visual-review/06-code/iteration-026/dark-full.png": {
+    "publishedPath": "images/current/06-code/dark-full.png",
+    "sha256": "49c3c41f6c30f97a239b0cb28e9643826c76212df9045b4e6d3c0481a3adbb96"
+  },
+  ".vscode-test/visual-review/06-code/iteration-026/dark-target.png": {
+    "publishedPath": "images/current/06-code/dark-target.png",
+    "sha256": "5349c22ce1b0776ea725189d7dc771befa1856fc29f06bf00fe0a39eda54e329"
+  },
+  ".vscode-test/visual-fidelity/references/07-equations-recommended.png": {
+    "publishedPath": "images/generated/07-equations-recommended.png",
+    "sha256": "5c87f61e24a7452836ce7a3efb1e6f4d95fd72d437d2462c4712696bd806ca74"
+  },
+  ".vscode-test/visual-review/07-equations/iteration-025/packet.json": {
+    "publishedPath": "evidence/07-equations/packet.json",
+    "sha256": "f997268f75b71ce030dabfead6e1de83c4ee408d51532eab8a7c227c7ae1b729"
+  },
+  ".vscode-test/visual-review/07-equations/iteration-025/receipt.json": {
+    "publishedPath": "evidence/07-equations/receipt.json",
+    "sha256": "64bded9fb20f46143ef7e2a668ccc06f1cc5c34340044d907e1308a8af2d8713"
+  },
+  ".vscode-test/visual-review/07-equations/iteration-025/groups.json": {
+    "publishedPath": "evidence/07-equations/groups.json",
+    "sha256": "d63083afd08361eb5189b9c60399c1171d813efe8687b669838fcd9dbe9fa114"
+  },
+  ".vscode-test/visual-review/07-equations/iteration-025/preview-full.png": {
+    "publishedPath": "images/current/07-equations/preview-full.png",
+    "sha256": "6f62b8122e2dfe73de863cfc14714d275fc3a0ee4cde7523aecc3a7a93d77c44"
+  },
+  ".vscode-test/visual-review/07-equations/iteration-025/preview-target.png": {
+    "publishedPath": "images/current/07-equations/preview-target.png",
+    "sha256": "61c90d5a94acf4b45296e9c31db050fb251f361b82bfc4a3d0a82aad4ab2e426"
+  },
+  ".vscode-test/visual-review/07-equations/iteration-025/source-full.png": {
+    "publishedPath": "images/current/07-equations/source-full.png",
+    "sha256": "6392ae00126426cbd0462081ab92f3e7058df639f21c5aea2a2c1ae0bdd29580"
+  },
+  ".vscode-test/visual-review/07-equations/iteration-025/source-target.png": {
+    "publishedPath": "images/current/07-equations/source-target.png",
+    "sha256": "a3adfb8f3f44d815da21115978ea5d5f9665b5907e5b7c0551f4c34482976aa8"
+  },
+  ".vscode-test/visual-review/07-equations/iteration-025/unsupported-full.png": {
+    "publishedPath": "images/current/07-equations/unsupported-full.png",
+    "sha256": "b8155afdd4b1004321c227d7fc7247df33321ea53f973a813ae9b8b8c69febca"
+  },
+  ".vscode-test/visual-review/07-equations/iteration-025/unsupported-target.png": {
+    "publishedPath": "images/current/07-equations/unsupported-target.png",
+    "sha256": "fb50d7c229309d8dbd68b3a78415d8324f5c3beac2e8bc8d525782c2900cb020"
+  },
+  ".vscode-test/visual-review/07-equations/iteration-025/long-full.png": {
+    "publishedPath": "images/current/07-equations/long-full.png",
+    "sha256": "6e51a12cc2c9ab2a09ca3a68ed99ef65c193288b3c17a955ec3eb1969de2f879"
+  },
+  ".vscode-test/visual-review/07-equations/iteration-025/long-target.png": {
+    "publishedPath": "images/current/07-equations/long-target.png",
+    "sha256": "48ad5a66d353663c02d2c237add2fe6180860635becf4544716370d17e31353d"
+  },
+  ".vscode-test/visual-review/07-equations/iteration-025/narrow-full.png": {
+    "publishedPath": "images/current/07-equations/narrow-full.png",
+    "sha256": "5f15e16cb09b4433d1e9f56d8681e51674e747e0af21b8238846f940536ef15a"
+  },
+  ".vscode-test/visual-review/07-equations/iteration-025/narrow-target.png": {
+    "publishedPath": "images/current/07-equations/narrow-target.png",
+    "sha256": "0c934ffb1039efb59b894b547d592d236064b8181346069395e700d57b61e523"
+  },
+  ".vscode-test/visual-fidelity/references/08-diagrams-moderate.png": {
+    "publishedPath": "images/generated/08-diagrams-moderate.png",
+    "sha256": "2c6e35ce060853039fc3d4f854505182238a88a1958a0f5ffed1d81cf6d11c77"
+  },
+  ".vscode-test/visual-review/08-diagrams/iteration-026/packet.json": {
+    "publishedPath": "evidence/08-diagrams/packet.json",
+    "sha256": "e8d174a72c513f20106efa82a87cb6170a0c15818e9a5c1cf13d8bb343adc605"
+  },
+  ".vscode-test/visual-review/08-diagrams/iteration-026/receipt.json": {
+    "publishedPath": "evidence/08-diagrams/receipt.json",
+    "sha256": "45f19ec9a3099e21f84625411539ccd4ebea2792e2512dad9d2d18fc56e725df"
+  },
+  ".vscode-test/visual-review/08-diagrams/iteration-026/groups.json": {
+    "publishedPath": "evidence/08-diagrams/groups.json",
+    "sha256": "3f8dc0daf722557484473f263d0f85c06f38fbfa2dc316691e052856cc3b6971"
+  },
+  ".vscode-test/visual-review/08-diagrams/iteration-026/preview-full.png": {
+    "publishedPath": "images/current/08-diagrams/preview-full.png",
+    "sha256": "8c3fad976de88a9ec9c755485214c16a8c818502d1d733837154150d5dc5ba51"
+  },
+  ".vscode-test/visual-review/08-diagrams/iteration-026/preview-target.png": {
+    "publishedPath": "images/current/08-diagrams/preview-target.png",
+    "sha256": "5992ae434541be7d66094afe0dd4196a870576fea779de4232f0d40d44af801b"
+  },
+  ".vscode-test/visual-review/08-diagrams/iteration-026/invalid-full.png": {
+    "publishedPath": "images/current/08-diagrams/invalid-full.png",
+    "sha256": "374568be0b2b87a70b1c93867feaf50c7d902c46b63b073259435c045aab8533"
+  },
+  ".vscode-test/visual-review/08-diagrams/iteration-026/invalid-target.png": {
+    "publishedPath": "images/current/08-diagrams/invalid-target.png",
+    "sha256": "834b8c3d45f0399dc5ba354eae23836be8728d63d8306dec4efcf4fe1c02265d"
+  },
+  ".vscode-test/visual-review/08-diagrams/iteration-026/source-full.png": {
+    "publishedPath": "images/current/08-diagrams/source-full.png",
+    "sha256": "b19cc2053c7d3965c7a534402d55384f87494144f085938206e92d76423be5a7"
+  },
+  ".vscode-test/visual-review/08-diagrams/iteration-026/source-target.png": {
+    "publishedPath": "images/current/08-diagrams/source-target.png",
+    "sha256": "ef48e74d8112e5b1427bedd12a2b8d3250f2a050b5413c3dea2ae914d4dcd9ac"
+  },
+  ".vscode-test/visual-review/08-diagrams/iteration-026/diagnostic-full.png": {
+    "publishedPath": "images/current/08-diagrams/diagnostic-full.png",
+    "sha256": "a3f16800cba05139dae7c95f791af401f9dc093f4330d3928449023545608874"
+  },
+  ".vscode-test/visual-review/08-diagrams/iteration-026/diagnostic-target.png": {
+    "publishedPath": "images/current/08-diagrams/diagnostic-target.png",
+    "sha256": "8d953041114739837fd53ac1796e90ba8dd810f60583e2a8ee817ed3cb5ad196"
+  },
+  ".vscode-test/visual-review/08-diagrams/iteration-026/narrow-full.png": {
+    "publishedPath": "images/current/08-diagrams/narrow-full.png",
+    "sha256": "cad5d8858fdbf7af7bf41fbf85cb53be6b8fdad151fdd70d0c49b24958a58294"
+  },
+  ".vscode-test/visual-review/08-diagrams/iteration-026/narrow-target.png": {
+    "publishedPath": "images/current/08-diagrams/narrow-target.png",
+    "sha256": "689f34cbc4e278628dba0aca5bc5951e0e3ac8b4f6536fa6ed7f148f8b434311"
+  },
+  "reports/validation/2026-10-01-selected-ui-ux/images/06-find-replace.jpg": {
+    "publishedPath": "images/before/06-find-replace.jpg",
+    "sha256": "366e6abbe0f1d4a53ad607c57ed1a98ed9ce15819f14b3c7018391e96489b144"
+  },
+  ".vscode-test/visual-fidelity/references/09-find-experimental.png": {
+    "publishedPath": "images/generated/09-find-experimental.png",
+    "sha256": "fa65a24779ec6411c0fff12279815359b529b7418ddd6dd1e888f5cd7ccc6daa"
+  },
+  ".vscode-test/visual-review/09-find/iteration-027/packet.json": {
+    "publishedPath": "evidence/09-find/packet.json",
+    "sha256": "743abf75bb4e45a84d5fb9b7df49666f603192ceb51969075698e3f428b5afd0"
+  },
+  ".vscode-test/visual-review/09-find/iteration-027/receipt.json": {
+    "publishedPath": "evidence/09-find/receipt.json",
+    "sha256": "972e55b962db720c6fcc7fd7f249dbc41f189b3efd594a408e3b31fb83a3226f"
+  },
+  ".vscode-test/visual-review/09-find/iteration-027/groups.json": {
+    "publishedPath": "evidence/09-find/groups.json",
+    "sha256": "9980612d53869d07d40edbfa3df2c53ef77da90ba0901d0119a089e0ceabbfe2"
+  },
+  ".vscode-test/visual-review/09-find/iteration-027/filled-full.png": {
+    "publishedPath": "images/current/09-find/filled-full.png",
+    "sha256": "b14f732160a3032e35d46d47a980c9cb74f869c3bfc6d98223ccca219011bfaa"
+  },
+  ".vscode-test/visual-review/09-find/iteration-027/filled-target.png": {
+    "publishedPath": "images/current/09-find/filled-target.png",
+    "sha256": "0190ddd1ad1a5599878bb48e37e89f24daf7bab0e77f5de425fff8093db5d0f1"
+  },
+  ".vscode-test/visual-review/09-find/iteration-027/selected-full.png": {
+    "publishedPath": "images/current/09-find/selected-full.png",
+    "sha256": "7c6b5112482b196567debfe7630c65d80871378313b87ab10784c0066392650f"
+  },
+  ".vscode-test/visual-review/09-find/iteration-027/selected-target.png": {
+    "publishedPath": "images/current/09-find/selected-target.png",
+    "sha256": "abf4d1c8a9187785eba0fc970938caa3b3a5578d5772bf62a03017733ca3d1f5"
+  },
+  ".vscode-test/visual-review/09-find/iteration-027/empty-full.png": {
+    "publishedPath": "images/current/09-find/empty-full.png",
+    "sha256": "61a5916fb8d05d7c4bcef7ad9e509c974d21a11241f6b624d2d6d083da4d8789"
+  },
+  ".vscode-test/visual-review/09-find/iteration-027/empty-target.png": {
+    "publishedPath": "images/current/09-find/empty-target.png",
+    "sha256": "06c9328cb773ad8352176d8674059413902219461d0fd2f4c41b1fe1c5a1a6f9"
+  },
+  ".vscode-test/visual-review/09-find/iteration-027/regex-full.png": {
+    "publishedPath": "images/current/09-find/regex-full.png",
+    "sha256": "95aae51fa95440253197d804630a2690e81c9ead96e51b51eb0c578324635b3e"
+  },
+  ".vscode-test/visual-review/09-find/iteration-027/regex-target.png": {
+    "publishedPath": "images/current/09-find/regex-target.png",
+    "sha256": "2d84b999c0828c111d688f47cdc5d01530364dd7190504996f06d8c45833097a"
+  },
+  ".vscode-test/visual-review/09-find/iteration-027/expensive-full.png": {
+    "publishedPath": "images/current/09-find/expensive-full.png",
+    "sha256": "83fdb88f040967761dbe06324374629c5cccc48f7aec702238ee61cf7feadc28"
+  },
+  ".vscode-test/visual-review/09-find/iteration-027/expensive-target.png": {
+    "publishedPath": "images/current/09-find/expensive-target.png",
+    "sha256": "97c75b143e0dd5b0ea08fe1ffc27826defba97facff4a02543d4ee9315e4eae8"
+  },
+  ".vscode-test/visual-review/09-find/iteration-027/narrow-full.png": {
+    "publishedPath": "images/current/09-find/narrow-full.png",
+    "sha256": "4e8e6c4ae295aee931c12aeae13c7f239e8d44a675aa64163516200e0cc1f0da"
+  },
+  ".vscode-test/visual-review/09-find/iteration-027/narrow-target.png": {
+    "publishedPath": "images/current/09-find/narrow-target.png",
+    "sha256": "3b953ca5173ce35e4415bfa142202866c357910e1a98f75d8f3b72d863447bd6"
+  },
+  "reports/validation/2026-10-01-selected-ui-ux/images/10-front-matter.jpg": {
+    "publishedPath": "images/before/10-front-matter.jpg",
+    "sha256": "e62756bb693ff35b2d7c2803b86e91b1a1476d4a2bb0496ec93beba7a03ecc8a"
+  },
+  ".vscode-test/visual-fidelity/references/10-metadata-recommended.png": {
+    "publishedPath": "images/generated/10-metadata-recommended.png",
+    "sha256": "babd4d2f325984f30b2b3edf6f9e8c6faf155b3706fd14f402f1a2f2193e09e9"
+  },
+  ".vscode-test/visual-review/10-metadata/iteration-025/packet.json": {
+    "publishedPath": "evidence/10-metadata/packet.json",
+    "sha256": "b6d821b91388ae4331835bb3e445ec3161a2ff68c7b7fcdae16bc4e24b9e173c"
+  },
+  ".vscode-test/visual-review/10-metadata/iteration-025/receipt.json": {
+    "publishedPath": "evidence/10-metadata/receipt.json",
+    "sha256": "373aebe01ccfa00fd2b6538c5075522ab74161715d07fb2d2d7910b355528c19"
+  },
+  ".vscode-test/visual-review/10-metadata/iteration-025/groups.json": {
+    "publishedPath": "evidence/10-metadata/groups.json",
+    "sha256": "fcdc381c1a84edefec766348feda081511fe98f01a3d6d3678d7505059cc995a"
+  },
+  ".vscode-test/visual-review/10-metadata/iteration-025/collapsed-full.png": {
+    "publishedPath": "images/current/10-metadata/collapsed-full.png",
+    "sha256": "ed282131833793c254d28d8dc9558a932de0113930009de0257cdd67aae21874"
+  },
+  ".vscode-test/visual-review/10-metadata/iteration-025/collapsed-target.png": {
+    "publishedPath": "images/current/10-metadata/collapsed-target.png",
+    "sha256": "9d6147c1255f321b4dc7008a6f07481f426416ffeeb334cf8f3b11b7b90d2905"
+  },
+  ".vscode-test/visual-review/10-metadata/iteration-025/expanded-full.png": {
+    "publishedPath": "images/current/10-metadata/expanded-full.png",
+    "sha256": "a0964c6d3ef6c3e1ce2a5ae0722c4387c47f5bd24e04f513d898559c3775cb31"
+  },
+  ".vscode-test/visual-review/10-metadata/iteration-025/expanded-target.png": {
+    "publishedPath": "images/current/10-metadata/expanded-target.png",
+    "sha256": "238116fbb5c6d17609299c9de86360e81c85d8dd01ed1a87f76d9a8ebbef0889"
+  },
+  ".vscode-test/visual-review/10-metadata/iteration-025/generated-full.png": {
+    "publishedPath": "images/current/10-metadata/generated-full.png",
+    "sha256": "81f1b7346c23594d851aa7ab5afd0aef6519d70908fbb8401f2eedd32e3b9580"
+  },
+  ".vscode-test/visual-review/10-metadata/iteration-025/generated-target.png": {
+    "publishedPath": "images/current/10-metadata/generated-target.png",
+    "sha256": "0ce8dd938225a4c2ad9df21cba5a142b4cd35d65ef3543006c202126a566051d"
+  },
+  ".vscode-test/visual-review/10-metadata/iteration-025/pending-full.png": {
+    "publishedPath": "images/current/10-metadata/pending-full.png",
+    "sha256": "80e0fa00a2e0c0db5d118d3b6b6286a5979b5911a66134459865785e1bd614d5"
+  },
+  ".vscode-test/visual-review/10-metadata/iteration-025/pending-target.png": {
+    "publishedPath": "images/current/10-metadata/pending-target.png",
+    "sha256": "7f3903a8c60303ba2482f3acbe5c8569077f1d804e38a14451bc6836987a41a5"
+  },
+  ".vscode-test/visual-review/10-metadata/iteration-025/refreshed-full.png": {
+    "publishedPath": "images/current/10-metadata/refreshed-full.png",
+    "sha256": "ac7da56504d2edfba8a8fa1b16a7bb377e054d8dab6b6e89f89d5c5b45595317"
+  },
+  ".vscode-test/visual-review/10-metadata/iteration-025/refreshed-target.png": {
+    "publishedPath": "images/current/10-metadata/refreshed-target.png",
+    "sha256": "12867311f55d785e9a61cd2a992c7a90e04c547079300cebc69a1f6ce0c306fb"
+  },
+  ".vscode-test/visual-fidelity/references/11-source-recommended.png": {
+    "publishedPath": "images/generated/11-source-recommended.png",
+    "sha256": "ea3398ed655e808f02b8f9d816093ba941cfbef83ca20f3391ada466a9f68c1f"
+  },
+  ".vscode-test/visual-fidelity/references/11-source-moderate.png": {
+    "publishedPath": "images/generated/11-source-moderate.png",
+    "sha256": "39a8747bbda22735936a0af7de20f1203b5f994793d0e955d682dc305d8056a1"
+  },
+  ".vscode-test/visual-review/11-source/iteration-026/packet.json": {
+    "publishedPath": "evidence/11-source/packet.json",
+    "sha256": "f1e3a8285b872ffac86d62e716bde411c1bbf6c5111072cb45c8c3f3e5b60573"
+  },
+  ".vscode-test/visual-review/11-source/iteration-026/receipt.json": {
+    "publishedPath": "evidence/11-source/receipt.json",
+    "sha256": "8d58998f390b241d0c97382a33e21887c897b5028abe71ac9ed683f965b96572"
+  },
+  ".vscode-test/visual-review/11-source/iteration-026/groups.json": {
+    "publishedPath": "evidence/11-source/groups.json",
+    "sha256": "583607215dcf53369cf7a5d5d17c136fdc57f47081dab9848156ad232867ff89"
+  },
+  ".vscode-test/visual-review/11-source/iteration-026/visual-full.png": {
+    "publishedPath": "images/current/11-source/visual-full.png",
+    "sha256": "6f70eb89c87a598a442aa7613f76fd6891baeeb2d3f9d5e67b5fed5f4bc375c6"
+  },
+  ".vscode-test/visual-review/11-source/iteration-026/visual-target.png": {
+    "publishedPath": "images/current/11-source/visual-target.png",
+    "sha256": "a7bdfdf9157377ceb1a09180f3d26f53ed39d0747d022b53e6a082464ee14ca9"
+  },
+  ".vscode-test/visual-review/11-source/iteration-026/source-full.png": {
+    "publishedPath": "images/current/11-source/source-full.png",
+    "sha256": "189a7081659df4e83d021e0537cf5542a38637b6011a5c886dd250fb566bfd69"
+  },
+  ".vscode-test/visual-review/11-source/iteration-026/source-target.png": {
+    "publishedPath": "images/current/11-source/source-target.png",
+    "sha256": "02b473a6b66d10b82f6f96df231cd99fdc16826002109d7772390c051345fa1d"
+  },
+  ".vscode-test/visual-review/11-source/iteration-026/split-full.png": {
+    "publishedPath": "images/current/11-source/split-full.png",
+    "sha256": "e8af71620777eee24203c1d6a957a2bf40b37334484d157a8a42576528b30e08"
+  },
+  ".vscode-test/visual-review/11-source/iteration-026/split-target.png": {
+    "publishedPath": "images/current/11-source/split-target.png",
+    "sha256": "734789e6ea3e5092e843ed50f33e6deef6330a5d688d9a8ad3e6c9e9b196243f"
+  },
+  ".vscode-test/visual-review/11-source/iteration-026/correspondence-full.png": {
+    "publishedPath": "images/current/11-source/correspondence-full.png",
+    "sha256": "a131b1aef2bad218219a93d77a3374feb9da146e6398e1db09c5336c25f6b5f7"
+  },
+  ".vscode-test/visual-review/11-source/iteration-026/correspondence-target.png": {
+    "publishedPath": "images/current/11-source/correspondence-target.png",
+    "sha256": "c69fb5ec5f838084cf5de99d4eaaa7214736719fcf0af15e3add1495bdad8841"
+  },
+  ".vscode-test/visual-review/11-source/iteration-026/editing-full.png": {
+    "publishedPath": "images/current/11-source/editing-full.png",
+    "sha256": "2e5952b78ed86788ecb3c312dbd1393d59990a752514927baa0b4c54f7aefb3e"
+  },
+  ".vscode-test/visual-review/11-source/iteration-026/editing-target.png": {
+    "publishedPath": "images/current/11-source/editing-target.png",
+    "sha256": "98cbf8a2a8d7994b20ed8ef97af38b11804e6419ac3f6c990a27c678b6c2e8cf"
+  },
+  ".vscode-test/visual-review/11-source/iteration-026/narrow-full.png": {
+    "publishedPath": "images/current/11-source/narrow-full.png",
+    "sha256": "58f16e58022cf510bdf49c7396e2af2106883430a76e66829a572b1be69fed86"
+  },
+  ".vscode-test/visual-review/11-source/iteration-026/narrow-target.png": {
+    "publishedPath": "images/current/11-source/narrow-target.png",
+    "sha256": "58f16e58022cf510bdf49c7396e2af2106883430a76e66829a572b1be69fed86"
+  },
+  "reports/validation/2026-10-01-selected-ui-ux/images/07-export-submenu.jpg": {
+    "publishedPath": "images/before/07-export-submenu.jpg",
+    "sha256": "d45d7b00c9eecdd3e64b26d01c8a3773d7ede1991a82f93a479be39212d50cf7"
+  },
+  ".vscode-test/visual-fidelity/references/12-export-moderate.png": {
+    "publishedPath": "images/generated/12-export-moderate.png",
+    "sha256": "bb9676a2aa9f385907855a350ca9ab734e3cd554598412fd907187755e570285"
+  },
+  ".vscode-test/visual-review/12-export/iteration-029/packet.json": {
+    "publishedPath": "evidence/12-export/packet.json",
+    "sha256": "78b7d9a50838468340c5bec3402cbfc4026f10c914ca48cd271b3240f51da979"
+  },
+  ".vscode-test/visual-review/12-export/iteration-029/receipt.json": {
+    "publishedPath": "evidence/12-export/receipt.json",
+    "sha256": "84da344a9de4379c2f70d86e3c4cfaba8b7e66295cdfa8321193f68864d80cdc"
+  },
+  ".vscode-test/visual-review/12-export/iteration-029/groups.json": {
+    "publishedPath": "evidence/12-export/groups.json",
+    "sha256": "849226e6ae9e00881da8fd55e7ece132d278dbc668e86e886cd4de484dbb95cd"
+  },
+  ".vscode-test/visual-review/12-export/iteration-029/available-full.png": {
+    "publishedPath": "images/current/12-export/available-full.png",
+    "sha256": "5089aa165b1cb904eb371d69a4588f1b49cee1c51402721952f5d071a48df7cc"
+  },
+  ".vscode-test/visual-review/12-export/iteration-029/available-target.png": {
+    "publishedPath": "images/current/12-export/available-target.png",
+    "sha256": "52977809204df25ee425ce8cea22f9b6477eb6cad5fda9219073a33211f76360"
+  },
+  ".vscode-test/visual-review/12-export/iteration-029/missing-full.png": {
+    "publishedPath": "images/current/12-export/missing-full.png",
+    "sha256": "f3da1170992550e1264f1090c1e4abccb006e18cff75d362f6c5fbf109d87fcf"
+  },
+  ".vscode-test/visual-review/12-export/iteration-029/missing-target.png": {
+    "publishedPath": "images/current/12-export/missing-target.png",
+    "sha256": "abc73eaa216fa4dd41d583d239cf83e92c7d47b65ba036d85cd10b495870a46f"
+  },
+  ".vscode-test/visual-review/12-export/iteration-029/running-full.png": {
+    "publishedPath": "images/current/12-export/running-full.png",
+    "sha256": "4ecfb4d944f45fa5da6df64cc121ca10ff5c2537d5df2d09a67b67310f6d2b57"
+  },
+  ".vscode-test/visual-review/12-export/iteration-029/running-target.png": {
+    "publishedPath": "images/current/12-export/running-target.png",
+    "sha256": "701bef2fa7bdb5f6a9fbe87a3ba94c0128e5922e146634a49412ed63dcb786fc"
+  },
+  ".vscode-test/visual-review/12-export/iteration-029/canceling-full.png": {
+    "publishedPath": "images/current/12-export/canceling-full.png",
+    "sha256": "7c20c6ef45d9d86c5d839d262f0a82b2e018c1988b182262310cc4889cfd3564"
+  },
+  ".vscode-test/visual-review/12-export/iteration-029/canceling-target.png": {
+    "publishedPath": "images/current/12-export/canceling-target.png",
+    "sha256": "22ed03a3324644a52ef530d909bbed099ba882505cf7b8fc513a4a41af39535b"
+  },
+  ".vscode-test/visual-review/12-export/iteration-029/failure-full.png": {
+    "publishedPath": "images/current/12-export/failure-full.png",
+    "sha256": "c9fa416411542cf5eb9d1e9b822a467976c037d99cabc636bbf5aea4cb14bf7e"
+  },
+  ".vscode-test/visual-review/12-export/iteration-029/failure-target.png": {
+    "publishedPath": "images/current/12-export/failure-target.png",
+    "sha256": "3f3fe890db0d5a2116cf8eeb854b28fd6ac7e7a61439f1b6cee81d5ffa32f9d4"
+  },
+  ".vscode-test/visual-review/12-export/iteration-029/complete-full.png": {
+    "publishedPath": "images/current/12-export/complete-full.png",
+    "sha256": "993d0d7b573911c70055b17261a337886680c7f04d436c60292dcbd0aab6c309"
+  },
+  ".vscode-test/visual-review/12-export/iteration-029/complete-target.png": {
+    "publishedPath": "images/current/12-export/complete-target.png",
+    "sha256": "506345b30f720948879450c2b8ba725acfc0a0ca2cd4f0898a11c61b78cd038f"
+  },
+  ".vscode-test/visual-review/12-export/iteration-029/narrow-full.png": {
+    "publishedPath": "images/current/12-export/narrow-full.png",
+    "sha256": "632b351acbadbd07448ce0b2061b898ae6cb3c761a43e48026dc88a754780a23"
+  },
+  ".vscode-test/visual-review/12-export/iteration-029/narrow-target.png": {
+    "publishedPath": "images/current/12-export/narrow-target.png",
+    "sha256": "3c985ad520125bcea3660b8682c1590291db70c2634ef6e46c9437b7691a6ec0"
+  }
+}

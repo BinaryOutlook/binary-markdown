@@ -1,0 +1,210 @@
+{
+  "schemaVersion": 2,
+  "parentPacketDigest": "b9f769058870dbdaabc95d0eeff786d9e03d286f0c59b5a4a8c1905ab4289dc5",
+  "groups": [
+    {
+      "caseIds": [
+        "visual",
+        "source"
+      ],
+      "evaluation": {
+        "packetDigest": "b9f769058870dbdaabc95d0eeff786d9e03d286f0c59b5a4a8c1905ab4289dc5",
+        "sectionId": "11-source",
+        "verdict": "PASS",
+        "summary": "Both submitted states meet the immutable concept within the target regions. Visual and Source modes are explicitly selected, the host-editor action is clearly separate, Source-mode formatting controls are visibly unavailable, and both panes present the same document with readable heading correspondence. This pass applies only to the submitted Visual and Source cases; omitted checklist states remain pending.",
+        "openedImages": [
+          "39a8747bbda22735936a0af7de20f1203b5f994793d0e955d682dc305d8056a1",
+          "ea3398ed655e808f02b8f9d816093ba941cfbef83ca20f3391ada466a9f68c1f",
+          "6f70eb89c87a598a442aa7613f76fd6891baeeb2d3f9d5e67b5fed5f4bc375c6",
+          "a7bdfdf9157377ceb1a09180f3d26f53ed39d0747d022b53e6a082464ee14ca9",
+          "189a7081659df4e83d021e0537cf5542a38637b6011a5c886dd250fb566bfd69",
+          "02b473a6b66d10b82f6f96df231cd99fdc16826002109d7772390c051345fa1d"
+        ],
+        "caseAssessments": [
+          {
+            "caseId": "visual",
+            "assessable": true,
+            "criteria": [
+              {
+                "criterionId": "C1",
+                "result": "met",
+                "evidence": "The segmented Visual / Source / Split control clearly shows Visual selected in blue, while “Open in VS Code” remains a separate labeled action."
+              },
+              {
+                "criterionId": "C2",
+                "result": "met",
+                "evidence": "The Visual state uses the available target pane as a clean, centered document canvas with stable margins and no competing source pane, clipping, or obstruction."
+              },
+              {
+                "criterionId": "C3",
+                "result": "met",
+                "evidence": "The visible document structure is legible, and the Method selection in the adjacent outline corresponds to the clearly visible Method section in the visual document."
+              }
+            ]
+          },
+          {
+            "caseId": "source",
+            "assessable": true,
+            "criteria": [
+              {
+                "criterionId": "C1",
+                "result": "met",
+                "evidence": "Source is explicitly selected in blue; the host-editor action is separately labeled, and visual insertion/formatting commands are visibly dimmed while source-relevant controls remain clear."
+              },
+              {
+                "criterionId": "C2",
+                "result": "met",
+                "evidence": "The source editor occupies the full target workspace with readable monospace content, consistent margins, and no misleading preview or competing editing surface."
+              },
+              {
+                "criterionId": "C3",
+                "result": "met",
+                "evidence": "The source visibly contains the same Research notes, Method, Results, and Review checklist structure shown in the companion Visual state, with the selected Research notes outline entry matching the first source heading."
+              }
+            ]
+          }
+        ],
+        "discrepancies": [],
+        "priorResolutions": [],
+        "missingEvidence": []
+      },
+      "error": null
+    },
+    {
+      "caseIds": [
+        "split",
+        "correspondence"
+      ],
+      "evaluation": {
+        "packetDigest": "b9f769058870dbdaabc95d0eeff786d9e03d286f0c59b5a4a8c1905ab4289dc5",
+        "sectionId": "11-source",
+        "verdict": "PASS",
+        "summary": "Both submitted states visibly satisfy the section criteria. Split mode is explicit, the source and read-only preview panes are balanced and clearly labeled, and the selected heading is consistently identified across source and preview. This pass applies only to the submitted Split and Corresponding selected heading cases.",
+        "openedImages": [
+          "39a8747bbda22735936a0af7de20f1203b5f994793d0e955d682dc305d8056a1",
+          "ea3398ed655e808f02b8f9d816093ba941cfbef83ca20f3391ada466a9f68c1f",
+          "e8af71620777eee24203c1d6a957a2bf40b37334484d157a8a42576528b30e08",
+          "734789e6ea3e5092e843ed50f33e6deef6330a5d688d9a8ad3e6c9e9b196243f",
+          "a131b1aef2bad218219a93d77a3374feb9da146e6398e1db09c5336c25f6b5f7",
+          "c69fb5ec5f838084cf5de99d4eaaa7214736719fcf0af15e3add1495bdad8841"
+        ],
+        "caseAssessments": [
+          {
+            "caseId": "split",
+            "assessable": true,
+            "criteria": [
+              {
+                "criterionId": "C1",
+                "result": "met",
+                "evidence": "The segmented Visual/Source/Split selector visibly shows Split as active. “Source (Markdown)” identifies the editable side, “Preview (Read only)” identifies the non-editable side, and “Open in VS Code” remains a distinct labeled action."
+              },
+              {
+                "criterionId": "C2",
+                "result": "met",
+                "evidence": "The target render shows two complete, nearly equal-width panes separated by a crisp divider. Both pane labels remain readable, and neither pane is clipped or obstructed."
+              },
+              {
+                "criterionId": "C3",
+                "result": "met",
+                "evidence": "The same document structure and content are simultaneously visible in source and rendered preview, with the Research notes heading carrying aligned selection cues in both panes."
+              }
+            ]
+          },
+          {
+            "caseId": "correspondence",
+            "assessable": true,
+            "criteria": [
+              {
+                "criterionId": "C1",
+                "result": "met",
+                "evidence": "Split remains explicitly selected, while the pane labels clearly distinguish Markdown source from the read-only preview and preserve a single visible editing authority."
+              },
+              {
+                "criterionId": "C2",
+                "result": "met",
+                "evidence": "The source and preview remain evenly composed across the available target width with stable labels, divider, margins, and fully visible relevant content."
+              },
+              {
+                "criterionId": "C3",
+                "result": "met",
+                "evidence": "“Results” is visibly selected in the source with a blue edge and highlighted row, and the matching rendered Results heading carries the corresponding blue edge and highlight in the preview."
+              }
+            ]
+          }
+        ],
+        "discrepancies": [],
+        "priorResolutions": [],
+        "missingEvidence": []
+      },
+      "error": null
+    },
+    {
+      "caseIds": [
+        "editing",
+        "narrow"
+      ],
+      "evaluation": {
+        "packetDigest": "b9f769058870dbdaabc95d0eeff786d9e03d286f0c59b5a4a8c1905ab4289dc5",
+        "sectionId": "11-source",
+        "verdict": "PASS",
+        "summary": "Both submitted states satisfy the target criteria. The editing render clearly identifies Split mode, separates editable Source from read-only Preview, maintains a balanced side-by-side composition, and visibly carries the same edited content and selected heading into the preview. The narrow render preserves the explicit mode selector, pane labels, editing authority, stacked usability, and heading correspondence.",
+        "openedImages": [
+          "39a8747bbda22735936a0af7de20f1203b5f994793d0e955d682dc305d8056a1",
+          "ea3398ed655e808f02b8f9d816093ba941cfbef83ca20f3391ada466a9f68c1f",
+          "2e5952b78ed86788ecb3c312dbd1393d59990a752514927baa0b4c54f7aefb3e",
+          "98cbf8a2a8d7994b20ed8ef97af38b11804e6419ac3f6c990a27c678b6c2e8cf",
+          "58f16e58022cf510bdf49c7396e2af2106883430a76e66829a572b1be69fed86",
+          "58f16e58022cf510bdf49c7396e2af2106883430a76e66829a572b1be69fed86"
+        ],
+        "caseAssessments": [
+          {
+            "caseId": "editing",
+            "assessable": true,
+            "criteria": [
+              {
+                "criterionId": "C1",
+                "result": "met",
+                "evidence": "The toolbar visibly marks Split in blue, while the panes are explicitly labeled “Source (Markdown)” and “Preview (Read only).” The source is the sole editing surface, and “Open in VS Code” remains a separately labeled host-editor action."
+              },
+              {
+                "criterionId": "C2",
+                "result": "met",
+                "evidence": "The target render shows a clean, approximately equal-width side-by-side division with a crisp central divider, consistent pane headers, generous usable space, and no clipping or obstruction of either target pane."
+              },
+              {
+                "criterionId": "C3",
+                "result": "met",
+                "evidence": "The source and preview visibly contain the same revised document details, including the added Status column, Follow-up row, updated checklist item, and live-edit sentence. The selected “Review checklist” heading is highlighted in the source and matched by a blue-edged gray cue on the same preview heading."
+              }
+            ]
+          },
+          {
+            "caseId": "narrow",
+            "assessable": true,
+            "criteria": [
+              {
+                "criterionId": "C1",
+                "result": "met",
+                "evidence": "Split remains explicitly selected in the compact mode control. “Source (Markdown)” and “Preview (Read only)” clearly distinguish the editable and read-only regions in the stacked layout."
+              },
+              {
+                "criterionId": "C2",
+                "result": "met",
+                "evidence": "At 480 px, the panes reflow vertically rather than becoming cramped columns. Each pane retains a full-width header and readable content area, with the preview beginning below the source and no horizontal clipping in the target."
+              },
+              {
+                "criterionId": "C3",
+                "result": "met",
+                "evidence": "The highlighted “Research notes” source heading corresponds to the blue-edged gray highlight on the preview’s “Research notes” heading. Both labels and the shared document content remain legible in the stacked state."
+              }
+            ]
+          }
+        ],
+        "discrepancies": [],
+        "priorResolutions": [],
+        "missingEvidence": []
+      },
+      "error": null
+    }
+  ]
+}

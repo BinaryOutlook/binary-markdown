@@ -1,0 +1,295 @@
+{
+  "schemaVersion": 1,
+  "sectionId": "08-diagrams",
+  "title": "Diagram errors and edit affordance",
+  "designCommit": "a798921f7e5a9b01a88360315b035a391f69da47",
+  "contractHash": "6a49fa68b56b31cae2ecb755cf2986d4dc9e20fc4f48b544e02c0560c95bb13c",
+  "designBrief": "Consistent minimalist Binary Markdown desktop-editor language. Flat off-white canvas #FAFAF8, pale neutral rail #F3F4F5, charcoal text #242830, one restrained blue accent #4266B0. For dark subjects use charcoal #1B1E26 and slate surfaces #272D38 with legible pale tokens and the same blue accent. Familiar system sans typography and monospace only for source. Crisp 1px dividers, 6px corner radii, 8px spacing increments, no decorative gradients, no glass, no giant cards, no marketing art, no invented logo. Preserve the real Markdown-editor identity and useful commands. This is a proposed static design concept, not a working product. Show one option only, with readable exact short labels and synthetic research-note content.",
+  "ownerAdjustments": [
+    "Retain strict rendering and original Mermaid source; parser locations are shown only when reliable."
+  ],
+  "targetRegions": [
+    {
+      "id": "diagram",
+      "description": "Mermaid block: explicit Source/Preview modes, render status, local concise diagnostic/source cue and valid diagram styling."
+    }
+  ],
+  "excludedRegions": [
+    "main toolbar",
+    "outline",
+    "authored prose outside Mermaid",
+    "desktop chrome",
+    "reference caption bands and numbered pins"
+  ],
+  "obstructionException": "Excluded UI matters only if it clips or obstructs this target. Never grade its independent design.",
+  "criteria": [
+    {
+      "id": "C1",
+      "description": "Explicit Source/Preview modes and status"
+    },
+    {
+      "id": "C2",
+      "description": "Concise local diagnostic and reliable source cue"
+    },
+    {
+      "id": "C3",
+      "description": "Calm valid diagram treatment"
+    }
+  ],
+  "requiredStates": [
+    "Valid preview",
+    "Invalid diagram",
+    "Source editing",
+    "Long diagnostic",
+    "Narrow pane"
+  ],
+  "references": [
+    {
+      "path": ".vscode-test/visual-fidelity/references/08-diagrams-moderate.png",
+      "sha256": "2c6e35ce060853039fc3d4f854505182238a88a1958a0f5ffed1d81cf6d11c77",
+      "width": 1672,
+      "height": 941,
+      "bytes": 1126869,
+      "level": "Moderate",
+      "intent": "Render a compact Mermaid block header with Preview / Source modes, a status label Needs attention, an editable source region, and a concise error with the problematic line emphasized. Pins: 1 explicit source/preview modes; 2 local error near its source; 3 valid content retains calm diagram styling. No auto-fix button.",
+      "annotations": [
+        "Explicit source/preview modes",
+        "Local error near its source",
+        "Valid content retains calm diagram styling"
+      ]
+    }
+  ],
+  "source": {
+    "commit": "9941d02028b4989a2af4d7647c6b972d11ff5529",
+    "dirty": true,
+    "productHash": "334c1575ab0be09973a26f60ff320f2ab673b05cc2538bcb6cef79f15096c344"
+  },
+  "capture": {
+    "kind": "production browser fixture",
+    "hostBoundary": "Synthetic test bridge; no installed-host or converter result is claimed.",
+    "browser": "Chromium 145.0.7632.6",
+    "node": "v24.21.0",
+    "inputHash": "0c35cc55c5aa77490c82a55f8e0ef8baea12d5342608d60b8009c6d14ae00afb",
+    "fixtureHash": "23c0726bf4671e05c7c6242815d292a5989ee4acc06821858c800a64c68360a1",
+    "deviceScaleFactor": 1
+  },
+  "cases": [
+    {
+      "id": "preview",
+      "state": "Valid preview",
+      "comparison": "Direct Moderate valid diagram in Preview.",
+      "targetBounds": {
+        "x": 480,
+        "y": 174.78125,
+        "width": 740,
+        "height": 176.6875
+      },
+      "observedEditorFocus": false,
+      "inputHash": "eddd3a7b03ed10337038ae06a80a2b6833a405422566b2108615ac0a797c77e7",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "minimal",
+      "observedThemeTokens": {
+        "--bg-color": "#fafafa",
+        "--text-color": "#333333",
+        "--link-color": "#4266b0",
+        "--outline-active-color": "#4266b0",
+        "--selection-bg": "#d0d0d0"
+      },
+      "locale": "en-US",
+      "zoom": 1,
+      "images": [
+        {
+          "path": ".vscode-test/visual-review/08-diagrams/iteration-026/preview-full.png",
+          "sha256": "8c3fad976de88a9ec9c755485214c16a8c818502d1d733837154150d5dc5ba51",
+          "width": 1440,
+          "height": 1000,
+          "bytes": 46942
+        },
+        {
+          "path": ".vscode-test/visual-review/08-diagrams/iteration-026/preview-target.png",
+          "sha256": "5992ae434541be7d66094afe0dd4196a870576fea779de4232f0d40d44af801b",
+          "width": 740,
+          "height": 176,
+          "bytes": 10381
+        }
+      ]
+    },
+    {
+      "id": "invalid",
+      "state": "Invalid diagram",
+      "comparison": "Direct Moderate local error beside visible authored Source, with reliable line cue.",
+      "targetBounds": {
+        "x": 480,
+        "y": 174.78125,
+        "width": 740,
+        "height": 387.453125
+      },
+      "observedEditorFocus": true,
+      "inputHash": "81d9d6cd892ca694c10d3b950ba9853e0b568d9aef357062a57f79fb3bdc1d93",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "minimal",
+      "observedThemeTokens": {
+        "--bg-color": "#fafafa",
+        "--text-color": "#333333",
+        "--link-color": "#4266b0",
+        "--outline-active-color": "#4266b0",
+        "--selection-bg": "#d0d0d0"
+      },
+      "locale": "en-US",
+      "zoom": 1,
+      "images": [
+        {
+          "path": ".vscode-test/visual-review/08-diagrams/iteration-026/invalid-full.png",
+          "sha256": "374568be0b2b87a70b1c93867feaf50c7d902c46b63b073259435c045aab8533",
+          "width": 1440,
+          "height": 1000,
+          "bytes": 62287
+        },
+        {
+          "path": ".vscode-test/visual-review/08-diagrams/iteration-026/invalid-target.png",
+          "sha256": "834b8c3d45f0399dc5ba354eae23836be8728d63d8306dec4efcf4fe1c02265d",
+          "width": 740,
+          "height": 387,
+          "bytes": 25606
+        }
+      ]
+    },
+    {
+      "id": "source",
+      "state": "Source editing",
+      "comparison": "Direct Moderate source-editing mode with explicit selected control.",
+      "targetBounds": {
+        "x": 480,
+        "y": 174.78125,
+        "width": 740,
+        "height": 276.46875
+      },
+      "observedEditorFocus": true,
+      "inputHash": "eddd3a7b03ed10337038ae06a80a2b6833a405422566b2108615ac0a797c77e7",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "minimal",
+      "observedThemeTokens": {
+        "--bg-color": "#fafafa",
+        "--text-color": "#333333",
+        "--link-color": "#4266b0",
+        "--outline-active-color": "#4266b0",
+        "--selection-bg": "#d0d0d0"
+      },
+      "locale": "en-US",
+      "zoom": 1,
+      "images": [
+        {
+          "path": ".vscode-test/visual-review/08-diagrams/iteration-026/source-full.png",
+          "sha256": "b19cc2053c7d3965c7a534402d55384f87494144f085938206e92d76423be5a7",
+          "width": 1440,
+          "height": 1000,
+          "bytes": 52851
+        },
+        {
+          "path": ".vscode-test/visual-review/08-diagrams/iteration-026/source-target.png",
+          "sha256": "ef48e74d8112e5b1427bedd12a2b8d3250f2a050b5413c3dea2ae914d4dcd9ac",
+          "width": 740,
+          "height": 276,
+          "bytes": 16068
+        }
+      ]
+    },
+    {
+      "id": "diagnostic",
+      "state": "Long diagnostic",
+      "comparison": "Derived parser diagnostic is bounded and expandable, retains honest location.",
+      "targetBounds": {
+        "x": 480,
+        "y": 174.78125,
+        "width": 740,
+        "height": 495.953125
+      },
+      "observedEditorFocus": true,
+      "inputHash": "81d9d6cd892ca694c10d3b950ba9853e0b568d9aef357062a57f79fb3bdc1d93",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "minimal",
+      "observedThemeTokens": {
+        "--bg-color": "#fafafa",
+        "--text-color": "#333333",
+        "--link-color": "#4266b0",
+        "--outline-active-color": "#4266b0",
+        "--selection-bg": "#d0d0d0"
+      },
+      "locale": "en-US",
+      "zoom": 1,
+      "images": [
+        {
+          "path": ".vscode-test/visual-review/08-diagrams/iteration-026/diagnostic-full.png",
+          "sha256": "a3f16800cba05139dae7c95f791af401f9dc093f4330d3928449023545608874",
+          "width": 1440,
+          "height": 1000,
+          "bytes": 75716
+        },
+        {
+          "path": ".vscode-test/visual-review/08-diagrams/iteration-026/diagnostic-target.png",
+          "sha256": "8d953041114739837fd53ac1796e90ba8dd810f60583e2a8ee817ed3cb5ad196",
+          "width": 740,
+          "height": 495,
+          "bytes": 38444
+        }
+      ]
+    },
+    {
+      "id": "narrow",
+      "state": "Narrow pane",
+      "comparison": "Derived narrow source/diagnostic treatment without clipping.",
+      "targetBounds": {
+        "x": 33.59375,
+        "y": 174.78125,
+        "width": 412.8125,
+        "height": 405.453125
+      },
+      "observedEditorFocus": true,
+      "inputHash": "81d9d6cd892ca694c10d3b950ba9853e0b568d9aef357062a57f79fb3bdc1d93",
+      "viewport": {
+        "width": 480,
+        "height": 1000
+      },
+      "theme": "minimal",
+      "observedThemeTokens": {
+        "--bg-color": "#fafafa",
+        "--text-color": "#333333",
+        "--link-color": "#4266b0",
+        "--outline-active-color": "#4266b0",
+        "--selection-bg": "#d0d0d0"
+      },
+      "locale": "en-US",
+      "zoom": 1,
+      "images": [
+        {
+          "path": ".vscode-test/visual-review/08-diagrams/iteration-026/narrow-full.png",
+          "sha256": "cad5d8858fdbf7af7bf41fbf85cb53be6b8fdad151fdd70d0c49b24958a58294",
+          "width": 480,
+          "height": 1000,
+          "bytes": 39158
+        },
+        {
+          "path": ".vscode-test/visual-review/08-diagrams/iteration-026/narrow-target.png",
+          "sha256": "689f34cbc4e278628dba0aca5bc5951e0e3ac8b4f6536fa6ed7f148f8b434311",
+          "width": 412,
+          "height": 405,
+          "bytes": 24030
+        }
+      ]
+    }
+  ],
+  "priorFailures": [],
+  "packetDigest": "7ad9c1557dbfa59df7acfb1ed0ff17ce2b373e01657e5ec4dcef14a46caf241b"
+}

@@ -1,0 +1,295 @@
+{
+  "schemaVersion": 1,
+  "sectionId": "07-equations",
+  "title": "Equation source and error recovery",
+  "designCommit": "a798921f7e5a9b01a88360315b035a391f69da47",
+  "contractHash": "6a49fa68b56b31cae2ecb755cf2986d4dc9e20fc4f48b544e02c0560c95bb13c",
+  "designBrief": "Consistent minimalist Binary Markdown desktop-editor language. Flat off-white canvas #FAFAF8, pale neutral rail #F3F4F5, charcoal text #242830, one restrained blue accent #4266B0. For dark subjects use charcoal #1B1E26 and slate surfaces #272D38 with legible pale tokens and the same blue accent. Familiar system sans typography and monospace only for source. Crisp 1px dividers, 6px corner radii, 8px spacing increments, no decorative gradients, no glass, no giant cards, no marketing art, no invented logo. Preserve the real Markdown-editor identity and useful commands. This is a proposed static design concept, not a working product. Show one option only, with readable exact short labels and synthetic research-note content.",
+  "ownerAdjustments": [
+    "Retain the authored TeX and source-position/wrap settings; do not silently correct invalid expressions."
+  ],
+  "targetRegions": [
+    {
+      "id": "equation",
+      "description": "Equation header, distinct Source/Preview panes, local unsupported-command warning/source cue and Shift+Enter guidance."
+    }
+  ],
+  "excludedRegions": [
+    "main toolbar",
+    "outline",
+    "authored prose outside equation",
+    "desktop chrome",
+    "reference caption bands and numbered pins"
+  ],
+  "obstructionException": "Excluded UI matters only if it clips or obstructs this target. Never grade its independent design.",
+  "criteria": [
+    {
+      "id": "C1",
+      "description": "Distinct Source/Preview labels"
+    },
+    {
+      "id": "C2",
+      "description": "Concise local warning with reliable source cue"
+    },
+    {
+      "id": "C3",
+      "description": "Discoverable Shift+Enter exit guidance"
+    }
+  ],
+  "requiredStates": [
+    "Valid preview",
+    "Active source",
+    "Unsupported command",
+    "Long source",
+    "Narrow pane"
+  ],
+  "references": [
+    {
+      "path": ".vscode-test/visual-fidelity/references/07-equations-recommended.png",
+      "sha256": "5c87f61e24a7452836ce7a3efb1e6f4d95fd72d437d2462c4712696bd806ca74",
+      "width": 1672,
+      "height": 941,
+      "bytes": 1062606,
+      "level": "Recommended",
+      "intent": "Retain the existing inline source and preview arrangement. Add a compact header 'Equation' and labels Source and Preview; show a clear inline warning 'Unknown command' linked to the visible unsupported command in the source. Keep the authored TeX unchanged and add short existing keyboard guidance 'Shift+Enter to return to text'. Pins: 1 source and preview are distinguished; 2 plain error explains the red command; 3 exit guidance reduces mode uncertainty. Render a simple a+b over c expression, and show unsupported command as an error, not corrected silently.",
+      "annotations": [
+        "Source and preview are distinguished",
+        "Plain error explains the red command",
+        "Exit guidance reduces mode uncertainty"
+      ]
+    }
+  ],
+  "source": {
+    "commit": "9941d02028b4989a2af4d7647c6b972d11ff5529",
+    "dirty": true,
+    "productHash": "334c1575ab0be09973a26f60ff320f2ab673b05cc2538bcb6cef79f15096c344"
+  },
+  "capture": {
+    "kind": "production browser fixture",
+    "hostBoundary": "Synthetic test bridge; no installed-host or converter result is claimed.",
+    "browser": "Chromium 145.0.7632.6",
+    "node": "v24.21.0",
+    "inputHash": "0c35cc55c5aa77490c82a55f8e0ef8baea12d5342608d60b8009c6d14ae00afb",
+    "fixtureHash": "23c0726bf4671e05c7c6242815d292a5989ee4acc06821858c800a64c68360a1",
+    "deviceScaleFactor": 1
+  },
+  "cases": [
+    {
+      "id": "preview",
+      "state": "Valid preview",
+      "comparison": "Derived valid equation with calm labeled Preview.",
+      "targetBounds": {
+        "x": 480,
+        "y": 216.375,
+        "width": 740,
+        "height": 170.828125
+      },
+      "observedEditorFocus": false,
+      "inputHash": "96d146b234c2d43b18b315a5e3e9723df7643f70aa396d7cedef972d6c877d62",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "minimal",
+      "observedThemeTokens": {
+        "--bg-color": "#fafafa",
+        "--text-color": "#333333",
+        "--link-color": "#4266b0",
+        "--outline-active-color": "#4266b0",
+        "--selection-bg": "#d0d0d0"
+      },
+      "locale": "en-US",
+      "zoom": 1,
+      "images": [
+        {
+          "path": ".vscode-test/visual-review/07-equations/iteration-025/preview-full.png",
+          "sha256": "6f62b8122e2dfe73de863cfc14714d275fc3a0ee4cde7523aecc3a7a93d77c44",
+          "width": 1440,
+          "height": 1000,
+          "bytes": 44825
+        },
+        {
+          "path": ".vscode-test/visual-review/07-equations/iteration-025/preview-target.png",
+          "sha256": "61c90d5a94acf4b45296e9c31db050fb251f361b82bfc4a3d0a82aad4ab2e426",
+          "width": 740,
+          "height": 170,
+          "bytes": 6089
+        }
+      ]
+    },
+    {
+      "id": "source",
+      "state": "Active source",
+      "comparison": "Direct Recommended active Source and Preview with exit guidance.",
+      "targetBounds": {
+        "x": 480,
+        "y": 216.375,
+        "width": 740,
+        "height": 248.21875
+      },
+      "observedEditorFocus": true,
+      "inputHash": "96d146b234c2d43b18b315a5e3e9723df7643f70aa396d7cedef972d6c877d62",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "minimal",
+      "observedThemeTokens": {
+        "--bg-color": "#fafafa",
+        "--text-color": "#333333",
+        "--link-color": "#4266b0",
+        "--outline-active-color": "#4266b0",
+        "--selection-bg": "#d0d0d0"
+      },
+      "locale": "en-US",
+      "zoom": 1,
+      "images": [
+        {
+          "path": ".vscode-test/visual-review/07-equations/iteration-025/source-full.png",
+          "sha256": "6392ae00126426cbd0462081ab92f3e7058df639f21c5aea2a2c1ae0bdd29580",
+          "width": 1440,
+          "height": 1000,
+          "bytes": 48071
+        },
+        {
+          "path": ".vscode-test/visual-review/07-equations/iteration-025/source-target.png",
+          "sha256": "a3adfb8f3f44d815da21115978ea5d5f9665b5907e5b7c0551f4c34482976aa8",
+          "width": 740,
+          "height": 248,
+          "bytes": 9261
+        }
+      ]
+    },
+    {
+      "id": "unsupported",
+      "state": "Unsupported command",
+      "comparison": "Direct Recommended unsupported command, concise local warning and honest source cue.",
+      "targetBounds": {
+        "x": 480,
+        "y": 216.375,
+        "width": 740,
+        "height": 314.21875
+      },
+      "observedEditorFocus": true,
+      "inputHash": "f289c22d5d67b8ed9d2b8ffd1ed956a76faaee97d13cea2c6b56f8fe5bc2dcd7",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "minimal",
+      "observedThemeTokens": {
+        "--bg-color": "#fafafa",
+        "--text-color": "#333333",
+        "--link-color": "#4266b0",
+        "--outline-active-color": "#4266b0",
+        "--selection-bg": "#d0d0d0"
+      },
+      "locale": "en-US",
+      "zoom": 1,
+      "images": [
+        {
+          "path": ".vscode-test/visual-review/07-equations/iteration-025/unsupported-full.png",
+          "sha256": "b8155afdd4b1004321c227d7fc7247df33321ea53f973a813ae9b8b8c69febca",
+          "width": 1440,
+          "height": 1000,
+          "bytes": 60136
+        },
+        {
+          "path": ".vscode-test/visual-review/07-equations/iteration-025/unsupported-target.png",
+          "sha256": "fb50d7c229309d8dbd68b3a78415d8324f5c3beac2e8bc8d525782c2900cb020",
+          "width": 740,
+          "height": 314,
+          "bytes": 21073
+        }
+      ]
+    },
+    {
+      "id": "long",
+      "state": "Long source",
+      "comparison": "Derived long authored TeX retains usable source/preview treatment.",
+      "targetBounds": {
+        "x": 480,
+        "y": 216.375,
+        "width": 740,
+        "height": 320.21875
+      },
+      "observedEditorFocus": true,
+      "inputHash": "7f1b51906605c6a790a34c33ce99557c93642cf352e70af6a6f946dd94f4dc71",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "minimal",
+      "observedThemeTokens": {
+        "--bg-color": "#fafafa",
+        "--text-color": "#333333",
+        "--link-color": "#4266b0",
+        "--outline-active-color": "#4266b0",
+        "--selection-bg": "#d0d0d0"
+      },
+      "locale": "en-US",
+      "zoom": 1,
+      "images": [
+        {
+          "path": ".vscode-test/visual-review/07-equations/iteration-025/long-full.png",
+          "sha256": "6e51a12cc2c9ab2a09ca3a68ed99ef65c193288b3c17a955ec3eb1969de2f879",
+          "width": 1440,
+          "height": 1000,
+          "bytes": 58644
+        },
+        {
+          "path": ".vscode-test/visual-review/07-equations/iteration-025/long-target.png",
+          "sha256": "48ad5a66d353663c02d2c237add2fe6180860635becf4544716370d17e31353d",
+          "width": 740,
+          "height": 320,
+          "bytes": 18971
+        }
+      ]
+    },
+    {
+      "id": "narrow",
+      "state": "Narrow pane",
+      "comparison": "Derived narrow equation panes/diagnostics remain readable.",
+      "targetBounds": {
+        "x": 33.59375,
+        "y": 216.375,
+        "width": 412.8125,
+        "height": 314.21875
+      },
+      "observedEditorFocus": true,
+      "inputHash": "f289c22d5d67b8ed9d2b8ffd1ed956a76faaee97d13cea2c6b56f8fe5bc2dcd7",
+      "viewport": {
+        "width": 480,
+        "height": 1000
+      },
+      "theme": "minimal",
+      "observedThemeTokens": {
+        "--bg-color": "#fafafa",
+        "--text-color": "#333333",
+        "--link-color": "#4266b0",
+        "--outline-active-color": "#4266b0",
+        "--selection-bg": "#d0d0d0"
+      },
+      "locale": "en-US",
+      "zoom": 1,
+      "images": [
+        {
+          "path": ".vscode-test/visual-review/07-equations/iteration-025/narrow-full.png",
+          "sha256": "5f15e16cb09b4433d1e9f56d8681e51674e747e0af21b8238846f940536ef15a",
+          "width": 480,
+          "height": 1000,
+          "bytes": 37358
+        },
+        {
+          "path": ".vscode-test/visual-review/07-equations/iteration-025/narrow-target.png",
+          "sha256": "0c934ffb1039efb59b894b547d592d236064b8181346069395e700d57b61e523",
+          "width": 412,
+          "height": 314,
+          "bytes": 19813
+        }
+      ]
+    }
+  ],
+  "priorFailures": [],
+  "packetDigest": "46be45027ffb9688fdc321f5e7a20893b7328744939b2a13052ef339229a21f8"
+}
