@@ -12585,8 +12585,21 @@
             row.classList.toggle('insert-command-clipped', narrow && !complete);
             if (complete) visible.push(index);
         });
+        const atEnd = list.scrollTop + list.clientHeight >= list.scrollHeight - 1;
         footer.querySelector('[data-direction="previous"]').disabled = list.scrollTop <= 1;
-        footer.querySelector('[data-direction="next"]').disabled = list.scrollTop + list.clientHeight >= list.scrollHeight - 1;
+        footer.querySelector('[data-direction="next"]').disabled = atEnd;
+        if (narrow && atEnd && visible.length) {
+            // Whole-card clipping can leave a partial preceding card's empty
+            // space above the final page. Fit that page to its complete rows,
+            // preserving the bottom anchor and every command's hit target.
+            const gap = rows[visible[0]].getBoundingClientRect().top - bounds.top - 8;
+            if (gap > 8) {
+                list.style.maxHeight = Math.max(80, list.clientHeight - gap) + 'px';
+                list.scrollTop = list.scrollHeight;
+                requestAnimationFrame(updateInsertScroll);
+                return;
+            }
+        }
         footer.querySelector('output').textContent = visible.length ? (visible[0] + 1) + '–' + (visible.at(-1) + 1) + ' / ' + rows.length : String(rows.length);
     }
 

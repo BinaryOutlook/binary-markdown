@@ -1371,6 +1371,7 @@ button.outline-item.is-active { background: color-mix(in srgb, var(--outline-act
 .insert-scroll { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 12px; border-top: 1px solid var(--border-color); font-size: 12px; }
 .insert-scroll[hidden] { display: none; }
 .insert-scroll button { width: auto; padding: 6px 8px; }
+.insert-scroll button:disabled, .insert-scroll button:disabled:hover, .insert-scroll button:disabled:focus { opacity: .45; background: transparent; cursor: default; outline: none; }
 .insert-scroll output { white-space: nowrap; color: var(--blockquote-color); }
 .insert-command-clipped { visibility: hidden; }
 .insert-options { padding: 16px; min-width: 0; overflow-y: auto; scrollbar-gutter: stable; }

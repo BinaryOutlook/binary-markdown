@@ -388,6 +388,11 @@ test('narrow Insert exposes complete lower commands through visible view-only na
     await expect(page.locator('[data-insert-action="mermaid"]')).toBeVisible();
     await expect(page.locator('.insert-scroll output')).toContainText('/ 8');
     await expect(next).toBeDisabled();
+    await expect(next).toHaveCSS('opacity', '0.45');
+    expect(await page.locator('.insert-options').evaluate(list => {
+        const first = list.querySelector('.insert-command:not([hidden]):not(.insert-command-clipped)')!;
+        return first.getBoundingClientRect().top - list.getBoundingClientRect().top;
+    })).toBeLessThanOrEqual(24);
     await page.locator('.insert-scroll [data-direction="previous"]').click();
     await expect(next).toBeEnabled();
     expect(await snapshot(page)).toMatchObject({ content: authored, pending: false });
