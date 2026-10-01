@@ -25,6 +25,36 @@ test('views, outline tabs and contextual toggle preserve authored source and cle
     await expect(page.locator('[data-action="undo"]')).toBeDisabled();
 });
 
+test('permanent All actions is keyboard reachable and preserves selection in contextual and narrow toolbars', async ({ page }) => {
+    await setup(page);
+    await expect(page.locator('#allActionsButton')).toBeHidden();
+    await page.locator('#contextToolbarToggle').click();
+    await page.locator('#editor strong').evaluate(node => {
+        const range = document.createRange(); range.selectNodeContents(node);
+        getSelection()!.removeAllRanges(); getSelection()!.addRange(range);
+    });
+    const actions = page.locator('#allActionsButton');
+    await expect(actions).toHaveAccessibleName('All actions');
+    await actions.focus(); await actions.press('Enter');
+    await expect(page.getByRole('dialog', { name: 'All actions', exact: true })).toBeVisible();
+    await expect(actions).toHaveAttribute('aria-expanded', 'true');
+    await page.locator('.command-palette-input').press('Escape');
+    await expect(actions).toHaveAttribute('aria-expanded', 'false');
+    expect(await page.evaluate(() => getSelection()?.toString())).toBe('target');
+    await page.setViewportSize({ width: 320, height: 600 });
+    await expect(page.locator('#toolbarOverflow #allActionsButton')).toHaveCount(1);
+    await page.locator('#toolbarMore').click();
+    await actions.click();
+    await expect(page.locator('#toolbarOverflow')).toBeHidden();
+    await expect(page.getByRole('dialog', { name: 'All actions', exact: true })).toBeVisible();
+    await page.locator('.command-palette-input').press('Escape');
+    expect(await snapshot(page)).toMatchObject({ content: authored, pending: false });
+    await expect(page.locator('#toolbar [data-action="undo"]')).toBeDisabled();
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.locator('button[data-editor-mode="source"]').click();
+    await expect(actions).toBeDisabled();
+});
+
 test('Split source edits share Undo with Visual and the preview is read only', async ({ page }) => {
     await setup(page);
     await page.locator('button[data-editor-mode="split"]').click();

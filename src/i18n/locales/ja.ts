@@ -60,6 +60,7 @@ export const webviewMessages = {
   historyDescription: "共有履歴で文書の編集を元に戻したり、やり直したりします。",
   viewDescription: "文書を変更せずに移動、検索、ビューの表示を行います。",
   formatActions: "書式",
+  allActions: "すべての操作",
   contextualTools: "選択時のツール",
   findReplaceTitle: '検索と置換',
   findLabel: '検索',

@@ -41,6 +41,22 @@ for (const position of ['auto', 'top-left', 'top-right', 'bottom-left', 'bottom-
     });
 }
 
+for (const position of ['bottom-left', 'bottom-right']) {
+    test(`${position}: the lower boundary target remains clickable outside the inspector`, async ({ page }) => {
+        await setup(page, position);
+        const lower = page.locator('.table-boundary-actions [data-action="add-row-below"]');
+        await expect(lower).toBeVisible();
+        await expect.poll(() => lower.evaluate(button => {
+            const rect = button.getBoundingClientRect();
+            return button.contains(document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2));
+        })).toBe(true);
+        await lower.click();
+        await expect(page.locator('#editor tr')).toHaveCount(4);
+        await page.locator('#toolbar [data-action="undo"]').click();
+        expect(await page.evaluate(() => (window as any).htmlToMarkdown())).toBe(documentText);
+    });
+}
+
 test('Full mode gives docked column insertion its own row in a narrow editor', async ({ page }) => {
     await page.setViewportSize({ width: 600, height: 800 });
     await setup(page, 'top-bar', 'full');

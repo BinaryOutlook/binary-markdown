@@ -60,6 +60,7 @@ export const webviewMessages = {
   historyDescription: "Undo or redo document edits using the shared history.",
   viewDescription: "Navigate, search, or open a view without changing the document.",
   formatActions: "Format",
+  allActions: "All actions",
   contextualTools: "Contextual tools",
   findReplaceTitle: 'Find and replace',
   findLabel: 'Find',

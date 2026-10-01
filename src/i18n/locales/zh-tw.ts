@@ -60,6 +60,7 @@ export const webviewMessages = {
   historyDescription: "使用共用歷史復原或重做文件編輯。",
   viewDescription: "導覽、搜尋或開啟檢視，不變更文件。",
   formatActions: "格式",
+  allActions: "所有操作",
   contextualTools: "情境工具",
   findReplaceTitle: '尋找與取代',
   findLabel: '尋找',

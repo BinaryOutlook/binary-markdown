@@ -12177,7 +12177,7 @@
 
         const action = btn.dataset.action;
         if (!action) return;
-        if (['insertMenu', 'formatActions', 'contextToolbar'].includes(action)) return;
+        if (['insertMenu', 'formatActions', 'allActions', 'contextToolbar'].includes(action)) return;
         if (btn.matches('[data-export-format], [data-export-action]') ||
             (action && action.indexOf('export') === 0)) return;
         closeToolbarOverflow(false);
@@ -12786,8 +12786,9 @@
         if (commandPalette) return;
 
         commandPalette = document.createElement('div');
+        commandPalette.id = 'commandPalette';
         commandPalette.className = 'command-palette';
-        commandPalette.setAttribute('role', 'dialog'); commandPalette.setAttribute('aria-label', i18n.formatActions);
+        commandPalette.setAttribute('role', 'dialog'); commandPalette.setAttribute('aria-label', i18n.allActions);
         commandPalette.style.display = 'none';
 
         // Search area
@@ -12985,6 +12986,7 @@
 
     function openCommandPalette() {
         if (isSourceMode) return;
+        closeToolbarOverflow(false);
         createCommandPalette();
 
         // Save editor selection
@@ -13043,6 +13045,7 @@
         commandPalette.style.left = left + 'px';
         commandPalette.style.display = 'flex';
         commandPaletteVisible = true;
+        for (const id of ['formatButton', 'allActionsButton']) document.getElementById(id)?.setAttribute('aria-expanded', 'true');
 
         // Show selection highlight via CSS Custom Highlight API (persists when input gets focus)
         if (commandPaletteSavedRange && !commandPaletteSavedRange.collapsed && CSS.highlights) {
@@ -13069,6 +13072,7 @@
 
         commandPalette.style.display = 'none';
         commandPaletteVisible = false;
+        for (const id of ['formatButton', 'allActionsButton']) document.getElementById(id)?.setAttribute('aria-expanded', 'false');
         document.removeEventListener('click', commandPaletteOutsideClickHandler);
         window.removeEventListener('resize', commandPaletteRepositionHandler);
         editor.removeEventListener('scroll', commandPaletteRepositionHandler);
@@ -13091,6 +13095,7 @@
         // Close palette
         commandPalette.style.display = 'none';
         commandPaletteVisible = false;
+        for (const id of ['formatButton', 'allActionsButton']) document.getElementById(id)?.setAttribute('aria-expanded', 'false');
         document.removeEventListener('click', commandPaletteOutsideClickHandler);
         window.removeEventListener('resize', commandPaletteRepositionHandler);
         editor.removeEventListener('scroll', commandPaletteRepositionHandler);
@@ -13329,8 +13334,10 @@
         savedToolbarRange = null;
         document.querySelectorAll('button[data-editor-mode]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.editorMode === mode)));
         toolbarActions.filter(item => item.formatting || item.button.dataset.action === 'insertMenu').forEach(item => { item.button.disabled = isSourceMode; });
-        const format = document.getElementById('formatButton');
-        if (format) format.disabled = isSourceMode;
+        for (const id of ['formatButton', 'allActionsButton']) {
+            const control = document.getElementById(id);
+            if (control) control.disabled = isSourceMode;
+        }
         const help = document.getElementById('modeHelp');
         if (help) { help.hidden = !isSourceMode; help.textContent = isSplitMode ? i18n.splitHelp : i18n.insertUnavailableSource; }
         notifyChangeImmediate();

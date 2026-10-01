@@ -60,6 +60,7 @@ export const webviewMessages = {
   historyDescription: "공유 기록을 사용하여 문서 편집을 실행 취소하거나 다시 실행합니다.",
   viewDescription: "문서를 변경하지 않고 탐색, 검색 또는 보기 열기를 수행합니다.",
   formatActions: "서식",
+  allActions: "모든 작업",
   contextualTools: "문맥 도구",
   findReplaceTitle: '찾기 및 바꾸기',
   findLabel: '찾기',

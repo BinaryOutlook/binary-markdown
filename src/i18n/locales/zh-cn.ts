@@ -60,6 +60,7 @@ export const webviewMessages = {
   historyDescription: "使用共享历史撤销或重做文档编辑。",
   viewDescription: "导航、搜索或打开视图，不更改文档。",
   formatActions: "格式",
+  allActions: "所有操作",
   contextualTools: "上下文工具",
   findReplaceTitle: '查找和替换',
   findLabel: '查找',

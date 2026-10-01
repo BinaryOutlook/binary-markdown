@@ -14,6 +14,8 @@
         };
         const format = byId('formatButton');
         if (format) format.addEventListener('click', options.openActions);
+        const allActions = byId('allActionsButton');
+        if (allActions) allActions.addEventListener('click', options.openActions);
         const contextToggle = byId('contextToolbarToggle');
         let contextual = false;
         const context = document.createElement('div');
@@ -34,7 +36,11 @@
             control.addEventListener('mousedown', event => event.preventDefault());
             context.appendChild(control);
         }
-        context.appendChild(button('…', options.openActions));
+        const contextMore = button('…', options.openActions);
+        contextMore.setAttribute('aria-label', i18n.allActions);
+        contextMore.title = i18n.allActions;
+        contextMore.setAttribute('aria-haspopup', 'dialog');
+        context.appendChild(contextMore);
         document.body.appendChild(context);
         function positionContext() {
             if (!contextual || options.isSourceMode()) { context.hidden = true; return; }
@@ -72,6 +78,7 @@
             contextual = !contextual;
             contextToggle.setAttribute('aria-pressed', String(contextual));
             document.documentElement.dataset.contextToolbar = String(contextual);
+            if (allActions) allActions.hidden = !contextual;
             options.layout(); positionContext();
         });
         context.addEventListener('keydown', event => {

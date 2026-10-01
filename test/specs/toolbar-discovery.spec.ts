@@ -94,6 +94,7 @@ for (const mode of ['full', 'simple']) {
         await page.evaluate(mode => (window as any).__hostMessageHandler({ type: 'toolbarMode', value: mode }), mode);
         await selectTarget(page, '#editor > p:first-child');
         const actions = await page.locator('#toolbar button[data-action], #toolbar button[data-editor-mode]').evaluateAll(buttons => buttons.filter(button => !button.closest('.table-toolbar')).map(button => (button as HTMLElement).dataset.action || 'mode:' + (button as HTMLElement).dataset.editorMode));
+        const contextual = await page.locator('html').getAttribute('data-context-toolbar') === 'true';
         for (const width of [1000, 620, 400, 320, 1600]) {
             await page.setViewportSize({ width, height: 600 });
             await page.evaluate(() => new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
@@ -101,7 +102,7 @@ for (const mode of ['full', 'simple']) {
             const geometry: any = await page.evaluate(toolbarGeometry);
             expect(geometry.overlaps).toEqual([]);
             const available = geometry.visible.filter((action: string) => action !== 'toolbarMore').concat(geometry.overflow);
-            const expected = actions.filter(action => (action !== 'openOutline' || width <= 700) && (mode === 'full' || ['openOutline', 'undo', 'redo', 'insertMenu', 'openInTextEditor', 'export', 'formatActions', 'contextToolbar', 'mode:visual', 'mode:source', 'mode:split'].includes(action!)));
+            const expected = actions.filter(action => (action !== 'allActions' || contextual) && (action !== 'openOutline' || width <= 700) && (mode === 'full' || ['openOutline', 'undo', 'redo', 'insertMenu', 'openInTextEditor', 'export', 'formatActions', 'allActions', 'contextToolbar', 'mode:visual', 'mode:source', 'mode:split'].includes(action!)));
             expect(available.sort()).toEqual(expected.sort());
             if (geometry.overflow.length) {
                 await page.locator('#toolbarMore').click();

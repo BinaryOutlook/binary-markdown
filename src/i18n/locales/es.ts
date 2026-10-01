@@ -60,6 +60,7 @@ export const webviewMessages = {
   historyDescription: "Deshaz o rehace cambios del documento con el historial compartido.",
   viewDescription: "Navega, busca o abre una vista sin cambiar el documento.",
   formatActions: "Formato",
+  allActions: "Todas las acciones",
   contextualTools: "Herramientas contextuales",
   findReplaceTitle: 'Buscar y reemplazar',
   findLabel: 'Buscar',
