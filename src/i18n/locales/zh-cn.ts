@@ -95,6 +95,7 @@ export const webviewMessages = {
   blockExitHint: "Shift+Enter 返回正文",
   diagramNeedsAttention: "需要检查",
   diagramSyntaxError: "请检查图表源码。",
+  diagramExpectedNodeEnd: "节点标签或形状需要结束分隔符，例如 ]。",
   formatDescription: "设置所选文本格式",
   blockDescription: "更改当前块",
   insertDescriptionInlineMath: "在正文中插入公式",

@@ -215,7 +215,7 @@
                 // source location. Keep the original error in data-render-error,
                 // and expose only the verified source cue as a visible line number.
                 const readableError = diagram ? error.replace(/(\b(?:parse|syntax) error)\s+on line \d+\s*:/gi, '$1:') : error;
-                concise.textContent = diagram && error ? (readableError.split(/\r?\n/).find(line => line.trim()) || '').trim().slice(0, 180) : '';
+                concise.textContent = diagram && error ? (block.dataset.renderErrorSummary || (readableError.split(/\r?\n/).find(line => line.trim()) || '').trim()).slice(0, 180) : '';
                 const diagnostic = chrome.querySelector('.block-diagnostic'); diagnostic.hidden = !error;
                 if (diagnostic.lastChild.textContent !== readableError) diagnostic.lastChild.textContent = readableError;
                 block.classList.toggle('block-needs-attention', Boolean(error));

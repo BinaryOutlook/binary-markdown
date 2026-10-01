@@ -1579,6 +1579,10 @@ html[data-table-toolbar-position="bottom-left"] .editor table, html[data-table-t
 .search-result button { font-size: 14px; line-height: 1.6; }
 .search-result button small { font-size: 12px; margin-bottom: 4px; }
 .search-results { max-height: 360px; }
+@media (max-width: 700px) {
+    .search-replace-box { top: auto; bottom: 12px; max-height: min(66vh, calc(100vh - 160px)); }
+    .search-results { max-height: max(72px, calc(66vh - 430px)); }
+}
 
 /* Supplement native scrollbars; external controls make overflowing tables discoverable. */
 .table-scroll-hint { position: fixed; z-index: 998; display: flex; align-items: center; justify-content: flex-end; gap: 8px; color: var(--blockquote-color); font: 12px/1.4 var(--font-family); }

@@ -21,7 +21,7 @@ function fixture(t, count = 1, sectionId = '03-commands') {
     const reference = { level: 'Experimental', sourcePath: 'design.png', localPath: '.vscode-test/reference.png', sha256: core.hash(pixel), width: 1, height: 1, writtenIntent: 'Rendered previews', annotations: [] };
     write('.vscode-test/reference.png', pixel);
     write(core.PLAN + '/references.json', JSON.stringify({ designCommit: 'a'.repeat(40), designBrief: 'Minimalist', sections: [{ id: sectionId, title: 'Insert', references: [reference], ownerScopeAdjustments: [], visualRequirements: ['Readable preview'], requiredStates: ['All'] }] }));
-    for (const file of ['evaluator-prompt.txt','verdict.schema.json']) write('scripts/visual-review/' + file, file.endsWith('.json') ? '{}' : 'Judge only Insert');
+    for (const file of ['evaluator-prompt.txt','verdict.schema.json']) write('scripts/visual-review/' + file, file.endsWith('.json') ? fs.readFileSync(path.join(__dirname, '../../scripts/visual-review/verdict.schema.json')) : 'Judge only Insert');
     execFileSync('git', ['init','-q'], { cwd: root });
     execFileSync('git', ['-c','user.name=Test','-c','user.email=test@example.invalid','add','src'], { cwd: root });
     execFileSync('git', ['-c','user.name=Test','-c','user.email=test@example.invalid','commit','-qm','fixture'], { cwd: root });
@@ -128,6 +128,10 @@ function groupSpawn(inspect) {
     let index = 0;
     return (executable, args, options) => {
         const packet = JSON.parse(fs.readFileSync(path.join(options.cwd, 'packet.json'), 'utf8'));
+        const schema = JSON.parse(fs.readFileSync(args[args.indexOf('--output-schema') + 1], 'utf8'));
+        assert.deepEqual(schema.properties.packetDigest.enum, [packet.packetDigest]);
+        assert.deepEqual(schema.properties.sectionId.enum, [packet.sectionId]);
+        assert.deepEqual(schema.properties.verdict.enum, ['PASS', 'FAIL', 'BLOCKED']);
         assert.ok(packet.cases.length <= 2);
         assert.ok(packet.sectionCaseChecklist.length >= packet.cases.length);
         for (const item of packet.cases) assert.deepEqual(packet.sectionCaseChecklist.find(c => c.id === item.id), { id: item.id, state: item.state, comparison: item.comparison });
@@ -180,4 +184,13 @@ test('similar Canvas states receive separate fresh image contexts without droppi
     assert.equal(records.schemaVersion, 2);
     const legacy = { ...records, schemaVersion: 1, groups: [{ caseIds: current.packet.cases.map(c => c.id), evaluation: pass(current.packet), error: null }] };
     assert.equal(core.validateGroups(current.packet, legacy), legacy);
+});
+
+test('a provider cannot bypass the pinned schema identity through its output file', async t => {
+    const f = fixture(t), current = f.capture();
+    const receipt = await review(f.root, current.relative, { spawn: groupSpawn(packet => ({ ...pass(packet), packetDigest: 'f'.repeat(64) })) });
+    assert.equal(receipt.verdict, 'BLOCKED');
+    assert.equal(receipt.evaluation, null);
+    const groups = core.readJson(f.root, path.posix.dirname(current.relative) + '/groups.json');
+    assert.match(groups.groups[0].error, /identity mismatch/);
 });

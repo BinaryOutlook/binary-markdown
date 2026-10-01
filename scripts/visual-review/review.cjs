@@ -23,7 +23,10 @@ async function evaluateGroup(root, packet, directory, index, options) {
             attachments.push(path.join(stage, name));
             mapping.push({ attachment: name, repositoryPath: image.path, sha256: image.sha256 });
         }
-        fs.copyFileSync(core.safePath(root, 'scripts/visual-review/verdict.schema.json'), path.join(stage, 'verdict.schema.json'));
+        const schema = core.readJson(root, 'scripts/visual-review/verdict.schema.json');
+        schema.properties.packetDigest.enum = [packet.packetDigest];
+        schema.properties.sectionId.enum = [packet.sectionId];
+        fs.writeFileSync(path.join(stage, 'verdict.schema.json'), JSON.stringify(schema, null, 2), { mode: 0o600 });
         const prompt = fs.readFileSync(core.safePath(root, 'scripts/visual-review/evaluator-prompt.txt'), 'utf8')
             + '\n\nThis invocation contains only the listed case group of one section. Assess every supplied case and no omitted cases. The parent packet digest stays unchanged. New discrepancy IDs must begin with the uppercase case ID followed by a hyphen; retain any existing prior ID for that case.\n'
             + '\n\nAttached images in order:\n' + JSON.stringify(mapping, null, 2) + '\n\nSection evaluation context (packetDigest identifies the original sealed builder packet):\n' + JSON.stringify(evaluationPacket, null, 2);

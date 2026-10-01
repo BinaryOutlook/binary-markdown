@@ -3062,6 +3062,10 @@
     
     function setBlockDiagnostic(wrapper, error, source = '') {
         wrapper.dataset.renderError = error ? String(error.message || error).slice(0, 1000) : '';
+        const expected = error?.hash?.expected;
+        // Mermaid's SQE token is a square node-shape terminator. Derive the
+        // recovery hint from the actual parser expectation, not guessed source.
+        wrapper.dataset.renderErrorSummary = Array.isArray(expected) && expected.some(token => String(token).replace(/['"]/g, '') === 'SQE') ? i18n.diagramExpectedNodeEnd : '';
         const reported = error?.hash?.loc?.first_line;
         // Jison locations are one-based. Plain message text is not a reliable authored-source coordinate.
         const line = Number.isInteger(reported) && reported > 0 && reported <= source.split('\n').length ? reported : Number.isInteger(error?.position) && error.position >= 0 && error.position <= source.length ? source.slice(0, error.position).split('\n').length : null;
@@ -16312,13 +16316,23 @@
         if (isSourceMode && reveal) {
             sourceEditor.setSelectionRange(match.start, match.end);
             const line = searchedSource.slice(0, match.start).split('\n').length - 1;
-            sourceEditor.scrollTop = Math.max(0, line * (parseFloat(getComputedStyle(sourceEditor).lineHeight) || 21) - sourceEditor.clientHeight / 3);
+            const visibleHeight = innerWidth <= 700 ? Math.max(60, Math.min(sourceEditor.clientHeight, searchReplaceBox.getBoundingClientRect().top - sourceEditor.getBoundingClientRect().top - 8)) : sourceEditor.clientHeight;
+            sourceEditor.scrollTop = Math.max(0, line * (parseFloat(getComputedStyle(sourceEditor).lineHeight) || 21) - visibleHeight / 3);
             updateSourceCorrespondence();
         } else if (range) {
             if (CSS.highlights) CSS.highlights.set('document-search-current', new Highlight(range));
-            if (reveal) range.startContainer.parentElement?.scrollIntoView({ block: 'nearest' });
+            if (reveal) {
+                range.startContainer.parentElement?.scrollIntoView({ block: 'nearest' });
+                if (innerWidth <= 700) {
+                    const bounds = range.getBoundingClientRect(), scroller = isSplitMode ? editor : document.getElementById('editorWrapper');
+                    const top = scroller.getBoundingClientRect().top + 8, bottom = searchReplaceBox.getBoundingClientRect().top - 8;
+                    if (bounds.bottom > bottom) scroller.scrollTop += bounds.bottom - bottom;
+                    else if (bounds.top < top) scroller.scrollTop -= top - bounds.top;
+                }
+            }
         }
         searchResults?.querySelectorAll('[data-match-index]').forEach(row => row.classList.toggle('is-current', Number(row.dataset.matchIndex) === index));
+        if (reveal && innerWidth <= 700) searchResults?.querySelector('.is-current')?.scrollIntoView({ block: 'nearest' });
         searchCount.textContent = (index + 1) + '/' + searchMatches.length + (searchTruncated ? '+' : ''); updateSearchActions();
     }
     let searchRefreshTimer = null;

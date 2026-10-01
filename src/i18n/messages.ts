@@ -83,6 +83,7 @@ export interface WebviewMessages {
   blockExitHint: string;
   diagramNeedsAttention: string;
   diagramSyntaxError: string;
+  diagramExpectedNodeEnd: string;
   formatDescription: string;
   blockDescription: string;
   insertDescriptionInlineMath: string;

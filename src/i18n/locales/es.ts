@@ -95,6 +95,7 @@ export const webviewMessages = {
   blockExitHint: "Mayús+Intro para volver al texto",
   diagramNeedsAttention: "Requiere atención",
   diagramSyntaxError: "Revise la fuente del diagrama.",
+  diagramExpectedNodeEnd: "Se esperaba un delimitador de cierre de la etiqueta o forma del nodo, como ].",
   formatDescription: "Dar formato al texto seleccionado",
   blockDescription: "Cambiar el bloque actual",
   insertDescriptionInlineMath: "Insertar una ecuación en el texto",

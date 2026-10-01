@@ -149,7 +149,7 @@ test('Mermaid shows a concise parser diagnostic before details and keeps it out 
     const content = '# Process\n\n```mermaid\ngraph LR\n A[Draft -->\n B[Review]\n```\n';
     await setup(page, content);
     await page.locator('[data-block-mode="edit"]').click();
-    await expect(page.locator('.block-error-summary')).toContainText('Parse error:');
+    await expect(page.locator('.block-error-summary')).toContainText('Expected a closing delimiter');
     await expect(page.locator('.block-error-summary')).not.toContainText('on line');
     await expect(page.locator('.block-diagnostic-text')).not.toContainText('on line');
     await expect(page.locator('.mermaid-wrapper')).toHaveAttribute('data-render-error', /Parse error on line/);
@@ -252,6 +252,40 @@ test('Find Source replacement retains exact spelling and participates in shared 
     await page.locator('#closeSearch').click();
     await page.locator('#sourceEditor').press('ControlOrMeta+z');
     await expect(page.locator('#sourceEditor')).toHaveValue(authored);
+});
+
+test('narrow Find keeps the selected document match visible above its scrollable submenu', async ({ page }) => {
+    const content = '# Research notes\n\nA focused writing space supports the method.\n\n## Method\n\nRecord the method, observations, and assumptions.\n\n## Results\n\nThe method supports an independent review.\n';
+    for (const height of [800, 1000]) {
+        await setup(page, content);
+        await page.setViewportSize({ width: 480, height });
+        await page.locator('#editor').click();
+        await page.keyboard.press('ControlOrMeta+h');
+        await page.locator('#searchInput').fill('method');
+        await page.locator('#replaceInput').fill('approach');
+        await expect(page.locator('.search-result')).toHaveCount(4);
+        await page.locator('.search-result input').nth(1).check();
+        await page.locator('.search-result button').nth(1).click();
+        const geometry = await page.evaluate(() => {
+            const range = [...(CSS as any).highlights.get('document-search-current')][0] as Range;
+            const menu = document.getElementById('searchReplaceBox')!.getBoundingClientRect();
+            return { text: range.toString(), bottom: range.getBoundingClientRect().bottom, menuTop: menu.top, menuBottom: menu.bottom, paneTop: document.getElementById('editorWrapper')!.getBoundingClientRect().top };
+        });
+        expect(geometry.text).toBe('Method');
+        expect(geometry.bottom).toBeGreaterThan(geometry.paneTop);
+        expect(geometry.bottom).toBeLessThan(geometry.menuTop);
+        expect(geometry.menuBottom).toBeLessThan(height);
+        await expect(page.locator('#searchInput')).toHaveValue('method');
+        await expect(page.locator('#replaceInput')).toHaveValue('approach');
+        expect(await snapshot(page)).toMatchObject({ content, pending: false });
+        await expect(page.locator('#toolbar [data-action="undo"]')).toBeDisabled();
+        await page.locator('button[data-editor-mode="source"]').click();
+        await page.keyboard.press('ControlOrMeta+h');
+        await expect(page.locator('.search-result')).toHaveCount(4);
+        await page.locator('.search-result button').nth(1).click();
+        expect(await page.locator('#sourceEditor').evaluate((node: HTMLTextAreaElement) => node.value.slice(node.selectionStart, node.selectionEnd))).toBe('Method');
+        expect(await snapshot(page)).toMatchObject({ content, pending: false });
+    }
 });
 
 test('Insert workspace filters categories, previews choices and recovers an empty search', async ({ page }) => {

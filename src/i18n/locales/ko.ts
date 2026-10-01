@@ -95,6 +95,7 @@ export const webviewMessages = {
   blockExitHint: "Shift+Enter로 본문으로 돌아가기",
   diagramNeedsAttention: "확인 필요",
   diagramSyntaxError: "다이어그램 소스를 확인하세요.",
+  diagramExpectedNodeEnd: "노드 레이블이나 도형을 닫는 구분자(예: ])가 필요합니다.",
   formatDescription: "선택한 텍스트 서식 지정",
   blockDescription: "현재 블록 변경",
   insertDescriptionInlineMath: "본문에 수식 삽입",

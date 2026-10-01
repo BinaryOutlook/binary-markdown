@@ -95,6 +95,7 @@ export const webviewMessages = {
   blockExitHint: "Shift+Enterで本文に戻る",
   diagramNeedsAttention: "確認が必要",
   diagramSyntaxError: "図のソースを確認してください。",
+  diagramExpectedNodeEnd: "ノードのラベルまたは図形を閉じる区切り文字（例：]）が必要です。",
   formatDescription: "選択したテキストを書式設定",
   blockDescription: "現在のブロックを変更",
   insertDescriptionInlineMath: "本文に数式を挿入",

@@ -95,6 +95,7 @@ export const webviewMessages = {
   blockExitHint: "Shift+Enter to return to text",
   diagramNeedsAttention: "Needs attention",
   diagramSyntaxError: "Check the diagram source.",
+  diagramExpectedNodeEnd: "Expected a closing delimiter for the node label or shape, such as ].",
   formatDescription: "Format the selected text",
   blockDescription: "Change the current block",
   insertDescriptionInlineMath: "Insert an equation in text",
