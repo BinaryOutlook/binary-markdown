@@ -117,7 +117,18 @@ function priorFailures(root, section) {
         const receipt = readJson(root, relative);
         const packet = readJson(root, OUTPUT + '/' + section + '/' + name + '/packet.json');
         validateReceipt(packet, receipt);
-        if (!receipt.evaluation) continue;
+        if (!receipt.evaluation) {
+            // A provider failure in another group cannot erase a validated
+            // visual FAIL. Retain its correction, while withholding PASS
+            // resolutions until the complete section can be aggregated.
+            const grouped = OUTPUT + '/' + section + '/' + name + '/groups.json';
+            if (fs.existsSync(safePath(root, grouped))) {
+                const records = readJson(root, grouped);
+                validateGroups(packet, records);
+                for (const group of records.groups) for (const item of group.evaluation?.discrepancies || []) if (item.severity !== 'Minor') failures.set(item.id, item);
+            }
+            continue;
+        }
         for (const resolution of receipt.evaluation.priorResolutions) if (resolution.status === 'fixed') failures.delete(resolution.id);
         for (const item of receipt.evaluation.discrepancies) if (item.severity !== 'Minor') failures.set(item.id, item);
     }
@@ -171,6 +182,47 @@ function loadPacket(root, relative, checkSource = true) {
 }
 function exactKeys(value, keys) {
     if (!value || typeof value !== 'object' || Array.isArray(value) || Object.keys(value).sort().join('|') !== [...keys].sort().join('|')) throw new Error('Malformed evaluator fields');
+}
+function caseGroups(packet) {
+    const groups = [];
+    for (let index = 0; index < packet.cases.length; index += 2) {
+        const cases = packet.cases.slice(index, index + 2), ids = cases.map(c => c.id);
+        groups.push({ ...packet, cases, priorFailures: packet.priorFailures.filter(f => ids.includes(f.caseId)) });
+    }
+    return groups;
+}
+function validateGroups(packet, records) {
+    exactKeys(records, ['schemaVersion','parentPacketDigest','groups']);
+    const expected = caseGroups(packet);
+    if (records.schemaVersion !== 1 || records.parentPacketDigest !== packet.packetDigest || !Array.isArray(records.groups) || records.groups.length !== expected.length) throw new Error('Case-group identity mismatch');
+    records.groups.forEach((group, index) => {
+        exactKeys(group, ['caseIds','evaluation','error']);
+        if (canonical(group.caseIds) !== canonical(expected[index].cases.map(c => c.id))) throw new Error('Case-group coverage mismatch');
+        if (group.evaluation) {
+            if (group.error !== null) throw new Error('Case-group result mismatch');
+            validateVerdict(expected[index], group.evaluation);
+            for (const item of group.evaluation.discrepancies) if (!packet.priorFailures.some(f => f.id === item.id) && !item.id.startsWith(item.caseId.toUpperCase() + '-')) throw new Error('New case-group discrepancy needs a case-specific ID');
+        } else sentence(group.error);
+    });
+    return records;
+}
+function aggregateGroups(packet, records) {
+    validateGroups(packet, records);
+    if (records.groups.some(g => !g.evaluation)) throw new Error('A required case group has no valid AI assessment; inspect groups.json');
+    const evaluations = records.groups.map(g => g.evaluation);
+    const verdict = evaluations.some(v => v.verdict === 'FAIL') ? 'FAIL' : evaluations.some(v => v.verdict === 'BLOCKED') ? 'BLOCKED' : 'PASS';
+    const combined = {
+        packetDigest: packet.packetDigest, sectionId: packet.sectionId, verdict,
+        summary: verdict + ': ' + records.groups.length + ' independent case groups cover all ' + packet.cases.length + ' submitted states. The individual AI observations and summaries are retained in groups.json; a section passes only when every required group passes.',
+        // Each group acknowledged its reference plus every full/target image.
+        // Keep the original multiset, including identical rendered image bytes.
+        openedImages: [...packet.references, ...packet.cases.flatMap(c => c.images)].map(i => i.sha256),
+        caseAssessments: evaluations.flatMap(v => v.caseAssessments),
+        discrepancies: evaluations.flatMap(v => v.discrepancies),
+        priorResolutions: evaluations.flatMap(v => v.priorResolutions),
+        missingEvidence: evaluations.flatMap(v => v.missingEvidence)
+    };
+    return validateVerdict(packet, combined);
 }
 function sentence(value) {
     if (typeof value !== 'string' || !value.trim() || value.length > 4000 || /[\x00-\x08\x0b\x0c\x0e-\x1f]/.test(value)) throw new Error('Invalid evaluator text');
@@ -256,4 +308,4 @@ function validateReceipt(packet, receipt) {
     } else if (receipt.verdict !== 'BLOCKED' || !receipt.error) throw new Error('Unsupported receipt');
     return receipt;
 }
-module.exports = { PLAN, OUTPUT, MAX_JSON, hash, canonical, digest, safePath, readJson, writeJson, png, sourceIdentity, contract, sectionContract, extractReferences, iterations, newIteration, seal, loadPacket, validateVerdict, validateReceipt, saveVerdict, escapeMd };
+module.exports = { PLAN, OUTPUT, MAX_JSON, hash, canonical, digest, safePath, readJson, writeJson, png, sourceIdentity, contract, sectionContract, extractReferences, iterations, newIteration, seal, loadPacket, caseGroups, validateGroups, aggregateGroups, validateVerdict, validateReceipt, saveVerdict, escapeMd };

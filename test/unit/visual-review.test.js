@@ -11,12 +11,13 @@ const core = require('../../scripts/visual-review/core.cjs');
 const { review } = require('../../scripts/visual-review/review.cjs');
 
 const pixel = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a0ioAAAAASUVORK5CYII=', 'base64');
-function fixture(t) {
+function fixture(t, count = 1) {
     const root = fs.mkdtempSync(path.join(os.tmpdir(), 'visual-review-unit-'));
     t.after(() => fs.rmSync(root, { recursive: true, force: true }));
     const write = (relative, content) => { const file = core.safePath(root, relative); fs.mkdirSync(path.dirname(file), { recursive: true }); fs.writeFileSync(file, content); };
     write('src/render.js', 'original');
-    write('scripts/visual-review/sections.json', JSON.stringify({ sections: [{ id: '03-commands', targetRegions: [{ id: 'insert', description: 'Insert only' }], excludedRegions: ['toolbar'], cases: [{ id: 'all', state: 'All', comparison: 'Direct' }] }] }));
+    const cases = Array.from({ length: count }, (_, index) => ({ id: index ? 'state-' + index : 'all', state: 'All', comparison: 'Direct' }));
+    write('scripts/visual-review/sections.json', JSON.stringify({ sections: [{ id: '03-commands', targetRegions: [{ id: 'insert', description: 'Insert only' }], excludedRegions: ['toolbar'], cases }] }));
     const reference = { level: 'Experimental', sourcePath: 'design.png', localPath: '.vscode-test/reference.png', sha256: core.hash(pixel), width: 1, height: 1, writtenIntent: 'Rendered previews', annotations: [] };
     write('.vscode-test/reference.png', pixel);
     write(core.PLAN + '/references.json', JSON.stringify({ designCommit: 'a'.repeat(40), designBrief: 'Minimalist', sections: [{ id: '03-commands', title: 'Insert', references: [reference], ownerScopeAdjustments: [], visualRequirements: ['Readable preview'], requiredStates: ['All'] }] }));
@@ -26,8 +27,8 @@ function fixture(t) {
     execFileSync('git', ['-c','user.name=Test','-c','user.email=test@example.invalid','commit','-qm','fixture'], { cwd: root });
     const capture = () => {
         const directory = core.newIteration(root, '03-commands');
-        write(directory + '/all-full.png', pixel); write(directory + '/all-target.png', pixel);
-        const packet = core.seal(root, directory, { sectionId: '03-commands', capture: { kind: 'unit fixture' }, cases: [{ id: 'all', state: 'All', comparison: 'Direct', images: [directory + '/all-full.png',directory + '/all-target.png'] }] });
+        for (const item of cases) { write(directory + '/' + item.id + '-full.png', pixel); write(directory + '/' + item.id + '-target.png', pixel); }
+        const packet = core.seal(root, directory, { sectionId: '03-commands', capture: { kind: 'unit fixture' }, cases: cases.map(item => ({ ...item, images: [directory + '/' + item.id + '-full.png',directory + '/' + item.id + '-target.png'] })) });
         return { relative: directory + '/packet.json', packet };
     };
     return { root, write, capture };
@@ -121,5 +122,47 @@ test('unavailable evaluator creates BLOCKED, never PASS, using a fresh read-only
         process.nextTick(() => child.emit('close', 1)); return child;
     };
     const receipt = await review(f.root, current.relative, { spawn: fakeSpawn });
+    assert.equal(receipt.verdict, 'BLOCKED'); assert.equal(receipt.evaluation, null);
+});
+function groupSpawn(inspect) {
+    let index = 0;
+    return (executable, args, options) => {
+        const packet = JSON.parse(fs.readFileSync(path.join(options.cwd, 'packet.json'), 'utf8'));
+        assert.ok(packet.cases.length <= 2);
+        assert.equal(args.filter(a => a === '--image').length, packet.references.length + packet.cases.length * 2);
+        const verdict = inspect(packet, index++);
+        if (verdict) fs.writeFileSync(args[args.indexOf('--output-last-message') + 1], JSON.stringify(verdict));
+        const child = new EventEmitter(); child.stdin = new PassThrough(); child.stdout = new PassThrough(); child.stderr = new PassThrough(); child.kill = () => {};
+        process.nextTick(() => child.emit('close', verdict ? 0 : 1)); return child;
+    };
+}
+test('bounded fresh groups cover every case and retain a FAIL without averaging it into PASS', async t => {
+    const f = fixture(t, 4), current = f.capture(); let calls = 0;
+    const receipt = await review(f.root, current.relative, { spawn: groupSpawn((packet, index) => {
+        calls++; const verdict = index ? pass(packet) : fail(packet);
+        if (!index) verdict.discrepancies[0].id = 'ALL-01';
+        return verdict;
+    }) });
+    assert.equal(calls, 2); assert.equal(receipt.verdict, 'FAIL'); assert.equal(receipt.evaluation.caseAssessments.length, 4);
+    assert.equal(receipt.evaluation.openedImages.length, 9);
+    const records = core.readJson(f.root, path.posix.dirname(current.relative) + '/groups.json');
+    assert.deepEqual(records.groups.map(g => g.caseIds), [['all','state-1'],['state-2','state-3']]);
+    assert.deepEqual(core.aggregateGroups(current.packet, records), receipt.evaluation);
+    records.groups.pop(); assert.throws(() => core.aggregateGroups(current.packet, records), /identity mismatch/);
+});
+test('a missing group blocks the section and preserves another group\'s validated failure for correction', async t => {
+    const f = fixture(t, 4), current = f.capture();
+    const receipt = await review(f.root, current.relative, { spawn: groupSpawn((packet, index) => {
+        if (index) return null;
+        const verdict = fail(packet); verdict.discrepancies[0].id = 'ALL-01'; return verdict;
+    }) });
+    assert.equal(receipt.verdict, 'BLOCKED'); assert.equal(receipt.evaluation, null);
+    assert.deepEqual(f.capture().packet.priorFailures.map(f => f.id), ['ALL-01']);
+});
+test('a group cannot borrow omitted cases or image acknowledgements from another group', async t => {
+    const f = fixture(t, 4), current = f.capture();
+    const receipt = await review(f.root, current.relative, { spawn: groupSpawn(packet => {
+        const verdict = pass(packet); verdict.caseAssessments[0].caseId = 'state-3'; return verdict;
+    }) });
     assert.equal(receipt.verdict, 'BLOCKED'); assert.equal(receipt.evaluation, null);
 });

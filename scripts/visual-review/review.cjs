@@ -7,14 +7,11 @@ const core = require('./core.cjs');
 
 // No shell, account secrets, repository chat history, source tree, or inherited
 // project instructions are copied into the evaluator's working directory.
-async function review(root, relative, options = {}) {
-    const packet = core.loadPacket(root, relative);
+async function evaluateGroup(root, packet, directory, index, options) {
     // Preserve the complete sealed packet for the builder and public history,
     // but keep earlier reviewers' prose out of the fresh visual judgment.
     // The digest identifies that original packet, not this context projection.
     const evaluationPacket = { ...packet, priorFailures: packet.priorFailures.map(({ id, caseId, criterionId, regionId }) => ({ id, caseId, criterionId, regionId })) };
-    const directory = path.posix.dirname(relative);
-    if (fs.existsSync(core.safePath(root, directory + '/receipt.json'))) throw new Error('Iteration already evaluated; capture a new iteration');
     const stage = fs.mkdtempSync(path.join(os.tmpdir(), 'binary-markdown-section-review-'));
     fs.chmodSync(stage, 0o700);
     try {
@@ -28,12 +25,14 @@ async function review(root, relative, options = {}) {
         }
         fs.copyFileSync(core.safePath(root, 'scripts/visual-review/verdict.schema.json'), path.join(stage, 'verdict.schema.json'));
         const prompt = fs.readFileSync(core.safePath(root, 'scripts/visual-review/evaluator-prompt.txt'), 'utf8')
+            + '\n\nThis invocation contains only the listed case group of one section. Assess every supplied case and no omitted cases. The parent packet digest stays unchanged. New discrepancy IDs must begin with the uppercase case ID followed by a hyphen; retain any existing prior ID for that case.\n'
             + '\n\nAttached images in order:\n' + JSON.stringify(mapping, null, 2) + '\n\nSection evaluation context (packetDigest identifies the original sealed builder packet):\n' + JSON.stringify(evaluationPacket, null, 2);
         const args = ['exec', '--ephemeral', '--ignore-user-config', '--sandbox', 'read-only', '--skip-git-repo-check',
             '--cd', stage, '--output-schema', path.join(stage, 'verdict.schema.json'), '--output-last-message', path.join(stage, 'verdict.json')];
         for (const attachment of attachments) args.push('--image', attachment);
         args.push('-');
-        const log = core.safePath(root, directory + '/evaluator.log');
+        const stem = directory + '/group-' + String(index + 1).padStart(3, '0');
+        const log = core.safePath(root, stem + '.log');
         let logBytes = 0;
         const stream = fs.createWriteStream(log, { flags: 'wx', mode: 0o600 });
         const result = await new Promise(resolve => {
@@ -55,18 +54,36 @@ async function review(root, relative, options = {}) {
             child.stdin.on('error', () => {}); child.stdin.end(prompt);
         });
         await new Promise(resolve => stream.end(resolve));
-        if (result.error) return core.saveVerdict(root, relative, null, result.error);
+        if (result.error) return { evaluation: null, error: result.error };
         const output = path.join(stage, 'verdict.json');
         let evaluation;
         try {
             if (!fs.existsSync(output) || fs.statSync(output).size > core.MAX_JSON) throw new Error('Missing or oversized evaluator output');
-            fs.copyFileSync(output, core.safePath(root, directory + '/evaluator-output.json'));
+            fs.copyFileSync(output, core.safePath(root, stem + '-output.json'));
             evaluation = JSON.parse(fs.readFileSync(output, 'utf8'));
             core.validateVerdict(packet, evaluation);
+            core.validateGroups(packet, { schemaVersion: 1, parentPacketDigest: packet.packetDigest,
+                groups: [{ caseIds: packet.cases.map(c => c.id), evaluation, error: null }] });
         } catch (error) {
-            return core.saveVerdict(root, relative, null, 'Evaluator output rejected: ' + error.message);
+            return { evaluation: null, error: 'Evaluator output rejected: ' + error.message };
         }
-        return core.saveVerdict(root, relative, evaluation);
+        return { evaluation, error: null };
     } finally { fs.rmSync(stage, { recursive: true, force: true }); }
+}
+async function review(root, relative, options = {}) {
+    const packet = core.loadPacket(root, relative), directory = path.posix.dirname(relative);
+    if (fs.existsSync(core.safePath(root, directory + '/receipt.json')) || fs.existsSync(core.safePath(root, directory + '/groups.json'))) throw new Error('Iteration already evaluated; capture a new iteration');
+    const records = { schemaVersion: 1, parentPacketDigest: packet.packetDigest, groups: [] };
+    // Bound context as well as scope: at most two real states per fresh call.
+    // Every state remains required; no score averaging or partial PASS occurs.
+    for (const [index, group] of core.caseGroups(packet).entries()) {
+        records.groups.push({ caseIds: group.cases.map(c => c.id), ...await evaluateGroup(root, group, directory, index, options) });
+    }
+    core.writeJson(root, directory + '/groups.json', records, true);
+    try {
+        return core.saveVerdict(root, relative, core.aggregateGroups(packet, records));
+    } catch (error) {
+        return core.saveVerdict(root, relative, null, 'Case-group review blocked: ' + error.message);
+    }
 }
 module.exports = { review };
