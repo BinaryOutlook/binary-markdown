@@ -12684,9 +12684,11 @@
             control.addEventListener('click', () => {
                 const rows = [...list.querySelectorAll('.insert-command:not([hidden])')];
                 const bounds = list.getBoundingClientRect();
+                // Match the complete-card boundary used by updateInsertScroll.
+                // A subpixel-aligned visible row must not become its own page target.
                 const next = direction === 'next'
-                    ? rows.find(row => row.getBoundingClientRect().bottom > bounds.bottom - 8)
-                    : [...rows].reverse().find(row => row.getBoundingClientRect().top < bounds.top + 8);
+                    ? rows.find(row => row.getBoundingClientRect().bottom > bounds.bottom - 7)
+                    : [...rows].reverse().find(row => row.getBoundingClientRect().top < bounds.top + 7);
                 if (next) list.scrollTop += next.getBoundingClientRect().top - bounds.top - 8;
                 updateInsertScroll();
             });

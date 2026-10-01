@@ -377,9 +377,10 @@ test('rendered Insert previews stay view-only and nested icon activation shares 
     expect((await snapshot(page)).content).toBe(authored);
 });
 
-test('narrow Insert exposes complete lower commands through visible view-only navigation', async ({ page }) => {
+for (const offset of [0, -0.5]) test('narrow Insert exposes complete lower commands through visible view-only navigation' + (offset ? ' with subpixel row alignment' : ''), async ({ page }) => {
     await setup(page);
     await page.setViewportSize({ width: 480, height: 800 });
+    if (offset) await page.addStyleTag({ content: `.insert-command { transform: translateY(${offset}px); }` });
     await page.locator('#insertButton').click();
     const next = page.locator('.insert-scroll [data-direction="next"]');
     await expect(next).toBeVisible();
