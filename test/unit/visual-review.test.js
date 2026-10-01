@@ -105,11 +105,18 @@ test('receipt tampering cannot turn a retained FAIL or provider failure into PAS
     blocked.verdict = 'PASS'; assert.throws(() => core.validateReceipt(second.packet, blocked), /Unsupported/);
 });
 test('unavailable evaluator creates BLOCKED, never PASS, using a fresh read-only image invocation', async t => {
-    const f = fixture(t), current = f.capture();
+    const f = fixture(t), first = f.capture();
+    core.saveVerdict(f.root, first.relative, fail(first.packet));
+    const current = f.capture();
     const fakeSpawn = (executable, args, options) => {
         assert.equal(options.shell, false); assert.ok(args.includes('--ephemeral')); assert.ok(args.includes('read-only')); assert.ok(args.includes('--ignore-user-config'));
         assert.ok(!options.cwd.startsWith(f.root)); assert.equal(args.filter(a => a === '--image').length, 3);
         assert.ok(!fs.existsSync(path.join(options.cwd, 'src')));
+        const context = JSON.parse(fs.readFileSync(path.join(options.cwd, 'packet.json'), 'utf8'));
+        assert.deepEqual(context.priorFailures, [{ id: 'INS-01', caseId: 'all', criterionId: 'C1', regionId: 'insert' }]);
+        assert.equal(context.packetDigest, current.packet.packetDigest);
+        assert.equal(current.packet.priorFailures[0].observed, 'Raw syntax');
+        assert.ok(!JSON.stringify(context).includes('Raw syntax'));
         const child = new EventEmitter(); child.stdin = new PassThrough(); child.stdout = new PassThrough(); child.stderr = new PassThrough(); child.kill = () => {};
         process.nextTick(() => child.emit('close', 1)); return child;
     };

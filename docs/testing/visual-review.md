@@ -47,6 +47,8 @@ Capture rebuilds the shared standalone browser fixture. Run captures sequentiall
 
 At a new builder turn or after compaction, reread the packet and unresolved discrepancy IDs, then reopen its reference and latest application screenshots. Submit only one section to each evaluator invocation. The fresh CLI invocation receives copied packet assets in a private temporary directory outside the checkout, runs read-only and receives no project chat history or builder success claim. Existing account/runtime safety rules still apply.
 
+The retained builder packet includes complete earlier discrepancy descriptions and corrections. The evaluator's context projection includes only prior IDs and their associated case, criterion and region; earlier reviewers' prose is withheld so a mistaken observation does not become evidence in the next judgment. All current images, fixed references, criteria and scope remain available. Its `packetDigest` identifies the original sealed builder packet, not a hash of the projected context. The coordinator still requires a current-image resolution for every prior ID and preserves the original FAIL receipt.
+
 ## Verdicts and scope
 
 | Result | Meaning | Next action |

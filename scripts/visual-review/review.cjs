@@ -9,12 +9,16 @@ const core = require('./core.cjs');
 // project instructions are copied into the evaluator's working directory.
 async function review(root, relative, options = {}) {
     const packet = core.loadPacket(root, relative);
+    // Preserve the complete sealed packet for the builder and public history,
+    // but keep earlier reviewers' prose out of the fresh visual judgment.
+    // The digest identifies that original packet, not this context projection.
+    const evaluationPacket = { ...packet, priorFailures: packet.priorFailures.map(({ id, caseId, criterionId, regionId }) => ({ id, caseId, criterionId, regionId })) };
     const directory = path.posix.dirname(relative);
     if (fs.existsSync(core.safePath(root, directory + '/receipt.json'))) throw new Error('Iteration already evaluated; capture a new iteration');
     const stage = fs.mkdtempSync(path.join(os.tmpdir(), 'binary-markdown-section-review-'));
     fs.chmodSync(stage, 0o700);
     try {
-        fs.writeFileSync(path.join(stage, 'packet.json'), JSON.stringify(packet, null, 2), { mode: 0o600 });
+        fs.writeFileSync(path.join(stage, 'packet.json'), JSON.stringify(evaluationPacket, null, 2), { mode: 0o600 });
         const attachments = [], mapping = [];
         for (const [index, image] of [...packet.references, ...packet.cases.flatMap(c => c.images)].entries()) {
             const name = 'image-' + String(index + 1).padStart(2, '0') + '.png';
@@ -24,7 +28,7 @@ async function review(root, relative, options = {}) {
         }
         fs.copyFileSync(core.safePath(root, 'scripts/visual-review/verdict.schema.json'), path.join(stage, 'verdict.schema.json'));
         const prompt = fs.readFileSync(core.safePath(root, 'scripts/visual-review/evaluator-prompt.txt'), 'utf8')
-            + '\n\nAttached images in order:\n' + JSON.stringify(mapping, null, 2) + '\n\nSection packet:\n' + JSON.stringify(packet, null, 2);
+            + '\n\nAttached images in order:\n' + JSON.stringify(mapping, null, 2) + '\n\nSection evaluation context (packetDigest identifies the original sealed builder packet):\n' + JSON.stringify(evaluationPacket, null, 2);
         const args = ['exec', '--ephemeral', '--ignore-user-config', '--sandbox', 'read-only', '--skip-git-repo-check',
             '--cd', stage, '--output-schema', path.join(stage, 'verdict.schema.json'), '--output-last-message', path.join(stage, 'verdict.json')];
         for (const attachment of attachments) args.push('--image', attachment);

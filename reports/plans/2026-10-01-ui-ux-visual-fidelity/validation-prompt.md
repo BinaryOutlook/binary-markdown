@@ -51,7 +51,11 @@ Return:
 4. A prioritized builder handoff and any missing evidence or material decision.
 
 On re-evaluation, compare the current images afresh, check each prior failure
-ID, and identify fixed, remaining, or newly observed target discrepancies.
+ID and its case/criterion/region, and identify fixed, remaining, or newly
+observed target discrepancies. Earlier reviewers' descriptions are withheld
+from this evaluation context; an existing ID does not establish that the
+earlier claim was correct. Its packetDigest identifies the complete sealed
+builder packet retained by the coordinator.
 PASS requires all packet criteria/states to have evidence and no unresolved
 Critical/Major discrepancy or unapproved deviation. A one-state PASS is not
 a claim about other states or components. Functional CI cannot override FAIL.
