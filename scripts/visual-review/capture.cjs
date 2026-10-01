@@ -127,7 +127,7 @@ async function prepare(page, section, item) {
     } else if (section === '10-metadata') {
         await loadDocument(page, '---\ntitle: "Research notes" # preserved\nauthor: "Example Author"\ntags: [research, review]\n---\n\n[TOC]\n\n# Research notes\n\n## Method\n\nWrite a short explanation.\n\n## Results\n\nReview the comparison.\n');
         await page.locator('.toc-refresh').click();
-        if (id === 'expanded') await page.locator('.front-matter summary').click();
+        if (['expanded', 'pending', 'refreshed'].includes(id)) await page.locator('.front-matter summary').click();
         if (id === 'pending' || id === 'refreshed') await page.locator('#editor > h2').last().fill('Conclusions');
         if (id === 'refreshed') await page.locator('.toc-refresh').click();
     } else if (section === '11-source') {

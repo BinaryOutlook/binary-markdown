@@ -51,7 +51,7 @@
     openOutput.addEventListener('click', event => { event.stopPropagation(); if (!openOutput.hidden) host.openExportOutput?.(); });
     document.getElementById('exportExperimental').textContent = text('experimental');
     document.getElementById('exportLimitations').textContent = text('limitations');
-    document.getElementById('exportSettings').textContent = text('setup');
+    document.getElementById('exportSettings').textContent = text('installationGuide');
     document.getElementById('exportPandocSetup').textContent = text('configurePandoc');
     document.getElementById('exportPandocSetup').title = text('pandocInstall');
     document.getElementById('exportBrowserSetup').textContent = text('configureBrowser');

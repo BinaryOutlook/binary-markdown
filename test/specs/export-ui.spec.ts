@@ -136,6 +136,12 @@ test.describe('Export toolbar and job status', () => {
         await expect(page.locator('#exportMenu')).toBeVisible();
         await page.locator('#exportPandocSetup').click();
         expect(await outbound(page, 'exportSettings')).toEqual([{ type: 'exportSettings', tool: 'pandoc' }]);
+        await page.locator('#exportButton').click();
+        await expect(page.locator('#exportSettings')).toHaveText('Installation guide');
+        await page.locator('#exportSettings').focus();
+        await page.keyboard.press('Enter');
+        expect(await outbound(page, 'exportSettings')).toEqual([{ type: 'exportSettings', tool: 'pandoc' }, { type: 'exportSettings' }]);
+        expect(await outbound(page, 'edit')).toEqual([]);
     });
 
     test('formats wait for host availability without offering tool installation', async ({ page }) => {

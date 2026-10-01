@@ -50,6 +50,22 @@ async function openInsert(editor) {
     }
 }
 
+async function chooseInsertAction(editor, keyboard, action) {
+    const actions = await editor.evaluate(() => [...document.querySelectorAll('#insertMenu [data-insert-action]:not([hidden])')].map(node => node.dataset.insertAction));
+    assert.ok(actions.includes(action), 'The requested Insert action exists in the current category');
+    // A narrow workspace deliberately conceals partial cards. Reach the whole
+    // card through production keyboard navigation before activating it; waiting
+    // for a hidden off-screen card before scrolling cannot establish reachability.
+    for (let step = 0; step <= actions.length; step++) {
+        if (await editor.evaluate(() => document.activeElement.dataset.insertAction) === action) {
+            await editor.locator('[data-insert-action="' + action + '"]').click();
+            return;
+        }
+        await keyboard.press('ArrowDown');
+    }
+    throw new Error('Insert keyboard navigation did not reach the requested action: ' + action);
+}
+
 // Native Quick Input can remain interactive while pointer stability waits
 // receive no animation frames. Select an observed exact row through its normal
 // keyboard handler, with a bounded number of navigation actions.
@@ -112,7 +128,7 @@ async function insertMenuChecks({ editor, keyboard, setMode, dialog, save, recor
     for (const [action, selector] of [['inlineMath', '.math-inline'], ['math', '.math-wrapper'], ['codeblock', '#editor pre'], ['table', '#editor table'], ['mermaid', '.mermaid-wrapper'], ['toc', '.toc-block']]) {
         const count = await editor.evaluate(selector => document.querySelectorAll(selector).length, selector);
         await selectTarget(editor); await openInsert(editor);
-        await editor.locator('[data-insert-action="' + action + '"]').click();
+        await chooseInsertAction(editor, keyboard, action);
         await editor.waitForFunction(({ selector, count }) => document.querySelectorAll(selector).length === count + 1, { selector, count });
         const after = await editor.evaluate(() => window.htmlToMarkdown());
         assert.notEqual(after, before);
@@ -130,7 +146,7 @@ async function insertMenuChecks({ editor, keyboard, setMode, dialog, save, recor
         await keyboard.press('Escape');
         assert.equal(await editor.evaluate(() => window.htmlToMarkdown()), before);
         await selectTarget(editor, selector); await openInsert(editor);
-        await editor.locator('[data-insert-action="inlineMath"]').click();
+        await chooseInsertAction(editor, keyboard, 'inlineMath');
         await editor.waitForFunction(selector => Boolean(document.querySelector(selector + ' .math-inline')), selector);
         await save(await editor.evaluate(() => window.htmlToMarkdown()));
         await editor.locator('[data-action="undo"]').click();
@@ -141,7 +157,7 @@ async function insertMenuChecks({ editor, keyboard, setMode, dialog, save, recor
         for (const accepted of [false, true]) {
             await editor.evaluate(() => { window.__nativeInsertEvents = []; });
             await selectTarget(editor); await openInsert(editor);
-            await editor.locator('[data-insert-action="' + action + '"]').click();
+            await chooseInsertAction(editor, keyboard, action);
             await dialog(action, accepted);
             const responseType = accepted ? (action === 'link' ? 'insertLinkHtml' : 'insertImageHtml') : 'insertCancelled';
             await editor.waitForFunction(type => window.__nativeInsertEvents.some(message => message.type === type), responseType);
@@ -165,4 +181,4 @@ async function insertMenuChecks({ editor, keyboard, setMode, dialog, save, recor
     return before;
 }
 
-module.exports = { source, selectTarget, openInsert, selectQuickInputItem, insertMenuChecks };
+module.exports = { source, selectTarget, openInsert, chooseInsertAction, selectQuickInputItem, insertMenuChecks };

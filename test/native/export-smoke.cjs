@@ -1277,7 +1277,7 @@ async function underlineExportCase(h, owner, record) {
 }
 
 async function insertMenuCase(h, owner, record) {
-    const { source, insertMenuChecks, selectTarget, openInsert, selectQuickInputItem } = require('./insert-menu.cjs');
+    const { source, insertMenuChecks, selectTarget, openInsert, chooseInsertAction, selectQuickInputItem } = require('./insert-menu.cjs');
     const { installedEditor } = require('./table-toolbar-overflow.cjs');
     const previous = await h.driver({ action: 'inspect' });
     const file = 'insert-menu.md', filePath = path.join(owner.workspace, file);
@@ -1286,50 +1286,61 @@ async function insertMenuCase(h, owner, record) {
     let connection = await h.open(file);
     try {
         await h.workbench(async page => {
-            const editor = installedEditor(connection, h);
-            // VS Code 1.85 also mounts a hidden select-all checkbox here.
-            const input = () => page.locator('.quick-input-widget:visible input:not([type="checkbox"]):visible').first();
-            await insertMenuChecks({ editor, keyboard: page.keyboard,
-                setMode: value => h.driver({ action: 'config', key: 'toolbarMode', scope: 'workspace', value }),
-                record: (name, details) => record(name, { ...details, route: 'installed webview; native keyboard; VS Code input boxes and simplified file picker' }),
-                save: async expected => {
-                    // Keep the separately tracked queued-edit/native-save
-                    // overlap (#11) outside this insertion persistence check.
-                    await h.until(async () => (await h.driver({ action: 'inspect' })).documents.some(document => samePath(document.path, filePath) && document.text === expected), 'inserted content reached host');
-                    await h.driver({ action: 'save' });
-                    assert.equal(fs.readFileSync(filePath, 'utf8'), expected);
-                },
-                dialog: async (action, accepted) => {
-                    await input().waitFor({ state: 'visible' });
-                    if (!accepted) await page.keyboard.press('Escape');
-                    else {
-                        if (action === 'link') {
-                            await input().fill('https://example.com/reference');
-                            await page.keyboard.press('Enter');
-                        } else {
-                            const imageName = 'Field sample 图像.png';
-                            // Navigate first: older pickers do not refresh their
-                            // directory listing until the path is accepted.
-                            await input().fill(path.join(owner.workspace, 'assets') + path.sep);
-                            await page.keyboard.press('Enter');
-                            await selectQuickInputItem(page, imageName, h.until);
+            const frame = page.locator('iframe.webview:visible');
+            const before = await frame.evaluate(node => ({ maxWidth: node.style.maxWidth, maxHeight: node.style.maxHeight }));
+            try {
+                const size = await frame.evaluate(async node => {
+                    node.style.maxWidth = '500px'; node.style.maxHeight = '450px';
+                    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+                    return { width: node.clientWidth, height: node.clientHeight };
+                });
+                await h.until(() => connection.evaluate(`innerWidth === ${size.width} && innerHeight === ${size.height}`));
+                const editor = installedEditor(connection, h);
+                // VS Code 1.85 also mounts a hidden select-all checkbox here.
+                const input = () => page.locator('.quick-input-widget:visible input:not([type="checkbox"]):visible').first();
+                await insertMenuChecks({ editor, keyboard: page.keyboard,
+                    setMode: value => h.driver({ action: 'config', key: 'toolbarMode', scope: 'workspace', value }),
+                    record: (name, details) => record(name, { ...details, route: 'installed webview; native keyboard; VS Code input boxes and simplified file picker' }),
+                    save: async expected => {
+                        // Keep the separately tracked queued-edit/native-save
+                        // overlap (#11) outside this insertion persistence check.
+                        await h.until(async () => (await h.driver({ action: 'inspect' })).documents.some(document => samePath(document.path, filePath) && document.text === expected), 'inserted content reached host');
+                        await h.driver({ action: 'save' });
+                        assert.equal(fs.readFileSync(filePath, 'utf8'), expected);
+                    },
+                    dialog: async (action, accepted) => {
+                        await input().waitFor({ state: 'visible' });
+                        if (!accepted) await page.keyboard.press('Escape');
+                        else {
+                            if (action === 'link') {
+                                await input().fill('https://example.com/reference');
+                                await page.keyboard.press('Enter');
+                            } else {
+                                const imageName = 'Field sample 图像.png';
+                                // Navigate first: older pickers do not refresh their
+                                // directory listing until the path is accepted.
+                                await input().fill(path.join(owner.workspace, 'assets') + path.sep);
+                                await page.keyboard.press('Enter');
+                                await selectQuickInputItem(page, imageName, h.until);
+                            }
                         }
+                        await page.locator('.quick-input-widget:visible').waitFor({ state: 'hidden' });
                     }
-                    await page.locator('.quick-input-widget:visible').waitFor({ state: 'hidden' });
-                }
-            });
-            // With no selected label, Escape from the second input must cancel
-            // the entire insertion instead of creating a fallback link.
-            await selectTarget(editor);
-            await editor.evaluate(() => { getSelection().collapseToEnd(); window.__nativeInsertEvents = []; });
-            await openInsert(editor); await editor.locator('[data-insert-action="link"]').click();
-            await input().waitFor({ state: 'visible' });
-            await input().fill('https://example.com/cancel-label'); await page.keyboard.press('Enter');
-            await h.until(async () => await input().inputValue() === 'link', 'link label input');
-            await page.keyboard.press('Escape');
-            await editor.waitForFunction(() => window.__nativeInsertEvents.some(message => message.type === 'insertCancelled'));
-            assert.equal(await editor.evaluate(() => document.querySelector('[data-action="undo"]').disabled), true);
-            record('insert-link-second-prompt', { cancelledWithoutEdit: true });
+                });
+                // With no selected label, Escape from the second input must cancel
+                // the entire insertion instead of creating a fallback link.
+                await selectTarget(editor);
+                await editor.evaluate(() => { getSelection().collapseToEnd(); window.__nativeInsertEvents = []; });
+                await openInsert(editor); await chooseInsertAction(editor, page.keyboard, 'link');
+                await input().waitFor({ state: 'visible' });
+                await input().fill('https://example.com/cancel-label'); await page.keyboard.press('Enter');
+                await h.until(async () => await input().inputValue() === 'link', 'link label input');
+                await page.keyboard.press('Escape');
+                await editor.waitForFunction(() => window.__nativeInsertEvents.some(message => message.type === 'insertCancelled'));
+                assert.equal(await editor.evaluate(() => document.querySelector('[data-action="undo"]').disabled), true);
+                record('insert-link-second-prompt', { cancelledWithoutEdit: true });
+                record('insert-narrow-reachability', { ...size, everyAction: true, wholeCardKeyboardNavigation: true, savedContentVerified: true });
+            } finally { await frame.evaluate((node, before) => Object.assign(node.style, before), before); }
         });
         await h.sourceMode(connection);
         assert.equal(await connection.evaluate('document.getElementById("sourceEditor").value'), source);
