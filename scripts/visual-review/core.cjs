@@ -190,7 +190,9 @@ function caseGroups(packet, legacy = false) {
     const size = !legacy && packet.sectionId === '01-canvas' ? 1 : 2;
     for (let index = 0; index < packet.cases.length; index += size) {
         const cases = packet.cases.slice(index, index + size), ids = cases.map(c => c.id);
-        groups.push({ ...packet, cases, priorFailures: packet.priorFailures.filter(f => ids.includes(f.caseId)) });
+        groups.push({ ...packet, cases,
+            sectionCaseChecklist: packet.cases.map(({ id, state, comparison }) => ({ id, state, comparison })),
+            priorFailures: packet.priorFailures.filter(f => ids.includes(f.caseId)) });
     }
     return groups;
 }

@@ -129,6 +129,8 @@ function groupSpawn(inspect) {
     return (executable, args, options) => {
         const packet = JSON.parse(fs.readFileSync(path.join(options.cwd, 'packet.json'), 'utf8'));
         assert.ok(packet.cases.length <= 2);
+        assert.ok(packet.sectionCaseChecklist.length >= packet.cases.length);
+        for (const item of packet.cases) assert.deepEqual(packet.sectionCaseChecklist.find(c => c.id === item.id), { id: item.id, state: item.state, comparison: item.comparison });
         assert.equal(args.filter(a => a === '--image').length, packet.references.length + packet.cases.length * 2);
         const verdict = inspect(packet, index++);
         if (verdict) fs.writeFileSync(args[args.indexOf('--output-last-message') + 1], JSON.stringify(verdict));
@@ -139,7 +141,8 @@ function groupSpawn(inspect) {
 test('bounded fresh groups cover every case and retain a FAIL without averaging it into PASS', async t => {
     const f = fixture(t, 4), current = f.capture(); let calls = 0;
     const receipt = await review(f.root, current.relative, { spawn: groupSpawn((packet, index) => {
-        calls++; const verdict = index ? pass(packet) : fail(packet);
+        calls++; assert.equal(packet.sectionCaseChecklist.length, 4);
+        const verdict = index ? pass(packet) : fail(packet);
         if (!index) verdict.discrepancies[0].id = 'ALL-01';
         return verdict;
     }) });

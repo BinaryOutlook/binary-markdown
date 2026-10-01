@@ -80,6 +80,44 @@
                 }
             });
         });
+        // A decorative cue follows the heading containing the source caret.
+        // It sits outside authored content and never changes textarea selection.
+        const sourceCue = document.createElement('span');
+        sourceCue.className = 'source-heading-cue'; sourceCue.hidden = true;
+        sourceCue.setAttribute('aria-hidden', 'true'); document.body.appendChild(sourceCue);
+        let sourceHeadingLine = null, sourceMeasure = null;
+        function refreshSourceHeadingCue() {
+            sourceCue.hidden = true;
+            if (document.documentElement.dataset.editorMode !== 'split' || sourceHeadingLine === null) return;
+            const bounds = sourceEditor.getBoundingClientRect();
+            if (!bounds.width || !bounds.height) return;
+            const style = getComputedStyle(sourceEditor);
+            const properties = ['fontFamily', 'fontSize', 'fontWeight', 'fontStyle', 'lineHeight', 'letterSpacing', 'tabSize', 'paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft', 'textIndent'];
+            const key = JSON.stringify([sourceEditor.value, sourceHeadingLine, sourceEditor.clientWidth, ...properties.map(name => style[name])]);
+            if (sourceMeasure?.key !== key) {
+                const mirror = document.createElement('div'); mirror.setAttribute('aria-hidden', 'true');
+                Object.assign(mirror.style, { position: 'fixed', left: '-10000px', top: '0', visibility: 'hidden', boxSizing: 'border-box', width: sourceEditor.clientWidth + 'px', whiteSpace: 'pre-wrap', overflowWrap: 'break-word' });
+                for (const name of properties) mirror.style[name] = style[name];
+                const lines = sourceEditor.value.split('\n');
+                mirror.textContent = lines.slice(0, sourceHeadingLine).join('\n') + (sourceHeadingLine ? '\n' : '');
+                const marker = document.createElement('span'); marker.textContent = lines[sourceHeadingLine] || ' '; mirror.appendChild(marker);
+                document.body.appendChild(mirror);
+                try {
+                    const box = marker.getBoundingClientRect(), lineHeight = parseFloat(style.lineHeight) || 21;
+                    sourceMeasure = { key, top: box.top - mirror.getBoundingClientRect().top - (lineHeight - Math.min(lineHeight, box.height)) / 2, height: Math.ceil(box.height / lineHeight) * lineHeight };
+                } finally { mirror.remove(); }
+            }
+            const top = bounds.top + sourceEditor.clientTop + sourceMeasure.top - sourceEditor.scrollTop;
+            const visibleTop = Math.max(bounds.top + sourceEditor.clientTop, top);
+            const height = Math.min(bounds.bottom - sourceEditor.clientTop, top + sourceMeasure.height) - visibleTop;
+            if (height <= 0) return;
+            Object.assign(sourceCue.style, { left: (bounds.left + sourceEditor.clientLeft) + 'px', top: visibleTop + 'px', width: sourceEditor.clientWidth + 'px', height: height + 'px' });
+            sourceCue.hidden = false;
+        }
+        function markSourceHeading(line) {
+            sourceHeadingLine = Number.isInteger(line) && line >= 0 ? line : null;
+            refreshSourceHeadingCue();
+        }
         function decorateBlocks() {
             for (const block of editor.querySelectorAll('.math-wrapper,.mermaid-wrapper')) {
                 const diagram = block.classList.contains('mermaid-wrapper');
@@ -103,7 +141,25 @@
                         chrome.appendChild(toggle);
                     }
                     const hint = document.createElement('small'); hint.textContent = i18n.blockExitHint; chrome.appendChild(hint);
+                    if (!diagram) for (const part of ['source', 'preview']) {
+                        const scroll = document.createElement('span'); scroll.className = 'block-preview-scroll'; scroll.hidden = true;
+                        scroll.dataset.scrollPart = part;
+                        const partLabel = part === 'source' ? i18n.sourceLabel : i18n.previewLabel;
+                        scroll.setAttribute('role', 'group'); scroll.setAttribute('aria-label', partLabel + ' · ' + i18n.equationScrollHint);
+                        const label = document.createElement('span'); label.textContent = scroll.getAttribute('aria-label'); scroll.appendChild(label);
+                        for (const [delta, key, symbol] of [[-1, 'equationScrollLeft', '←'], [1, 'equationScrollRight', '→']]) {
+                            const control = button(symbol, event => {
+                                event.stopPropagation(); const target = block.querySelector(part === 'source' ? 'pre[data-lang="math"]' : '.math-display');
+                                target.scrollLeft += delta * Math.max(80, target.clientWidth * .65); decorateBlocks();
+                            });
+                            control.setAttribute('aria-label', partLabel + ' · ' + i18n[key]); control.title = control.getAttribute('aria-label');
+                            control.addEventListener('mousedown', event => event.preventDefault()); scroll.appendChild(control);
+                        }
+                        chrome.appendChild(scroll);
+                        block.querySelector(part === 'source' ? 'pre[data-lang="math"]' : '.math-display')?.addEventListener('scroll', decorateBlocks, { passive: true });
+                    }
                     const status = document.createElement('span'); status.className = 'block-status'; status.setAttribute('role', 'status'); chrome.appendChild(status);
+                    const concise = document.createElement('span'); concise.className = 'block-error-summary'; concise.hidden = true; chrome.appendChild(concise);
                     const diagnostic = document.createElement('details'); diagnostic.className = 'block-diagnostic';
                     const summary = document.createElement('summary'); summary.textContent = i18n.diagnosticDetails;
                     const detail = document.createElement('div'); detail.className = 'block-diagnostic-text'; diagnostic.append(summary, detail); chrome.appendChild(diagnostic);
@@ -123,6 +179,13 @@
                 }
                 const preview = block.querySelector(diagram ? '.mermaid-diagram' : '.math-display');
                 if (preview) preview.dataset.previewLabel = i18n.previewLabel;
+                for (const scroll of chrome.querySelectorAll('.block-preview-scroll')) {
+                    const target = scroll.dataset.scrollPart === 'source' ? pre : preview;
+                    scroll.hidden = !target.clientWidth || target.scrollWidth <= target.clientWidth + 1;
+                    const controls = scroll.querySelectorAll('button');
+                    controls[0].disabled = target.scrollLeft <= 1;
+                    controls[1].disabled = target.scrollLeft >= target.scrollWidth - target.clientWidth - 1;
+                }
                 chrome.querySelectorAll('[data-block-mode]').forEach(toggle => { toggle.disabled = options.isSourceMode(); toggle.setAttribute('aria-pressed', String(block.dataset.mode === toggle.dataset.blockMode)); });
                 const error = block.dataset.renderError || '';
                 const status = chrome.querySelector('.block-status');
@@ -130,6 +193,9 @@
                 const text = error ? (diagram ? i18n.diagramNeedsAttention : unknown ? i18n.unknownEquationCommand + ' ' + unknown[1] : i18n.equationUnsupported) : '';
                 if (status.textContent !== text) status.textContent = text;
                 status.hidden = !error;
+                const concise = chrome.querySelector('.block-error-summary');
+                concise.hidden = !diagram || !error;
+                concise.textContent = diagram && error ? (error.split(/\r?\n/).find(line => line.trim()) || '').trim().slice(0, 180) : '';
                 const diagnostic = chrome.querySelector('.block-diagnostic'); diagnostic.hidden = !error;
                 if (diagnostic.lastChild.textContent !== error) diagnostic.lastChild.textContent = error;
                 block.classList.toggle('block-needs-attention', Boolean(error));
@@ -160,11 +226,15 @@
             }
             positionContext();
             decorateBlocks();
+            refreshSourceHeadingCue();
         }
         sourceEditor.addEventListener('scroll', refresh);
         wrapper.addEventListener('scroll', refresh);
         window.addEventListener('resize', refresh);
+        const blockModes = new MutationObserver(decorateBlocks);
+        blockModes.observe(editor, { subtree: true, attributes: true, attributeFilter: ['data-mode'] });
+        window.addEventListener('pagehide', () => { blockModes.disconnect(); sourceCue.remove(); }, { once: true });
         refresh();
-        return { refresh };
+        return { refresh, markSourceHeading };
     }
 })();

@@ -113,6 +113,7 @@
         const bounds = editorWrapper.getBoundingClientRect();
         const keepCaret = caretBefore?.height && caretBefore.top >= bounds.top && caretBefore.bottom <= bounds.bottom;
         document.documentElement.dataset[name] = value;
+        if (workspaceUi) workspaceUi.refresh();
         // CSS changes the layout without detaching the active editable node.
         if (keepCaret) editorWrapper.scrollTop += range.getBoundingClientRect().top - caretBefore.top;
     }
@@ -13243,6 +13244,7 @@
         headings.forEach((heading, i) => { if (heading.line <= line) index = i; });
         const nodes = [...editor.querySelectorAll('h1,h2,h3,h4,h5,h6')];
         nodes.forEach((node, i) => node.classList.toggle('source-correspondence', isSplitMode && i === index));
+        if (workspaceUi) workspaceUi.markSourceHeading(headings[index]?.line);
         if (index >= 0) setActiveOutlineItem(index, false);
         if (isSplitMode && scroll && nodes[index]) nodes[index].scrollIntoView({ block: 'nearest' });
         const position = document.getElementById('documentPosition');

@@ -77,6 +77,65 @@ test('Outline navigates to the corresponding source heading in Split', async ({ 
     expect((await snapshot(page)).pending).toBe(false);
 });
 
+test('Split marks the corresponding source heading without moving its caret or changing source', async ({ page }) => {
+    const content = '# One\n\nBefore target after.\n\n## Two\n\nOther text.\n';
+    await setup(page, content);
+    await page.locator('button[data-editor-mode="split"]').click();
+    const source = page.locator('#sourceEditor');
+    const offset = content.indexOf('Other text');
+    await source.evaluate((node: HTMLTextAreaElement, at) => { node.setSelectionRange(at, at); node.dispatchEvent(new Event('select')); }, offset);
+    await expect(page.locator('.source-heading-cue')).toBeVisible();
+    await expect(page.locator('#editor h2')).toHaveClass(/source-correspondence/);
+    expect(await source.evaluate((node: HTMLTextAreaElement) => [node.selectionStart, node.selectionEnd])).toEqual([offset, offset]);
+    const before = await page.locator('.source-heading-cue').boundingBox();
+    await page.setViewportSize({ width: 480, height: 800 });
+    await expect.poll(async () => Math.abs((await page.locator('.source-heading-cue').boundingBox())!.x - (await source.boundingBox())!.x)).toBeLessThan(1);
+    await expect(page.locator('.source-heading-cue')).toBeVisible();
+    const cue = await page.locator('.source-heading-cue').boundingBox(), pane = await source.boundingBox();
+    expect(cue!.x).toBeGreaterThanOrEqual(pane!.x);
+    expect(cue!.y).toBeGreaterThan(pane!.y);
+    expect(cue!.y + cue!.height).toBeLessThanOrEqual(pane!.y + pane!.height);
+    expect(cue!.x).not.toBe(before!.x);
+    await page.locator('button[data-editor-mode="visual"]').click();
+    await expect(page.locator('.source-heading-cue')).toBeHidden();
+    expect(await snapshot(page)).toMatchObject({ content, pending: false });
+    await expect(page.locator('#toolbar [data-action="undo"]')).toBeDisabled();
+});
+
+test('long equations expose source and preview scrolling without editing or overriding wrap preferences', async ({ page }) => {
+    const tex = Array(18).fill('\\frac{a+b}{c}').join(' + ');
+    const content = '# Equation\n\n$$\n' + tex + '\n$$\n\nContinue here.\n';
+    await setup(page, content);
+    await page.locator('.math-display').click();
+    for (const part of ['source', 'preview']) {
+        const controls = page.locator('.block-preview-scroll[data-scroll-part="' + part + '"]');
+        await expect(controls).toBeVisible();
+        await expect(controls.locator('button').first()).toBeDisabled();
+        await controls.locator('button').last().click();
+        const target = page.locator(part === 'source' ? '.math-wrapper pre[data-lang="math"]' : '.math-display');
+        await expect.poll(() => target.evaluate(node => node.scrollLeft)).toBeGreaterThan(0);
+        await controls.locator('button').first().click();
+        await expect.poll(() => target.evaluate(node => node.scrollLeft)).toBe(0);
+    }
+    await page.evaluate(() => (window as any).__hostMessageHandler({ type: 'mathSourceWrap', value: true }));
+    await page.setViewportSize({ width: 480, height: 800 });
+    await expect(page.locator('.block-preview-scroll[data-scroll-part="source"]')).toBeHidden();
+    await expect(page.locator('.block-preview-scroll[data-scroll-part="preview"]')).toBeVisible();
+    expect(await snapshot(page)).toMatchObject({ content, pending: false });
+    await expect(page.locator('#toolbar [data-action="undo"]')).toBeDisabled();
+});
+
+test('Mermaid shows a concise parser diagnostic before details and keeps it out of authored source', async ({ page }) => {
+    const content = '# Process\n\n```mermaid\ngraph LR\n A[Draft -->\n B[Review]\n```\n';
+    await setup(page, content);
+    await page.locator('[data-block-mode="edit"]').click();
+    await expect(page.locator('.block-error-summary')).toContainText('Parse error on line');
+    await expect(page.locator('.block-diagnostic')).not.toHaveAttribute('open');
+    await expect(page.locator('.block-error-line')).toBeVisible();
+    expect(await snapshot(page)).toMatchObject({ content, pending: false });
+    await expect(page.locator('#toolbar [data-action="undo"]')).toBeDisabled();
+});
+
 test('Outline uses one thin active marker and retains the configured accent', async ({ page }) => {
     const content = '# One\n\nBefore target after.\n';
     await setup(page, content);

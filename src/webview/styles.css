@@ -1322,6 +1322,7 @@ html[data-math-source-position="below"] .editor .math-wrapper[data-mode="edit"] 
 .editor-mode-switch { display: flex; border: 1px solid var(--border-color); border-radius: 6px; padding: 2px; }
 .toolbar .editor-mode-switch button { font: inherit; font-size: 12px; min-height: 28px; }
 .editor-mode-switch button[aria-pressed="true"], #contextToolbarToggle[aria-pressed="true"] { background: var(--selection-bg); }
+.editor-mode-switch button[aria-pressed="true"] { background: var(--link-color); color: var(--bg-color); }
 #formatButton, #contextToolbarToggle { font: inherit; font-size: 12px; gap: 4px; }
 #contextToolbarToggle { max-width: none; white-space: nowrap; }
 [data-context-toolbar="true"] #toolbarInner { display: none; }
@@ -1552,6 +1553,13 @@ html[data-table-toolbar-position="bottom-left"] .editor table, html[data-table-t
 .block-error-line { position: absolute; inset-inline: 0; border-left: 3px solid #b52638; background: #ffebee80; pointer-events: none; z-index: 0; }
 .block-error-line[hidden] { display: none; }
 .math-wrapper > pre code, .mermaid-wrapper > pre code { position: relative; z-index: 1; }
+.math-display .katex-display { width: max-content; min-width: 100%; }
+.block-preview-scroll { display: flex; align-items: center; gap: 8px; width: 100%; font-size: 12px; }
+.block-preview-scroll[hidden], .block-error-summary[hidden] { display: none; }
+.block-preview-scroll > span { margin-right: auto; }
+.block-error-summary { width: 100%; color: var(--text-color); font: 12px/1.5 var(--font-mono); overflow-wrap: anywhere; }
+.source-heading-cue { position: fixed; z-index: 5; pointer-events: none; box-sizing: border-box; border-left: 2px solid var(--link-color); background: color-mix(in srgb, var(--link-color) 12%, transparent); }
+.source-heading-cue[hidden] { display: none; }
 [data-theme="night"] .block-status, [data-theme="dark"] .block-status { color: #ff9baf; background: #44232b; }
 [data-theme="night"] .block-error-line, [data-theme="dark"] .block-error-line { background: #9b243c40; border-color: #ff9baf; }
 
