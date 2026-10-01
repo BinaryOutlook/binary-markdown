@@ -189,6 +189,28 @@ test('Mermaid shows a concise parser diagnostic before details and keeps it out 
     await expect(page.locator('#toolbar [data-action="undo"]')).toBeDisabled();
 });
 
+test('expanded diagnostics expose the parser explanation and support keyboard scrolling without edits', async ({ page }) => {
+    const content = '# Process\n\n```mermaid\ngraph LR\n A[Draft -->\n B[Review]\n```\n';
+    await setup(page, content);
+    await page.locator('[data-block-mode="edit"]').click();
+    await page.locator('.block-diagnostic summary').click();
+    const detail = page.getByRole('region', { name: 'Diagnostic details', exact: true });
+    await expect(detail).toContainText('Expecting');
+    expect(await detail.evaluate(node => node.scrollHeight <= node.clientHeight + 1)).toBe(true);
+    expect((await detail.boundingBox())!.height).toBeLessThan(300);
+    await page.locator('.mermaid-wrapper').evaluate((node: HTMLElement) => {
+        node.dataset.renderError += '\nAdditional parser context remains available for keyboard reading.'.repeat(30);
+    });
+    await page.setViewportSize({ width: 480, height: 800 });
+    await expect.poll(() => detail.evaluate(node => node.scrollHeight > node.clientHeight)).toBe(true);
+    await detail.focus(); await detail.press('End');
+    await expect.poll(() => detail.evaluate(node => node.scrollTop)).toBeGreaterThan(0);
+    await detail.press('Home');
+    await expect.poll(() => detail.evaluate(node => node.scrollTop)).toBe(0);
+    expect(await snapshot(page)).toMatchObject({ content, pending: false });
+    await expect(page.locator('#toolbar [data-action="undo"]')).toBeDisabled();
+});
+
 test('Outline uses one thin active marker and retains the configured accent', async ({ page }) => {
     const content = '# One\n\nBefore target after.\n';
     await setup(page, content);

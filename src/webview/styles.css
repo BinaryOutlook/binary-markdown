@@ -1547,7 +1547,8 @@ html[data-table-toolbar-position="bottom-left"] .editor table, html[data-table-t
 .block-chrome small { width: auto; margin-left: auto; color: var(--blockquote-color); font-size: 12px; }
 .block-status { padding: 6px 8px; border-radius: 4px; background: #fff0f1; color: #a51f30; font-size: 12px; }
 .block-diagnostic { font-size: 12px; }
-.block-diagnostic-text { max-height: 84px; font-size: 11px; background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 4px; margin-top: 8px; }
+.block-diagnostic-text { max-height: 160px; font-size: 11px; background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 4px; margin-top: 8px; scrollbar-gutter: stable; scrollbar-width: thin; scrollbar-color: var(--blockquote-color) var(--toolbar-bg); }
+.block-diagnostic-text:focus-visible { outline: 2px solid var(--link-color); outline-offset: -2px; }
 .block-needs-attention { border: 1px solid var(--border-color); }
 .math-wrapper > pre::before, .mermaid-wrapper > pre::before, .math-display::before, .mermaid-diagram::before { font-size: 13px; font-weight: 600; text-align: left; }
 .math-wrapper > pre, .mermaid-wrapper > pre { position: relative; }

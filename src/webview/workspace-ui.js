@@ -185,7 +185,9 @@
                     const concise = document.createElement('span'); concise.className = 'block-error-summary'; concise.hidden = true; chrome.appendChild(concise);
                     const diagnostic = document.createElement('details'); diagnostic.className = 'block-diagnostic';
                     const summary = document.createElement('summary'); summary.textContent = i18n.diagnosticDetails;
-                    const detail = document.createElement('div'); detail.className = 'block-diagnostic-text'; diagnostic.append(summary, detail); chrome.appendChild(diagnostic);
+                    const detail = document.createElement('div'); detail.className = 'block-diagnostic-text';
+                    detail.tabIndex = 0; detail.setAttribute('role', 'region'); detail.setAttribute('aria-label', i18n.diagnosticDetails);
+                    diagnostic.append(summary, detail); chrome.appendChild(diagnostic);
                     block.prepend(chrome);
                 }
                 const pre = block.querySelector(diagram ? 'pre[data-lang="mermaid"]' : 'pre[data-lang="math"]');
