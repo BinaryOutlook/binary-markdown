@@ -11,24 +11,24 @@ const core = require('../../scripts/visual-review/core.cjs');
 const { review } = require('../../scripts/visual-review/review.cjs');
 
 const pixel = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a0ioAAAAASUVORK5CYII=', 'base64');
-function fixture(t, count = 1) {
+function fixture(t, count = 1, sectionId = '03-commands') {
     const root = fs.mkdtempSync(path.join(os.tmpdir(), 'visual-review-unit-'));
     t.after(() => fs.rmSync(root, { recursive: true, force: true }));
     const write = (relative, content) => { const file = core.safePath(root, relative); fs.mkdirSync(path.dirname(file), { recursive: true }); fs.writeFileSync(file, content); };
     write('src/render.js', 'original');
     const cases = Array.from({ length: count }, (_, index) => ({ id: index ? 'state-' + index : 'all', state: 'All', comparison: 'Direct' }));
-    write('scripts/visual-review/sections.json', JSON.stringify({ sections: [{ id: '03-commands', targetRegions: [{ id: 'insert', description: 'Insert only' }], excludedRegions: ['toolbar'], cases }] }));
+    write('scripts/visual-review/sections.json', JSON.stringify({ sections: [{ id: sectionId, targetRegions: [{ id: 'insert', description: 'Insert only' }], excludedRegions: ['toolbar'], cases }] }));
     const reference = { level: 'Experimental', sourcePath: 'design.png', localPath: '.vscode-test/reference.png', sha256: core.hash(pixel), width: 1, height: 1, writtenIntent: 'Rendered previews', annotations: [] };
     write('.vscode-test/reference.png', pixel);
-    write(core.PLAN + '/references.json', JSON.stringify({ designCommit: 'a'.repeat(40), designBrief: 'Minimalist', sections: [{ id: '03-commands', title: 'Insert', references: [reference], ownerScopeAdjustments: [], visualRequirements: ['Readable preview'], requiredStates: ['All'] }] }));
+    write(core.PLAN + '/references.json', JSON.stringify({ designCommit: 'a'.repeat(40), designBrief: 'Minimalist', sections: [{ id: sectionId, title: 'Insert', references: [reference], ownerScopeAdjustments: [], visualRequirements: ['Readable preview'], requiredStates: ['All'] }] }));
     for (const file of ['evaluator-prompt.txt','verdict.schema.json']) write('scripts/visual-review/' + file, file.endsWith('.json') ? '{}' : 'Judge only Insert');
     execFileSync('git', ['init','-q'], { cwd: root });
     execFileSync('git', ['-c','user.name=Test','-c','user.email=test@example.invalid','add','src'], { cwd: root });
     execFileSync('git', ['-c','user.name=Test','-c','user.email=test@example.invalid','commit','-qm','fixture'], { cwd: root });
     const capture = () => {
-        const directory = core.newIteration(root, '03-commands');
+        const directory = core.newIteration(root, sectionId);
         for (const item of cases) { write(directory + '/' + item.id + '-full.png', pixel); write(directory + '/' + item.id + '-target.png', pixel); }
-        const packet = core.seal(root, directory, { sectionId: '03-commands', capture: { kind: 'unit fixture' }, cases: cases.map(item => ({ ...item, images: [directory + '/' + item.id + '-full.png',directory + '/' + item.id + '-target.png'] })) });
+        const packet = core.seal(root, directory, { sectionId, capture: { kind: 'unit fixture' }, cases: cases.map(item => ({ ...item, images: [directory + '/' + item.id + '-full.png',directory + '/' + item.id + '-target.png'] })) });
         return { relative: directory + '/packet.json', packet };
     };
     return { root, write, capture };
@@ -165,4 +165,16 @@ test('a group cannot borrow omitted cases or image acknowledgements from another
         const verdict = pass(packet); verdict.caseAssessments[0].caseId = 'state-3'; return verdict;
     }) });
     assert.equal(receipt.verdict, 'BLOCKED'); assert.equal(receipt.evaluation, null);
+});
+test('similar Canvas states receive separate fresh image contexts without dropping a state', async t => {
+    const f = fixture(t, 2, '01-canvas'), current = f.capture(); let calls = 0;
+    const receipt = await review(f.root, current.relative, { spawn: groupSpawn(packet => {
+        calls++; assert.equal(packet.cases.length, 1); return pass(packet);
+    }) });
+    assert.equal(calls, 2); assert.equal(receipt.verdict, 'PASS');
+    assert.equal(receipt.evaluation.caseAssessments.length, 2);
+    const records = core.readJson(f.root, path.posix.dirname(current.relative) + '/groups.json');
+    assert.equal(records.schemaVersion, 2);
+    const legacy = { ...records, schemaVersion: 1, groups: [{ caseIds: current.packet.cases.map(c => c.id), evaluation: pass(current.packet), error: null }] };
+    assert.equal(core.validateGroups(current.packet, legacy), legacy);
 });

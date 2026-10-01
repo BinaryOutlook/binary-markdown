@@ -62,7 +62,7 @@ async function evaluateGroup(root, packet, directory, index, options) {
             fs.copyFileSync(output, core.safePath(root, stem + '-output.json'));
             evaluation = JSON.parse(fs.readFileSync(output, 'utf8'));
             core.validateVerdict(packet, evaluation);
-            core.validateGroups(packet, { schemaVersion: 1, parentPacketDigest: packet.packetDigest,
+            core.validateGroups(packet, { schemaVersion: 2, parentPacketDigest: packet.packetDigest,
                 groups: [{ caseIds: packet.cases.map(c => c.id), evaluation, error: null }] });
         } catch (error) {
             return { evaluation: null, error: 'Evaluator output rejected: ' + error.message };
@@ -73,7 +73,7 @@ async function evaluateGroup(root, packet, directory, index, options) {
 async function review(root, relative, options = {}) {
     const packet = core.loadPacket(root, relative), directory = path.posix.dirname(relative);
     if (fs.existsSync(core.safePath(root, directory + '/receipt.json')) || fs.existsSync(core.safePath(root, directory + '/groups.json'))) throw new Error('Iteration already evaluated; capture a new iteration');
-    const records = { schemaVersion: 1, parentPacketDigest: packet.packetDigest, groups: [] };
+    const records = { schemaVersion: 2, parentPacketDigest: packet.packetDigest, groups: [] };
     // Bound context as well as scope: at most two real states per fresh call.
     // Every state remains required; no score averaging or partial PASS occurs.
     for (const [index, group] of core.caseGroups(packet).entries()) {

@@ -183,18 +183,21 @@ function loadPacket(root, relative, checkSource = true) {
 function exactKeys(value, keys) {
     if (!value || typeof value !== 'object' || Array.isArray(value) || Object.keys(value).sort().join('|') !== [...keys].sort().join('|')) throw new Error('Malformed evaluator fields');
 }
-function caseGroups(packet) {
+function caseGroups(packet, legacy = false) {
     const groups = [];
-    for (let index = 0; index < packet.cases.length; index += 2) {
-        const cases = packet.cases.slice(index, index + 2), ids = cases.map(c => c.id);
+    // Nearly identical focused/unfocused canvas states need separate image
+    // contexts. Other sections retain the bounded pair of related states.
+    const size = !legacy && packet.sectionId === '01-canvas' ? 1 : 2;
+    for (let index = 0; index < packet.cases.length; index += size) {
+        const cases = packet.cases.slice(index, index + size), ids = cases.map(c => c.id);
         groups.push({ ...packet, cases, priorFailures: packet.priorFailures.filter(f => ids.includes(f.caseId)) });
     }
     return groups;
 }
 function validateGroups(packet, records) {
     exactKeys(records, ['schemaVersion','parentPacketDigest','groups']);
-    const expected = caseGroups(packet);
-    if (records.schemaVersion !== 1 || records.parentPacketDigest !== packet.packetDigest || !Array.isArray(records.groups) || records.groups.length !== expected.length) throw new Error('Case-group identity mismatch');
+    const expected = caseGroups(packet, records.schemaVersion === 1);
+    if (![1,2].includes(records.schemaVersion) || records.parentPacketDigest !== packet.packetDigest || !Array.isArray(records.groups) || records.groups.length !== expected.length) throw new Error('Case-group identity mismatch');
     records.groups.forEach((group, index) => {
         exactKeys(group, ['caseIds','evaluation','error']);
         if (canonical(group.caseIds) !== canonical(expected[index].cases.map(c => c.id))) throw new Error('Case-group coverage mismatch');
