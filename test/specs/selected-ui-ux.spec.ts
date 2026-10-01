@@ -420,6 +420,12 @@ test('contextual formatting finds a visible gap without covering headings or sel
         }).length;
     });
     expect(overlaps).toBe(0);
+    const distance = await page.evaluate(() => {
+        const toolbar = document.querySelector('.context-format-toolbar')!.getBoundingClientRect();
+        const selection = getSelection()!.getRangeAt(0).getBoundingClientRect();
+        return Math.hypot(Math.max(selection.left - toolbar.right, toolbar.left - selection.right, 0), Math.max(selection.top - toolbar.bottom, toolbar.top - selection.bottom, 0));
+    });
+    expect(distance).toBeLessThanOrEqual(96);
     expect(await page.evaluate(() => getSelection()!.toString())).toBe('A calm writing spa');
     expect(await snapshot(page)).toMatchObject({ content, pending: false });
 });

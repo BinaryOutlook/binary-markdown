@@ -49,18 +49,24 @@
             if (!rect || rect.bottom < pane.top || rect.top > pane.bottom) { context.hidden = true; return; }
             context.hidden = false;
             const width = context.offsetWidth, height = context.offsetHeight;
-            const left = Math.max(pane.left + 8, Math.min(rect.left, pane.right - width - 8));
             // Search the nearest visible gap rather than placing an overlay on
             // the preceding heading. Dense pages retain the permanent Format action.
-            const obstacles = [...editor.children].map(node => node.getBoundingClientRect()).filter(box => box.width && box.height);
-            const positions = [rect.top - height - 8, rect.bottom + 8, pane.top + 8,
+            const obstacles = [...editor.children, ...document.querySelectorAll('.editor-width-guide button, .editor-width-guide [role="tooltip"]')]
+                .map(node => node.getBoundingClientRect()).filter(box => box.width && box.height);
+            const minTop = toolbar.getBoundingClientRect().bottom + 6;
+            const clampLeft = left => Math.max(pane.left + 4, Math.min(left, pane.right - width - 4));
+            const columns = [...new Set([rect.left, rect.left - width - 6, rect.right + 6].map(clampLeft))];
+            const positions = [rect.top - height - 8, rect.bottom + 8, rect.top, minTop,
                 ...obstacles.flatMap(box => [box.top - height - 6, box.bottom + 6])];
-            const candidates = positions.filter(top => top >= pane.top + 4 && top + height <= Math.min(pane.bottom, window.innerHeight) - 4 &&
+            const candidates = positions.flatMap(top => columns.map(left => ({ left, top }))).filter(({ left, top }) =>
+                top >= minTop && top + height <= Math.min(pane.bottom, window.innerHeight) - 4 &&
                 !obstacles.some(box => left < box.right + 2 && left + width > box.left - 2 && top < box.bottom + 2 && top + height > box.top - 2));
-            candidates.sort((a, b) => Math.abs(a + height / 2 - (rect.top + rect.bottom) / 2) - Math.abs(b + height / 2 - (rect.top + rect.bottom) / 2));
+            const distance = item => Math.hypot(Math.max(rect.left - item.left - width, item.left - rect.right, 0), Math.max(rect.top - item.top - height, item.top - rect.bottom, 0));
+            candidates.sort((a, b) => distance(a) - distance(b));
             if (!candidates.length) { context.hidden = true; return; }
-            context.style.left = left + 'px';
-            context.style.top = candidates[0] + 'px';
+            if (distance(candidates[0]) > 96) { context.hidden = true; return; }
+            context.style.left = candidates[0].left + 'px';
+            context.style.top = candidates[0].top + 'px';
         }
         if (contextToggle) contextToggle.addEventListener('click', () => {
             contextual = !contextual;

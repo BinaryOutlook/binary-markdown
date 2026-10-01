@@ -1329,7 +1329,7 @@ html[data-math-source-position="below"] .editor .math-wrapper[data-mode="edit"] 
 [data-context-toolbar="true"] .toolbar-fixed--right { margin-left: auto; }
 .context-format-toolbar { position: fixed; display: flex; gap: 2px; z-index: 10002; padding: 4px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-color); color: var(--text-color); box-shadow: 0 2px 8px #0002; max-width: calc(100vw - 16px); }
 .context-format-toolbar[hidden] { display: none; }
-.context-format-toolbar button { background: none; border: none; color: inherit; padding: 6px; border-radius: 4px; cursor: pointer; }
+.context-format-toolbar button { background: none; border: none; color: inherit; padding: 4px; min-width: 24px; min-height: 24px; border-radius: 4px; cursor: pointer; }
 .context-format-toolbar button:hover { background: var(--selection-bg); }
 .context-format-toolbar button:focus-visible, .sidebar-tabs button:focus-visible, .outline-item:focus-visible { outline: 2px solid var(--link-color); outline-offset: -2px; }
 .sidebar-tabs { display: flex; gap: 4px; min-width: 0; }
