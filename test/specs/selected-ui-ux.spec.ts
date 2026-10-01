@@ -46,6 +46,26 @@ test('Split source edits share Undo with Visual and the preview is read only', a
     expect((await snapshot(page)).content).toBe(authored);
 });
 
+test('Split hides code editing chrome while retaining a read-only preview and the source history', async ({ page }) => {
+    const content = '# Review\n\n```javascript\nconst count = 24;\n```\n';
+    await setup(page, content);
+    await expect(page.locator('.code-delete-btn')).toBeVisible();
+    await page.locator('button[data-editor-mode="split"]').click();
+    await expect(page.locator('.code-block-header')).toBeHidden();
+    await expect(page.locator('#editor pre code')).toContainText('const count = 24;');
+    await expect(page.locator('.code-delete-btn')).toBeDisabled();
+    await page.locator('#sourceEditor').press('ControlOrMeta+a');
+    await page.keyboard.insertText(content.replace('24', '25'));
+    await expect(page.locator('#editor pre code')).toContainText('const count = 25;');
+    await expect(page.locator('.code-block-header')).toBeHidden();
+    await page.locator('#sourceEditor').press('ControlOrMeta+z');
+    await expect(page.locator('#sourceEditor')).toHaveValue(content);
+    await page.locator('button[data-editor-mode="visual"]').click();
+    await expect(page.locator('.code-block-header')).toBeVisible();
+    await expect(page.locator('.code-delete-btn')).toBeEnabled();
+    expect((await snapshot(page)).content).toBe(content);
+});
+
 test('a narrow pane conceals the rail without changing its stored state and can open an overlay', async ({ page }) => {
     await setup(page);
     await expect(page.locator('#sidebar')).toBeVisible();
@@ -129,7 +149,10 @@ test('Mermaid shows a concise parser diagnostic before details and keeps it out 
     const content = '# Process\n\n```mermaid\ngraph LR\n A[Draft -->\n B[Review]\n```\n';
     await setup(page, content);
     await page.locator('[data-block-mode="edit"]').click();
-    await expect(page.locator('.block-error-summary')).toContainText('Parse error on line');
+    await expect(page.locator('.block-error-summary')).toContainText('Parse error:');
+    await expect(page.locator('.block-error-summary')).not.toContainText('on line');
+    await expect(page.locator('.block-diagnostic-text')).not.toContainText('on line');
+    await expect(page.locator('.mermaid-wrapper')).toHaveAttribute('data-render-error', /Parse error on line/);
     await expect(page.locator('.block-diagnostic')).not.toHaveAttribute('open');
     await expect(page.locator('.block-error-line')).toBeVisible();
     expect(await snapshot(page)).toMatchObject({ content, pending: false });
@@ -379,6 +402,28 @@ test('contextual formatting uses the retained selection and shared Undo', async 
     expect((await snapshot(page)).content).toBe(authored);
 });
 
+test('contextual formatting finds a visible gap without covering headings or selected prose', async ({ page }) => {
+    const content = '# Research notes\n\nA calm writing space makes ideas easier to follow. Our research explores the relationship between clear structure and readable controls.\n\n## Background\n\nThe first study considers focused work and useful feedback.\n';
+    await setup(page, content);
+    await page.locator('#contextToolbarToggle').click();
+    await page.evaluate(() => {
+        const text = document.querySelector('#editor p')!.firstChild!;
+        const range = document.createRange(); range.setStart(text, 0); range.setEnd(text, 18);
+        document.getElementById('editor')!.focus(); getSelection()!.removeAllRanges(); getSelection()!.addRange(range);
+    });
+    await expect(page.locator('.context-format-toolbar')).toBeVisible();
+    const overlaps = await page.evaluate(() => {
+        const toolbar = document.querySelector('.context-format-toolbar')!.getBoundingClientRect();
+        return [...document.querySelector('#editor')!.children].filter(node => {
+            const box = node.getBoundingClientRect();
+            return box.width && box.height && toolbar.left < box.right && toolbar.right > box.left && toolbar.top < box.bottom && toolbar.bottom > box.top;
+        }).length;
+    });
+    expect(overlaps).toBe(0);
+    expect(await page.evaluate(() => getSelection()!.toString())).toBe('A calm writing spa');
+    expect(await snapshot(page)).toMatchObject({ content, pending: false });
+});
+
 test('palette navigation and export actions are view-only', async ({ page }) => {
     await setup(page);
     await page.locator('#formatButton').click();
@@ -418,10 +463,13 @@ test('equation and diagram diagnostics are readable without changing the source'
     await expect(page.locator('.mermaid-wrapper pre')).toBeVisible();
     await page.locator('.mermaid-wrapper [data-block-mode="display"]').click();
     expect(await snapshot(page)).toMatchObject({ content, pending: false });
-    await setup(page, '```mermaid\ngraph TD\n A --> [\n```\n');
+    const invalid = '```mermaid\ngraph TD\n A --> [\n```\n';
+    await setup(page, invalid);
     await expect(page.locator('.mermaid-wrapper .block-status')).toContainText('Needs attention');
     await page.locator('.block-diagnostic summary').click();
-    await expect(page.locator('.block-diagnostic-text')).toContainText('line');
+    await expect(page.locator('.block-diagnostic-text')).toContainText('Expecting');
+    await expect(page.locator('.block-diagnostic-text')).not.toContainText('on line');
+    expect(await snapshot(page)).toMatchObject({ content: invalid, pending: false });
 });
 
 test('table coordinates remain outside authored cells and boundary plus appends at the edge', async ({ page }) => {

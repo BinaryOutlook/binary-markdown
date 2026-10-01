@@ -1346,6 +1346,7 @@ button.outline-item.is-active { background: color-mix(in srgb, var(--outline-act
 [data-editor-mode="split"] #sourceEditor { order: 0; height: 100%; min-height: 0; max-width: none; margin: 0; padding: 24px; overflow: auto; line-height: 1.5; border-right: 1px solid var(--border-color); }
 [data-editor-mode="split"] #editor { order: 1; overflow: auto; height: 100%; min-height: 0; max-width: none !important; padding: 24px; margin: 0 !important; }
 [data-editor-mode="split"] .source-correspondence { border-left: 3px solid var(--link-color); padding-left: 8px; background: var(--selection-bg); }
+[data-editor-mode="split"] #editor .code-block-header { display: none; }
 #editor h1, #editor h2, #editor h3 { color: var(--heading-color); }
 #editor:focus-within ~ .editor-width-guide { visibility: visible; }
 .editor-width-guide:not(:focus-within):has(~ #editorWrapper #editor:not(:focus-within)) .editor-width-bounds { opacity: .25; }

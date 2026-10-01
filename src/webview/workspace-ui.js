@@ -48,9 +48,19 @@
             const pane = wrapper.getBoundingClientRect();
             if (!rect || rect.bottom < pane.top || rect.top > pane.bottom) { context.hidden = true; return; }
             context.hidden = false;
-            const width = context.offsetWidth;
-            context.style.left = Math.max(8, Math.min(rect.left, window.innerWidth - width - 8)) + 'px';
-            context.style.top = Math.max(pane.top + 4, rect.top - context.offsetHeight - 8) + 'px';
+            const width = context.offsetWidth, height = context.offsetHeight;
+            const left = Math.max(pane.left + 8, Math.min(rect.left, pane.right - width - 8));
+            // Search the nearest visible gap rather than placing an overlay on
+            // the preceding heading. Dense pages retain the permanent Format action.
+            const obstacles = [...editor.children].map(node => node.getBoundingClientRect()).filter(box => box.width && box.height);
+            const positions = [rect.top - height - 8, rect.bottom + 8, pane.top + 8,
+                ...obstacles.flatMap(box => [box.top - height - 6, box.bottom + 6])];
+            const candidates = positions.filter(top => top >= pane.top + 4 && top + height <= Math.min(pane.bottom, window.innerHeight) - 4 &&
+                !obstacles.some(box => left < box.right + 2 && left + width > box.left - 2 && top < box.bottom + 2 && top + height > box.top - 2));
+            candidates.sort((a, b) => Math.abs(a + height / 2 - (rect.top + rect.bottom) / 2) - Math.abs(b + height / 2 - (rect.top + rect.bottom) / 2));
+            if (!candidates.length) { context.hidden = true; return; }
+            context.style.left = left + 'px';
+            context.style.top = candidates[0] + 'px';
         }
         if (contextToggle) contextToggle.addEventListener('click', () => {
             contextual = !contextual;
@@ -195,9 +205,13 @@
                 status.hidden = !error;
                 const concise = chrome.querySelector('.block-error-summary');
                 concise.hidden = !diagram || !error;
-                concise.textContent = diagram && error ? (error.split(/\r?\n/).find(line => line.trim()) || '').trim().slice(0, 180) : '';
+                // Message-only parser coordinates can disagree with its structured
+                // source location. Keep the original error in data-render-error,
+                // and expose only the verified source cue as a visible line number.
+                const readableError = diagram ? error.replace(/(\b(?:parse|syntax) error)\s+on line \d+\s*:/gi, '$1:') : error;
+                concise.textContent = diagram && error ? (readableError.split(/\r?\n/).find(line => line.trim()) || '').trim().slice(0, 180) : '';
                 const diagnostic = chrome.querySelector('.block-diagnostic'); diagnostic.hidden = !error;
-                if (diagnostic.lastChild.textContent !== error) diagnostic.lastChild.textContent = error;
+                if (diagnostic.lastChild.textContent !== readableError) diagnostic.lastChild.textContent = readableError;
                 block.classList.toggle('block-needs-attention', Boolean(error));
             }
         }
