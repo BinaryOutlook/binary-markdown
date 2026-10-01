@@ -12,6 +12,12 @@ These records preserve observations about particular revisions and environments.
 | 2026-09-14 | [Feature comparison](comparisons/2026-09-14-feature-comparison.md) | Source at `0a7641a`; competitor information and priorities as assessed on that date |
 | 2026-09-08 | [Earlier feature comparison](comparisons/2026-09-08-feature-comparison.md) | Source at `9ff6ce04`; predates export and later integration features |
 
+## Proposed plans
+
+| Date | Plan | Scope and status |
+| --- | --- | --- |
+| 2026-10-01 | [Scoped AI visual review system](plans/2026-10-01-ui-ux-visual-fidelity/system-design.md) | Authorized builder/evaluator loop, fixed chosen references, section-only verdicts, and executable evidence design; implementation and new product verdicts follow separately |
+
 ## Validation
 
 | Recorded scope | Report | Evidence boundary |

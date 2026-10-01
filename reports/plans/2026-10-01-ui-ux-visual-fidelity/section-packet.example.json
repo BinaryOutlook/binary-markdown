@@ -1,0 +1,85 @@
+{
+  "schemaVersion": 1,
+  "status": "Illustrative packet; actual render, identity and capture fields must be filled before evaluation",
+  "sectionId": "12-export",
+  "iteration": 1,
+  "target": {
+    "name": "Export submenu only",
+    "referenceRegion": "Export header/body and its format/setup, job-status, warning/output groups and actions; exclude concept annotations and surrounding editor chrome",
+    "actualRegion": "Complete Export submenu in the real application, including its header, controls, status, warning/output groups and actions",
+    "referenceBounds": null,
+    "actualBounds": null,
+    "excludedRegions": [
+      "Main toolbar",
+      "Outline sidebar",
+      "Writing canvas",
+      "Desktop or host chrome"
+    ],
+    "exclusionRule": "Excluded designs do not affect this verdict unless they obstruct or clip the target."
+  },
+  "references": [
+    {
+      "path": ".vscode-test/visual-fidelity/references/12-export-moderate.png",
+      "designCommit": "a798921f7e5a9b01a88360315b035a391f69da47",
+      "sha256": "bb9676a2aa9f385907855a350ca9ab734e3cd554598412fd907187755e570285",
+      "relevantIntent": "Use an anchored export panel with a format list and short support summary, a Setup section for missing tools, and a job-status section with stages, warning count and output action. Pins: 1 capabilities and setup are separated; 2 status shows the current stage; 3 warnings and outputs have clear actions. No invented percentage completion.",
+      "annotations": [
+        "Capabilities and setup are separated",
+        "Status shows the current stage",
+        "Warnings and outputs have clear actions"
+      ]
+    }
+  ],
+  "ownerScopeAdjustments": [
+    "Work only on the Export submenu; do not introduce a separate export application or change existing saved-export contracts.",
+    "Use actual host stages, bounded warnings and host-recorded completed output; do not fabricate percentages or completion."
+  ],
+  "visualCriteria": [
+    {
+      "id": "EXP-C01",
+      "requirement": "Distinct format/setup, job-status and output/warning sections"
+    },
+    {
+      "id": "EXP-C02",
+      "requirement": "Clear stage and action hierarchy"
+    },
+    {
+      "id": "EXP-C03",
+      "requirement": "Legible recovery and output actions"
+    }
+  ],
+  "statesUnderReview": [],
+  "stateInstructions": "Fill with the matched reference state and only the states covered by this invocation. For unpictured states, include explicit derived visual requirements. Other required section states remain pending.",
+  "remainingSectionStates": [
+    "Available and missing tools",
+    "Running and canceling",
+    "Failure",
+    "Completion with warnings",
+    "Narrow panel"
+  ],
+  "actualImages": {
+    "fullView": "reports/validation/ui-ux-visual-fidelity/12-export/iteration-01/full-view.png",
+    "componentView": "reports/validation/ui-ux-visual-fidelity/12-export/iteration-01/after.png",
+    "additionalStateViews": []
+  },
+  "actualSource": {
+    "commit": null,
+    "localChanges": null,
+    "diffOrSourceHash": null,
+    "buildIdentity": null
+  },
+  "capture": {
+    "timestamp": null,
+    "viewport": null,
+    "panelSize": null,
+    "theme": null,
+    "locale": null,
+    "zoom": null,
+    "fixtureHash": null,
+    "interactionState": null,
+    "captureRecipe": null
+  },
+  "priorDiscrepancies": [],
+  "verdictScope": "Only the named Export target and statesUnderReview. Empty states or missing actual images/source identity mean BLOCKED.",
+  "builderSelfCheck": "Retain separately; evaluator first compares images without a builder success claim."
+}

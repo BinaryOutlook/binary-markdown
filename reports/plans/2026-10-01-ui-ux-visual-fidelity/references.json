@@ -1,0 +1,515 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-10-01",
+  "status": "proposed correction plan",
+  "baselineCommit": "8540d392360cc9c33999c7a045c034ca30fe175b",
+  "designCommit": "a798921f7e5a9b01a88360315b035a391f69da47",
+  "designBrief": "Consistent minimalist Binary Markdown desktop-editor language. Flat off-white canvas #FAFAF8, pale neutral rail #F3F4F5, charcoal text #242830, one restrained blue accent #4266B0. For dark subjects use charcoal #1B1E26 and slate surfaces #272D38 with legible pale tokens and the same blue accent. Familiar system sans typography and monospace only for source. Crisp 1px dividers, 6px corner radii, 8px spacing increments, no decorative gradients, no glass, no giant cards, no marketing art, no invented logo. Preserve the real Markdown-editor identity and useful commands. This is a proposed static design concept, not a working product. Show one option only, with readable exact short labels and synthetic research-note content.",
+  "comparisonPolicy": "plan.md#comparison-policy",
+  "sections": [
+    {
+      "id": "01-canvas",
+      "title": "Writing canvas and visual hierarchy",
+      "status": "proposed; no new visual acceptance",
+      "references": [
+        {
+          "level": "Recommended",
+          "sourcePath": "reports/investigations/2026-09-30-ui-ux-visual-review/images/generated/01-canvas-recommended.png",
+          "sourceUrl": "https://github.com/BinaryOutlook/binary-markdown/blob/a798921f7e5a9b01a88360315b035a391f69da47/reports/investigations/2026-09-30-ui-ux-visual-review/images/generated/01-canvas-recommended.png",
+          "localPath": ".vscode-test/visual-fidelity/references/01-canvas-recommended.png",
+          "sha256": "05a2b26218a1bdb28cc467168c188809a8898c352c9b5124a42dbce9fa82008d",
+          "width": 1536,
+          "height": 1024,
+          "writtenIntent": "Make the smallest practical correction: retain the outline and current full toolbar, reduce the writing canvas top inset to about 40px, use a readable 740px body measure, retain 16px body text, make H1 charcoal and H2 charcoal with restrained rules, show subtle width markers only when focused. Keep the code block and table content intact. Numbered callouts: 1 near the first heading = Less empty space before writing; 2 near heading hierarchy = Quiet, consistent typography; 3 near width marker = Guides appear when useful.",
+          "annotations": [
+            "Less empty space before writing: reduce the top inset while keeping a comfortable reading column",
+            "Quiet hierarchy: use charcoal headings and restrained section rules",
+            "Guides when useful: expose width assistance on focus rather than during ordinary reading"
+          ]
+        }
+      ],
+      "ownerScopeAdjustments": [
+        "Configured fonts, article width and alignment remain user preferences."
+      ],
+      "visualRequirements": [
+        "Calm top inset and reading measure",
+        "Quiet heading hierarchy",
+        "Width guidance does not compete with prose"
+      ],
+      "requiredStates": [
+        "Focused and unfocused writing",
+        "Empty document",
+        "Short and narrow panes"
+      ],
+      "proposedEvidenceDirectory": "reports/validation/ui-ux-visual-fidelity/01-canvas/iteration-01/",
+      "promptPath": "prompts/01-canvas.md"
+    },
+    {
+      "id": "02-toolbar",
+      "title": "Toolbar hierarchy and narrow-pane overflow",
+      "status": "proposed; no new visual acceptance",
+      "references": [
+        {
+          "level": "Experimental",
+          "sourcePath": "reports/investigations/2026-09-30-ui-ux-visual-review/images/generated/02-toolbar-experimental.png",
+          "sourceUrl": "https://github.com/BinaryOutlook/binary-markdown/blob/a798921f7e5a9b01a88360315b035a391f69da47/reports/investigations/2026-09-30-ui-ux-visual-review/images/generated/02-toolbar-experimental.png",
+          "localPath": ".vscode-test/visual-fidelity/references/02-toolbar-experimental.png",
+          "sha256": "f63cf1e70e556c1a2fc2c4ffd85c8f38707c1b2758de1571ee9665af8f45f1d6",
+          "width": 1536,
+          "height": 1024,
+          "writtenIntent": "Explore a user-selectable context-aware toolbar: concise permanent Insert, Format, Visual/Source, Export controls; a contextual formatting strip near selected text; a searchable all-actions panel that stays keyboard reachable. Pins: 1 permanent essential commands; 2 selection-specific tools; 3 search exposes the complete command set. Show this as an optional workflow, not forced automatic personalization.",
+          "annotations": [
+            "Permanent essential commands",
+            "Selection-specific tools",
+            "Search exposes the complete command set"
+          ]
+        }
+      ],
+      "ownerScopeAdjustments": [
+        "Contextual mode is optional and session-only; retain saved Full/Simple and complete command access.",
+        "Commands outside Insert use the separately selected Moderate palette."
+      ],
+      "visualRequirements": [
+        "Essential command hierarchy",
+        "Compact near-selection tools",
+        "Legible mode and utility actions"
+      ],
+      "requiredStates": [
+        "No selection",
+        "Selected prose",
+        "Protected/source contexts",
+        "Narrow overflow"
+      ],
+      "proposedEvidenceDirectory": "reports/validation/ui-ux-visual-fidelity/02-toolbar/iteration-01/",
+      "promptPath": "prompts/02-toolbar.md"
+    },
+    {
+      "id": "03-commands",
+      "title": "Insert and Action Palette discovery",
+      "status": "proposed; no new visual acceptance",
+      "references": [
+        {
+          "level": "Experimental",
+          "sourcePath": "reports/investigations/2026-09-30-ui-ux-visual-review/images/generated/03-commands-experimental.png",
+          "sourceUrl": "https://github.com/BinaryOutlook/binary-markdown/blob/a798921f7e5a9b01a88360315b035a391f69da47/reports/investigations/2026-09-30-ui-ux-visual-review/images/generated/03-commands-experimental.png",
+          "localPath": ".vscode-test/visual-fidelity/references/03-commands-experimental.png",
+          "sha256": "5ed871f5a099692cefa9ca2c9b248ee365d1f97e901b378a186376882cffc273",
+          "width": 1672,
+          "height": 941,
+          "writtenIntent": "Explore a larger optional command workspace opened by the existing shortcut, with search at top, a left group list, and compact previews for Table, Equation, Code block. For unmatched-command show clear no-results guidance. Pins: 1 categories support exploration; 2 preview describes the insertion; 3 search recovery is always available. No AI suggestion, no invented command execution.",
+          "annotations": [
+            "Categories support exploration",
+            "Preview describes the insertion",
+            "Search recovery is always available"
+          ]
+        },
+        {
+          "level": "Moderate",
+          "sourcePath": "reports/investigations/2026-09-30-ui-ux-visual-review/images/generated/03-commands-moderate.png",
+          "sourceUrl": "https://github.com/BinaryOutlook/binary-markdown/blob/a798921f7e5a9b01a88360315b035a391f69da47/reports/investigations/2026-09-30-ui-ux-visual-review/images/generated/03-commands-moderate.png",
+          "localPath": ".vscode-test/visual-fidelity/references/03-commands-moderate.png",
+          "sha256": "a332410af0c4d892c3ce050f6aafd091c02255a84ebdccbef0c979ceed5729d0",
+          "width": 1672,
+          "height": 941,
+          "writtenIntent": "Show a searchable Insert popover with matching results for table and a separate no-results state for unmatched-command. Shared command names and short purpose descriptions connect Insert with the Action Palette; existing keyboard hints remain visible.",
+          "annotations": [
+            "Matching results use shared names and short descriptions",
+            "Empty results explain the state and offer Clear search",
+            "Shared command details retain existing keyboard hints"
+          ]
+        }
+      ],
+      "ownerScopeAdjustments": [
+        "Experimental applies to Insert only; the remaining Action Palette follows Moderate.",
+        "Keep existing commands; generated sample wording is illustrative."
+      ],
+      "visualRequirements": [
+        "Balanced categories and command rows",
+        "Readable icons, titles, descriptions and separate shortcuts",
+        "Useful table/equation/code previews"
+      ],
+      "requiredStates": [
+        "All and a category",
+        "Search with results",
+        "No results",
+        "Unavailable action",
+        "Narrow workspace"
+      ],
+      "proposedEvidenceDirectory": "reports/validation/ui-ux-visual-fidelity/03-commands/iteration-01/",
+      "promptPath": "prompts/03-commands.md"
+    },
+    {
+      "id": "04-outline",
+      "title": "Outline hierarchy and sidebar footer",
+      "status": "proposed; no new visual acceptance",
+      "references": [
+        {
+          "level": "Experimental",
+          "sourcePath": "reports/investigations/2026-09-30-ui-ux-visual-review/images/generated/04-outline-experimental.png",
+          "sourceUrl": "https://github.com/BinaryOutlook/binary-markdown/blob/a798921f7e5a9b01a88360315b035a391f69da47/reports/investigations/2026-09-30-ui-ux-visual-review/images/generated/04-outline-experimental.png",
+          "localPath": ".vscode-test/visual-fidelity/references/04-outline-experimental.png",
+          "sha256": "604360efc429d7ef4aad3ddde5d1a4d134fcf07673cf26cdde42ffc59bb70808",
+          "width": 1672,
+          "height": 941,
+          "writtenIntent": "Explore an optional Outline / Document tabbed rail: Outline retains the semantic tree; Document offers compact section navigation and document details without cards. A thin reading-position marker follows the active section. Pins: 1 navigation modes are explicit; 2 progress supports orientation; 3 document details leave the main writing area clear. No automatic source rewriting.",
+          "annotations": [
+            "Navigation modes are explicit",
+            "Progress supports orientation",
+            "Document details leave the main writing area clear"
+          ]
+        }
+      ],
+      "ownerScopeAdjustments": [
+        "Retain heading semantics and desktop preferences; small panes may use an overlay."
+      ],
+      "visualRequirements": [
+        "Semantic tree and explicit tabs",
+        "Thin reading-position cue",
+        "One organized statistics/progress area"
+      ],
+      "requiredStates": [
+        "Nested headings",
+        "Long headings",
+        "Outline and Document tabs",
+        "Scrolled document",
+        "Narrow overlay"
+      ],
+      "proposedEvidenceDirectory": "reports/validation/ui-ux-visual-fidelity/04-outline/iteration-01/",
+      "promptPath": "prompts/04-outline.md"
+    },
+    {
+      "id": "05-tables",
+      "title": "Contextual table controls",
+      "status": "proposed; no new visual acceptance",
+      "references": [
+        {
+          "level": "Experimental",
+          "sourcePath": "reports/investigations/2026-09-30-ui-ux-visual-review/images/generated/05-tables-experimental.png",
+          "sourceUrl": "https://github.com/BinaryOutlook/binary-markdown/blob/a798921f7e5a9b01a88360315b035a391f69da47/reports/investigations/2026-09-30-ui-ux-visual-review/images/generated/05-tables-experimental.png",
+          "localPath": ".vscode-test/visual-fidelity/references/05-tables-experimental.png",
+          "sha256": "bba8162ee5cbf9e4c8a13c68030b78a1457193e52e650808bb06af3118e975ad",
+          "width": 1672,
+          "height": 941,
+          "writtenIntent": "Explore a spreadsheet-like optional interaction: subtle row/column headers, inline plus buttons at insertion boundaries, and a small selection inspector with Rows, Columns and Alignment. Keep the document aesthetic and preserve plain Markdown table semantics. Pins: 1 direct insertion at boundaries; 2 row/column association is visible; 3 advanced operations remain in a compact inspector. No formulas or data-grid feature promises.",
+          "annotations": [
+            "Direct insertion at boundaries",
+            "Row/column association is visible",
+            "Advanced operations remain in a compact inspector"
+          ]
+        }
+      ],
+      "ownerScopeAdjustments": [
+        "The owner replaces the image's 2 by 2 insertion buttons with a diamond: above / left-right / below.",
+        "Retain existing stored placement choices and plain Markdown semantics; record the inspector-placement adaptation before implementation."
+      ],
+      "visualRequirements": [
+        "Readable coordinate gutters",
+        "Grouped selection/alignment controls and the requested diamond",
+        "Insertion targets outside authored cell content; no obstruction or clipping"
+      ],
+      "requiredStates": [
+        "Body and header selection",
+        "Coordinates and boundary insertion",
+        "Wide table scrolling",
+        "Each saved placement",
+        "Narrow pane"
+      ],
+      "proposedEvidenceDirectory": "reports/validation/ui-ux-visual-fidelity/05-tables/iteration-01/",
+      "promptPath": "prompts/05-tables.md"
+    },
+    {
+      "id": "06-code",
+      "title": "Code readability and block controls",
+      "status": "proposed; no new visual acceptance",
+      "references": [
+        {
+          "level": "Moderate",
+          "sourcePath": "reports/investigations/2026-09-30-ui-ux-visual-review/images/generated/06-code-moderate.png",
+          "sourceUrl": "https://github.com/BinaryOutlook/binary-markdown/blob/a798921f7e5a9b01a88360315b035a391f69da47/reports/investigations/2026-09-30-ui-ux-visual-review/images/generated/06-code-moderate.png",
+          "localPath": ".vscode-test/visual-fidelity/references/06-code-moderate.png",
+          "sha256": "f04de57191c5bb998e75a02e35c64f415775829397d274c51589cf58fa633c02",
+          "width": 1536,
+          "height": 1024,
+          "writtenIntent": "Use a calm code header with JavaScript dropdown, optional Wrap control, Copy and Open in text editor. A compact language-search popover uses readable names and identifiers with a clear selected row. Show a copied confirmation as a quiet text state. Pins: 1 language is an explicit control; 2 wrapping reduces horizontal friction; 3 copy feedback is understandable. Dark slate surfaces, no neon.",
+          "annotations": [
+            "Language is an explicit control",
+            "Wrapping reduces horizontal friction",
+            "Copy feedback is understandable"
+          ]
+        }
+      ],
+      "ownerScopeAdjustments": [
+        "Preserve the stationary code toolbar and per-block view wrapping from the earlier code-control work.",
+        "Do not alter copied text, source indentation or blank lines."
+      ],
+      "visualRequirements": [
+        "Explicit calm block header",
+        "Readable selected language and search rows",
+        "Wrap/copy/text-editor controls and legible syntax contrast"
+      ],
+      "requiredStates": [
+        "Unwrapped horizontal scroll",
+        "Wrapped lines",
+        "Language search and selected language",
+        "Copied feedback",
+        "Light and dark themes"
+      ],
+      "proposedEvidenceDirectory": "reports/validation/ui-ux-visual-fidelity/06-code/iteration-01/",
+      "promptPath": "prompts/06-code.md"
+    },
+    {
+      "id": "07-equations",
+      "title": "Equation source and error recovery",
+      "status": "proposed; no new visual acceptance",
+      "references": [
+        {
+          "level": "Recommended",
+          "sourcePath": "reports/investigations/2026-09-30-ui-ux-visual-review/images/generated/07-equations-recommended.png",
+          "sourceUrl": "https://github.com/BinaryOutlook/binary-markdown/blob/a798921f7e5a9b01a88360315b035a391f69da47/reports/investigations/2026-09-30-ui-ux-visual-review/images/generated/07-equations-recommended.png",
+          "localPath": ".vscode-test/visual-fidelity/references/07-equations-recommended.png",
+          "sha256": "5c87f61e24a7452836ce7a3efb1e6f4d95fd72d437d2462c4712696bd806ca74",
+          "width": 1672,
+          "height": 941,
+          "writtenIntent": "Retain the existing inline source and preview arrangement. Add a compact header 'Equation' and labels Source and Preview; show a clear inline warning 'Unknown command' linked to the visible unsupported command in the source. Keep the authored TeX unchanged and add short existing keyboard guidance 'Shift+Enter to return to text'. Pins: 1 source and preview are distinguished; 2 plain error explains the red command; 3 exit guidance reduces mode uncertainty. Render a simple a+b over c expression, and show unsupported command as an error, not corrected silently.",
+          "annotations": [
+            "Source and preview are distinguished",
+            "Plain error explains the red command",
+            "Exit guidance reduces mode uncertainty"
+          ]
+        }
+      ],
+      "ownerScopeAdjustments": [
+        "Retain the authored TeX and source-position/wrap settings; do not silently correct invalid expressions."
+      ],
+      "visualRequirements": [
+        "Distinct Source/Preview labels",
+        "Concise local warning with reliable source cue",
+        "Discoverable Shift+Enter exit guidance"
+      ],
+      "requiredStates": [
+        "Valid preview",
+        "Active source",
+        "Unsupported command",
+        "Long source",
+        "Narrow pane"
+      ],
+      "proposedEvidenceDirectory": "reports/validation/ui-ux-visual-fidelity/07-equations/iteration-01/",
+      "promptPath": "prompts/07-equations.md"
+    },
+    {
+      "id": "08-diagrams",
+      "title": "Diagram errors and edit affordance",
+      "status": "proposed; no new visual acceptance",
+      "references": [
+        {
+          "level": "Moderate",
+          "sourcePath": "reports/investigations/2026-09-30-ui-ux-visual-review/images/generated/08-diagrams-moderate.png",
+          "sourceUrl": "https://github.com/BinaryOutlook/binary-markdown/blob/a798921f7e5a9b01a88360315b035a391f69da47/reports/investigations/2026-09-30-ui-ux-visual-review/images/generated/08-diagrams-moderate.png",
+          "localPath": ".vscode-test/visual-fidelity/references/08-diagrams-moderate.png",
+          "sha256": "2c6e35ce060853039fc3d4f854505182238a88a1958a0f5ffed1d81cf6d11c77",
+          "width": 1672,
+          "height": 941,
+          "writtenIntent": "Render a compact Mermaid block header with Preview / Source modes, a status label Needs attention, an editable source region, and a concise error with the problematic line emphasized. Pins: 1 explicit source/preview modes; 2 local error near its source; 3 valid content retains calm diagram styling. No auto-fix button.",
+          "annotations": [
+            "Explicit source/preview modes",
+            "Local error near its source",
+            "Valid content retains calm diagram styling"
+          ]
+        }
+      ],
+      "ownerScopeAdjustments": [
+        "Retain strict rendering and original Mermaid source; parser locations are shown only when reliable."
+      ],
+      "visualRequirements": [
+        "Explicit Source/Preview modes and status",
+        "Concise local diagnostic and reliable source cue",
+        "Calm valid diagram treatment"
+      ],
+      "requiredStates": [
+        "Valid preview",
+        "Invalid diagram",
+        "Source editing",
+        "Long diagnostic",
+        "Narrow pane"
+      ],
+      "proposedEvidenceDirectory": "reports/validation/ui-ux-visual-fidelity/08-diagrams/iteration-01/",
+      "promptPath": "prompts/08-diagrams.md"
+    },
+    {
+      "id": "09-find",
+      "title": "Find and Replace labeling and control hierarchy",
+      "status": "proposed; no new visual acceptance",
+      "references": [
+        {
+          "level": "Experimental",
+          "sourcePath": "reports/investigations/2026-09-30-ui-ux-visual-review/images/generated/09-find-experimental.png",
+          "sourceUrl": "https://github.com/BinaryOutlook/binary-markdown/blob/a798921f7e5a9b01a88360315b035a391f69da47/reports/investigations/2026-09-30-ui-ux-visual-review/images/generated/09-find-experimental.png",
+          "localPath": ".vscode-test/visual-fidelity/references/09-find-experimental.png",
+          "sha256": "fa65a24779ec6411c0fff12279815359b529b7418ddd6dd1e888f5cd7ccc6daa",
+          "width": 1672,
+          "height": 941,
+          "writtenIntent": "Explore an optional search-results rail listing three source-context matches with document highlights, replacement text at top, and Replace selected / Replace all actions. Pins: 1 results give context; 2 replacement scope is selectable; 3 highlights connect results to text. Keep this as an ambitious new interaction with extra implementation effort.",
+          "annotations": [
+            "Results give context",
+            "Replacement scope is selectable",
+            "Highlights connect results to text"
+          ]
+        }
+      ],
+      "ownerScopeAdjustments": [
+        "Work only on the Find/Replace submenu surface; outer placement may adapt to that scope while retaining the chosen internal hierarchy.",
+        "Preserve bounded regex execution, literal replacement and shared undo."
+      ],
+      "visualRequirements": [
+        "Persistent visible field-purpose labels",
+        "Clear replacement/action hierarchy and readable contextual results",
+        "Selected-target clarity and associated document highlights"
+      ],
+      "requiredStates": [
+        "Filled Find and Replace fields",
+        "Several results and selected targets",
+        "No results",
+        "Invalid or expensive regex",
+        "Narrow pane"
+      ],
+      "proposedEvidenceDirectory": "reports/validation/ui-ux-visual-fidelity/09-find/iteration-01/",
+      "promptPath": "prompts/09-find.md"
+    },
+    {
+      "id": "10-metadata",
+      "title": "Metadata and generated contents ownership",
+      "status": "proposed; no new visual acceptance",
+      "references": [
+        {
+          "level": "Recommended",
+          "sourcePath": "reports/investigations/2026-09-30-ui-ux-visual-review/images/generated/10-metadata-recommended.png",
+          "sourceUrl": "https://github.com/BinaryOutlook/binary-markdown/blob/a798921f7e5a9b01a88360315b035a391f69da47/reports/investigations/2026-09-30-ui-ux-visual-review/images/generated/10-metadata-recommended.png",
+          "localPath": ".vscode-test/visual-fidelity/references/10-metadata-recommended.png",
+          "sha256": "babd4d2f325984f30b2b3edf6f9e8c6faf155b3706fd14f402f1a2f2193e09e9",
+          "width": 1536,
+          "height": 1024,
+          "writtenIntent": "Keep raw YAML editing and the generated TOC in place. Label the disclosure 'Front matter · YAML' and the contents block 'Contents · Generated'; add concise help 'Refreshes on save' and a labeled Refresh action. Use a small clear distinction between editable source and generated content. Pins: 1 raw metadata ownership is explicit; 2 generated entries are identified; 3 refresh behavior is explained. Do not turn YAML into a form or rewrite authored comments.",
+          "annotations": [
+            "Raw metadata ownership is explicit",
+            "Generated entries are identified",
+            "Refresh behavior is explained"
+          ]
+        }
+      ],
+      "ownerScopeAdjustments": [
+        "Keep authored raw YAML, comments, key order and delimiters authoritative; disclosure is view-only."
+      ],
+      "visualRequirements": [
+        "Small authored/generated ownership labels",
+        "Clear labeled Refresh and concise refresh help",
+        "Auxiliary blocks do not dominate prose"
+      ],
+      "requiredStates": [
+        "Collapsed and expanded YAML",
+        "Generated contents",
+        "Pending refresh",
+        "Refresh action"
+      ],
+      "proposedEvidenceDirectory": "reports/validation/ui-ux-visual-fidelity/10-metadata/iteration-01/",
+      "promptPath": "prompts/10-metadata.md"
+    },
+    {
+      "id": "11-source",
+      "title": "Visual and Source mode identity",
+      "status": "proposed; no new visual acceptance",
+      "references": [
+        {
+          "level": "Moderate",
+          "sourcePath": "reports/investigations/2026-09-30-ui-ux-visual-review/images/generated/11-source-moderate.png",
+          "sourceUrl": "https://github.com/BinaryOutlook/binary-markdown/blob/a798921f7e5a9b01a88360315b035a391f69da47/reports/investigations/2026-09-30-ui-ux-visual-review/images/generated/11-source-moderate.png",
+          "localPath": ".vscode-test/visual-fidelity/references/11-source-moderate.png",
+          "sha256": "39a8747bbda22735936a0af7de20f1203b5f994793d0e955d682dc305d8056a1",
+          "width": 1536,
+          "height": 1024,
+          "writtenIntent": "Offer an optional Visual / Source / Split switch with a source pane and read-only preview side by side in Split. Use shared heading markers and preserve the selected source location. Pins: 1 optional split view; 2 visible correspondence between source and preview; 3 one document and one undo history remain the design constraint. Split is a new proposal.",
+          "annotations": [
+            "Optional split view",
+            "Visible correspondence between source and preview",
+            "One document and one undo history remain the design constraint"
+          ]
+        },
+        {
+          "level": "Recommended",
+          "sourcePath": "reports/investigations/2026-09-30-ui-ux-visual-review/images/generated/11-source-recommended.png",
+          "sourceUrl": "https://github.com/BinaryOutlook/binary-markdown/blob/a798921f7e5a9b01a88360315b035a391f69da47/reports/investigations/2026-09-30-ui-ux-visual-review/images/generated/11-source-recommended.png",
+          "localPath": ".vscode-test/visual-fidelity/references/11-source-recommended.png",
+          "sha256": "ea3398ed655e808f02b8f9d816093ba941cfbef83ca20f3391ada466a9f68c1f",
+          "width": 1491,
+          "height": 1055,
+          "writtenIntent": "Keep the existing Source textarea and document outline. Replace the ambiguous icon-only mode control with a clearly selected Visual / Source segmented switch, label Open in VS Code separately, and visibly dim unavailable visual-formatting commands while Source is active. Add no syntax-editor features. Pins: 1 current mode is explicit; 2 host text editor is a distinct action; 3 commands communicate context.",
+          "annotations": [
+            "Current mode is explicit",
+            "Host text editor is a distinct action",
+            "Commands communicate context"
+          ]
+        }
+      ],
+      "ownerScopeAdjustments": [
+        "Moderate applies to Split only; Visual/Source controls follow Recommended.",
+        "Keep one editable document, shared undo/save and read-only preview; preserve view-only cleanliness."
+      ],
+      "visualRequirements": [
+        "Explicit mode selection and editing authority",
+        "Balanced source/preview composition",
+        "Understandable source/preview correspondence"
+      ],
+      "requiredStates": [
+        "Visual",
+        "Source",
+        "Split",
+        "Corresponding selected heading",
+        "Live source editing",
+        "Narrow stacked panes"
+      ],
+      "proposedEvidenceDirectory": "reports/validation/ui-ux-visual-fidelity/11-source/iteration-01/",
+      "promptPath": "prompts/11-source.md"
+    },
+    {
+      "id": "12-export",
+      "title": "Export choice, setup and recovery",
+      "status": "proposed; no new visual acceptance",
+      "references": [
+        {
+          "level": "Moderate",
+          "sourcePath": "reports/investigations/2026-09-30-ui-ux-visual-review/images/generated/12-export-moderate.png",
+          "sourceUrl": "https://github.com/BinaryOutlook/binary-markdown/blob/a798921f7e5a9b01a88360315b035a391f69da47/reports/investigations/2026-09-30-ui-ux-visual-review/images/generated/12-export-moderate.png",
+          "localPath": ".vscode-test/visual-fidelity/references/12-export-moderate.png",
+          "sha256": "bb9676a2aa9f385907855a350ca9ab734e3cd554598412fd907187755e570285",
+          "width": 1491,
+          "height": 1055,
+          "writtenIntent": "Use an anchored export panel with a format list and short support summary, a Setup section for missing tools, and a job-status section with stages, warning count and output action. Pins: 1 capabilities and setup are separated; 2 status shows the current stage; 3 warnings and outputs have clear actions. No invented percentage completion.",
+          "annotations": [
+            "Capabilities and setup are separated",
+            "Status shows the current stage",
+            "Warnings and outputs have clear actions"
+          ]
+        }
+      ],
+      "ownerScopeAdjustments": [
+        "Work only on the Export submenu; do not introduce a separate export application or change existing saved-export contracts.",
+        "Use actual host stages, bounded warnings and host-recorded completed output; do not fabricate percentages or completion."
+      ],
+      "visualRequirements": [
+        "Distinct format/setup, job-status and output/warning sections",
+        "Clear stage and action hierarchy",
+        "Legible recovery and output actions"
+      ],
+      "requiredStates": [
+        "Available and missing tools",
+        "Running and canceling",
+        "Failure",
+        "Completion with warnings",
+        "Narrow panel"
+      ],
+      "proposedEvidenceDirectory": "reports/validation/ui-ux-visual-fidelity/12-export/iteration-01/",
+      "promptPath": "prompts/12-export.md"
+    }
+  ],
+  "builderPrompt": "builder-prompt.md",
+  "packetExample": "section-packet.example.json"
+}
