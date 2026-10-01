@@ -248,6 +248,8 @@ export const webviewMessages = {
   imageDirSourceSettings: 'by 設定',
   imageDirSourceDefault: 'by デフォルト',
   // Command palette
+  previousCommands: '前のコマンド',
+  nextCommands: 'その他のコマンド',
   commandPaletteFilter: '入力して絞り込み...',
   commandPaletteInline: 'インライン',
   commandPaletteHeadings: '見出し',

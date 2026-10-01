@@ -248,6 +248,8 @@ export const webviewMessages = {
   imageDirSourceSettings: '설정에 의해',
   imageDirSourceDefault: '기본값',
   // Command palette
+  previousCommands: '이전 명령',
+  nextCommands: '더 많은 명령',
   commandPaletteFilter: '입력하여 필터...',
   commandPaletteInline: '인라인',
   commandPaletteHeadings: '제목',

@@ -32,7 +32,9 @@ async function commands(page, item) {
     if (item.id === 'category') await page.locator('[data-insert-category="equationsCategory"]').click();
     if (item.id === 'search') await page.locator('.insert-search input').fill('code');
     if (item.id === 'empty') await page.locator('.insert-search input').fill('unmatched-command');
-    if (item.id === 'narrow-end') await page.locator('[data-insert-action="toc"]').scrollIntoViewIfNeeded();
+    if (item.id === 'narrow-end') {
+        for (let step = 0; step < 8 && await page.locator('.insert-scroll [data-direction="next"]').isEnabled(); step++) await page.locator('.insert-scroll [data-direction="next"]').click();
+    }
 }
 async function capture(root, sectionId, caseFilter) {
     const { recipe } = core.sectionContract(root, sectionId);

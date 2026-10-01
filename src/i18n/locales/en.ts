@@ -248,6 +248,8 @@ export const webviewMessages = {
   imageDirSourceSettings: 'by settings',
   imageDirSourceDefault: 'by default',
   // Command palette
+  previousCommands: 'Previous commands',
+  nextCommands: 'More commands',
   commandPaletteFilter: 'Type to filter...',
   commandPaletteInline: 'Inline',
   commandPaletteHeadings: 'Headings',

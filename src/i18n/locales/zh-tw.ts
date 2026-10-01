@@ -248,6 +248,8 @@ export const webviewMessages = {
   imageDirSourceSettings: '按設定',
   imageDirSourceDefault: '按預設',
   // Command palette
+  previousCommands: '上一組命令',
+  nextCommands: '更多命令',
   commandPaletteFilter: '輸入篩選...',
   commandPaletteInline: '內聯',
   commandPaletteHeadings: '標題',

@@ -158,6 +158,36 @@ test('Action Palette uses shared descriptions and has a clear-search recovery ac
     await expect(page.locator('.command-palette-item small').first()).toBeVisible();
 });
 
+test('rendered Insert previews stay view-only and nested icon activation shares Undo', async ({ page }) => {
+    await setup(page);
+    await page.locator('#insertButton').click();
+    await expect(page.locator('.insert-table-preview span')).toHaveCount(6);
+    await expect(page.locator('.insert-preview-inlineMath .katex')).toBeVisible();
+    await expect(page.locator('[data-insert-action="table"] .insert-command-title')).toHaveText('Insert Table');
+    await expect(page.locator('[data-insert-action="table"] .insert-shortcut')).toContainText('+T');
+    expect(await snapshot(page)).toMatchObject({ content: authored, pending: false });
+    await page.locator('[data-insert-action="codeblock"] .insert-command-icon svg').click();
+    await expect(page.locator('#editor pre code')).toHaveCount(1);
+    await page.locator('[data-action="undo"]').click();
+    expect((await snapshot(page)).content).toBe(authored);
+});
+
+test('narrow Insert exposes complete lower commands through visible view-only navigation', async ({ page }) => {
+    await setup(page);
+    await page.setViewportSize({ width: 480, height: 800 });
+    await page.locator('#insertButton').click();
+    const next = page.locator('.insert-scroll [data-direction="next"]');
+    await expect(next).toBeVisible();
+    for (let step = 0; step < 8 && await next.isEnabled(); step++) await next.click();
+    await expect(page.locator('[data-insert-action="toc"]')).toBeVisible();
+    await expect(page.locator('[data-insert-action="mermaid"]')).toBeVisible();
+    await expect(page.locator('.insert-scroll output')).toContainText('/ 8');
+    await expect(next).toBeDisabled();
+    await page.locator('.insert-scroll [data-direction="previous"]').click();
+    await expect(next).toBeEnabled();
+    expect(await snapshot(page)).toMatchObject({ content: authored, pending: false });
+});
+
 test('mode switches preserve the selected inline text through Markdown source offsets', async ({ page }) => {
     await setup(page);
     await page.evaluate(() => {

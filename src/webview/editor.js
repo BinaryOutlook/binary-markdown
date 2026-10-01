@@ -12446,12 +12446,42 @@
     var insertButton = document.getElementById('insertButton');
     var insertMenu = document.getElementById('insertMenu');
     var insertMenuRange = null;
-    var insertActions = ['inlineMath', 'math', 'table', 'codeblock', 'link', 'image', 'mermaid', 'toc'];
+    var insertActions = ['table', 'inlineMath', 'codeblock', 'math', 'link', 'image', 'mermaid', 'toc'];
 
     const insertCategory = { inlineMath: 'equationsCategory', math: 'equationsCategory', table: 'structureCategory', toc: 'structureCategory', codeblock: 'codeCategory', mermaid: 'codeCategory', link: 'mediaCategory', image: 'mediaCategory' };
     const insertSamples = { inlineMath: '$x^2$', math: '$$\\frac{a+b}{c}$$', table: '| A | B |\n| --- | --- |', codeblock: '```javascript\nconst value = 1;\n```', link: '[text](https://example.com)', image: '![description](image.png)', mermaid: 'graph TD\n  A --> B', toc: '[TOC]' };
     const actionDescription = action => ['viewUndo','viewRedo'].includes(action) ? i18n.historyDescription : action.startsWith('view') ? i18n.viewDescription : i18n['insertDescription' + action[0].toUpperCase() + action.slice(1)] || (['bold','italic','underline','strikethrough','code'].includes(action) ? i18n.formatDescription : i18n.blockDescription);
     let insertSearch = null, insertCategorySelection = 'allCategory';
+
+    // Only fixed illustrative samples enter previews. These are view controls,
+    // never authored editor content or an additional command execution path.
+    function createInsertPreview(action) {
+        const preview = document.createElement('span');
+        preview.className = 'insert-preview insert-preview-' + action;
+        preview.setAttribute('aria-hidden', 'true');
+        if (action === 'table') {
+            const grid = document.createElement('span'); grid.className = 'insert-table-preview';
+            for (const value of ['A', 'B', 'C', '', '', '']) {
+                const cell = document.createElement('span'); cell.textContent = value; grid.appendChild(cell);
+            }
+            preview.appendChild(grid);
+        } else if (action === 'inlineMath' || action === 'math') {
+            const sample = action === 'inlineMath' ? 'E=mc^2' : '\\frac{a+b}{c}';
+            if (window.katex) window.katex.render(sample, preview, { throwOnError: false, trust: false, displayMode: false });
+            else preview.textContent = action === 'inlineMath' ? 'E = mc²' : '(a + b) / c';
+        } else if (action === 'codeblock') {
+            const pre = document.createElement('pre'); pre.dataset.lang = 'javascript'; const code = document.createElement('code');
+            code.className = 'language-javascript'; code.textContent = 'const value = 1;';
+            pre.appendChild(code); applyHighlighting(pre); preview.appendChild(code);
+        } else if (action === 'image') {
+            preview.innerHTML = LUCIDE_ICONS.image; // Static project-owned icon.
+        } else if (action === 'toc') {
+            preview.textContent = '1. Research notes\n   1.1 Method\n   1.2 Results';
+        } else {
+            preview.textContent = insertSamples[action];
+        }
+        return preview;
+    }
     function filterInsertWorkspace() {
         const query = (insertSearch?.value || '').trim().toLocaleLowerCase();
         let visible = 0;
@@ -12461,6 +12491,9 @@
         });
         const empty = insertMenu.querySelector('.insert-empty');
         if (empty) empty.hidden = visible > 0;
+        const options = insertMenu.querySelector('.insert-options');
+        if (options) options.scrollTop = 0;
+        if (!insertMenu.hidden) positionInsertMenu();
         insertMenu.querySelectorAll('[data-insert-category]').forEach(item => item.setAttribute('aria-pressed', String(item.dataset.insertCategory === insertCategorySelection)));
     }
 
@@ -12489,11 +12522,49 @@
 
     function positionInsertMenu() {
         const rect = insertTrigger().getBoundingClientRect();
-        const width = Math.min(640, Math.max(0, window.innerWidth - 16));
+        const width = Math.min(960, Math.max(0, window.innerWidth - 16));
         insertMenu.style.width = width + 'px';
         insertMenu.style.left = Math.max(8, Math.min(rect.left, window.innerWidth - width - 8)) + 'px';
         insertMenu.style.top = Math.max(8, Math.min(rect.bottom + 4, window.innerHeight - 320)) + 'px';
         insertMenu.style.maxHeight = Math.max(80, window.innerHeight - parseFloat(insertMenu.style.top) - 8) + 'px';
+        const options = insertMenu.querySelector('.insert-options');
+        if (options) {
+            options.style.maxHeight = '';
+            if (window.innerWidth <= 760) {
+                const available = window.innerHeight - parseFloat(insertMenu.style.top)
+                    - insertMenu.querySelector('.insert-search').getBoundingClientRect().height
+                    - insertMenu.querySelector('.insert-categories').getBoundingClientRect().height - 64;
+                let used = 16;
+                for (const row of options.querySelectorAll('.insert-command:not([hidden])')) {
+                    const pitch = row.getBoundingClientRect().height + 8;
+                    if (used + pitch > available) break;
+                    used += pitch;
+                }
+                options.style.maxHeight = Math.max(80, used > 16 ? used : available) + 'px';
+            }
+        }
+        requestAnimationFrame(updateInsertScroll);
+    }
+
+    function updateInsertScroll() {
+        const list = insertMenu.querySelector('.insert-options');
+        const footer = insertMenu.querySelector('.insert-scroll');
+        if (!list || !footer) return;
+        const rows = [...list.querySelectorAll('.insert-command:not([hidden])')];
+        const bounds = list.getBoundingClientRect();
+        const narrow = window.innerWidth <= 760;
+        const visible = [];
+        rows.forEach((row, index) => {
+            const rect = row.getBoundingClientRect();
+            const complete = rect.top >= bounds.top + 7 && rect.bottom <= bounds.bottom - 7;
+            row.classList.toggle('insert-command-clipped', narrow && !complete);
+            if (complete) visible.push(index);
+        });
+        const overflow = list.scrollHeight > list.clientHeight + 1;
+        footer.hidden = !overflow;
+        footer.querySelector('[data-direction="previous"]').disabled = list.scrollTop <= 1;
+        footer.querySelector('[data-direction="next"]').disabled = list.scrollTop + list.clientHeight >= list.scrollHeight - 1;
+        footer.querySelector('output').textContent = visible.length ? (visible[0] + 1) + '–' + (visible.at(-1) + 1) + ' / ' + rows.length : String(rows.length);
     }
 
     function restoreInsertRange() {
@@ -12532,8 +12603,8 @@
         }
         insertMenu.hidden = false;
         insertButton.setAttribute('aria-expanded', 'true');
-        positionInsertMenu();
         insertSearch.value = ''; insertCategorySelection = 'allCategory'; filterInsertWorkspace();
+        positionInsertMenu();
         const choices = [...insertMenu.querySelectorAll('button[data-insert-action]')];
         (last ? choices.at(-1) : insertSearch).focus({ preventScroll: true });
     }
@@ -12549,28 +12620,61 @@
         const workspace = document.createElement('div'); workspace.className = 'insert-workspace';
         const categories = document.createElement('div'); categories.className = 'insert-categories';
         for (const category of ['allCategory','structureCategory','equationsCategory','codeCategory','mediaCategory']) {
-            const choice = document.createElement('button'); choice.type = 'button'; choice.textContent = i18n[category]; choice.dataset.insertCategory = category;
+            const choice = document.createElement('button'); choice.type = 'button'; choice.dataset.insertCategory = category;
+            const icon = document.createElement('span'); icon.className = 'insert-category-icon'; icon.setAttribute('aria-hidden', 'true');
+            icon.innerHTML = LUCIDE_ICONS[{ allCategory: 'table', structureCategory: 'ul', equationsCategory: 'math', codeCategory: 'codeblock', mediaCategory: 'image' }[category]];
+            const title = document.createElement('span'); title.textContent = i18n[category]; choice.append(icon, title);
             choice.addEventListener('click', () => { insertCategorySelection = category; filterInsertWorkspace(); });
             categories.appendChild(choice);
         }
         const list = document.createElement('div'); list.className = 'insert-options'; list.setAttribute('role', 'menu'); list.setAttribute('aria-label', i18n.commandPaletteInsert);
-        workspace.append(categories, list); insertMenu.appendChild(workspace);
+        const results = document.createElement('div'); results.className = 'insert-results';
+        const scrollControls = document.createElement('div'); scrollControls.className = 'insert-scroll'; scrollControls.hidden = true;
+        const count = document.createElement('output'); count.setAttribute('aria-live', 'polite');
+        for (const direction of ['previous', 'next']) {
+            const control = document.createElement('button'); control.type = 'button'; control.dataset.direction = direction;
+            control.textContent = direction === 'previous' ? '↑ ' + i18n.previousCommands : i18n.nextCommands + ' ↓';
+            control.addEventListener('click', () => {
+                const rows = [...list.querySelectorAll('.insert-command:not([hidden])')];
+                const bounds = list.getBoundingClientRect();
+                const next = direction === 'next'
+                    ? rows.find(row => row.getBoundingClientRect().bottom > bounds.bottom - 8)
+                    : [...rows].reverse().find(row => row.getBoundingClientRect().top < bounds.top + 8);
+                if (next) list.scrollTop += next.getBoundingClientRect().top - bounds.top - 8;
+                updateInsertScroll();
+            });
+            scrollControls.appendChild(control);
+            if (direction === 'previous') scrollControls.appendChild(count);
+        }
+        list.addEventListener('scroll', updateInsertScroll, { passive: true });
+        results.append(list, scrollControls); workspace.append(categories, results); insertMenu.appendChild(workspace);
         const empty = document.createElement('div'); empty.className = 'insert-empty'; empty.setAttribute('role', 'status'); empty.hidden = true;
-        empty.textContent = i18n.noMatchingActions + '. ' + i18n.searchRecovery; list.appendChild(empty);
+        const emptyTitle = document.createElement('strong'); emptyTitle.textContent = i18n.noMatchingActions;
+        const emptyHelp = document.createElement('p'); emptyHelp.textContent = i18n.searchRecovery;
+        const emptyClear = document.createElement('button'); emptyClear.type = 'button'; emptyClear.textContent = i18n.clearSearch;
+        emptyClear.addEventListener('click', () => { insertSearch.value = ''; insertCategorySelection = 'allCategory'; filterInsertWorkspace(); insertSearch.focus(); });
+        empty.append(emptyTitle, emptyHelp, emptyClear); list.appendChild(empty);
         for (const action of insertActions) {
             const command = COMMAND_PALETTE_ITEMS.find(item => item.action === action);
             const button = document.createElement('button');
             button.type = 'button';
+            button.className = 'insert-command';
             button.setAttribute('role', 'menuitem');
             button.dataset.insertAction = action;
-            const label = document.createElement('span');
-            label.textContent = i18n[command.i18nKey] || command.i18nKey;
+            const icon = document.createElement('span'); icon.className = 'insert-command-icon'; icon.setAttribute('aria-hidden', 'true'); icon.innerHTML = LUCIDE_ICONS[command.icon] || '';
+            const details = document.createElement('span'); details.className = 'insert-command-details';
+            const label = document.createElement('strong'); label.className = 'insert-command-title';
+            const parsed = parseI18nLabel(command.i18nKey); label.textContent = parsed.label;
             const reason = document.createElement('small');
             reason.id = 'insert-reason-' + action;
             reason.hidden = true;
             button.setAttribute('aria-describedby', reason.id);
-            const preview = document.createElement('code'); preview.className = 'insert-preview'; preview.textContent = insertSamples[action]; preview.setAttribute('aria-hidden', 'true');
-            button.append(label, reason, preview);
+            details.append(label, reason);
+            const shortcut = document.createElement('kbd'); shortcut.className = 'insert-shortcut';
+            const isMac = navigator.platform.toUpperCase().includes('MAC');
+            shortcut.textContent = parsed.shortcut ? (isMac ? parsed.shortcut.replace(/Ctrl/g, 'Cmd') : parsed.shortcut) : '—';
+            shortcut.setAttribute('aria-hidden', String(!parsed.shortcut));
+            button.append(icon, details, createInsertPreview(action), shortcut);
             list.appendChild(button);
         }
         insertButton.addEventListener('mousedown', event => { captureToolbarSelection(event); event.preventDefault(); });
