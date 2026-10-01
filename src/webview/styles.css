@@ -1587,7 +1587,7 @@ html[data-table-toolbar-position="bottom-left"] .editor table, html[data-table-t
 .command-palette-categories button:focus-visible { outline: 2px solid var(--link-color); }
 .command-palette-list { max-height: 400px; min-height: 0; }
 .command-palette-count { border-top: 1px solid var(--border-color); padding: 8px 12px; font-size: 12px; }
-#exportPandocSetup, #exportBrowserSetup { margin-top: 8px; border: 1px solid var(--border-color); border-radius: 4px; color: var(--link-color); background: var(--code-bg); }
+#exportSettings, #exportPandocSetup, #exportBrowserSetup { margin-top: 8px; border: 1px solid var(--border-color); border-radius: 4px; color: var(--link-color); background: var(--code-bg); }
 #searchSelectedCount { white-space: nowrap; }
 
 .toc-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
