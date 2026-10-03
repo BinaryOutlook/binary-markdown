@@ -2,6 +2,7 @@ import { test, expect, Page } from '@playwright/test';
 import * as fs from 'fs';
 import * as path from 'path';
 import { getExportMessages } from '../../src/export/messages';
+import { webviewMessages } from '../../src/i18n/locales/en';
 
 const root = path.resolve(__dirname, '../..');
 const { generateEditorBodyHtml } = require('../../src/shared/editor-body-html');
@@ -14,7 +15,7 @@ type UiWindow = Window & {
 
 async function setup(page: Page, exportEnabled = true) {
     await page.goto('/standalone-editor.html');
-    await page.setContent('<!DOCTYPE html><html data-theme="github" data-toolbar-mode="full"><head></head><body>' + generateEditorBodyHtml({ setImageDir: 'Set Image Directory', openExtensionSettings: 'Open Binary Markdown Settings' }, 'darwin', { exportEnabled, settingsEnabled: true }) + '</body></html>');
+    await page.setContent('<!DOCTYPE html><html data-theme="github" data-toolbar-mode="full"><head></head><body>' + generateEditorBodyHtml(webviewMessages, 'darwin', { exportEnabled, settingsEnabled: true }) + '</body></html>');
     await page.addStyleTag({ content: fs.readFileSync(path.join(root, 'src/webview/styles.css'), 'utf8')
         .replace('__FONT_SIZE__', '16').replace('__OUTLINE_ACTIVE_COLOR__', 'var(--link-color)') });
     await page.addScriptTag({ content: fs.readFileSync(path.join(root, 'src/shared/test-host-bridge.js'), 'utf8') });
@@ -25,7 +26,7 @@ async function setup(page: Page, exportEnabled = true) {
     const editor = fs.readFileSync(path.join(root, 'src/webview/editor.js'), 'utf8')
         .replace('__SEARCH_WORKER__', () => JSON.stringify(fs.readFileSync(path.join(root, 'src/shared/document-search.js'), 'utf8')).replace(/</g, '\\u003c'))
         .replace('__MATH_BACKSLASH__', 'true')
-        .replace('__DEBUG_MODE__', 'false').replace('__I18N__', '{}')
+        .replace('__DEBUG_MODE__', 'false').replace('__I18N__', () => JSON.stringify(webviewMessages))
         .replace('__DOCUMENT_BASE_URI__', '').replace('__CONTENT__', JSON.stringify(Buffer.from(original).toString('base64')));
     await page.addScriptTag({ content: editor });
     await page.evaluate(messages => { (window as Window & { exportMessages?: unknown }).exportMessages = messages; }, getExportMessages());

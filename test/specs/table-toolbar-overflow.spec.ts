@@ -18,6 +18,23 @@ async function setup(page: Page, position: string) {
     await expect(page.locator(controls)).toHaveAttribute('data-placement', position);
 }
 
+async function partialDock(page: Page, navigationInMenu = false) {
+    // Icon-only utilities changed the available budget. Find a real partial
+    // overflow state across platform font metrics while retaining the diamond.
+    for (const width of [1100, 1040, 980, 920, 860, 800, 740]) {
+        await page.setViewportSize({ width, height: 800 });
+        await page.evaluate(() => new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
+        const matches = await page.evaluate(({ controls, overflow, navigationInMenu }) => {
+            const bar = document.querySelector(controls)!;
+            const visible = (action: string) => Boolean(bar.querySelector(`[data-action="${action}"]`)?.getClientRects().length);
+            const navigationMoved = Boolean(document.querySelector(`${overflow} select[aria-label="Rows"]`) && document.querySelector(`${overflow} select[aria-label="Columns"]`));
+            return visible('more') && visible('add-col-left') && visible('add-row-below') && (!navigationInMenu || navigationMoved);
+        }, { controls, overflow, navigationInMenu });
+        if (matches) return;
+    }
+    throw new Error('No narrow pane retained the directional controls with the required overflow actions');
+}
+
 async function wholeButtons(page: Page) {
     await expect.poll(() => page.locator(controls).evaluate(toolbar => {
         const bounds = toolbar.getBoundingClientRect();
@@ -142,9 +159,7 @@ test('a focused action follows overflow in both directions without editing', asy
 
 test('docked controls retain leading actions and resize an open overflow menu', async ({ page }) => {
     await setup(page, 'top-bar');
-    // Leave room for the complete directional diamond and row/column navigation
-    // while overflowing secondary actions; the compact menu is checked below.
-    await page.setViewportSize({ width: 1100, height: 800 });
+    await partialDock(page);
     const more = page.locator(`${controls} [data-action="more"]`);
     await expect(more).toBeVisible();
     await expect(page.locator(`${controls} [data-action="add-col-left"]`)).toBeVisible();
@@ -183,7 +198,7 @@ test('compact menu reveals its last action with the keyboard in a short pane', a
 test('a narrow dock retains row and column navigation in its overflow without editing', async ({ page }) => {
     await setup(page, 'top-bar');
     const before = await page.evaluate(() => (window as any).htmlToMarkdown());
-    await page.setViewportSize({ width: 1100, height: 800 });
+    await partialDock(page, true);
     await expect(page.locator(`${controls} [data-action="add-row-below"]`)).toBeVisible();
     await page.locator(`${controls} [data-action="more"]`).click();
     const rows = page.locator(overflow).getByRole('combobox', { name: 'Rows', exact: true });
