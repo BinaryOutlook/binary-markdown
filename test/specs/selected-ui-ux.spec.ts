@@ -55,6 +55,40 @@ test('permanent All actions is keyboard reachable and preserves selection in con
     await expect(actions).toBeDisabled();
 });
 
+test('closing All actions before its deferred listener runs does not close the next opening', async ({ page }) => {
+    await setup(page);
+    await page.locator('#contextToolbarToggle').click();
+    await page.locator('#editor strong').evaluate(node => {
+        const range = document.createRange(); range.selectNodeContents(node);
+        getSelection()!.removeAllRanges(); getSelection()!.addRange(range);
+    });
+    const actions = page.locator('#allActionsButton');
+    const dialog = page.getByRole('dialog', { name: 'All actions', exact: true });
+    const clockStart = new Date('2026-01-01T00:00:00Z');
+    await page.clock.install({ time: clockStart });
+    await page.clock.pauseAt(new Date(clockStart.getTime() + 1000));
+    // Keep the deferred outside-click registration pending until after Escape.
+    await actions.dispatchEvent('click');
+    await expect(dialog).toBeVisible();
+    await page.locator('.command-palette-input').dispatchEvent('keydown', { key: 'Escape' });
+    await expect(dialog).toBeHidden();
+    await page.clock.runFor(1);
+    await page.clock.resume();
+
+    await page.setViewportSize({ width: 320, height: 600 });
+    await expect(page.locator('#toolbarOverflow #allActionsButton')).toHaveCount(1);
+    await page.locator('#toolbarMore').click();
+    await actions.click();
+    await expect(dialog).toBeVisible();
+    await expect(page.locator('#toolbarOverflow')).toBeHidden();
+    await page.clock.runFor(1);
+    await page.locator('#editor').dispatchEvent('click');
+    await expect(dialog).toBeHidden();
+    expect(await page.evaluate(() => getSelection()?.toString())).toBe('target');
+    expect(await snapshot(page)).toMatchObject({ content: authored, pending: false });
+    await expect(page.locator('#toolbar [data-action="undo"]')).toBeDisabled();
+});
+
 test('Split source edits share Undo with Visual and the preview is read only', async ({ page }) => {
     await setup(page);
     await page.locator('button[data-editor-mode="split"]').click();

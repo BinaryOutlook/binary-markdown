@@ -12792,6 +12792,7 @@
     var commandPaletteList = null;
     var commandPaletteSavedRange = null;
     var commandPaletteVisible = false;
+    var commandPaletteOutsideClickTimer = null;
     var commandPaletteCategory = '';
     var commandPaletteCount = null;
 
@@ -13002,12 +13003,19 @@
         }
     }
 
+    function stopCommandPaletteOutsideClicks() {
+        clearTimeout(commandPaletteOutsideClickTimer);
+        commandPaletteOutsideClickTimer = null;
+        document.removeEventListener('click', commandPaletteOutsideClickHandler);
+    }
+
     function commandPaletteRepositionHandler() {
         if (commandPaletteVisible) closeCommandPalette();
     }
 
     function openCommandPalette() {
         if (isSourceMode) return;
+        stopCommandPaletteOutsideClicks();
         closeToolbarOverflow(false);
         createCommandPalette();
 
@@ -13080,8 +13088,9 @@
         });
 
         // Close on click outside
-        setTimeout(function() {
-            document.addEventListener('click', commandPaletteOutsideClickHandler);
+        commandPaletteOutsideClickTimer = setTimeout(function() {
+            commandPaletteOutsideClickTimer = null;
+            if (commandPaletteVisible) document.addEventListener('click', commandPaletteOutsideClickHandler);
         }, 0);
 
         // Close on scroll/resize
@@ -13095,7 +13104,7 @@
         commandPalette.style.display = 'none';
         commandPaletteVisible = false;
         for (const id of ['formatButton', 'allActionsButton']) document.getElementById(id)?.setAttribute('aria-expanded', 'false');
-        document.removeEventListener('click', commandPaletteOutsideClickHandler);
+        stopCommandPaletteOutsideClicks();
         window.removeEventListener('resize', commandPaletteRepositionHandler);
         editor.removeEventListener('scroll', commandPaletteRepositionHandler);
 
@@ -13118,7 +13127,7 @@
         commandPalette.style.display = 'none';
         commandPaletteVisible = false;
         for (const id of ['formatButton', 'allActionsButton']) document.getElementById(id)?.setAttribute('aria-expanded', 'false');
-        document.removeEventListener('click', commandPaletteOutsideClickHandler);
+        stopCommandPaletteOutsideClicks();
         window.removeEventListener('resize', commandPaletteRepositionHandler);
         editor.removeEventListener('scroll', commandPaletteRepositionHandler);
 
