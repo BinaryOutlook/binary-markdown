@@ -238,7 +238,9 @@ test('expanded diagnostics expose the parser explanation and support keyboard sc
     await page.setViewportSize({ width: 480, height: 800 });
     await expect.poll(() => detail.evaluate(node => node.scrollHeight > node.clientHeight)).toBe(true);
     await detail.focus(); await detail.press('End');
-    await expect.poll(() => detail.evaluate(node => node.scrollTop)).toBeGreaterThan(0);
+    // Native keyboard scrolling animates. Finish End before testing Home so
+    // each assertion observes its own destination instead of overlapping them.
+    await expect.poll(() => detail.evaluate(node => node.scrollHeight - node.clientHeight - node.scrollTop)).toBe(0);
     await detail.press('Home');
     await expect.poll(() => detail.evaluate(node => node.scrollTop)).toBe(0);
     expect(await snapshot(page)).toMatchObject({ content, pending: false });
