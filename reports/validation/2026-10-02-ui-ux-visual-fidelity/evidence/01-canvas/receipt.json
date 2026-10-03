@@ -1,0 +1,141 @@
+{
+  "schemaVersion": 1,
+  "sectionId": "01-canvas",
+  "packetDigest": "2529812c8e3295a4090b3c544ace0592e72a0a7a05078cc4b573b0d3bb49deb8",
+  "source": {
+    "commit": "9941d02028b4989a2af4d7647c6b972d11ff5529",
+    "dirty": true,
+    "productHash": "334c1575ab0be09973a26f60ff320f2ab673b05cc2538bcb6cef79f15096c344"
+  },
+  "verdict": "PASS",
+  "evaluation": {
+    "packetDigest": "2529812c8e3295a4090b3c544ace0592e72a0a7a05078cc4b573b0d3bb49deb8",
+    "sectionId": "01-canvas",
+    "verdict": "PASS",
+    "summary": "PASS: 5 independent case groups cover all 5 submitted states. The individual AI observations and summaries are retained in groups.json; a section passes only when every required group passes.",
+    "openedImages": [
+      "05a2b26218a1bdb28cc467168c188809a8898c352c9b5124a42dbce9fa82008d",
+      "8fb5ed955f5b5062381c6d850d4237e5c25018318f3cb574f6c4473ff0adca6a",
+      "72b914e08c027727076b550f3aa8ecff3f11eb497468c466b4242dff818301ce",
+      "9920c886186b08c3e7a1594f459bc71635611711434ac03b4c66fab31dfb19d8",
+      "e029b292a4d875eb7d39e3ab647fb552557b16015b611413de293a91cf7a29b0",
+      "1d24592f4475d8ef4e890f2589e28a1fb09c8d98939bedf94409c5721926128e",
+      "04a8beba4f94f69b30fede91e7940e0ae102bfbe54f410ded3fc03928d2fac0b",
+      "8dbef9cf8c54f9239653228f7834073316ad5ee4c4c541d5f216f06961ffa943",
+      "7381727ec78f20adbd71bf7f0c12023f4bf5fbf5085cb32a69738a1fd1d2416e",
+      "4d7e256b2c41c88979ebca0249f2888e0621b252ee2514c9458157bd122717ab",
+      "9305aaa44b257108f75942c3c0ab2182314c6e27b3cdf9166fc5bd0c3c89f5b2"
+    ],
+    "caseAssessments": [
+      {
+        "caseId": "focused",
+        "assessable": true,
+        "criteria": [
+          {
+            "criterionId": "C1",
+            "result": "met",
+            "evidence": "The complete target is visible. The first heading begins roughly 48px below the target's top edge, close to the intended approximately 40px inset, and the main text column maintains a comfortable, readable measure of about 740px."
+          },
+          {
+            "criterionId": "C2",
+            "result": "met",
+            "evidence": "The charcoal H1 and smaller H2 headings form a clear but restrained hierarchy. Fine neutral rules, consistent left alignment, and steady vertical spacing separate sections without visual noise."
+          },
+          {
+            "criterionId": "C3",
+            "result": "met",
+            "evidence": "In the explicitly focused capture, width assistance appears as faint, compact corner markers at the canvas boundaries. The markers remain peripheral and do not overlap or compete with headings, prose, code, table, or checklist content."
+          }
+        ]
+      },
+      {
+        "caseId": "unfocused",
+        "assessable": true,
+        "criteria": [
+          {
+            "criterionId": "C1",
+            "result": "met",
+            "evidence": "Both current renders show the first heading beginning roughly 48 px below the target region's top, close to the intended compact inset, with a centered writing column of comfortable readable width and no clipping."
+          },
+          {
+            "criterionId": "C2",
+            "result": "met",
+            "evidence": "The visible H1 and section headings use a clear but restrained charcoal hierarchy; thin neutral rules, consistent spacing, and regular body text preserve a quiet prose rhythm."
+          },
+          {
+            "criterionId": "C3",
+            "result": "met",
+            "evidence": "In the recorded unfocused state, no vertical width markers are visible around the article, so width assistance does not compete with the prose. The complete target remains visible in both the full and target renders."
+          }
+        ]
+      },
+      {
+        "caseId": "empty",
+        "assessable": true,
+        "criteria": [
+          {
+            "criterionId": "C1",
+            "result": "met",
+            "evidence": "Both the full and target renders show the empty-state prompt beginning about 45–50 px below the canvas top, avoiding a disproportionate blank inset. Its horizontal placement establishes a restrained central writing measure with ample side breathing room."
+          },
+          {
+            "criterionId": "C2",
+            "result": "met",
+            "evidence": "This is a deliberately empty document, so no authored heading hierarchy is expected. The only canvas text is a quiet, light-gray prompt, leaving a clean surface without false hierarchy or competing typography."
+          },
+          {
+            "criterionId": "C3",
+            "result": "met",
+            "evidence": "The recorded editor state is unfocused, and neither the full render nor the target crop shows vertical width markers or other guidance competing with the empty-state prompt."
+          }
+        ]
+      },
+      {
+        "caseId": "short",
+        "assessable": true,
+        "criteria": [
+          {
+            "criterionId": "C1",
+            "result": "met",
+            "evidence": "The writing column begins about 48px below the target-region top and remains centered at a readable approximately 740px measure within the 1180px pane. The short viewport does not cause horizontal clipping or an excessive introductory void."
+          },
+          {
+            "criterionId": "C2",
+            "result": "met",
+            "evidence": "The visible H1 and H2 headings use a clear charcoal hierarchy, consistent spacing, and thin restrained rules. Body copy remains comfortably separated and readable without headings becoming visually loud."
+          },
+          {
+            "criterionId": "C3",
+            "result": "met",
+            "evidence": "The captured editor is unfocused and no vertical width guides compete with the prose. The centered column boundary remains understandable through layout alone, matching the requirement that guidance stay quiet outside focus."
+          }
+        ]
+      },
+      {
+        "caseId": "narrow",
+        "assessable": true,
+        "criteria": [
+          {
+            "criterionId": "C1",
+            "result": "met",
+            "evidence": "The target render begins the H1 about 42–48px below the canvas top and uses consistent roughly 34px side margins. Prose wraps naturally within the narrow pane, while all target content remains visible and unclipped."
+          },
+          {
+            "criterionId": "C2",
+            "result": "met",
+            "evidence": "The charcoal H1 and smaller H2 headings form a clear, restrained hierarchy. Thin neutral rules, consistent spacing, and regular-weight body text preserve a quiet editorial rhythm throughout the narrow canvas."
+          },
+          {
+            "criterionId": "C3",
+            "result": "met",
+            "evidence": "Capture metadata identifies the editor as unfocused, and no vertical width markers compete with the prose. The writing boundaries remain understandable through stable margins and natural wrapping."
+          }
+        ]
+      }
+    ],
+    "discrepancies": [],
+    "priorResolutions": [],
+    "missingEvidence": []
+  },
+  "error": null
+}

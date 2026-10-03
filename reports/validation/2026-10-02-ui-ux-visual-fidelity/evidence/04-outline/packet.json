@@ -1,0 +1,338 @@
+{
+  "schemaVersion": 1,
+  "sectionId": "04-outline",
+  "title": "Outline hierarchy and sidebar footer",
+  "designCommit": "a798921f7e5a9b01a88360315b035a391f69da47",
+  "contractHash": "6a49fa68b56b31cae2ecb755cf2986d4dc9e20fc4f48b544e02c0560c95bb13c",
+  "designBrief": "Consistent minimalist Binary Markdown desktop-editor language. Flat off-white canvas #FAFAF8, pale neutral rail #F3F4F5, charcoal text #242830, one restrained blue accent #4266B0. For dark subjects use charcoal #1B1E26 and slate surfaces #272D38 with legible pale tokens and the same blue accent. Familiar system sans typography and monospace only for source. Crisp 1px dividers, 6px corner radii, 8px spacing increments, no decorative gradients, no glass, no giant cards, no marketing art, no invented logo. Preserve the real Markdown-editor identity and useful commands. This is a proposed static design concept, not a working product. Show one option only, with readable exact short labels and synthetic research-note content.",
+  "ownerAdjustments": [
+    "Retain heading semantics and desktop preferences; small panes may use an overlay."
+  ],
+  "targetRegions": [
+    {
+      "id": "rail",
+      "description": "Entire Outline/Document rail: tabs, nested heading navigation, reading cue, unified statistics/progress and utility footer."
+    }
+  ],
+  "excludedRegions": [
+    "main toolbar",
+    "authored canvas",
+    "other workspace panels",
+    "desktop chrome",
+    "reference caption bands and numbered pins"
+  ],
+  "obstructionException": "Excluded UI matters only if it clips or obstructs this target. Never grade its independent design.",
+  "criteria": [
+    {
+      "id": "C1",
+      "description": "Semantic tree and explicit tabs"
+    },
+    {
+      "id": "C2",
+      "description": "Thin reading-position cue"
+    },
+    {
+      "id": "C3",
+      "description": "One organized statistics/progress area"
+    }
+  ],
+  "requiredStates": [
+    "Nested headings",
+    "Long headings",
+    "Outline and Document tabs",
+    "Scrolled document",
+    "Narrow overlay"
+  ],
+  "references": [
+    {
+      "path": ".vscode-test/visual-fidelity/references/04-outline-experimental.png",
+      "sha256": "604360efc429d7ef4aad3ddde5d1a4d134fcf07673cf26cdde42ffc59bb70808",
+      "width": 1672,
+      "height": 941,
+      "bytes": 1265594,
+      "level": "Experimental",
+      "intent": "Explore an optional Outline / Document tabbed rail: Outline retains the semantic tree; Document offers compact section navigation and document details without cards. A thin reading-position marker follows the active section. Pins: 1 navigation modes are explicit; 2 progress supports orientation; 3 document details leave the main writing area clear. No automatic source rewriting.",
+      "annotations": [
+        "Navigation modes are explicit",
+        "Progress supports orientation",
+        "Document details leave the main writing area clear"
+      ]
+    }
+  ],
+  "source": {
+    "commit": "9941d02028b4989a2af4d7647c6b972d11ff5529",
+    "dirty": true,
+    "productHash": "334c1575ab0be09973a26f60ff320f2ab673b05cc2538bcb6cef79f15096c344"
+  },
+  "capture": {
+    "kind": "production browser fixture",
+    "hostBoundary": "Synthetic test bridge; no installed-host or converter result is claimed.",
+    "browser": "Chromium 145.0.7632.6",
+    "node": "v24.21.0",
+    "inputHash": "0c35cc55c5aa77490c82a55f8e0ef8baea12d5342608d60b8009c6d14ae00afb",
+    "fixtureHash": "23c0726bf4671e05c7c6242815d292a5989ee4acc06821858c800a64c68360a1",
+    "deviceScaleFactor": 1
+  },
+  "cases": [
+    {
+      "id": "nested",
+      "state": "Nested headings",
+      "comparison": "Direct Experimental nested outline and explicit tabs.",
+      "targetBounds": {
+        "x": 0,
+        "y": 0,
+        "width": 260,
+        "height": 1000
+      },
+      "observedEditorFocus": false,
+      "inputHash": "45c8146dd8109e3fc3ae4bc40b78349803f026ee7b905690751fec02388e877e",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "minimal",
+      "observedThemeTokens": {
+        "--bg-color": "#fafafa",
+        "--text-color": "#333333",
+        "--link-color": "#4266b0",
+        "--outline-active-color": "#4266b0",
+        "--selection-bg": "#d0d0d0"
+      },
+      "locale": "en-US",
+      "zoom": 1,
+      "images": [
+        {
+          "path": ".vscode-test/visual-review/04-outline/iteration-026/nested-full.png",
+          "sha256": "3e17506f0aaddeb9f029e39362a381188fc14d7400a26d9b1e690a6656556677",
+          "width": 1440,
+          "height": 1000,
+          "bytes": 204611
+        },
+        {
+          "path": ".vscode-test/visual-review/04-outline/iteration-026/nested-target.png",
+          "sha256": "369b0266c62dd58585f0c4ba7ea91abb9a4f1cc6750216220a5b1b4b400284c0",
+          "width": 260,
+          "height": 1000,
+          "bytes": 26236
+        }
+      ]
+    },
+    {
+      "id": "long",
+      "state": "Long headings",
+      "comparison": "Derived: long headings wrap without losing their tree level.",
+      "targetBounds": {
+        "x": 0,
+        "y": 0,
+        "width": 260,
+        "height": 1000
+      },
+      "observedEditorFocus": false,
+      "inputHash": "61858c5145f026b7c66be3dc66e5b0249c6b468a0d518807d1ae6d3e0631ceca",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "minimal",
+      "observedThemeTokens": {
+        "--bg-color": "#fafafa",
+        "--text-color": "#333333",
+        "--link-color": "#4266b0",
+        "--outline-active-color": "#4266b0",
+        "--selection-bg": "#d0d0d0"
+      },
+      "locale": "en-US",
+      "zoom": 1,
+      "images": [
+        {
+          "path": ".vscode-test/visual-review/04-outline/iteration-026/long-full.png",
+          "sha256": "6de84429826ff95a04d930726fec62fae7000bcc6cb81447b8d10c14b856005a",
+          "width": 1440,
+          "height": 1000,
+          "bytes": 63498
+        },
+        {
+          "path": ".vscode-test/visual-review/04-outline/iteration-026/long-target.png",
+          "sha256": "aaeb9d60192d2b770943c203a17a7a04252af0a9bee27d2d034a5529c3807bd2",
+          "width": 260,
+          "height": 1000,
+          "bytes": 22906
+        }
+      ]
+    },
+    {
+      "id": "document",
+      "state": "Outline and Document tabs",
+      "comparison": "Derived: Document tab organizes document details without duplicate statistics.",
+      "targetBounds": {
+        "x": 0,
+        "y": 0,
+        "width": 260,
+        "height": 1000
+      },
+      "observedEditorFocus": false,
+      "inputHash": "45c8146dd8109e3fc3ae4bc40b78349803f026ee7b905690751fec02388e877e",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "minimal",
+      "observedThemeTokens": {
+        "--bg-color": "#fafafa",
+        "--text-color": "#333333",
+        "--link-color": "#4266b0",
+        "--outline-active-color": "#4266b0",
+        "--selection-bg": "#d0d0d0"
+      },
+      "locale": "en-US",
+      "zoom": 1,
+      "images": [
+        {
+          "path": ".vscode-test/visual-review/04-outline/iteration-026/document-full.png",
+          "sha256": "8d07d58e7989a272141bd4d0a72cfce489e45d5c51d9d5b026c324da771ec871",
+          "width": 1440,
+          "height": 1000,
+          "bytes": 197822
+        },
+        {
+          "path": ".vscode-test/visual-review/04-outline/iteration-026/document-target.png",
+          "sha256": "36dfaa985e77653068c01b4c388b90d85505b786362c4dd969e52db9aa39b1e1",
+          "width": 260,
+          "height": 1000,
+          "bytes": 26013
+        }
+      ]
+    },
+    {
+      "id": "outline",
+      "state": "Outline and Document tabs",
+      "comparison": "Direct Outline tab; compact footer with current section progress.",
+      "targetBounds": {
+        "x": 0,
+        "y": 0,
+        "width": 260,
+        "height": 1000
+      },
+      "observedEditorFocus": false,
+      "inputHash": "45c8146dd8109e3fc3ae4bc40b78349803f026ee7b905690751fec02388e877e",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "minimal",
+      "observedThemeTokens": {
+        "--bg-color": "#fafafa",
+        "--text-color": "#333333",
+        "--link-color": "#4266b0",
+        "--outline-active-color": "#4266b0",
+        "--selection-bg": "#d0d0d0"
+      },
+      "locale": "en-US",
+      "zoom": 1,
+      "images": [
+        {
+          "path": ".vscode-test/visual-review/04-outline/iteration-026/outline-full.png",
+          "sha256": "3e17506f0aaddeb9f029e39362a381188fc14d7400a26d9b1e690a6656556677",
+          "width": 1440,
+          "height": 1000,
+          "bytes": 204611
+        },
+        {
+          "path": ".vscode-test/visual-review/04-outline/iteration-026/outline-target.png",
+          "sha256": "369b0266c62dd58585f0c4ba7ea91abb9a4f1cc6750216220a5b1b4b400284c0",
+          "width": 260,
+          "height": 1000,
+          "bytes": 26236
+        }
+      ]
+    },
+    {
+      "id": "scrolled",
+      "state": "Scrolled document",
+      "comparison": "Derived: active heading and reading cue correspond to scrolled document.",
+      "targetBounds": {
+        "x": 0,
+        "y": 0,
+        "width": 260,
+        "height": 1000
+      },
+      "observedEditorFocus": false,
+      "inputHash": "45c8146dd8109e3fc3ae4bc40b78349803f026ee7b905690751fec02388e877e",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "minimal",
+      "observedThemeTokens": {
+        "--bg-color": "#fafafa",
+        "--text-color": "#333333",
+        "--link-color": "#4266b0",
+        "--outline-active-color": "#4266b0",
+        "--selection-bg": "#d0d0d0"
+      },
+      "locale": "en-US",
+      "zoom": 1,
+      "images": [
+        {
+          "path": ".vscode-test/visual-review/04-outline/iteration-026/scrolled-full.png",
+          "sha256": "4b28c492df6c21c3a7458c7490f97ec4c93e0ac6f551cdaf72d007a9fe815813",
+          "width": 1440,
+          "height": 1000,
+          "bytes": 256316
+        },
+        {
+          "path": ".vscode-test/visual-review/04-outline/iteration-026/scrolled-target.png",
+          "sha256": "0b6080a40f22e0c44516179386bbf6ad19fff3ee5fbe28367f4a81e19125f753",
+          "width": 260,
+          "height": 1000,
+          "bytes": 27479
+        }
+      ]
+    },
+    {
+      "id": "narrow",
+      "state": "Narrow overlay",
+      "comparison": "Derived: narrow overlay retains full rail hierarchy and can close.",
+      "targetBounds": {
+        "x": 0,
+        "y": 0,
+        "width": 260,
+        "height": 1000
+      },
+      "observedEditorFocus": true,
+      "inputHash": "45c8146dd8109e3fc3ae4bc40b78349803f026ee7b905690751fec02388e877e",
+      "viewport": {
+        "width": 480,
+        "height": 1000
+      },
+      "theme": "minimal",
+      "observedThemeTokens": {
+        "--bg-color": "#fafafa",
+        "--text-color": "#333333",
+        "--link-color": "#4266b0",
+        "--outline-active-color": "#4266b0",
+        "--selection-bg": "#d0d0d0"
+      },
+      "locale": "en-US",
+      "zoom": 1,
+      "images": [
+        {
+          "path": ".vscode-test/visual-review/04-outline/iteration-026/narrow-full.png",
+          "sha256": "fe3ec8c38e5fff82cf042180675a6984b885fb4f1b12e0bb645e6169b85b5893",
+          "width": 480,
+          "height": 1000,
+          "bytes": 83908
+        },
+        {
+          "path": ".vscode-test/visual-review/04-outline/iteration-026/narrow-target.png",
+          "sha256": "159588c76f7447db4b39cae79683d4b929867b75da1c2b96b0e7dd8495a2c65a",
+          "width": 260,
+          "height": 1000,
+          "bytes": 26235
+        }
+      ]
+    }
+  ],
+  "priorFailures": [],
+  "packetDigest": "67d8ff35ca8e674bde501c006981a75f08d3f4825c4c4896e95460ebd72fdc39"
+}

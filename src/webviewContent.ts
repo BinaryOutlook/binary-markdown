@@ -164,7 +164,7 @@ export function getWebviewContent(
     </style>
 </head>
 <body>
-    ${generateEditorBodyHtml(msg, process.platform, { outlineOpen: safeConfig.outlineOpen, exportEnabled: true, settingsEnabled: true })}
+    ${generateEditorBodyHtml(msg, process.platform, { outlineOpen: safeConfig.outlineOpen, exportEnabled: true, settingsEnabled: true, hostEditor: 'vscode' })}
 
     <script src="${vendorUri('markdown-blocks.js')}"></script>
     <script src="${turndownUri}"></script>

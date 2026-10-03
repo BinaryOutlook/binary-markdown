@@ -19,6 +19,26 @@
     let preservedRange = null;
     let preservedSourceSelection = null;
     let previousFocus = null;
+    let lastFormat = null, cancelPending = false;
+    const stages = new Map();
+    const stageMessages = new Map();
+    const retry = document.getElementById('exportRetry');
+    document.getElementById('exportFormatHeading').textContent = text('formatOptions');
+    document.getElementById('exportJobHeading').textContent = text('jobStatus');
+    document.getElementById('exportResultsHeading').textContent = text('resultsHeading');
+    document.getElementById('exportIdleStatus').textContent = text('idleStatus');
+    document.getElementById('exportIdleResults').textContent = text('idleResults');
+    retry.textContent = text('retry');
+    function requestFormat(format) {
+        lastFormat = format; cancelPending = false; stages.clear(); stageMessages.clear();
+        document.getElementById('exportStages').replaceChildren();
+        retry.hidden = true; host.requestExport(format);
+    }
+    retry.addEventListener('click', event => {
+        event.stopPropagation();
+        const item = menu.querySelector('[data-export-format="' + lastFormat + '"]');
+        if (!running && item?.getAttribute('aria-disabled') === 'false') requestFormat(lastFormat);
+    });
 
     button.title = text('title');
     button.setAttribute('aria-label', text('title'));
@@ -32,9 +52,11 @@
     openOutput.addEventListener('click', event => { event.stopPropagation(); if (!openOutput.hidden) host.openExportOutput?.(); });
     document.getElementById('exportExperimental').textContent = text('experimental');
     document.getElementById('exportLimitations').textContent = text('limitations');
-    document.getElementById('exportSettings').textContent = text('setup');
-    document.getElementById('exportPandocSetup').textContent = text('pandocInstall');
-    document.getElementById('exportBrowserSetup').textContent = text('browserInstall');
+    document.getElementById('exportSettings').textContent = text('installationGuide');
+    document.getElementById('exportPandocSetup').textContent = text('configurePandoc');
+    document.getElementById('exportPandocSetup').title = text('pandocInstall');
+    document.getElementById('exportBrowserSetup').textContent = text('configureBrowser');
+    document.getElementById('exportBrowserSetup').title = text('browserInstall');
     cancel.textContent = text('cancel');
 
     function preserveSelection() {
@@ -59,7 +81,7 @@
     }
 
     function items() {
-        return Array.from(menu.querySelectorAll('[role="menuitem"], #exportCancel, #exportOpenOutput')).filter(item => !item.hidden);
+        return Array.from(menu.querySelectorAll('[role="menuitem"], #exportCancel, #exportOpenOutput, #exportRetry')).filter(item => !item.hidden);
     }
 
     function visibleButton() {
@@ -157,7 +179,7 @@
         const format = item.dataset.exportFormat;
         if (format) {
             if (item.getAttribute('aria-disabled') === 'true') return;
-            host.requestExport(format);
+            requestFormat(format);
         } else {
             const tool = item.dataset.exportAction;
             if (!['settings','pandoc','browser'].includes(tool)) return;
@@ -171,7 +193,11 @@
     });
     cancel.addEventListener('click', event => {
         event.stopPropagation();
-        if (running) host.cancelExport();
+        if (running && !cancelPending) {
+            cancelPending = true; cancel.disabled = true;
+            statusMessage.textContent = text('cancelPending');
+            host.cancelExport();
+        }
     });
     document.addEventListener('keydown', event => {
         if (!menu.hidden && event.key === 'Escape') {
@@ -191,7 +217,13 @@
             updateCapabilities();
         } else if (message.type === 'exportStatus') {
             if (!['running','complete','failed','cancelled'].includes(message.state)) return;
+            if (message.state === 'running' && !running) {
+                // Exports can also start through a host command. Never carry a
+                // previous job's completed stages into that independent run.
+                stages.clear(); stageMessages.clear(); cancelPending = false;
+            }
             running = message.state === 'running';
+            if (!running) cancelPending = false;
             if (running && menu.hidden) openMenu(false);
             status.hidden = false;
             status.dataset.state = message.state;
@@ -202,8 +234,31 @@
             spinner.removeAttribute('aria-hidden');
             spinner.hidden = !running;
             cancel.hidden = !running;
+            cancel.disabled = cancelPending;
             const stateKey = message.state === 'complete' ? 'completed' : message.state;
-            statusMessage.textContent = message.message || text(message.stage || stateKey);
+            const knownStages = ['checking','dependencies','resources','rendering','converting','saving'];
+            const hasKnownStage = knownStages.includes(message.stage);
+            // A host stage belongs in the observed timeline once. The headline
+            // describes the job state, including cancellation awaiting the host.
+            statusMessage.textContent = cancelPending ? text('cancelPending') : running && hasKnownStage
+                ? text('running') : message.message || text(stateKey);
+            document.getElementById('exportIdleStatus').hidden = true;
+            document.getElementById('exportIdleResults').hidden = message.state === 'complete';
+            retry.hidden = message.state !== 'failed' || !lastFormat;
+            if (running && hasKnownStage) {
+                for (const stage of stages.keys()) stages.set(stage, 'complete');
+                stages.set(message.stage, 'running');
+                stageMessages.set(message.stage, message.message || text(message.stage));
+            } else if (!running && stages.size) stages.set([...stages.keys()].at(-1), message.state);
+            const stageList = document.getElementById('exportStages'); stageList.replaceChildren();
+            for (const [key, state] of stages) {
+                const row = document.createElement('li'); row.dataset.state = state;
+                if (state === 'running') row.setAttribute('aria-current', 'step');
+                const indicator = document.createElement('span'); indicator.className = 'export-stage-indicator'; indicator.setAttribute('aria-hidden', 'true'); indicator.textContent = state === 'complete' ? '✓' : state === 'running' ? '•' : '–';
+                const label = document.createElement('span'); label.className = 'export-stage-label'; label.textContent = stageMessages.get(key) || text(key);
+                const stateLabel = document.createElement('span'); stateLabel.className = 'export-stage-state'; stateLabel.textContent = text(state === 'complete' ? 'stageCompleted' : state === 'running' ? 'stageCurrent' : state);
+                row.append(indicator, label, stateLabel); stageList.appendChild(row);
+            }
             outputPath.textContent = message.outputPath || '';
             openOutput.hidden = message.state !== 'complete' || typeof message.outputPath !== 'string' || !message.outputPath;
             warningList.replaceChildren();

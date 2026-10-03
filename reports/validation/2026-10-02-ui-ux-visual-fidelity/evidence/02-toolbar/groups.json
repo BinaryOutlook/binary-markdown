@@ -1,0 +1,250 @@
+{
+  "schemaVersion": 2,
+  "parentPacketDigest": "82fd2d56aaae42d16db7f0fd8de703d5c608466c00700204b81636403d6d28ac",
+  "groups": [
+    {
+      "caseIds": [
+        "idle",
+        "selection"
+      ],
+      "evaluation": {
+        "packetDigest": "82fd2d56aaae42d16db7f0fd8de703d5c608466c00700204b81636403d6d28ac",
+        "sectionId": "02-toolbar",
+        "verdict": "PASS",
+        "summary": "Both submitted states visibly preserve a concise essential toolbar, legible mode and utility controls, and appropriate selection-only formatting tools. The idle state does not incorrectly show the contextual strip; the selected-prose state shows a compact, unobstructed strip near the selection. This pass applies only to the submitted idle and selection cases; the other checklist states remain outside this invocation.",
+        "openedImages": [
+          "f63cf1e70e556c1a2fc2c4ffd85c8f38707c1b2758de1571ee9665af8f45f1d6",
+          "d2ea16ead9312459f38920d41590d7e0a84ca87af3c95691c079d5910edfb4c0",
+          "2054aefcfe7630190f30f0d6a4b608b4fd361875a07ade41b1ab816af9a70a69",
+          "0e66047cc5c620a70c9f7442cc6becc507c3edb8e17f85212bef0b4aee9023a7",
+          "4804994c0044184e8b20fa1e14261261cab46184eff03e01d5b282c5dde2e7b4"
+        ],
+        "caseAssessments": [
+          {
+            "caseId": "idle",
+            "assessable": true,
+            "criteria": [
+              {
+                "criterionId": "C1",
+                "result": "met",
+                "evidence": "The no-selection toolbar presents undo/redo, labeled Insert and Format controls, a clearly indicated Contextual tools mode, an overflow control, and separated right-side utilities without crowding or obstruction."
+              },
+              {
+                "criterionId": "C2",
+                "result": "met",
+                "evidence": "No contextual formatting strip is visible in the no-selection state, appropriately avoiding irrelevant prose tools while leaving the contextual mode available."
+              },
+              {
+                "criterionId": "C3",
+                "result": "met",
+                "evidence": "Open in VS Code, Export, Visual, Source, and Split are readable and distinctly grouped; Visual has an unambiguous blue selected state."
+              }
+            ]
+          },
+          {
+            "caseId": "selection",
+            "assessable": true,
+            "criteria": [
+              {
+                "criterionId": "C1",
+                "result": "met",
+                "evidence": "The permanent toolbar remains fully visible and structurally consistent during prose selection, with essential commands, overflow, utilities, and view modes retaining clear grouping."
+              },
+              {
+                "criterionId": "C2",
+                "result": "met",
+                "evidence": "A compact floating strip appears beside the selected prose with clear bold, italic, underline, strikethrough, inline-code, link, and overflow controls. It is unobstructed and visually tied to the selection."
+              },
+              {
+                "criterionId": "C3",
+                "result": "met",
+                "evidence": "The selected-prose render keeps Open in VS Code, Export, Visual, Source, and Split legible; Visual remains clearly selected and the contextual strip does not cover these controls."
+              }
+            ]
+          }
+        ],
+        "discrepancies": [],
+        "priorResolutions": [],
+        "missingEvidence": []
+      },
+      "error": null
+    },
+    {
+      "caseIds": [
+        "actions",
+        "protected"
+      ],
+      "evaluation": {
+        "packetDigest": "82fd2d56aaae42d16db7f0fd8de703d5c608466c00700204b81636403d6d28ac",
+        "sectionId": "02-toolbar",
+        "verdict": "PASS",
+        "summary": "Both submitted states are assessable and meet the toolbar criteria. The no-selection case preserves a concise command hierarchy and exposes a readable, searchable, categorized all-actions panel. The protected code context keeps the essential toolbar and mode utilities visible without showing an inappropriate prose-formatting strip.",
+        "openedImages": [
+          "f63cf1e70e556c1a2fc2c4ffd85c8f38707c1b2758de1571ee9665af8f45f1d6",
+          "00ec0029bb6c8727f1f31fcfdfef445790ba045c9264b54aacc2ad716ab34adf",
+          "3ab5284912f9d946f9385b1ee3a8030eea689eb26c0bc10166bb9c8f49001ee6",
+          "c52fcb14cbe65ea551e96300b6aff0dd86576036d7b6e79824447ef1b24891ab",
+          "bb501d66d99978e288802596c41169a7481ff4284d205c5b190e87353cd39009"
+        ],
+        "caseAssessments": [
+          {
+            "caseId": "actions",
+            "assessable": true,
+            "criteria": [
+              {
+                "criterionId": "C1",
+                "result": "met",
+                "evidence": "The full render shows a restrained permanent hierarchy with Insert, Format, Contextual tools, overflow, editor-view controls, Export, and the Visual/Source/Split mode group. The open panel identifies 36 actions and organizes them through search and category tabs."
+              },
+              {
+                "criterionId": "C2",
+                "result": "met",
+                "evidence": "Because this is explicitly a no-selection state, no near-selection prose strip is expected. The visible all-actions panel supplies the appropriate contextual command surface without obstructing the toolbar."
+              },
+              {
+                "criterionId": "C3",
+                "result": "met",
+                "evidence": "Search, category tabs, action names, descriptions, icons, and shortcuts are readable. The selected All category and Bold row have clear neutral selection surfaces, while the blue Visual mode remains legible in the full render."
+              }
+            ]
+          },
+          {
+            "caseId": "protected",
+            "assessable": true,
+            "criteria": [
+              {
+                "criterionId": "C1",
+                "result": "met",
+                "evidence": "The protected-context full and target renders retain the concise top-level hierarchy: Insert, Format, Contextual tools, overflow, Open in VS Code, Export, and Visual/Source/Split modes."
+              },
+              {
+                "criterionId": "C2",
+                "result": "met",
+                "evidence": "The selected code content shows only code-block-specific controls within the canvas; no floating prose-formatting strip appears, matching the protected-context requirement."
+              },
+              {
+                "criterionId": "C3",
+                "result": "met",
+                "evidence": "Toolbar labels, icons, utility actions, and the Visual/Source/Split modes are clearly readable. Visual has an unambiguous blue active state, and the controls fit without clipping in the supplied target crop."
+              }
+            ]
+          }
+        ],
+        "discrepancies": [],
+        "priorResolutions": [],
+        "missingEvidence": []
+      },
+      "error": null
+    },
+    {
+      "caseIds": [
+        "source",
+        "narrow"
+      ],
+      "evaluation": {
+        "packetDigest": "82fd2d56aaae42d16db7f0fd8de703d5c608466c00700204b81636403d6d28ac",
+        "sectionId": "02-toolbar",
+        "verdict": "PASS",
+        "summary": "Both submitted states satisfy the toolbar criteria. The source view clearly distinguishes unavailable visual-only commands while preserving readable mode and utility controls. The narrow view retains essential commands, an unmistakable focused overflow control, and legible Visual/Source/Split modes without clipping or obstruction.",
+        "openedImages": [
+          "f63cf1e70e556c1a2fc2c4ffd85c8f38707c1b2758de1571ee9665af8f45f1d6",
+          "158245d085f92e1c3f0935f8199749a39aa387b7697a82e9b47f412a115303e7",
+          "358550ce9294d1cf425062d49f0e78588822e02661c47545578dacb716a3cd25",
+          "541baca96f405773a768ac9eab3e8f77046e451cc0bcd239a881b53c497c4f3d",
+          "0e6653a97266bafc65871846aeff3932573fe2584aabae0bfe88aa620c1a1f12"
+        ],
+        "caseAssessments": [
+          {
+            "caseId": "source",
+            "assessable": true,
+            "criteria": [
+              {
+                "criterionId": "C1",
+                "result": "met",
+                "evidence": "The source toolbar presents a clear left-to-right hierarchy: disabled undo/redo and visual-only Insert/Format controls, the contextual-tools control, then utilities and the mode switcher. Source is visibly selected."
+              },
+              {
+                "criterionId": "C2",
+                "result": "met",
+                "evidence": "No prose-selection strip appears in this protected source state, which is appropriate; the visible notice explicitly directs insertion work to the visual editor."
+              },
+              {
+                "criterionId": "C3",
+                "result": "met",
+                "evidence": "Open in VS Code and Export are readable, and the Visual/Source/Split segmented control is fully visible with a strong blue Source selection state. Disabled visual-only actions remain legible and clearly unavailable."
+              }
+            ]
+          },
+          {
+            "caseId": "narrow",
+            "assessable": true,
+            "criteria": [
+              {
+                "criterionId": "C1",
+                "result": "met",
+                "evidence": "At 480 px, the toolbar preserves the navigation control, undo/redo, Insert, Format, overflow, and the complete mode switcher in a compact single row without overlap."
+              },
+              {
+                "criterionId": "C2",
+                "result": "met",
+                "evidence": "This narrow state does not depict selected prose, so omission of a temporary near-selection formatting strip is consistent with the submitted state; the permanent formatting entry remains available."
+              },
+              {
+                "criterionId": "C3",
+                "result": "met",
+                "evidence": "Visual, Source, and Split remain fully labeled and readable. The blue focus outline on the ellipsis visibly communicates keyboard access to overflowed utilities, with no clipping of the target region."
+              }
+            ]
+          }
+        ],
+        "discrepancies": [],
+        "priorResolutions": [],
+        "missingEvidence": []
+      },
+      "error": null
+    },
+    {
+      "caseIds": [
+        "overflow"
+      ],
+      "evaluation": {
+        "packetDigest": "82fd2d56aaae42d16db7f0fd8de703d5c608466c00700204b81636403d6d28ac",
+        "sectionId": "02-toolbar",
+        "verdict": "PASS",
+        "summary": "The narrow overflow state preserves a clear essential toolbar hierarchy and exposes labeled utility actions in a compact, unobstructed menu. The supplied full and target captures agree, and all submitted criteria are visibly satisfied for this state.",
+        "openedImages": [
+          "f63cf1e70e556c1a2fc2c4ffd85c8f38707c1b2758de1571ee9665af8f45f1d6",
+          "3a5b0a883af5af305de2a4082e016ef5f98cd9e085ba9f68d6744c60ec834e68",
+          "7d21f62db68f9e069ea1488fee08017c10befdef378e6e201902e42b89a7996b"
+        ],
+        "caseAssessments": [
+          {
+            "caseId": "overflow",
+            "assessable": true,
+            "criteria": [
+              {
+                "criterionId": "C1",
+                "result": "met",
+                "evidence": "The full capture visibly retains the permanent narrow-toolbar essentials: sidebar, undo/redo, Insert, Format, overflow, and the Visual/Source/Split mode group. Grouping and active Visual state remain clear at 480 px."
+              },
+              {
+                "criterionId": "C2",
+                "result": "met",
+                "evidence": "This is a narrow overflow state without selected prose, so a near-selection formatting strip is not expected. The overflow instead provides a clearly focused, labeled Contextual tools entry without clipping or obstruction."
+              },
+              {
+                "criterionId": "C3",
+                "result": "met",
+                "evidence": "The open overflow menu clearly labels Contextual tools, All actions, Open in VS Code, and Export with recognizable supporting icons. The component capture includes the complete menu within its bounds, and the full capture shows it fully reachable with an 8 px right margin."
+              }
+            ]
+          }
+        ],
+        "discrepancies": [],
+        "priorResolutions": [],
+        "missingEvidence": []
+      },
+      "error": null
+    }
+  ]
+}

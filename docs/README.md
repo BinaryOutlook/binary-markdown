@@ -13,6 +13,7 @@ Start here for maintained Binary Markdown guidance. These pages describe the sou
 | Export a document | [First HTML export](export-tutorial.md) | [Export help and settings](../media/export-help.md) |
 | Build or contribute | [Build from source](building.md) | [Contributing](../CONTRIBUTING.md), [documentation standard](documentation-standard.md) |
 | Test a change | [Validation guide](testing/README.md) | [Export verification](export-verification.md), [Windows checks](testing/windows.md) |
+| Compare an implemented UI with a chosen concept | [Scoped AI visual review](testing/visual-review.md) | [System design](../reports/plans/2026-10-01-ui-ux-visual-fidelity/system-design.md) |
 | Understand export | [Architecture](export-architecture.md) | [Requirements and format support](export-subsystem.md) |
 | Understand software freedom, cost, and licensing | [Cost and software freedom](licensing.md#cost-and-software-freedom) | [Commercial redistribution](licensing.md#redistribution-and-commercial-use), [MIT-licensed starting points](licensing.md#mit-licensed-starting-points) |
 | Understand project policy | [Releases and support](releases-and-support.md) | [Roadmap](roadmap.md), [licensing](licensing.md), [branding](branding.md), [license decision](decisions/001-agpl-transition.md) |

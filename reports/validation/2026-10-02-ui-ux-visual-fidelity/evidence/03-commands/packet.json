@@ -1,0 +1,443 @@
+{
+  "schemaVersion": 1,
+  "sectionId": "03-commands",
+  "title": "Insert and Action Palette discovery",
+  "designCommit": "a798921f7e5a9b01a88360315b035a391f69da47",
+  "contractHash": "6a49fa68b56b31cae2ecb755cf2986d4dc9e20fc4f48b544e02c0560c95bb13c",
+  "designBrief": "Consistent minimalist Binary Markdown desktop-editor language. Flat off-white canvas #FAFAF8, pale neutral rail #F3F4F5, charcoal text #242830, one restrained blue accent #4266B0. For dark subjects use charcoal #1B1E26 and slate surfaces #272D38 with legible pale tokens and the same blue accent. Familiar system sans typography and monospace only for source. Crisp 1px dividers, 6px corner radii, 8px spacing increments, no decorative gradients, no glass, no giant cards, no marketing art, no invented logo. Preserve the real Markdown-editor identity and useful commands. This is a proposed static design concept, not a working product. Show one option only, with readable exact short labels and synthetic research-note content.",
+  "ownerAdjustments": [
+    "Experimental applies to Insert only; the remaining Action Palette follows Moderate.",
+    "Keep existing commands; generated sample wording is illustrative."
+  ],
+  "targetRegions": [
+    {
+      "id": "insert",
+      "description": "Entire Insert workspace: search, category rail, command rows, descriptions, separate shortcuts and rendered previews. Experimental reference central workspace only."
+    },
+    {
+      "id": "palette",
+      "description": "Entire Moderate Action Palette: search, groups, icons, titles, descriptions, shortcuts and empty recovery."
+    }
+  ],
+  "excludedRegions": [
+    "main toolbar",
+    "outline",
+    "authored canvas outside the workspace",
+    "desktop chrome",
+    "reference caption bands and numbered pins"
+  ],
+  "obstructionException": "Excluded UI matters only if it clips or obstructs this target. Never grade its independent design.",
+  "criteria": [
+    {
+      "id": "C1",
+      "description": "Balanced categories and command rows"
+    },
+    {
+      "id": "C2",
+      "description": "Readable icons, titles, descriptions and separate shortcuts"
+    },
+    {
+      "id": "C3",
+      "description": "Useful table/equation/code previews"
+    }
+  ],
+  "requiredStates": [
+    "All and a category",
+    "Search with results",
+    "No results",
+    "Unavailable action",
+    "Narrow workspace"
+  ],
+  "references": [
+    {
+      "path": ".vscode-test/visual-fidelity/references/03-commands-experimental.png",
+      "sha256": "5ed871f5a099692cefa9ca2c9b248ee365d1f97e901b378a186376882cffc273",
+      "width": 1672,
+      "height": 941,
+      "bytes": 1216985,
+      "level": "Experimental",
+      "intent": "Explore a larger optional command workspace opened by the existing shortcut, with search at top, a left group list, and compact previews for Table, Equation, Code block. For unmatched-command show clear no-results guidance. Pins: 1 categories support exploration; 2 preview describes the insertion; 3 search recovery is always available. No AI suggestion, no invented command execution.",
+      "annotations": [
+        "Categories support exploration",
+        "Preview describes the insertion",
+        "Search recovery is always available"
+      ]
+    },
+    {
+      "path": ".vscode-test/visual-fidelity/references/03-commands-moderate.png",
+      "sha256": "a332410af0c4d892c3ce050f6aafd091c02255a84ebdccbef0c979ceed5729d0",
+      "width": 1672,
+      "height": 941,
+      "bytes": 1089961,
+      "level": "Moderate",
+      "intent": "Show a searchable Insert popover with matching results for table and a separate no-results state for unmatched-command. Shared command names and short purpose descriptions connect Insert with the Action Palette; existing keyboard hints remain visible.",
+      "annotations": [
+        "Matching results use shared names and short descriptions",
+        "Empty results explain the state and offer Clear search",
+        "Shared command details retain existing keyboard hints"
+      ]
+    }
+  ],
+  "source": {
+    "commit": "9941d02028b4989a2af4d7647c6b972d11ff5529",
+    "dirty": true,
+    "productHash": "334c1575ab0be09973a26f60ff320f2ab673b05cc2538bcb6cef79f15096c344"
+  },
+  "capture": {
+    "kind": "production browser fixture",
+    "hostBoundary": "Synthetic test bridge; no installed-host or converter result is claimed.",
+    "browser": "Chromium 145.0.7632.6",
+    "node": "v24.21.0",
+    "inputHash": "0c35cc55c5aa77490c82a55f8e0ef8baea12d5342608d60b8009c6d14ae00afb",
+    "fixtureHash": "23c0726bf4671e05c7c6242815d292a5989ee4acc06821858c800a64c68360a1",
+    "deviceScaleFactor": 1
+  },
+  "cases": [
+    {
+      "id": "all",
+      "state": "All and a category",
+      "comparison": "Direct reference: All Insert workspace with Table, Equation and Code visual previews.",
+      "targetBounds": {
+        "x": 336,
+        "y": 40.984375,
+        "width": 960,
+        "height": 879.796875
+      },
+      "observedEditorFocus": false,
+      "inputHash": "0c35cc55c5aa77490c82a55f8e0ef8baea12d5342608d60b8009c6d14ae00afb",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "minimal",
+      "observedThemeTokens": {
+        "--bg-color": "#fafafa",
+        "--text-color": "#333333",
+        "--link-color": "#4266b0",
+        "--outline-active-color": "#4266b0",
+        "--selection-bg": "#d0d0d0"
+      },
+      "locale": "en-US",
+      "zoom": 1,
+      "images": [
+        {
+          "path": ".vscode-test/visual-review/03-commands/iteration-031/all-full.png",
+          "sha256": "fd9f413a7de2ab191c1fce424a9f85f68034b170abadcd3f144576968480902c",
+          "width": 1440,
+          "height": 1000,
+          "bytes": 99877
+        },
+        {
+          "path": ".vscode-test/visual-review/03-commands/iteration-031/all-target.png",
+          "sha256": "37478da2e74dcbb1c6190ac4d917648078c9f6b1f481cfe1aee4434f38cb791d",
+          "width": 960,
+          "height": 879,
+          "bytes": 68644
+        }
+      ]
+    },
+    {
+      "id": "category",
+      "state": "All and a category",
+      "comparison": "Derived: same category/list hierarchy with Equations selected; previews remain visual.",
+      "targetBounds": {
+        "x": 336,
+        "y": 40.984375,
+        "width": 960,
+        "height": 354.140625
+      },
+      "observedEditorFocus": false,
+      "inputHash": "0c35cc55c5aa77490c82a55f8e0ef8baea12d5342608d60b8009c6d14ae00afb",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "minimal",
+      "observedThemeTokens": {
+        "--bg-color": "#fafafa",
+        "--text-color": "#333333",
+        "--link-color": "#4266b0",
+        "--outline-active-color": "#4266b0",
+        "--selection-bg": "#d0d0d0"
+      },
+      "locale": "en-US",
+      "zoom": 1,
+      "images": [
+        {
+          "path": ".vscode-test/visual-review/03-commands/iteration-031/category-full.png",
+          "sha256": "ab992de229416bceb20255d55385594b27b3465e1df16e6396db4f6545b3e198",
+          "width": 1440,
+          "height": 1000,
+          "bytes": 62629
+        },
+        {
+          "path": ".vscode-test/visual-review/03-commands/iteration-031/category-target.png",
+          "sha256": "3f0f31cb4bb77b5471edea91a43f751088bd421623ab0c390c3eeb54d0ca4177",
+          "width": 960,
+          "height": 354,
+          "bytes": 23017
+        }
+      ]
+    },
+    {
+      "id": "search",
+      "state": "Search with results",
+      "comparison": "Derived: same workspace, code search shows readable matching rows and previews.",
+      "targetBounds": {
+        "x": 336,
+        "y": 40.984375,
+        "width": 960,
+        "height": 354.140625
+      },
+      "observedEditorFocus": false,
+      "inputHash": "0c35cc55c5aa77490c82a55f8e0ef8baea12d5342608d60b8009c6d14ae00afb",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "minimal",
+      "observedThemeTokens": {
+        "--bg-color": "#fafafa",
+        "--text-color": "#333333",
+        "--link-color": "#4266b0",
+        "--outline-active-color": "#4266b0",
+        "--selection-bg": "#d0d0d0"
+      },
+      "locale": "en-US",
+      "zoom": 1,
+      "images": [
+        {
+          "path": ".vscode-test/visual-review/03-commands/iteration-031/search-full.png",
+          "sha256": "4de34722b5fa1a24d255117cd4fa92eed0721ef167fe76b8c21498be226ea3b1",
+          "width": 1440,
+          "height": 1000,
+          "bytes": 59939
+        },
+        {
+          "path": ".vscode-test/visual-review/03-commands/iteration-031/search-target.png",
+          "sha256": "681fd5a0d8f2f49b505a9cf3fe13027a384489d2a705f5883f377388dfe1853a",
+          "width": 960,
+          "height": 354,
+          "bytes": 20529
+        }
+      ]
+    },
+    {
+      "id": "empty",
+      "state": "No results",
+      "comparison": "Derived: clear empty guidance and available Clear search action; retain workspace composition.",
+      "targetBounds": {
+        "x": 336,
+        "y": 40.984375,
+        "width": 960,
+        "height": 354.140625
+      },
+      "observedEditorFocus": false,
+      "inputHash": "0c35cc55c5aa77490c82a55f8e0ef8baea12d5342608d60b8009c6d14ae00afb",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "minimal",
+      "observedThemeTokens": {
+        "--bg-color": "#fafafa",
+        "--text-color": "#333333",
+        "--link-color": "#4266b0",
+        "--outline-active-color": "#4266b0",
+        "--selection-bg": "#d0d0d0"
+      },
+      "locale": "en-US",
+      "zoom": 1,
+      "images": [
+        {
+          "path": ".vscode-test/visual-review/03-commands/iteration-031/empty-full.png",
+          "sha256": "3eeae0f37975e667c512c01264b3ff17f1cb7c9f9c49e5133e0c44ef3536f6d0",
+          "width": 1440,
+          "height": 1000,
+          "bytes": 59879
+        },
+        {
+          "path": ".vscode-test/visual-review/03-commands/iteration-031/empty-target.png",
+          "sha256": "0a3bcc09a8d8d874000a0384b4dfa88cb645f604f734de78a7b65f2f920037a3",
+          "width": 960,
+          "height": 354,
+          "bytes": 20344
+        }
+      ]
+    },
+    {
+      "id": "unavailable",
+      "state": "Unavailable action",
+      "comparison": "Derived: preserve rows/previews and expose unavailable reasons in protected code context.",
+      "targetBounds": {
+        "x": 336,
+        "y": 40.984375,
+        "width": 960,
+        "height": 879.796875
+      },
+      "observedEditorFocus": false,
+      "inputHash": "cf12a0a50e46e7e2975734bb4389132cea731f22abb7be1fb639a4db7229ef54",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "minimal",
+      "observedThemeTokens": {
+        "--bg-color": "#fafafa",
+        "--text-color": "#333333",
+        "--link-color": "#4266b0",
+        "--outline-active-color": "#4266b0",
+        "--selection-bg": "#d0d0d0"
+      },
+      "locale": "en-US",
+      "zoom": 1,
+      "images": [
+        {
+          "path": ".vscode-test/visual-review/03-commands/iteration-031/unavailable-full.png",
+          "sha256": "34b6fa0a036c2f6b28040fc381784358350ceb606b57a6e5efee2cd934cabad1",
+          "width": 1440,
+          "height": 1000,
+          "bytes": 117743
+        },
+        {
+          "path": ".vscode-test/visual-review/03-commands/iteration-031/unavailable-target.png",
+          "sha256": "f5a88a83ff00b8c921452a10a01d739842ba396de32a53665532450af962bd70",
+          "width": 960,
+          "height": 879,
+          "bytes": 85798
+        }
+      ]
+    },
+    {
+      "id": "narrow",
+      "state": "Narrow workspace",
+      "comparison": "Derived: stack or compact categories without clipped search/labels/actions or authored-content obstruction.",
+      "targetBounds": {
+        "x": 8,
+        "y": 40.984375,
+        "width": 464,
+        "height": 839.3125
+      },
+      "observedEditorFocus": false,
+      "inputHash": "0c35cc55c5aa77490c82a55f8e0ef8baea12d5342608d60b8009c6d14ae00afb",
+      "viewport": {
+        "width": 480,
+        "height": 1000
+      },
+      "theme": "minimal",
+      "observedThemeTokens": {
+        "--bg-color": "#fafafa",
+        "--text-color": "#333333",
+        "--link-color": "#4266b0",
+        "--outline-active-color": "#4266b0",
+        "--selection-bg": "#d0d0d0"
+      },
+      "locale": "en-US",
+      "zoom": 1,
+      "images": [
+        {
+          "path": ".vscode-test/visual-review/03-commands/iteration-031/narrow-full.png",
+          "sha256": "7bdc83aaa816eea9f85a0e7b98e7bc6cf0e1df36ddf665100794cfdd4fe95d40",
+          "width": 480,
+          "height": 1000,
+          "bytes": 48958
+        },
+        {
+          "path": ".vscode-test/visual-review/03-commands/iteration-031/narrow-target.png",
+          "sha256": "24031d54bf6eb74fa6348c333010828ed610c52c2baf2bf87d3e817c52c8243f",
+          "width": 464,
+          "height": 839,
+          "bytes": 43271
+        }
+      ]
+    },
+    {
+      "id": "narrow-end",
+      "state": "Narrow workspace",
+      "comparison": "Derived: scrolled narrow results must show complete Mermaid/Contents rows and a clear internal scrolling affordance, with search and categories retained.",
+      "targetBounds": {
+        "x": 8,
+        "y": 40.984375,
+        "width": 464,
+        "height": 764.515625
+      },
+      "observedEditorFocus": false,
+      "inputHash": "0c35cc55c5aa77490c82a55f8e0ef8baea12d5342608d60b8009c6d14ae00afb",
+      "viewport": {
+        "width": 480,
+        "height": 1000
+      },
+      "theme": "minimal",
+      "observedThemeTokens": {
+        "--bg-color": "#fafafa",
+        "--text-color": "#333333",
+        "--link-color": "#4266b0",
+        "--outline-active-color": "#4266b0",
+        "--selection-bg": "#d0d0d0"
+      },
+      "locale": "en-US",
+      "zoom": 1,
+      "images": [
+        {
+          "path": ".vscode-test/visual-review/03-commands/iteration-031/narrow-end-full.png",
+          "sha256": "92d31ef885d1bc466c396c2fe802949cc4412561bf7c9e261afb144e19d17eea",
+          "width": 480,
+          "height": 1000,
+          "bytes": 47112
+        },
+        {
+          "path": ".vscode-test/visual-review/03-commands/iteration-031/narrow-end-target.png",
+          "sha256": "e9958abe4a4f10fb6e0da11866e96b631a494dfc80bd7e9a0a1342a95d240844",
+          "width": 464,
+          "height": 764,
+          "bytes": 41433
+        }
+      ]
+    },
+    {
+      "id": "palette",
+      "state": "Search with results",
+      "comparison": "Direct Moderate companion reference: grouped Action Palette with icons, descriptions and separate shortcuts; previews belong only to Insert.",
+      "targetBounds": {
+        "x": 260,
+        "y": 48.1875,
+        "width": 360,
+        "height": 301.5625
+      },
+      "observedEditorFocus": false,
+      "inputHash": "0c35cc55c5aa77490c82a55f8e0ef8baea12d5342608d60b8009c6d14ae00afb",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "minimal",
+      "observedThemeTokens": {
+        "--bg-color": "#fafafa",
+        "--text-color": "#333333",
+        "--link-color": "#4266b0",
+        "--outline-active-color": "#4266b0",
+        "--selection-bg": "#d0d0d0"
+      },
+      "locale": "en-US",
+      "zoom": 1,
+      "images": [
+        {
+          "path": ".vscode-test/visual-review/03-commands/iteration-031/palette-full.png",
+          "sha256": "1079407b2fcdb9ba1d0ae97e17ed9c45a17e93a76c995a62bd54503c15d1ce8d",
+          "width": 1440,
+          "height": 1000,
+          "bytes": 76244
+        },
+        {
+          "path": ".vscode-test/visual-review/03-commands/iteration-031/palette-target.png",
+          "sha256": "76a4dd63497996a834b21219fc0c7b381173da9c5fcd2325a6088bb2e4c45f24",
+          "width": 360,
+          "height": 301,
+          "bytes": 14907
+        }
+      ]
+    }
+  ],
+  "priorFailures": [],
+  "packetDigest": "c9db750dab4b520e21da766bf624718c7bfd95ba813d254e93c1c97597b35d3b"
+}

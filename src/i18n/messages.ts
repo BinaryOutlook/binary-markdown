@@ -63,6 +63,7 @@ export interface WebviewMessages {
   historyDescription: string;
   viewDescription: string;
   formatActions: string;
+  allActions: string;
   contextualTools: string;
   sourceLabel: string;
   previewLabel: string;
@@ -83,6 +84,7 @@ export interface WebviewMessages {
   blockExitHint: string;
   diagramNeedsAttention: string;
   diagramSyntaxError: string;
+  diagramExpectedNodeEnd: string;
   formatDescription: string;
   blockDescription: string;
   insertDescriptionInlineMath: string;

@@ -83,7 +83,8 @@ jobs:
           - {label: windows, os: windows-2025, code: latest, browserSuite: true}
           - {label: vscode-minimum, os: ubuntu-24.04, code: '1.85.0', browserSuite: false}
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 40
+    # The full macOS native and browser suites can exceed 40 minutes together.
+    timeout-minutes: ${{ matrix.label == 'macos' && 60 || 40 }}
     env:
       CI: '1'
       PYTHONUTF8: '1'

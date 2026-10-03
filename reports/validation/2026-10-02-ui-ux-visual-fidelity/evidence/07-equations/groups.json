@@ -1,0 +1,183 @@
+{
+  "schemaVersion": 2,
+  "parentPacketDigest": "46be45027ffb9688fdc321f5e7a20893b7328744939b2a13052ef339229a21f8",
+  "groups": [
+    {
+      "caseIds": [
+        "preview",
+        "source"
+      ],
+      "evaluation": {
+        "packetDigest": "46be45027ffb9688fdc321f5e7a20893b7328744939b2a13052ef339229a21f8",
+        "sectionId": "07-equations",
+        "verdict": "PASS",
+        "summary": "Both submitted states clearly preserve the compact Equation header, labeled panes, rendered fraction, and visible Shift+Enter guidance. The active-source state exposes the authored TeX in a focused monospace source pane, while the valid-preview state appropriately presents a calm preview without an error warning. This pass applies only to the submitted Valid preview and Active source cases; unsupported-command, long-source, and narrow-pane states were not part of this invocation.",
+        "openedImages": [
+          "5c87f61e24a7452836ce7a3efb1e6f4d95fd72d437d2462c4712696bd806ca74",
+          "6f62b8122e2dfe73de863cfc14714d275fc3a0ee4cde7523aecc3a7a93d77c44",
+          "61c90d5a94acf4b45296e9c31db050fb251f361b82bfc4a3d0a82aad4ab2e426",
+          "6392ae00126426cbd0462081ab92f3e7058df639f21c5aea2a2c1ae0bdd29580",
+          "a3adfb8f3f44d815da21115978ea5d5f9665b5907e5b7c0551f4c34482976aa8"
+        ],
+        "caseAssessments": [
+          {
+            "caseId": "preview",
+            "assessable": true,
+            "criteria": [
+              {
+                "criterionId": "C1",
+                "result": "met",
+                "evidence": "The target visibly identifies the displayed pane as “Preview”; the valid-preview comparison intentionally omits the inactive source editor, and the rendered fraction is clearly separated beneath the Equation header."
+              },
+              {
+                "criterionId": "C2",
+                "result": "met",
+                "evidence": "The submitted source is valid, so no unsupported-command warning is expected. The preview is calm and clean, with no false diagnostic or misleading error cue."
+              },
+              {
+                "criterionId": "C3",
+                "result": "met",
+                "evidence": "“Shift+Enter to return to text” is clearly readable at the upper right of the Equation header in both the full and target captures."
+              }
+            ]
+          },
+          {
+            "caseId": "source",
+            "assessable": true,
+            "criteria": [
+              {
+                "criterionId": "C1",
+                "result": "met",
+                "evidence": "Distinct “Source” and “Preview” labels are visible, with the focused source editor above and rendered output below."
+              },
+              {
+                "criterionId": "C2",
+                "result": "met",
+                "evidence": "The source pane visibly exposes the authored TeX in monospace and provides a reliable source-position cue through the blue focused boundary. Because this case contains valid TeX, omission of an unsupported-command warning is appropriate."
+              },
+              {
+                "criterionId": "C3",
+                "result": "met",
+                "evidence": "“Shift+Enter to return to text” remains plainly visible at the upper right while the Source pane is active."
+              }
+            ]
+          }
+        ],
+        "discrepancies": [],
+        "priorResolutions": [],
+        "missingEvidence": []
+      },
+      "error": null
+    },
+    {
+      "caseIds": [
+        "unsupported",
+        "long"
+      ],
+      "evaluation": {
+        "packetDigest": "46be45027ffb9688fdc321f5e7a20893b7328744939b2a13052ef339229a21f8",
+        "sectionId": "07-equations",
+        "verdict": "PASS",
+        "summary": "Both submitted states meet the section criteria. The unsupported-command state presents distinct source and preview regions, a concise local warning tied to a visible source-line cue, and clear exit guidance. The long-source state preserves the authored TeX in usable horizontally scrollable source and preview panes with the same clear hierarchy and guidance.",
+        "openedImages": [
+          "5c87f61e24a7452836ce7a3efb1e6f4d95fd72d437d2462c4712696bd806ca74",
+          "b8155afdd4b1004321c227d7fc7247df33321ea53f973a813ae9b8b8c69febca",
+          "fb50d7c229309d8dbd68b3a78415d8324f5c3beac2e8bc8d525782c2900cb020",
+          "6e51a12cc2c9ab2a09ca3a68ed99ef65c193288b3c17a955ec3eb1969de2f879",
+          "48ad5a66d353663c02d2c237add2fe6180860635becf4544716370d17e31353d"
+        ],
+        "caseAssessments": [
+          {
+            "caseId": "unsupported",
+            "assessable": true,
+            "criteria": [
+              {
+                "criterionId": "C1",
+                "result": "met",
+                "evidence": "The target clearly separates and labels the monospace Source pane and rendered Preview pane."
+              },
+              {
+                "criterionId": "C2",
+                "result": "met",
+                "evidence": "A concise red “Unknown command: \\unknowncommand” banner appears locally within the equation block. “Source line 1,” the red source gutter cue, tinted source line, and red command in the preview provide a reliable visual connection to the invalid authored command."
+              },
+              {
+                "criterionId": "C3",
+                "result": "met",
+                "evidence": "“Shift+Enter to return to text” is plainly visible at the upper-right of the equation header in both the full and target captures."
+              }
+            ]
+          },
+          {
+            "caseId": "long",
+            "assessable": true,
+            "criteria": [
+              {
+                "criterionId": "C1",
+                "result": "met",
+                "evidence": "Source and Preview are visibly distinct, explicitly labeled, and retain their respective monospace-source and rendered-math treatments."
+              },
+              {
+                "criterionId": "C2",
+                "result": "met",
+                "evidence": "This valid long-source state appropriately shows no unsupported-command warning. The authored source remains visibly available and is not silently altered."
+              },
+              {
+                "criterionId": "C3",
+                "result": "met",
+                "evidence": "“Shift+Enter to return to text” remains prominent in the equation header despite the additional horizontal-scroll controls."
+              }
+            ]
+          }
+        ],
+        "discrepancies": [],
+        "priorResolutions": [],
+        "missingEvidence": []
+      },
+      "error": null
+    },
+    {
+      "caseIds": [
+        "narrow"
+      ],
+      "evaluation": {
+        "packetDigest": "46be45027ffb9688fdc321f5e7a20893b7328744939b2a13052ef339229a21f8",
+        "sectionId": "07-equations",
+        "verdict": "PASS",
+        "summary": "The narrow equation state preserves a clear hierarchy and remains readable. Source and Preview are distinctly labeled, the unsupported-command warning is concise and tied to a precise visible source cue, and the Shift+Enter exit guidance remains discoverable. The full render contains the complete target, and the target crop does not conceal required content.",
+        "openedImages": [
+          "5c87f61e24a7452836ce7a3efb1e6f4d95fd72d437d2462c4712696bd806ca74",
+          "5f15e16cb09b4433d1e9f56d8681e51674e747e0af21b8238846f940536ef15a",
+          "0c934ffb1039efb59b894b547d592d236064b8181346069395e700d57b61e523"
+        ],
+        "caseAssessments": [
+          {
+            "caseId": "narrow",
+            "assessable": true,
+            "criteria": [
+              {
+                "criterionId": "C1",
+                "result": "met",
+                "evidence": "The narrow render visibly separates and labels the Source pane above the Preview pane; both labels are readable and their pane boundaries remain clear."
+              },
+              {
+                "criterionId": "C2",
+                "result": "met",
+                "evidence": "A local red warning reads “Unknown command: \\unknowncommand.” The active source pane identifies “Source line 1” and uses a red left-edge cue plus pale-red line highlighting, while the same unsupported command is red in the preview."
+              },
+              {
+                "criterionId": "C3",
+                "result": "met",
+                "evidence": "“Shift+Enter to return to text” is clearly visible at the upper right of the equation header and remains readable at the narrow viewport."
+              }
+            ]
+          }
+        ],
+        "discrepancies": [],
+        "priorResolutions": [],
+        "missingEvidence": []
+      },
+      "error": null
+    }
+  ]
+}

@@ -3,6 +3,14 @@ import { test, expect, Page } from '@playwright/test';
 
 const documentText = '# Table\n\n| Item | State | Owner |\n| --- | --- | --- |\n| One | Ready | A |\n| Two | Draft | B |\n\nAfter table.\n';
 const controls = '.table-toolbar:not(.table-toolbar-measure)';
+async function clickTableAction(page: Page, action: string) {
+    // A new selection schedules the measured layout on the next frame.
+    await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+    const direct = page.locator(`${controls} [data-action="${action}"]`);
+    if (await direct.isVisible()) return direct.click();
+    await page.locator(`${controls} [data-action="more"]`).click();
+    await page.locator(`.table-overflow-menu [data-action="${action}"]`).click();
+}
 async function setup(page: Page, preference = 'auto', toolbarMode = 'simple') {
     await page.goto('/production-editor.html');
     await page.waitForFunction(() => (window as any).__testApi?.ready);
@@ -30,6 +38,22 @@ for (const position of ['auto', 'top-left', 'top-right', 'bottom-left', 'bottom-
         await expect(page.locator('#editor tr')).toHaveCount(3);
         await page.locator('#toolbar [data-action="redo"]').click();
         await expect(page.locator('#editor tr')).toHaveCount(4);
+    });
+}
+
+for (const position of ['bottom-left', 'bottom-right']) {
+    test(`${position}: the lower boundary target remains clickable outside the inspector`, async ({ page }) => {
+        await setup(page, position);
+        const lower = page.locator('.table-boundary-actions [data-action="add-row-below"]');
+        await expect(lower).toBeVisible();
+        await expect.poll(() => lower.evaluate(button => {
+            const rect = button.getBoundingClientRect();
+            return button.contains(document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2));
+        })).toBe(true);
+        await lower.click();
+        await expect(page.locator('#editor tr')).toHaveCount(4);
+        await page.locator('#toolbar [data-action="undo"]').click();
+        expect(await page.evaluate(() => (window as any).htmlToMarkdown())).toBe(documentText);
     });
 }
 
@@ -68,6 +92,15 @@ test('live placement updates preserve document, cell selection and clean state',
     await expect(page.locator('#toolbar [data-action="undo"]')).toBeDisabled();
 });
 
+test('an explicit placement applies while the pointer remains over the old dock', async ({ page }) => {
+    await setup(page, 'top-bar', 'full');
+    await page.locator(controls).hover();
+    await page.evaluate(() => (window as any).__hostMessageHandler({ type: 'tableToolbarPosition', value: 'top-left' }));
+    await expect(page.locator(controls)).toHaveAttribute('data-placement', 'top-left');
+    expect(await page.evaluate(() => document.querySelector('#editor td')?.contains(getSelection()?.anchorNode || null))).toBe(true);
+    expect(await page.evaluate(() => (window as any).__testApi.messages.filter((message: any) => ['edit', 'save'].includes(message.type)))).toEqual([]);
+});
+
 test('a failed placement save reports the failure without moving or editing the table', async ({ page }) => {
     await setup(page, 'top-left');
     const before = await page.locator('#editor').innerHTML();
@@ -76,7 +109,7 @@ test('a failed placement save reports the failure without moving or editing the 
             setTimeout(() => (window as any).__hostMessageHandler({ type: 'tableToolbarPositionError' }), 0);
         };
     });
-    await page.locator(`${controls} [data-action="placement"]`).click();
+    await clickTableAction(page, 'placement');
     await page.locator('.table-placement-menu [data-position="top-bar"]').click();
     await expect(page.getByRole('status')).toContainText('Could not save the table toolbar position');
     await expect(page.locator('html')).toHaveAttribute('data-table-toolbar-position', 'top-left');
@@ -106,7 +139,7 @@ for (const variant of ['floating', 'docked', 'compact']) {
             await page.evaluate(text => (window as any).__testApi.setMarkdown(text), documentText);
             await page.locator('#editor tr').nth(1).locator('td').nth(1).click();
             if (variant === 'compact') await page.locator('.table-toolbar-toggle').click();
-            await page.locator(`${controls} [data-action="${action}"]`).click();
+            await clickTableAction(page, action);
             await expect(page.locator('#editor tr')).toHaveCount(action.startsWith('add-row') ? 4 : action === 'del-row' ? 2 : 3);
             await expect(page.locator('#editor th')).toHaveCount(action.startsWith('add-col') ? 4 : action === 'del-col' ? 2 : 3);
             if (action.startsWith('align-')) {
@@ -129,7 +162,7 @@ for (const variant of ['floating', 'docked', 'compact']) {
 
 test('chooser has three initial choices, persists a fixed choice, and closes on focus leaving', async ({ page }) => {
     await setup(page, 'top-bar');
-    await page.locator(`${controls} [data-action="placement"]`).click();
+    await clickTableAction(page, 'placement');
     const picker = page.locator('.table-placement-menu');
     await expect(picker.locator('button')).toHaveCount(3);
     await picker.locator('[data-position="fixed"]').click();
@@ -141,7 +174,7 @@ test('chooser has three initial choices, persists a fixed choice, and closes on 
     expect(await page.evaluate(() => (window as any).__testApi.messages.filter((message: any) => message.type === 'setTableToolbarPosition')))
         .toEqual([{ type: 'setTableToolbarPosition', value: 'bottom-right' }]);
     await expect(page.locator('#toolbar [data-action="undo"]')).toBeDisabled();
-    await page.locator(`${controls} [data-action="placement"]`).click();
+    await clickTableAction(page, 'placement');
     await page.locator('#toolbar button[data-editor-mode="split"]').focus();
     await expect(picker).not.toBeVisible();
 });
@@ -213,7 +246,7 @@ for (const width of [420, 900, 1280]) {
 
 test('a focused placement menu stays usable when its pane shrinks', async ({ page }) => {
     await setup(page, 'top-bar');
-    await page.locator(`${controls} [data-action="placement"]`).click();
+    await clickTableAction(page, 'placement');
     await page.locator('[data-position="fixed"]').click();
     await page.setViewportSize({ width: 430, height: 450 });
     await page.locator('[data-position="right"]').click();

@@ -21,7 +21,8 @@
             const side = placement === 'left' || placement === 'right';
             const size = side ? vertical : horizontal;
             let x = placement.endsWith('right') ? table.right - size.width : table.left;
-            let y = placement.startsWith('bottom') ? table.bottom + gap : table.top - size.height - gap;
+            // Keep the 24px lower boundary button and its 8px offset clear.
+            let y = placement.startsWith('bottom') ? table.bottom + 38 : table.top - size.height - gap;
             if (side) {
                 x = placement === 'left' ? table.left - size.width - gap : table.right + gap;
                 y = (visibleTop + visibleBottom - size.height) / 2;

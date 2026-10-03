@@ -2,6 +2,7 @@ import { test, expect, Page } from '@playwright/test';
 import * as fs from 'fs';
 import * as path from 'path';
 import { getExportMessages } from '../../src/export/messages';
+import { webviewMessages } from '../../src/i18n/locales/en';
 
 const root = path.resolve(__dirname, '../..');
 const { generateEditorBodyHtml } = require('../../src/shared/editor-body-html');
@@ -14,7 +15,7 @@ type UiWindow = Window & {
 
 async function setup(page: Page, exportEnabled = true) {
     await page.goto('/standalone-editor.html');
-    await page.setContent('<!DOCTYPE html><html data-theme="github" data-toolbar-mode="full"><head></head><body>' + generateEditorBodyHtml({ setImageDir: 'Set Image Directory', openExtensionSettings: 'Open Binary Markdown Settings' }, 'darwin', { exportEnabled, settingsEnabled: true }) + '</body></html>');
+    await page.setContent('<!DOCTYPE html><html data-theme="github" data-toolbar-mode="full"><head></head><body>' + generateEditorBodyHtml(webviewMessages, 'darwin', { exportEnabled, settingsEnabled: true }) + '</body></html>');
     await page.addStyleTag({ content: fs.readFileSync(path.join(root, 'src/webview/styles.css'), 'utf8')
         .replace('__FONT_SIZE__', '16').replace('__OUTLINE_ACTIVE_COLOR__', 'var(--link-color)') });
     await page.addScriptTag({ content: fs.readFileSync(path.join(root, 'src/shared/test-host-bridge.js'), 'utf8') });
@@ -25,7 +26,7 @@ async function setup(page: Page, exportEnabled = true) {
     const editor = fs.readFileSync(path.join(root, 'src/webview/editor.js'), 'utf8')
         .replace('__SEARCH_WORKER__', () => JSON.stringify(fs.readFileSync(path.join(root, 'src/shared/document-search.js'), 'utf8')).replace(/</g, '\\u003c'))
         .replace('__MATH_BACKSLASH__', 'true')
-        .replace('__DEBUG_MODE__', 'false').replace('__I18N__', '{}')
+        .replace('__DEBUG_MODE__', 'false').replace('__I18N__', () => JSON.stringify(webviewMessages))
         .replace('__DOCUMENT_BASE_URI__', '').replace('__CONTENT__', JSON.stringify(Buffer.from(original).toString('base64')));
     await page.addScriptTag({ content: editor });
     await page.evaluate(messages => { (window as Window & { exportMessages?: unknown }).exportMessages = messages; }, getExportMessages());
@@ -100,14 +101,16 @@ test.describe('Export toolbar and job status', () => {
         } finally { release(); }
     });
 
-    test('button is immediately after VS Code, preserves source/selection, and lists four formats', async ({ page }, testInfo) => {
+    test('icon-only Export preserves source/selection and lists four formats', async ({ page }, testInfo) => {
         await setup(page);
         await page.getByText('Selection remains intact.', { exact: true }).click();
         const before = await page.evaluate(() => {
             const selection = window.getSelection()!;
             return { text: selection.anchorNode?.textContent, offset: selection.anchorOffset };
         });
-        expect(await page.locator('#exportButton').evaluate(element => element.previousElementSibling?.getAttribute('data-action'))).toBe('openInTextEditor');
+        await expect(page.locator('#toolbar [data-action="openInTextEditor"]')).toHaveCount(0);
+        await expect(page.locator('#exportButton svg')).toHaveCount(1);
+        expect(await page.locator('#exportButton').evaluate(element => [...element.children].filter(child => getComputedStyle(child).display !== 'none').map(child => child.textContent).join('').trim())).toBe('');
         await page.getByRole('button', { name: 'Export', exact: true }).click();
         await expect(page.getByRole('dialog', { name: 'Export', exact: true })).toBeVisible();
         await expect(page.locator('[data-export-format]')).toHaveCount(4);
@@ -136,6 +139,12 @@ test.describe('Export toolbar and job status', () => {
         await expect(page.locator('#exportMenu')).toBeVisible();
         await page.locator('#exportPandocSetup').click();
         expect(await outbound(page, 'exportSettings')).toEqual([{ type: 'exportSettings', tool: 'pandoc' }]);
+        await page.locator('#exportButton').click();
+        await expect(page.locator('#exportSettings')).toHaveText('Installation guide');
+        await page.locator('#exportSettings').focus();
+        await page.keyboard.press('Enter');
+        expect(await outbound(page, 'exportSettings')).toEqual([{ type: 'exportSettings', tool: 'pandoc' }, { type: 'exportSettings' }]);
+        expect(await outbound(page, 'edit')).toEqual([]);
     });
 
     test('formats wait for host availability without offering tool installation', async ({ page }) => {
@@ -149,6 +158,34 @@ test.describe('Export toolbar and job status', () => {
         await page.locator('[data-export-format="html"]').focus();
         await page.keyboard.press('Enter');
         expect(await outbound(page, 'export')).toEqual([]);
+    });
+
+    test('available exports and the completed output remain visible actions in a narrow pane', async ({ page }) => {
+        await page.setViewportSize({ width: 480, height: 1000 }); await setup(page);
+        await page.locator('#exportButton').click();
+        await hostMessage(page, { type: 'exportCapabilities', host: { available: true }, pandoc: { available: false }, browser: { available: true } });
+        const html = page.locator('[data-export-format="html"]');
+        await expect(html).toHaveAttribute('aria-disabled', 'false');
+        await expect(html).toHaveCSS('border-top-style', 'solid');
+        await expect(page.locator('[data-export-format="docx"]')).toHaveCSS('border-top-style', 'dashed');
+        await page.locator('[data-export-format="docx"]').focus(); await page.keyboard.press('Enter');
+        expect(await outbound(page, 'export')).toEqual([]);
+        await html.focus(); await page.keyboard.press('Enter');
+        expect(await outbound(page, 'export')).toEqual([{ type: 'export', format: 'html' }]);
+        await hostMessage(page, { type: 'exportStatus', state: 'complete', outputPath: '/documents/report.html', warnings: [{ code: 'test-warning', message: 'Review image resolution.' }] });
+        const output = page.locator('#exportOpenOutput');
+        await expect(output).toBeVisible(); await expect(output).toBeEnabled();
+        const colors = await output.evaluate(element => {
+            const style = getComputedStyle(element); const probe = document.createElement('span');
+            probe.style.color = 'var(--link-color)'; element.appendChild(probe);
+            const accent = getComputedStyle(probe).color; probe.remove();
+            return { text: style.color, background: style.backgroundColor, accent };
+        });
+        expect(colors.text).not.toBe(colors.background); expect(colors.background).toBe(colors.accent);
+        await output.focus(); await page.keyboard.press('Enter');
+        expect(await outbound(page, 'openExportOutput')).toEqual([{ type: 'openExportOutput' }]);
+        await expect(page.locator('#exportWarnings')).toBeVisible();
+        expect(await outbound(page, 'edit')).toEqual([]);
     });
 
     for (const reason of [getExportMessages().unsupportedRemote, getExportMessages().trustRequired]) {
@@ -192,7 +229,8 @@ test.describe('Export toolbar and job status', () => {
         await expect(page.locator('#exportSpinner')).toBeVisible();
         await expect(page.locator('#exportStatus')).toHaveAttribute('data-state', 'running');
         await expect(page.getByRole('progressbar', { name: 'Export', exact: true })).toBeVisible();
-        await expect(page.locator('#exportStatusMessage')).toHaveText('Preparing referenced resources…');
+        await expect(page.locator('#exportStatusMessage')).toHaveText(getExportMessages().running);
+        await expect(page.locator('#exportStages [aria-current="step"] .export-stage-label')).toHaveText('Preparing referenced resources…');
         await page.getByRole('button', { name: 'Cancel export', exact: true }).click();
         expect(await outbound(page, 'cancelExport')).toHaveLength(1);
         await hostMessage(page, { type: 'exportStatus', state: 'complete', message: 'Export complete', outputPath: '/documents/report.html', warnings: [{ code: 'asset-missing', message: '<script>bad()</script> image unavailable' }] });
@@ -212,6 +250,57 @@ test.describe('Export toolbar and job status', () => {
         await expect(page.locator('#exportButton')).toHaveCount(0);
         await expect(page.locator('#exportMenu')).toHaveCount(0);
         await expect(page.locator('#exportStatus')).toHaveCount(0);
+    });
+
+    test('only observed host stages appear and cancellation stays pending until confirmation', async ({ page }) => {
+        await setup(page);
+        await hostMessage(page, { type: 'exportStatus', state: 'running', stage: 'resources' });
+        await expect(page.locator('#exportStages li')).toHaveCount(1);
+        await expect(page.locator('#exportStages li')).toContainText('Preparing referenced resources');
+        await expect(page.locator('#exportStatusMessage')).toHaveText(getExportMessages().running);
+        await expect(page.locator('#exportStages [aria-current="step"] .export-stage-state')).toHaveText(getExportMessages().stageCurrent);
+        await page.locator('#exportCancel').click();
+        await expect(page.locator('#exportStatus')).toHaveAttribute('data-state', 'running');
+        await expect(page.locator('#exportStatusMessage')).toHaveText(getExportMessages().cancelPending);
+        await expect(page.locator('#exportCancel')).toBeDisabled();
+        await hostMessage(page, { type: 'exportStatus', state: 'running', stage: 'rendering' });
+        await expect(page.locator('#exportStages li')).toHaveCount(2);
+        await expect(page.locator('#exportStages [data-state="complete"] .export-stage-state')).toHaveText(getExportMessages().stageCompleted);
+        await expect(page.locator('#exportStages [aria-current="step"] .export-stage-label')).toHaveText(getExportMessages().rendering);
+        await expect(page.locator('#exportStatusMessage')).toHaveText(getExportMessages().cancelPending);
+        await expect(page.locator('#exportOpenOutput')).toBeHidden();
+        await hostMessage(page, { type: 'exportStatus', state: 'cancelled' });
+        await expect(page.locator('#exportStatus')).toHaveAttribute('data-state', 'cancelled');
+        expect(await outbound(page, 'cancelExport')).toHaveLength(1);
+        expect(await outbound(page, 'edit')).toHaveLength(0);
+    });
+
+    test('Retry requests the failed format again without inventing stages or editing source', async ({ page }) => {
+        await setup(page);
+        await page.locator('#exportButton').click();
+        await hostMessage(page, { type: 'exportCapabilities', host: { available: true }, pandoc: { available: false }, browser: { available: false } });
+        await page.locator('[data-export-format="html"]').click();
+        await hostMessage(page, { type: 'exportStatus', state: 'failed', message: 'Synthetic output could not be saved.' });
+        await expect(page.locator('#exportRetry')).toBeVisible();
+        await expect(page.locator('#exportStages li')).toHaveCount(0);
+        await page.locator('#exportRetry').click();
+        expect(await outbound(page, 'export')).toEqual([{ type: 'export', format: 'html' }, { type: 'export', format: 'html' }]);
+        await expect(page.locator('#exportRetry')).toBeHidden();
+        await expect(page.locator('#exportStages li')).toHaveCount(0);
+        expect(await outbound(page, 'edit')).toHaveLength(0);
+    });
+
+    test('a later host-command export starts with only its own observed stages', async ({ page }) => {
+        await setup(page);
+        await hostMessage(page, { type: 'exportStatus', state: 'running', stage: 'resources' });
+        await hostMessage(page, { type: 'exportStatus', state: 'running', stage: 'saving' });
+        await hostMessage(page, { type: 'exportStatus', state: 'complete', outputPath: '/documents/report.html' });
+        await expect(page.locator('#exportStages li')).toHaveCount(2);
+        await hostMessage(page, { type: 'exportStatus', state: 'running', stage: 'checking' });
+        await expect(page.locator('#exportStages li')).toHaveCount(1);
+        await expect(page.locator('#exportStages li')).toContainText(getExportMessages().checking);
+        await expect(page.locator('#exportOpenOutput')).toBeHidden();
+        expect(await outbound(page, 'edit')).toHaveLength(0);
     });
 });
 

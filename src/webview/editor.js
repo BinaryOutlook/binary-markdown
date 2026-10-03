@@ -113,6 +113,7 @@
         const bounds = editorWrapper.getBoundingClientRect();
         const keepCaret = caretBefore?.height && caretBefore.top >= bounds.top && caretBefore.bottom <= bounds.bottom;
         document.documentElement.dataset[name] = value;
+        if (workspaceUi) workspaceUi.refresh();
         // CSS changes the layout without detaching the active editable node.
         if (keepCaret) editorWrapper.scrollTop += range.getBoundingClientRect().top - caretBefore.top;
     }
@@ -176,7 +177,7 @@
     // Populate toolbar buttons with Lucide icons
     function initToolbarIcons() {
         toolbar.querySelectorAll('button[data-action]').forEach(function(btn) {
-            var icon = LUCIDE_ICONS[btn.dataset.action];
+            var icon = btn.dataset.action === 'contextToolbar' ? null : LUCIDE_ICONS[btn.dataset.action];
             if (icon) btn.innerHTML = icon;
         });
     }
@@ -187,6 +188,12 @@
     var toolbarInner = document.getElementById('toolbarInner');
     var toolbarMore = document.getElementById('toolbarMore');
     var toolbarOverflow = document.getElementById('toolbarOverflow');
+    var toolbarOverflowItems = document.getElementById('toolbarOverflowItems');
+    var toolbarCommandSearch = document.getElementById('toolbarCommandSearch');
+    var toolbarCommandResults = document.getElementById('toolbarCommandResults');
+    var toolbarMenuRange = null;
+    var toolbarMenuRevision = null;
+    var toolbarMenuSourceSelection = null;
     var toolbarActions = [];
     var toolbarLayoutFrame = 0;
     if (toolbarMore && toolbarOverflow) {
@@ -206,6 +213,14 @@
         if (!toolbarOverflow) return;
         toolbarOverflow.hidden = true;
         toolbarMore.setAttribute('aria-expanded', 'false');
+        if (editorRange(toolbarMenuRange)) {
+            const selection = window.getSelection();
+            selection.removeAllRanges(); selection.addRange(toolbarMenuRange);
+        }
+        if (toolbarMenuSourceSelection && isSourceMode) {
+            sourceEditor.setSelectionRange(toolbarMenuSourceSelection.start, toolbarMenuSourceSelection.end);
+        }
+        toolbarMenuRange = null; toolbarMenuSourceSelection = null;
         if (restoreFocus) toolbarMore.focus({ preventScroll: true });
     }
 
@@ -218,12 +233,55 @@
         toolbarOverflow.style.maxHeight = Math.max(28, window.innerHeight - rect.bottom - 12) + 'px';
     }
 
+    function toolbarMenuChoices() {
+        return [...toolbarOverflow.querySelectorAll('button:not(:disabled)')].filter(button => button.getClientRects().length);
+    }
+
+    function renderToolbarCommandSearch() {
+        const query = toolbarCommandSearch.value.trim();
+        const searching = Boolean(query) || !toolbarOverflowItems.children.length;
+        toolbarOverflowItems.hidden = searching;
+        toolbarCommandResults.hidden = !searching;
+        toolbarCommandResults.replaceChildren();
+        if (!searching) return;
+        for (const item of matchingCommandItems(query)) {
+            const control = createCommandItem(item);
+            delete control.dataset.action;
+            control.dataset.menuCommand = item.action;
+            control.setAttribute('role', 'menuitem');
+            const reason = isSourceMode && !item.action.startsWith('view') ? i18n.insertUnavailableSource
+                : insertActions.includes(item.action) ? insertUnavailable(item.action, toolbarMenuRange) : '';
+            if (reason) { control.disabled = true; control.querySelector('small').textContent = reason; }
+            toolbarCommandResults.appendChild(control);
+        }
+        if (!toolbarCommandResults.children.length) {
+            const empty = document.createElement('p'); empty.setAttribute('role', 'status');
+            empty.textContent = i18n.noMatchingActions + '. ' + i18n.searchRecovery;
+            const clear = document.createElement('button'); clear.type = 'button'; clear.textContent = i18n.clearSearch;
+            clear.addEventListener('click', event => {
+                event.stopPropagation(); toolbarCommandSearch.value = ''; renderToolbarCommandSearch(); toolbarCommandSearch.focus();
+            });
+            toolbarCommandResults.append(empty, clear);
+        }
+    }
+
     function openToolbarOverflow(last) {
+        const selection = window.getSelection();
+        const current = selection?.rangeCount ? selection.getRangeAt(0) : null;
+        toolbarMenuRange = editorRange(current) ? current.cloneRange()
+            : editorRange(savedToolbarRange) ? savedToolbarRange.cloneRange() : null;
+        if (!toolbarMenuRange && !isSourceMode) {
+            toolbarMenuRange = document.createRange(); toolbarMenuRange.selectNodeContents(editor); toolbarMenuRange.collapse(false);
+        }
+        toolbarMenuRevision = editorRenderRevision;
+        toolbarMenuSourceSelection = isSourceMode ? { start: sourceEditor.selectionStart, end: sourceEditor.selectionEnd } : null;
+        toolbarCommandSearch.value = '';
+        renderToolbarCommandSearch();
         toolbarOverflow.hidden = false;
         toolbarMore.setAttribute('aria-expanded', 'true');
         positionToolbarOverflow();
-        const items = [...toolbarOverflow.querySelectorAll('button:not(:disabled)')];
-        (last ? items.at(-1) : items[0])?.focus({ preventScroll: true });
+        if (last) toolbarMenuChoices().at(-1)?.focus({ preventScroll: true });
+        else toolbarCommandSearch.focus({ preventScroll: true });
     }
 
     function scheduleToolbarLayout() {
@@ -241,7 +299,7 @@
             if (button.parentNode !== home.parentNode) home.after(button);
             button.removeAttribute('role');
         }
-        toolbarMore.hidden = true;
+        toolbarMore.hidden = false;
         toolbar.querySelectorAll('.toolbar-fixed').forEach(section => section.classList.remove('toolbar-empty'));
         const utilityWidth = [...toolbar.querySelectorAll('.toolbar-fixed')].reduce((width, section) => width + section.getBoundingClientRect().width, 0);
         if (toolbar.dataset.utilityWidth !== String(utilityWidth)) {
@@ -265,7 +323,7 @@
             for (const { button, home } of candidates) {
                 if (fits()) break;
                 if (!button.getClientRects().length) continue;
-                toolbarOverflow.appendChild(button);
+                toolbarOverflowItems.appendChild(button);
                 button.setAttribute('role', 'menuitem');
                 const section = home.parentElement.closest('.toolbar-fixed');
                 if (section && ![...section.querySelectorAll('button')].some(item => item.getClientRects().length)) {
@@ -275,16 +333,16 @@
         }
         // Original order in the menu remains stable as its membership changes.
         for (const { button } of toolbarActions) {
-            if (button.parentNode === toolbarOverflow) toolbarOverflow.appendChild(button);
+            if (button.parentNode === toolbarOverflowItems) toolbarOverflowItems.appendChild(button);
         }
-        toolbarMore.hidden = !toolbarOverflow.children.length;
-        if (toolbarMore.hidden) closeToolbarOverflow(false);
-        else if (wasOpen || focusedAction?.button.parentNode === toolbarOverflow) {
+        if (wasOpen || focusedAction?.button.parentNode === toolbarOverflowItems) {
+            renderToolbarCommandSearch();
             toolbarOverflow.hidden = false;
             toolbarMore.setAttribute('aria-expanded', 'true');
             positionToolbarOverflow();
         }
-        if (active === toolbarMore && !toolbarMore.hidden) toolbarMore.focus({ preventScroll: true });
+        if (active.dataset?.menuCommand) toolbarCommandResults.querySelector('[data-menu-command="' + active.dataset.menuCommand + '"]')?.focus({ preventScroll: true });
+        else if (active === toolbarMore && !toolbarMore.hidden) toolbarMore.focus({ preventScroll: true });
         else if (focusedAction && active.getClientRects().length) active.focus({ preventScroll: true });
         else if (focusedAction || (active === toolbarMore && toolbarMore.hidden)) {
             const first = toolbarActions.find(item => item.button.getClientRects().length && !item.button.disabled);
@@ -306,20 +364,41 @@
             }
         });
         toolbarOverflow.addEventListener('mousedown', event => { if (event.target.closest('button')) event.preventDefault(); });
+        toolbarCommandSearch.addEventListener('input', renderToolbarCommandSearch);
+        toolbarOverflow.addEventListener('click', event => {
+            const control = event.target.closest('[data-menu-command]');
+            if (!control || control.disabled) return;
+            event.stopPropagation();
+            const action = control.dataset.menuCommand;
+            if (!action.startsWith('view') && (toolbarMenuRevision !== editorRenderRevision || !editorRange(toolbarMenuRange))) {
+                closeToolbarOverflow(false); showEditorToast(i18n.insertUnavailableSelection); return;
+            }
+            const range = editorRange(toolbarMenuRange) ? toolbarMenuRange.cloneRange() : null;
+            closeToolbarOverflow(false);
+            if (!isSourceMode) {
+                editor.focus({ preventScroll: true });
+                // Focusing a previously unfocused editor can move its selection.
+                if (range) { const selection = window.getSelection(); selection.removeAllRanges(); selection.addRange(range); }
+            }
+            savedToolbarRange = null;
+            executeEditorCommand(action);
+        });
         toolbarOverflow.addEventListener('keydown', function(event) {
             if (toolbarOverflow.hidden) return;
-            const items = [...toolbarOverflow.querySelectorAll('button:not(:disabled)')];
+            const items = toolbarMenuChoices();
             const index = items.indexOf(document.activeElement);
             let next;
             if (event.key === 'ArrowDown') next = (index + 1) % items.length;
-            if (event.key === 'ArrowUp') next = (index + items.length - 1) % items.length;
-            if (event.key === 'Home') next = 0;
-            if (event.key === 'End') next = items.length - 1;
+            if (event.key === 'ArrowUp') next = index < 0 ? items.length - 1 : (index + items.length - 1) % items.length;
+            if (event.target !== toolbarCommandSearch && event.key === 'Home') next = 0;
+            if (event.target !== toolbarCommandSearch && event.key === 'End') next = items.length - 1;
             if (next !== undefined) {
                 event.preventDefault();
                 event.stopPropagation();
                 items[next]?.focus();
                 items[next]?.scrollIntoView({ block: 'nearest' });
+            } else if (event.key === 'Enter' && event.target === toolbarCommandSearch) {
+                event.preventDefault(); event.stopPropagation(); items[0]?.click();
             } else if (event.key === 'Escape') {
                 event.preventDefault();
                 event.stopPropagation();
@@ -3060,9 +3139,13 @@
     
     function setBlockDiagnostic(wrapper, error, source = '') {
         wrapper.dataset.renderError = error ? String(error.message || error).slice(0, 1000) : '';
+        const expected = error?.hash?.expected;
+        // Mermaid's SQE token is a square node-shape terminator. Derive the
+        // recovery hint from the actual parser expectation, not guessed source.
+        wrapper.dataset.renderErrorSummary = Array.isArray(expected) && expected.some(token => String(token).replace(/['"]/g, '') === 'SQE') ? i18n.diagramExpectedNodeEnd : '';
         const reported = error?.hash?.loc?.first_line;
-        const match = /(?:on )?line\s+(\d+)/i.exec(wrapper.dataset.renderError);
-        const line = Number.isInteger(reported) ? reported + 1 : match ? Number(match[1]) : Number.isInteger(error?.position) ? source.slice(0, error.position).split('\n').length : null;
+        // Jison locations are one-based. Plain message text is not a reliable authored-source coordinate.
+        const line = Number.isInteger(reported) && reported > 0 && reported <= source.split('\n').length ? reported : Number.isInteger(error?.position) && error.position >= 0 && error.position <= source.length ? source.slice(0, error.position).split('\n').length : null;
         if (line) wrapper.dataset.errorLine = String(line); else delete wrapper.dataset.errorLine;
         if (workspaceUi) workspaceUi.refresh();
     }
@@ -3530,6 +3613,7 @@
         copyBtn.type = 'button';
         copyBtn.className = 'code-copy-btn';
         copyBtn.innerHTML = LUCIDE_ICONS.copy;
+        const copyLabel = document.createElement('span'); copyLabel.className = 'code-action-label'; copyLabel.textContent = i18n.copyCode; copyBtn.appendChild(copyLabel);
         copyBtn.title = i18n.copyCode || 'Copy code';
         copyBtn.setAttribute('aria-label', copyBtn.title);
         copyBtn.dataset.copyState = 'idle';
@@ -3553,6 +3637,7 @@
         wrapBtn.setAttribute('aria-label', wrapBtn.title);
         wrapBtn.setAttribute('aria-pressed', 'false');
         wrapBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M3 12h14a4 4 0 0 1 0 8h-4m3-3-3 3 3 3M3 18h4"/></svg>';
+        const wrapLabel = document.createElement('span'); wrapLabel.className = 'code-action-label'; wrapLabel.textContent = i18n.wrapCode; wrapBtn.appendChild(wrapLabel);
         wrapBtn.addEventListener('pointerdown', event => event.preventDefault());
         wrapBtn.addEventListener('keydown', event => {
             if (!event.ctrlKey && !event.metaKey) event.stopPropagation();
@@ -3626,6 +3711,7 @@
         header.appendChild(wrapBtn);
         header.appendChild(copyBtn);
         const openCode = document.createElement('button'); openCode.type = 'button'; openCode.className = 'code-open-btn'; openCode.title = i18n.openInTextEditor; openCode.setAttribute('aria-label', openCode.title); openCode.innerHTML = LUCIDE_ICONS.openInTextEditor || LUCIDE_ICONS.code;
+        const openLabel = document.createElement('span'); openLabel.className = 'code-action-label'; openLabel.textContent = i18n.openInTextEditor; openCode.appendChild(openLabel);
         openCode.addEventListener('mousedown', event => event.preventDefault());
         openCode.addEventListener('click', event => { event.stopPropagation(); host.openInTextEditor(); });
         header.appendChild(openCode);
@@ -4162,6 +4248,7 @@
             ? selection.getRangeAt(0).cloneRange() : null;
         const wasEditing = pre.getAttribute('data-mode') === 'edit';
         const current = pre.getAttribute('data-lang') || 'plaintext';
+        const currentId = LANGUAGE_ALIASES[current.toLowerCase()] || current.toLowerCase();
         const selector = document.createElement('div');
         selector.className = 'lang-selector';
         const input = document.createElement('input');
@@ -4232,15 +4319,21 @@
             for (const id of results) {
                 const item = document.createElement('div'); item.className = 'lang-selector-item';
                 item.id = 'codeLanguageOption-' + id; item.dataset.language = id; item.setAttribute('role', 'option');
+                item.dataset.currentLanguage = String(id === currentId);
                 const name = document.createElement('span'); name.textContent = codeLanguageName(id);
                 const identifier = document.createElement('small'); identifier.textContent = id;
                 item.append(name, identifier);
+                if (id === currentId) {
+                    const mark = document.createElement('span'); mark.className = 'lang-selector-current-mark';
+                    mark.textContent = '✓'; mark.setAttribute('aria-hidden', 'true'); item.appendChild(mark);
+                    item.setAttribute('aria-label', codeLanguageName(id) + ': ' + (i18n.languagePickerCurrent || 'Current language'));
+                }
                 item.addEventListener('mousedown', event => event.preventDefault());
                 item.addEventListener('click', () => choose(id)); list.appendChild(item);
             }
             empty.hidden = results.length > 0;
             activate(selected && results.includes(selected) ? results.indexOf(selected) :
-                query ? (results.length ? 0 : -1) : Math.max(0, results.indexOf(LANGUAGE_ALIASES[current.toLowerCase()] || current.toLowerCase())));
+                query ? (results.length ? 0 : -1) : Math.max(0, results.indexOf(currentId)));
             positionLanguageSelector();
         };
         input.addEventListener('input', () => render());
@@ -4269,11 +4362,16 @@
         const status = pre.querySelector('.code-block-status');
         if (!button || !status) return;
         clearTimeout(button.copyFeedbackTimer);
+        // Temporary feedback must not shift neighboring controls. Keep long
+        // failure details in the tooltip/status rather than in the button row.
+        button.style.minWidth = state === 'idle' ? '' : button.getBoundingClientRect().width + 'px';
         button.dataset.copyState = state;
         button.innerHTML = state === 'copied' ? LUCIDE_ICONS.check : LUCIDE_ICONS.copy;
         const message = state === 'copied' ? (i18n.copiedCode || 'Copied') :
             state === 'error' ? (i18n.copyCodeFailed || 'Could not copy code. Try again.') : '';
+        const label = document.createElement('span'); label.className = 'code-action-label'; label.textContent = state === 'copied' ? message : i18n.copyCode; button.appendChild(label);
         status.textContent = message;
+        status.dataset.copyState = state;
         button.title = message || (i18n.copyCode || 'Copy code');
         if (state !== 'idle') button.copyFeedbackTimer = setTimeout(() => setCodeCopyState(pre, 'idle'), 2000);
     }
@@ -12163,7 +12261,7 @@
 
         const action = btn.dataset.action;
         if (!action) return;
-        if (['insertMenu', 'formatActions', 'contextToolbar'].includes(action)) return;
+        if (['insertMenu', 'formatActions', 'allActions', 'contextToolbar'].includes(action)) return;
         if (btn.matches('[data-export-format], [data-export-action]') ||
             (action && action.indexOf('export') === 0)) return;
         closeToolbarOverflow(false);
@@ -12428,7 +12526,6 @@
         { group: 'view', action: 'viewOutline', i18nKey: 'outlineTitle', icon: 'openOutline' },
         { group: 'view', action: 'viewFind', i18nKey: 'searchPlaceholder' },
         { group: 'view', action: 'viewReplace', i18nKey: 'replace' },
-        { group: 'view', action: 'viewTextEditor', i18nKey: 'openInTextEditor', icon: 'openInTextEditor' },
         { group: 'view', action: 'viewExport', i18nKey: 'exportPanelTitle', icon: 'export' },
     ];
 
@@ -12446,12 +12543,42 @@
     var insertButton = document.getElementById('insertButton');
     var insertMenu = document.getElementById('insertMenu');
     var insertMenuRange = null;
-    var insertActions = ['inlineMath', 'math', 'table', 'codeblock', 'link', 'image', 'mermaid', 'toc'];
+    var insertActions = ['table', 'inlineMath', 'codeblock', 'math', 'link', 'image', 'mermaid', 'toc'];
 
     const insertCategory = { inlineMath: 'equationsCategory', math: 'equationsCategory', table: 'structureCategory', toc: 'structureCategory', codeblock: 'codeCategory', mermaid: 'codeCategory', link: 'mediaCategory', image: 'mediaCategory' };
     const insertSamples = { inlineMath: '$x^2$', math: '$$\\frac{a+b}{c}$$', table: '| A | B |\n| --- | --- |', codeblock: '```javascript\nconst value = 1;\n```', link: '[text](https://example.com)', image: '![description](image.png)', mermaid: 'graph TD\n  A --> B', toc: '[TOC]' };
     const actionDescription = action => ['viewUndo','viewRedo'].includes(action) ? i18n.historyDescription : action.startsWith('view') ? i18n.viewDescription : i18n['insertDescription' + action[0].toUpperCase() + action.slice(1)] || (['bold','italic','underline','strikethrough','code'].includes(action) ? i18n.formatDescription : i18n.blockDescription);
     let insertSearch = null, insertCategorySelection = 'allCategory';
+
+    // Only fixed illustrative samples enter previews. These are view controls,
+    // never authored editor content or an additional command execution path.
+    function createInsertPreview(action) {
+        const preview = document.createElement('span');
+        preview.className = 'insert-preview insert-preview-' + action;
+        preview.setAttribute('aria-hidden', 'true');
+        if (action === 'table') {
+            const grid = document.createElement('span'); grid.className = 'insert-table-preview';
+            for (const value of ['A', 'B', 'C', '', '', '']) {
+                const cell = document.createElement('span'); cell.textContent = value; grid.appendChild(cell);
+            }
+            preview.appendChild(grid);
+        } else if (action === 'inlineMath' || action === 'math') {
+            const sample = action === 'inlineMath' ? 'E=mc^2' : '\\frac{a+b}{c}';
+            if (window.katex) window.katex.render(sample, preview, { throwOnError: false, trust: false, displayMode: false });
+            else preview.textContent = action === 'inlineMath' ? 'E = mc²' : '(a + b) / c';
+        } else if (action === 'codeblock') {
+            const pre = document.createElement('pre'); pre.dataset.lang = 'javascript'; const code = document.createElement('code');
+            code.className = 'language-javascript'; code.textContent = 'const value = 1;';
+            pre.appendChild(code); applyHighlighting(pre); preview.appendChild(code);
+        } else if (action === 'image') {
+            preview.innerHTML = LUCIDE_ICONS.image; // Static project-owned icon.
+        } else if (action === 'toc') {
+            preview.textContent = '1. Research notes\n   1.1 Method\n   1.2 Results';
+        } else {
+            preview.textContent = insertSamples[action];
+        }
+        return preview;
+    }
     function filterInsertWorkspace() {
         const query = (insertSearch?.value || '').trim().toLocaleLowerCase();
         let visible = 0;
@@ -12461,6 +12588,9 @@
         });
         const empty = insertMenu.querySelector('.insert-empty');
         if (empty) empty.hidden = visible > 0;
+        const options = insertMenu.querySelector('.insert-options');
+        if (options) options.scrollTop = 0;
+        if (!insertMenu.hidden) positionInsertMenu();
         insertMenu.querySelectorAll('[data-insert-category]').forEach(item => item.setAttribute('aria-pressed', String(item.dataset.insertCategory === insertCategorySelection)));
     }
 
@@ -12484,16 +12614,69 @@
     }
 
     function insertTrigger() {
-        return insertButton.getClientRects().length ? insertButton : toolbarMore;
+        return insertButton?.getClientRects().length ? insertButton : toolbarMore;
     }
 
     function positionInsertMenu() {
         const rect = insertTrigger().getBoundingClientRect();
-        const width = Math.min(640, Math.max(0, window.innerWidth - 16));
+        const width = Math.min(960, Math.max(0, window.innerWidth - 16));
         insertMenu.style.width = width + 'px';
         insertMenu.style.left = Math.max(8, Math.min(rect.left, window.innerWidth - width - 8)) + 'px';
         insertMenu.style.top = Math.max(8, Math.min(rect.bottom + 4, window.innerHeight - 320)) + 'px';
         insertMenu.style.maxHeight = Math.max(80, window.innerHeight - parseFloat(insertMenu.style.top) - 8) + 'px';
+        const options = insertMenu.querySelector('.insert-options');
+        if (options) {
+            options.style.maxHeight = '';
+            if (window.innerWidth <= 760) {
+                const available = window.innerHeight - parseFloat(insertMenu.style.top)
+                    - insertMenu.querySelector('.insert-search').getBoundingClientRect().height
+                    - insertMenu.querySelector('.insert-categories').getBoundingClientRect().height - 64;
+                let used = 16;
+                const rows = [...options.querySelectorAll('.insert-command:not([hidden])')];
+                for (const row of rows) {
+                    const pitch = row.getBoundingClientRect().height + 8;
+                    if (used + pitch > available) break;
+                    used += pitch;
+                }
+                const tallest = Math.max(0, ...rows.map(row => row.getBoundingClientRect().height)) + 16;
+                options.style.maxHeight = Math.max(80, Math.min(available, Math.max(used, tallest))) + 'px';
+            }
+        }
+        requestAnimationFrame(updateInsertScroll);
+    }
+
+    function updateInsertScroll() {
+        const list = insertMenu.querySelector('.insert-options');
+        const footer = insertMenu.querySelector('.insert-scroll');
+        if (!list || !footer) return;
+        const rows = [...list.querySelectorAll('.insert-command:not([hidden])')];
+        const overflow = list.scrollHeight > list.clientHeight + 1;
+        footer.hidden = !overflow;
+        const bounds = list.getBoundingClientRect();
+        const narrow = window.innerWidth <= 760;
+        const visible = [];
+        rows.forEach((row, index) => {
+            const rect = row.getBoundingClientRect();
+            const complete = rect.top >= bounds.top + 7 && rect.bottom <= bounds.bottom - 7;
+            row.classList.toggle('insert-command-clipped', narrow && !complete);
+            if (complete) visible.push(index);
+        });
+        const atEnd = list.scrollTop + list.clientHeight >= list.scrollHeight - 1;
+        footer.querySelector('[data-direction="previous"]').disabled = list.scrollTop <= 1;
+        footer.querySelector('[data-direction="next"]').disabled = atEnd;
+        if (narrow && atEnd && visible.length) {
+            // Whole-card clipping can leave a partial preceding card's empty
+            // space above the final page. Fit that page to its complete rows,
+            // preserving the bottom anchor and every command's hit target.
+            const gap = rows[visible[0]].getBoundingClientRect().top - bounds.top - 8;
+            if (gap > 8) {
+                list.style.maxHeight = Math.max(80, list.clientHeight - gap) + 'px';
+                list.scrollTop = list.scrollHeight;
+                requestAnimationFrame(updateInsertScroll);
+                return;
+            }
+        }
+        footer.querySelector('output').textContent = visible.length ? (visible[0] + 1) + '–' + (visible.at(-1) + 1) + ' / ' + rows.length : String(rows.length);
     }
 
     function restoreInsertRange() {
@@ -12504,10 +12687,20 @@
         return true;
     }
 
+    function focusInsertChoice(choice) {
+        const list = insertMenu.querySelector('.insert-options');
+        const bounds = list.getBoundingClientRect(), rect = choice.getBoundingClientRect();
+        if (rect.top < bounds.top + 8) list.scrollTop += rect.top - bounds.top - 8;
+        else if (rect.bottom > bounds.bottom - 8) list.scrollTop += rect.bottom - bounds.bottom + 8;
+        // Reveal the whole card before focusing: a visibility-hidden partial
+        // card cannot accept keyboard focus in a narrow workspace.
+        updateInsertScroll(); choice.focus({ preventScroll: true });
+    }
+
     function closeInsertMenu(restoreFocus) {
         if (!insertMenu) return;
         insertMenu.hidden = true;
-        insertButton.setAttribute('aria-expanded', 'false');
+        insertButton?.setAttribute('aria-expanded', 'false');
         restoreInsertRange();
         if (restoreFocus) insertTrigger().focus({ preventScroll: true });
     }
@@ -12522,7 +12715,7 @@
             insertMenuRange.selectNodeContents(editor);
             insertMenuRange.collapse(false);
         }
-        insertButton.dispatchEvent(new CustomEvent('toolbar-submenu-open', { bubbles: true }));
+        toolbar.dispatchEvent(new CustomEvent('toolbar-submenu-open', { bubbles: true }));
         for (const item of insertMenu.querySelectorAll('button[data-insert-action]')) {
             const reason = insertUnavailable(item.dataset.insertAction, insertMenuRange);
             item.setAttribute('aria-disabled', String(Boolean(reason)));
@@ -12531,14 +12724,15 @@
             description.hidden = false;
         }
         insertMenu.hidden = false;
-        insertButton.setAttribute('aria-expanded', 'true');
-        positionInsertMenu();
+        insertButton?.setAttribute('aria-expanded', 'true');
         insertSearch.value = ''; insertCategorySelection = 'allCategory'; filterInsertWorkspace();
+        positionInsertMenu();
         const choices = [...insertMenu.querySelectorAll('button[data-insert-action]')];
-        (last ? choices.at(-1) : insertSearch).focus({ preventScroll: true });
+        if (last) focusInsertChoice(choices.at(-1));
+        else insertSearch.focus({ preventScroll: true });
     }
 
-    if (insertButton && insertMenu) {
+    if (insertMenu) {
         const searchBar = document.createElement('div'); searchBar.className = 'insert-search';
         insertSearch = document.createElement('input'); insertSearch.type = 'search';
         insertSearch.placeholder = i18n.commandPaletteFilter; insertSearch.setAttribute('aria-label', i18n.commandPaletteFilter);
@@ -12549,36 +12743,71 @@
         const workspace = document.createElement('div'); workspace.className = 'insert-workspace';
         const categories = document.createElement('div'); categories.className = 'insert-categories';
         for (const category of ['allCategory','structureCategory','equationsCategory','codeCategory','mediaCategory']) {
-            const choice = document.createElement('button'); choice.type = 'button'; choice.textContent = i18n[category]; choice.dataset.insertCategory = category;
+            const choice = document.createElement('button'); choice.type = 'button'; choice.dataset.insertCategory = category;
+            const icon = document.createElement('span'); icon.className = 'insert-category-icon'; icon.setAttribute('aria-hidden', 'true');
+            icon.innerHTML = LUCIDE_ICONS[{ allCategory: 'table', structureCategory: 'ul', equationsCategory: 'math', codeCategory: 'codeblock', mediaCategory: 'image' }[category]];
+            const title = document.createElement('span'); title.textContent = i18n[category]; choice.append(icon, title);
             choice.addEventListener('click', () => { insertCategorySelection = category; filterInsertWorkspace(); });
             categories.appendChild(choice);
         }
         const list = document.createElement('div'); list.className = 'insert-options'; list.setAttribute('role', 'menu'); list.setAttribute('aria-label', i18n.commandPaletteInsert);
-        workspace.append(categories, list); insertMenu.appendChild(workspace);
+        const results = document.createElement('div'); results.className = 'insert-results';
+        const scrollControls = document.createElement('div'); scrollControls.className = 'insert-scroll'; scrollControls.hidden = true;
+        const count = document.createElement('output'); count.setAttribute('aria-live', 'polite');
+        for (const direction of ['previous', 'next']) {
+            const control = document.createElement('button'); control.type = 'button'; control.dataset.direction = direction;
+            control.textContent = direction === 'previous' ? '↑ ' + i18n.previousCommands : i18n.nextCommands + ' ↓';
+            control.addEventListener('click', () => {
+                const rows = [...list.querySelectorAll('.insert-command:not([hidden])')];
+                const bounds = list.getBoundingClientRect();
+                // Match the complete-card boundary used by updateInsertScroll.
+                // A subpixel-aligned visible row must not become its own page target.
+                const next = direction === 'next'
+                    ? rows.find(row => row.getBoundingClientRect().bottom > bounds.bottom - 7)
+                    : [...rows].reverse().find(row => row.getBoundingClientRect().top < bounds.top + 7);
+                if (next) list.scrollTop += next.getBoundingClientRect().top - bounds.top - 8;
+                updateInsertScroll();
+            });
+            scrollControls.appendChild(control);
+            if (direction === 'previous') scrollControls.appendChild(count);
+        }
+        list.addEventListener('scroll', updateInsertScroll, { passive: true });
+        results.append(list, scrollControls); workspace.append(categories, results); insertMenu.appendChild(workspace);
         const empty = document.createElement('div'); empty.className = 'insert-empty'; empty.setAttribute('role', 'status'); empty.hidden = true;
-        empty.textContent = i18n.noMatchingActions + '. ' + i18n.searchRecovery; list.appendChild(empty);
+        const emptyTitle = document.createElement('strong'); emptyTitle.textContent = i18n.noMatchingActions;
+        const emptyHelp = document.createElement('p'); emptyHelp.textContent = i18n.searchRecovery;
+        const emptyClear = document.createElement('button'); emptyClear.type = 'button'; emptyClear.textContent = i18n.clearSearch;
+        emptyClear.addEventListener('click', () => { insertSearch.value = ''; insertCategorySelection = 'allCategory'; filterInsertWorkspace(); insertSearch.focus(); });
+        empty.append(emptyTitle, emptyHelp, emptyClear); list.appendChild(empty);
         for (const action of insertActions) {
             const command = COMMAND_PALETTE_ITEMS.find(item => item.action === action);
             const button = document.createElement('button');
             button.type = 'button';
+            button.className = 'insert-command';
             button.setAttribute('role', 'menuitem');
             button.dataset.insertAction = action;
-            const label = document.createElement('span');
-            label.textContent = i18n[command.i18nKey] || command.i18nKey;
+            const icon = document.createElement('span'); icon.className = 'insert-command-icon'; icon.setAttribute('aria-hidden', 'true'); icon.innerHTML = LUCIDE_ICONS[command.icon] || '';
+            const details = document.createElement('span'); details.className = 'insert-command-details';
+            const label = document.createElement('strong'); label.className = 'insert-command-title';
+            const parsed = parseI18nLabel(command.i18nKey); label.textContent = parsed.label;
             const reason = document.createElement('small');
             reason.id = 'insert-reason-' + action;
             reason.hidden = true;
             button.setAttribute('aria-describedby', reason.id);
-            const preview = document.createElement('code'); preview.className = 'insert-preview'; preview.textContent = insertSamples[action]; preview.setAttribute('aria-hidden', 'true');
-            button.append(label, reason, preview);
+            details.append(label, reason);
+            const shortcut = document.createElement('kbd'); shortcut.className = 'insert-shortcut';
+            const isMac = navigator.platform.toUpperCase().includes('MAC');
+            shortcut.textContent = parsed.shortcut ? (isMac ? parsed.shortcut.replace(/Ctrl/g, 'Cmd') : parsed.shortcut) : '—';
+            shortcut.setAttribute('aria-hidden', String(!parsed.shortcut));
+            button.append(icon, details, createInsertPreview(action), shortcut);
             list.appendChild(button);
         }
-        insertButton.addEventListener('mousedown', event => { captureToolbarSelection(event); event.preventDefault(); });
-        insertButton.addEventListener('click', event => {
+        insertButton?.addEventListener('mousedown', event => { captureToolbarSelection(event); event.preventDefault(); });
+        insertButton?.addEventListener('click', event => {
             event.stopPropagation();
             if (insertMenu.hidden) openInsertMenu(false); else closeInsertMenu(true);
         });
-        insertButton.addEventListener('keydown', event => {
+        insertButton?.addEventListener('keydown', event => {
             if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
                 event.preventDefault(); event.stopPropagation();
                 openInsertMenu(event.key === 'ArrowUp');
@@ -12595,8 +12824,7 @@
             if (event.target !== insertSearch && event.key === 'End') next = choices.length - 1;
             if (next !== undefined && choices.length) {
                 event.preventDefault(); event.stopPropagation();
-                choices[next].focus({ preventScroll: true });
-                choices[next].scrollIntoView({ block: 'nearest' });
+                focusInsertChoice(choices[next]);
             } else if (event.key === 'Enter' && event.target === insertSearch && choices.length) {
                 event.preventDefault(); event.stopPropagation(); choices[0].click();
             } else if (event.key === 'Escape') {
@@ -12626,10 +12854,10 @@
             if (directInsertion) syncMarkdownSync();
         });
         document.addEventListener('mousedown', event => {
-            if (!insertMenu.hidden && !insertMenu.contains(event.target) && !insertButton.contains(event.target)) closeInsertMenu(false);
+            if (!insertMenu.hidden && !insertMenu.contains(event.target) && !insertTrigger().contains(event.target)) closeInsertMenu(false);
         });
         insertMenu.addEventListener('focusout', () => queueMicrotask(() => {
-            if (!insertMenu.hidden && !insertMenu.contains(document.activeElement) && document.activeElement !== insertButton) closeInsertMenu(false);
+            if (!insertMenu.hidden && !insertMenu.contains(document.activeElement) && document.activeElement !== insertTrigger()) closeInsertMenu(false);
         }));
         window.addEventListener('resize', () => { if (!insertMenu.hidden) positionInsertMenu(); });
         new ResizeObserver(() => { if (!insertMenu.hidden) positionInsertMenu(); }).observe(toolbar);
@@ -12640,6 +12868,9 @@
     var commandPaletteList = null;
     var commandPaletteSavedRange = null;
     var commandPaletteVisible = false;
+    var commandPaletteOutsideClickTimer = null;
+    var commandPaletteCategory = '';
+    var commandPaletteCount = null;
 
     function parseI18nLabel(i18nKey) {
         var fullText = i18n[i18nKey] || i18nKey;
@@ -12654,8 +12885,9 @@
         if (commandPalette) return;
 
         commandPalette = document.createElement('div');
+        commandPalette.id = 'commandPalette';
         commandPalette.className = 'command-palette';
-        commandPalette.setAttribute('role', 'dialog'); commandPalette.setAttribute('aria-label', i18n.formatActions);
+        commandPalette.setAttribute('role', 'dialog'); commandPalette.setAttribute('aria-label', i18n.allActions);
         commandPalette.style.display = 'none';
 
         // Search area
@@ -12669,10 +12901,22 @@
         searchDiv.appendChild(commandPaletteInput);
         commandPalette.appendChild(searchDiv);
 
+        const categories = document.createElement('div'); categories.className = 'command-palette-categories';
+        categories.setAttribute('role', 'group'); categories.setAttribute('aria-label', i18n.commandPaletteFilter);
+        for (const key of ['', ...Object.keys(COMMAND_PALETTE_GROUPS)]) {
+            const category = document.createElement('button'); category.type = 'button'; category.dataset.paletteCategory = key;
+            category.textContent = key ? COMMAND_PALETTE_GROUPS[key]() : i18n.allCategory;
+            category.addEventListener('click', () => { commandPaletteCategory = key; renderCommandPaletteItems(commandPaletteInput.value); commandPaletteInput.focus(); });
+            categories.appendChild(category);
+        }
+        commandPalette.appendChild(categories);
+
         // List area
         commandPaletteList = document.createElement('div');
         commandPaletteList.className = 'command-palette-list';
         commandPalette.appendChild(commandPaletteList);
+        commandPaletteCount = document.createElement('output'); commandPaletteCount.className = 'command-palette-count';
+        commandPaletteCount.setAttribute('aria-live', 'polite'); commandPalette.appendChild(commandPaletteCount);
 
         // Prevent focus loss when clicking palette (except input)
         commandPalette.addEventListener('mousedown', function(e) {
@@ -12725,25 +12969,64 @@
         document.body.appendChild(commandPalette);
     }
 
+    function commandItemLabel(item) {
+        return item.action === 'viewExport'
+            ? { label: document.getElementById('exportButton').getAttribute('aria-label'), shortcut: '' }
+            : parseI18nLabel(item.i18nKey);
+    }
+
+    function matchingCommandItems(filter) {
+        const query = (filter || '').trim().toLocaleLowerCase();
+        return COMMAND_PALETTE_ITEMS.filter(item => {
+            if (item.action === 'viewExport' && !document.getElementById('exportButton')) return false;
+            const parsed = commandItemLabel(item);
+            return !query || [parsed.label, item.action, parsed.shortcut, actionDescription(item.action)]
+                .join(' ').toLocaleLowerCase().includes(query);
+        });
+    }
+
+    function createCommandItem(item) {
+        const parsed = commandItemLabel(item);
+        const isMac = navigator.platform.toUpperCase().includes('MAC');
+        var el = document.createElement('button'); el.type = 'button';
+        el.className = 'command-palette-item';
+        el.dataset.action = item.action;
+        if (item.action === 'viewUndo') el.disabled = !undoManager.canUndo;
+        if (item.action === 'viewRedo') el.disabled = !undoManager.canRedo;
+
+        // Icon
+        var iconSpan = document.createElement('span');
+        iconSpan.className = 'command-palette-icon';
+        iconSpan.innerHTML = LUCIDE_ICONS[item.icon] || '';
+        el.appendChild(iconSpan);
+
+        // Label
+        var labelSpan = document.createElement('span');
+        labelSpan.className = 'command-palette-label';
+        labelSpan.textContent = parsed.label;
+        const description = document.createElement('small'); description.textContent = actionDescription(item.action);
+        labelSpan.appendChild(description);
+        el.appendChild(labelSpan);
+
+        // Shortcut
+        if (parsed.shortcut) {
+            var shortcutSpan = document.createElement('span');
+            shortcutSpan.className = 'command-palette-shortcut';
+            shortcutSpan.textContent = isMac ? parsed.shortcut.replace(/Ctrl/g, 'Cmd') : parsed.shortcut;
+            el.appendChild(shortcutSpan);
+        }
+
+        return el;
+    }
+
     function renderCommandPaletteItems(filter) {
         commandPaletteList.innerHTML = '';
 
-        var normalizedFilter = (filter || '').toLowerCase().trim();
         var currentGroup = null;
         var visibleIndex = 0;
-        var isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
 
-        for (var idx = 0; idx < COMMAND_PALETTE_ITEMS.length; idx++) {
-            var item = COMMAND_PALETTE_ITEMS[idx];
-            if (item.action === 'viewExport' && !document.getElementById('exportButton')) continue;
-            var parsed = item.action === 'viewExport' ? { label: document.getElementById('exportButton').getAttribute('aria-label'), shortcut: '' } : parseI18nLabel(item.i18nKey);
-
-            // Filter: match against label, action name, or shortcut
-            if (normalizedFilter) {
-                var searchable = (parsed.label + ' ' + item.action + ' ' + parsed.shortcut).toLowerCase();
-                if (searchable.indexOf(normalizedFilter) === -1) continue;
-            }
-
+        for (const item of matchingCommandItems(filter)) {
+            if (commandPaletteCategory && item.group !== commandPaletteCategory) continue;
             // Insert group header if new group
             if (item.group !== currentGroup) {
                 currentGroup = item.group;
@@ -12753,36 +13036,8 @@
                 commandPaletteList.appendChild(groupLabel);
             }
 
-            // Create item element
-            var el = document.createElement('button'); el.type = 'button';
-            el.className = 'command-palette-item';
+            const el = createCommandItem(item);
             if (visibleIndex === 0) el.classList.add('selected');
-            el.dataset.action = item.action;
-            if (item.action === 'viewUndo') el.disabled = !undoManager.canUndo;
-            if (item.action === 'viewRedo') el.disabled = !undoManager.canRedo;
-
-            // Icon
-            var iconSpan = document.createElement('span');
-            iconSpan.className = 'command-palette-icon';
-            iconSpan.innerHTML = LUCIDE_ICONS[item.icon] || '';
-            el.appendChild(iconSpan);
-
-            // Label
-            var labelSpan = document.createElement('span');
-            labelSpan.className = 'command-palette-label';
-            labelSpan.textContent = parsed.label;
-            const description = document.createElement('small'); description.textContent = actionDescription(item.action);
-            labelSpan.appendChild(description);
-            el.appendChild(labelSpan);
-
-            // Shortcut
-            if (parsed.shortcut) {
-                var shortcutSpan = document.createElement('span');
-                shortcutSpan.className = 'command-palette-shortcut';
-                shortcutSpan.textContent = isMac ? parsed.shortcut.replace(/Ctrl/g, 'Cmd') : parsed.shortcut;
-                el.appendChild(shortcutSpan);
-            }
-
             commandPaletteList.appendChild(el);
             visibleIndex++;
         }
@@ -12790,9 +13045,11 @@
             const empty = document.createElement('p'); empty.className = 'command-palette-empty'; empty.setAttribute('role', 'status');
             empty.textContent = i18n.noMatchingActions + '. ' + i18n.searchRecovery; commandPaletteList.appendChild(empty);
             const clear = document.createElement('button'); clear.type = 'button'; clear.className = 'command-palette-clear'; clear.textContent = i18n.clearSearch;
-            clear.addEventListener('click', event => { event.stopPropagation(); commandPaletteInput.value = ''; renderCommandPaletteItems(''); commandPaletteInput.focus(); });
+            clear.addEventListener('click', event => { event.stopPropagation(); commandPaletteInput.value = ''; commandPaletteCategory = ''; renderCommandPaletteItems(''); commandPaletteInput.focus(); });
             commandPaletteList.appendChild(clear);
         }
+        commandPalette.querySelectorAll('[data-palette-category]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.paletteCategory === commandPaletteCategory)));
+        commandPaletteCount.textContent = (i18n.paletteActionCount || '{count} actions').replace('{count}', String(visibleIndex));
     }
 
     function moveCommandPaletteSelection(direction) {
@@ -12832,12 +13089,20 @@
         }
     }
 
+    function stopCommandPaletteOutsideClicks() {
+        clearTimeout(commandPaletteOutsideClickTimer);
+        commandPaletteOutsideClickTimer = null;
+        document.removeEventListener('click', commandPaletteOutsideClickHandler);
+    }
+
     function commandPaletteRepositionHandler() {
         if (commandPaletteVisible) closeCommandPalette();
     }
 
     function openCommandPalette() {
         if (isSourceMode) return;
+        stopCommandPaletteOutsideClicks();
+        closeToolbarOverflow(false);
         createCommandPalette();
 
         // Save editor selection
@@ -12870,7 +13135,10 @@
         }
 
         // Position below cursor line (or above if not enough space below)
-        var paletteHeight = 360;
+        commandPaletteCategory = ''; commandPaletteInput.value = ''; renderCommandPaletteItems('');
+        commandPalette.style.maxHeight = Math.max(120, window.innerHeight - 16) + 'px';
+        commandPalette.style.display = 'flex';
+        var paletteHeight = commandPalette.getBoundingClientRect().height;
         var paletteWidth = Math.min(360, window.innerWidth - 16);
         var top, left;
 
@@ -12893,10 +13161,7 @@
         commandPalette.style.left = left + 'px';
         commandPalette.style.display = 'flex';
         commandPaletteVisible = true;
-
-        // Clear filter and render all items
-        commandPaletteInput.value = '';
-        renderCommandPaletteItems('');
+        for (const id of ['formatButton', 'allActionsButton']) document.getElementById(id)?.setAttribute('aria-expanded', 'true');
 
         // Show selection highlight via CSS Custom Highlight API (persists when input gets focus)
         if (commandPaletteSavedRange && !commandPaletteSavedRange.collapsed && CSS.highlights) {
@@ -12909,8 +13174,9 @@
         });
 
         // Close on click outside
-        setTimeout(function() {
-            document.addEventListener('click', commandPaletteOutsideClickHandler);
+        commandPaletteOutsideClickTimer = setTimeout(function() {
+            commandPaletteOutsideClickTimer = null;
+            if (commandPaletteVisible) document.addEventListener('click', commandPaletteOutsideClickHandler);
         }, 0);
 
         // Close on scroll/resize
@@ -12923,7 +13189,8 @@
 
         commandPalette.style.display = 'none';
         commandPaletteVisible = false;
-        document.removeEventListener('click', commandPaletteOutsideClickHandler);
+        for (const id of ['formatButton', 'allActionsButton']) document.getElementById(id)?.setAttribute('aria-expanded', 'false');
+        stopCommandPaletteOutsideClicks();
         window.removeEventListener('resize', commandPaletteRepositionHandler);
         editor.removeEventListener('scroll', commandPaletteRepositionHandler);
 
@@ -12945,7 +13212,8 @@
         // Close palette
         commandPalette.style.display = 'none';
         commandPaletteVisible = false;
-        document.removeEventListener('click', commandPaletteOutsideClickHandler);
+        for (const id of ['formatButton', 'allActionsButton']) document.getElementById(id)?.setAttribute('aria-expanded', 'false');
+        stopCommandPaletteOutsideClicks();
         window.removeEventListener('resize', commandPaletteRepositionHandler);
         editor.removeEventListener('scroll', commandPaletteRepositionHandler);
 
@@ -12961,12 +13229,16 @@
             commandPaletteSavedRange = null;
         }
 
+        executeEditorCommand(action);
+    }
+
+    function executeEditorCommand(action) {
         const views = {
             viewUndo: () => undoManager.undo(), viewRedo: () => undoManager.redo(),
-            viewInsert: () => insertButton?.click(), viewContextual: () => document.getElementById('contextToolbarToggle')?.click(),
+            viewInsert: () => openInsertMenu(false), viewContextual: () => document.getElementById('contextToolbarToggle')?.click(),
             viewVisual: () => setEditorMode('visual'), viewSource: () => setEditorMode('source'), viewSplit: () => setEditorMode('split'),
             viewOutline: openSidebar, viewFind: () => openSearchBox(false), viewReplace: () => openSearchBox(true),
-            viewTextEditor: () => host.openInTextEditor(), viewExport: () => document.getElementById('exportButton')?.click(),
+            viewExport: () => document.getElementById('exportButton')?.click(),
         };
         if (views[action]) { views[action](); return; }
         // Save undo snapshot before action
@@ -12977,6 +13249,7 @@
 
         // Dispatch via shared function (same as toolbar)
         dispatchToolbarAction(action);
+        if (insertActions.includes(action) && !['link', 'image', 'toc'].includes(action)) syncMarkdownSync();
     }
 
     // ========== UTILITIES ==========
@@ -13102,6 +13375,7 @@
         headings.forEach((heading, i) => { if (heading.line <= line) index = i; });
         const nodes = [...editor.querySelectorAll('h1,h2,h3,h4,h5,h6')];
         nodes.forEach((node, i) => node.classList.toggle('source-correspondence', isSplitMode && i === index));
+        if (workspaceUi) workspaceUi.markSourceHeading(headings[index]?.line);
         if (index >= 0) setActiveOutlineItem(index, false);
         if (isSplitMode && scroll && nodes[index]) nodes[index].scrollIntoView({ block: 'nearest' });
         const position = document.getElementById('documentPosition');
@@ -13167,6 +13441,7 @@
         document.documentElement.dataset.editorMode = mode;
         sourceEditor.style.display = isSourceMode ? 'block' : 'none';
         editor.style.display = mode === 'source' ? 'none' : 'block';
+        for (const id of ['sourcePaneHeading', 'previewPaneHeading']) { const label = document.getElementById(id); if (label) label.hidden = !isSplitMode; }
         if (isSourceMode) {
             sourceEditor.value = markdown;
             if (isSplitMode) renderFromMarkdown();
@@ -13181,8 +13456,10 @@
         savedToolbarRange = null;
         document.querySelectorAll('button[data-editor-mode]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.editorMode === mode)));
         toolbarActions.filter(item => item.formatting || item.button.dataset.action === 'insertMenu').forEach(item => { item.button.disabled = isSourceMode; });
-        const format = document.getElementById('formatButton');
-        if (format) format.disabled = isSourceMode;
+        for (const id of ['formatButton', 'allActionsButton']) {
+            const control = document.getElementById(id);
+            if (control) control.disabled = isSourceMode;
+        }
         const help = document.getElementById('modeHelp');
         if (help) { help.hidden = !isSourceMode; help.textContent = isSplitMode ? i18n.splitHelp : i18n.insertUnavailableSource; }
         notifyChangeImmediate();
@@ -13350,6 +13627,7 @@
                 else item.removeAttribute('aria-current');
             });
             activeOutlineIndex = boundedIndex;
+            if (workspaceUi) workspaceUi.refresh();
         }
 
         if (!ensureVisible) return;
@@ -16034,8 +16312,16 @@
     const selectedSearchMatches = new Set();
     const searchResults = document.getElementById('searchResults');
     const searchFeedback = document.getElementById('searchFeedback');
-    const replaceSelected = document.getElementById('replaceSelected');
+    let replaceSelected = document.getElementById('replaceSelected');
     const selectAllSearch = document.getElementById('searchSelectAll');
+    const replacementScope = document.getElementById('replaceScope');
+    const searchSelectedCount = document.getElementById('searchSelectedCount');
+    // Keep the two scope-sensitive replacement commands beside one another.
+    const replacementActions = document.getElementById('searchReplacementActions');
+    if (replacementActions) {
+        const selected = document.createElement('button'); selected.type = 'button'; selected.id = 'replaceSelected'; selected.textContent = i18n.replaceSelected;
+        replacementActions.append(selected, replaceAll); replaceSelected = selected;
+    }
     function stopSearchWorker() { clearTimeout(searchWorkerTimer); searchWorker?.terminate(); searchWorker = null; }
     function openSearchBox(showReplace = false) {
         if (searchReplaceBox.style.display === 'none') {
@@ -16112,8 +16398,10 @@
         updateSearchActions();
     }
     function updateSearchActions() {
-        replaceOne.disabled = currentMatchIndex < 0;
-        replaceAll.disabled = !searchMatches.length || searchTruncated;
+        const selectedOnly = replacementScope?.value === 'selected';
+        replaceOne.disabled = currentMatchIndex < 0 || (selectedOnly && !selectedSearchMatches.has(currentMatchIndex));
+        replaceAll.disabled = selectedOnly || !searchMatches.length || searchTruncated;
+        if (searchSelectedCount) searchSelectedCount.textContent = (i18n.selectedMatchCount || '{count} selected').replace('{count}', String(selectedSearchMatches.size));
         if (replaceSelected) replaceSelected.disabled = !selectedSearchMatches.size;
         if (selectAllSearch) {
             selectAllSearch.checked = Boolean(searchMatches.length && selectedSearchMatches.size === searchMatches.length);
@@ -16157,13 +16445,23 @@
         if (isSourceMode && reveal) {
             sourceEditor.setSelectionRange(match.start, match.end);
             const line = searchedSource.slice(0, match.start).split('\n').length - 1;
-            sourceEditor.scrollTop = Math.max(0, line * (parseFloat(getComputedStyle(sourceEditor).lineHeight) || 21) - sourceEditor.clientHeight / 3);
+            const visibleHeight = innerWidth <= 700 ? Math.max(60, Math.min(sourceEditor.clientHeight, searchReplaceBox.getBoundingClientRect().top - sourceEditor.getBoundingClientRect().top - 8)) : sourceEditor.clientHeight;
+            sourceEditor.scrollTop = Math.max(0, line * (parseFloat(getComputedStyle(sourceEditor).lineHeight) || 21) - visibleHeight / 3);
             updateSourceCorrespondence();
         } else if (range) {
             if (CSS.highlights) CSS.highlights.set('document-search-current', new Highlight(range));
-            if (reveal) range.startContainer.parentElement?.scrollIntoView({ block: 'nearest' });
+            if (reveal) {
+                range.startContainer.parentElement?.scrollIntoView({ block: 'nearest' });
+                if (innerWidth <= 700) {
+                    const bounds = range.getBoundingClientRect(), scroller = isSplitMode ? editor : document.getElementById('editorWrapper');
+                    const top = scroller.getBoundingClientRect().top + 8, bottom = searchReplaceBox.getBoundingClientRect().top - 8;
+                    if (bounds.bottom > bottom) scroller.scrollTop += bounds.bottom - bottom;
+                    else if (bounds.top < top) scroller.scrollTop -= top - bounds.top;
+                }
+            }
         }
         searchResults?.querySelectorAll('[data-match-index]').forEach(row => row.classList.toggle('is-current', Number(row.dataset.matchIndex) === index));
+        if (reveal && innerWidth <= 700) searchResults?.querySelector('.is-current')?.scrollIntoView({ block: 'nearest' });
         searchCount.textContent = (index + 1) + '/' + searchMatches.length + (searchTruncated ? '+' : ''); updateSearchActions();
     }
     let searchRefreshTimer = null;
@@ -16187,8 +16485,9 @@
         else renderFromMarkdown();
         visualSourceCurrent = true; notifyChangeImmediate(); performSearch();
     }
-    function replaceCurrentMatch() { if (currentMatchIndex >= 0) replaceMatchIndices([currentMatchIndex]); }
-    function replaceAllMatches() { if (!searchTruncated) replaceMatchIndices(searchMatches.map((_, index) => index)); }
+    function replaceCurrentMatch() { if (!replaceOne.disabled && currentMatchIndex >= 0) replaceMatchIndices([currentMatchIndex]); }
+    function replaceAllMatches() { if (!replaceAll.disabled && !searchTruncated) replaceMatchIndices(searchMatches.map((_, index) => index)); }
+    if (replacementScope) replacementScope.addEventListener('change', updateSearchActions);
     if (replaceSelected) replaceSelected.addEventListener('click', () => replaceMatchIndices([...selectedSearchMatches]));
     if (selectAllSearch) selectAllSearch.addEventListener('change', () => {
         selectedSearchMatches.clear(); if (selectAllSearch.checked) searchMatches.forEach((_, index) => selectedSearchMatches.add(index));

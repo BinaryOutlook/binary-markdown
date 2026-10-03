@@ -1,0 +1,141 @@
+{
+  "schemaVersion": 1,
+  "sectionId": "08-diagrams",
+  "packetDigest": "7ad9c1557dbfa59df7acfb1ed0ff17ce2b373e01657e5ec4dcef14a46caf241b",
+  "source": {
+    "commit": "9941d02028b4989a2af4d7647c6b972d11ff5529",
+    "dirty": true,
+    "productHash": "334c1575ab0be09973a26f60ff320f2ab673b05cc2538bcb6cef79f15096c344"
+  },
+  "verdict": "PASS",
+  "evaluation": {
+    "packetDigest": "7ad9c1557dbfa59df7acfb1ed0ff17ce2b373e01657e5ec4dcef14a46caf241b",
+    "sectionId": "08-diagrams",
+    "verdict": "PASS",
+    "summary": "PASS: 3 independent case groups cover all 5 submitted states. The individual AI observations and summaries are retained in groups.json; a section passes only when every required group passes.",
+    "openedImages": [
+      "2c6e35ce060853039fc3d4f854505182238a88a1958a0f5ffed1d81cf6d11c77",
+      "8c3fad976de88a9ec9c755485214c16a8c818502d1d733837154150d5dc5ba51",
+      "5992ae434541be7d66094afe0dd4196a870576fea779de4232f0d40d44af801b",
+      "374568be0b2b87a70b1c93867feaf50c7d902c46b63b073259435c045aab8533",
+      "834b8c3d45f0399dc5ba354eae23836be8728d63d8306dec4efcf4fe1c02265d",
+      "b19cc2053c7d3965c7a534402d55384f87494144f085938206e92d76423be5a7",
+      "ef48e74d8112e5b1427bedd12a2b8d3250f2a050b5413c3dea2ae914d4dcd9ac",
+      "a3f16800cba05139dae7c95f791af401f9dc093f4330d3928449023545608874",
+      "8d953041114739837fd53ac1796e90ba8dd810f60583e2a8ee817ed3cb5ad196",
+      "cad5d8858fdbf7af7bf41fbf85cb53be6b8fdad151fdd70d0c49b24958a58294",
+      "689f34cbc4e278628dba0aca5bc5951e0e3ac8b4f6536fa6ed7f148f8b434311"
+    ],
+    "caseAssessments": [
+      {
+        "caseId": "preview",
+        "assessable": true,
+        "criteria": [
+          {
+            "criterionId": "C1",
+            "result": "met",
+            "evidence": "The Mermaid header visibly presents Preview and Source controls, with Preview clearly selected; the rendered content is labeled Preview."
+          },
+          {
+            "criterionId": "C2",
+            "result": "met",
+            "evidence": "This is a valid-source state, so no diagnostic or source-location cue is expected. No spurious warning is shown, and Source remains explicitly available."
+          },
+          {
+            "criterionId": "C3",
+            "result": "met",
+            "evidence": "Draft, Review, and Export render as a centered, compact left-to-right diagram with restrained lavender outlines, dark connectors, ample whitespace, and no visual alarm treatment."
+          }
+        ]
+      },
+      {
+        "caseId": "invalid",
+        "assessable": true,
+        "criteria": [
+          {
+            "criterionId": "C1",
+            "result": "met",
+            "evidence": "Preview and Source controls remain visible, Source is selected, and the red-tinted Needs attention status is prominent without overwhelming the block."
+          },
+          {
+            "criterionId": "C2",
+            "result": "met",
+            "evidence": "A concise message explains that a closing delimiter is expected; the source panel identifies line 2 and highlights A[Draft --> with a red line marker. Diagnostic details are separately expandable, keeping the primary message bounded and local."
+          },
+          {
+            "criterionId": "C3",
+            "result": "met",
+            "evidence": "A valid diagram is intentionally absent in this invalid-source state. The surrounding neutral surfaces remain calm, while red is confined to the status, faulty source line, and concise preview warning."
+          }
+        ]
+      },
+      {
+        "caseId": "source",
+        "assessable": true,
+        "criteria": [
+          {
+            "criterionId": "C1",
+            "result": "met",
+            "evidence": "The Mermaid header visibly provides Preview and Source controls, with Source distinctly selected; the focused source editor is additionally indicated by a crisp blue boundary."
+          },
+          {
+            "criterionId": "C2",
+            "result": "met",
+            "evidence": "The authored Mermaid source is plainly visible in a dedicated monospace region, preserving the original graph text and providing an unambiguous source-editing cue."
+          },
+          {
+            "criterionId": "C3",
+            "result": "met",
+            "evidence": "The valid Draft → Review → Export diagram renders cleanly beneath the source with restrained lavender node outlines, neutral surfaces, readable labels, and uncluttered spacing."
+          }
+        ]
+      },
+      {
+        "caseId": "diagnostic",
+        "assessable": true,
+        "criteria": [
+          {
+            "criterionId": "C1",
+            "result": "met",
+            "evidence": "Preview and Source controls remain explicit, Source is visibly selected, and the red-tinted Needs attention status clearly communicates the invalid render state."
+          },
+          {
+            "criterionId": "C2",
+            "result": "met",
+            "evidence": "A concise closing-delimiter explanation appears locally above bounded, expandable diagnostic details. The source section explicitly identifies Source line 2 and emphasizes that exact line with a red rail and pale-red row highlight."
+          },
+          {
+            "criterionId": "C3",
+            "result": "met",
+            "evidence": "For this invalid-source state, the unavailable preview is represented by a restrained pale-red message area reading Check the diagram source; the surrounding block remains orderly, legible, and free of decorative excess or clipping."
+          }
+        ]
+      },
+      {
+        "caseId": "narrow",
+        "assessable": true,
+        "criteria": [
+          {
+            "criterionId": "C1",
+            "result": "met",
+            "evidence": "The narrow render clearly presents Preview and Source as adjacent, readable modes, with Source visibly selected. The red-tinted “Needs attention” status remains prominent without overwhelming the block."
+          },
+          {
+            "criterionId": "C2",
+            "result": "met",
+            "evidence": "A concise diagnostic appears immediately above the source editor, while “Source · Source line 2,” the highlighted second line, and the red gutter marker provide a consistent, reliable local cue to the malformed authored source. Diagnostic details remain available through a compact disclosure."
+          },
+          {
+            "criterionId": "C3",
+            "result": "met",
+            "evidence": "In this intentionally invalid narrow state, the preview appropriately shows a restrained “Check the diagram source.” message rather than inventing a valid render. Neutral surfaces, compact spacing, crisp borders, restrained error tinting, and monospace source styling remain calm and legible at the 480 px viewport."
+          }
+        ]
+      }
+    ],
+    "discrepancies": [],
+    "priorResolutions": [],
+    "missingEvidence": []
+  },
+  "error": null
+}

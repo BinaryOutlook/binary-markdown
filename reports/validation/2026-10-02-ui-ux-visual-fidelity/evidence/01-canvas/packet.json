@@ -1,0 +1,293 @@
+{
+  "schemaVersion": 1,
+  "sectionId": "01-canvas",
+  "title": "Writing canvas and visual hierarchy",
+  "designCommit": "a798921f7e5a9b01a88360315b035a391f69da47",
+  "contractHash": "6a49fa68b56b31cae2ecb755cf2986d4dc9e20fc4f48b544e02c0560c95bb13c",
+  "designBrief": "Consistent minimalist Binary Markdown desktop-editor language. Flat off-white canvas #FAFAF8, pale neutral rail #F3F4F5, charcoal text #242830, one restrained blue accent #4266B0. For dark subjects use charcoal #1B1E26 and slate surfaces #272D38 with legible pale tokens and the same blue accent. Familiar system sans typography and monospace only for source. Crisp 1px dividers, 6px corner radii, 8px spacing increments, no decorative gradients, no glass, no giant cards, no marketing art, no invented logo. Preserve the real Markdown-editor identity and useful commands. This is a proposed static design concept, not a working product. Show one option only, with readable exact short labels and synthetic research-note content.",
+  "ownerAdjustments": [
+    "Configured fonts, article width and alignment remain user preferences."
+  ],
+  "targetRegions": [
+    {
+      "id": "canvas",
+      "description": "Writing column, heading hierarchy, prose rhythm and focus-only width guides."
+    }
+  ],
+  "excludedRegions": [
+    "toolbar",
+    "outline",
+    "code/table control redesign",
+    "desktop chrome",
+    "reference caption bands and numbered pins"
+  ],
+  "obstructionException": "Excluded UI matters only if it clips or obstructs this target. Never grade its independent design.",
+  "criteria": [
+    {
+      "id": "C1",
+      "description": "Calm top inset and reading measure"
+    },
+    {
+      "id": "C2",
+      "description": "Quiet heading hierarchy"
+    },
+    {
+      "id": "C3",
+      "description": "Width guidance does not compete with prose"
+    }
+  ],
+  "requiredStates": [
+    "Focused and unfocused writing",
+    "Empty document",
+    "Short and narrow panes"
+  ],
+  "references": [
+    {
+      "path": ".vscode-test/visual-fidelity/references/01-canvas-recommended.png",
+      "sha256": "05a2b26218a1bdb28cc467168c188809a8898c352c9b5124a42dbce9fa82008d",
+      "width": 1536,
+      "height": 1024,
+      "bytes": 1286152,
+      "level": "Recommended",
+      "intent": "Make the smallest practical correction: retain the outline and current full toolbar, reduce the writing canvas top inset to about 40px, use a readable 740px body measure, retain 16px body text, make H1 charcoal and H2 charcoal with restrained rules, show subtle width markers only when focused. Keep the code block and table content intact. Numbered callouts: 1 near the first heading = Less empty space before writing; 2 near heading hierarchy = Quiet, consistent typography; 3 near width marker = Guides appear when useful.",
+      "annotations": [
+        "Less empty space before writing: reduce the top inset while keeping a comfortable reading column",
+        "Quiet hierarchy: use charcoal headings and restrained section rules",
+        "Guides when useful: expose width assistance on focus rather than during ordinary reading"
+      ]
+    }
+  ],
+  "source": {
+    "commit": "9941d02028b4989a2af4d7647c6b972d11ff5529",
+    "dirty": true,
+    "productHash": "334c1575ab0be09973a26f60ff320f2ab673b05cc2538bcb6cef79f15096c344"
+  },
+  "capture": {
+    "kind": "production browser fixture",
+    "hostBoundary": "Synthetic test bridge; no installed-host or converter result is claimed.",
+    "browser": "Chromium 145.0.7632.6",
+    "node": "v24.21.0",
+    "inputHash": "0c35cc55c5aa77490c82a55f8e0ef8baea12d5342608d60b8009c6d14ae00afb",
+    "fixtureHash": "23c0726bf4671e05c7c6242815d292a5989ee4acc06821858c800a64c68360a1",
+    "deviceScaleFactor": 1
+  },
+  "cases": [
+    {
+      "id": "focused",
+      "state": "Focused and unfocused writing",
+      "comparison": "Direct Recommended canvas intent with heading, prose, code and table; focus-only guidance.",
+      "targetBounds": {
+        "x": 260,
+        "y": 68.1875,
+        "width": 1180,
+        "height": 931.8125
+      },
+      "observedEditorFocus": true,
+      "inputHash": "7b9cd04b9a8a76d619d45683d48acb9ce18f8a7dd8aeb7d161d693b3203912a1",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "minimal",
+      "observedThemeTokens": {
+        "--bg-color": "#fafafa",
+        "--text-color": "#333333",
+        "--link-color": "#4266b0",
+        "--outline-active-color": "#4266b0",
+        "--selection-bg": "#d0d0d0"
+      },
+      "locale": "en-US",
+      "zoom": 1,
+      "images": [
+        {
+          "path": ".vscode-test/visual-review/01-canvas/iteration-027/focused-full.png",
+          "sha256": "8fb5ed955f5b5062381c6d850d4237e5c25018318f3cb574f6c4473ff0adca6a",
+          "width": 1440,
+          "height": 1000,
+          "bytes": 99916
+        },
+        {
+          "path": ".vscode-test/visual-review/01-canvas/iteration-027/focused-target.png",
+          "sha256": "72b914e08c027727076b550f3aa8ecff3f11eb497468c466b4242dff818301ce",
+          "width": 1180,
+          "height": 931,
+          "bytes": 72643
+        }
+      ]
+    },
+    {
+      "id": "unfocused",
+      "state": "Focused and unfocused writing",
+      "comparison": "Same canvas without focus; width assistance must be quiet.",
+      "targetBounds": {
+        "x": 260,
+        "y": 68.1875,
+        "width": 1180,
+        "height": 931.8125
+      },
+      "observedEditorFocus": false,
+      "inputHash": "7b9cd04b9a8a76d619d45683d48acb9ce18f8a7dd8aeb7d161d693b3203912a1",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "minimal",
+      "observedThemeTokens": {
+        "--bg-color": "#fafafa",
+        "--text-color": "#333333",
+        "--link-color": "#4266b0",
+        "--outline-active-color": "#4266b0",
+        "--selection-bg": "#d0d0d0"
+      },
+      "locale": "en-US",
+      "zoom": 1,
+      "images": [
+        {
+          "path": ".vscode-test/visual-review/01-canvas/iteration-027/unfocused-full.png",
+          "sha256": "9920c886186b08c3e7a1594f459bc71635611711434ac03b4c66fab31dfb19d8",
+          "width": 1440,
+          "height": 1000,
+          "bytes": 99709
+        },
+        {
+          "path": ".vscode-test/visual-review/01-canvas/iteration-027/unfocused-target.png",
+          "sha256": "e029b292a4d875eb7d39e3ab647fb552557b16015b611413de293a91cf7a29b0",
+          "width": 1180,
+          "height": 931,
+          "bytes": 72386
+        }
+      ]
+    },
+    {
+      "id": "empty",
+      "state": "Empty document",
+      "comparison": "Derived: clear empty writing surface without disproportionate top inset.",
+      "targetBounds": {
+        "x": 260,
+        "y": 68.1875,
+        "width": 1180,
+        "height": 931.8125
+      },
+      "observedEditorFocus": false,
+      "inputHash": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "minimal",
+      "observedThemeTokens": {
+        "--bg-color": "#fafafa",
+        "--text-color": "#333333",
+        "--link-color": "#4266b0",
+        "--outline-active-color": "#4266b0",
+        "--selection-bg": "#d0d0d0"
+      },
+      "locale": "en-US",
+      "zoom": 1,
+      "images": [
+        {
+          "path": ".vscode-test/visual-review/01-canvas/iteration-027/empty-full.png",
+          "sha256": "1d24592f4475d8ef4e890f2589e28a1fb09c8d98939bedf94409c5721926128e",
+          "width": 1440,
+          "height": 1000,
+          "bytes": 30024
+        },
+        {
+          "path": ".vscode-test/visual-review/01-canvas/iteration-027/empty-target.png",
+          "sha256": "04a8beba4f94f69b30fede91e7940e0ae102bfbe54f410ded3fc03928d2fac0b",
+          "width": 1180,
+          "height": 931,
+          "bytes": 10031
+        }
+      ]
+    },
+    {
+      "id": "short",
+      "state": "Short and narrow panes",
+      "comparison": "Derived: preserve readable measure and hierarchy in a short pane.",
+      "targetBounds": {
+        "x": 260,
+        "y": 68.1875,
+        "width": 1180,
+        "height": 471.8125
+      },
+      "observedEditorFocus": false,
+      "inputHash": "7b9cd04b9a8a76d619d45683d48acb9ce18f8a7dd8aeb7d161d693b3203912a1",
+      "viewport": {
+        "width": 1440,
+        "height": 540
+      },
+      "theme": "minimal",
+      "observedThemeTokens": {
+        "--bg-color": "#fafafa",
+        "--text-color": "#333333",
+        "--link-color": "#4266b0",
+        "--outline-active-color": "#4266b0",
+        "--selection-bg": "#d0d0d0"
+      },
+      "locale": "en-US",
+      "zoom": 1,
+      "images": [
+        {
+          "path": ".vscode-test/visual-review/01-canvas/iteration-027/short-full.png",
+          "sha256": "8dbef9cf8c54f9239653228f7834073316ad5ee4c4c541d5f216f06961ffa943",
+          "width": 1440,
+          "height": 540,
+          "bytes": 67629
+        },
+        {
+          "path": ".vscode-test/visual-review/01-canvas/iteration-027/short-target.png",
+          "sha256": "7381727ec78f20adbd71bf7f0c12023f4bf5fbf5085cb32a69738a1fd1d2416e",
+          "width": 1180,
+          "height": 471,
+          "bytes": 42183
+        }
+      ]
+    },
+    {
+      "id": "narrow",
+      "state": "Short and narrow panes",
+      "comparison": "Derived: adapt writing measure within narrow pane without clipping.",
+      "targetBounds": {
+        "x": 0,
+        "y": 68.1875,
+        "width": 480,
+        "height": 931.8125
+      },
+      "observedEditorFocus": false,
+      "inputHash": "7b9cd04b9a8a76d619d45683d48acb9ce18f8a7dd8aeb7d161d693b3203912a1",
+      "viewport": {
+        "width": 480,
+        "height": 1000
+      },
+      "theme": "minimal",
+      "observedThemeTokens": {
+        "--bg-color": "#fafafa",
+        "--text-color": "#333333",
+        "--link-color": "#4266b0",
+        "--outline-active-color": "#4266b0",
+        "--selection-bg": "#d0d0d0"
+      },
+      "locale": "en-US",
+      "zoom": 1,
+      "images": [
+        {
+          "path": ".vscode-test/visual-review/01-canvas/iteration-027/narrow-full.png",
+          "sha256": "4d7e256b2c41c88979ebca0249f2888e0621b252ee2514c9458157bd122717ab",
+          "width": 480,
+          "height": 1000,
+          "bytes": 68272
+        },
+        {
+          "path": ".vscode-test/visual-review/01-canvas/iteration-027/narrow-target.png",
+          "sha256": "9305aaa44b257108f75942c3c0ab2182314c6e27b3cdf9166fc5bd0c3c89f5b2",
+          "width": 480,
+          "height": 931,
+          "bytes": 64091
+        }
+      ]
+    }
+  ],
+  "priorFailures": [],
+  "packetDigest": "2529812c8e3295a4090b3c544ace0592e72a0a7a05078cc4b573b0d3bb49deb8"
+}

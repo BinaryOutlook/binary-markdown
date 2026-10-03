@@ -168,6 +168,10 @@ function harness(settings, owner) {
             const matches = [];
             for (const page of pages) if ((await page.title()).includes(owner.token)) matches.push(page);
             assert.equal(matches.length, 1, 'Exactly one window must match the owned profile token');
+            // Re-establish the visible-window precondition for each native
+            // interaction, including callbacks after a converter or another app
+            // has taken focus. Bring only the ownership-matched window forward.
+            await matches[0].bringToFront();
             return await callback(matches[0]);
         } finally { await browser.close(); }
     };
@@ -210,18 +214,19 @@ function harness(settings, owner) {
         });
         try {
             await send('Runtime.enable');
-            let contextId;
+            let contextId, contentOwner;
             lastEditorFrames = [];
             for (const context of contexts.filter(value => value.auxData?.isDefault)) {
                 const found = await send('Runtime.evaluate', {
                     expression: `({ editor:!!document.querySelector('#editor'), ready:document.getElementById('exportButton')?.dataset.exportReady, label:document.getElementById('exportButton')?.getAttribute('aria-label'), mode:document.documentElement.dataset.toolbarMode, loading:document.readyState, childFrames:Array.from(document.querySelectorAll('iframe')).map(frame=>frame.id) })`,
                     contextId: context.id, returnByValue: true
                 });
-                let frame = 'outer';
+                let frame = 'outer', frameOwner;
                 if (context.auxData.frameId !== target.id) {
                     // CDP identifies the owner even when older Electron hides
                     // window.frameElement across the JavaScript boundary.
                     const ownerNode = await send('DOM.getFrameOwner', { frameId: context.auxData.frameId });
+                    frameOwner = ownerNode.backendNodeId;
                     const { node } = await send('DOM.describeNode', { backendNodeId: ownerNode.backendNodeId });
                     const attributes = node.attributes || [];
                     for (let index = 0; index < attributes.length; index += 2) {
@@ -233,11 +238,28 @@ function harness(settings, owner) {
                 if (frame === 'active-frame' && found.result.value?.editor && found.result.value.ready === 'true') {
                     assert.equal(contextId, undefined, 'Only one active editor context is permitted');
                     contextId = context.id;
+                    contentOwner = frameOwner;
                 }
             }
             assert.ok(contextId, 'The active editor context must be ready');
             return {
                 send, close: () => socket.close(),
+                // Resolve the already verified active frame's owner through
+                // CDP. Older VS Code exposes this frame to CDP but not through
+                // Playwright's outer frame locator hierarchy.
+                contentFrameStyle: async style => {
+                    assert.ok(contentOwner, 'The active editor must have an identified owner');
+                    const { object } = await send('DOM.resolveNode', { backendNodeId: contentOwner });
+                    try {
+                        const result = await send('Runtime.callFunctionOn', {
+                            objectId: object.objectId,
+                            functionDeclaration: 'function(style) { const before = { maxWidth: this.style.maxWidth, maxHeight: this.style.maxHeight }; if (style) Object.assign(this.style, style); return before; }',
+                            arguments: [{ value: style || null }], returnByValue: true
+                        });
+                        if (result.exceptionDetails) throw new Error('Could not constrain the owned content frame');
+                        return result.result.value;
+                    } finally { await send('Runtime.releaseObject', { objectId: object.objectId }); }
+                },
                 evaluate: async expression => {
                     const result = await send('Runtime.evaluate', { expression, contextId, returnByValue: true, awaitPromise: true });
                     if (result.exceptionDetails) throw new Error(JSON.stringify(result.exceptionDetails));
@@ -1140,6 +1162,7 @@ async function underlineCase(h, owner, record) {
     await h.driver({ action: 'config', key: 'toolbarMode', scope: 'workspace', value: 'full' });
     let connection = await h.open(file);
     try {
+        await h.until(() => connection.evaluate('document.documentElement.dataset.toolbarMode === "full"'), 'full toolbar delivered before underline checks');
         let before;
         await h.workbench(async page => {
             before = await underlineChecks({ editor: installedEditor(connection, h), keyboard: page.keyboard,
@@ -1277,7 +1300,7 @@ async function underlineExportCase(h, owner, record) {
 }
 
 async function insertMenuCase(h, owner, record) {
-    const { source, insertMenuChecks, selectTarget, openInsert, selectQuickInputItem } = require('./insert-menu.cjs');
+    const { source, insertMenuChecks, selectTarget, openInsert, chooseInsertAction, selectQuickInputItem } = require('./insert-menu.cjs');
     const { installedEditor } = require('./table-toolbar-overflow.cjs');
     const previous = await h.driver({ action: 'inspect' });
     const file = 'insert-menu.md', filePath = path.join(owner.workspace, file);
@@ -1286,50 +1309,80 @@ async function insertMenuCase(h, owner, record) {
     let connection = await h.open(file);
     try {
         await h.workbench(async page => {
-            const editor = installedEditor(connection, h);
-            // VS Code 1.85 also mounts a hidden select-all checkbox here.
-            const input = () => page.locator('.quick-input-widget:visible input:not([type="checkbox"]):visible').first();
-            await insertMenuChecks({ editor, keyboard: page.keyboard,
-                setMode: value => h.driver({ action: 'config', key: 'toolbarMode', scope: 'workspace', value }),
-                record: (name, details) => record(name, { ...details, route: 'installed webview; native keyboard; VS Code input boxes and simplified file picker' }),
-                save: async expected => {
-                    // Keep the separately tracked queued-edit/native-save
-                    // overlap (#11) outside this insertion persistence check.
-                    await h.until(async () => (await h.driver({ action: 'inspect' })).documents.some(document => samePath(document.path, filePath) && document.text === expected), 'inserted content reached host');
-                    await h.driver({ action: 'save' });
-                    assert.equal(fs.readFileSync(filePath, 'utf8'), expected);
-                },
-                dialog: async (action, accepted) => {
-                    await input().waitFor({ state: 'visible' });
-                    if (!accepted) await page.keyboard.press('Escape');
-                    else {
-                        if (action === 'link') {
-                            await input().fill('https://example.com/reference');
-                            await page.keyboard.press('Enter');
-                        } else {
-                            const imageName = 'Field sample 图像.png';
-                            // Navigate first: older pickers do not refresh their
-                            // directory listing until the path is accepted.
-                            await input().fill(path.join(owner.workspace, 'assets') + path.sep);
-                            await page.keyboard.press('Enter');
-                            await selectQuickInputItem(page, imageName, h.until);
+            const frame = page.locator('iframe.webview:visible');
+            const before = await frame.evaluate(node => ({ maxWidth: node.style.maxWidth, maxHeight: node.style.maxHeight }));
+            const contentBefore = await connection.contentFrameStyle();
+            try {
+                await frame.evaluate(node => {
+                    node.style.maxWidth = '500px'; node.style.maxHeight = '450px';
+                });
+                // VS Code can retain its inner content frame's old layout size
+                // after the outer host frame is constrained. Constrain both
+                // owned frames, then verify the actual editor viewport below.
+                await connection.contentFrameStyle({ maxWidth: '500px', maxHeight: '450px' });
+                // The outer workbench and inner webview deliver resize at
+                // different times. Poll their current measurements; a snapshot
+                // taken before delivery can retain the previous window size.
+                // Do not await animation frames in a backgrounded native window.
+                const inspectSize = async () => ({
+                    outer: await frame.evaluate(node => ({ width: node.clientWidth, height: node.clientHeight })),
+                    inner: await connection.evaluate('({ width: innerWidth, height: innerHeight })')
+                });
+                const delivered = await h.until(async () => {
+                    const value = await inspectSize();
+                    return value.outer.width > 0 && value.outer.width <= 500 && value.outer.height > 0 && value.outer.height <= 450 &&
+                        value.inner.width === value.outer.width && value.inner.height === value.outer.height ? value : null;
+                }, 'narrow Insert viewport delivered to the installed webview', inspectSize);
+                const size = delivered.inner;
+                const editor = installedEditor(connection, h);
+                // VS Code 1.85 also mounts a hidden select-all checkbox here.
+                const input = () => page.locator('.quick-input-widget:visible input:not([type="checkbox"]):visible').first();
+                await insertMenuChecks({ editor, keyboard: page.keyboard,
+                    setMode: value => h.driver({ action: 'config', key: 'toolbarMode', scope: 'workspace', value }),
+                    record: (name, details) => record(name, { ...details, route: 'installed webview; native keyboard; VS Code input boxes and simplified file picker' }),
+                    save: async expected => {
+                        // Keep the separately tracked queued-edit/native-save
+                        // overlap (#11) outside this insertion persistence check.
+                        await h.until(async () => (await h.driver({ action: 'inspect' })).documents.some(document => samePath(document.path, filePath) && document.text === expected), 'inserted content reached host');
+                        await h.driver({ action: 'save' });
+                        assert.equal(fs.readFileSync(filePath, 'utf8'), expected);
+                    },
+                    dialog: async (action, accepted) => {
+                        await input().waitFor({ state: 'visible' });
+                        if (!accepted) await page.keyboard.press('Escape');
+                        else {
+                            if (action === 'link') {
+                                await input().fill('https://example.com/reference');
+                                await page.keyboard.press('Enter');
+                            } else {
+                                const imageName = 'Field sample 图像.png';
+                                // Navigate first: older pickers do not refresh their
+                                // directory listing until the path is accepted.
+                                await input().fill(path.join(owner.workspace, 'assets') + path.sep);
+                                await page.keyboard.press('Enter');
+                                await selectQuickInputItem(page, imageName, h.until);
+                            }
                         }
+                        await page.locator('.quick-input-widget:visible').waitFor({ state: 'hidden' });
                     }
-                    await page.locator('.quick-input-widget:visible').waitFor({ state: 'hidden' });
-                }
-            });
-            // With no selected label, Escape from the second input must cancel
-            // the entire insertion instead of creating a fallback link.
-            await selectTarget(editor);
-            await editor.evaluate(() => { getSelection().collapseToEnd(); window.__nativeInsertEvents = []; });
-            await openInsert(editor); await editor.locator('[data-insert-action="link"]').click();
-            await input().waitFor({ state: 'visible' });
-            await input().fill('https://example.com/cancel-label'); await page.keyboard.press('Enter');
-            await h.until(async () => await input().inputValue() === 'link', 'link label input');
-            await page.keyboard.press('Escape');
-            await editor.waitForFunction(() => window.__nativeInsertEvents.some(message => message.type === 'insertCancelled'));
-            assert.equal(await editor.evaluate(() => document.querySelector('[data-action="undo"]').disabled), true);
-            record('insert-link-second-prompt', { cancelledWithoutEdit: true });
+                });
+                // With no selected label, Escape from the second input must cancel
+                // the entire insertion instead of creating a fallback link.
+                await selectTarget(editor);
+                await editor.evaluate(() => { getSelection().collapseToEnd(); window.__nativeInsertEvents = []; });
+                await openInsert(editor); await chooseInsertAction(editor, page.keyboard, 'link');
+                await input().waitFor({ state: 'visible' });
+                await input().fill('https://example.com/cancel-label'); await page.keyboard.press('Enter');
+                await h.until(async () => await input().inputValue() === 'link', 'link label input');
+                await page.keyboard.press('Escape');
+                await editor.waitForFunction(() => window.__nativeInsertEvents.some(message => message.type === 'insertCancelled'));
+                assert.equal(await editor.evaluate(() => document.querySelector('[data-action="undo"]').disabled), true);
+                record('insert-link-second-prompt', { cancelledWithoutEdit: true });
+                record('insert-narrow-reachability', { ...size, everyAction: true, wholeCardKeyboardNavigation: true, savedContentVerified: true });
+            } finally {
+                await connection.contentFrameStyle(contentBefore);
+                await frame.evaluate((node, before) => Object.assign(node.style, before), before);
+            }
         });
         await h.sourceMode(connection);
         assert.equal(await connection.evaluate('document.getElementById("sourceEditor").value'), source);
