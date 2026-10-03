@@ -26,7 +26,7 @@ The extension ID is `BinaryOutlook.binary-markdown`. Installation leaves your de
 
 - **Visual, Source, and Split views:** semantic paragraphs and lists, preserved source for unchanged blocks, links, images, blockquotes, an Outline/Document rail, and an editable Markdown pane beside a read-only live preview.
 - **Formatting and tables:** Full or Simple toolbars, optional contextual tools, a searchable Insert workspace and Action Palette, HTML-backed underline, a spatial table inspector, horizontal scrolling for wide tables, and aligned or compact source formatting for edited tables.
-- **Code and equations:** syntax highlighting, searchable language selection, anchored code controls, icon-based copying, optional per-block soft wrapping with a visible notice, editable KaTeX source, and Mermaid diagrams. See [code block features](docs/editor-guide.md#-code-block-features).
+- **Code and equations:** syntax highlighting, searchable language selection, labeled code controls for copying and soft wrapping, a visible wrap notice, editable KaTeX source, and Mermaid diagrams. See [code block features](docs/editor-guide.md#-code-block-features).
 - **A configurable writing space:** themes, seven interface languages, full or capped column width, column alignment, and optional width guides.
 - **Find and Replace:** source-context results, selected replacements, and case, whole-word, or regular-expression matching with a shared undo history.
 - **Document structure:** protected YAML front matter and a generated table of contents refreshed on save or on request.
