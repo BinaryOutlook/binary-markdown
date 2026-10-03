@@ -99,7 +99,7 @@
             tab.addEventListener('keydown', event => {
                 if (['ArrowLeft','ArrowRight','Home','End'].includes(event.key)) {
                     event.preventDefault(); const next = event.key === 'Home' ? 0 : event.key === 'End' ? 1 : 1 - index;
-                    selectTab(next); tabs[next].focus();
+                    selectTab(next); refresh(); tabs[next].focus();
                 }
             });
         });
@@ -244,11 +244,14 @@
             if (documentPosition) documentPosition.textContent = i18n.readingProgress + ': ' + (headings[current]?.textContent || '—');
             const navigation = byId('documentNavigation');
             if (navigation && !byId('documentInfo').hidden) {
-                const signature = headings.map(node => node.textContent + ':' + node.classList.contains('is-active')).join('|');
+                const signature = JSON.stringify(headings.map(node => [node.textContent, node.dataset.level, node.classList.contains('is-active')]));
                 if (navigation.dataset.signature !== signature) {
                     navigation.dataset.signature = signature; navigation.replaceChildren();
-                    headings.filter(node => Number(node.dataset.level) <= 2).forEach(original => {
-                        const entry = button(original.textContent, () => original.click());
+                    headings.forEach((original, index) => {
+                        if (Number(original.dataset.level) > 2) return;
+                        // Outline nodes are recreated after edits and mode changes.
+                        // Resolve the current listener instead of retaining a stale one.
+                        const entry = button(original.textContent, () => outline.querySelectorAll('.outline-item')[index]?.click());
                         entry.className = 'document-heading'; entry.classList.toggle('is-active', original === headings[current]); navigation.appendChild(entry);
                     });
                 }

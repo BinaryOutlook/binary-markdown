@@ -2,6 +2,57 @@ import { test, expect } from '@playwright/test';
 import { EditorTestHelper } from '../utils/editor-test-helper';
 
 test.describe('Outline reading-position tracking', () => {
+    test('Document keyboard tab activation populates navigation and retains tab focus', async ({ page }) => {
+        const content = '# First\n\n' + 'Read the first section.\n\n'.repeat(30) + '## Second\n\nNext section.\n';
+        await page.goto('/production-editor.html');
+        await page.waitForFunction(() => (window as any).__testApi?.ready);
+        await page.evaluate(content => (window as any).__hostMessageHandler({ type: 'update', content }), content);
+        await page.locator('#outlineTab').focus();
+        await page.keyboard.press('ArrowRight');
+        await expect(page.locator('#documentInfo')).toBeVisible();
+        await expect(page.locator('.document-heading')).toHaveCount(2);
+        await expect(page.locator('#documentTab')).toBeFocused();
+        expect(await page.evaluate(() => (window as any).htmlToMarkdown())).toBe(content);
+        await expect(page.locator('#toolbar [data-action="undo"]')).toBeDisabled();
+    });
+
+    for (const mode of ['source', 'split']) {
+        test(`Document navigation resolves the current outline after switching to ${mode}`, async ({ page }) => {
+            const content = '# First\n\n' + 'Read the first section.\n\n'.repeat(30) + '## Second\n\nNext section.\n';
+            const errors: string[] = [];
+            page.on('pageerror', error => errors.push(error.message));
+            await page.goto('/production-editor.html');
+            await page.waitForFunction(() => (window as any).__testApi?.ready);
+            await page.evaluate(content => (window as any).__hostMessageHandler({ type: 'update', content }), content);
+            await page.locator('#documentTab').click();
+            await expect(page.locator('.document-heading')).toHaveCount(2);
+            await expect(page.locator('.document-heading').first()).toHaveClass(/is-active/);
+
+            await page.locator(`button[data-editor-mode="${mode}"]`).click();
+            await page.locator('.document-heading').filter({ hasText: 'Second' }).click();
+            await expect.poll(() => page.locator('#sourceEditor').evaluate((node: HTMLTextAreaElement) => node.selectionStart)).toBe(content.indexOf('## Second'));
+            await expect(page.locator('#sourceEditor')).toHaveValue(content);
+            await expect(page.locator('#toolbar [data-action="undo"]')).toBeDisabled();
+            expect(errors).toEqual([]);
+        });
+    }
+
+    test('Document navigation updates when a heading level changes without changing its text', async ({ page }) => {
+        const content = '# First\n\n' + 'Read the first section.\n\n'.repeat(30) + '## Second\n\nNext section.\n';
+        await page.goto('/production-editor.html');
+        await page.waitForFunction(() => (window as any).__testApi?.ready);
+        await page.evaluate(content => (window as any).__hostMessageHandler({ type: 'update', content }), content);
+        await page.locator('#documentTab').click();
+        await expect(page.locator('.document-heading')).toHaveCount(2);
+
+        const changed = content.replace('## Second', '### Second');
+        await page.evaluate(content => (window as any).__hostMessageHandler({ type: 'update', content }), changed);
+        await expect(page.locator('#outline .outline-item').nth(1)).toHaveAttribute('data-level', '3');
+        await expect(page.locator('.document-heading')).toHaveCount(1);
+        expect(await page.evaluate(() => (window as any).htmlToMarkdown())).toBe(changed);
+        await expect(page.locator('#toolbar [data-action="undo"]')).toBeDisabled();
+    });
+
     test('Minimal uses the chosen blue and progress follows an explicit outline color', async ({ page }) => {
         await page.goto('/production-editor.html');
         await page.waitForFunction(() => (window as any).__testApi?.ready);
