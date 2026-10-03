@@ -11,14 +11,11 @@
 function generateEditorBodyHtml(messages, platform, options) {
     const msg = messages || {};
     const m = (key) => msg[key] || '';
-    const mod = platform === 'darwin' ? 'Cmd' : 'Ctrl';
     const outlineOpen = !options || options.outlineOpen !== false;
     const sidebarClass = outlineOpen ? 'sidebar' : 'sidebar hidden';
     const openButtonClass = outlineOpen ? 'menu-btn hidden' : 'menu-btn';
     const settingsButton = options && options.settingsEnabled ? `<button type="button" class="sidebar-footer-action" id="extensionSettingsBtn" title="${m('openExtensionSettings')}" aria-label="${m('openExtensionSettings')}"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg></button>` : '';
     const exportEnabled = Boolean(options && options.exportEnabled);
-    const hostEditor = options && options.hostEditor === 'vscode' ? 'vscode' : 'text';
-    const hostEditorLabel = m(hostEditor === 'vscode' ? 'openInVsCode' : 'openInTextEditor');
     const exportButton = exportEnabled ? `<button type="button" data-action="export" id="exportButton" title="Export" aria-label="Export" aria-haspopup="dialog" aria-expanded="false" aria-controls="exportMenu"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 4 6 6-6 6"/><path d="M21 10H11a8 8 0 0 0-8 8v2"/></svg></button>` : '';
     const exportPanels = exportEnabled ? `
             <div id="exportMenu" class="export-menu" role="dialog" aria-label="Export" aria-describedby="exportLimitations" hidden>
@@ -71,9 +68,8 @@ function generateEditorBodyHtml(messages, platform, options) {
                         <button data-action="undo" title="${m('undo')}"></button>
                         <button data-action="redo" title="${m('redo')}"></button>
                     </div>
-                    <button type="button" data-action="insertMenu" class="toolbar-insert" id="insertButton" title="${m('commandPaletteInsert')}" aria-haspopup="dialog" aria-expanded="false" aria-controls="insertMenu"><span class="toolbar-insert-title">${m('commandPaletteInsert')}</span><span aria-hidden="true">▾</span></button>
                 </div>
-                <div class="toolbar-fixed toolbar-fixed--tools"><button type="button" data-action="formatActions" id="formatButton" title="${m('formatActions')}" aria-haspopup="dialog" aria-expanded="false" aria-controls="commandPalette">${m('formatActions')}</button><button type="button" data-action="contextToolbar" id="contextToolbarToggle" title="${m('contextualTools')}" aria-pressed="false">${m('contextualTools')}</button><button type="button" data-action="allActions" id="allActionsButton" title="${m('allActions')}" aria-haspopup="dialog" aria-expanded="false" aria-controls="commandPalette" hidden><span aria-hidden="true">…</span></button></div><div class="toolbar-inner" id="toolbarInner">
+                <div class="toolbar-fixed toolbar-fixed--tools"><button type="button" data-action="contextToolbar" id="contextToolbarToggle" title="${m('contextualTools')}" aria-label="${m('contextualTools')}" aria-pressed="false"><span aria-hidden="true">&gt;&gt;</span></button></div><div class="toolbar-inner" id="toolbarInner">
                     <div class="toolbar-group" data-group="inline">
                         <button data-action="bold" title="${m('bold')}"></button>
                         <button data-action="italic" title="${m('italic')}"></button>
@@ -104,15 +100,14 @@ function generateEditorBodyHtml(messages, platform, options) {
                         <button data-action="table" title="${m('insertTable')}"></button>
                     </div>
                 </div>
-                <button type="button" class="toolbar-more" id="toolbarMore" title="${m('toolbarMoreActions')}" aria-label="${m('toolbarMoreActions')}" aria-haspopup="menu" aria-expanded="false" aria-controls="toolbarOverflow" hidden>&#x22EF;</button>
+                <button type="button" class="toolbar-more" id="toolbarMore" title="${m('toolbarMoreActions')}" aria-label="${m('toolbarMoreActions')}" aria-haspopup="dialog" aria-expanded="false" aria-controls="toolbarOverflow">&#x22EF;</button>
                 <div class="toolbar-fixed toolbar-fixed--right">
                     <div class="toolbar-group" data-group="utility">
-                        <button data-action="openInTextEditor" data-host-editor="${hostEditor}" title="${hostEditorLabel} (${mod}+Shift+.)"></button>
                         ${exportButton}
                         <div class="editor-mode-switch" role="group" aria-label="${m('editorModes')}"><button type="button" data-editor-mode="visual" aria-pressed="true">${m('modeVisual')}</button><button type="button" data-editor-mode="source" aria-pressed="false">${m('modeSource')}</button><button type="button" data-editor-mode="split" aria-pressed="false">${m('modeSplit')}</button></div>
                     </div>
                 </div>
-                <div id="toolbarOverflow" class="toolbar-overflow" role="menu" aria-label="${m('toolbarMoreActions')}" hidden></div>
+                <div id="toolbarOverflow" class="toolbar-overflow" role="dialog" aria-label="${m('toolbarMoreActions')}" hidden><div class="toolbar-overflow-search"><input type="search" id="toolbarCommandSearch" placeholder="${m('commandPaletteFilter')}" aria-label="${m('commandPaletteFilter')}" /></div><div id="toolbarOverflowItems" role="menu" aria-label="${m('toolbarMoreActions')}"></div><div id="toolbarCommandResults" role="menu" aria-label="${m('allActions')}" hidden></div></div>
             </div>
             <div id="insertMenu" class="insert-menu" role="dialog" aria-label="${m('commandPaletteInsert')}" hidden></div>
             ${exportPanels}

@@ -1,3 +1,4 @@
+import { openInsertWorkspace, openActionPalette } from '../utils/command-menu';
 import { test, expect, Page } from '@playwright/test';
 
 const authored = '---\ntitle: "Review" # retained\n---\n\n# One\n\nBefore **target** after.\n\n## Two\n\nOther text.\n';
@@ -25,34 +26,25 @@ test('views, outline tabs and contextual toggle preserve authored source and cle
     await expect(page.locator('[data-action="undo"]')).toBeDisabled();
 });
 
-test('permanent All actions is keyboard reachable and preserves selection in contextual and narrow toolbars', async ({ page }) => {
+test('permanent command search is keyboard reachable and preserves selection in contextual and narrow toolbars', async ({ page }) => {
     await setup(page);
-    await expect(page.locator('#allActionsButton')).toBeHidden();
     await page.locator('#contextToolbarToggle').click();
     await page.locator('#editor strong').evaluate(node => {
         const range = document.createRange(); range.selectNodeContents(node);
         getSelection()!.removeAllRanges(); getSelection()!.addRange(range);
     });
-    const actions = page.locator('#allActionsButton');
-    await expect(actions).toHaveAccessibleName('All actions');
-    await actions.focus(); await actions.press('Enter');
-    await expect(page.getByRole('dialog', { name: 'All actions', exact: true })).toBeVisible();
-    await expect(actions).toHaveAttribute('aria-expanded', 'true');
-    await page.locator('.command-palette-input').press('Escape');
-    await expect(actions).toHaveAttribute('aria-expanded', 'false');
-    expect(await page.evaluate(() => getSelection()?.toString())).toBe('target');
-    await page.setViewportSize({ width: 320, height: 600 });
-    await expect(page.locator('#toolbarOverflow #allActionsButton')).toHaveCount(1);
-    await page.locator('#toolbarMore').click();
-    await actions.click();
-    await expect(page.locator('#toolbarOverflow')).toBeHidden();
-    await expect(page.getByRole('dialog', { name: 'All actions', exact: true })).toBeVisible();
-    await page.locator('.command-palette-input').press('Escape');
+    const actions = page.locator('#toolbarMore');
+    for (const width of [1440, 320]) {
+        await page.setViewportSize({ width, height: 600 });
+        await actions.focus(); await actions.press('Enter');
+        await expect(page.locator('#toolbarCommandSearch')).toBeFocused();
+        await expect(actions).toHaveAttribute('aria-expanded', 'true');
+        await page.locator('#toolbarCommandSearch').press('Escape');
+        await expect(actions).toHaveAttribute('aria-expanded', 'false');
+        expect(await page.evaluate(() => getSelection()?.toString())).toBe('target');
+    }
     expect(await snapshot(page)).toMatchObject({ content: authored, pending: false });
     await expect(page.locator('#toolbar [data-action="undo"]')).toBeDisabled();
-    await page.setViewportSize({ width: 1440, height: 900 });
-    await page.locator('button[data-editor-mode="source"]').click();
-    await expect(actions).toBeDisabled();
 });
 
 test('closing All actions before its deferred listener runs does not close the next opening', async ({ page }) => {
@@ -62,7 +54,7 @@ test('closing All actions before its deferred listener runs does not close the n
         const range = document.createRange(); range.selectNodeContents(node);
         getSelection()!.removeAllRanges(); getSelection()!.addRange(range);
     });
-    const actions = page.locator('#allActionsButton');
+    const actions = page.locator('.context-format-toolbar button[aria-label="All actions"]');
     const dialog = page.getByRole('dialog', { name: 'All actions', exact: true });
     const clockStart = new Date('2026-01-01T00:00:00Z');
     await page.clock.install({ time: clockStart });
@@ -76,9 +68,9 @@ test('closing All actions before its deferred listener runs does not close the n
     await page.clock.resume();
 
     await page.setViewportSize({ width: 320, height: 600 });
-    await expect(page.locator('#toolbarOverflow #allActionsButton')).toHaveCount(1);
-    await page.locator('#toolbarMore').click();
-    await actions.click();
+    // Drain the resize event before opening a palette that deliberately closes on resize.
+    await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+    await actions.dispatchEvent('click');
     await expect(dialog).toBeVisible();
     await expect(page.locator('#toolbarOverflow')).toBeHidden();
     await page.clock.runFor(1);
@@ -264,7 +256,10 @@ test('Outline uses one thin active marker and retains the configured accent', as
 test('source mode disables visual formatting and retains explicit mode labels', async ({ page }) => {
     await setup(page);
     await page.locator('button[data-editor-mode="source"]').click();
-    await expect(page.locator('#formatButton')).toBeDisabled();
+    await expect(page.locator('#formatButton')).toHaveCount(0);
+    await page.locator('#toolbarMore').click();
+    await page.locator('#toolbarCommandSearch').fill('bold');
+    await expect(page.locator('[data-menu-command="bold"]')).toBeDisabled();
     await expect(page.locator('[data-action="bold"]')).toBeDisabled();
     await expect(page.locator('button[data-editor-mode="source"]')).toHaveAttribute('aria-pressed', 'true');
     await expect(page.locator('#editor')).toBeHidden();
@@ -378,7 +373,7 @@ test('narrow Find keeps the selected document match visible above its scrollable
 
 test('Insert workspace filters categories, previews choices and recovers an empty search', async ({ page }) => {
     await setup(page);
-    await page.locator('#insertButton').click();
+    await openInsertWorkspace(page);
     await expect(page.locator('.insert-preview')).toHaveCount(8);
     await page.locator('[data-insert-category="equationsCategory"]').click();
     await expect(page.locator('#insertMenu [data-insert-action]:visible')).toHaveCount(2);
@@ -392,7 +387,7 @@ test('Insert workspace filters categories, previews choices and recovers an empt
 
 test('Action Palette uses shared descriptions and has a clear-search recovery action', async ({ page }) => {
     await setup(page);
-    await page.locator('#formatButton').click();
+    await openActionPalette(page);
     await page.locator('.command-palette-input').fill('unmatched-command');
     await expect(page.locator('.command-palette-empty')).toContainText('No matching actions');
     await page.locator('.command-palette-clear').click();
@@ -401,7 +396,7 @@ test('Action Palette uses shared descriptions and has a clear-search recovery ac
 
 test('rendered Insert previews stay view-only and nested icon activation shares Undo', async ({ page }) => {
     await setup(page);
-    await page.locator('#insertButton').click();
+    await openInsertWorkspace(page);
     await expect(page.locator('.insert-table-preview span')).toHaveCount(6);
     await expect(page.locator('.insert-preview-inlineMath .katex')).toBeVisible();
     await expect(page.locator('[data-insert-action="table"] .insert-command-title')).toHaveText('Insert Table');
@@ -417,7 +412,7 @@ for (const offset of [0, -0.5]) test('narrow Insert exposes complete lower comma
     await setup(page);
     await page.setViewportSize({ width: 480, height: 800 });
     if (offset) await page.addStyleTag({ content: `.insert-command { transform: translateY(${offset}px); }` });
-    await page.locator('#insertButton').click();
+    await openInsertWorkspace(page);
     const next = page.locator('.insert-scroll [data-direction="next"]');
     await expect(next).toBeVisible();
     for (let step = 0; step < 8 && await next.isEnabled(); step++) await next.click();
@@ -450,7 +445,7 @@ test('mode switches preserve the selected inline text through Markdown source of
 
 test('palette categories expose the complete command set and filtering is view only', async ({ page }) => {
     await setup(page);
-    await page.locator('#formatButton').click();
+    await openActionPalette(page);
     const all = await page.locator('.command-palette-item').count();
     await expect(page.locator('.command-palette-count')).toHaveText(`${all} actions`);
     await page.locator('[data-palette-category="insert"]').click();
@@ -560,7 +555,7 @@ test('contextual formatting finds a visible gap without covering headings or sel
 
 test('palette navigation and export actions are view-only', async ({ page }) => {
     await setup(page);
-    await page.locator('#formatButton').click();
+    await openActionPalette(page);
     await page.locator('.command-palette-input').fill('viewSplit');
     await page.keyboard.press('Enter');
     await expect(page.locator('#sourceEditor')).toBeVisible();

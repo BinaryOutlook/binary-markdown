@@ -21,13 +21,16 @@ async function openInsert(editor) {
         // still evaluates DOM state. Poll an actionable control instead of
         // awaiting a frame promise that prevents the watchdog from polling.
         await editor.waitForFunction(() => {
-            const visible = node => node && !node.disabled && node.getClientRects().length > 0 &&
-                getComputedStyle(node).visibility !== 'hidden';
-            return Boolean(document.getElementById('insertMenu') &&
-                (visible(document.getElementById('insertButton')) || visible(document.getElementById('toolbarMore'))));
+            const node = document.getElementById('toolbarMore');
+            return Boolean(document.getElementById('insertMenu') && node && !node.disabled &&
+                node.getClientRects().length && getComputedStyle(node).visibility !== 'hidden');
         });
-        if (!await editor.locator('#insertButton').isVisible()) await editor.locator('#toolbarMore').click();
-        await editor.locator('#insertButton').click();
+        if (!await editor.locator('#toolbarOverflow').isVisible()) await editor.locator('#toolbarMore').click();
+        await editor.evaluate(() => {
+            const search = document.getElementById('toolbarCommandSearch');
+            search.focus(); search.value = 'viewInsert'; search.dispatchEvent(new Event('input', { bubbles: true }));
+        });
+        await editor.locator('[data-menu-command="viewInsert"]').click();
         await editor.waitForFunction(() => {
             const menu = document.getElementById('insertMenu');
             return Boolean(menu && !menu.hidden && menu.getClientRects().length);
@@ -39,7 +42,7 @@ async function openInsert(editor) {
                 readyState: document.readyState, visibility: document.visibilityState,
                 focused: document.hasFocus(), activeElement: document.activeElement?.id,
                 mode: document.documentElement.dataset.toolbarMode,
-                controls: ['insertButton', 'toolbarMore', 'insertMenu'].map(id => {
+                controls: ['toolbarMore', 'toolbarCommandSearch', 'insertMenu'].map(id => {
                     const node = document.getElementById(id);
                     return { id, present: Boolean(node), visible: Boolean(node?.getClientRects().length),
                         disabled: node?.disabled, hidden: node?.hidden };

@@ -100,14 +100,16 @@ test.describe('Export toolbar and job status', () => {
         } finally { release(); }
     });
 
-    test('button is immediately after VS Code, preserves source/selection, and lists four formats', async ({ page }, testInfo) => {
+    test('icon-only Export preserves source/selection and lists four formats', async ({ page }, testInfo) => {
         await setup(page);
         await page.getByText('Selection remains intact.', { exact: true }).click();
         const before = await page.evaluate(() => {
             const selection = window.getSelection()!;
             return { text: selection.anchorNode?.textContent, offset: selection.anchorOffset };
         });
-        expect(await page.locator('#exportButton').evaluate(element => element.previousElementSibling?.getAttribute('data-action'))).toBe('openInTextEditor');
+        await expect(page.locator('#toolbar [data-action="openInTextEditor"]')).toHaveCount(0);
+        await expect(page.locator('#exportButton svg')).toHaveCount(1);
+        expect(await page.locator('#exportButton').evaluate(element => [...element.children].filter(child => getComputedStyle(child).display !== 'none').map(child => child.textContent).join('').trim())).toBe('');
         await page.getByRole('button', { name: 'Export', exact: true }).click();
         await expect(page.getByRole('dialog', { name: 'Export', exact: true })).toBeVisible();
         await expect(page.locator('[data-export-format]')).toHaveCount(4);

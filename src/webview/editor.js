@@ -177,7 +177,7 @@
     // Populate toolbar buttons with Lucide icons
     function initToolbarIcons() {
         toolbar.querySelectorAll('button[data-action]').forEach(function(btn) {
-            var icon = LUCIDE_ICONS[btn.dataset.action];
+            var icon = btn.dataset.action === 'contextToolbar' ? null : LUCIDE_ICONS[btn.dataset.action];
             if (icon) btn.innerHTML = icon;
         });
     }
@@ -188,6 +188,12 @@
     var toolbarInner = document.getElementById('toolbarInner');
     var toolbarMore = document.getElementById('toolbarMore');
     var toolbarOverflow = document.getElementById('toolbarOverflow');
+    var toolbarOverflowItems = document.getElementById('toolbarOverflowItems');
+    var toolbarCommandSearch = document.getElementById('toolbarCommandSearch');
+    var toolbarCommandResults = document.getElementById('toolbarCommandResults');
+    var toolbarMenuRange = null;
+    var toolbarMenuRevision = null;
+    var toolbarMenuSourceSelection = null;
     var toolbarActions = [];
     var toolbarLayoutFrame = 0;
     if (toolbarMore && toolbarOverflow) {
@@ -197,9 +203,8 @@
             if (button.title) button.setAttribute('aria-label', button.title);
             const label = document.createElement('span');
             label.className = 'toolbar-action-label';
-            label.textContent = button.dataset.action === 'openInTextEditor'
-                ? i18n[button.dataset.hostEditor === 'vscode' ? 'openInVsCode' : 'openInTextEditor'] : button.title;
-            if (!['formatActions', 'contextToolbar'].includes(button.dataset.action)) button.appendChild(label);
+            label.textContent = button.title;
+            button.appendChild(label);
             toolbarActions.push({ button, home, formatting: toolbarInner.contains(button) });
         });
     }
@@ -208,6 +213,14 @@
         if (!toolbarOverflow) return;
         toolbarOverflow.hidden = true;
         toolbarMore.setAttribute('aria-expanded', 'false');
+        if (editorRange(toolbarMenuRange)) {
+            const selection = window.getSelection();
+            selection.removeAllRanges(); selection.addRange(toolbarMenuRange);
+        }
+        if (toolbarMenuSourceSelection && isSourceMode) {
+            sourceEditor.setSelectionRange(toolbarMenuSourceSelection.start, toolbarMenuSourceSelection.end);
+        }
+        toolbarMenuRange = null; toolbarMenuSourceSelection = null;
         if (restoreFocus) toolbarMore.focus({ preventScroll: true });
     }
 
@@ -220,12 +233,55 @@
         toolbarOverflow.style.maxHeight = Math.max(28, window.innerHeight - rect.bottom - 12) + 'px';
     }
 
+    function toolbarMenuChoices() {
+        return [...toolbarOverflow.querySelectorAll('button:not(:disabled)')].filter(button => button.getClientRects().length);
+    }
+
+    function renderToolbarCommandSearch() {
+        const query = toolbarCommandSearch.value.trim();
+        const searching = Boolean(query) || !toolbarOverflowItems.children.length;
+        toolbarOverflowItems.hidden = searching;
+        toolbarCommandResults.hidden = !searching;
+        toolbarCommandResults.replaceChildren();
+        if (!searching) return;
+        for (const item of matchingCommandItems(query)) {
+            const control = createCommandItem(item);
+            delete control.dataset.action;
+            control.dataset.menuCommand = item.action;
+            control.setAttribute('role', 'menuitem');
+            const reason = isSourceMode && !item.action.startsWith('view') ? i18n.insertUnavailableSource
+                : insertActions.includes(item.action) ? insertUnavailable(item.action, toolbarMenuRange) : '';
+            if (reason) { control.disabled = true; control.querySelector('small').textContent = reason; }
+            toolbarCommandResults.appendChild(control);
+        }
+        if (!toolbarCommandResults.children.length) {
+            const empty = document.createElement('p'); empty.setAttribute('role', 'status');
+            empty.textContent = i18n.noMatchingActions + '. ' + i18n.searchRecovery;
+            const clear = document.createElement('button'); clear.type = 'button'; clear.textContent = i18n.clearSearch;
+            clear.addEventListener('click', event => {
+                event.stopPropagation(); toolbarCommandSearch.value = ''; renderToolbarCommandSearch(); toolbarCommandSearch.focus();
+            });
+            toolbarCommandResults.append(empty, clear);
+        }
+    }
+
     function openToolbarOverflow(last) {
+        const selection = window.getSelection();
+        const current = selection?.rangeCount ? selection.getRangeAt(0) : null;
+        toolbarMenuRange = editorRange(current) ? current.cloneRange()
+            : editorRange(savedToolbarRange) ? savedToolbarRange.cloneRange() : null;
+        if (!toolbarMenuRange && !isSourceMode) {
+            toolbarMenuRange = document.createRange(); toolbarMenuRange.selectNodeContents(editor); toolbarMenuRange.collapse(false);
+        }
+        toolbarMenuRevision = editorRenderRevision;
+        toolbarMenuSourceSelection = isSourceMode ? { start: sourceEditor.selectionStart, end: sourceEditor.selectionEnd } : null;
+        toolbarCommandSearch.value = '';
+        renderToolbarCommandSearch();
         toolbarOverflow.hidden = false;
         toolbarMore.setAttribute('aria-expanded', 'true');
         positionToolbarOverflow();
-        const items = [...toolbarOverflow.querySelectorAll('button:not(:disabled)')];
-        (last ? items.at(-1) : items[0])?.focus({ preventScroll: true });
+        if (last) toolbarMenuChoices().at(-1)?.focus({ preventScroll: true });
+        else toolbarCommandSearch.focus({ preventScroll: true });
     }
 
     function scheduleToolbarLayout() {
@@ -243,7 +299,7 @@
             if (button.parentNode !== home.parentNode) home.after(button);
             button.removeAttribute('role');
         }
-        toolbarMore.hidden = true;
+        toolbarMore.hidden = false;
         toolbar.querySelectorAll('.toolbar-fixed').forEach(section => section.classList.remove('toolbar-empty'));
         const utilityWidth = [...toolbar.querySelectorAll('.toolbar-fixed')].reduce((width, section) => width + section.getBoundingClientRect().width, 0);
         if (toolbar.dataset.utilityWidth !== String(utilityWidth)) {
@@ -267,7 +323,7 @@
             for (const { button, home } of candidates) {
                 if (fits()) break;
                 if (!button.getClientRects().length) continue;
-                toolbarOverflow.appendChild(button);
+                toolbarOverflowItems.appendChild(button);
                 button.setAttribute('role', 'menuitem');
                 const section = home.parentElement.closest('.toolbar-fixed');
                 if (section && ![...section.querySelectorAll('button')].some(item => item.getClientRects().length)) {
@@ -277,16 +333,16 @@
         }
         // Original order in the menu remains stable as its membership changes.
         for (const { button } of toolbarActions) {
-            if (button.parentNode === toolbarOverflow) toolbarOverflow.appendChild(button);
+            if (button.parentNode === toolbarOverflowItems) toolbarOverflowItems.appendChild(button);
         }
-        toolbarMore.hidden = !toolbarOverflow.children.length;
-        if (toolbarMore.hidden) closeToolbarOverflow(false);
-        else if (wasOpen || focusedAction?.button.parentNode === toolbarOverflow) {
+        if (wasOpen || focusedAction?.button.parentNode === toolbarOverflowItems) {
+            renderToolbarCommandSearch();
             toolbarOverflow.hidden = false;
             toolbarMore.setAttribute('aria-expanded', 'true');
             positionToolbarOverflow();
         }
-        if (active === toolbarMore && !toolbarMore.hidden) toolbarMore.focus({ preventScroll: true });
+        if (active.dataset?.menuCommand) toolbarCommandResults.querySelector('[data-menu-command="' + active.dataset.menuCommand + '"]')?.focus({ preventScroll: true });
+        else if (active === toolbarMore && !toolbarMore.hidden) toolbarMore.focus({ preventScroll: true });
         else if (focusedAction && active.getClientRects().length) active.focus({ preventScroll: true });
         else if (focusedAction || (active === toolbarMore && toolbarMore.hidden)) {
             const first = toolbarActions.find(item => item.button.getClientRects().length && !item.button.disabled);
@@ -308,20 +364,41 @@
             }
         });
         toolbarOverflow.addEventListener('mousedown', event => { if (event.target.closest('button')) event.preventDefault(); });
+        toolbarCommandSearch.addEventListener('input', renderToolbarCommandSearch);
+        toolbarOverflow.addEventListener('click', event => {
+            const control = event.target.closest('[data-menu-command]');
+            if (!control || control.disabled) return;
+            event.stopPropagation();
+            const action = control.dataset.menuCommand;
+            if (!action.startsWith('view') && (toolbarMenuRevision !== editorRenderRevision || !editorRange(toolbarMenuRange))) {
+                closeToolbarOverflow(false); showEditorToast(i18n.insertUnavailableSelection); return;
+            }
+            const range = editorRange(toolbarMenuRange) ? toolbarMenuRange.cloneRange() : null;
+            closeToolbarOverflow(false);
+            if (!isSourceMode) {
+                editor.focus({ preventScroll: true });
+                // Focusing a previously unfocused editor can move its selection.
+                if (range) { const selection = window.getSelection(); selection.removeAllRanges(); selection.addRange(range); }
+            }
+            savedToolbarRange = null;
+            executeEditorCommand(action);
+        });
         toolbarOverflow.addEventListener('keydown', function(event) {
             if (toolbarOverflow.hidden) return;
-            const items = [...toolbarOverflow.querySelectorAll('button:not(:disabled)')];
+            const items = toolbarMenuChoices();
             const index = items.indexOf(document.activeElement);
             let next;
             if (event.key === 'ArrowDown') next = (index + 1) % items.length;
-            if (event.key === 'ArrowUp') next = (index + items.length - 1) % items.length;
-            if (event.key === 'Home') next = 0;
-            if (event.key === 'End') next = items.length - 1;
+            if (event.key === 'ArrowUp') next = index < 0 ? items.length - 1 : (index + items.length - 1) % items.length;
+            if (event.target !== toolbarCommandSearch && event.key === 'Home') next = 0;
+            if (event.target !== toolbarCommandSearch && event.key === 'End') next = items.length - 1;
             if (next !== undefined) {
                 event.preventDefault();
                 event.stopPropagation();
                 items[next]?.focus();
                 items[next]?.scrollIntoView({ block: 'nearest' });
+            } else if (event.key === 'Enter' && event.target === toolbarCommandSearch) {
+                event.preventDefault(); event.stopPropagation(); items[0]?.click();
             } else if (event.key === 'Escape') {
                 event.preventDefault();
                 event.stopPropagation();
@@ -12449,7 +12526,6 @@
         { group: 'view', action: 'viewOutline', i18nKey: 'outlineTitle', icon: 'openOutline' },
         { group: 'view', action: 'viewFind', i18nKey: 'searchPlaceholder' },
         { group: 'view', action: 'viewReplace', i18nKey: 'replace' },
-        { group: 'view', action: 'viewTextEditor', i18nKey: 'openInTextEditor', icon: 'openInTextEditor' },
         { group: 'view', action: 'viewExport', i18nKey: 'exportPanelTitle', icon: 'export' },
     ];
 
@@ -12538,7 +12614,7 @@
     }
 
     function insertTrigger() {
-        return insertButton.getClientRects().length ? insertButton : toolbarMore;
+        return insertButton?.getClientRects().length ? insertButton : toolbarMore;
     }
 
     function positionInsertMenu() {
@@ -12624,7 +12700,7 @@
     function closeInsertMenu(restoreFocus) {
         if (!insertMenu) return;
         insertMenu.hidden = true;
-        insertButton.setAttribute('aria-expanded', 'false');
+        insertButton?.setAttribute('aria-expanded', 'false');
         restoreInsertRange();
         if (restoreFocus) insertTrigger().focus({ preventScroll: true });
     }
@@ -12639,7 +12715,7 @@
             insertMenuRange.selectNodeContents(editor);
             insertMenuRange.collapse(false);
         }
-        insertButton.dispatchEvent(new CustomEvent('toolbar-submenu-open', { bubbles: true }));
+        toolbar.dispatchEvent(new CustomEvent('toolbar-submenu-open', { bubbles: true }));
         for (const item of insertMenu.querySelectorAll('button[data-insert-action]')) {
             const reason = insertUnavailable(item.dataset.insertAction, insertMenuRange);
             item.setAttribute('aria-disabled', String(Boolean(reason)));
@@ -12648,7 +12724,7 @@
             description.hidden = false;
         }
         insertMenu.hidden = false;
-        insertButton.setAttribute('aria-expanded', 'true');
+        insertButton?.setAttribute('aria-expanded', 'true');
         insertSearch.value = ''; insertCategorySelection = 'allCategory'; filterInsertWorkspace();
         positionInsertMenu();
         const choices = [...insertMenu.querySelectorAll('button[data-insert-action]')];
@@ -12656,7 +12732,7 @@
         else insertSearch.focus({ preventScroll: true });
     }
 
-    if (insertButton && insertMenu) {
+    if (insertMenu) {
         const searchBar = document.createElement('div'); searchBar.className = 'insert-search';
         insertSearch = document.createElement('input'); insertSearch.type = 'search';
         insertSearch.placeholder = i18n.commandPaletteFilter; insertSearch.setAttribute('aria-label', i18n.commandPaletteFilter);
@@ -12726,12 +12802,12 @@
             button.append(icon, details, createInsertPreview(action), shortcut);
             list.appendChild(button);
         }
-        insertButton.addEventListener('mousedown', event => { captureToolbarSelection(event); event.preventDefault(); });
-        insertButton.addEventListener('click', event => {
+        insertButton?.addEventListener('mousedown', event => { captureToolbarSelection(event); event.preventDefault(); });
+        insertButton?.addEventListener('click', event => {
             event.stopPropagation();
             if (insertMenu.hidden) openInsertMenu(false); else closeInsertMenu(true);
         });
-        insertButton.addEventListener('keydown', event => {
+        insertButton?.addEventListener('keydown', event => {
             if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
                 event.preventDefault(); event.stopPropagation();
                 openInsertMenu(event.key === 'ArrowUp');
@@ -12778,10 +12854,10 @@
             if (directInsertion) syncMarkdownSync();
         });
         document.addEventListener('mousedown', event => {
-            if (!insertMenu.hidden && !insertMenu.contains(event.target) && !insertButton.contains(event.target)) closeInsertMenu(false);
+            if (!insertMenu.hidden && !insertMenu.contains(event.target) && !insertTrigger().contains(event.target)) closeInsertMenu(false);
         });
         insertMenu.addEventListener('focusout', () => queueMicrotask(() => {
-            if (!insertMenu.hidden && !insertMenu.contains(document.activeElement) && document.activeElement !== insertButton) closeInsertMenu(false);
+            if (!insertMenu.hidden && !insertMenu.contains(document.activeElement) && document.activeElement !== insertTrigger()) closeInsertMenu(false);
         }));
         window.addEventListener('resize', () => { if (!insertMenu.hidden) positionInsertMenu(); });
         new ResizeObserver(() => { if (!insertMenu.hidden) positionInsertMenu(); }).observe(toolbar);
@@ -12893,26 +12969,64 @@
         document.body.appendChild(commandPalette);
     }
 
+    function commandItemLabel(item) {
+        return item.action === 'viewExport'
+            ? { label: document.getElementById('exportButton').getAttribute('aria-label'), shortcut: '' }
+            : parseI18nLabel(item.i18nKey);
+    }
+
+    function matchingCommandItems(filter) {
+        const query = (filter || '').trim().toLocaleLowerCase();
+        return COMMAND_PALETTE_ITEMS.filter(item => {
+            if (item.action === 'viewExport' && !document.getElementById('exportButton')) return false;
+            const parsed = commandItemLabel(item);
+            return !query || [parsed.label, item.action, parsed.shortcut, actionDescription(item.action)]
+                .join(' ').toLocaleLowerCase().includes(query);
+        });
+    }
+
+    function createCommandItem(item) {
+        const parsed = commandItemLabel(item);
+        const isMac = navigator.platform.toUpperCase().includes('MAC');
+        var el = document.createElement('button'); el.type = 'button';
+        el.className = 'command-palette-item';
+        el.dataset.action = item.action;
+        if (item.action === 'viewUndo') el.disabled = !undoManager.canUndo;
+        if (item.action === 'viewRedo') el.disabled = !undoManager.canRedo;
+
+        // Icon
+        var iconSpan = document.createElement('span');
+        iconSpan.className = 'command-palette-icon';
+        iconSpan.innerHTML = LUCIDE_ICONS[item.icon] || '';
+        el.appendChild(iconSpan);
+
+        // Label
+        var labelSpan = document.createElement('span');
+        labelSpan.className = 'command-palette-label';
+        labelSpan.textContent = parsed.label;
+        const description = document.createElement('small'); description.textContent = actionDescription(item.action);
+        labelSpan.appendChild(description);
+        el.appendChild(labelSpan);
+
+        // Shortcut
+        if (parsed.shortcut) {
+            var shortcutSpan = document.createElement('span');
+            shortcutSpan.className = 'command-palette-shortcut';
+            shortcutSpan.textContent = isMac ? parsed.shortcut.replace(/Ctrl/g, 'Cmd') : parsed.shortcut;
+            el.appendChild(shortcutSpan);
+        }
+
+        return el;
+    }
+
     function renderCommandPaletteItems(filter) {
         commandPaletteList.innerHTML = '';
 
-        var normalizedFilter = (filter || '').toLowerCase().trim();
         var currentGroup = null;
         var visibleIndex = 0;
-        var isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
 
-        for (var idx = 0; idx < COMMAND_PALETTE_ITEMS.length; idx++) {
-            var item = COMMAND_PALETTE_ITEMS[idx];
+        for (const item of matchingCommandItems(filter)) {
             if (commandPaletteCategory && item.group !== commandPaletteCategory) continue;
-            if (item.action === 'viewExport' && !document.getElementById('exportButton')) continue;
-            var parsed = item.action === 'viewExport' ? { label: document.getElementById('exportButton').getAttribute('aria-label'), shortcut: '' } : parseI18nLabel(item.i18nKey);
-
-            // Filter: match against label, action name, or shortcut
-            if (normalizedFilter) {
-                var searchable = (parsed.label + ' ' + item.action + ' ' + parsed.shortcut).toLowerCase();
-                if (searchable.indexOf(normalizedFilter) === -1) continue;
-            }
-
             // Insert group header if new group
             if (item.group !== currentGroup) {
                 currentGroup = item.group;
@@ -12922,36 +13036,8 @@
                 commandPaletteList.appendChild(groupLabel);
             }
 
-            // Create item element
-            var el = document.createElement('button'); el.type = 'button';
-            el.className = 'command-palette-item';
+            const el = createCommandItem(item);
             if (visibleIndex === 0) el.classList.add('selected');
-            el.dataset.action = item.action;
-            if (item.action === 'viewUndo') el.disabled = !undoManager.canUndo;
-            if (item.action === 'viewRedo') el.disabled = !undoManager.canRedo;
-
-            // Icon
-            var iconSpan = document.createElement('span');
-            iconSpan.className = 'command-palette-icon';
-            iconSpan.innerHTML = LUCIDE_ICONS[item.icon] || '';
-            el.appendChild(iconSpan);
-
-            // Label
-            var labelSpan = document.createElement('span');
-            labelSpan.className = 'command-palette-label';
-            labelSpan.textContent = parsed.label;
-            const description = document.createElement('small'); description.textContent = actionDescription(item.action);
-            labelSpan.appendChild(description);
-            el.appendChild(labelSpan);
-
-            // Shortcut
-            if (parsed.shortcut) {
-                var shortcutSpan = document.createElement('span');
-                shortcutSpan.className = 'command-palette-shortcut';
-                shortcutSpan.textContent = isMac ? parsed.shortcut.replace(/Ctrl/g, 'Cmd') : parsed.shortcut;
-                el.appendChild(shortcutSpan);
-            }
-
             commandPaletteList.appendChild(el);
             visibleIndex++;
         }
@@ -13143,12 +13229,16 @@
             commandPaletteSavedRange = null;
         }
 
+        executeEditorCommand(action);
+    }
+
+    function executeEditorCommand(action) {
         const views = {
             viewUndo: () => undoManager.undo(), viewRedo: () => undoManager.redo(),
-            viewInsert: () => insertButton?.click(), viewContextual: () => document.getElementById('contextToolbarToggle')?.click(),
+            viewInsert: () => openInsertMenu(false), viewContextual: () => document.getElementById('contextToolbarToggle')?.click(),
             viewVisual: () => setEditorMode('visual'), viewSource: () => setEditorMode('source'), viewSplit: () => setEditorMode('split'),
             viewOutline: openSidebar, viewFind: () => openSearchBox(false), viewReplace: () => openSearchBox(true),
-            viewTextEditor: () => host.openInTextEditor(), viewExport: () => document.getElementById('exportButton')?.click(),
+            viewExport: () => document.getElementById('exportButton')?.click(),
         };
         if (views[action]) { views[action](); return; }
         // Save undo snapshot before action
@@ -13159,6 +13249,7 @@
 
         // Dispatch via shared function (same as toolbar)
         dispatchToolbarAction(action);
+        if (insertActions.includes(action) && !['link', 'image', 'toc'].includes(action)) syncMarkdownSync();
     }
 
     // ========== UTILITIES ==========

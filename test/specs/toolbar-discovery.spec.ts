@@ -107,6 +107,8 @@ for (const mode of ['full', 'simple']) {
             if (geometry.overflow.length) {
                 await page.locator('#toolbarMore').click();
                 const items = page.locator('#toolbarOverflow button:not(:disabled)');
+                await expect(page.locator('#toolbarCommandSearch')).toBeFocused();
+                await page.keyboard.press('ArrowDown');
                 await expect(items.first()).toBeFocused();
                 await page.keyboard.press('End');
                 await expect(items.last()).toBeFocused();

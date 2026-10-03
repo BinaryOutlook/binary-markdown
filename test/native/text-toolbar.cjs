@@ -16,7 +16,7 @@ function toolbarGeometry() {
         rects.push({ action: button.dataset.action || (button.dataset.editorMode ? "mode:" + button.dataset.editorMode : button.id), left: rect.left, right: rect.right, top: rect.top, bottom: rect.bottom });
     }
     const overlaps = rects.slice(1).filter((rect, i) => rect.left < rects[i].right - 1 && rect.top < rects[i].bottom - 1 && rect.bottom > rects[i].top + 1).map(rect => rect.action);
-    return { clipped, overlaps, visible: rects.map(rect => rect.action), overflow: [...menu.querySelectorAll('button')].map(button => button.dataset.action), width: bounds.width };
+    return { clipped, overlaps, visible: rects.map(rect => rect.action), overflow: [...menu.querySelectorAll('button[data-action]')].map(button => button.dataset.action), width: bounds.width };
 }
 
 module.exports = { toolbarGeometry };

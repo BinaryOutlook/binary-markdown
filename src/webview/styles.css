@@ -1326,7 +1326,7 @@ html[data-math-source-position="below"] .editor .math-wrapper[data-mode="edit"] 
 .toolbar .editor-mode-switch button { font: inherit; font-size: 12px; min-height: 28px; }
 .editor-mode-switch button[aria-pressed="true"], #contextToolbarToggle[aria-pressed="true"] { background: var(--selection-bg); }
 .editor-mode-switch button[aria-pressed="true"] { background: var(--link-color); color: var(--bg-color); }
-#formatButton, #contextToolbarToggle { font: inherit; font-size: 12px; gap: 4px; }
+#contextToolbarToggle { font: inherit; font-size: 12px; gap: 4px; }
 #contextToolbarToggle { max-width: none; white-space: nowrap; }
 [data-context-toolbar="true"] #toolbarInner { display: none; }
 [data-context-toolbar="true"] .toolbar-fixed--right { margin-left: auto; }
@@ -1481,10 +1481,10 @@ button.command-palette-item { border: 0; width: 100%; text-align: start; font: i
 
 .toolbar { height: auto; min-height: 40px; }
 .toolbar-fixed--tools { padding-inline: 2px; }
-#formatButton > .toolbar-action-label, #contextToolbarToggle > .toolbar-action-label { display: none; }
-#toolbarOverflow #formatButton > .toolbar-action-label, #toolbarOverflow #contextToolbarToggle > .toolbar-action-label { display: block; }
-#exportButton { width: auto; gap: 4px; }
-#exportButton .toolbar-action-label { display: inline; font-size: 12px; }
+#contextToolbarToggle > .toolbar-action-label { display: none; }
+#toolbarOverflow #contextToolbarToggle > .toolbar-action-label { display: block; }
+#exportButton .toolbar-action-label { display: none; }
+#toolbarOverflow #exportButton .toolbar-action-label { display: inline; }
 
 .search-result .search-source-action { width: auto; flex-shrink: 0; border: 1px solid var(--border-color); border-radius: 4px; padding: 2px 6px; }
 
@@ -1501,8 +1501,6 @@ button.command-palette-item { border: 0; width: 100%; text-align: start; font: i
 
 /* Concept review corrections use the active theme and remain outside source. */
 .toolbar button:disabled { opacity: .4; cursor: default; background: transparent; }
-.toolbar [data-action="openInTextEditor"] { width: auto; gap: 6px; font-size: 12px; white-space: nowrap; }
-.toolbar [data-action="openInTextEditor"] .toolbar-action-label { display: inline; }
 html:not([data-editor-width-indicators="false"]):not([data-editor-width-mode="full"]):not([data-editor-mode="source"]):not([data-editor-mode="split"]) #editor:focus-within { background-image: linear-gradient(var(--border-color), var(--border-color)), linear-gradient(var(--border-color), var(--border-color)); background-size: 1px 100%, 1px 100%; background-position: left top, right top; background-repeat: no-repeat; }
 .editor-width-guide:not(:focus-within):has(~ #editorWrapper #editor:not(:focus-within)) .editor-width-bounds { opacity: 0; }
 .sidebar-tabs button { padding: 8px; font-size: 14px; }
@@ -1651,3 +1649,12 @@ html[data-table-toolbar-position="bottom-left"] .editor table, html[data-table-t
 #exportWarnings { margin-top: 12px; padding: 8px; border: 1px solid #bd8d2c; border-radius: 4px; background: #fff8e3; color: #5d4519; font-size: 12px; }
 #exportWarningsList { padding-left: 20px; max-height: 120px; overflow: auto; }
 [data-theme="dark"] #exportWarnings, [data-theme="night"] #exportWarnings { background: #3c321c; color: #eed295; }
+
+/* Command search stays above the overflow options at every toolbar width. */
+.toolbar-overflow-search { position: sticky; top: -4px; z-index: 1; padding: 4px 0 8px; background: var(--bg-color); }
+.toolbar-overflow-search input { box-sizing: border-box; width: 100%; padding: 8px; border: 1px solid var(--border-color); border-radius: 4px; color: var(--text-color); background: var(--bg-color); font: inherit; }
+.toolbar-overflow-search input:focus-visible { outline: 2px solid var(--link-color); outline-offset: -2px; }
+.toolbar-overflow .command-palette-item { height: auto; min-height: 32px; max-width: none; padding: 8px; }
+.toolbar-overflow .command-palette-label { white-space: normal; overflow-wrap: anywhere; }
+.toolbar-overflow .command-palette-label small { display: block; font-size: 11px; opacity: .75; }
+.toolbar-overflow .command-palette-shortcut { margin-left: auto; }

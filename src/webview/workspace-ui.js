@@ -12,10 +12,6 @@
             node.type = 'button'; node.textContent = label;
             node.addEventListener('click', handler); return node;
         };
-        const format = byId('formatButton');
-        if (format) format.addEventListener('click', options.openActions);
-        const allActions = byId('allActionsButton');
-        if (allActions) allActions.addEventListener('click', options.openActions);
         const contextToggle = byId('contextToolbarToggle');
         let contextual = false;
         const context = document.createElement('div');
@@ -56,7 +52,7 @@
             context.hidden = false;
             const width = context.offsetWidth, height = context.offsetHeight;
             // Search the nearest visible gap rather than placing an overlay on
-            // the preceding heading. Dense pages retain the permanent Format action.
+            // the preceding heading. Dense pages retain the toolbar command search.
             const obstacles = [...editor.children, ...document.querySelectorAll('.editor-width-guide button, .editor-width-guide [role="tooltip"]')]
                 .map(node => node.getBoundingClientRect()).filter(box => box.width && box.height);
             const minTop = toolbar.getBoundingClientRect().bottom + 6;
@@ -78,7 +74,6 @@
             contextual = !contextual;
             contextToggle.setAttribute('aria-pressed', String(contextual));
             document.documentElement.dataset.contextToolbar = String(contextual);
-            if (allActions) allActions.hidden = !contextual;
             options.layout(); positionContext();
         });
         context.addEventListener('keydown', event => {

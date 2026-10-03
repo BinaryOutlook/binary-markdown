@@ -46,8 +46,10 @@ async function commands(page, item) {
         await page.evaluate(() => window.__testApi.setMarkdown('```javascript\nconst value = 42;\n```\n'));
         await page.locator('#editor pre code').click();
     }
-    if (item.id === 'palette') { await page.locator('#formatButton').click(); await page.locator('.command-palette-input').fill('table'); return; }
-    await page.locator('#insertButton').click();
+    if (item.id === 'palette') { await page.locator('#editor').focus(); await page.keyboard.press('ControlOrMeta+/'); await page.locator('.command-palette-input').fill('table'); return; }
+    await page.locator('#toolbarMore').click();
+    await page.locator('#toolbarCommandSearch').fill('viewInsert');
+    await page.locator('[data-menu-command="viewInsert"]').click();
     if (item.id === 'category') await page.locator('[data-insert-category="equationsCategory"]').click();
     if (item.id === 'search') await page.locator('.insert-search input').fill('code');
     if (item.id === 'empty') await page.locator('.insert-search input').fill('unmatched-command');
@@ -61,7 +63,7 @@ async function prepare(page, section, item) {
     if (section === '01-canvas') {
         await loadDocument(page, id === 'empty' ? '' : CANVAS);
         if (id === 'focused') await page.locator('#editor p').first().click();
-        else await page.locator('#insertButton').focus();
+        else await page.locator('#toolbarMore').focus();
         // The rail may be hidden. A hidden tab cannot transfer actual focus,
         // so verify the requested state through the live active element.
         await page.waitForFunction(focused => document.getElementById('editor').contains(document.activeElement) === focused, id === 'focused');
@@ -72,7 +74,7 @@ async function prepare(page, section, item) {
         if (await page.locator('#toolbarOverflow').isVisible()) await page.keyboard.press('Escape');
         if (id === 'selection') await selectText(page, '#editor p');
         if (id === 'protected') await selectText(page, '#editor pre code');
-        if (id === 'actions') await page.locator('#formatButton').click();
+        if (id === 'actions') { await page.locator('#editor').focus(); await page.keyboard.press('ControlOrMeta+/'); }
         if (id === 'source') await page.locator('[data-editor-mode="source"]').click();
         if (id === 'overflow') await page.locator('#toolbarMore').click();
     } else if (section === '04-outline') {
