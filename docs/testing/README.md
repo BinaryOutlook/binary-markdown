@@ -8,6 +8,10 @@ From the repository root, run `npm run compile` and `npm run test:unit`. The uni
 
 `npm test` compiles and lints first, then runs the complete unit suite and the full browser suite. Ordinary local unit runs explicitly skip real-converter and package checks when their opt-in prerequisites are absent; they do not establish candidate-level validation. Follow the [candidate instructions](../building.md#validate-a-candidate) to enable those checks and identify the tested VSIX.
 
+## Concept rendering review
+
+For concept-to-render evaluation, use the [scoped AI visual review workflow](visual-review.md). It captures the production browser UI, preserves fixed chosen references, and returns section-only PASS/FAIL/BLOCKED verdicts with a correction handoff. AI evaluation is explicit and separate from functional CI and final owner acceptance.
+
 ## Paragraph and table source regressions
 
 From the repository root, run `npm run compile`, `npm run test:markdown-blocks`, `npm run test:table-format`, and `npm run test:build`, then `CI=1 npx playwright test test/specs/paragraph-semantics.spec.ts test/specs/table-source-format.spec.ts --retries=0`. These suites check semantic blocks, all seven themes, soft source wraps, hard breaks, separator preservation, Enter/Backspace, undo/redo, source switching, copy/paste, list continuation, table headers and export preparation. Combined cases edit tables among wrapped prose, hard breaks and unusual separators, and verify exact saved source after a format change. Run the complete browser suite after changes to the shared parser or serializer.

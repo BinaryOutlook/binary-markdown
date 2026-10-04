@@ -63,7 +63,7 @@ for (const locale of ['en', 'es', 'fr', 'ja', 'ko', 'zh-cn', 'zh-tw']) {
     });
 }
 
-test('the copy icon supports keyboard activation and stable success feedback', async ({ page }) => {
+test('the labeled copy control supports keyboard activation and stable success feedback', async ({ page }) => {
     await page.addInitScript(() => {
         (window as any).__copied = [];
         Object.defineProperty(navigator.clipboard, 'writeText', { value: async (text: string) => (window as any).__copied.push(text) });
@@ -72,12 +72,16 @@ test('the copy icon supports keyboard activation and stable success feedback', a
     const button = page.getByRole('button', { name: 'Copy code', exact: true });
     await expect(button).toHaveAttribute('title', 'Copy code');
     await expect(button.locator('svg')).toHaveAttribute('aria-hidden', 'true');
-    await expect(button).toHaveText('');
+    await expect(button).toHaveText('Copy code');
     const before = await button.boundingBox();
     await button.focus();
     await page.keyboard.press('Enter');
     await expect(button).toHaveAttribute('data-copy-state', 'copied');
     await expect(page.getByRole('status').filter({ hasText: 'Copied' })).toHaveCount(1);
+    const announcement = page.getByRole('status').filter({ hasText: 'Copied' });
+    expect(await announcement.evaluate(node => ({ width: node.getBoundingClientRect().width, clip: getComputedStyle(node).clipPath })))
+        .toEqual({ width: 1, clip: 'inset(50%)' });
+    await expect(button.locator('.code-action-label')).toHaveText('Copied');
     const after = await button.boundingBox();
     expect(after!.width).toBe(before!.width);
     expect(after!.x).toBe(before!.x);

@@ -1,0 +1,175 @@
+{
+  "type": "object",
+  "properties": {
+    "packetDigest": {
+      "type": "string"
+    },
+    "sectionId": {
+      "type": "string"
+    },
+    "verdict": {
+      "type": "string",
+      "enum": [
+        "PASS",
+        "FAIL",
+        "BLOCKED"
+      ]
+    },
+    "summary": {
+      "type": "string"
+    },
+    "openedImages": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "caseAssessments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "caseId": {
+            "type": "string"
+          },
+          "assessable": {
+            "type": "boolean"
+          },
+          "criteria": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "criterionId": {
+                  "type": "string"
+                },
+                "result": {
+                  "type": "string",
+                  "enum": [
+                    "met",
+                    "unmet",
+                    "unassessable"
+                  ]
+                },
+                "evidence": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "criterionId",
+                "result",
+                "evidence"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "caseId",
+          "assessable",
+          "criteria"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "discrepancies": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[A-Z0-9-]{2,40}$"
+          },
+          "caseId": {
+            "type": "string"
+          },
+          "criterionId": {
+            "type": "string"
+          },
+          "regionId": {
+            "type": "string"
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "Critical",
+              "Major",
+              "Minor"
+            ]
+          },
+          "expected": {
+            "type": "string"
+          },
+          "observed": {
+            "type": "string"
+          },
+          "correction": {
+            "type": "string"
+          },
+          "nextRender": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "caseId",
+          "criterionId",
+          "regionId",
+          "severity",
+          "expected",
+          "observed",
+          "correction",
+          "nextRender"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "priorResolutions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "fixed",
+              "remaining",
+              "unassessable"
+            ]
+          },
+          "evidence": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "evidence"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "missingEvidence": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "packetDigest",
+    "sectionId",
+    "verdict",
+    "summary",
+    "openedImages",
+    "caseAssessments",
+    "discrepancies",
+    "priorResolutions",
+    "missingEvidence"
+  ],
+  "additionalProperties": false
+}

@@ -21,6 +21,12 @@ validation-evidence/
 test/html/vendor/
 test/html/production-editor.html
 
+# Generated visual-review deliveries; retain compact Markdown summaries.
+/reports/validation/*-ui-ux-visual-fidelity/evidence/
+/reports/validation/*-ui-ux-visual-fidelity/images/
+/reports/validation/*-ui-ux-visual-fidelity/delivery/
+/reports/validation/*-ui-ux-visual-fidelity/*.html
+
 # Temporary files
 *.log
 *.tmp

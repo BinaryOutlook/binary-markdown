@@ -251,6 +251,6 @@ const styles = fs.readFileSync(path.join(__dirname, '../src/webview/styles.css')
     .replace('__OUTLINE_ACTIVE_COLOR__', 'var(--link-color)');
 fs.writeFileSync(path.join(__dirname, 'html/production-editor.html'), `<!doctype html>
 <html lang="en" data-theme="things" data-toolbar-mode="${require('../package.json').contributes.configuration.properties['binary-markdown.toolbarMode'].default}"><head><meta charset="utf-8"><link rel="stylesheet" href="vendor/katex.min.css"><style>${styles}</style></head>
-<body>${generateEditorBodyHtml(require('../src/i18n/locales/en.ts').webviewMessages, process.platform, { exportEnabled: true, settingsEnabled: true })}
+<body>${generateEditorBodyHtml(require('../src/i18n/locales/en.ts').webviewMessages, process.platform, { exportEnabled: true, settingsEnabled: true, hostEditor: 'vscode' })}
 <script src="vendor/markdown-blocks.js"></script><script src="vendor/turndown.js"></script><script src="vendor/turndown-plugin-gfm.js"></script>
 <script src="vendor/katex.min.js"></script><script src="vendor/mermaid.min.js"></script><script>${testHostBridgeScript}</script><script>${editorScript}</script><script>window.exportMessages=${JSON.stringify(require('../out/export/messages.js').getExportMessages())};${fs.readFileSync(path.join(__dirname, '../src/webview/export-ui.js'), 'utf8')}</script></body></html>`);

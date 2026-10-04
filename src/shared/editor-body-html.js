@@ -5,13 +5,12 @@
  *
  * @param {Record<string, string>} messages - Localized interface messages.
  * @param {string} platform - process.platform ('darwin' | 'win32' | 'linux')
- * @param {{ outlineOpen?: boolean, exportEnabled?: boolean, settingsEnabled?: boolean }} [options] - editor UI state
+ * @param {{ outlineOpen?: boolean, exportEnabled?: boolean, settingsEnabled?: boolean, hostEditor?: 'vscode' }} [options] - editor UI state
  * @returns {string} HTML for <div class="container">...</div>.
  */
 function generateEditorBodyHtml(messages, platform, options) {
     const msg = messages || {};
     const m = (key) => msg[key] || '';
-    const mod = platform === 'darwin' ? 'Cmd' : 'Ctrl';
     const outlineOpen = !options || options.outlineOpen !== false;
     const sidebarClass = outlineOpen ? 'sidebar' : 'sidebar hidden';
     const openButtonClass = outlineOpen ? 'menu-btn hidden' : 'menu-btn';
@@ -21,7 +20,7 @@ function generateEditorBodyHtml(messages, platform, options) {
     const exportPanels = exportEnabled ? `
             <div id="exportMenu" class="export-menu" role="dialog" aria-label="Export" aria-describedby="exportLimitations" hidden>
                 <h3 id="exportPanelTitle">Export</h3>
-                <strong id="exportExperimental" class="export-experimental"></strong>
+                <strong id="exportExperimental" class="export-experimental" hidden></strong><section class="export-section"><h4 id="exportFormatHeading"></h4>
                 <details class="export-support"><summary id="exportSupportSummary"></summary><p id="exportLimitations" class="export-limitations"></p></details>
                 <button type="button" role="menuitem" data-export-format="html"><span>HTML</span><span data-export-tool-status="html"></span></button>
                 <button type="button" role="menuitem" data-export-format="pdf"><span>PDF</span><span data-export-tool-status="pdf"></span></button>
@@ -30,9 +29,9 @@ function generateEditorBodyHtml(messages, platform, options) {
                 <h4 id="exportSetupHeading"></h4><button type="button" role="menuitem" data-export-action="settings" id="exportSettings"></button>
                 <button type="button" role="menuitem" data-export-action="pandoc" id="exportPandocSetup" hidden></button>
                 <button type="button" role="menuitem" data-export-action="browser" id="exportBrowserSetup" hidden></button>
-            <section id="exportStatus" class="export-status" role="status" aria-live="polite" aria-atomic="false" hidden>
+            </section><section class="export-section"><h4 id="exportJobHeading"></h4><p id="exportIdleStatus"></p><section id="exportStatus" class="export-status" role="status" aria-live="polite" aria-atomic="false" hidden>
                 <div class="export-status-row"><span id="exportSpinner" class="export-spinner" aria-hidden="true" hidden></span><span id="exportStatusMessage"></span><button type="button" data-export-action="cancel" id="exportCancel" hidden></button></div>
-                <div id="exportOutputPath" class="export-output-path"></div><button type="button" id="exportOpenOutput" hidden></button>
+                <ol id="exportStages" class="export-stages"></ol><button type="button" id="exportRetry" hidden></button></section></section><section class="export-section"><h4 id="exportResultsHeading"></h4><p id="exportIdleResults"></p><div id="exportOutputPath" class="export-output-path"></div><button type="button" id="exportOpenOutput" hidden></button>
                 <details id="exportWarnings" hidden><summary id="exportWarningsSummary"></summary><ul id="exportWarningsList"></ul></details>
             </section></div>` : '';
 
@@ -42,9 +41,9 @@ function generateEditorBodyHtml(messages, platform, options) {
                 <div class="sidebar-tabs" role="tablist" aria-label="${m('documentTab')}"><button type="button" role="tab" id="outlineTab" aria-selected="true" aria-controls="outline">${m('outlineTitle')}</button><button type="button" role="tab" id="documentTab" aria-selected="false" aria-controls="documentInfo" tabindex="-1">${m('documentTab')}</button></div>
                 <button class="sidebar-toggle" id="closeSidebar" title="${m('closeOutline')}">&#9776;</button>
             </div>
-            <div class="reading-progress"><progress id="readingProgress" max="100" value="0" aria-label="${m('readingProgress')}"></progress></div><nav class="outline" id="outline" role="tabpanel" aria-labelledby="outlineTab"></nav><section id="documentInfo" class="document-info" role="tabpanel" aria-labelledby="documentTab" hidden><p id="documentStatistics"></p><p id="documentPosition"></p></section>
+            <nav class="outline" id="outline" role="tabpanel" aria-labelledby="outlineTab"></nav><section id="documentInfo" class="document-info" role="tabpanel" aria-labelledby="documentTab" hidden><p id="documentPosition" class="document-position"></p><div id="documentNavigation" class="document-navigation"></div></section>
             <div class="sidebar-footer">
-                <div class="word-count" id="wordCount"></div>
+                <strong id="documentTitle" class="document-title"></strong><div class="word-count" id="wordCount"></div><div class="reading-progress"><progress id="readingProgress" max="100" value="0" aria-label="${m('readingProgress')}"></progress><span id="sectionProgress"></span></div>
                 <div class="sidebar-status-imagedir" id="statusImageDir">
                     <div class="imagedir-header">
                         <span class="imagedir-label">${m('imageDirLabel')}</span>
@@ -69,9 +68,8 @@ function generateEditorBodyHtml(messages, platform, options) {
                         <button data-action="undo" title="${m('undo')}"></button>
                         <button data-action="redo" title="${m('redo')}"></button>
                     </div>
-                    <button type="button" data-action="insertMenu" class="toolbar-insert" id="insertButton" title="${m('commandPaletteInsert')}" aria-haspopup="dialog" aria-expanded="false" aria-controls="insertMenu"><span class="toolbar-insert-title">${m('commandPaletteInsert')}</span><span aria-hidden="true">▾</span></button>
                 </div>
-                <div class="toolbar-fixed toolbar-fixed--tools"><button type="button" data-action="formatActions" id="formatButton" title="${m('formatActions')}" aria-haspopup="dialog">${m('formatActions')}</button><button type="button" data-action="contextToolbar" id="contextToolbarToggle" title="${m('contextualTools')}" aria-pressed="false">${m('contextualTools')}</button></div><div class="toolbar-inner" id="toolbarInner">
+                <div class="toolbar-fixed toolbar-fixed--tools"><button type="button" data-action="contextToolbar" id="contextToolbarToggle" title="${m('contextualTools')}" aria-label="${m('contextualTools')}" aria-pressed="false" aria-expanded="true" aria-controls="toolbarInner"><span aria-hidden="true">&lt;&lt;</span></button></div><div class="toolbar-inner" id="toolbarInner">
                     <div class="toolbar-group" data-group="inline">
                         <button data-action="bold" title="${m('bold')}"></button>
                         <button data-action="italic" title="${m('italic')}"></button>
@@ -102,15 +100,14 @@ function generateEditorBodyHtml(messages, platform, options) {
                         <button data-action="table" title="${m('insertTable')}"></button>
                     </div>
                 </div>
-                <button type="button" class="toolbar-more" id="toolbarMore" title="${m('toolbarMoreActions')}" aria-label="${m('toolbarMoreActions')}" aria-haspopup="menu" aria-expanded="false" aria-controls="toolbarOverflow" hidden>&#x22EF;</button>
+                <button type="button" class="toolbar-more" id="toolbarMore" title="${m('toolbarMoreActions')}" aria-label="${m('toolbarMoreActions')}" aria-haspopup="dialog" aria-expanded="false" aria-controls="toolbarOverflow">&#x22EF;</button>
                 <div class="toolbar-fixed toolbar-fixed--right">
                     <div class="toolbar-group" data-group="utility">
-                        <button data-action="openInTextEditor" title="${m('openInTextEditor')} (${mod}+Shift+.)"></button>
                         ${exportButton}
                         <div class="editor-mode-switch" role="group" aria-label="${m('editorModes')}"><button type="button" data-editor-mode="visual" aria-pressed="true">${m('modeVisual')}</button><button type="button" data-editor-mode="source" aria-pressed="false">${m('modeSource')}</button><button type="button" data-editor-mode="split" aria-pressed="false">${m('modeSplit')}</button></div>
                     </div>
                 </div>
-                <div id="toolbarOverflow" class="toolbar-overflow" role="menu" aria-label="${m('toolbarMoreActions')}" hidden></div>
+                <div id="toolbarOverflow" class="toolbar-overflow" role="dialog" aria-label="${m('toolbarMoreActions')}" hidden><div class="toolbar-overflow-search"><input type="search" id="toolbarCommandSearch" placeholder="${m('commandPaletteFilter')}" aria-label="${m('commandPaletteFilter')}" /></div><div id="toolbarOverflowItems" role="menu" aria-label="${m('toolbarMoreActions')}"></div><div id="toolbarCommandResults" role="menu" aria-label="${m('allActions')}" hidden></div></div>
             </div>
             <div id="insertMenu" class="insert-menu" role="dialog" aria-label="${m('commandPaletteInsert')}" hidden></div>
             ${exportPanels}
@@ -123,31 +120,32 @@ function generateEditorBodyHtml(messages, platform, options) {
             </div>
             <div id="modeHelp" class="mode-help" hidden></div><div class="editor-wrapper" id="editorWrapper">
                 <div class="search-replace-box" id="searchReplaceBox" style="display: none;">
-                    <div class="search-row">
+                    <div class="search-panel-heading"><strong>${m('findReplaceTitle')}</strong><button id="closeSearch" title="${m('closeSearch')}" aria-label="${m('closeSearch')}">&#10005;</button></div>
+                    <label class="search-field-label" for="searchInput">${m('findLabel')}</label><div class="search-row">
                         <input type="search" id="searchInput" aria-label="${m('searchPlaceholder')}" placeholder="${m('searchPlaceholder')}" />
                         <span class="search-count" id="searchCount" role="status" aria-live="polite">0/0</span>
                         <button id="searchPrev" title="${m('searchPrev')}">&#9650;</button>
                         <button id="searchNext" title="${m('searchNext')}">&#9660;</button>
                         <button id="toggleReplace" title="${m('toggleReplace')}">&#8693;</button>
-                        <button id="closeSearch" title="${m('closeSearch')}">&#10005;</button>
                     </div>
                     <div class="replace-row" id="replaceRow" style="display: none;">
-                        <input type="text" id="replaceInput" aria-label="${m('replacePlaceholder')}" placeholder="${m('replacePlaceholder')}" />
+                        <label class="search-field-label" for="replaceInput">${m('replaceWithLabel')}</label><input type="text" id="replaceInput" aria-label="${m('replacePlaceholder')}" placeholder="${m('replacePlaceholder')}" />
                         <button id="replaceOne" title="${m('replace')}">${m('replace')}</button>
                         <button id="replaceAll" title="${m('replaceAll')}">${m('replaceAll')}</button>
                     </div>
+                    <label class="search-field-label" for="replaceScope">${m('replaceScopeLabel')}</label><select id="replaceScope"><option value="document">${m('scopeDocument')}</option><option value="selected">${m('scopeSelected')}</option></select>
                     <p class="search-scope">${m('searchSourceScope')}</p>
                     <div class="search-options">
                         <label><input type="checkbox" id="searchCaseSensitive" /> ${m('caseSensitive')}</label>
                         <label><input type="checkbox" id="searchWholeWord" /> ${m('wholeWord')}</label>
                         <label><input type="checkbox" id="searchRegex" /> ${m('regex')}</label>
                     </div>
-                    <div class="search-results-controls"><label><input type="checkbox" id="searchSelectAll" /> ${m('selectAllMatches')}</label><button type="button" id="replaceSelected">${m('replaceSelected')}</button></div>
+                    <div class="search-replacement-actions" id="searchReplacementActions"></div><div class="search-results-controls"><label><input type="checkbox" id="searchSelectAll" /> ${m('selectAllMatches')}</label><output id="searchSelectedCount" aria-live="polite"></output></div>
                     <p id="searchFeedback" role="status" aria-live="polite"></p>
                     <div id="searchResults" class="search-results" aria-label="${m('searchResults')}"></div>
                 </div>
-                <div class="editor" id="editor" contenteditable="true" spellcheck="true"></div>
-                <textarea class="source-editor" id="sourceEditor" aria-label="${m('sourceLabel')}" spellcheck="false" style="display: none;"></textarea>
+                <div class="pane-heading" id="previewPaneHeading" hidden>${m('previewPaneTitle')}</div><div class="editor" id="editor" contenteditable="true" spellcheck="true"></div>
+                <div class="pane-heading" id="sourcePaneHeading" hidden>${m('sourcePaneTitle')}</div><textarea class="source-editor" id="sourceEditor" aria-label="${m('sourceLabel')}" spellcheck="false" style="display: none;"></textarea>
             </div>
         </main>
     </div>`;

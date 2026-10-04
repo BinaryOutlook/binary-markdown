@@ -1,3 +1,4 @@
+import { openInsertWorkspace } from '../utils/command-menu';
 import { toggleEditorView } from '../utils/view-mode';
 import { test, expect, Page } from '@playwright/test';
 
@@ -29,8 +30,7 @@ async function select(page: Page, selector = '#editor > p', text = 'target') {
 }
 
 async function open(page: Page) {
-    if (!(await page.locator('#insertButton').isVisible())) await page.locator('#toolbarMore').click();
-    await page.locator('#insertButton').click();
+    await openInsertWorkspace(page);
     await expect(page.locator('#insertMenu')).toBeVisible();
 }
 
@@ -44,14 +44,14 @@ for (const mode of ['full', 'simple']) {
         await expect(page.locator('#insertMenu [aria-disabled="true"]')).toHaveCount(0);
         await expect(page.locator('.insert-search input')).toBeFocused();
         await page.keyboard.press('ArrowDown');
-        await expect(page.locator('[data-insert-action="inlineMath"]')).toBeFocused();
+        await expect(page.locator('[data-insert-action="table"]')).toBeFocused();
         await page.keyboard.press('End');
         await expect(page.locator('[data-insert-action="toc"]')).toBeFocused();
         await page.keyboard.press('ArrowDown');
-        await expect(page.locator('[data-insert-action="inlineMath"]')).toBeFocused();
+        await expect(page.locator('[data-insert-action="table"]')).toBeFocused();
         await page.keyboard.press('Escape');
         await expect(page.locator('#insertMenu')).toBeHidden();
-        await expect(page.locator('#insertButton')).toBeFocused();
+        await expect(page.locator('#toolbarMore')).toBeFocused();
         expect(await page.evaluate(() => getSelection()!.toString())).toBe('target');
         await expect(page.locator('[data-action="undo"]')).toBeDisabled();
         await page.evaluate(() => (window as any).__hostMessageHandler({ type: 'captureExportSnapshot', requestId: 'insert-view-only' }));
@@ -107,7 +107,8 @@ for (const [content, selector] of [
 test('Source mode explains why insertion is unavailable', async ({ page }) => {
     await setup(page);
     await toggleEditorView(page);
-    await expect(page.locator('#insertButton')).toBeDisabled();
+    await open(page);
+    await expect(page.locator('[data-insert-action="table"]')).toHaveAttribute('aria-disabled', 'true');
     await expect(page.locator('#modeHelp')).toContainText('visual editor');
     expect(await page.locator('#sourceEditor').inputValue()).toBe(source);
 });
@@ -143,7 +144,7 @@ for (const action of ['link', 'image']) {
             const request = await page.evaluate(action => (window as any).__testApi.messages.findLast((m: any) => m.type === (action === 'link' ? 'insertLink' : 'insertImage')), action);
             expect(request.requestId).toMatch(/^insert-/);
             // Moving focus while the host dialog is open must not lose the bookmark.
-            await page.locator('#insertButton').focus();
+            await page.locator('#toolbarMore').focus();
             await page.evaluate(requestId => (window as any).__hostMessageHandler({ type: 'insertCancelled', requestId }), request.requestId);
             expect(await page.evaluate(() => getSelection()!.toString())).toBe('target');
             await expect(page.locator('[data-action="undo"]')).toBeDisabled();
@@ -198,7 +199,10 @@ for (const action of ['codeblock', 'table', 'math', 'mermaid']) {
         const states = await page.evaluate(action => {
             const click = (selector: string) => (document.querySelector(selector) as HTMLButtonElement).click();
             const before = (window as any).htmlToMarkdown();
-            click('#insertButton'); click(`[data-insert-action="${action}"]`);
+            click('#toolbarMore');
+            const search = document.getElementById('toolbarCommandSearch') as HTMLInputElement;
+            search.value = 'viewInsert'; search.dispatchEvent(new Event('input', { bubbles: true }));
+            click('[data-menu-command="viewInsert"]'); click(`[data-insert-action="${action}"]`);
             const inserted = (window as any).htmlToMarkdown();
             click('[data-action="undo"]');
             const undone = (window as any).htmlToMarkdown();

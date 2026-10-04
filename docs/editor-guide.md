@@ -4,25 +4,25 @@ Adapted from the inherited editor documentation. See [Acknowledgments](../ACKNOW
 
 ## Formatting toolbar
 
-The **Full** toolbar shows standard text formatting by default in VS Code and the desktop app. Choose **Simple** with `binary-markdown.toolbarMode` in VS Code Settings or **Toolbar** in desktop Preferences for compact controls. Explicit `simple` and `full` preferences are retained. This default also applies to existing configurations without a stored toolbar preference; it is not limited to new installations.
+The **Full** toolbar shows standard text formatting by default in VS Code and the desktop app. Choose **Simple** with `binary-markdown.toolbarMode` in VS Code Settings or **Toolbar** in desktop Preferences for compact history, view, and utility controls. Explicit `simple` and `full` preferences are retained. This default also applies to existing configurations without a stored toolbar preference; it is not limited to new installations.
 
-Resizing keeps complete buttons in the toolbar and puts remaining actions under **More toolbar actions**. At very narrow widths, utility actions can also move into that menu. Use the arrow keys or `Home`/`End` within the menu, and `Escape` to close it. Changing toolbar mode updates the current editor without replacing its document, selection, active equation input, or undo history.
+The three-dot **More toolbar actions** button is always available. Resizing keeps complete buttons in the toolbar and puts remaining actions under that menu, with a search field at the top. Typing searches the complete formatting, insertion, and view command catalog, including actions already visible in the toolbar. With an empty search, the menu shows the overflow actions, or the full catalog when all toolbar actions fit. Arrow Down enters the choices; use the arrow keys and `Home`/`End` on a choice, or press Enter in the search field to run the first enabled result. Escape closes the menu and returns focus to the three-dot button while retaining the editor selection. Changing toolbar mode keeps the document, selection, active equation input, and undo history.
 
-Use **Format** to open the searchable Action Palette. Its descriptions explain each action; it includes all six heading levels, insertion commands, Undo/Redo, and navigation/view actions. **Contextual tools** is an optional toggle for the current editor session. When enabled, selected prose shows a small formatting strip and the full formatting row yields space to the canvas. The existing Full/Simple preference remains intact. Turn the toggle off to restore that row. At narrow widths, find these controls under **More toolbar actions**.
+The searchable Action Palette remains available through `Cmd+/`/`Ctrl+/` and the contextual strip's **All actions** ellipsis. Category filters and an action count help you browse descriptions, all six heading levels, insertion commands, Undo/Redo, and navigation/view actions. The toolbar toggle shows `<<` while the formatting row is expanded. Click it to collapse the row and enable **Contextual tools** for the current editor session; the button changes to `>>`. Selected prose then shows a small formatting strip where nearby space permits. The permanent three-dot command search remains available when there is no unobstructed space for the strip. Click `>>` to expand the row again and disable contextual tools; the saved Full/Simple preference stays intact.
 
 ## Editor views and document rail
 
 **Visual**, **Source**, and **Split** are explicit view controls. Source is the editable Markdown text. Split shows that same editable source beside a read-only live preview; small windows stack the two panes. Source edits update the preview after a short pause. All views share one Undo/Redo history and one save route. Switching views keeps authored content and the corresponding selection when literal rendered text can be mapped to source; hidden syntax and transformed equations may require locating the text in Source.
 
-Visual formatting and insertion controls are disabled in Source and Split. Use Visual for those actions, or edit their Markdown syntax in the source pane. **Open in Text Editor** keeps its existing host action. Split does not create another editable document or undo history.
+Visual formatting and insertion controls are disabled in Source and Split. Use Visual for those actions, or edit their Markdown syntax in the source pane. Use `Cmd+Shift+.`/`Ctrl+Shift+.` to open the host text editor. Split labels both panes and marks the corresponding source heading and preview section without changing your selection. Split does not create another editable document or undo history.
 
-The sidebar has **Outline** and **Document** tabs. Outline buttons locate headings in either view; in Split, they also locate the corresponding source heading and preview section. Document shows word, character, and line statistics. A thin progress indicator follows the active document pane. Small windows conceal the rail without changing the stored desktop preference; use **Open Outline** to display it over the canvas and **Close Outline** to return to writing.
+The sidebar has **Outline** and **Document** tabs. Outline buttons locate headings in either view; in Split, they also locate the corresponding source heading and preview section. Document provides navigation through the first two heading levels and identifies the current section. The shared footer shows the document title, counts, and current section's position among the headings, with a thin section-progress indicator. Small windows conceal the rail without changing the stored desktop preference; use **Open Outline** to display it over the canvas and **Close Outline** to return to writing.
 
 ## Find and Replace
 
 Use `Cmd+F`/`Ctrl+F` to find, or `Cmd+H`/`Ctrl+H` to find and replace. Search operates on Markdown source, including syntax and metadata. Each result shows its source line and surrounding text. Click a result to locate it; results without a visible text counterpart offer **Source** to show the exact match. Previous/Next and Enter/Shift+Enter navigate results.
 
-Enable **Case sensitive**, **Whole word**, or **Regex** as needed. Tick result checkboxes and use **Replace selected**, replace the current match, or replace all matches. Replacement text is literal. Each replacement operation is one undo step across views, and unaffected source stays intact. Typing while the panel remains open refreshes results without moving the source caret.
+Enable **Case sensitive**, **Whole word**, or **Regex** as needed. Tick result checkboxes and use **Replace selected**, replace the current match, or replace all matches. **Replace in** starts with the whole document; choosing selected matches disables whole-document replacement and permits replacing the current match only when it is checked. A count shows how many matches are selected. Replacement text is literal. Each replacement operation is one undo step across views, and unaffected source stays intact. Typing while the panel remains open refreshes results without moving the source caret.
 
 Invalid patterns show feedback. Empty and zero-length matches do not become replacement targets. A search worker cancels a regular expression that takes too long; simplify the pattern and retry. Results are capped at 10,000 matches, and Replace All is unavailable when results are truncated. **Show more matches** reveals additional result rows in batches.
 
@@ -36,7 +36,7 @@ Code spans, code blocks, equations, and generated document blocks cannot be unde
 
 ## Insert menu
 
-**Insert** is available in both **Full** and **Simple** mode. Its dropdown includes inline equations, block equations, tables, code blocks, links, images, Mermaid diagrams, and a managed table of contents. At very narrow widths, open **More toolbar actions** to find **Insert**. Existing toolbar buttons, shortcuts, and the Action Palette remain available.
+The Insert workspace remains available in both **Full** and **Simple** mode. Open the three-dot **More toolbar actions** menu, search for **Insert**, and choose the **Insert** command. The workspace includes inline equations, block equations, tables, code blocks, links, images, Mermaid diagrams, and a managed table of contents. Search the three-dot menu for an individual insertion command to run it directly, or use its existing toolbar button, shortcut, or Action Palette entry.
 
 Opening the menu retains your caret or selection. Use up/down arrows or `Home`/`End` to navigate, `Enter` or `Space` to choose an item, and `Escape` to close it. Opening, navigating, or cancelling the menu does not edit the document. Cancelling a link or image dialog also leaves the document and undo history unchanged. Confirmed insertions use the retained location and can be undone in one step.
 
@@ -44,7 +44,7 @@ Inline equations wrap the selected text, or start with `x` at a caret, and open 
 
 The menu explains unavailable contexts. Switch to the visual editor to insert items. Move outside code, equation, metadata, or generated blocks before using the menu. Inline items are available in ordinary list items and table cells; block items require a paragraph outside lists, tables, and blockquotes. These restrictions preserve the surrounding document structure.
 
-Search the Insert workspace or choose **All**, **Structure**, **Equations**, **Code and diagrams**, or **Media**. Each option shows a description and a short Markdown example. Empty searches offer **Clear search**. The search field opens first; Arrow Down enters the choices, Home/End navigate them, and Escape restores the editor selection. Unavailable actions explain their context restriction.
+Search the Insert workspace or choose **All**, **Structure**, **Equations**, **Code and diagrams**, or **Media**. Command cards combine labels, icons, and illustrative previews, including a rendered table, equations, and highlighted code; available shortcuts appear separately. Narrow panes show complete cards with **Previous commands**, **More commands**, and the visible range when the list overflows. Empty searches offer **Clear search**. The search field opens first; Arrow Down enters the choices, Home/End navigate them, and Escape restores the editor selection. Unavailable actions explain their context restriction.
 
 <a id="-creating-markdown-elements"></a>
 
@@ -171,9 +171,9 @@ Preservation applies to tables recognized by the Markdown parser. The setting co
 
 ### Table operations
 
-Selecting a cell reveals row/column numbers, highlights its row and column, and offers **Rows** and **Columns** selectors to locate another cell without editing. The four insertion arrows form a diamond: above at the top, left/right in the middle, and below at the bottom. Boundary **+** buttons add a column to the right or a row below the active cell. Alignment, deletion, keyboard navigation, and the stored toolbar placement choices remain available. Compact panes use a table menu; editing actions keep one shared undo history. Header-row and last-column protections still apply.
+Selecting a cell reveals row numbers and column letters outside the table, highlights its row and column, and offers **Rows** and **Columns** selectors to locate another cell without editing. The four insertion arrows form a diamond and insert relative to the active cell: above at the top, left/right in the middle, and below at the bottom. Boundary **+** buttons append a column at the table's right edge or a row at its bottom edge. Alignment, deletion, keyboard navigation, and the stored toolbar placement choices remain available. Compact panes use a table menu; editing actions keep one shared undo history. Header-row and last-column protections still apply.
 
-Select a table cell to show its controls. **Automatic** is the default: the controls use an available corner or side, based on the visible table and surrounding content, and move into the top bar when there is no room. When space shrinks, complete leading buttons remain visible and **More table actions** (⋯) contains the remaining actions. A top bar with too little room for the directional diamond and row/column navigation shows a table icon (**Table controls**) containing all actions. The controls keep a usable position while you work and wait for scrolling or resizing to settle before leaving the top bar.
+Select a table cell to show its controls. **Automatic** is the default: the controls use an available corner or side, based on the visible table and surrounding content, and move into the top bar when there is no room. When space shrinks, complete action groups remain visible and **More table actions** (⋯) contains the remaining actions, including row/column navigation when necessary. A top bar with too little room for the directional diamond and overflow button shows a table icon (**Table controls**) containing all actions. The controls keep a usable position while you work and wait for scrolling or resizing to settle before leaving the top bar.
 
 In **Full** mode, docked table controls occupy a second row beneath general formatting and utilities. In **Simple** mode, they share the primary row. The second row appears only for the selected table when its controls are docked; selecting other content or entering Source mode removes it. Explicit floating positions keep their existing layout. You can reach both rows with `Tab`, or use `Alt+F10` to go directly from the table to its controls.
 
@@ -181,11 +181,11 @@ Use the table icon with a gear (**Table toolbar position**) to choose **Automati
 
 One selection applies and saves the placement without reloading the editor. If saving the preference fails, a notification explains the failure and the previous setting remains active. You can retry the choice without changing the document.
 
-Fixed controls stay at the chosen anchor where possible and use the overflow menu when horizontal or vertical space is limited. They hide when their table is completely offscreen. Automatic and top-bar controls remain available for the selected table until you select another block or enter Source mode. Changing placement does not edit the Markdown or add an undo step.
+Fixed controls stay at the chosen anchor where possible and use the overflow menu when horizontal or vertical space is limited. Top and side placements reserve space beside the writing viewport, and bottom placements leave space beneath each table, so controls do not cover authored content. They hide when their table is completely offscreen. Automatic and top-bar controls remain available for the selected table until you select another block or enter Source mode. Changing placement does not edit the Markdown or add an undo step.
 
 Press `Alt+F10` from a table cell to focus its controls. Use left/right arrows in a horizontal toolbar, up/down arrows in a vertical toolbar or menu, and `Home`/`End` to move to the first/last action. `Enter` or `Space` activates a control; `Escape` returns to and reveals the retained cell. Focus follows an action into or out of overflow as space changes. Short menus scroll to reveal the focused item. Inserting above the header, deleting the header, and deleting the final column are disabled in both the toolbar and its overflow menu.
 
-Wide tables scroll horizontally within the table, keeping the surrounding document in place. Use the scrollbar below the table or a horizontal trackpad gesture to reveal offscreen columns. `Tab` and `Shift+Tab` move between cells and reveal the caret, including in headers and cells wider than the pane. Up/down navigation and `Escape` from the table controls also reveal the selected cell. Scrolling, window resizing, and cell navigation do not edit the Markdown or create an undo step. Column resizing remains available; the local scroll box is editor presentation and does not constrain exported tables.
+Wide tables scroll horizontally within the table, keeping the surrounding document in place. Use the scrollbar, a horizontal trackpad gesture, or the labeled left/right scroll buttons below an overflowing table to reveal offscreen columns. The buttons appear when the table's lower edge and controls fit within the viewport. `Tab` and `Shift+Tab` move between cells and reveal the caret, including in headers and cells wider than the pane. Up/down navigation and `Escape` from the table controls also reveal the selected cell. Scrolling, window resizing, and cell navigation do not edit the Markdown or create an undo step. Column resizing remains available; the local scroll box is editor presentation and does not constrain exported tables.
 
 | Key | Action |
 | --- | --- |
@@ -242,7 +242,7 @@ The editor supports syntax highlighting for the following languages:
 
 Click the code block’s language button, or focus it and press Enter, Space, or an arrow key. The search field takes focus immediately. Search a readable name or alias, such as `JS`, `JavaScript`, `C++`/`cpp`, or `C#`/`csharp`. Exact matches appear before prefix and substring matches. Use Up/Down and Enter to choose; Escape cancels and restores the previous code caret or language-button focus. Tab closes the picker and continues keyboard navigation.
 
-The current identifier remains visible, including custom languages absent from the suggestions. Opening, searching, canceling, and choosing the unchanged language do not edit Markdown or create an undo step. An actual choice changes only the fence identifier and is one undoable action; code indentation, tabs, and blank lines remain intact. Choosing **Math equation** or **Mermaid diagram** explicitly converts the block to the corresponding editable preview. The search field stays above a scrolling result list in narrow or short panes.
+The current identifier remains visible, including custom languages absent from the suggestions. When the current language appears in the results, a checkmark distinguishes it from the pending keyboard choice; moving the highlight does not commit a change. Opening, searching, canceling, and choosing the unchanged language do not edit Markdown or create an undo step. An actual choice changes only the fence identifier and is one undoable action; code indentation, tabs, and blank lines remain intact. Choosing **Math equation** or **Mermaid diagram** explicitly converts the block to the corresponding editable preview. The search field stays above a scrolling result list in narrow or short panes.
 
 ### Choose the language order
 
@@ -262,11 +262,11 @@ The preference persists and applies immediately to open pickers, retaining the q
 
 ### Code controls and soft wrapping
 
-Each ordinary code block has a toolbar above its code. The controls remain at the visible block's right edge while long code scrolls horizontally below them. In a narrow pane, the toolbar can occupy multiple rows without covering code.
+Each ordinary code block has a toolbar above its code, with visible labels for copying, wrapping, and opening the host text editor. The controls remain at the visible block's right edge while long code scrolls horizontally below them. In a narrow pane, the open-editor action uses a compact icon with an accessible label, and the toolbar can occupy multiple rows without covering code.
 
 **Open in Text Editor** in the code header opens the document in the host text editor. Syntax colors follow the selected theme, with pale colors on dark backgrounds and deeper colors on light backgrounds.
 
-Click **Copy code** (the overlapping-pages icon) to copy the code's original text, including indentation, tabs, authored line breaks, and trailing blank lines. A checkmark briefly confirms success; the button keeps the same size. Keyboard users can focus the button and press Enter or Space. If copying fails, the tooltip and accessible status explain the failure so you can retry.
+Click **Copy code** (the overlapping-pages icon and label) to copy the code's original text, including indentation, tabs, authored line breaks, and trailing blank lines. A checkmark and **Copied** label briefly confirm success; the button reserves its width during feedback. Keyboard users can focus the button and press Enter or Space. If copying fails, a visible status and the tooltip explain the failure so you can retry.
 
 Click **Wrap code** to fit long lines within that block's available width. Wrapping starts off for every new block and newly opened editor. While enabled, the toggle stays highlighted and a persistent **Wrapped** badge appears beside it; its tooltip explains that wrapping changes only the display. Actual source lines can span multiple visible rows, including long tokens without spaces.
 
@@ -291,7 +291,7 @@ graph TD
     B -->|No| D[End]
 ```
 
-Use **Source** and **Preview** in the Mermaid header to switch modes, or click the diagram to edit its source. Shift+Enter exits source editing. Invalid diagrams show **Needs attention**, a source line when available, and an expandable parser diagnostic. Diagnostics are plain text; the editor does not rewrite invalid source. Rendering uses Mermaid strict security mode, so diagram-defined callbacks and HTML interaction are restricted.
+Use **Source** and **Preview** in the Mermaid header to switch modes, or click the diagram to edit its source. Shift+Enter exits source editing. Invalid diagrams show **Needs attention**, a concise parser explanation, a source line when reliable location data is available, and expandable **Diagnostic details**. Long details scroll and can receive keyboard focus. Diagnostics are plain text; the editor does not rewrite invalid source. Rendering uses Mermaid strict security mode, so diagram-defined callbacks and HTML interaction are restricted.
 
 ### KaTeX math equations
 
@@ -316,7 +316,7 @@ $$
 - Code examples, link destinations, escaped delimiters, unmatched delimiters and common currency forms stay literal. Inline dollar math requires non-whitespace next to both delimiters and no digit immediately after the closing delimiter.
 - KaTeX renders supported TeX commands; this is not full MathJax or LaTeX support. Invalid expressions show an error and retain editable source. Empty display blocks show "Empty expression".
 
-Equation blocks label **Source** and **Preview** and show the Shift+Enter exit hint. Unsupported commands retain their source and expose a plain-text diagnostic with a source line when available.
+Equation blocks label **Source** and **Preview** and show the Shift+Enter exit hint. Each pane offers labeled horizontal scroll buttons when its content overflows. Unsupported commands retain their source and expose a plain-text diagnostic with a source line when available.
 
 Choose `binary-markdown.mathSourcePosition` in VS Code Settings, or **Equation source position** in desktop Preferences, to place editable block-equation source **Above preview** (default) or **Below preview**. The preference applies immediately and persists across reopened documents. Changing it retains the active source selection and edit mode; it does not change the equation, add an undo step, or affect inline equations, Source mode, or exported content.
 
@@ -405,7 +405,7 @@ Open **Settings** (`Cmd+,` on macOS or `Ctrl+,` on Windows/Linux) and search for
 | `binary-markdown.imageDefaultDir` | Default directory for saved images | `""` (same as markdown file) |
 | `binary-markdown.forceRelativeImagePath` | Force relative paths for images | `false` |
 | `binary-markdown.language` | UI language (`default`, `en`, `ja`, `zh-CN`, `zh-TW`, `ko`, `es`, `fr`) | `default` |
-| `binary-markdown.toolbarMode` | Toolbar display mode (`full`, `simple`). Simple shows undo/redo, Insert, and utility buttons; use the Action Palette for other operations | `full` |
+| `binary-markdown.toolbarMode` | Toolbar display mode (`full`, `simple`). Simple shows history, contextual tools, command search, and utility controls; search for formatting and insertion commands | `full` |
 | `binary-markdown.tableSourceFormat` | Use `aligned` or `compact` (Legacy); see [table source format](#table-source-format) | `aligned` |
 | `binary-markdown.tableToolbarPosition` | Use `auto`, any corner, `left`, `right`, or `top-bar`; see [table operations](#table-operations) | `auto` |
 | `binary-markdown.outlineActiveColor` | Outline highlight: `theme`, `blue`, `green`, `orange`, `red`, or `purple` | `theme` |

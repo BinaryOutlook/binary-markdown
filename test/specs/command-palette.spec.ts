@@ -68,7 +68,7 @@ test.describe('コマンドパレット', () => {
 
         // 全アイテム数を確認
         const allItems = await page.locator('.command-palette-item').count();
-        expect(allItems).toBe(35); // Formatting, insertion, history, and view actions; this fixture has no export host.
+        expect(allItems).toBe(34); // Formatting, insertion, history, and view actions; this fixture has no export host.
         await expect(page.locator('.command-palette-item[data-action="toc"]')).toHaveCount(1);
         await expect(page.locator('.command-palette-item[data-action="underline"]')).toHaveCount(1);
 
