@@ -26,8 +26,26 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  scope:
+    name: Classify change
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      mode: ${{ steps.scope.outputs.mode }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 2
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .node-version
+      - id: scope
+        run: node .github/scripts/ci-scope.cjs
+
   package:
     name: Build candidate
+    needs: scope
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     outputs:
@@ -62,6 +80,11 @@ jobs:
         run: npm audit
       - name: Package the clean source revision once
         run: npm run package -- --release
+      - name: Unit and package checks for documentation changes
+        if: needs.scope.outputs.mode == 'docs'
+        run: |
+          candidate=$(find "$PWD/dist" -maxdepth 1 -name '*.vsix' -print)
+          EXPORT_VSIX_PATH="$candidate" npm run test:unit
       - name: Identify immutable candidate
         id: identity
         run: |
@@ -80,22 +103,23 @@ jobs:
         id: summary
         env:
           CANDIDATE_URL: ${{ steps.upload.outputs.artifact-url }}
+          VALIDATION_MODE: ${{ needs.scope.outputs.mode }}
         run: node scripts/ci-vsix-summary.cjs
 
   validate:
     name: Validate (${{ matrix.label }})
-    needs: package
+    needs: [scope, package]
+    if: needs.scope.outputs.mode == 'full'
     strategy:
       fail-fast: false
       matrix:
         include:
-          - {label: ubuntu, os: ubuntu-24.04, code: latest, browserSuite: true}
-          - {label: macos, os: macos-15, code: latest, browserSuite: true}
-          - {label: windows, os: windows-2025, code: latest, browserSuite: true}
-          - {label: vscode-minimum, os: ubuntu-24.04, code: '1.85.0', browserSuite: false}
+          - {label: ubuntu, os: ubuntu-24.04, code: latest}
+          - {label: macos, os: macos-15, code: latest}
+          - {label: windows, os: windows-2025, code: latest}
+          - {label: vscode-minimum, os: ubuntu-24.04, code: '1.85.0'}
     runs-on: ${{ matrix.os }}
-    # The full macOS native and browser suites can exceed 40 minutes together.
-    timeout-minutes: ${{ matrix.label == 'macos' && 60 || 40 }}
+    timeout-minutes: 30
     env:
       CI: '1'
       PYTHONUTF8: '1'
@@ -162,24 +186,6 @@ jobs:
         run: |
           node .github/scripts/native-check.cjs | Tee-Object -FilePath ci-results/native-tests.txt
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-      - name: Browser regressions with no retries
-        if: matrix.browserSuite && runner.os != 'Windows'
-        run: |
-          npm run test:build
-          npx playwright test --workers=2 --retries=0 | tee ci-results/browser-tests.txt
-      - name: Browser regressions with no retries (Windows)
-        if: matrix.browserSuite && runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          npm.cmd run test:build
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          npx.cmd playwright test --workers=2 --retries=0 | Tee-Object -FilePath ci-results/browser-tests.txt
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-      - name: Collect browser traces
-        if: always()
-        run: |
-          mkdir -p ci-results
-          if [[ -d test-results ]]; then cp -R test-results ci-results/browser-traces; fi
       - name: Retain validation evidence
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -189,32 +195,86 @@ jobs:
           if-no-files-found: warn
           retention-days: 7
 
-  ready:
-    name: VSIX validation
-    needs: [package, validate]
-    if: always()
-    runs-on: ubuntu-24.04
+  browser:
+    name: Browser (${{ matrix.platform.label }}, ${{ matrix.shard }}/3)
+    needs: [scope, package]
+    if: needs.scope.outputs.mode == 'full'
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          - {label: ubuntu, os: ubuntu-24.04}
+          - {label: macos, os: macos-15}
+          - {label: windows, os: windows-2025}
+        shard: [1, 2, 3]
+    runs-on: ${{ matrix.platform.os }}
+    timeout-minutes: 20
+    env:
+      CI: '1'
+      CI_BROWSER_PLATFORM: ${{ matrix.platform.label }}
     steps:
-      - name: Require every validation lane
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.package.outputs.source }}
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .node-version
+          cache: npm
+      - run: npm ci
+      - name: Compile and build browser fixture
+        run: npm run compile && npm run test:build
+      - name: Provision browser only
+        run: node .github/scripts/provision-browser.cjs
+      - name: Browser regressions with no retries
+        if: runner.os != 'Windows'
+        run: |
+          mkdir -p ci-results
+          npx playwright test --workers=2 --retries=0 --shard=${{ matrix.shard }}/3 --reporter=list,blob | tee ci-results/browser-tests.txt
+      - name: Browser regressions with no retries (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force ci-results | Out-Null
+          npx.cmd playwright test --workers=2 --retries=0 --shard=${{ matrix.shard }}/3 --reporter=list,blob | Tee-Object -FilePath ci-results/browser-tests.txt
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Retain browser evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: browser-${{ matrix.platform.label }}-${{ matrix.shard }}-${{ needs.package.outputs.source }}-${{ github.run_attempt }}
+          path: |
+            ci-results
+            blob-report
+            test-results
+          if-no-files-found: error
+          retention-days: 7
+
+  ready:
+    # A skipped job still creates a successful check. Branch builds must never
+    # create a check with the protected PR/main gate's name.
+    name: ${{ github.event_name == 'push' && github.ref != 'refs/heads/main' && 'Branch build only' || 'VSIX validation' }}
+    needs: [scope, package, validate, browser]
+    if: always() && (github.event_name != 'push' || github.ref == 'refs/heads/main')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .node-version
+      - name: Require every applicable validation lane
         env:
+          VALIDATION_MODE: ${{ needs.scope.outputs.mode }}
+          SCOPE_RESULT: ${{ needs.scope.result }}
           PACKAGE_RESULT: ${{ needs.package.result }}
-          VALIDATION_RESULT: ${{ needs.validate.result }}
+          NATIVE_RESULT: ${{ needs.validate.result }}
+          BROWSER_RESULT: ${{ needs.browser.result }}
           CANDIDATE: ${{ needs.package.outputs.artifact }}
           PACKAGE_FILE: ${{ needs.package.outputs.filename }}
           SOURCE: ${{ needs.package.outputs.source }}
           ARTIFACT_URL: ${{ needs.package.outputs.artifact_url }}
           SHA256: ${{ needs.package.outputs.sha256 }}
-        run: |
-          if [[ "$PACKAGE_RESULT" == success && "$VALIDATION_RESULT" == success ]]; then
-            printf '## VSIX validation passed\n\nAll four required lanes passed for these package bytes.\n\n' >> "$GITHUB_STEP_SUMMARY"
-          else
-            printf '## VSIX validation did not pass\n\nThis run does not establish a validated package.\n\n' >> "$GITHUB_STEP_SUMMARY"
-          fi
-          printf 'Package result: %s; validation result: %s.\n\n' "$PACKAGE_RESULT" "$VALIDATION_RESULT" >> "$GITHUB_STEP_SUMMARY"
-          printf 'Development package: %s\n\nSource: %s\n\nArtifact bundle: %s\n\nVSIX SHA-256: %s\n\n' "$PACKAGE_FILE" "$SOURCE" "$CANDIDATE" "$SHA256" >> "$GITHUB_STEP_SUMMARY"
-          if [[ -n "$ARTIFACT_URL" ]]; then
-            printf '[Download the development package](%s)\n\n' "$ARTIFACT_URL" >> "$GITHUB_STEP_SUMMARY"
-          fi
-          printf 'Downloads require GitHub sign-in and expire seven days after upload. Official release eligibility is checked separately.\n' >> "$GITHUB_STEP_SUMMARY"
-          test "$PACKAGE_RESULT" = success
-          test "$VALIDATION_RESULT" = success
+        run: node .github/scripts/ci-gate.cjs

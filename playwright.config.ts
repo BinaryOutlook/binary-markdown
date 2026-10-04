@@ -7,6 +7,8 @@ export default defineConfig({
     retries: 0,
     workers: process.env.CI ? 1 : 2,
     reporter: 'list',
+    // Keep platform results distinct when merging the nine CI blob reports.
+    tag: process.env.CI_BROWSER_PLATFORM ? `@${process.env.CI_BROWSER_PLATFORM}` : undefined,
     timeout: 30000,
     
     use: {

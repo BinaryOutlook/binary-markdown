@@ -1,7 +1,7 @@
 'use strict';
 const assert = require('node:assert/strict');
 const test = require('node:test');
-const { formatPackageSummary, verifiedArtifactUrl } = require('../../scripts/ci-vsix-summary.cjs');
+const { code, formatPackageSummary, verifiedArtifactUrl } = require('../../scripts/ci-vsix-summary.cjs');
 const { candidateVSIXName } = require('../../scripts/candidate-names.cjs');
 const info = {
     artifact: 'binary-markdown-0.4.1.vsix', version: '0.4.1',
@@ -18,6 +18,32 @@ test('package summaries link the exact run artifact and do not claim completed v
     for (const value of [info.sourceCommit, info.sha256, info.sourceTree, '123', '42', '2']) assert.ok(summary.includes('<code>' + value + '</code>'));
     assert.match(summary, /expire seven days/);
     assert.match(summary, /does not change the package version/);
+    assert.match(summary, /four native lanes to test these same package bytes and nine browser shards to test this source revision/);
+    assert.equal(summary, formatPackageSummary(info, url, 'full'));
+});
+test('branch package summaries distinguish build-only checks from the protected validation gate', () => {
+    const summary = formatPackageSummary(info, url, 'build');
+    assert.match(summary, /build-only checks passed/);
+    assert.match(summary, /does not report the protected \*\*VSIX validation\*\* gate/);
+    assert.match(summary, /or run native and browser validation/);
+    assert.doesNotMatch(summary, /validation pending/);
+    assert.ok(summary.includes('](' + url + ')'));
+});
+test('documentation package summaries report only the checks actually run', () => {
+    const summary = formatPackageSummary(info, url, 'docs');
+    assert.match(summary, /documentation, unit and package checks passed/);
+    assert.match(summary, /does not run native or browser validation and is not full validation/);
+    assert.match(summary, /final \*\*VSIX validation\*\* result for the documentation-only gate/);
+    assert.doesNotMatch(summary, /validation pending/);
+    assert.ok(summary.includes('](' + url + ')'));
+});
+test('unknown validation modes cannot produce a misleading package summary', () => {
+    for (const mode of ['', 'partial', 'success', null]) {
+        assert.throws(() => formatPackageSummary(info, url, mode), /Unknown validation mode/);
+    }
+});
+test('the exported code formatter escapes identity fields for reuse in the final gate', () => {
+    assert.equal(code('<tag>|[link](target)\nnext'), '<code>&#60;tag&#62;&#124;&#91;link&#93;&#40;target&#41; next</code>');
 });
 test('untrusted ref characters cannot create summary links, HTML or table cells', () => {
     const summary = formatPackageSummary({...info, ci: {...info.ci, ref: 'refs/heads/<img src=x>|[link](https://evil.invalid)\nInjected row'}}, url);

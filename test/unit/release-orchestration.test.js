@@ -2,14 +2,15 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { ensureValidation, ensurePullValidation } = require('../../scripts/auto-release.cjs');
+const { fullValidationJobs, evidenceNames } = require('../../scripts/ci-validation.cjs');
 
 const source = 'a'.repeat(40);
-const jobs = ['Build candidate', 'Validate (ubuntu)', 'Validate (macos)', 'Validate (windows)', 'Validate (vscode-minimum)', 'VSIX validation']
+const jobs = fullValidationJobs
     .map(name => ({ name, status: 'completed', conclusion: 'success' }));
 const candidate = (overrides = {}) => ({ id: 10, run_attempt: 1, path: '.github/workflows/ci-vsix.yml',
     head_branch: 'main', head_sha: source, event: 'push', status: 'completed', conclusion: 'success', ...overrides });
 const artifacts = (attempt = 1) => [`vsix-candidate-${source}-${attempt}`,
-    ...['ubuntu', 'macos', 'windows', 'vscode-minimum'].map(lane => `validation-${lane}-${source}-${attempt}`)]
+    ...evidenceNames(source, attempt)]
     .map(name => ({ name, expired: false }));
 
 function fixture(runs = [candidate()], options = {}) {
@@ -28,8 +29,11 @@ function fixture(runs = [candidate()], options = {}) {
         pages(endpoint) {
             calls.push({ endpoint });
             if (endpoint.includes('/jobs?')) return options.jobs || jobs;
-            if (endpoint.includes('/artifacts?')) return options.expired && endpoint.includes('/10/') ?
-                artifacts().map(artifact => ({ ...artifact, expired: true })) : artifacts();
+            if (endpoint.includes('/artifacts?')) {
+                if (endpoint.includes('/10/') && options.missing) return artifacts().filter(artifact => artifact.name !== options.missing);
+                return options.expired && endpoint.includes('/10/') ?
+                    artifacts().map(artifact => ({ ...artifact, expired: true })) : artifacts();
+            }
             throw new Error('Unexpected paginated request: ' + endpoint);
         },
         async pause() { throw new Error('This scenario should complete without polling'); },
@@ -37,10 +41,17 @@ function fixture(runs = [candidate()], options = {}) {
     return { client, calls };
 }
 
-test('reuses a completed exact-source validation with all five available artifacts', async () => {
+test('reuses a completed exact-source validation with candidate, native and browser artifacts', async () => {
     const { client, calls } = fixture();
     assert.equal(await ensureValidation('main', source, client), 10);
     assert.equal(calls.some(call => call.body), false);
+});
+test('every browser shard artifact is required before reusing validation', async () => {
+    for (const artifact of artifacts().filter(item => item.name.startsWith('browser-'))) {
+        const { client, calls } = fixture([candidate()], { missing: artifact.name });
+        assert.equal(await ensureValidation('main', source, client), 11);
+        assert.equal(calls.filter(call => call.body).length, 1);
+    }
 });
 test('failed validation stops without dispatching another attempt', async () => {
     const { client, calls } = fixture([candidate({ conclusion: 'failure' })]);

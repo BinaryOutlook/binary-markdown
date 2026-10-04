@@ -3,6 +3,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const { planRelease, latestOfficialRelease, patchFiles, assertSameReleasePlan } = require('./release-policy.cjs');
 const { verifyValidationJobs } = require('./release-candidate');
+const { evidenceNames } = require('./ci-validation.cjs');
 const { REPOSITORY, api, optionalApi, pages, git, currentMain, assertMain, assertRepository } = require('./release-github.cjs');
 const { promote } = require('./promote-vsix.cjs');
 
@@ -64,8 +65,7 @@ async function ensureValidation(branch, source, client = { api, pages, pause }) 
     let run = runs[0];
     const artifactsAvailable = candidate => {
         const artifacts = client.pages(`actions/runs/${candidate.id}/artifacts?per_page=100`, 'artifacts');
-        const names = [`vsix-candidate-${source}-${candidate.run_attempt}`,
-            ...['ubuntu', 'macos', 'windows', 'vscode-minimum'].map(lane => `validation-${lane}-${source}-${candidate.run_attempt}`)];
+        const names = [`vsix-candidate-${source}-${candidate.run_attempt}`, ...evidenceNames(source, candidate.run_attempt)];
         return names.every(name => artifacts.some(artifact => artifact.name === name && !artifact.expired));
     };
     if (!run || (run.status === 'completed' && run.conclusion === 'success' && !artifactsAvailable(run))) {

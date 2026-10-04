@@ -33,15 +33,40 @@ test('explicit full main validation is accepted but dispatches from a bot branch
     assert.throws(() => verifyRun({ ...run(), event: 'workflow_dispatch', head_branch: 'codex/auto-release-0.2.1' }, repository, commit));
     assert.throws(() => verifyRun({ ...run(), event: 'workflow_run' }, repository, commit));
 });
-test('release promotion refuses skipped, failed, missing and ambiguous validation lanes', () => {
-    const jobs = ['Build candidate', 'Validate (ubuntu)', 'Validate (macos)', 'Validate (windows)', 'Validate (vscode-minimum)', 'VSIX validation']
-        .map(name => ({ name, status: 'completed', conclusion: 'success' }));
-    verifyValidationJobs(jobs);
-    for (const conclusion of ['skipped', 'failure', 'cancelled', 'neutral']) {
-        assert.throws(() => verifyValidationJobs(jobs.map(job => job.name === 'Validate (windows)' ? { ...job, conclusion } : job)));
-    }
-    assert.throws(() => verifyValidationJobs(jobs.slice(1)));
-    assert.throws(() => verifyValidationJobs([...jobs, jobs[0]]));
+const successfulValidationJobs = () => [
+    'Classify change', 'Build candidate',
+    'Validate (ubuntu)', 'Validate (macos)', 'Validate (windows)', 'Validate (vscode-minimum)',
+    'Browser (ubuntu, 1/3)', 'Browser (ubuntu, 2/3)', 'Browser (ubuntu, 3/3)',
+    'Browser (macos, 1/3)', 'Browser (macos, 2/3)', 'Browser (macos, 3/3)',
+    'Browser (windows, 1/3)', 'Browser (windows, 2/3)', 'Browser (windows, 3/3)',
+    'VSIX validation'
+].map(name => ({ name, status: 'completed', conclusion: 'success' }));
+test('release promotion accepts completed validation on every platform and browser shard', () => {
+    verifyValidationJobs(successfulValidationJobs());
+});
+for (const { name } of successfulValidationJobs()) {
+    test('release promotion requires a unique, completed, successful ' + name, () => {
+        const jobs = successfulValidationJobs();
+        assert.throws(() => verifyValidationJobs(jobs.filter(job => job.name !== name)), /Missing or ambiguous/, 'missing');
+        assert.throws(() => verifyValidationJobs([...jobs, jobs.find(job => job.name === name)]), /Missing or ambiguous/, 'duplicate');
+        for (const conclusion of ['skipped', 'failure', 'cancelled', 'neutral', 'timed_out', null]) {
+            assert.throws(() => verifyValidationJobs(jobs.map(job => job.name === name ? { ...job, conclusion } : job)),
+                /Every required lane must succeed/, String(conclusion));
+        }
+        for (const status of ['queued', 'in_progress']) {
+            assert.throws(() => verifyValidationJobs(jobs.map(job => job.name === name ? { ...job, status } : job)),
+                error => error.code === 'ERR_ASSERTION' && error.message.startsWith(name) && error.expected === 'completed', status);
+        }
+    });
+}
+test('a successful documentation or branch build cannot substitute for full release validation', () => {
+    const jobs = successfulValidationJobs();
+    const documentationJobs = jobs.filter(job => ['Classify change', 'Build candidate', 'VSIX validation'].includes(job.name));
+    assert.throws(() => verifyValidationJobs(documentationJobs), /Missing or ambiguous validation job: Validate \(ubuntu\)/);
+    assert.throws(() => verifyValidationJobs(documentationJobs.filter(job => job.name !== 'VSIX validation')),
+        /Missing or ambiguous validation job: Validate \(ubuntu\)/);
+    assert.throws(() => verifyValidationJobs(jobs.filter(job => !job.name.startsWith('Browser ('))),
+        /Missing or ambiguous validation job: Browser \(ubuntu, 1\/3\)/);
 });
 test('release candidate rejects changed bytes, dirty source and mismatched identities', t => {
     const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'binary-release-'));

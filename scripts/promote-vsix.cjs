@@ -5,6 +5,7 @@ const os = require('node:os');
 const path = require('node:path');
 const { createHash } = require('node:crypto');
 const { verifyRun, prepareReleaseAssets, renderReleaseNotes, verifyValidationJobs } = require('./release-candidate');
+const { evidenceNames } = require('./ci-validation.cjs');
 const { command, api, optionalApi, pages, git, currentMain, assertMain, assertRepository, REPOSITORY } = require('./release-github.cjs');
 
 async function promote({ runId, publish = false, beforePublish = async () => {} }) {
@@ -34,11 +35,15 @@ async function promote({ runId, publish = false, beforePublish = async () => {} 
         // Official asset names remain stable; only filenames and sidecar names
         // change. The validated VSIX is never rebuilt or modified.
         prepareReleaseAssets(dist, JSON.parse(fs.readFileSync('package.json', 'utf8')), source);
-        for (const lane of ['ubuntu', 'macos', 'windows', 'vscode-minimum']) {
-            const name = `validation-${lane}-${source}-${candidate.attempt}`;
+        for (const name of evidenceNames(source, candidate.attempt)) {
             const target = path.join(evidence, name);
             command('gh', ['run', 'download', String(runId), '--repo', REPOSITORY, '--name', name, '--dir', target]);
-            assert.ok(fs.statSync(path.join(target, 'artifact-audit.json')).isFile());
+            if (name.startsWith('validation-')) {
+                assert.ok(fs.statSync(path.join(target, 'artifact-audit.json')).isFile());
+            } else {
+                assert.ok(fs.readdirSync(path.join(target, 'blob-report')).some(file => file.endsWith('.zip')),
+                    'Each browser shard must retain its test report');
+            }
         }
         fs.writeFileSync(path.join(evidence, 'validation-run.json'), JSON.stringify(run, null, 2) + '\n');
         command('git', ['archive', '--format=tar.gz', `--prefix=binary-markdown-${version}/`,
