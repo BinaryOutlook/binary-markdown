@@ -26,32 +26,46 @@ async function tableContentChecks({ editor, keyboard, resize, record }) {
     assert.equal(geometry.localOverflow, 'auto');
     assert.ok(geometry.wrapperContentWidth <= geometry.wrapperWidth + 1);
     await editor.locator('#editor th').first().click();
-    const selected = () => editor.evaluate(() => {
+    const selectedState = expectedIndex => {
         const node = getSelection().anchorNode;
         const cell = (node.nodeType === 3 ? node.parentElement : node).closest('td,th');
         const table = cell.closest('table'), bounds = table.getBoundingClientRect();
         const wrapper = document.getElementById('editorWrapper').getBoundingClientRect();
         const caret = getSelection().getRangeAt(0).getBoundingClientRect();
-        return { index: cell.parentElement.rowIndex * 8 + cell.cellIndex, visible: caret.height > 0 &&
-            caret.left >= Math.max(bounds.left, wrapper.left, 0) - 1 && caret.right <= Math.min(bounds.right, wrapper.right, innerWidth) + 1 };
-    });
+        const state = { index: cell.parentElement.rowIndex * 8 + cell.cellIndex, visible: caret.height > 0 &&
+            caret.left >= Math.max(bounds.left, wrapper.left, 0) - 1 && caret.right <= Math.min(bounds.right, wrapper.right, innerWidth) + 1,
+            caret: caret.toJSON(), table: bounds.toJSON(), wrapper: wrapper.toJSON(), scrollLeft: table.scrollLeft, viewportWidth: innerWidth };
+        return expectedIndex === undefined ? state : state.index === expectedIndex && state.visible;
+    };
+    const expectSelected = async (index, message = 'Navigation reveals the selected source cell') => {
+        // Native input can return before Chromium finishes its selection scroll.
+        // Keep the same visible-caret contract and fail with the final geometry.
+        try {
+            await editor.waitForFunction(selectedState, index);
+        } catch (error) {
+            const observed = await editor.evaluate(selectedState);
+            throw new Error(message + ': ' + JSON.stringify(observed), { cause: error });
+        }
+        const { index: actualIndex, visible } = await editor.evaluate(selectedState);
+        assert.deepEqual({ index: actualIndex, visible }, { index, visible: true }, message);
+    };
     for (let index = 1; index < 24; index++) {
         await keyboard.press('Tab');
-        assert.deepEqual(await selected(), { index, visible: true }, 'Tab reveals the selected source cell');
+        await expectSelected(index, 'Tab reveals the selected source cell');
     }
     for (let index = 22; index >= 0; index--) {
         await keyboard.press('Shift+Tab');
-        assert.deepEqual(await selected(), { index, visible: true }, 'Shift+Tab reveals the selected source cell');
+        await expectSelected(index, 'Shift+Tab reveals the selected source cell');
     }
     await resize(500, 450);
     for (let index = 1; index < 16; index++) {
         await keyboard.press('Tab');
-        assert.deepEqual(await selected(), { index, visible: true });
+        await expectSelected(index);
     }
     await keyboard.press('ArrowDown');
-    assert.deepEqual(await selected(), { index: 23, visible: true });
+    await expectSelected(23);
     await keyboard.press('ArrowUp');
-    assert.deepEqual(await selected(), { index: 15, visible: true });
+    await expectSelected(15);
     await keyboard.press('Alt+F10');
     assert.equal(await editor.evaluate(() => Boolean(document.activeElement?.closest('.table-toolbar, .table-toolbar-dock'))), true);
     if (await editor.evaluate(() => document.activeElement === document.querySelector('.table-toolbar-toggle'))) await keyboard.press('Enter');
@@ -62,7 +76,7 @@ async function tableContentChecks({ editor, keyboard, resize, record }) {
         return width;
     });
     await keyboard.press('Escape');
-    assert.deepEqual(await selected(), { index: 15, visible: true });
+    await expectSelected(15);
     await editor.evaluate(width => { document.querySelector('.sidebar').style.width = width; }, sidebarWidth);
     assert.deepEqual(await editor.evaluate(tableCells), cells);
     assert.equal(await editor.evaluate(() => window.htmlToMarkdown()), before);
