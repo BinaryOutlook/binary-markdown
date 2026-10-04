@@ -18,6 +18,14 @@ Visual formatting and insertion controls are disabled in Source and Split. Use V
 
 The sidebar has **Outline** and **Document** tabs. Outline buttons locate headings in either view; in Split, they also locate the corresponding source heading and preview section. Document provides navigation through the first two heading levels and identifies the current section. The shared footer shows the document title, counts, and current section's position among the headings, with a thin section-progress indicator. Small windows conceal the rail without changing the stored desktop preference; use **Open Outline** to display it over the canvas and **Close Outline** to return to writing.
 
+## Custom section anchors
+
+A standalone empty HTML anchor such as `<a id="legacy-section"></a>` keeps an existing section link working after you rename its heading. The visual editor treats the anchor as invisible navigation metadata. `[Jump](#legacy-section)` locates the following content without editing the document. Consecutive anchors share that location; an anchor at the end locates the document end. Duplicate targets resolve to the first matching anchor or heading in document order.
+
+Use a quoted, nonempty `id` or legacy `name` attribute, or both. Target values cannot contain whitespace or angle brackets. Edit anchors in **Source**; visual edits to surrounding content, saving, and Undo/Redo retain their original source. HTML export retains inert anchor targets. When a visual deletion or replacement spans an anchor, the anchor moves before the resulting content instead of being removed. Remove anchors in Source mode. Viewing anchors creates no document edit.
+
+Recognition applies only to complete standalone lines at the document's top level, with fewer than four leading spaces. Inline anchors, anchors in lists or quotes, payload text, unquoted attributes, and extra attributes such as `href`, `style`, or event handlers remain literal source. Code examples and escaped tags also remain literal. Arbitrary HTML stays disabled.
+
 ## Find and Replace
 
 Use `Cmd+F`/`Ctrl+F` to find, or `Cmd+H`/`Ctrl+H` to find and replace. Search operates on Markdown source, including syntax and metadata. Each result shows its source line and surrounding text. Click a result to locate it; results without a visible text counterpart offer **Source** to show the exact match. Previous/Next and Enter/Shift+Enter navigate results.

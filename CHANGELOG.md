@@ -12,6 +12,7 @@
 
 ### Added
 
+- Recognize standalone empty HTML section anchors as invisible navigation targets, preserve their source through visual edits, and retain inert targets in HTML export.
 - Optional per-block soft wrapping, off by default, with a persistent **Wrapped** notice. Wrapping preserves code content, editing state, source/save/copy behavior, and independent export layout. See [code controls and soft wrapping](docs/editor-guide.md#code-controls-and-soft-wrapping).
 
 ## 0.4.1

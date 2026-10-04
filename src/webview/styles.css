@@ -1469,7 +1469,7 @@ button.command-palette-item { border: 0; width: 100%; text-align: start; font: i
 #exportOpenOutput { margin-top: 8px; background: var(--link-color); border: 1px solid var(--link-color); border-radius: 4px; padding: 6px 8px; color: var(--bg-color); font: inherit; cursor: pointer; }
 #exportOpenOutput:hover, #exportOpenOutput:focus-visible { background: var(--link-color); color: var(--bg-color); outline-offset: 2px; }
 #exportOpenOutput[hidden] { display: none; }
-#editor > :first-child { margin-top: 0; }
+#editor > :nth-child(1 of :not(.markdown-anchor)) { margin-top: 0; }
 .reading-progress progress::-webkit-progress-bar { background: var(--sidebar-border); }
 .reading-progress progress::-webkit-progress-value { background: var(--outline-active-color, var(--link-color)); }
 .block-diagnostic-text { white-space: pre-wrap; font: 11px/1.5 var(--font-mono); padding: 8px; max-height: 160px; overflow: auto; }
@@ -1657,3 +1657,14 @@ html[data-table-toolbar-position="bottom-left"] .editor table, html[data-table-t
 .toolbar-overflow .command-palette-label { white-space: normal; overflow-wrap: anywhere; }
 .toolbar-overflow .command-palette-label small { display: block; font-size: 11px; opacity: .75; }
 .toolbar-overflow .command-palette-shortcut { margin-left: auto; }
+
+/* Navigation metadata keeps source without a visible paragraph or caret stop. */
+.editor > .markdown-anchor {
+    height: 0;
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    overflow: hidden;
+    pointer-events: none;
+}

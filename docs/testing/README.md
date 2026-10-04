@@ -18,6 +18,12 @@ From the repository root, run `npm run compile`, `npm run test:markdown-blocks`,
 
 For actual file persistence, build and install a new development VSIX in the [isolated native harness](../../test/native/export-smoke.md), then run its `paragraph-semantics` and `table-source-format` suites against that same package. They measure the installed view, type both kinds of break, save through VS Code, reopen files, check exact source bytes, exercise both table layouts and setting precedence, and export HTML. Both suites also run with `--suite all`. A browser pass alone does not establish installed-host saving or another operating system's behavior.
 
+## Custom section anchor regressions
+
+After compilation, run `npm run test:markdown-blocks`, `npm run test:build`, and `CI=1 npx playwright test test/specs/html-anchors.spec.ts --retries=0`. These checks cover restricted standalone anchors, literal unsupported syntax, source preservation, fragment navigation, all-theme zero-height layout, deletion/replacement, Undo/Redo, Source switching, and prepared HTML targets. Run the complete browser suite after shared parser or serializer changes.
+
+For actual file persistence and host navigation, package and install the development VSIX in the [isolated native harness](../../test/native/export-smoke.md), then run `node test/native/export-smoke.cjs run --suite html-anchors` with the initialization options for that owned profile. Record the exact package identity; browser checks alone do not establish installed-extension saving.
+
 ## Save, list and inline-code regressions
 
 The installed harness includes `save-correctness` and `list-code-preservation` in `--suite all`. Run them against a newly packaged and installed VSIX using the [focused procedure](../../test/native/export-smoke.md#save-list-and-inline-code-preservation). The save check controls delivery of actual editor messages during native Save and compares the captured snapshot, host buffer, disk and reopened Source view. The preservation check covers ordered starts and checklists, literal and padded inline code, Undo/Redo, Source mode and save/reopen. The guide describes their controlled inputs and coverage boundaries; retain results for the exact package tested.
