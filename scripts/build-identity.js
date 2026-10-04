@@ -19,6 +19,35 @@ function sourceRepository(value) {
     } catch { return null; }
 }
 
+function githubActionsIdentity(environment) {
+    if (environment.GITHUB_ACTIONS !== 'true') return null;
+    const integer = key => {
+        const value = environment[key];
+        if (!/^[1-9]\d*$/.test(value || '') || !Number.isSafeInteger(Number(value))) {
+            throw new Error('GitHub Actions identity requires a positive safe integer: ' + key);
+        }
+        return Number(value);
+    };
+    const runId = integer('GITHUB_RUN_ID');
+    const runNumber = integer('GITHUB_RUN_NUMBER');
+    const runAttempt = integer('GITHUB_RUN_ATTEMPT');
+    const repository = environment.GITHUB_REPOSITORY || '';
+    if (!/^[a-zA-Z0-9_-]+\/[a-zA-Z0-9_.-]+$/.test(repository) || ['.', '..'].includes(repository.split('/')[1])) {
+        throw new Error('GitHub Actions identity requires an owner/repository name.');
+    }
+    const server = new URL(environment.GITHUB_SERVER_URL || 'https://github.com');
+    if (server.protocol !== 'https:' || server.username || server.password || server.search || server.hash || server.pathname !== '/') {
+        throw new Error('GitHub Actions identity requires a credential-free HTTPS server origin.');
+    }
+    const ref = environment.GITHUB_REF || '';
+    if (!/^refs\/[^\u0000-\u0020\u007f]+$/.test(ref)) throw new Error('GitHub Actions identity requires a complete Git ref.');
+    return {
+        provider: 'github-actions', repository, runId, runNumber, runAttempt,
+        runUrl: server.origin + '/' + repository + '/actions/runs/' + runId,
+        event: environment.GITHUB_EVENT_NAME || 'unknown', ref,
+    };
+}
+
 function buildIdentity(root, environment = process.env) {
     const manifest = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
     const top = git(root, ['rev-parse', '--show-toplevel']);
@@ -40,7 +69,7 @@ function buildIdentity(root, environment = process.env) {
         sourceKind: checkout ? 'git' : provided ? 'provided' : 'unknown',
         dirty: status === null ? null : status.length > 0,
         repository, sourceUrl: repository && sourceCommit ? repository + '/tree/' + sourceCommit : null,
-        buildNode: process.versions.node,
+        buildNode: process.versions.node, ci: githubActionsIdentity(environment),
     };
 }
 
@@ -52,4 +81,4 @@ function assertReleaseIdentity(info) {
     if (!info.repository) throw new Error('Release packaging requires a source repository URL.');
 }
 
-module.exports = { buildIdentity, assertReleaseIdentity, sourceRepository };
+module.exports = { buildIdentity, assertReleaseIdentity, sourceRepository, githubActionsIdentity };

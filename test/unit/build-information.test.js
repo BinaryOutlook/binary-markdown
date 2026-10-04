@@ -43,3 +43,28 @@ test('missing or damaged build stamps remain explicitly unknown', async () => {
         assert.match(report, /Local source changes: unknown/);
     }
 });
+
+test('copied CI report distinguishes same-version builds and rerun attempts', async () => {
+    for (const attempt of [1, 2]) {
+        const report = await copy(JSON.stringify({version: '0.4.1', ci: {
+            runId: 123456, runNumber: 42, runAttempt: attempt,
+            runUrl: 'https://github.com/BinaryOutlook/binary-markdown/actions/runs/123456',
+            ref: 'refs/heads/feature',
+        }}));
+        assert.match(report, /Binary Markdown 0\.4\.1/);
+        assert.match(report, /CI build number: 42/);
+        assert.match(report, /CI run ID: 123456/);
+        assert.ok(report.includes('CI run attempt: ' + attempt));
+        assert.ok(report.includes('CI run URL: https://github.com/BinaryOutlook/binary-markdown/actions/runs/123456'));
+        assert.match(report, /CI ref: refs\/heads\/feature/);
+    }
+});
+test('local and older packages report absent CI metadata honestly', async () => {
+    for (const info of [{}, {ci: null}]) {
+        const report = await copy(JSON.stringify(info));
+        assert.match(report, /CI build number: not recorded/);
+        assert.match(report, /CI run ID: not recorded/);
+        assert.match(report, /CI run attempt: not recorded/);
+        assert.match(report, /CI run URL: not recorded/);
+    }
+});

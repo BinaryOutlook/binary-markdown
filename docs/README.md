@@ -12,6 +12,7 @@ Start here for maintained Binary Markdown guidance. These pages describe the sou
 | Configure the editor | [Settings reference](editor-guide.md#vs-code-settings) | [Outline state](editor-guide.md#outline-state), [interface languages](editor-guide.md#interface-languages) |
 | Export a document | [First HTML export](export-tutorial.md) | [Export help and settings](../media/export-help.md) |
 | Build or contribute | [Build from source](building.md) | [Contributing](../CONTRIBUTING.md), [documentation standard](documentation-standard.md) |
+| Maintain CI safely | [CI security](ci-security.md) | [Build instructions](building.md), [release policy](releases-and-support.md) |
 | Test a change | [Validation guide](testing/README.md) | [Export verification](export-verification.md), [Windows checks](testing/windows.md) |
 | Compare an implemented UI with a chosen concept | [Scoped AI visual review](testing/visual-review.md) | [System design](../reports/plans/2026-10-01-ui-ux-visual-fidelity/system-design.md) |
 | Understand export | [Architecture](export-architecture.md) | [Requirements and format support](export-subsystem.md) |
