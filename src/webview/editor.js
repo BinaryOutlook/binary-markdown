@@ -2732,6 +2732,14 @@
 
     function renderMarkdownBlock(block, exportCode = false, parent = null, index = 0) {
         const children = () => block.children.map((child, i) => renderMarkdownBlock(child, exportCode, block, i)).join('');
+        if (block.type === 'binary_anchor') {
+            const anchors = block.meta.anchors;
+            if (exportCode) return anchors.map(attrs => '<a' + Object.entries(attrs).map(([name, value]) =>
+                ' ' + name + '="' + escapeHtml(value).replace(/"/g, '&quot;') + '"').join('') + '></a>').join('');
+            return '<div class="markdown-anchor" contenteditable="false" aria-hidden="true"' +
+                ' data-anchor-targets="' + encodeURIComponent(JSON.stringify(anchors.flatMap(attrs => Object.values(attrs)))) +
+                '" data-anchor-source="' + encodeURIComponent(block.source) + '"></div>';
+        }
         if (block.type === 'front_matter') return renderFrontMatter(block.content);
         if (block.type === 'binary_aux') return renderTocBlock(block.content);
         if (block.type === 'binary_math') return mathBlockHtml(block.meta);
@@ -3360,6 +3368,73 @@
         event.preventDefault(); event.stopImmediatePropagation();
         editInlineMath(span);
     }, true);
+    // Invisible anchors cannot be selected intentionally in Visual mode. Keep
+    // them outside native deletion/replacement ranges; Source owns their removal.
+    function retainAnchorsForEdit(inputType) {
+        const selection = window.getSelection();
+        if (!selection?.rangeCount || isSourceMode || !editor.querySelector(':scope > .markdown-anchor')) return false;
+        const range = selection.getRangeAt(0);
+        const selected = !range.collapsed;
+        if (!editor.contains(range.commonAncestorContainer)) return false;
+        let start = range.startContainer;
+        while (start !== editor && start.parentNode !== editor) start = start.parentNode;
+        let block = start === editor ? editor.childNodes[range.startOffset] : start;
+        let anchors = [];
+        if (!range.collapsed) {
+            anchors = Array.from(editor.querySelectorAll(':scope > .markdown-anchor')).filter(node => range.intersectsNode(node));
+            while (block?.classList?.contains('markdown-anchor')) block = block.nextSibling;
+        } else if (/^deleteContent(?:Backward|Forward)$/.test(inputType) && block?.nodeType === 1) {
+            const backward = inputType === 'deleteContentBackward';
+            if (block.classList.contains('markdown-anchor')) {
+                block = backward ? block.nextElementSibling : block.previousElementSibling;
+                while (block?.classList.contains('markdown-anchor')) block = backward ? block.nextElementSibling : block.previousElementSibling;
+                if (!block) return 'boundary';
+            }
+            const edge = range.cloneRange(); edge.selectNodeContents(block);
+            if (backward) edge.setEnd(range.startContainer, range.startOffset);
+            else edge.setStart(range.startContainer, range.startOffset);
+            if (edge.toString() || edge.cloneContents().querySelector('img,.math-inline')) return false;
+            let sibling = backward ? block.previousElementSibling : block.nextElementSibling;
+            while (sibling?.classList.contains('markdown-anchor')) {
+                if (backward) anchors.unshift(sibling); else anchors.push(sibling);
+                sibling = backward ? sibling.previousElementSibling : sibling.nextElementSibling;
+            }
+            if (anchors.length && !sibling) return 'boundary';
+            if (backward) block = sibling;
+        }
+        if (!anchors.length) return false;
+        undoManager.saveSnapshot();
+        for (const anchor of anchors) editor.insertBefore(anchor, block || null);
+        if (!block && selected) {
+            // Chromium clamps a caret after only noneditable nodes to the start.
+            // Give replacement text an explicit editable position after metadata.
+            const paragraph = document.createElement('p'); paragraph.innerHTML = '<br>';
+            editor.appendChild(paragraph);
+            range.selectNodeContents(paragraph); range.collapse(true);
+        } else if (start === editor && selected) range.setStartAfter(anchors.at(-1));
+        selection.removeAllRanges(); selection.addRange(range);
+        return true;
+    }
+
+    editor.addEventListener('keydown', event => {
+        if (event.target.closest?.('.front-matter,.toc-block') || (event.key !== 'Backspace' && event.key !== 'Delete')) return;
+        const inputType = event.key === 'Backspace' ? 'deleteContentBackward' : 'deleteContentForward';
+        const retained = retainAnchorsForEdit(inputType);
+        if (retained) {
+            if (retained === 'boundary') event.preventDefault();
+            // Let Chromium merge the visible blocks after metadata moves out of
+            // its range, rather than applying custom handlers to hidden blocks.
+            event.stopImmediatePropagation();
+        }
+    }, true);
+    editor.addEventListener('beforeinput', event => {
+        if (event.target.closest?.('.front-matter,.toc-block')) return;
+        if (/^(?:insert|delete)/.test(event.inputType) && retainAnchorsForEdit(event.inputType) === 'boundary') event.preventDefault();
+    }, true);
+    for (const type of ['paste', 'cut']) editor.addEventListener(type, event => {
+        if (!event.target.closest?.('.front-matter,.toc-block')) retainAnchorsForEdit(type);
+    }, true);
+
     editor.addEventListener('keydown', event => {
         if (event.target.classList.contains('math-inline') && (event.key === 'Enter' || event.key === ' ')) {
             event.preventDefault(); event.stopImmediatePropagation();
@@ -6314,6 +6389,7 @@
 
         const tag = node.tagName.toLowerCase();
 
+        if (node.classList.contains('markdown-anchor')) return decodeURIComponent(node.dataset.anchorSource) + '\n';
         if (node.classList.contains('toc-block')) return decodeURIComponent(node.dataset.tocSource) + '\n';
         if (node.classList.contains('front-matter')) {
             const raw = node.querySelector('textarea').value;
@@ -14835,38 +14911,38 @@
             // Show toast notification for external change
             showEditorToast(message.message);
         } else if (message.type === 'scrollToAnchor') {
-            // Scroll to anchor (heading) in the document
-            const anchor = message.anchor;
-            if (anchor) {
-                // Find heading by id or by text content
-                const headings = editor.querySelectorAll('h1, h2, h3, h4, h5, h6');
-                for (const heading of headings) {
-                    // Generate slug from heading text (same as GitHub-style anchor)
-                    const headingText = heading.textContent || '';
-                    const slug = headingText
-                        .toLowerCase()
-                        .trim()
-                        .replace(/[^\w\s\u3040-\u309f\u30a0-\u30ff\u4e00-\u9faf\uac00-\ud7af-]/g, '') // Keep alphanumeric, Japanese, Chinese, Korean, hyphen
-                        .replace(/\s+/g, '-'); // Replace spaces with hyphens
-                    
-                    if (slug === anchor || heading.id === anchor) {
-                        const wrapper = editor.closest('.editor-wrapper');
-                        if (wrapper) {
-                            const wrapperRect = wrapper.getBoundingClientRect();
-                            const headingRect = heading.getBoundingClientRect();
-                            wrapper.scrollTo({ top: wrapper.scrollTop + headingRect.top - wrapperRect.top, behavior: 'smooth' });
-                        } else {
-                            heading.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                        }
-                        // Briefly highlight the heading
-                        heading.style.transition = 'background-color 0.3s';
-                        heading.style.backgroundColor = 'var(--selection-bg)';
-                        setTimeout(() => {
-                            heading.style.backgroundColor = '';
-                        }, 1500);
-                        break;
-                    }
+            let anchor = message.anchor;
+            if (typeof anchor !== 'string' || !anchor) return;
+            try { anchor = decodeURIComponent(anchor); } catch (_) { /* Keep literal malformed percent signs. */ }
+            // Match metadata inside the document, never user-controlled CSS selectors
+            // or IDs on the surrounding application UI. First document target wins.
+            const targets = editor.querySelectorAll('.markdown-anchor,h1,h2,h3,h4,h5,h6');
+            for (const target of targets) {
+                const custom = target.classList.contains('markdown-anchor');
+                const matches = custom ? JSON.parse(decodeURIComponent(target.dataset.anchorTargets)).includes(anchor) :
+                    target.id === anchor || (target.textContent || '').toLowerCase().trim()
+                        .replace(/[^\w\s\u3040-\u309f\u30a0-\u30ff\u4e00-\u9faf\uac00-\ud7af-]/g, '')
+                        .replace(/\s+/g, '-') === anchor;
+                if (!matches) continue;
+                let visible = target;
+                if (custom) {
+                    visible = target.nextElementSibling;
+                    while (visible?.classList.contains('markdown-anchor')) visible = visible.nextElementSibling;
+                    // An anchor at EOF still has a zero-height scroll position.
+                    visible ||= target;
                 }
+                const wrapper = editor.closest('.editor-wrapper');
+                if (wrapper) {
+                    const wrapperRect = wrapper.getBoundingClientRect();
+                    const targetRect = visible.getBoundingClientRect();
+                    wrapper.scrollTo({ top: wrapper.scrollTop + targetRect.top - wrapperRect.top, behavior: 'smooth' });
+                } else visible.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                if (!visible.classList.contains('markdown-anchor')) {
+                    visible.style.transition = 'background-color 0.3s';
+                    visible.style.backgroundColor = 'var(--selection-bg)';
+                    setTimeout(() => { visible.style.backgroundColor = ''; }, 1500);
+                }
+                break;
             }
         }
     });

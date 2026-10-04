@@ -74,6 +74,45 @@ parser.block.ruler.before('fence', 'binary_aux', (state, start, end, silent) => 
     return true;
 }, { alt: ['paragraph', 'reference', 'blockquote', 'list'] });
 
+// Empty standalone anchors are navigation metadata, not arbitrary HTML.
+// Require quoted id/name attributes; reject payloads and all other attributes.
+function parseAnchor(line) {
+    const match = /^<a\b([^<>]*)>[ \t]*<\/a[ \t]*>$/i.exec(line.trim());
+    if (!match) return null;
+    let rest = match[1];
+    const attrs = {};
+    while (rest.trim()) {
+        const attribute = /^[ \t]+(id|name)[ \t]*=[ \t]*(["'])(.*?)\2/i.exec(rest);
+        if (!attribute) return null;
+        const name = attribute[1].toLowerCase();
+        if (Object.hasOwn(attrs, name) || /[\\\x00-\x1f]/.test(attribute[3])) return null;
+        const value = parser.utils.unescapeAll(attribute[3]);
+        if (!value || /[\s<>\x00-\x1f]/.test(value)) return null;
+        attrs[name] = value;
+        rest = rest.slice(attribute[0].length);
+    }
+    return Object.keys(attrs).length ? attrs : null;
+}
+
+parser.block.ruler.before('paragraph', 'binary_anchor', (state, start, end, silent) => {
+    // Nested containers and indented code retain their existing interpretation.
+    if (state.blkIndent || state.level !== 0 || state.sCount[start] >= 4) return false;
+    const anchors = [];
+    let line = start;
+    for (; line < end && state.sCount[line] < 4; line++) {
+        const attrs = parseAnchor(state.getLines(line, line + 1, 0, false));
+        if (!attrs) break;
+        anchors.push(attrs);
+    }
+    if (!anchors.length) return false;
+    if (silent) return true;
+    const token = state.push('binary_anchor', 'div', 0);
+    token.map = [start, line];
+    token.meta = { anchors };
+    state.line = line;
+    return true;
+}, { alt: ['paragraph'] });
+
 function tokenTree(tokens) {
     const root = { children: [] };
     const stack = [root];

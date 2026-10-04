@@ -350,7 +350,7 @@ async function run(settings, owner) {
         fs.writeFileSync(report, JSON.stringify({ harness: harnessIdentity(), host: receipt(owner), packageSha256: hash(fs.readFileSync(settings.package)), receipts }, null, 2));
         console.log(name, JSON.stringify(details));
     };
-    const available = ['identity', 'filesystem', 'formats', 'saves', 'save-correctness', 'list-code-preservation', 'edges', 'ui', 'equations', 'pdf-background', 'selection', 'immutable', 'offline', 'document-aux', 'links', 'codeblocks', 'code-block-controls', 'table-placement', 'table-source-format', 'table-content', 'table-row', 'text-toolbar', 'insert-menu', 'underline', 'underline-exports', 'editor-width', 'editor-alignment', 'width-indicators', 'language-picker', 'language-order', 'equation-source-position', 'equation-source-wrap', 'code-label-position', 'code-line-count', 'pdf-code-numbers', 'docx-code-numbers', 'blockquotes', 'paragraph-semantics'];
+    const available = ['identity', 'filesystem', 'formats', 'saves', 'save-correctness', 'list-code-preservation', 'edges', 'ui', 'equations', 'pdf-background', 'selection', 'immutable', 'offline', 'document-aux', 'links', 'codeblocks', 'code-block-controls', 'table-placement', 'table-source-format', 'table-content', 'table-row', 'text-toolbar', 'insert-menu', 'underline', 'underline-exports', 'editor-width', 'editor-alignment', 'width-indicators', 'language-picker', 'language-order', 'equation-source-position', 'equation-source-wrap', 'code-label-position', 'code-line-count', 'pdf-code-numbers', 'docx-code-numbers', 'blockquotes', 'paragraph-semantics', 'html-anchors'];
     const groups = settings.suite === 'all' ? available : [settings.suite];
     assert.ok(groups.every(value => available.includes(value)), 'Suite must be all, ' + available.join(', '));
     const htmlExports = [];
@@ -548,6 +548,7 @@ async function run(settings, owner) {
         if (groups.includes('editor-alignment')) await editorAlignmentCase(h, owner, record);
         if (groups.includes('editor-width')) await editorWidthCase(h, owner, record);
         if (groups.includes('paragraph-semantics')) await require('./paragraph-semantics.cjs').paragraphSemanticsCase(h, owner, record);
+        if (groups.includes('html-anchors')) await require('./html-anchors.cjs').htmlAnchorsCase(h, owner, record);
         if (groups.includes('underline')) await underlineCase(h, owner, record);
         if (groups.includes('code-label-position')) await codeLabelPositionCase(h, owner, record);
         if (groups.includes('code-line-count')) await codeLabelPositionCase(h, owner, record, true);

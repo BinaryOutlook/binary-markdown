@@ -68,3 +68,34 @@ test('literal HTML and unsupported reference definitions remain visible source',
     assert.equal(reconstruct(parsed), source);
     assert.deepEqual(parsed.blocks.map(block => block.type), ['paragraph', 'paragraph']);
 });
+
+test('standalone empty anchors retain source and decoded navigation targets', () => {
+    const source = '  <A name = \'older-section\' ID="legacy&#45;section"></A>\n<a id="章"></a>\n## Renamed\n\nText\n\n<a id="end"></a>';
+    const parsed = parse(source);
+    assert.equal(reconstruct(parsed), source);
+    assert.deepEqual(parsed.blocks.map(block => block.type), ['binary_anchor', 'heading', 'paragraph', 'binary_anchor']);
+    assert.deepEqual(parsed.blocks[0].meta.anchors, [{ name: 'older-section', id: 'legacy-section' }, { id: '章' }]);
+    assert.equal(parsed.blocks[3].source, '<a id="end"></a>');
+});
+
+test('anchor recognition never enables other HTML or consumes literal examples', () => {
+    for (const source of [
+        '<a id="x" onclick="bad"></a>', '<a href="target" id="x"></a>', '<a id="x">text</a>',
+        '<a id="x" id="y"></a>', '<a id=x></a>', '<a id=""></a>', '<a id="two words"></a>',
+        '<a id="line&#10;break"></a>', '<a id="x" style="display:none"></a>', '<a></a>',
+        '`<a id="x"></a>`', '\\<a id="x"></a>', 'Text <a id="x"></a>', '<a id="x"></a> tail',
+        '    <a id="x"></a>', '```html\n<a id="x"></a>\n```', '> <a id="x"></a>', '- <a id="x"></a>'
+    ]) {
+        const parsed = parse(source);
+        assert.equal(reconstruct(parsed), source);
+        assert.ok(parsed.blocks.every(block => block.type !== 'binary_anchor'), source);
+    }
+});
+
+
+test('top-level anchors interrupt prose without requiring blank separator lines', () => {
+    const source = 'Before\n<a id="target"></a>\nAfter\n';
+    const parsed = parse(source);
+    assert.equal(reconstruct(parsed), source);
+    assert.deepEqual(parsed.blocks.map(block => block.type), ['paragraph', 'binary_anchor', 'paragraph']);
+});
