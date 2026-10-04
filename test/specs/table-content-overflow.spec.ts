@@ -84,6 +84,62 @@ test('Tab and Shift+Tab reveal each selected cell without adding undo', async ({
     await expect(page.locator('#toolbar [data-action="undo"]')).toBeDisabled();
 });
 
+test('a later pane resize keeps the selected caret visible without overriding manual scrolling', async ({ page }) => {
+    await setup(page);
+    const before = await page.evaluate(() => (window as any).htmlToMarkdown());
+    await page.locator('#editor th').first().click();
+    await page.keyboard.press('Tab');
+    await page.keyboard.press('Tab');
+    await expect.poll(() => selectedCell(page)).toEqual({ index: 2, visible: true });
+    const selection = await page.evaluate(() => ({ anchor: getSelection()!.anchorOffset, focus: getSelection()!.focusOffset }));
+
+    // Toolbar docking or a newly visible vertical scrollbar can narrow the
+    // table after navigation has already revealed the selected caret.
+    await page.setViewportSize({ width: 560, height: 560 });
+    await expect.poll(() => selectedCell(page)).toEqual({ index: 2, visible: true });
+    expect(await page.evaluate(() => ({ anchor: getSelection()!.anchorOffset, focus: getSelection()!.focusOffset }))).toEqual(selection);
+    await expect(page.locator('#editor')).toBeFocused();
+    const table = page.locator('#editor table');
+    await table.evaluate(node => { node.scrollLeft = 0; });
+    await page.evaluate(() => new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
+    expect(await table.evaluate(node => node.scrollLeft)).toBe(0);
+    for (const width of [520, 800]) {
+        await page.setViewportSize({ width, height: 560 });
+        await page.evaluate(() => new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
+        expect(await table.evaluate(node => node.scrollLeft)).toBe(0);
+    }
+    expect(await page.evaluate(() => (window as any).htmlToMarkdown())).toBe(before);
+    expect(await page.evaluate(() => (window as any).__testApi.messages.filter((m: any) => ['edit', 'save'].includes(m.type)))).toEqual([]);
+    await expect(page.locator('#toolbar [data-action="undo"]')).toBeDisabled();
+});
+
+for (const context of ['toolbar focus', 'selected text']) test(`pane resize preserves manual scrolling with ${context}`, async ({ page }) => {
+    await setup(page);
+    await page.locator('#editor th').first().click();
+    await page.keyboard.press('Tab');
+    await page.keyboard.press('Tab');
+    if (context === 'toolbar focus') {
+        await page.keyboard.press('Alt+F10');
+        expect(await page.evaluate(() => Boolean(document.activeElement?.closest('.table-toolbar, .table-toolbar-dock')))).toBe(true);
+    } else {
+        await page.evaluate(() => {
+            const range = document.createRange();
+            range.selectNodeContents(document.querySelectorAll('#editor th')[2].firstChild!);
+            getSelection()!.removeAllRanges(); getSelection()!.addRange(range);
+        });
+    }
+    const focused = await page.locator(':focus').elementHandle();
+    const selection = await page.evaluate(() => ({ text: getSelection()!.toString(), anchor: getSelection()!.anchorOffset, focus: getSelection()!.focusOffset }));
+    const table = page.locator('#editor table');
+    await table.evaluate(node => { node.scrollLeft = 0; });
+    await page.setViewportSize({ width: 560, height: 560 });
+    await page.evaluate(() => new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
+    expect(await table.evaluate(node => node.scrollLeft)).toBe(0);
+    expect(await focused!.evaluate(node => node === document.activeElement)).toBe(true);
+    expect(await page.evaluate(() => ({ text: getSelection()!.toString(), anchor: getSelection()!.anchorOffset, focus: getSelection()!.focusOffset }))).toEqual(selection);
+    await expect(page.locator('#toolbar [data-action="undo"]')).toBeDisabled();
+});
+
 test('header navigation skips resize handles and keeps typing undoable', async ({ page }) => {
     await setup(page);
     await page.locator('#editor th').first().click();
