@@ -1324,7 +1324,6 @@ html[data-math-source-position="below"] .editor .math-wrapper[data-mode="edit"] 
 /* Cohesive view controls; colors continue to follow the selected theme. */
 .editor-mode-switch { display: flex; border: 1px solid var(--border-color); border-radius: 6px; padding: 2px; }
 .toolbar .editor-mode-switch button { font: inherit; font-size: 12px; min-height: 28px; }
-.editor-mode-switch button[aria-pressed="true"], #contextToolbarToggle[aria-pressed="true"] { background: var(--selection-bg); }
 .editor-mode-switch button[aria-pressed="true"] { background: var(--link-color); color: var(--bg-color); }
 #contextToolbarToggle { font: inherit; font-size: 12px; gap: 4px; }
 #contextToolbarToggle { max-width: none; white-space: nowrap; }
