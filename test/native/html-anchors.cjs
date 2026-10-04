@@ -75,11 +75,12 @@ async function htmlAnchorsCase(h, owner, record) {
             const exported = new DOMParser().parseFromString(${JSON.stringify(html)}, 'text/html');
             return [...exported.querySelectorAll('a[id="legacy-section"], a[name="old-section"]')].map(node => ({
                 id: node.getAttribute('id'), name: node.getAttribute('name'), text: node.textContent,
+                rel: node.getAttribute('rel'),
                 attributes: [...node.attributes].map(attribute => attribute.name) }));
         })()`);
         assert.deepEqual(anchors, [
-            { id: 'legacy-section', name: null, text: '', attributes: ['id'] },
-            { id: null, name: 'old-section', text: '', attributes: ['name'] }
+            { id: 'legacy-section', name: null, text: '', rel: 'noreferrer noopener', attributes: ['id', 'rel'] },
+            { id: null, name: 'old-section', text: '', rel: 'noreferrer noopener', attributes: ['name', 'rel'] }
         ]);
         assert.ok(!html.includes('data-anchor-source') && !html.includes('data-anchor-targets'));
         assert.ok(html.includes('Editable body!'));
