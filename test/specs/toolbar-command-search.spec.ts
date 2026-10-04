@@ -25,7 +25,7 @@ for (const width of [320, 768, 1024, 1440]) {
         await setup(page, width);
         await expect(page.locator('#insertButton, #formatButton, #toolbar [data-action="openInTextEditor"]')).toHaveCount(0);
         await expect(page.locator('#toolbarMore')).toBeVisible();
-        expect(await page.locator('#contextToolbarToggle > span[aria-hidden="true"]').textContent()).toBe('>>');
+        expect(await page.locator('#contextToolbarToggle > span[aria-hidden="true"]').textContent()).toBe('<<');
         await expect(page.locator('#contextToolbarToggle svg')).toHaveCount(0);
         await search(page, 'heading');
         await expect(page.locator('[data-menu-command^="heading"]')).toHaveCount(6);

@@ -73,8 +73,9 @@
         if (contextToggle) contextToggle.addEventListener('click', () => {
             contextual = !contextual;
             contextToggle.setAttribute('aria-pressed', String(contextual));
+            contextToggle.setAttribute('aria-expanded', String(!contextual));
             const indicator = contextToggle.querySelector('span[aria-hidden="true"]');
-            if (indicator) indicator.textContent = contextual ? '<<' : '>>';
+            if (indicator) indicator.textContent = contextual ? '>>' : '<<';
             document.documentElement.dataset.contextToolbar = String(contextual);
             options.layout(); positionContext();
         });

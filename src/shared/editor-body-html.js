@@ -69,7 +69,7 @@ function generateEditorBodyHtml(messages, platform, options) {
                         <button data-action="redo" title="${m('redo')}"></button>
                     </div>
                 </div>
-                <div class="toolbar-fixed toolbar-fixed--tools"><button type="button" data-action="contextToolbar" id="contextToolbarToggle" title="${m('contextualTools')}" aria-label="${m('contextualTools')}" aria-pressed="false"><span aria-hidden="true">&gt;&gt;</span></button></div><div class="toolbar-inner" id="toolbarInner">
+                <div class="toolbar-fixed toolbar-fixed--tools"><button type="button" data-action="contextToolbar" id="contextToolbarToggle" title="${m('contextualTools')}" aria-label="${m('contextualTools')}" aria-pressed="false" aria-expanded="true" aria-controls="toolbarInner"><span aria-hidden="true">&lt;&lt;</span></button></div><div class="toolbar-inner" id="toolbarInner">
                     <div class="toolbar-group" data-group="inline">
                         <button data-action="bold" title="${m('bold')}"></button>
                         <button data-action="italic" title="${m('italic')}"></button>
