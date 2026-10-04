@@ -66,7 +66,7 @@ jobs:
         run: |
           source=$(git rev-parse HEAD)
           printf 'source=%s\nartifact=vsix-candidate-%s-%s\n' "$source" "$source" "$GITHUB_RUN_ATTEMPT" >> "$GITHUB_OUTPUT"
-          (cd dist && shasum -a 256 --check *.vsix.sha256)
+          (cd dist && shasum -a 256 --check ./*.vsix.sha256)
       - id: upload
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
@@ -208,8 +208,8 @@ jobs:
           else
             printf '## VSIX validation did not pass\n\nThis run does not establish a validated package.\n\n' >> "$GITHUB_STEP_SUMMARY"
           fi
-          printf 'Package result: `%s`; validation result: `%s`.\n\n' "$PACKAGE_RESULT" "$VALIDATION_RESULT" >> "$GITHUB_STEP_SUMMARY"
-          printf 'Source: `%s`\n\nCandidate: `%s`\n\nVSIX SHA-256: `%s`\n\n' "$SOURCE" "$CANDIDATE" "$SHA256" >> "$GITHUB_STEP_SUMMARY"
+          printf 'Package result: %s; validation result: %s.\n\n' "$PACKAGE_RESULT" "$VALIDATION_RESULT" >> "$GITHUB_STEP_SUMMARY"
+          printf 'Source: %s\n\nCandidate: %s\n\nVSIX SHA-256: %s\n\n' "$SOURCE" "$CANDIDATE" "$SHA256" >> "$GITHUB_STEP_SUMMARY"
           if [[ -n "$ARTIFACT_URL" ]]; then
             printf '[Download the development package](%s)\n\n' "$ARTIFACT_URL" >> "$GITHUB_STEP_SUMMARY"
           fi
