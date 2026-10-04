@@ -24,7 +24,7 @@ The installed harness includes `save-correctness` and `list-code-preservation` i
 
 ## Required candidate validation
 
-The [VSIX workflow](../../.github/workflows/ci-vsix.yml) builds one identified candidate on Ubuntu. Every validation lane checks the same package bytes against the source revision before exercising the installed extension.
+The [VSIX workflow](../../.github/workflows/ci-vsix.yml) builds one identified candidate on Ubuntu for every branch push, PR and explicit dispatch. Workflow syntax and security checks run before dependency installation. Every validation lane checks the same package bytes against the source revision before exercising the installed extension.
 
 | Lane | Host | VS Code | Browser regression suite |
 | --- | --- | --- | --- |
@@ -33,7 +33,7 @@ The [VSIX workflow](../../.github/workflows/ci-vsix.yml) builds one identified c
 | Windows | Windows x86-64 | Latest stable | Complete suite, no retries |
 | Minimum supported VS Code | Ubuntu x86-64 | 1.85.0 | Native compatibility checks; browser suite runs in the other lanes |
 
-Each lane runs compilation, frozen-input checks, unit and real-converter tests, package/source parity checks, the installed-VSIX harness and artifact assertions. The required `VSIX validation` result depends on all lanes. See the [Windows guide](windows.md) for its provisioning and platform-specific cases. Configured checks are requirements; their presence does not mean that a run passed.
+Each lane runs compilation, frozen-input checks, unit and real-converter tests, package/source parity checks, the installed-VSIX harness and artifact assertions. The required `VSIX validation` result depends on all lanes. See the [Windows guide](windows.md) for its provisioning and platform-specific cases. Configured checks are requirements; their presence does not mean that a run passed. The package is available before lane validation completes. Use the [download procedure](../building.md#download-an-automated-development-build) and the final run status to distinguish packaged from validated snapshots. The installed identity suite compares CI build/run/attempt fields with the actual packaged stamp when present.
 
 ## Run and inspect native checks
 

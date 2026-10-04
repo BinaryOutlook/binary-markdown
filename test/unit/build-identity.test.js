@@ -60,3 +60,35 @@ test('source repository identity strips credentials and supports ordinary SSH or
     assert.equal(sourceRepository('file:///private/source'), null);
     assert.equal(sourceRepository('not a URL'), null);
 });
+
+const ciEnvironment = (overrides = {}) => ({
+    GITHUB_ACTIONS: 'true', GITHUB_REPOSITORY: 'BinaryOutlook/binary-markdown',
+    GITHUB_RUN_ID: '123456', GITHUB_RUN_NUMBER: '42', GITHUB_RUN_ATTEMPT: '2',
+    GITHUB_SERVER_URL: 'https://github.com', GITHUB_REF: 'refs/pull/12/merge',
+    GITHUB_EVENT_NAME: 'pull_request', ...overrides,
+});
+test('CI identity records rerun identity without replacing the checked-out source or version', t => {
+    const root = checkout(t);
+    const info = buildIdentity(root, ciEnvironment({ GITHUB_SHA: 'f'.repeat(40) }));
+    assert.equal(info.sourceCommit, git(root, 'rev-parse', 'HEAD'));
+    assert.equal(info.version, '0.2.0');
+    assert.deepEqual(info.ci, {
+        provider: 'github-actions', repository: 'BinaryOutlook/binary-markdown',
+        runId: 123456, runNumber: 42, runAttempt: 2,
+        runUrl: 'https://github.com/BinaryOutlook/binary-markdown/actions/runs/123456',
+        event: 'pull_request', ref: 'refs/pull/12/merge',
+    });
+    assert.equal(buildIdentity(root, ciEnvironment({GITHUB_ACTIONS: 'false'})).ci, null);
+    assert.equal(buildIdentity(root, {}).ci, null);
+});
+test('partial or malformed CI identity fails instead of inventing an attributable build', t => {
+    const root = checkout(t);
+    for (const overrides of [
+        {GITHUB_RUN_ID: undefined}, {GITHUB_RUN_ID: '../123'}, {GITHUB_RUN_NUMBER: '0'},
+        {GITHUB_RUN_ATTEMPT: '-2'}, {GITHUB_RUN_ID: '9007199254740992'},
+        {GITHUB_REPOSITORY: '../repo'}, {GITHUB_REPOSITORY: 'owner/..'},
+        {GITHUB_SERVER_URL: 'http://github.com'}, {GITHUB_SERVER_URL: 'https://token@github.com'},
+        {GITHUB_SERVER_URL: 'https://github.com/path'}, {GITHUB_REF: 'main'},
+        {GITHUB_REF: 'refs/heads/branch\nInjected: value'},
+    ]) assert.throws(() => buildIdentity(root, ciEnvironment(overrides)), undefined, Object.keys(overrides).join(','));
+});

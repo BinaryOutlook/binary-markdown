@@ -20,6 +20,8 @@ Use local desktop VS Code **1.85.0 or later**. Validation targets Windows x86-64
 2. In VS Code, open **Extensions**, choose **… → Install from VSIX…**, select the package, and reload if prompted.
 3. Open a Markdown file and choose **Reopen Editor With… → Binary Markdown**.
 
+For unreleased branch or PR work, [download an automated development VSIX](docs/building.md#download-an-automated-development-build). Check the run's validation status and retain the checksum and build-information sidecars. These temporary testing packages do not publish a Marketplace update.
+
 The extension ID is `BinaryOutlook.binary-markdown`. Installation leaves your default Markdown editor unchanged; use **Configure Default Editor…** if you want Binary Markdown to open every Markdown file. Updating this extension retains its identity and settings. For older Any Markdown or test-build IDs, follow the [migration guide](docs/migration.md).
 
 ## Features

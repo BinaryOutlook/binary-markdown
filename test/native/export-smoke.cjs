@@ -364,7 +364,15 @@ async function run(settings, owner) {
             assert.ok(buildInformation.includes('Source commit: ' + info.sourceCommit));
             assert.ok(buildInformation.includes('Local source changes: ' + (info.dirty ? 'yes' : 'no')));
             assert.ok(buildInformation.includes('VS Code: ' + receipt(owner).vscodeVersion));
-            record('build-information', { sourceCommit: info.sourceCommit, version: info.version, dirty: info.dirty, clipboardRestored: true });
+            if (info.ci) {
+                assert.ok(buildInformation.includes('CI build number: ' + info.ci.runNumber));
+                assert.ok(buildInformation.includes('CI run ID: ' + info.ci.runId));
+                assert.ok(buildInformation.includes('CI run attempt: ' + info.ci.runAttempt));
+                assert.ok(buildInformation.includes('CI run URL: ' + info.ci.runUrl));
+            } else {
+                assert.ok(buildInformation.includes('CI build number: not recorded'));
+            }
+            record('build-information', { sourceCommit: info.sourceCommit, version: info.version, dirty: info.dirty, ci: info.ci || null, clipboardRestored: true });
         }
         await h.driver({ action: 'config', key: 'export.pandocPath', value: settings.pandoc });
         await h.driver({ action: 'config', key: 'export.browserPath', value: settings.browser });

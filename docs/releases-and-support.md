@@ -18,7 +18,7 @@ The [repository transition](repository-transition.md) preserves the original for
 
 **Free (freedom):** Users retain the rights to run, study, modify, and redistribute the software under the applicable licenses. Other distributors may charge for copies or support while complying with those licenses. The [licensing guide](licensing.md#cost-and-software-freedom) explains the four freedoms, their GNU/FSF heritage, and AGPL obligations. Future licensing arrangements depend on the rights the project holds and do not remove these commitments.
 
-[GitHub Releases](https://github.com/BinaryOutlook/binary-markdown/releases) is the initial official download channel. Marketplace and Open VSX publication are future work. Source builds and VSIX installation do not require Marketplace credentials. [Build instructions](building.md) cover `main`, release tags and historical commits.
+[GitHub Releases](https://github.com/BinaryOutlook/binary-markdown/releases) is the initial official download channel. Marketplace uploads are a separate manual maintainer action; these workflows do not publish there. Open VSX publication remains separate work. Source builds and VSIX installation do not require Marketplace credentials. [Build instructions](building.md) cover `main`, release tags and historical commits.
 
 | Channel | What it means |
 | --- | --- |
@@ -26,11 +26,11 @@ The [repository transition](repository-transition.md) preserves the original for
 | CI candidate | An automatically packaged development snapshot with a source stamp and test results. Passing CI does not itself publish or approve a release. |
 | Local/community build | A build from a selected commit, possibly modified. Identify its origin and changes; do not imply maintainer validation. |
 
-Actions candidate artifacts expire after seven days and their usual download links require GitHub sign-in. Published release assets are the durable public download channel. Standard GitHub-hosted runners for public repositories use GitHub's free compute allowance; larger runners and storage beyond the applicable allowance can incur charges. This pipeline uses standard runners and short artifact retention. [Actions billing](https://docs.github.com/en/billing/concepts/product-billing/github-actions), [artifact downloads](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/download-workflow-artifacts).
+The [development-build procedure](building.md#download-an-automated-development-build) covers branch and PR downloads, validation status and installation. Actions candidate artifacts expire after seven days and their usual download links require GitHub sign-in. Published release assets are the durable public download channel. Standard GitHub-hosted runners for public repositories use GitHub's free compute allowance; larger runners and storage beyond the applicable allowance can incur charges. This pipeline uses standard runners and short artifact retention. [Actions billing](https://docs.github.com/en/billing/concepts/product-billing/github-actions), [artifact downloads](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/download-workflow-artifacts).
 
 ## Reporting a problem
 
-In the Command Palette, run **Binary Markdown: Copy Build Information**. Include the resulting commit, local-change status, VS Code version and host architecture in the [bug report](https://github.com/BinaryOutlook/binary-markdown/issues/new/choose). Source archives without a build stamp remain explicitly unidentified; give the best available revision and explain what is unknown.
+In the Command Palette, run **Binary Markdown: Copy Build Information**. Include the resulting commit, local-change status, CI build/run/attempt when recorded, VS Code version and host architecture in the [bug report](https://github.com/BinaryOutlook/binary-markdown/issues/new/choose). Source archives without a build stamp remain explicitly unidentified; give the best available revision and explain what is unknown.
 
 Include expected and actual behaviour, clear steps and a small Markdown example. Export reports also need the chosen format, Pandoc/browser versions, warnings and relevant settings. Remove private text and personal paths. Testing current development can help, but it is not a condition for reporting an older affected commit. An older checkout can depend on unavailable tools; we will explain when that prevents reproduction.
 
