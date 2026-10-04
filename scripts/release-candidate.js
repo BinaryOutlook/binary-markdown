@@ -4,6 +4,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { createHash } = require('node:crypto');
 const { execFileSync } = require('node:child_process');
+const { canonicalVSIXName, candidateVSIXName } = require('./candidate-names.cjs');
 
 function verifyRun(run, repository, mainCommit) {
     assert.match(mainCommit, /^[0-9a-f]{40}$/);
@@ -34,11 +35,15 @@ function verifyCandidate(directory, manifest, sourceCommit) {
     assert.equal(manifest.name, 'binary-markdown');
     assert.equal(manifest.publisher, 'BinaryOutlook');
     assert.equal(manifest.license, 'AGPL-3.0-or-later');
-    const name = manifest.name + '-' + manifest.version + '.vsix';
+    const packages = fs.readdirSync(directory).filter(file => file.endsWith('.vsix'));
+    assert.equal(packages.length, 1, 'A candidate contains exactly one VSIX');
+    const name = packages[0];
     assert.deepEqual(fs.readdirSync(directory).sort(), [name, name + '.build-info.json', name + '.sha256'].sort(), 'A candidate contains only its VSIX, checksum and identity');
     const bytes = fs.readFileSync(path.join(directory, name));
     const sha256 = createHash('sha256').update(bytes).digest('hex');
     const info = JSON.parse(fs.readFileSync(path.join(directory, name + '.build-info.json'), 'utf8'));
+    assert.ok(name === canonicalVSIXName(manifest) || name === candidateVSIXName(manifest, info.ci),
+        'Candidate filename must match its version and CI build identity');
     assert.equal(fs.readFileSync(path.join(directory, name + '.sha256'), 'utf8'), sha256 + '  ' + name + '\n');
     for (const key of ['version', 'name', 'license']) assert.equal(info[key], manifest[key]);
     assert.equal(info.sourceCommit, sourceCommit);
@@ -48,6 +53,22 @@ function verifyCandidate(directory, manifest, sourceCommit) {
     assert.equal(info.artifact, name);
     assert.equal(info.sha256, sha256);
     return { name, sha256, info };
+}
+
+function prepareReleaseAssets(directory, manifest, sourceCommit) {
+    const candidate = verifyCandidate(directory, manifest, sourceCommit);
+    const name = canonicalVSIXName(manifest);
+    if (candidate.name !== name) {
+        for (const suffix of ['', '.sha256', '.build-info.json']) {
+            fs.renameSync(path.join(directory, candidate.name + suffix), path.join(directory, name + suffix));
+        }
+        fs.writeFileSync(path.join(directory, name + '.sha256'), candidate.sha256 + '  ' + name + '\n');
+        fs.writeFileSync(path.join(directory, name + '.build-info.json'),
+            JSON.stringify({ ...candidate.info, artifact: name }, null, 2) + '\n');
+    }
+    const released = verifyCandidate(directory, manifest, sourceCommit);
+    assert.equal(released.sha256, candidate.sha256, 'Release naming must preserve the validated VSIX bytes');
+    return released;
 }
 
 function renderReleaseNotes(markdown, sourceCommit) {
@@ -77,4 +98,4 @@ if (require.main === module) {
     } else throw new Error('Use inspect <run.json> <main-sha>, verify <candidate-directory> <source-sha> or notes <notes.md> <source-sha>.');
 }
 
-module.exports = { verifyRun, verifyCandidate, renderReleaseNotes, verifyValidationJobs };
+module.exports = { verifyRun, verifyCandidate, prepareReleaseAssets, renderReleaseNotes, verifyValidationJobs };

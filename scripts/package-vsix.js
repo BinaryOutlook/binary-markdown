@@ -5,6 +5,7 @@ const path = require('path');
 const { spawnSync } = require('child_process');
 const { createHash } = require('crypto');
 const { buildIdentity, assertReleaseIdentity } = require('./build-identity');
+const { candidateVSIXName } = require('./candidate-names.cjs');
 const manifest = require('../package.json');
 
 const root = path.join(__dirname, '..');
@@ -13,7 +14,7 @@ if (options.some(value => value !== '--release')) throw new Error('Usage: npm ru
 const identity = buildIdentity(root);
 if (options.includes('--release')) assertReleaseIdentity(identity);
 fs.writeFileSync(path.join(root, 'build-info.json'), JSON.stringify(identity, null, 2) + '\n');
-const output = path.join(root, 'dist', `${manifest.name}-${manifest.version}.vsix`);
+const output = path.join(root, 'dist', candidateVSIXName(manifest, identity.ci));
 fs.mkdirSync(path.dirname(output), { recursive: true });
 
 // Run the locally pinned CLI through Node, including on Windows. vsce invokes

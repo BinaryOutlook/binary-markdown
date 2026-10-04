@@ -4,6 +4,7 @@ const fs = require('node:fs');
 const { execFileSync } = require('node:child_process');
 const { verifyCandidate } = require('./release-candidate');
 const { githubActionsIdentity } = require('./build-identity');
+const { developmentBuildLabel } = require('./candidate-names.cjs');
 
 function code(value) {
     // HTML entities keep both Markdown syntax and table delimiters inert, even
@@ -28,6 +29,7 @@ function formatPackageSummary(info, artifactUrl) {
     const link = verifiedArtifactUrl(info, artifactUrl);
     return [
         '## Development VSIX', '',
+        '**Build:** ' + code(info.version + '-dev-' + developmentBuildLabel(info.ci)), '',
         '**Packaged — validation pending.** This download is an unreleased development snapshot. Check the overall run and the final **VSIX validation** result before describing it as validated.', '',
         '[Download the VSIX, checksum and build-information sidecar](' + link + ')', '',
         '| Identity | Value |', '| --- | --- |',
@@ -50,7 +52,8 @@ function main() {
     assert.deepEqual(info.ci, githubActionsIdentity(process.env), 'Candidate must identify this CI run and attempt');
     const artifactUrl = verifiedArtifactUrl(info, process.env.CANDIDATE_URL);
     fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, formatPackageSummary(info, artifactUrl));
-    fs.appendFileSync(process.env.GITHUB_OUTPUT, 'sha256=' + info.sha256 + '\nartifact_url=' + artifactUrl + '\n');
+    fs.appendFileSync(process.env.GITHUB_OUTPUT, 'sha256=' + info.sha256 + '\nartifact_url=' + artifactUrl +
+        '\nfilename=' + info.artifact + '\n');
 }
 if (require.main === module) {
     try { main(); }

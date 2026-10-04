@@ -4,7 +4,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const { createHash } = require('node:crypto');
-const { verifyRun, renderReleaseNotes, verifyValidationJobs } = require('./release-candidate');
+const { verifyRun, prepareReleaseAssets, renderReleaseNotes, verifyValidationJobs } = require('./release-candidate');
 const { command, api, optionalApi, pages, git, currentMain, assertMain, assertRepository, REPOSITORY } = require('./release-github.cjs');
 
 async function promote({ runId, publish = false, beforePublish = async () => {} }) {
@@ -31,6 +31,9 @@ async function promote({ runId, publish = false, beforePublish = async () => {} 
         command('gh', ['run', 'download', String(runId), '--repo', REPOSITORY,
             '--name', candidate.artifact, '--dir', dist]);
         command(process.execPath, ['scripts/release-candidate.js', 'verify', dist, source]);
+        // Official asset names remain stable; only filenames and sidecar names
+        // change. The validated VSIX is never rebuilt or modified.
+        prepareReleaseAssets(dist, JSON.parse(fs.readFileSync('package.json', 'utf8')), source);
         for (const lane of ['ubuntu', 'macos', 'windows', 'vscode-minimum']) {
             const name = `validation-${lane}-${source}-${candidate.attempt}`;
             const target = path.join(evidence, name);

@@ -35,6 +35,7 @@ jobs:
       artifact: ${{ steps.identity.outputs.artifact }}
       sha256: ${{ steps.summary.outputs.sha256 }}
       artifact_url: ${{ steps.summary.outputs.artifact_url }}
+      filename: ${{ steps.summary.outputs.filename }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -199,6 +200,7 @@ jobs:
           PACKAGE_RESULT: ${{ needs.package.result }}
           VALIDATION_RESULT: ${{ needs.validate.result }}
           CANDIDATE: ${{ needs.package.outputs.artifact }}
+          PACKAGE_FILE: ${{ needs.package.outputs.filename }}
           SOURCE: ${{ needs.package.outputs.source }}
           ARTIFACT_URL: ${{ needs.package.outputs.artifact_url }}
           SHA256: ${{ needs.package.outputs.sha256 }}
@@ -209,7 +211,7 @@ jobs:
             printf '## VSIX validation did not pass\n\nThis run does not establish a validated package.\n\n' >> "$GITHUB_STEP_SUMMARY"
           fi
           printf 'Package result: %s; validation result: %s.\n\n' "$PACKAGE_RESULT" "$VALIDATION_RESULT" >> "$GITHUB_STEP_SUMMARY"
-          printf 'Source: %s\n\nCandidate: %s\n\nVSIX SHA-256: %s\n\n' "$SOURCE" "$CANDIDATE" "$SHA256" >> "$GITHUB_STEP_SUMMARY"
+          printf 'Development package: %s\n\nSource: %s\n\nArtifact bundle: %s\n\nVSIX SHA-256: %s\n\n' "$PACKAGE_FILE" "$SOURCE" "$CANDIDATE" "$SHA256" >> "$GITHUB_STEP_SUMMARY"
           if [[ -n "$ARTIFACT_URL" ]]; then
             printf '[Download the development package](%s)\n\n' "$ARTIFACT_URL" >> "$GITHUB_STEP_SUMMARY"
           fi

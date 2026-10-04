@@ -4,7 +4,8 @@ const os = require('node:os');
 const path = require('node:path');
 const { createHash } = require('node:crypto');
 const test = require('node:test');
-const { verifyRun, verifyCandidate, renderReleaseNotes, verifyValidationJobs } = require('../../scripts/release-candidate');
+const { verifyRun, verifyCandidate, prepareReleaseAssets, renderReleaseNotes, verifyValidationJobs } = require('../../scripts/release-candidate');
+const { candidateVSIXName } = require('../../scripts/candidate-names.cjs');
 const { assertArtifactAudit } = require('../native/assert-artifact-audit.cjs');
 
 const repository = 'BinaryOutlook/binary-markdown';
@@ -77,4 +78,37 @@ test('artifact observations cannot pass CI with dropped markers or original imag
     }
     const duplicate = make(); duplicate.results[1] = duplicate.results[0];
     assert.throws(() => assertArtifactAudit(duplicate, manifest));
+});
+
+test('named CI candidates reject identity mismatches and publish unchanged bytes under official names', t => {
+    const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'binary-named-release-'));
+    t.after(() => fs.rmSync(directory, {recursive: true, force: true}));
+    const manifest = {name: 'binary-markdown', publisher: 'BinaryOutlook', version: '0.4.1', license: 'AGPL-3.0-or-later'};
+    const ci = {ref: 'refs/heads/main', runNumber: 125, runAttempt: 2};
+    const name = candidateVSIXName(manifest, ci);
+    const bytes = Buffer.from('same validated package bytes');
+    const sha256 = createHash('sha256').update(bytes).digest('hex');
+    const identity = {...manifest, sourceCommit: commit, sourceKind: 'git', dirty: false,
+        repository: 'https://github.com/' + repository, artifact: name, sha256, ci};
+    fs.writeFileSync(path.join(directory, name), bytes);
+    fs.writeFileSync(path.join(directory, name + '.sha256'), sha256 + '  ' + name + '\n');
+    const stamp = info => fs.writeFileSync(path.join(directory, name + '.build-info.json'), JSON.stringify(info));
+    stamp(identity);
+    assert.equal(verifyCandidate(directory, manifest, commit).name, name);
+    for (const changed of [{...ci, runNumber: 126}, {...ci, runAttempt: 1}, {...ci, ref: 'refs/pull/98/merge'}]) {
+        stamp({...identity, ci: changed});
+        assert.throws(() => verifyCandidate(directory, manifest, commit));
+    }
+    stamp(identity);
+    fs.writeFileSync(path.join(directory, 'extra.vsix'), bytes);
+    assert.throws(() => verifyCandidate(directory, manifest, commit));
+    fs.unlinkSync(path.join(directory, 'extra.vsix'));
+    const released = prepareReleaseAssets(directory, manifest, commit);
+    assert.equal(released.name, 'binary-markdown-0.4.1.vsix');
+    assert.equal(released.sha256, sha256);
+    assert.ok(fs.readFileSync(path.join(directory, released.name)).equals(bytes));
+    assert.deepEqual(released.info.ci, ci);
+    assert.equal(released.info.artifact, released.name);
+    assert.equal(fs.readFileSync(path.join(directory, released.name + '.sha256'), 'utf8'), sha256 + '  ' + released.name + '\n');
+    assert.deepEqual(prepareReleaseAssets(directory, manifest, commit), released);
 });
