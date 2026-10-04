@@ -1,0 +1,8 @@
+# Security-sensitive automation and packaging changes request maintainer review.
+# Review requests are advisory; branch protection retains solo-maintainer merges.
+/.github/ @BinaryOutlook
+/scripts/ @BinaryOutlook
+/.node-version @BinaryOutlook
+/package.json @BinaryOutlook
+/package-lock.json @BinaryOutlook
+/src/build-info.ts @BinaryOutlook

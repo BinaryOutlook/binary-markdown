@@ -18,6 +18,7 @@ Compilation builds TypeScript and translations, copies webview/shared modules, a
 ## Checks
 
 ```sh
+npm run check:workflows
 npm run lint
 npm run test:unit
 npm run test:outline-state
@@ -101,4 +102,6 @@ BinaryOutlook currently handles reviews and releases. Changes may be developed a
 
 CI starts automatically for new and updated pull requests, including first-time contributors and drafts. The **Start PR CI automatically** workflow authorizes pending **Validate VSIX** runs; this grants permission to run tests, not approval of the proposed changes. The controller uses trusted repository code and never executes a contributor's branch with its Actions write permission.
 
-Merging into `main` requires **VSIX validation** to pass on an up-to-date branch, resolved review conversations, and at least one approving review. New changes dismiss stale approvals. The author cannot approve their own PR, so a maintainer's own PR also needs another eligible reviewer. CI does not submit reviews or merge pull requests. If an older PR is still awaiting CI permission, a maintainer can run **Start PR CI automatically** from Actions to authorize its current run.
+Merging into `main` requires a PR, **VSIX validation** to pass on an up-to-date branch, and resolved review conversations. The maintainer decides when to merge; there is no mandatory independent approval for the solo-maintainer workflow. CI does not submit code-review approvals. The separately configured release scheduler can merge its own verified version-only PR under the [release policy](docs/releases-and-support.md#automatic-vsix-releases). If an older PR is still awaiting CI permission, a maintainer can run **Start PR CI automatically** from Actions to authorize its current run.
+
+Workflow and packaging changes request maintainer attention through `CODEOWNERS`. Follow the [CI security guide](docs/ci-security.md) for workflow checks, credential boundaries and repository settings.

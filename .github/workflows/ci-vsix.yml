@@ -49,6 +49,8 @@ jobs:
         with:
           node-version-file: .node-version
           cache: npm
+      - name: Check workflow syntax and security
+        run: npm run check:workflows
       - run: npm ci
       - run: npm run lint
       - name: Check documentation links and public text

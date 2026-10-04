@@ -1,6 +1,6 @@
 name: Start PR CI automatically
 
-on:
+on: # zizmor: ignore[dangerous-triggers] Trusted workflow revision only; authorizes exact CI runs without executing PR code.
   pull_request_target:
     types: [opened, synchronize, reopened]
   workflow_run:
