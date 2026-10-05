@@ -11,9 +11,7 @@ test.describe('Mermaid and Source Mode', () => {
         });
         
         await page.goto('http://localhost:3000/standalone-editor.html');
-        // Wait for page to load
-        await page.waitForSelector('#editor', { timeout: 5000 });
-        await page.waitForTimeout(1000);
+        await page.waitForFunction(() => window.__testApi?.ready === true, { timeout: 5000 });
     });
 
     test('setMarkdown should work', async ({ page }) => {
@@ -105,8 +103,7 @@ flowchart LR
             window.__testApi.setMarkdown(md);
         }, mermaidMarkdown);
 
-        // Wait for mermaid to load and render (up to 5 seconds)
-        await page.waitForTimeout(5000);
+        await expect(page.locator('#editor .mermaid-diagram svg')).toHaveCount(1, { timeout: 5000 });
 
         const result = await page.evaluate(() => {
             const editor = document.getElementById('editor');

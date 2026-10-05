@@ -8,10 +8,11 @@ The Windows lane validates the same candidate source and VSIX as Ubuntu, macOS a
 
 - Compilation, frozen fixture verification, unit tests, real converter tests and byte-for-byte packaged-runtime parity.
 - Installed desktop VS Code with an isolated profile and extension directory; all native scenarios, all four frozen documents in HTML/PDF/DOCX/EPUB, and the same artifact inventory assertions used on macOS and Ubuntu.
-- The complete Chromium browser regression suite with two workers and no retries.
 - Absolute image paths, Unicode/space-containing directories and unchanged CRLF source bytes through all four native export formats.
 
-Failures propagate through the existing required `VSIX validation` check. The release workflow also requires Windows artifact-audit evidence. Validation receipts and failure traces are retained for seven days, and superseded PR runs are cancelled by the existing concurrency policy.
+Three independent `Browser (windows, 1/3)` through `Browser (windows, 3/3)` jobs run the complete Chromium browser regression suite alongside the native lane, with two workers per shard and no retries. They check out the same source revision and provision only Chromium.
+
+Failures from the native lane or any browser shard propagate through the existing required `VSIX validation` check. The release workflow also requires Windows artifact-audit evidence and all three Windows browser reports. Validation receipts and failure traces are retained for seven days, and superseded PR runs are cancelled by the existing concurrency policy.
 
 ## Windows dependencies and behavior
 

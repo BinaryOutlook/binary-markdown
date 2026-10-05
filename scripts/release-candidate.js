@@ -5,6 +5,7 @@ const path = require('node:path');
 const { createHash } = require('node:crypto');
 const { execFileSync } = require('node:child_process');
 const { canonicalVSIXName, candidateVSIXName } = require('./candidate-names.cjs');
+const { fullValidationJobs } = require('./ci-validation.cjs');
 
 function verifyRun(run, repository, mainCommit) {
     assert.match(mainCommit, /^[0-9a-f]{40}$/);
@@ -22,7 +23,7 @@ function verifyRun(run, repository, mainCommit) {
 }
 
 function verifyValidationJobs(jobs) {
-    for (const name of ['Build candidate', 'Validate (ubuntu)', 'Validate (macos)', 'Validate (windows)', 'Validate (vscode-minimum)', 'VSIX validation']) {
+    for (const name of fullValidationJobs) {
         const matching = jobs.filter(job => job.name === name);
         assert.equal(matching.length, 1, 'Missing or ambiguous validation job: ' + name);
         assert.equal(matching[0].status, 'completed', name);

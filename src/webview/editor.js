@@ -4403,9 +4403,13 @@
         const cell = element.closest?.('td, th');
         if (!cell || !editor.contains(cell)) return;
         cell.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+        scrollTableToCaret(cell);
+    }
+
+    function scrollTableToCaret(cell, previousWidth) {
         const table = cell.closest('table');
         const selection = window.getSelection();
-        if (!table || !selection?.isCollapsed || !selection.rangeCount || !cell.contains(selection.anchorNode)) return;
+        if (!table || !editor.contains(cell) || !table.clientWidth || !selection?.isCollapsed || !selection.rangeCount || !cell.contains(selection.anchorNode)) return;
         const caret = selection.getRangeAt(0).getBoundingClientRect();
         if (!caret.height && !caret.width) return;
         const bounds = table.getBoundingClientRect();
@@ -4413,6 +4417,11 @@
         // rather than repeatedly aligning the cell's other edge with the pane.
         const left = bounds.left + table.clientLeft;
         const right = left + table.clientWidth;
+        // Resize correction is only for a caret newly clipped by shrinkage.
+        // A caret already outside the old viewport may have been deliberately
+        // scrolled away; neither shrinking nor growing should pull it back.
+        if (previousWidth !== undefined && (table.clientWidth >= previousWidth ||
+            caret.left < left - 1 || caret.right > left + previousWidth + 1)) return;
         if (caret.left < left + 2) table.scrollLeft -= left + 2 - caret.left;
         else if (caret.right > right - 2) table.scrollLeft += caret.right - right + 2;
     }
@@ -4424,6 +4433,14 @@
         isSourceMode: () => isSourceMode,
         onContext(cell) { activeTableCell = cell; activeTable = cell?.closest('table') || null; },
         onReveal: revealTableCaret,
+        onTableResize(table, previousWidth) {
+            if (isSourceMode || isTableColResizing || document.activeElement !== editor) return;
+            const node = window.getSelection()?.anchorNode;
+            const cell = (node?.nodeType === 3 ? node.parentElement : node)?.closest?.('td, th');
+            // Late docking/scrollbar layout can clip a caret already revealed
+            // by navigation. Correct only horizontal scroll, never focus or range.
+            if (cell?.closest('table') === table) scrollTableToCaret(cell, previousWidth);
+        },
         onLayout: scheduleToolbarLayout,
         onPreference(value) { host.setTableToolbarPosition?.(value); },
         onAction(action) {

@@ -150,7 +150,15 @@
         document.body.appendChild(overflow);
         let pickerAnchor = actions[actions.length - 1];
         const resize = new ResizeObserver(() => schedule());
-        const scrollResize = new ResizeObserver(() => schedule());
+        const scrollWidths = new WeakMap();
+        const scrollResize = new ResizeObserver(entries => {
+            for (const { target } of entries) {
+                const width = target.clientWidth, previous = scrollWidths.get(target);
+                scrollWidths.set(target, width);
+                if (width > 0 && previous > 0 && width !== previous) options.onTableResize?.(target, previous);
+            }
+            schedule();
+        });
         for (const element of new Set([editor, wrapper, header, row])) resize.observe(element);
         const mutations = new MutationObserver(() => schedule());
         mutations.observe(editor, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['style', 'class'] });
@@ -414,7 +422,10 @@
                         hint.appendChild(button);
                     }
                     hint.addEventListener('mousedown', event => event.preventDefault());
-                    document.body.appendChild(hint); scrollHints.set(target, hint); scrollResize.observe(target);
+                    document.body.appendChild(hint); scrollHints.set(target, hint);
+                    // Capture before docking changes layout; the observer's
+                    // first delivery may already contain the narrower width.
+                    scrollWidths.set(target, target.clientWidth); scrollResize.observe(target);
                 }
                 const box = target.getBoundingClientRect();
                 // A column's resize handle can extend a few pixels beyond a

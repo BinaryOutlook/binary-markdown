@@ -18,6 +18,7 @@ CONTRIBUTING.md
 !vendor/**
 test/**
 test-results/**
+blob-report/**
 ci-results/**
 validation-evidence/**
 samples/**
