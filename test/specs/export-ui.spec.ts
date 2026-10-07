@@ -20,11 +20,12 @@ async function setup(page: Page, exportEnabled = true) {
         .replace('__FONT_SIZE__', '16').replace('__OUTLINE_ACTIVE_COLOR__', 'var(--link-color)') });
     await page.addScriptTag({ content: fs.readFileSync(path.join(root, 'src/shared/test-host-bridge.js'), 'utf8') });
     await page.addScriptTag({ content: fs.readFileSync(path.join(root, 'src/shared/document-aux.js'), 'utf8') });
-    const editor = require('../../scripts/bundle-editor.cjs').readEditorRuntime(root)
-        .replace('__SEARCH_WORKER__', () => JSON.stringify(fs.readFileSync(path.join(root, 'src/shared/document-search.js'), 'utf8')).replace(/</g, '\\u003c'))
-        .replace('__MATH_BACKSLASH__', 'true')
-        .replace('__DEBUG_MODE__', 'false').replace('__I18N__', () => JSON.stringify(webviewMessages))
-        .replace('__DOCUMENT_BASE_URI__', '').replace('__CONTENT__', JSON.stringify(Buffer.from(original).toString('base64')));
+    const editor = require('../../src/shared/editor-script-values').substituteEditorScript(
+        require('../../scripts/bundle-editor.cjs').readEditorRuntime(root), {
+            __SEARCH_WORKER__: fs.readFileSync(path.join(root, 'src/shared/document-search.js'), 'utf8'),
+            __MATH_BACKSLASH__: true, __DEBUG_MODE__: false, __I18N__: webviewMessages,
+            __DOCUMENT_BASE_URI__: '', __CONTENT__: Buffer.from(original).toString('base64')
+        });
     await page.addScriptTag({ content: editor });
     await page.evaluate(messages => { (window as Window & { exportMessages?: unknown }).exportMessages = messages; }, getExportMessages());
     await page.addScriptTag({ content: fs.readFileSync(path.join(root, 'src/webview/export-ui.js'), 'utf8') });

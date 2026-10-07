@@ -84,13 +84,15 @@ export function generateEditorHtml(
         .replace('__FONT_SIZE__', String(config.fontSize))
         .replace('__OUTLINE_ACTIVE_COLOR__', 'var(--link-color)');
 
-    const editorScript = fs.readFileSync(editorScriptPath, 'utf8')
-        .replace('__SEARCH_WORKER__', () => JSON.stringify(fs.readFileSync(getResourcePath('src/shared/document-search.js'), 'utf8')).replace(/</g, '\\u003c'))
-        .replace('__MATH_BACKSLASH__', 'true')
-        .replace('__DEBUG_MODE__', String(config.enableDebugLogging))
-        .replace('__I18N__', JSON.stringify(config.webviewMessages))
-        .replace('__DOCUMENT_BASE_URI__', config.documentBaseUri)
-        .replace('__CONTENT__', `'${Buffer.from(content, 'utf8').toString('base64')}'`);
+    const { substituteEditorScript } = require(getResourcePath('src/shared/editor-script-values.js'));
+    const editorScript = substituteEditorScript(fs.readFileSync(editorScriptPath, 'utf8'), {
+        __SEARCH_WORKER__: fs.readFileSync(getResourcePath('src/shared/document-search.js'), 'utf8'),
+        __MATH_BACKSLASH__: true,
+        __DEBUG_MODE__: config.enableDebugLogging,
+        __I18N__: config.webviewMessages,
+        __DOCUMENT_BASE_URI__: config.documentBaseUri,
+        __CONTENT__: Buffer.from(content, 'utf8').toString('base64')
+    });
 
     const vendorFileUri = (file: string) => fileUri(path.join(vendorDir, file));
 

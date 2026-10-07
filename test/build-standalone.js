@@ -11,6 +11,7 @@ const fs = require('fs');
 const path = require('path');
 
 const { readEditorRuntime } = require('../scripts/bundle-editor.cjs');
+const { substituteEditorScript } = require('../src/shared/editor-script-values');
 const testHostBridgePath = path.join(__dirname, '../src/shared/test-host-bridge.js');
 const outputPath = path.join(__dirname, 'html/standalone-editor.html');
 
@@ -49,14 +50,15 @@ const codeControlStyles = productionStyles.slice(
     productionStyles.indexOf('.lang-selector {')
 );
 
-// プレースホルダーを置換
-editorScript = editorScript
-    .replace('__SEARCH_WORKER__', () => JSON.stringify(fs.readFileSync(path.join(__dirname, '../src/shared/document-search.js'), 'utf8')).replace(/</g, '\\u003c'))
-        .replace('__MATH_BACKSLASH__', 'true')
-    .replace('__DEBUG_MODE__', 'false')
-    .replace('__I18N__', JSON.stringify(require('../src/i18n/locales/en.ts').webviewMessages))
-    .replace('__DOCUMENT_BASE_URI__', '')
-    .replace('__CONTENT__', '``');
+// Serialize host data in one pass, using the same inline-script boundary as production.
+editorScript = substituteEditorScript(editorScript, {
+    __SEARCH_WORKER__: fs.readFileSync(path.join(__dirname, '../src/shared/document-search.js'), 'utf8'),
+    __MATH_BACKSLASH__: true,
+    __DEBUG_MODE__: false,
+    __I18N__: require('../src/i18n/locales/en.ts').webviewMessages,
+    __DOCUMENT_BASE_URI__: '',
+    __CONTENT__: ''
+});
 
 // HTMLテンプレート
 const html = `<!DOCTYPE html>

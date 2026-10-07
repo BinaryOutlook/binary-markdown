@@ -184,8 +184,8 @@ function createInlineCodec({ mathSyntax, mathBackslashDelimiters, resolveImagePa
     }
     function escapeHtml(text) {
         // Single pass replacement using a map for better performance
-        const escapeMap = { '&': '&amp;', '<': '&lt;', '>': '&gt;' };
-        return text.replace(/[&<>]/g, char => escapeMap[char]);
+        const escapeMap = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+        return text.replace(/[&<>"']/g, char => escapeMap[char]);
     }
     function collectCharStyles(node, currentStyles = new Set()) {
         const result = [];
@@ -489,7 +489,8 @@ function createInlineController(dependencies) {
         // Resolve relative path against document base URI
         if (dependencies.documentBaseUri) {
             // Remove trailing slash from base and leading ./ from src
-            const base = dependencies.documentBaseUri.replace(/\/$/, '');
+            // The authored path is already escaped by parseInline; escape the host URI too.
+            const base = escapeHtml(dependencies.documentBaseUri.replace(/\/$/, ''));
             const path = src.replace(/^\.\//, '');
             return base + '/' + path;
         }

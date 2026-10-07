@@ -610,7 +610,7 @@ window.BinaryMath = require('../shared/math-syntax');
     blocksSpecialService.initializeMermaidRenderVersions1();
     uiChromeService.initializeWidthGuide();
     uiSearchService.initializeSearch();
-    const documentBaseUri = '__DOCUMENT_BASE_URI__';
+    const documentBaseUri = __DOCUMENT_BASE_URI__;
     uiChromeService.initializeIsSourceMode1();
     let workspaceUi = null;
     coreSessionService.initializeMarkdown();
