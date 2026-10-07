@@ -1,6 +1,6 @@
 # Editor modularization plan
 
-Status: proposed architecture and local baseline capture; no editor extraction has been implemented.
+Status: original proposal, subsequently implemented locally. See the [implementation record](implementation.md) for actual sizes, checkpoints and verification.
 
 The goal is to replace the large shared closure in `src/webview/editor.js` with cohesive modules that preserve the existing editing experience. The user has delegated behavior discovery and routine design choices. Implementation should characterize existing behavior independently rather than require the user to enumerate it.
 

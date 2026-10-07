@@ -1,0 +1,65 @@
+{
+  "source_inputs_commit": "cffb3ab68ea42173d3b29e393e4ff0d95aa1e68e",
+  "verification_scripts_commit": "b1d2709f67342ad898e483bd6dbfe33b9718eb9e",
+  "baseline_commit": "3bb891ea0848acb0d4fc00806e5ef292ca8793bb",
+  "environment": {
+    "platform": "macOS ARM"
+  },
+  "compile": {
+    "root": "passed",
+    "electron": "passed"
+  },
+  "lint": {
+    "command": "npm run lint",
+    "errors": 0,
+    "pre_existing_warnings": 11
+  },
+  "unit": {
+    "command": "npm run test:unit",
+    "passed": 431,
+    "failed": 0,
+    "skipped": 19,
+    "skip_scope": "18 opt-in real-converter cases and one opt-in package case"
+  },
+  "browser": {
+    "command": "CI=1 npx playwright test --workers=2 --retries=0",
+    "passed": 1209,
+    "failed": 0,
+    "retries": 0
+  },
+  "package": {
+    "version": "0.5.0",
+    "source_commit": "cffb3ab68ea42173d3b29e393e4ff0d95aa1e68e",
+    "local_changes": true,
+    "sha256": "442bd8d7998f088a0b20d3d5de279a2c869fa3042ebae7116c3377c65a241bfa",
+    "archive_parity": "passed",
+    "frozen_export_inputs_verified": 7
+  },
+  "installed_vscode": {
+    "suites_passed": [
+      "save-correctness",
+      "list-code-preservation",
+      "paragraph-semantics",
+      "table-source-format",
+      "identity"
+    ],
+    "owned_test_process_closed": true
+  },
+  "electron": {
+    "command": "node test/native/electron-table-content.cjs",
+    "outcome": "passed",
+    "navigation_cells": 24,
+    "save_and_reopen": true
+  },
+  "documentation": {
+    "raw_review": "passed",
+    "rendered_review": "passed",
+    "pages": 10,
+    "preview_limit": "Existing unchanged Mermaid diagram displayed as fenced code."
+  },
+  "limitations": [
+    "Local validation only; hosted CI and other operating systems were not evaluated.",
+    "Native suites are focused, not the complete installed-VSIX or release matrix.",
+    "OS IME, screen-reader acceptance and export-reader visual fidelity remain outside these observations."
+  ]
+}

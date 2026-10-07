@@ -1,0 +1,164 @@
+{
+  "source_commit": "cffb3ab68ea42173d3b29e393e4ff0d95aa1e68e",
+  "baseline_commit": "3bb891ea0848acb0d4fc00806e5ef292ca8793bb",
+  "baseline_editor_lines": 16647,
+  "source_files": 31,
+  "total_lines": 18041,
+  "files": [
+    {
+      "file": "src/webview/editor.js",
+      "physical_lines": 727,
+      "sha256": "f6074aaa0ed00bbf416733a8f4414df68b297d9200c93da4caaf3b0ae2aeb35a"
+    },
+    {
+      "file": "src/webview/editor/blocks/code-content.js",
+      "physical_lines": 474,
+      "sha256": "7390210ecb1b0ca0ac0c058ec17cf62cb4a56cc1f581938ac2f9a4b7fd68becc"
+    },
+    {
+      "file": "src/webview/editor/blocks/code-controls.js",
+      "physical_lines": 585,
+      "sha256": "98567dcced986eb23ef593067ab9b8c359c6bbb35171683d0eb73660fcb380b2"
+    },
+    {
+      "file": "src/webview/editor/blocks/export.js",
+      "physical_lines": 309,
+      "sha256": "c4582c473eca70f39eaec3432ed280a8943b6fac2f46d69c04085ee2b5b75468"
+    },
+    {
+      "file": "src/webview/editor/blocks/render.js",
+      "physical_lines": 480,
+      "sha256": "f9d17ea18ce156ea050c3b6fbd86e13052fd321308274d08cc1147a0930c5462"
+    },
+    {
+      "file": "src/webview/editor/blocks/special.js",
+      "physical_lines": 547,
+      "sha256": "f64d00440c60d8e6234b4204cc897f50ebf845a363bed1a51e0cfc7ed8341baf"
+    },
+    {
+      "file": "src/webview/editor/blocks/tables.js",
+      "physical_lines": 606,
+      "sha256": "9f8bff3e16a7e8ef16fa28cd5e5cc110cde1c49cbe6b25ea02999fac5397ff0c"
+    },
+    {
+      "file": "src/webview/editor/codec/blocks.js",
+      "physical_lines": 801,
+      "sha256": "547ce03fe681852b283ce82e0ab38a334c8234f51f88a0e7c3f7da40a0722d98"
+    },
+    {
+      "file": "src/webview/editor/codec/inline.js",
+      "physical_lines": 518,
+      "sha256": "ead6dd8d01dd36186bee8e186dbe527b1bf2da42e9b510cf46cda851b0ead4bb"
+    },
+    {
+      "file": "src/webview/editor/core/host.js",
+      "physical_lines": 323,
+      "sha256": "6012c09764cb5e9bc0f72c508b1140c7306b9cc41efd315c14282e4a6d43bb85"
+    },
+    {
+      "file": "src/webview/editor/core/session.js",
+      "physical_lines": 476,
+      "sha256": "5e62429d9e594da05a608390cad14d2c137d66e8567f6c3d04f5ed332db11618"
+    },
+    {
+      "file": "src/webview/editor/editing/block-patterns.js",
+      "physical_lines": 580,
+      "sha256": "4bd8bbbad8a81ee15de4f4233f4446cbd0253bf428d2a7e9f12ceadc4cbe1a21"
+    },
+    {
+      "file": "src/webview/editor/editing/inline-format.js",
+      "physical_lines": 548,
+      "sha256": "c1c72dc7659797ddb6a2048c109a6aba42a0b41120580106ef9df3ac0b728b0b"
+    },
+    {
+      "file": "src/webview/editor/editing/lists.js",
+      "physical_lines": 604,
+      "sha256": "811c56ad3a6c46840352c9154a7270c7e491372e92619a5d9eef770dbaddaa63"
+    },
+    {
+      "file": "src/webview/editor/input/block-navigation.js",
+      "physical_lines": 469,
+      "sha256": "d8739cb89e10b3b967e45fc9ef170ee5c68b08ca1d8b1f085b2e540b1566f5ae"
+    },
+    {
+      "file": "src/webview/editor/input/dispatch.js",
+      "physical_lines": 583,
+      "sha256": "76f6b0ff15acd6d428528f574e51f272974e6d13cfffacb493e2810a5f3ec101"
+    },
+    {
+      "file": "src/webview/editor/input/list-backspace.js",
+      "physical_lines": 641,
+      "sha256": "4911f6dbb449e325ae8bbf4fe12e308f7231ef02f61e490187e0f32a4e25944b"
+    },
+    {
+      "file": "src/webview/editor/input/list-boundaries.js",
+      "physical_lines": 660,
+      "sha256": "5fa3c2bb44911c84d85b050236470f7ae4248c00e463778053eb8f7c0c041df3"
+    },
+    {
+      "file": "src/webview/editor/input/list-enter-tab.js",
+      "physical_lines": 461,
+      "sha256": "d7f14881900fee5fdd1d4395d900f422ab0ea8dbf8c526cb5c0c7303205463bf"
+    },
+    {
+      "file": "src/webview/editor/input/list-selection-delete.js",
+      "physical_lines": 510,
+      "sha256": "be24f6cf54f23b0be24b78419703a7b7df1d6b130bdf64dcaa6097ea11bc63b8"
+    },
+    {
+      "file": "src/webview/editor/input/paragraph-delete.js",
+      "physical_lines": 430,
+      "sha256": "7980d3d4db353d66cef32282c0035ba15015156a385c5542e1c11acbf93b6d24"
+    },
+    {
+      "file": "src/webview/editor/input/paragraph-format.js",
+      "physical_lines": 411,
+      "sha256": "5968f3ea6a95f5d65f2b270f676413a354ab2b8573830691fdd4a47f372bfaa3"
+    },
+    {
+      "file": "src/webview/editor/input/tables.js",
+      "physical_lines": 480,
+      "sha256": "0843ae071e6632a3e60f4cb0add8bbf1c9421116954209d0e3468eee88cf4107"
+    },
+    {
+      "file": "src/webview/editor/selection/dom.js",
+      "physical_lines": 808,
+      "sha256": "d148ae5c63b8f2dd9c270a77bd02d2b4b69f15a2c96c67e36f815487a27a727a"
+    },
+    {
+      "file": "src/webview/editor/selection/lines.js",
+      "physical_lines": 489,
+      "sha256": "a86ea09d077230acf1feae29e67f20fe732c986c15bef03bad464a9507880db4"
+    },
+    {
+      "file": "src/webview/editor/transfer/clipboard.js",
+      "physical_lines": 584,
+      "sha256": "8b3a6be56acdb14aefaef44b6413736b210379497275cdc69eeed5469b4f2bfe"
+    },
+    {
+      "file": "src/webview/editor/transfer/paste.js",
+      "physical_lines": 739,
+      "sha256": "bdc82d3db1ca1bc6e98ae3dc5df5a305b5305b2a6fa9cf57bc06e8b65c20fb6e"
+    },
+    {
+      "file": "src/webview/editor/ui/chrome.js",
+      "physical_lines": 1042,
+      "sha256": "2b1c9dd98beeb6ff1865400f6955eb8f138133fc9d408f76c0f40f2da745c6ee"
+    },
+    {
+      "file": "src/webview/editor/ui/commands.js",
+      "physical_lines": 824,
+      "sha256": "1ec1a3f0f48c27d3c70f3a483f0dacf1ab1934e74ebb886ddef47efe1dd0bb6c"
+    },
+    {
+      "file": "src/webview/editor/ui/menus.js",
+      "physical_lines": 864,
+      "sha256": "9bdb0c7c0d187fa490d1171d9b42fe16b5400ec19cf97419dee7d932e62b5f52"
+    },
+    {
+      "file": "src/webview/editor/ui/search.js",
+      "physical_lines": 468,
+      "sha256": "71155a8a59d30f75c4f7b0e0928470d8662c68984e8fd913a7636f29189e0620"
+    }
+  ]
+}

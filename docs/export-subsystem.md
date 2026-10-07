@@ -87,7 +87,7 @@ Do not claim a parser capability merely because Pandoc can write its output form
 | FR-EXP-005 | The export interface shall identify formats that require missing dependencies and make the corresponding setup guidance accessible. | Derived | AC-05 |
 | FR-EXP-006 | The export interface shall make the experimental status and known format limitations available before conversion begins. | User | AC-01, AC-08 |
 
-The current insertion point is in the utility group in [editor-body-html.js](../src/shared/editor-body-html.js). Icon population is handled by [editor.js](../src/webview/editor.js). These are implementation pointers, not a requirement to change unrelated toolbar behavior or create a separate preferences page.
+The current insertion point is in the utility group in [editor-body-html.js](../src/shared/editor-body-html.js). Icon population is handled by [ui/chrome.js](../src/webview/editor/ui/chrome.js). These are implementation pointers, not a requirement to change unrelated toolbar behavior or create a separate preferences page.
 
 ### Source eligibility and revision consistency
 

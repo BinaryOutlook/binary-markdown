@@ -13,7 +13,9 @@ npm ci
 npm run compile
 ```
 
-Compilation builds TypeScript and translations, copies webview/shared modules, and bundles vendor assets. `npm run watch` watches TypeScript only; rerun the full compile command for webview JavaScript, CSS, shared JavaScript, or locale changes.
+Compilation builds TypeScript and translations, copies webview/shared assets, and bundles editor and vendor assets. After `scripts/copy-webview.js`, esbuild writes the unminified browser runtime to `out/webview/editor.js` and records runtime and source-file hashes in `out/webview/editor.bundle.json`. VS Code, Electron, and browser fixtures use the same emitted runtime. See [editor architecture](docs/editor-architecture.md) for module boundaries and initialization.
+
+`npm run watch` watches TypeScript only; rerun the full compile command for webview JavaScript, CSS, shared JavaScript, or locale changes.
 
 ## Checks
 
