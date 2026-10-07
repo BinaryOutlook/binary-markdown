@@ -27,7 +27,7 @@ for (const [name, generate] of Object.entries(hosts)) {
 
     test(`${name} renders quoted Markdown attributes without creating event handlers`, async ({ page }) => {
         const alt = 'photo" onerror="window.__injectionProbe=true';
-        const original = `![${alt}](https://example.invalid/quote" onerror="window.__injectionProbe=true)\n\nA "quote" and 'apostrophe'.\n`;
+        const original = `![${alt}](https://example.invalid/quote" onerror="window.__injectionProbe=true)\n\n[quoted link](https://example.invalid/quote" onclick="window.__injectionProbe=true)\n\nA "quote" and 'apostrophe'.\n`;
         const html = generate(original, {});
         await page.route('**/security-image.html', route => route.fulfill({ contentType: 'text/html', body: html }));
         await page.goto('/security-image.html');
@@ -37,6 +37,8 @@ for (const [name, generate] of Object.entries(hosts)) {
         await expect(image).toHaveAttribute('alt', alt);
         await expect(image).not.toHaveAttribute('onerror');
         await image.evaluate(node => node.dispatchEvent(new Event('error')));
+        await expect(page.locator('#editor a')).not.toHaveAttribute('onclick');
+        await expect(page.locator('#editor a')).toHaveAttribute('href', 'https://example.invalid/quote" onclick="window.__injectionProbe=true');
         expect(await page.evaluate(() => (window as any).__injectionProbe)).toBeUndefined();
         expect(await page.evaluate(() => (window as any).__testApi.getMarkdown())).toBe(original);
         await page.locator('[data-editor-mode="source"]').click();

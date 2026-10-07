@@ -67,15 +67,15 @@ function createInlineCodec({ mathSyntax, mathBackslashDelimiters, resolveImagePa
         // IMPORTANT: Process images and links SECOND to protect their paths from inline formatting
         // Images MUST be processed BEFORE links (otherwise link regex matches the [alt](src) part)
         html = html.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, function (match, alt, src) {
-            const resolvedSrc = resolveImagePath(src);
-            const imgHtml = '<img src="' + resolvedSrc + '" alt="' + alt + '" data-markdown-path="' + src + '" style="max-width:100%;">';
+            const resolvedSrc = escapeAttribute(resolveImagePath(src));
+            const imgHtml = '<img src="' + resolvedSrc + '" alt="' + escapeAttribute(alt) + '" data-markdown-path="' + escapeAttribute(src) + '" style="max-width:100%;">';
             const placeholder = '\x00IMG' + (placeholderIndex++) + '\x00';
             placeholders.push({ placeholder, html: imgHtml });
             return placeholder;
         });
         // Links (must be after images)
         html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, function (match, linkText, href) {
-            const linkHtml = '<a href="' + href + '">' + formatInlineText(linkText) + '</a>';
+            const linkHtml = '<a href="' + escapeAttribute(href) + '">' + formatInlineText(linkText) + '</a>';
             const placeholder = '\x00LINK' + (placeholderIndex++) + '\x00';
             placeholders.push({ placeholder, html: linkHtml });
             return placeholder;
@@ -184,8 +184,13 @@ function createInlineCodec({ mathSyntax, mathBackslashDelimiters, resolveImagePa
     }
     function escapeHtml(text) {
         // Single pass replacement using a map for better performance
-        const escapeMap = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
-        return text.replace(/[&<>"']/g, char => escapeMap[char]);
+        const escapeMap = { '&': '&amp;', '<': '&lt;', '>': '&gt;' };
+        return text.replace(/[&<>]/g, char => escapeMap[char]);
+    }
+    // Inline paths/text have already escaped &, < and >. Escape only their
+    // attribute delimiters so code/prose text keeps its original rendering.
+    function escapeAttribute(text) {
+        return text.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     }
     function collectCharStyles(node, currentStyles = new Set()) {
         const result = [];

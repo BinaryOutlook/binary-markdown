@@ -438,12 +438,22 @@ test.describe('Export document-only rendering', () => {
         expect(await page.locator('[id^="dbinary-export-diagram-"]').count()).toBe(0);
     });
 
-    test('sanitizes attribute injection and unsafe links before attachment', async ({ page }) => {
+    test('keeps quoted paths inert and disables unsafe links before attachment', async ({ page }) => {
         const unsafe = '[bad link](javascript:alert%281%29)\n\n![image](missing.png" onerror="window.exportInjected=true" data-extra=")\n';
         const rendered = await prepare(page, unsafe);
-        expect(rendered.html).not.toMatch(/\sonerror=|href="javascript:/i);
+        const attributes = await page.evaluate(html => {
+            const document = new DOMParser().parseFromString(html, 'text/html');
+            return {
+                handlers: [...document.querySelectorAll('*')].flatMap(node => [...node.attributes]
+                    .filter(attribute => /^on/i.test(attribute.name)).map(attribute => attribute.name)),
+                unsafeLinks: document.querySelectorAll('a[href^="javascript:"]').length,
+                imagePath: document.querySelector('img')?.getAttribute('data-markdown-path')
+            };
+        }, rendered.html);
+        expect(attributes).toEqual({ handlers: [], unsafeLinks: 0,
+            imagePath: 'missing.png" onerror="window.exportInjected=true" data-extra="' });
         expect(rendered.html).toContain('Unsafe resource or link disabled');
-        expect(rendered.warnings.map((warning: { code: string }) => warning.code)).toEqual(expect.arrayContaining(['active-content', 'unsafe-reference']));
+        expect(rendered.warnings.map((warning: { code: string }) => warning.code)).toEqual(expect.arrayContaining(['unsafe-reference']));
         expect(await page.evaluate(() => (window as Window & { exportInjected?: boolean }).exportInjected)).toBeUndefined();
     });
 
