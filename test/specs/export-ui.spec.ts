@@ -19,11 +19,8 @@ async function setup(page: Page, exportEnabled = true) {
     await page.addStyleTag({ content: fs.readFileSync(path.join(root, 'src/webview/styles.css'), 'utf8')
         .replace('__FONT_SIZE__', '16').replace('__OUTLINE_ACTIVE_COLOR__', 'var(--link-color)') });
     await page.addScriptTag({ content: fs.readFileSync(path.join(root, 'src/shared/test-host-bridge.js'), 'utf8') });
-    await page.addScriptTag({ content: fs.readFileSync(path.join(root, 'src/shared/math-syntax.js'), 'utf8') });
-    for (const file of ['src/shared/table-placement.js', 'src/webview/table-toolbar.js']) {
-        await page.addScriptTag({ content: fs.readFileSync(path.join(root, file), 'utf8') });
-    }
-    const editor = fs.readFileSync(path.join(root, 'src/webview/editor.js'), 'utf8')
+    await page.addScriptTag({ content: fs.readFileSync(path.join(root, 'src/shared/document-aux.js'), 'utf8') });
+    const editor = require('../../scripts/bundle-editor.cjs').readEditorRuntime(root)
         .replace('__SEARCH_WORKER__', () => JSON.stringify(fs.readFileSync(path.join(root, 'src/shared/document-search.js'), 'utf8')).replace(/</g, '\\u003c'))
         .replace('__MATH_BACKSLASH__', 'true')
         .replace('__DEBUG_MODE__', 'false').replace('__I18N__', () => JSON.stringify(webviewMessages))

@@ -10,7 +10,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const editorJsPath = path.join(__dirname, '../src/webview/editor.js');
+const { readEditorRuntime } = require('../scripts/bundle-editor.cjs');
 const testHostBridgePath = path.join(__dirname, '../src/shared/test-host-bridge.js');
 const outputPath = path.join(__dirname, 'html/standalone-editor.html');
 
@@ -35,10 +35,8 @@ if (fs.existsSync(vendorSrc)) {
     }
 }
 
-// editor.jsを読み込み
-let editorScript = fs.readFileSync(path.join(__dirname, '../src/webview/workspace-ui.js'), 'utf8') + '\n' + fs.readFileSync(path.join(__dirname, '../src/shared/document-aux.js'), 'utf8') + '\n' + fs.readFileSync(editorJsPath, 'utf-8');
-
-editorScript = fs.readFileSync(path.join(__dirname, '../src/shared/table-format.js'), 'utf8') + '\n' + editorScript;
+// Both fixtures execute the same freshly compiled runtime as the hosts.
+let editorScript = fs.readFileSync(path.join(__dirname, '../src/shared/document-aux.js'), 'utf8') + '\n' + readEditorRuntime(path.resolve(__dirname, '..'));
 
 // テスト用HostBridgeを読み込み
 const testHostBridgeScript = fs.readFileSync(testHostBridgePath, 'utf-8');
@@ -52,8 +50,6 @@ const codeControlStyles = productionStyles.slice(
 );
 
 // プレースホルダーを置換
-editorScript = fs.readFileSync(path.join(__dirname, '../src/shared/math-syntax.js'), 'utf8') + '\n' + editorScript;
-editorScript = fs.readFileSync(path.join(__dirname, '../src/shared/editor-layout.js'), 'utf8') + '\n' + fs.readFileSync(path.join(__dirname, '../src/shared/table-placement.js'), 'utf8') + '\n' + fs.readFileSync(path.join(__dirname, '../src/webview/table-toolbar.js'), 'utf8') + '\n' + editorScript;
 editorScript = editorScript
     .replace('__SEARCH_WORKER__', () => JSON.stringify(fs.readFileSync(path.join(__dirname, '../src/shared/document-search.js'), 'utf8')).replace(/</g, '\\u003c'))
         .replace('__MATH_BACKSLASH__', 'true')

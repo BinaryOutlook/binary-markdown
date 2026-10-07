@@ -1,3 +1,11 @@
+// Preserve the existing browser helper APIs while bundling CommonJS modules.
+require('./workspace-ui');
+window.BinaryTableFormat = require('../shared/table-format');
+window.BinaryEditorLayout = require('../shared/editor-layout');
+window.BinaryTablePlacement = require('../shared/table-placement');
+require('./table-toolbar');
+window.BinaryMath = require('../shared/math-syntax');
+
 (function() {
     // Debug logging configuration
     const DEBUG_MODE = __DEBUG_MODE__;

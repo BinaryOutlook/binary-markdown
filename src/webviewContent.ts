@@ -139,9 +139,7 @@ export function getWebviewContent(
     const katexJsUri = vendorUri('katex.min.js');
     const katexCssUri = vendorUri('katex.min.css');
 
-    const mathScript = fs.readFileSync(path.join(__dirname, 'shared', 'math-syntax.js'), 'utf8');
-    const tableFormatScript = fs.readFileSync(path.join(__dirname, 'shared', 'table-format.js'), 'utf8');
-    const editorScript = (fs.readFileSync(path.join(__dirname, 'webview', 'workspace-ui.js'), 'utf8') + '\n' + tableFormatScript + '\n' + fs.readFileSync(path.join(__dirname, 'shared', 'editor-layout.js'), 'utf8') + '\n' + fs.readFileSync(path.join(__dirname, 'shared', 'table-placement.js'), 'utf8') + '\n' + fs.readFileSync(path.join(__dirname, 'webview', 'table-toolbar.js'), 'utf8') + '\n' + mathScript + '\n' + fs.readFileSync(editorScriptPath, 'utf8'))
+    const editorScript = fs.readFileSync(editorScriptPath, 'utf8')
         .replace('__SEARCH_WORKER__', () => JSON.stringify(fs.readFileSync(path.join(__dirname, 'shared', 'document-search.js'), 'utf8')).replace(/</g, '\\u003c'))
         .replace('__MATH_BACKSLASH__', String(safeConfig.mathBackslashDelimiters))
         .replace('__DEBUG_MODE__', String(safeConfig.enableDebugLogging ?? false))
