@@ -101,7 +101,7 @@ async function loadHttpResource(url: URL, signal: AbortSignal, redirects = 0): P
         const chunks: Buffer[] = [];
         for await (const chunk of response) { chunks.push(Buffer.from(chunk)); }
         checkCancelled(signal);
-        let bytes = Buffer.concat(chunks);
+        let bytes: Buffer = Buffer.concat(chunks);
         const encodings = String(response.headers['content-encoding'] || '').split(',').map(value => value.trim().toLowerCase()).filter(Boolean);
         for (const encoding of encodings.reverse()) {
             if (Object.hasOwn(decompressors, encoding)) { bytes = await decompressors[encoding](bytes); }
