@@ -1,24 +1,20 @@
 'use strict';
-
-// Named capabilities remain live; this factory installs no listeners.
+// Construction defines capabilities; bootstrap controls the original initialization order.
 function createLists(dependencies) {
-
-
     // ========== LIST TYPE CHANGE ==========
-
     // Change the parent list type of a given li element.
     // If the li is the only child, just swap the tag.
     // If there are siblings, split into up to 3 lists: before (original), target (new), after (original).
     // Then merge adjacent compatible lists.
     function changeParentListType(li, targetTag) {
         var parentList = li.parentNode;
-        if (!parentList) return;
+        if (!parentList)
+            return;
         var currentTag = parentList.tagName.toLowerCase();
-        if (currentTag === targetTag) return; // Already correct type
-
+        if (currentTag === targetTag)
+            return; // Already correct type
         var siblings = Array.from(parentList.children);
         var liIndex = siblings.indexOf(li);
-
         if (siblings.length === 1) {
             // Only child — replace parent tag in-place
             var newList = document.createElement(targetTag);
@@ -29,11 +25,11 @@ function createLists(dependencies) {
             }
             newList.appendChild(li);
             parentList.replaceWith(newList);
-        } else {
+        }
+        else {
             // Multiple siblings — split into before/target/after
             var parentOfList = parentList.parentNode;
             var insertRef = parentList.nextSibling;
-
             // Build "after" list (items after li)
             var afterItems = siblings.slice(liIndex + 1);
             var afterList = null;
@@ -43,34 +39,34 @@ function createLists(dependencies) {
                     afterList.appendChild(afterItems[j]);
                 }
             }
-
             // Build "target" list (just the converted li)
             var targetList = document.createElement(targetTag);
             targetList.appendChild(li);
-
             // parentList now only contains "before" items (items before li)
             // If parentList is now empty, remove it
             if (parentList.children.length === 0) {
                 parentOfList.insertBefore(targetList, insertRef);
-                if (afterList) parentOfList.insertBefore(afterList, targetList.nextSibling);
+                if (afterList)
+                    parentOfList.insertBefore(afterList, targetList.nextSibling);
                 parentList.remove();
-            } else {
+            }
+            else {
                 // Insert target and after lists after the (now shortened) parentList
                 parentOfList.insertBefore(targetList, insertRef);
-                if (afterList) parentOfList.insertBefore(afterList, targetList.nextSibling);
+                if (afterList)
+                    parentOfList.insertBefore(afterList, targetList.nextSibling);
             }
-
             // Merge adjacent compatible lists
             mergeAdjacentLists(targetList);
         }
     }
-
-
     // Check if two list elements are compatible for merging
     // Regular ul and task ul are NOT compatible
     function areListsCompatible(a, b) {
-        if (!a || !b) return false;
-        if (a.tagName !== b.tagName) return false;
+        if (!a || !b)
+            return false;
+        if (a.tagName !== b.tagName)
+            return false;
         // Both must be same type (ul or ol)
         if (a.tagName.toLowerCase() === 'ul') {
             // Check if one is task list and other is not
@@ -81,8 +77,6 @@ function createLists(dependencies) {
         }
         return true; // ol lists are always compatible with other ol
     }
-
-
     // Merge targetList with its adjacent compatible siblings
     function mergeAdjacentLists(targetList) {
         // Merge with next sibling
@@ -93,7 +87,6 @@ function createLists(dependencies) {
             }
             next.remove();
         }
-
         // Merge with previous sibling
         var prev = targetList.previousElementSibling;
         if (prev && areListsCompatible(prev, targetList)) {
@@ -103,10 +96,7 @@ function createLists(dependencies) {
             targetList.remove();
         }
     }
-
-
     // ========== LIST INDENTATION ==========
-
     function indentListItem(li) {
         // #region agent log
         dependencies.logger.log('indentListItem called', {
@@ -116,7 +106,6 @@ function createLists(dependencies) {
             prevSiblingTag: li.previousElementSibling?.tagName
         });
         // #endregion
-
         let prevSibling = li.previousElementSibling;
         if (!prevSibling || prevSibling.tagName.toLowerCase() !== 'li') {
             // No previous sibling within the same list.
@@ -135,7 +124,8 @@ function createLists(dependencies) {
                     let nestedList;
                     if (crossNestedLists.length > 0) {
                         nestedList = crossNestedLists[crossNestedLists.length - 1];
-                    } else {
+                    }
+                    else {
                         nestedList = document.createElement(currentListTag);
                         lastLiOfPrev.appendChild(nestedList);
                     }
@@ -153,24 +143,22 @@ function createLists(dependencies) {
             // #endregion
             return; // Can't indent first item or item without previous sibling
         }
-
         // #region agent log
         dependencies.logger.log('indentListItem: Found previous sibling, will indent');
         // #endregion
-
         // Check if previous sibling already has a nested list
         // Use querySelectorAll to get the LAST nested list (Section 16: querySelector returns only the first match)
         const nestedLists = prevSibling.querySelectorAll(':scope > ul, :scope > ol');
         let nestedList;
         if (nestedLists.length > 0) {
             nestedList = nestedLists[nestedLists.length - 1];
-        } else {
+        }
+        else {
             // Create a new nested list of the same type as parent
             const parentList = li.parentNode;
             nestedList = document.createElement(parentList.tagName.toLowerCase());
             prevSibling.appendChild(nestedList);
         }
-
         // Move the li into the nested list
         nestedList.appendChild(li);
         // Note: Cursor position is preserved by the caller
@@ -178,8 +166,6 @@ function createLists(dependencies) {
         dependencies.logger.log('indentListItem: Done, li moved to nested list');
         // #endregion
     }
-
-
     function outdentListItem(li) {
         dependencies.logger.log('outdentListItem called', { liText: li.textContent });
         const parentList = li.parentNode;
@@ -189,7 +175,6 @@ function createLists(dependencies) {
             grandparentLiTag: grandparentLi?.tagName,
             grandparentLiIsLi: grandparentLi?.tagName?.toLowerCase() === 'li'
         });
-
         // Check if we're in a nested list
         if (!grandparentLi || grandparentLi.tagName.toLowerCase() !== 'li') {
             // Already at top level - convert to paragraph
@@ -197,9 +182,7 @@ function createLists(dependencies) {
             convertListItemToParagraph(li);
             return;
         }
-
         const grandparentList = grandparentLi.parentNode;
-
         // Move all following siblings (within same list) to stay in the nested list
         const followingSiblings = [];
         let sibling = li.nextElementSibling;
@@ -207,7 +190,6 @@ function createLists(dependencies) {
             followingSiblings.push(sibling);
             sibling = sibling.nextElementSibling;
         }
-
         // Collect trailing sibling lists after parentList in grandparentLi
         // These are ul/ol elements that come AFTER the current list under the same parent li.
         // In mixed-type lists, items in these lists are visually "below" the current item,
@@ -225,10 +207,8 @@ function createLists(dependencies) {
             followingSiblings: followingSiblings.length,
             trailingSiblingLists: trailingSiblingLists.length
         });
-
         // Insert li after grandparent li
         grandparentList.insertBefore(li, grandparentLi.nextElementSibling);
-
         // If there were following siblings, keep them nested under the moved item
         if (followingSiblings.length > 0) {
             let newNestedList = li.querySelector('ul, ol');
@@ -238,26 +218,20 @@ function createLists(dependencies) {
             }
             followingSiblings.forEach(s => newNestedList.appendChild(s));
         }
-
         // Move trailing sibling lists under the moved item to preserve line order
         for (var i = 0; i < trailingSiblingLists.length; i++) {
             li.appendChild(trailingSiblingLists[i]);
         }
-
         // Remove empty parent list
         if (parentList.children.length === 0) {
             parentList.remove();
         }
-
         // Note: Cursor position is preserved by the caller
     }
-
-
     function convertListItemToParagraph(li) {
         dependencies.logger.log('convertListItemToParagraph called', { liText: li.textContent });
         const parentList = li.parentNode;
         const listTagName = parentList.tagName.toLowerCase();
-
         // Get text content (excluding checkbox if any)
         // Also collect nested lists (ul/ol) to preserve them
         let content = '';
@@ -265,17 +239,18 @@ function createLists(dependencies) {
         for (const child of li.childNodes) {
             if (child.nodeType === 3) {
                 content += child.textContent;
-            } else if (child.nodeType === 1) {
+            }
+            else if (child.nodeType === 1) {
                 var childTag = child.tagName.toLowerCase();
                 if (childTag === 'ul' || childTag === 'ol') {
                     nestedLists.push(child);
-                } else if (childTag !== 'input') {
+                }
+                else if (childTag !== 'input') {
                     content += child.outerHTML;
                 }
             }
         }
         dependencies.logger.log('convertListItemToParagraph: content extracted', { content, nestedListCount: nestedLists.length });
-
         // Collect following siblings of li in the parent list.
         // They must be placed into a new list AFTER the paragraph to preserve line order.
         var followingItems = [];
@@ -287,14 +262,11 @@ function createLists(dependencies) {
         for (var j = 0; j < followingItems.length; j++) {
             followingItems[j].remove();
         }
-
         // Create paragraph
         const p = document.createElement('p');
         p.innerHTML = content.trim() || '<br>';
-
         // Remove the li from the list
         li.remove();
-
         // Determine insertion point for the paragraph:
         // - If parentList still has children (items that preceded the target li),
         //   insert p after parentList.
@@ -303,14 +275,15 @@ function createLists(dependencies) {
         if (parentList.children.length === 0) {
             parentList.parentNode.insertBefore(p, parentList);
             parentList.remove();
-        } else {
+        }
+        else {
             if (parentList.nextSibling) {
                 parentList.parentNode.insertBefore(p, parentList.nextSibling);
-            } else {
+            }
+            else {
                 parentList.parentNode.appendChild(p);
             }
         }
-
         // Insert elements after p in correct visual order:
         // 1. nestedLists (children of the original li – visually below li's own text)
         // 2. followingItems as a new list (siblings of li – visually after all of li's content)
@@ -318,12 +291,12 @@ function createLists(dependencies) {
         for (var i = 0; i < nestedLists.length; i++) {
             if (insertAfter.nextSibling) {
                 insertAfter.parentNode.insertBefore(nestedLists[i], insertAfter.nextSibling);
-            } else {
+            }
+            else {
                 insertAfter.parentNode.appendChild(nestedLists[i]);
             }
             insertAfter = nestedLists[i];
         }
-
         if (followingItems.length > 0) {
             var newList = document.createElement(listTagName);
             for (var k = 0; k < followingItems.length; k++) {
@@ -331,87 +304,80 @@ function createLists(dependencies) {
             }
             if (insertAfter.nextSibling) {
                 insertAfter.parentNode.insertBefore(newList, insertAfter.nextSibling);
-            } else {
+            }
+            else {
                 insertAfter.parentNode.appendChild(newList);
             }
         }
         dependencies.logger.log('convertListItemToParagraph: paragraph and nested lists inserted');
-
         dependencies.logger.log('convertListItemToParagraph: li removed, setting cursor');
-
         // Set cursor to the new paragraph
         dependencies.setCursorToEnd(p);
-
         dependencies.syncMarkdown();
         dependencies.logger.log('convertListItemToParagraph: done');
     }
-
-
     function convertToList(type) {
         const sel = window.getSelection();
-        if (!sel || !sel.rangeCount) return;
-
+        if (!sel || !sel.rangeCount)
+            return;
         let node = sel.anchorNode;
         while (node && node.parentNode !== dependencies.editor) {
             node = node.parentNode;
         }
-        if (!node || node === dependencies.editor) return;
-
+        if (!node || node === dependencies.editor)
+            return;
         const text = node.textContent || '';
         const nextSibling = node.nextElementSibling;
-
         // Check if the next sibling is the same type of list
         if (nextSibling && nextSibling.tagName.toLowerCase() === type) {
             // Merge with existing list - prepend new item
             const li = document.createElement('li');
             li.textContent = text || '';
-            if (!li.textContent) li.innerHTML = '<br>';
+            if (!li.textContent)
+                li.innerHTML = '<br>';
             nextSibling.insertBefore(li, nextSibling.firstChild);
             node.remove();
             dependencies.setCursorToEnd(li);
             dependencies.syncMarkdown();
             return;
         }
-
         // Check if the previous sibling is the same type of list
         const prevSibling = node.previousElementSibling;
         if (prevSibling && prevSibling.tagName.toLowerCase() === type) {
             // Merge with existing list - append new item
             const li = document.createElement('li');
             li.textContent = text || '';
-            if (!li.textContent) li.innerHTML = '<br>';
+            if (!li.textContent)
+                li.innerHTML = '<br>';
             prevSibling.appendChild(li);
             node.remove();
             dependencies.setCursorToEnd(li);
             dependencies.syncMarkdown();
             return;
         }
-
         // No adjacent list of same type - create new list
         const list = document.createElement(type);
         const li = document.createElement('li');
         li.textContent = text || '';
-        if (!li.textContent) li.innerHTML = '<br>';
+        if (!li.textContent)
+            li.innerHTML = '<br>';
         list.appendChild(li);
         node.replaceWith(list);
         dependencies.setCursorToEnd(li);
         dependencies.syncMarkdown();
     }
-
-
     function convertToTaskList() {
         const sel = window.getSelection();
-        if (!sel || !sel.rangeCount) return;
-
+        if (!sel || !sel.rangeCount)
+            return;
         let node = sel.anchorNode;
         while (node && node.parentNode !== dependencies.editor) {
             node = node.parentNode;
         }
-        if (!node || node === dependencies.editor) return;
-
+        if (!node || node === dependencies.editor)
+            return;
         const text = node.textContent || '';
         const nextSibling = node.nextElementSibling;
-
         // Check if the next sibling is a task list (ul with checkbox)
         if (nextSibling && nextSibling.tagName.toLowerCase() === 'ul') {
             const firstLi = nextSibling.querySelector('li');
@@ -429,7 +395,6 @@ function createLists(dependencies) {
                 return;
             }
         }
-
         // Check if the previous sibling is a task list
         const prevSibling = node.previousElementSibling;
         if (prevSibling && prevSibling.tagName.toLowerCase() === 'ul') {
@@ -448,7 +413,6 @@ function createLists(dependencies) {
                 return;
             }
         }
-
         // No adjacent task list - create new list
         const ul = document.createElement('ul');
         const li = document.createElement('li');
@@ -461,15 +425,12 @@ function createLists(dependencies) {
         dependencies.setCursorToEnd(li);
         dependencies.syncMarkdown();
     }
-
-
     // Convert a single <li> element's content to the target type.
     // Handles adding/removing checkboxes and preserves nested lists.
     // Returns the new <li> element.
     function convertLiToType(sourceLi, targetType) {
         var newLi = document.createElement('li');
         var hasCheckbox = !!sourceLi.querySelector(':scope > input[type="checkbox"]');
-
         if (targetType === 'task' && !hasCheckbox) {
             // Add checkbox, keep all children (including nested lists)
             var checkbox = document.createElement('input');
@@ -478,38 +439,42 @@ function createLists(dependencies) {
             for (var i = 0; i < sourceLi.childNodes.length; i++) {
                 newLi.appendChild(sourceLi.childNodes[i].cloneNode(true));
             }
-        } else if (targetType !== 'task' && hasCheckbox) {
+        }
+        else if (targetType !== 'task' && hasCheckbox) {
             // Remove checkbox, keep everything else (including nested lists)
             var skipNextSpace = false;
             for (var i = 0; i < sourceLi.childNodes.length; i++) {
                 var child = sourceLi.childNodes[i];
-                if (child.nodeType === 1 && child.tagName === 'INPUT') { skipNextSpace = true; continue; }
-                if (skipNextSpace && child.nodeType === 3 && child.textContent === ' ') { skipNextSpace = false; continue; }
+                if (child.nodeType === 1 && child.tagName === 'INPUT') {
+                    skipNextSpace = true;
+                    continue;
+                }
+                if (skipNextSpace && child.nodeType === 3 && child.textContent === ' ') {
+                    skipNextSpace = false;
+                    continue;
+                }
                 skipNextSpace = false;
                 newLi.appendChild(child.cloneNode(true));
             }
-        } else {
+        }
+        else {
             // No checkbox change needed - clone all children
             for (var i = 0; i < sourceLi.childNodes.length; i++) {
                 newLi.appendChild(sourceLi.childNodes[i].cloneNode(true));
             }
         }
-
         if (!newLi.hasChildNodes() || newLi.innerHTML.trim() === '') {
             newLi.innerHTML = '<br>';
         }
-
         return newLi;
     }
-
-
     // Convert the list items at cursor or selection to a different list type.
     // targetType: 'ul' | 'ol' | 'task'
     // Returns true if conversion was performed, false if cursor was not in a list.
     function convertListToType(targetType) {
         var sel = window.getSelection();
-        if (!sel || !sel.rangeCount) return false;
-
+        if (!sel || !sel.rangeCount)
+            return false;
         // Find the closest <li> ancestor from cursor
         var node = sel.anchorNode;
         var cursorLi = null;
@@ -520,35 +485,33 @@ function createLists(dependencies) {
             }
             node = node.parentNode;
         }
-        if (!cursorLi) return false;
-
+        if (!cursorLi)
+            return false;
         var parentList = cursorLi.parentElement;
-        if (!parentList || (parentList.tagName !== 'UL' && parentList.tagName !== 'OL')) return false;
-
+        if (!parentList || (parentList.tagName !== 'UL' && parentList.tagName !== 'OL'))
+            return false;
         // Get items to convert (single cursor = 1 item, selection = multiple items)
         var range = sel.getRangeAt(0);
         var targetItems = range.collapsed
             ? [cursorLi]
             : dependencies.getSelectedListItems(range, sel);
-
-        if (targetItems.length === 0) return false;
-
+        if (targetItems.length === 0)
+            return false;
         // Filter to only direct children of the same parent list
-        var itemsToConvert = targetItems.filter(function(li) { return li.parentNode === parentList; });
-        if (itemsToConvert.length === 0) return false;
-
+        var itemsToConvert = targetItems.filter(function (li) { return li.parentNode === parentList; });
+        if (itemsToConvert.length === 0)
+            return false;
         // Check if all target items are already the target type
-        var allAlreadyTarget = itemsToConvert.every(function(li) {
+        var allAlreadyTarget = itemsToConvert.every(function (li) {
             var liHasCheckbox = !!li.querySelector(':scope > input[type="checkbox"]');
             var liType = parentList.tagName === 'OL' ? 'ol' : (liHasCheckbox ? 'task' : 'ul');
             return liType === targetType;
         });
-        if (allAlreadyTarget) return true;
-
+        if (allAlreadyTarget)
+            return true;
         // Determine parent tag for target type
         var targetParentTag = targetType === 'ol' ? 'OL' : 'UL';
         var currentParentTag = parentList.tagName; // 'UL' or 'OL'
-
         // Gather all direct <li> children of parentList in order
         var allItems = [];
         for (var i = 0; i < parentList.children.length; i++) {
@@ -557,17 +520,16 @@ function createLists(dependencies) {
             }
         }
         var convertSet = new Set(itemsToConvert);
-
         // Find the index range of items to convert
         var firstConvertIdx = -1;
         var lastConvertIdx = -1;
         for (var i = 0; i < allItems.length; i++) {
             if (convertSet.has(allItems[i])) {
-                if (firstConvertIdx === -1) firstConvertIdx = i;
+                if (firstConvertIdx === -1)
+                    firstConvertIdx = i;
                 lastConvertIdx = i;
             }
         }
-
         if (targetParentTag === currentParentTag) {
             // CASE A: Same parent tag (ul<->task) - modify <li> items in-place
             var newCursorLi = null;
@@ -575,21 +537,19 @@ function createLists(dependencies) {
                 var li = itemsToConvert[i];
                 var newLi = convertLiToType(li, targetType);
                 li.replaceWith(newLi);
-                if (li === cursorLi) newCursorLi = newLi;
+                if (li === cursorLi)
+                    newCursorLi = newLi;
             }
             dependencies.setupInteractiveElements();
             dependencies.setCursorToEnd(newCursorLi || itemsToConvert[0]);
             dependencies.syncMarkdown();
             return true;
         }
-
         // CASE B: Different parent tag - need to split the list
         var beforeItems = allItems.slice(0, firstConvertIdx);
         var convertItems = allItems.slice(firstConvertIdx, lastConvertIdx + 1);
         var afterItems = allItems.slice(lastConvertIdx + 1);
-
         var fragments = [];
-
         // 1. Before list (keep original type)
         if (beforeItems.length > 0) {
             var beforeList = document.createElement(currentParentTag.toLowerCase());
@@ -598,17 +558,16 @@ function createLists(dependencies) {
             }
             fragments.push(beforeList);
         }
-
         // 2. Converted items (new type)
         var newList = document.createElement(targetParentTag.toLowerCase());
         var newCursorLi = null;
         for (var i = 0; i < convertItems.length; i++) {
             var newLi = convertLiToType(convertItems[i], targetType);
             newList.appendChild(newLi);
-            if (convertItems[i] === cursorLi) newCursorLi = newLi;
+            if (convertItems[i] === cursorLi)
+                newCursorLi = newLi;
         }
         fragments.push(newList);
-
         // 3. After list (keep original type)
         if (afterItems.length > 0) {
             var afterList = document.createElement(currentParentTag.toLowerCase());
@@ -617,23 +576,29 @@ function createLists(dependencies) {
             }
             fragments.push(afterList);
         }
-
         // Replace parentList with the fragments
         var parentParent = parentList.parentNode;
         var refNode = parentList.nextSibling;
         parentList.remove();
-
         for (var i = 0; i < fragments.length; i++) {
             parentParent.insertBefore(fragments[i], refNode);
         }
-
         dependencies.setupInteractiveElements();
         dependencies.setCursorToEnd(newCursorLi || newList.firstElementChild);
         dependencies.syncMarkdown();
         return true;
     }
-
-    return { changeParentListType, areListsCompatible, mergeAdjacentLists, indentListItem, outdentListItem, convertListItemToParagraph, convertToList, convertToTaskList, convertLiToType, convertListToType };
+    return {
+        changeParentListType,
+        areListsCompatible,
+        mergeAdjacentLists,
+        indentListItem,
+        outdentListItem,
+        convertListItemToParagraph,
+        convertToList,
+        convertToTaskList,
+        convertLiToType,
+        convertListToType
+    };
 }
-
 module.exports = { createLists };

@@ -3,28 +3,7 @@
  * Construction binds capabilities without rendering or modifying the document.
  * Sequence/directive owners stay outside the codec; the sentinel set is shared.
  */
-function createBlockCodec({
-    document,
-    editor,
-    logger,
-    REGEX,
-    emptyTableCell,
-    mathBackslashDelimiters,
-    codeBlocksWithSentinel,
-    parseInline,
-    escapeHtml,
-    renderFrontMatter,
-    renderTocBlock,
-    mathBlockHtml,
-    inlineMathMarkdown,
-    mathBlockMarkdown,
-    mdGetInlineMarkdown,
-    parseBlocks,
-    formatTable,
-    nextSourceBlockSequence,
-    getCurrentImageDir,
-    getCurrentForceRelativePath
-}) {
+function createBlockCodec({ document, editor, logger, REGEX, emptyTableCell, mathBackslashDelimiters, codeBlocksWithSentinel, parseInline, escapeHtml, renderFrontMatter, renderTocBlock, mathBlockHtml, inlineMathMarkdown, mathBlockMarkdown, mdGetInlineMarkdown, parseBlocks, formatTable, nextSourceBlockSequence, getCurrentImageDir, getCurrentForceRelativePath }) {
     function parseMarkdownLine(text, allowMath = true) {
         const parseLineInline = value => parseInline(value, allowMath);
         // Heading
@@ -34,12 +13,10 @@ function createBlockCodec({
             const content = parseLineInline(headingMatch[2]);
             return { tag: 'h' + level, html: content, consumed: true };
         }
-
         // Horizontal rule
         if (REGEX.hr.test(text.trim())) {
             return { tag: 'hr', html: '', consumed: true };
         }
-
         // Task list (check first before unordered list)
         const taskMatch = text.match(REGEX.task);
         if (taskMatch) {
@@ -49,7 +26,6 @@ function createBlockCodec({
             // Use <br> for empty task items to make them visible and editable
             return { tag: 'li', listType: 'ul', html: '<input type="checkbox"' + (checked ? ' checked' : '') + '>' + (taskContent || '<br>'), consumed: true, indent: indent };
         }
-
         // Unordered list (with indentation support)
         const ulMatch = text.match(REGEX.ul);
         if (ulMatch) {
@@ -58,7 +34,6 @@ function createBlockCodec({
             // Use <br> for empty list items to make them visible and editable
             return { tag: 'li', listType: 'ul', html: content || '<br>', consumed: true, indent: indent };
         }
-
         // Ordered list (with indentation support)
         const olMatch = text.match(REGEX.ol);
         if (olMatch) {
@@ -67,13 +42,11 @@ function createBlockCodec({
             // Use <br> for empty list items to make them visible and editable
             return { tag: 'li', listType: 'ol', html: content || '<br>', consumed: true, indent: indent };
         }
-
         // Blockquote
         const quoteMatch = text.match(REGEX.quote);
         if (quoteMatch) {
             return { tag: 'blockquote', html: parseLineInline(quoteMatch[1]), consumed: true };
         }
-
         // Code block start (3+ backticks or tildes)
         const codeBlockMatch = text.match(REGEX.codeBlock);
         if (codeBlockMatch) {
@@ -81,25 +54,29 @@ function createBlockCodec({
             const fenceChar = codeBlockMatch[1][0];
             return { tag: 'pre', html: '', codeBlock: true, lang: (codeBlockMatch[2] || '').trim(), consumed: true, fenceLength: fenceLen, fenceChar: fenceChar };
         }
-
         // Regular paragraph
         return { tag: 'p', html: parseLineInline(text), consumed: false };
     }
-
     function renderMarkdownBlock(block, exportCode = false, parent = null, index = 0) {
         const children = () => block.children.map((child, i) => renderMarkdownBlock(child, exportCode, block, i)).join('');
-        if (block.type === 'front_matter') return renderFrontMatter(block.content);
-        if (block.type === 'binary_aux') return renderTocBlock(block.content);
-        if (block.type === 'binary_math') return mathBlockHtml(block.meta);
-        if (block.type === 'inline') return parseInline(block.content, true, true);
+        if (block.type === 'front_matter')
+            return renderFrontMatter(block.content);
+        if (block.type === 'binary_aux')
+            return renderTocBlock(block.content);
+        if (block.type === 'binary_math')
+            return mathBlockHtml(block.meta);
+        if (block.type === 'inline')
+            return parseInline(block.content, true, true);
         if (block.type === 'paragraph') {
             const text = block.children.find(child => child.type === 'inline')?.content || '';
             // Keep the established quote line-editing contract for a simple
             // quote. Quotes containing several blocks keep those blocks.
-            if (parent?.type === 'blockquote' && parent.level === 0 && parent.children.length === 1) return parseInline(text);
+            if (parent?.type === 'blockquote' && parent.level === 0 && parent.children.length === 1)
+                return parseInline(text);
             if (parent?.type === 'list_item' && index === 0) {
                 const task = /^\[([ xX])\] +(.*)$/s.exec(text);
-                if (task) return '<input type="checkbox"' + (task[1].toLowerCase() === 'x' ? ' checked' : '') + '>' + (parseInline(task[2], true, true) || '<br>');
+                if (task)
+                    return '<input type="checkbox"' + (task[1].toLowerCase() === 'x' ? ' checked' : '') + '>' + (parseInline(task[2], true, true) || '<br>');
                 return parseInline(text, true, true) || '<br>';
             }
             return '<p>' + children() + '</p>';
@@ -125,7 +102,8 @@ function createBlockCodec({
                 (exportCode ? ' data-export-code-lines="' + count + '"' : '') +
                 ' data-mode="display"><code contenteditable="false"' + trailingAttr + '>' + codeHtml + '</code></pre>';
         }
-        if (block.type === 'hr') return '<hr>';
+        if (block.type === 'hr')
+            return '<hr>';
         if (block.type === 'list_item') {
             const needsCaret = !block.children.length || ['bullet_list', 'ordered_list'].includes(block.children[0].type);
             return '<li>' + (needsCaret ? '<br>' : '') + children() + '</li>';
@@ -144,7 +122,8 @@ function createBlockCodec({
         }
         if (block.type === 'table') {
             const html = '<table>' + children() + '</table>';
-            if (exportCode || block.source === undefined) return html;
+            if (exportCode || block.source === undefined)
+                return html;
             const template = document.createElement('template');
             template.innerHTML = html;
             const table = template.content.firstElementChild;
@@ -156,28 +135,29 @@ function createBlockCodec({
         }
         return children();
     }
-
     function markdownToHtmlFragment(markdownText, exportCode = false) {
         const parsed = parseBlocks(markdownText, { backslashDelimiters: mathBackslashDelimiters });
-        if (exportCode) return parsed.blocks.map(block => renderMarkdownBlock(block, true)).join('');
+        if (exportCode)
+            return parsed.blocks.map(block => renderMarkdownBlock(block, true)).join('');
         let previousId = '';
         return parsed.blocks.map((block, index) => {
             const template = document.createElement('template');
             template.innerHTML = renderMarkdownBlock(block);
             const element = template.content.firstElementChild;
-            if (!element) return '';
+            if (!element)
+                return '';
             const id = String(nextSourceBlockSequence());
             element.dataset.mdId = id;
             element.dataset.mdPrevious = previousId;
             element.dataset.mdBefore = encodeURIComponent(block.before);
             element.dataset.mdSource = encodeURIComponent(block.source);
             element.dataset.mdCanonical = encodeURIComponent(mdProcessNode(element).replace(/\n$/, ''));
-            if (index === parsed.blocks.length - 1) element.dataset.mdTrailing = encodeURIComponent(parsed.trailing || '\n');
+            if (index === parsed.blocks.length - 1)
+                element.dataset.mdTrailing = encodeURIComponent(parsed.trailing || '\n');
             previousId = id;
             return element.outerHTML;
         }).join('');
     }
-
     function getCodeFence(content) {
         // Find the longest sequence of backticks in the content
         const backtickMatches = content.match(/\`+/g);
@@ -193,7 +173,6 @@ function createBlockCodec({
         const fenceLength = Math.max(3, maxBackticks + 1);
         return '\`'.repeat(fenceLength);
     }
-
     function wrapInlineCode(content) {
         // Find the longest sequence of backticks in the content
         const backtickMatches = content.match(/`+/g);
@@ -205,13 +184,11 @@ function createBlockCodec({
                 }
             }
         }
-
         if (maxBackticks === 0) {
             // Protect meaningful edge spaces from code-span padding normalization.
             const needsPadding = content.startsWith(' ') && content.endsWith(' ') && /[^ ]/.test(content);
             return '`' + (needsPadding ? ' ' + content + ' ' : content) + '`';
         }
-
         // Use at least 2 more backticks than the longest sequence found
         // This ensures the fence won't be confused with content
         // e.g., content with ``` needs ````` (5) to wrap safely
@@ -219,27 +196,28 @@ function createBlockCodec({
         // Add spaces around content (CommonMark rule for backtick-containing content)
         return fence + ' ' + content + ' ' + fence;
     }
-
     function stripTrailingNewlines(content, code, sentinelOwner) {
         if (code && code.getAttribute('data-trailing-br') === 'true') {
-            if (content.endsWith('\n')) content = content.slice(0, -1);
+            if (content.endsWith('\n'))
+                content = content.slice(0, -1);
         }
         if (sentinelOwner && codeBlocksWithSentinel.has(sentinelOwner)) {
-            if (content.endsWith('\n')) content = content.slice(0, -1);
+            if (content.endsWith('\n'))
+                content = content.slice(0, -1);
         }
         return content;
     }
-
     function mdProcessNode(node, listPrefix = '') {
         if (node.nodeType === 3) {
             return node.textContent;
         }
-        if (node.nodeType !== 1) return '';
-        if (node.classList.contains('math-inline')) return inlineMathMarkdown(node);
-
+        if (node.nodeType !== 1)
+            return '';
+        if (node.classList.contains('math-inline'))
+            return inlineMathMarkdown(node);
         const tag = node.tagName.toLowerCase();
-
-        if (node.classList.contains('toc-block')) return decodeURIComponent(node.dataset.tocSource) + '\n';
+        if (node.classList.contains('toc-block'))
+            return decodeURIComponent(node.dataset.tocSource) + '\n';
         if (node.classList.contains('front-matter')) {
             const raw = node.querySelector('textarea').value;
             return raw && node.nextSibling && !raw.endsWith('\n') ? raw + '\n' : raw;
@@ -260,7 +238,8 @@ function createBlockCodec({
                 // Sibling separators are added by serializeMarkdownBlocks.
                 return pContent + '\n';
             case 'div':
-                if (node.classList.contains('math-wrapper')) return mathBlockMarkdown(node);
+                if (node.classList.contains('math-wrapper'))
+                    return mathBlockMarkdown(node);
                 // Check if this is a mermaid wrapper
                 if (node.classList.contains('mermaid-wrapper') || node.classList.contains('math-wrapper')) {
                     const wrapperLang = node.classList.contains('mermaid-wrapper') ? 'mermaid' : 'math';
@@ -274,11 +253,13 @@ function createBlockCodec({
                                 for (const child of n.childNodes) {
                                     if (child.nodeType === 3) {
                                         wrapperContent += child.textContent;
-                                    } else if (child.nodeType === 1) {
+                                    }
+                                    else if (child.nodeType === 1) {
                                         const tagName = child.tagName.toLowerCase();
                                         if (tagName === 'br') {
                                             wrapperContent += '\n';
-                                        } else {
+                                        }
+                                        else {
                                             processCodeNode(child);
                                         }
                                     }
@@ -319,12 +300,14 @@ function createBlockCodec({
                             if (child.nodeType === 3) {
                                 // Text node
                                 codeContent += child.textContent;
-                            } else if (child.nodeType === 1) {
+                            }
+                            else if (child.nodeType === 1) {
                                 const tagName = child.tagName.toLowerCase();
                                 if (tagName === 'br') {
                                     // <br> element
                                     codeContent += '\n';
-                                } else {
+                                }
+                                else {
                                     // Other elements (like highlight spans) - recurse
                                     processCodeNode(child);
                                 }
@@ -332,7 +315,8 @@ function createBlockCodec({
                         }
                     };
                     processCodeNode(code);
-                } else {
+                }
+                else {
                     codeContent = node.textContent;
                 }
                 // Check if this is an empty code block (only a placeholder <br>)
@@ -343,7 +327,8 @@ function createBlockCodec({
                     code.firstChild.tagName.toLowerCase() === 'br';
                 if (isEmptyCodeBlock) {
                     codeContent = '\n';
-                } else {
+                }
+                else {
                     codeContent = stripTrailingNewlines(codeContent, code, node);
                     // Always add \n for fence format.
                     codeContent += '\n';
@@ -355,7 +340,8 @@ function createBlockCodec({
                 let ulContent = '';
                 for (const li of node.children) {
                     if (li.tagName.toLowerCase() === 'li') {
-                        if (ulContent && node.dataset.mdLoose === 'true') ulContent += '\n';
+                        if (ulContent && node.dataset.mdLoose === 'true')
+                            ulContent += '\n';
                         ulContent += mdProcessListItem(li, listPrefix, '-');
                     }
                 }
@@ -365,7 +351,8 @@ function createBlockCodec({
                 let num = node.hasAttribute('start') ? Number(node.getAttribute('start')) : 1;
                 for (const li of node.children) {
                     if (li.tagName.toLowerCase() === 'li') {
-                        if (olContent && node.dataset.mdLoose === 'true') olContent += '\n';
+                        if (olContent && node.dataset.mdLoose === 'true')
+                            olContent += '\n';
                         olContent += mdProcessListItem(li, listPrefix, num + '.');
                         num++;
                     }
@@ -409,27 +396,32 @@ function createBlockCodec({
                 return result;
         }
     }
-
     function mdProcessListItem(li, indent, marker) {
         const checkbox = li.querySelector(':scope > input[type="checkbox"]');
         const continuation = indent + ' '.repeat(marker.length + 1);
         const segments = [];
         let inline = document.createElement('span');
         function flushInline() {
-            if (!inline.childNodes.length) return;
+            if (!inline.childNodes.length)
+                return;
             segments.push({ text: mdGetInlineMarkdown(inline), kind: 'inline' });
             inline = document.createElement('span');
         }
         for (const child of li.childNodes) {
-            if (child === checkbox) continue;
+            if (child === checkbox)
+                continue;
             const block = child.nodeType === 1 && (/^(P|DIV|UL|OL|PRE|BLOCKQUOTE|TABLE|H[1-6]|HR)$/.test(child.tagName));
-            if (!block) { inline.appendChild(child.cloneNode(true)); continue; }
+            if (!block) {
+                inline.appendChild(child.cloneNode(true));
+                continue;
+            }
             flushInline();
             if (child.tagName === 'UL' || child.tagName === 'OL') {
                 // A non-1 ordered marker cannot interrupt the preceding paragraph.
                 const needsBlankLine = child.tagName === 'OL' && child.hasAttribute('start') && Number(child.getAttribute('start')) !== 1;
                 segments.push({ text: mdProcessNode(child, continuation).replace(/\n$/, ''), kind: 'list', needsBlankLine });
-            } else {
+            }
+            else {
                 segments.push({ text: mdProcessNode(child).replace(/\n$/, ''), kind: 'block' });
             }
         }
@@ -438,16 +430,16 @@ function createBlockCodec({
         const prefix = marker + ' ' + (checkbox ? '[' + (checkbox.checked ? 'x' : ' ') + '] ' : '');
         let result = indent + prefix + first.split('\n').join('\n' + continuation);
         for (const segment of segments) {
-            if (segment.kind === 'list') result += (segment.needsBlankLine ? '\n\n' : '\n') + segment.text;
-            else result += '\n\n' + continuation + segment.text.split('\n').join('\n' + continuation);
+            if (segment.kind === 'list')
+                result += (segment.needsBlankLine ? '\n\n' : '\n') + segment.text;
+            else
+                result += '\n\n' + continuation + segment.text.split('\n').join('\n' + continuation);
         }
         return result + '\n';
     }
-
     function mdGetTextContent(node) {
         return node.textContent.trim();
     }
-
     function mdProcessBlockquote(bq) {
         if (Array.from(bq.children).some(child => /^(P|DIV|H[1-6]|UL|OL|PRE|BLOCKQUOTE|TABLE)$/.test(child.tagName))) {
             return serializeMarkdownBlocks(bq, false).replace(/\n$/, '').split('\n').map(line => '> ' + line).join('\n') + '\n';
@@ -458,18 +450,24 @@ function createBlockCodec({
         let lines = [];
         const codeLines = new Set();
         let currentLine = '';
-
         function processBlockquoteContent(node) {
             if (node.nodeType === 1 && node.classList.contains('math-inline')) {
-                currentLine += inlineMathMarkdown(node); return;
+                currentLine += inlineMathMarkdown(node);
+                return;
             }
             if (node.nodeType === 1 && node.classList.contains('math-wrapper')) {
-                if (currentLine) { lines.push(currentLine); currentLine = ''; }
+                if (currentLine) {
+                    lines.push(currentLine);
+                    currentLine = '';
+                }
                 lines.push(...mathBlockMarkdown(node).replace(/\n$/, '').split('\n'));
                 return;
             }
             if (node.nodeType === 1 && (node.tagName === 'PRE' || node.classList.contains('mermaid-wrapper'))) {
-                if (currentLine) { lines.push(currentLine); currentLine = ''; }
+                if (currentLine) {
+                    lines.push(currentLine);
+                    currentLine = '';
+                }
                 // Serialize the block, not its toolbar/inline code children.
                 // Code whitespace must survive the quote's prose normalization.
                 for (const line of mdProcessNode(node).replace(/\n$/, '').split('\n')) {
@@ -492,16 +490,19 @@ function createBlockCodec({
                             currentLine = '';
                         }
                     }
-                } else {
+                }
+                else {
                     currentLine += text;
                 }
-            } else if (node.nodeType === 1) {
+            }
+            else if (node.nodeType === 1) {
                 const tag = node.tagName.toLowerCase();
                 if (tag === 'br') {
                     // Line break - push current line (even if empty) and start new line
                     lines.push(currentLine);
                     currentLine = '';
-                } else if (tag === 'div' || tag === 'p') {
+                }
+                else if (tag === 'div' || tag === 'p') {
                     // Block elements created by browser for line breaks
                     // Push current line first (even if empty, to preserve structure)
                     if (lines.length > 0 || currentLine !== '') {
@@ -515,17 +516,24 @@ function createBlockCodec({
                     // After processing div/p, push the line
                     lines.push(currentLine);
                     currentLine = '';
-                } else if (['strong', 'b', 'em', 'i', 'del', 's', 'strike', 'u', 'code', 'a', 'img'].includes(tag)) {
+                }
+                else if (['strong', 'b', 'em', 'i', 'del', 's', 'strike', 'u', 'code', 'a', 'img'].includes(tag)) {
                     // Inline elements - process them
                     const content = mdProcessNode(node);
                     if (tag === 'u' || node.querySelector('u')) {
                         const parts = content.split('\n');
                         parts.forEach((part, index) => {
                             currentLine += part;
-                            if (index < parts.length - 1) { lines.push(currentLine); currentLine = ''; }
+                            if (index < parts.length - 1) {
+                                lines.push(currentLine);
+                                currentLine = '';
+                            }
                         });
-                    } else currentLine += content;
-                } else {
+                    }
+                    else
+                        currentLine += content;
+                }
+                else {
                     // Other elements - process children
                     for (const child of node.childNodes) {
                         processBlockquoteContent(child);
@@ -533,36 +541,31 @@ function createBlockCodec({
                 }
             }
         }
-
         for (const child of bq.childNodes) {
             processBlockquoteContent(child);
         }
-
         // Add the last line only if it has content or if there are already lines
         // This prevents double empty lines when blockquote only contains <br>
         if (currentLine !== '' || lines.length === 0) {
             lines.push(currentLine);
         }
-
         // Keep trailing empty lines - they are intentional user content
         // Only remove if the blockquote is completely empty
         if (lines.length === 1 && lines[0].trim() === '') {
             return '> \n';
         }
-
         // Build markdown with > prefix for each line (including empty lines)
         return lines.map((line, index) => '> ' + (codeLines.has(index) ? line : line.trim())).join('\n') + '\n';
     }
-
     function readTableData(table) {
         const rows = table.querySelectorAll('tr');
-        if (rows.length === 0) return { contents: [], alignments: [], explicitLeft: [] };
+        if (rows.length === 0)
+            return { contents: [], alignments: [], explicitLeft: [] };
         // The block parser splits table columns before inline parsing, so
         // pipes need escaping even inside code spans and link destinations.
         function escapePipeInCell(text) {
             return text.replace(/\|/g, '\\|');
         }
-
         // Process cell content with table delimiter escaping.
         function processCellContent(cell) {
             let cellText = '';
@@ -570,13 +573,17 @@ function createBlockCodec({
                 if (child.nodeType === 3) {
                     // Text node - escape pipe characters
                     cellText += escapePipeInCell(child.textContent);
-                } else if (child.nodeType === 1) {
+                }
+                else if (child.nodeType === 1) {
                     const tag = child.tagName.toLowerCase();
                     if (tag === 'br') {
-                        if (!child.hasAttribute('data-table-placeholder')) cellText += '<br>';
-                    } else if (tag === 'code') {
+                        if (!child.hasAttribute('data-table-placeholder'))
+                            cellText += '<br>';
+                    }
+                    else if (tag === 'code') {
                         cellText += escapePipeInCell(wrapInlineCode(child.textContent));
-                    } else {
+                    }
+                    else {
                         // Other inline elements (strong, em, a, img, etc.)
                         // Recursively process each inline element.
                         cellText += processCellNode(child);
@@ -585,70 +592,65 @@ function createBlockCodec({
             }
             return cellText;
         }
-
         // Recursively process a node, escaping table delimiters.
         function processCellNode(node) {
             if (node.nodeType === 3) {
                 return escapePipeInCell(node.textContent);
             }
-            if (node.nodeType !== 1) return '';
-            if (node.classList.contains('math-inline')) return escapePipeInCell(inlineMathMarkdown(node));
-
+            if (node.nodeType !== 1)
+                return '';
+            if (node.classList.contains('math-inline'))
+                return escapePipeInCell(inlineMathMarkdown(node));
             const tag = node.tagName.toLowerCase();
-
             if (tag === 'code') {
                 return escapePipeInCell(wrapInlineCode(node.textContent));
             }
-
             if (tag === 'br') {
                 return node.hasAttribute('data-table-placeholder') ? '' : '<br>';
             }
-
             // For other elements, process children and wrap with appropriate markdown
             let innerContent = '';
             for (const child of node.childNodes) {
                 innerContent += processCellNode(child);
             }
-
             // Apply markdown formatting based on tag
             if (tag === 'strong' || tag === 'b') {
                 return '**' + innerContent + '**';
-            } else if (tag === 'em' || tag === 'i') {
+            }
+            else if (tag === 'em' || tag === 'i') {
                 return '*' + innerContent + '*';
-            } else if (tag === 'del' || tag === 's' || tag === 'strike') {
+            }
+            else if (tag === 'del' || tag === 's' || tag === 'strike') {
                 return '~~' + innerContent + '~~';
-            } else if (tag === 'u') {
+            }
+            else if (tag === 'u') {
                 return '<u>' + innerContent + '</u>';
-            } else if (tag === 'a') {
+            }
+            else if (tag === 'a') {
                 const href = node.getAttribute('href') || '';
                 return '[' + innerContent + '](' + escapePipeInCell(href) + ')';
-            } else if (tag === 'img') {
+            }
+            else if (tag === 'img') {
                 const src = node.dataset.markdownPath || node.getAttribute('src') || '';
                 const alt = node.getAttribute('alt') || '';
                 return '![' + escapePipeInCell(alt) + '](' + escapePipeInCell(src) + ')';
             }
-
             return innerContent;
         }
-
         const headers = Array.from(rows[0].querySelectorAll('th, td'));
         const firstDataCells = rows[1]?.querySelectorAll('td');
-        const alignments = headers.map((cell, i) =>
-            firstDataCells?.[i]?.style.textAlign || cell.dataset.tableAlign || cell.style.textAlign || 'left');
-        const contents = Array.from(rows, row => Array.from(row.querySelectorAll('th, td'),
-            cell => processCellContent(cell).trim()));
+        const alignments = headers.map((cell, i) => firstDataCells?.[i]?.style.textAlign || cell.dataset.tableAlign || cell.style.textAlign || 'left');
+        const contents = Array.from(rows, row => Array.from(row.querySelectorAll('th, td'), cell => processCellContent(cell).trim()));
         // An explicit left marker also controls header alignment. Keep it
         // distinct from a column with no authored alignment.
         const explicitLeft = headers.map((cell, i) => alignments[i] === 'left' &&
             (cell.dataset.tableAlign === 'left' || cell.style.textAlign === 'left'));
         return { contents, alignments, explicitLeft };
     }
-
     function rememberTableSource(table, source, state = JSON.stringify(readTableData(table))) {
         table.dataset.tableSource = source;
         table.dataset.tableState = state;
     }
-
     function mdProcessTable(table) {
         const data = readTableData(table);
         const state = JSON.stringify(data);
@@ -661,28 +663,29 @@ function createBlockCodec({
         rememberTableSource(table, source, state);
         return source;
     }
-
     function serializeMarkdownBlocks(container, preserveLayout = true, visit = null) {
         let result = '', previous = null;
         for (const child of container.childNodes) {
-            if (child.nodeType === 3 && !child.textContent.trim()) continue;
+            if (child.nodeType === 3 && !child.textContent.trim())
+                continue;
             const canonical = mdProcessNode(child).replace(/\n$/, '');
             // Empty editing positions are caret scaffolding, not Markdown blocks.
-            if (!canonical.trim()) continue;
+            if (!canonical.trim())
+                continue;
             const data = child.dataset || {};
             const unchanged = preserveLayout && data.mdCanonical !== undefined && decodeURIComponent(data.mdCanonical) === canonical;
             const content = unchanged ? decodeURIComponent(data.mdSource) : canonical;
             const sameBoundary = preserveLayout && data.mdBefore !== undefined &&
                 (!previous || previous.dataset?.mdId) && data.mdPrevious === (previous?.dataset?.mdId || '');
             result += sameBoundary ? decodeURIComponent(data.mdBefore) : previous ? '\n\n' : '';
-            if (visit) visit(child, result, content);
+            if (visit)
+                visit(child, result, content);
             result += content;
             previous = child;
         }
         const tail = preserveLayout && previous?.dataset?.mdTrailing;
         return result + (tail ? decodeURIComponent(tail) : '\n');
     }
-
     function clipboardHtml(container) {
         const copy = container.cloneNode(true);
         // A partial selection must never copy the unselected source carried
@@ -696,27 +699,29 @@ function createBlockCodec({
         }
         return copy.innerHTML;
     }
-
     function serializeMarkdownFragment(container) {
         const blocks = document.createElement('div');
         let inline = null;
         for (const child of container.childNodes) {
             const isBlock = child.nodeType === 1 && /^(P|DIV|H[1-6]|UL|OL|LI|PRE|BLOCKQUOTE|TABLE|HR)$/.test(child.tagName);
-            if (isBlock) { inline = null; blocks.appendChild(child.cloneNode(true)); }
+            if (isBlock) {
+                inline = null;
+                blocks.appendChild(child.cloneNode(true));
+            }
             else {
-                if (!inline) { inline = document.createElement('p'); blocks.appendChild(inline); }
+                if (!inline) {
+                    inline = document.createElement('p');
+                    blocks.appendChild(inline);
+                }
                 inline.appendChild(child.cloneNode(true));
             }
         }
         return serializeMarkdownBlocks(blocks, false).trim();
     }
-
     function htmlToMarkdown() {
         let md = serializeMarkdownBlocks(editor);
-
         // Remove zero-width spaces (used for cursor positioning in contenteditable)
         md = md.replace(/\u200B/g, '');
-
         // Append directives in a single block if any are set
         // Format:
         // ---
@@ -732,10 +737,8 @@ function createBlockCodec({
         if (directives) {
             md += '\n---\n' + directives.trimEnd();
         }
-
         return md;
     }
-
     return {
         parseMarkdownLine,
         renderMarkdownBlock,
@@ -756,5 +759,43 @@ function createBlockCodec({
         htmlToMarkdown,
     };
 }
-
-module.exports = { createBlockCodec };
+// Construction defines capabilities; bootstrap controls the original initialization order.
+function createBlocksController(dependencies) {
+    let parseMarkdownLine, renderMarkdownBlock, markdownToHtmlFragment, getCodeFence, wrapInlineCode, stripTrailingNewlines, mdProcessNode, mdProcessListItem, mdGetTextContent, mdProcessBlockquote, readTableData, rememberTableSource, mdProcessTable, serializeMarkdownBlocks, clipboardHtml, serializeMarkdownFragment, htmlToMarkdown;
+    let initializeParseMarkdownLineDone = false;
+    function initializeParseMarkdownLine() {
+        if (initializeParseMarkdownLineDone)
+            return;
+        initializeParseMarkdownLineDone = true;
+        ({ parseMarkdownLine, renderMarkdownBlock, markdownToHtmlFragment, getCodeFence, wrapInlineCode, stripTrailingNewlines, mdProcessNode, mdProcessListItem, mdGetTextContent, mdProcessBlockquote, readTableData, rememberTableSource, mdProcessTable, serializeMarkdownBlocks, clipboardHtml, serializeMarkdownFragment, htmlToMarkdown } = createBlockCodec({
+            document, editor: dependencies.editor, logger: dependencies.logger, REGEX: dependencies.REGEX, emptyTableCell: dependencies.emptyTableCell, mathBackslashDelimiters: dependencies.mathBackslashDelimiters, codeBlocksWithSentinel: dependencies.codeBlocksWithSentinel, parseInline: dependencies.parseInline, escapeHtml: dependencies.escapeHtml,
+            renderFrontMatter: (...args) => dependencies.renderFrontMatter(...args), renderTocBlock: (...args) => dependencies.renderTocBlock(...args),
+            mathBlockHtml: (...args) => dependencies.mathBlockHtml(...args), inlineMathMarkdown: (...args) => dependencies.inlineMathMarkdown(...args),
+            mathBlockMarkdown: (...args) => dependencies.mathBlockMarkdown(...args), mdGetInlineMarkdown: dependencies.mdGetInlineMarkdown,
+            parseBlocks: (...args) => window.BinaryMarkdownBlocks.parse(...args), formatTable: (...args) => dependencies.tableFormat.format(...args),
+            nextSourceBlockSequence: () => ++dependencies.sourceBlockSequence, getCurrentImageDir: () => dependencies.currentImageDir,
+            getCurrentForceRelativePath: () => dependencies.currentForceRelativePath
+        }));
+    }
+    return {
+        get parseMarkdownLine() { return parseMarkdownLine; }, set parseMarkdownLine(value) { parseMarkdownLine = value; },
+        get renderMarkdownBlock() { return renderMarkdownBlock; }, set renderMarkdownBlock(value) { renderMarkdownBlock = value; },
+        get markdownToHtmlFragment() { return markdownToHtmlFragment; }, set markdownToHtmlFragment(value) { markdownToHtmlFragment = value; },
+        get getCodeFence() { return getCodeFence; }, set getCodeFence(value) { getCodeFence = value; },
+        get wrapInlineCode() { return wrapInlineCode; }, set wrapInlineCode(value) { wrapInlineCode = value; },
+        get stripTrailingNewlines() { return stripTrailingNewlines; }, set stripTrailingNewlines(value) { stripTrailingNewlines = value; },
+        get mdProcessNode() { return mdProcessNode; }, set mdProcessNode(value) { mdProcessNode = value; },
+        get mdProcessListItem() { return mdProcessListItem; }, set mdProcessListItem(value) { mdProcessListItem = value; },
+        get mdGetTextContent() { return mdGetTextContent; }, set mdGetTextContent(value) { mdGetTextContent = value; },
+        get mdProcessBlockquote() { return mdProcessBlockquote; }, set mdProcessBlockquote(value) { mdProcessBlockquote = value; },
+        get readTableData() { return readTableData; }, set readTableData(value) { readTableData = value; },
+        get rememberTableSource() { return rememberTableSource; }, set rememberTableSource(value) { rememberTableSource = value; },
+        get mdProcessTable() { return mdProcessTable; }, set mdProcessTable(value) { mdProcessTable = value; },
+        get serializeMarkdownBlocks() { return serializeMarkdownBlocks; }, set serializeMarkdownBlocks(value) { serializeMarkdownBlocks = value; },
+        get clipboardHtml() { return clipboardHtml; }, set clipboardHtml(value) { clipboardHtml = value; },
+        get serializeMarkdownFragment() { return serializeMarkdownFragment; }, set serializeMarkdownFragment(value) { serializeMarkdownFragment = value; },
+        get htmlToMarkdown() { return htmlToMarkdown; }, set htmlToMarkdown(value) { htmlToMarkdown = value; },
+        initializeParseMarkdownLine
+    };
+}
+module.exports = { createBlockCodec, createBlocksController };

@@ -1,14 +1,11 @@
 'use strict';
-
-// Named capabilities remain live; this factory installs no listeners.
+// Construction defines capabilities; bootstrap controls the original initialization order.
 function createExport(dependencies) {
-
-
+    let exportRenderSequence, exportRenderQueue, exportRenderRequests;
     function checkExportCancellation(signal) {
-        if (signal.aborted) throw new Error('Export preparation was cancelled.');
+        if (signal.aborted)
+            throw new Error('Export preparation was cancelled.');
     }
-
-
     function awaitExportReady(promise, signal) {
         checkExportCancellation(signal);
         return new Promise((resolve, reject) => {
@@ -17,15 +14,11 @@ function createExport(dependencies) {
             Promise.resolve(promise).then(resolve, reject).finally(() => signal.removeEventListener('abort', onAbort));
         });
     }
-
-
     function exportWarning(warnings, code, message) {
         if (!warnings.some(warning => warning.code === code && warning.message === message)) {
             warnings.push({ code: code, message: message });
         }
     }
-
-
     function stripExportMetadata(source) {
         let text = source.replace(/^\uFEFF/, '').replace(/\r\n?/g, '\n');
         text = dependencies.documentAux.splitFrontMatter(text).body;
@@ -35,22 +28,22 @@ function createExport(dependencies) {
             let fence = null;
             for (const line of text.slice(0, directiveStart).split('\n')) {
                 const match = line.match(/^\s{0,3}(`{3,}|~{3,})(.*)$/);
-                if (!match) continue;
-                if (!fence) fence = { character: match[1][0], length: match[1].length };
-                else if (match[1][0] === fence.character && match[1].length >= fence.length && !match[2].trim()) fence = null;
+                if (!match)
+                    continue;
+                if (!fence)
+                    fence = { character: match[1][0], length: match[1].length };
+                else if (match[1][0] === fence.character && match[1].length >= fence.length && !match[2].trim())
+                    fence = null;
             }
-            if (!fence) text = text.slice(0, directiveStart);
+            if (!fence)
+                text = text.slice(0, directiveStart);
         }
         return text;
     }
-
-
     function hasUnsafeExportStyle(value) {
         const withoutLocalReferences = value.replace(/url\(\s*(['"]?)#[^)]+\)/gi, '');
         return /(?:\\|@import|expression\s*\(|javascript\s*:|url\s*\()/i.test(withoutLocalReferences);
     }
-
-
     function sanitizeExportTree(root, warnings) {
         const blocked = 'script,iframe,object,embed,link,meta,base,form,button,textarea,select,video,audio,canvas,template,animate,animateMotion,animateTransform,set';
         root.querySelectorAll(blocked).forEach(element => {
@@ -69,7 +62,8 @@ function createExport(dependencies) {
                     if (name.startsWith('on') || /^(?:srcdoc|action|formaction|ping)$/.test(name)) {
                         exportWarning(warnings, 'active-content', 'Active document content was replaced with a visible fallback.');
                     }
-                } else if (/^(?:href|xlink:href|src)$/.test(name)) {
+                }
+                else if (/^(?:href|xlink:href|src)$/.test(name)) {
                     const compact = value.replace(/[\u0000-\u0020\u007f]/g, '');
                     const safeData = name === 'src' && /^data:image\/(?:png|jpeg|gif|webp|svg\+xml|avif|bmp);/i.test(compact);
                     const scheme = compact.match(/^([a-z][a-z0-9+.-]*):/i);
@@ -84,7 +78,8 @@ function createExport(dependencies) {
                         element.after(note);
                         exportWarning(warnings, 'unsafe-reference', 'An unsafe resource or link was disabled.');
                     }
-                } else if (name === 'style' && hasUnsafeExportStyle(value)) {
+                }
+                else if (name === 'style' && hasUnsafeExportStyle(value)) {
                     element.removeAttribute(attribute.name);
                     exportWarning(warnings, 'active-style', 'An active or external style was removed.');
                 }
@@ -94,8 +89,10 @@ function createExport(dependencies) {
                 exportWarning(warnings, 'active-style', 'An active or external style was removed.');
             }
             if (element.tagName.toLowerCase() === 'input') {
-                if (element.getAttribute('type') === 'checkbox') element.setAttribute('disabled', '');
-                else element.remove();
+                if (element.getAttribute('type') === 'checkbox')
+                    element.setAttribute('disabled', '');
+                else
+                    element.remove();
             }
             if (element.tagName.toLowerCase() === 'a') {
                 element.removeAttribute('target');
@@ -103,8 +100,6 @@ function createExport(dependencies) {
             }
         });
     }
-
-
     function createExportFallback(wrapper, label, source, warnings, code) {
         const fallback = document.createElement('div');
         fallback.className = 'export-fallback';
@@ -119,8 +114,6 @@ function createExport(dependencies) {
         wrapper.replaceWith(fallback);
         exportWarning(warnings, code, label);
     }
-
-
     async function prepareExportDocument(source, appearance, signal) {
         checkExportCancellation(signal);
         const warnings = [];
@@ -183,7 +176,8 @@ function createExport(dependencies) {
                     dependencies.renderInlineMath(span, true);
                     output.className = 'math-inline-display';
                     output.innerHTML = span.innerHTML;
-                } catch (error) {
+                }
+                catch (error) {
                     output.className = 'export-warning';
                     output.textContent = dependencies.inlineMathMarkdown(span);
                     exportWarning(warnings, 'math-fallback', 'An inline equation could not be rendered; its source is preserved.');
@@ -202,7 +196,8 @@ function createExport(dependencies) {
                 const display = wrapper.querySelector('.math-display');
                 if (!display || !display.innerHTML || display.querySelector('.katex-error, .math-error')) {
                     createExportFallback(wrapper, 'This mathematical expression could not be rendered; its source is preserved below.', mathSource, warnings, 'math-fallback');
-                } else {
+                }
+                else {
                     wrapper.replaceWith(display);
                 }
             }
@@ -216,7 +211,7 @@ function createExport(dependencies) {
                 }
                 dependencies.initMermaid();
                 const previousConfig = mermaid.mermaidAPI.getConfig();
-                const id = 'binary-export-diagram-' + (++dependencies.exportRenderSequence);
+                const id = 'binary-export-diagram-' + (++exportRenderSequence);
                 const measurement = document.createElement('div');
                 container.appendChild(measurement);
                 try {
@@ -238,21 +233,26 @@ function createExport(dependencies) {
                     fragment.innerHTML = result.svg;
                     sanitizeExportTree(fragment.content, warnings);
                     const svg = fragment.content.querySelector('svg');
-                    if (!svg) throw new Error('The diagram renderer produced no SVG.');
+                    if (!svg)
+                        throw new Error('The diagram renderer produced no SVG.');
                     diagrams.push({ source: diagramSource, svg: svg.outerHTML });
                     wrapper.replaceWith(svg);
-                } catch (error) {
+                }
+                catch (error) {
                     checkExportCancellation(signal);
                     createExportFallback(wrapper, 'This diagram could not be rendered; its source is preserved below.', diagramSource, warnings, 'diagram-fallback');
-                } finally {
+                }
+                finally {
                     mermaid.initialize(previousConfig);
                     // Mermaid can leave its owned error container after rejection.
                     const failedContainer = document.getElementById('d' + id);
-                    if (failedContainer && container.contains(failedContainer)) failedContainer.remove();
+                    if (failedContainer && container.contains(failedContainer))
+                        failedContainer.remove();
                     measurement.remove();
                 }
             }
-            if (document.fonts && document.fonts.ready) await awaitExportReady(document.fonts.ready, signal);
+            if (document.fonts && document.fonts.ready)
+                await awaitExportReady(document.fonts.ready, signal);
             checkExportCancellation(signal);
             sanitizeExportTree(container, warnings);
             container.querySelectorAll('[data-mode], [data-trailing-br], [data-mermaid-setup], [data-math-setup]').forEach(element => {
@@ -264,9 +264,11 @@ function createExport(dependencies) {
             // Move back to an inert document before restoring src: even an
             // unattached HTMLImageElement in the live document starts fetching.
             const output = document.createElement('template');
-            while (container.firstChild) output.content.appendChild(container.firstChild);
+            while (container.firstChild)
+                output.content.appendChild(container.firstChild);
             images.forEach(entry => {
-                if (entry.original !== null && output.content.contains(entry.image)) entry.image.setAttribute('src', entry.original);
+                if (entry.original !== null && output.content.contains(entry.image))
+                    entry.image.setAttribute('src', entry.original);
             });
             return {
                 html: '<article class="editor export-document">' + output.innerHTML + '</article>',
@@ -275,12 +277,33 @@ function createExport(dependencies) {
                 theme: appearance.theme,
                 fontSize: appearance.fontSize
             };
-        } finally {
+        }
+        finally {
             container.remove();
         }
     }
-
-    return { checkExportCancellation, awaitExportReady, exportWarning, stripExportMetadata, hasUnsafeExportStyle, sanitizeExportTree, createExportFallback, prepareExportDocument };
+    let initializeExportRenderSequenceDone = false;
+    function initializeExportRenderSequence() {
+        if (initializeExportRenderSequenceDone)
+            return;
+        initializeExportRenderSequenceDone = true;
+        (exportRenderSequence = 0);
+        (exportRenderQueue = Promise.resolve());
+        (exportRenderRequests = new Map());
+    }
+    return {
+        checkExportCancellation,
+        awaitExportReady,
+        exportWarning,
+        stripExportMetadata,
+        hasUnsafeExportStyle,
+        sanitizeExportTree,
+        createExportFallback,
+        prepareExportDocument,
+        get exportRenderSequence() { return exportRenderSequence; }, set exportRenderSequence(value) { exportRenderSequence = value; },
+        get exportRenderQueue() { return exportRenderQueue; }, set exportRenderQueue(value) { exportRenderQueue = value; },
+        get exportRenderRequests() { return exportRenderRequests; }, set exportRenderRequests(value) { exportRenderRequests = value; },
+        initializeExportRenderSequence
+    };
 }
-
 module.exports = { createExport };
