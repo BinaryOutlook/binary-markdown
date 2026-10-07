@@ -1,0 +1,69 @@
+{
+  "source_commit": "840742611d18b4554df3cc7363bdd0d7dc317407",
+  "environment": {
+    "platform": "macOS ARM"
+  },
+  "scope": "Changed editor source, loaders, fixtures, build/resource delivery, dependencies and public task documentation; not a whole-product penetration test.",
+  "findings_fixed": [
+    "JSON-encode document-base URI and all six script values in one substitution pass; escape < in inline script data.",
+    "Escape quotes in Markdown HTML attributes and escape resolved host base URI."
+  ],
+  "dependency_audit": {
+    "command": "npm audit --json",
+    "vulnerabilities": 0
+  },
+  "compile": {
+    "root": "passed",
+    "electron": "passed"
+  },
+  "lint": {
+    "errors": 0,
+    "pre_existing_warnings": 11
+  },
+  "unit": {
+    "command": "npm run test:unit",
+    "passed": 435,
+    "skipped": 19,
+    "failed": 0
+  },
+  "focused_browser": {
+    "passed": 78,
+    "failed": 0,
+    "new_security_cases": 4,
+    "retries": 0
+  },
+  "full_browser": {
+    "status": "pending at publication snapshot",
+    "command": "CI=1 npx playwright test --workers=2 --retries=0"
+  },
+  "privacy": {
+    "unpublished_commits_sanitized": 9,
+    "new_personal_paths_found": 0,
+    "new_private_account_or_host_identifiers_found": 0,
+    "removed": [
+      "report dates",
+      "reported durations",
+      "local tool/version fingerprints",
+      "dated task report paths"
+    ],
+    "preserved": [
+      "macOS ARM",
+      "public attribution",
+      "inherited project history",
+      "source and artifact hashes"
+    ],
+    "unpublished_commits_checked": 10
+  },
+  "limits": [
+    "Earlier installed-extension and Electron native evidence applies to the pre-audit package only.",
+    "Hosted platform validation is required for the corrected package.",
+    "Real OS IME, screen readers and output-reader visual acceptance remain separate."
+  ],
+  "superseded_full_browser_attempt": {
+    "passed": 590,
+    "failed": 11,
+    "interrupted": 2,
+    "not_run": 610,
+    "reason": "Broad quote escaping changed code highlighting/copy/export, and a string regex mistook literal onerror text for an event attribute. Narrowed escaping and DOM-based assertions; 78 affected browser checks passed."
+  }
+}

@@ -1,6 +1,6 @@
 {
-  "source_inputs_commit": "cffb3ab68ea42173d3b29e393e4ff0d95aa1e68e",
-  "verification_scripts_commit": "b1d2709f67342ad898e483bd6dbfe33b9718eb9e",
+  "source_inputs_commit": "169532bb1e2de3b60c74d1b4979d2f18b9899065",
+  "verification_scripts_commit": "8964705918b5cf1bc55d24df07abba041c81e22c",
   "baseline_commit": "3bb891ea0848acb0d4fc00806e5ef292ca8793bb",
   "environment": {
     "platform": "macOS ARM"
@@ -61,5 +61,6 @@
     "Local validation only; hosted CI and other operating systems were not evaluated.",
     "Native suites are focused, not the complete installed-VSIX or release matrix.",
     "OS IME, screen-reader acceptance and export-reader visual fidelity remain outside these observations."
-  ]
+  ],
+  "scope": "Extraction checks before the publication security corrections; later checks are recorded in security-audit.json."
 }

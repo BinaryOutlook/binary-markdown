@@ -24,8 +24,8 @@ Module evaluation and service construction define methods without reading editor
 
 The important barriers are:
 
-1. Configure the browser helpers, initial state, width controls, source modes, selection and codecs.
-2. Decode the host content and render the initial document.
+1. Configure browser helpers, initial state, width controls and source modes; decode the host content, then initialize selection and codecs.
+2. Render the initial document.
 3. Construct history, then initialize renderer flags, code controls, table controls and general input listeners.
 4. Initialize toolbar bookmarks, menus, sidebar/mode wiring and shortcuts.
 5. Register host messages, transfer handlers and focus synchronization.
@@ -59,7 +59,7 @@ CI=1 npx playwright test --workers=2 --retries=0
 
 Compilation copies webview assets and then [bundles the editor](../scripts/bundle-editor.cjs) as an unminified IIFE at `out/webview/editor.js`. The adjacent `editor.bundle.json` records each input hash and the runtime hash. Fixture generation refuses missing, stale or overwritten output; rerun full compilation after changing an imported source file. Running `copy-webview.js` alone after bundling overwrites the runtime with the source entry and is not a valid build.
 
-VS Code and Electron load the emitted runtime rather than concatenating the source files. The six host substitutions remain in the runtime exactly once. Shared helper globals are installed before dependent UI modules evaluate. Host adapters, document helpers and vendors retain their existing load boundaries.
+VS Code and Electron load the emitted runtime rather than concatenating the source files. The six host substitutions remain in the runtime exactly once. [Shared host-data serialization](../src/shared/editor-script-values.js) supplies complete JSON expressions in one pass and escapes script-closing markup; do not quote markers or interpolate raw URI/text values into the script. Shared helper globals are installed before dependent UI modules evaluate. Host adapters, document helpers and vendors retain their existing load boundaries.
 
 Use the [build guide](building.md) for packaging, and the [testing guide](testing/README.md) for installed save/reopen and export checks. Browser fixtures are generated output; preserve unrelated edits when restoring the tracked standalone HTML after a test run.
 

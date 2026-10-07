@@ -1,14 +1,14 @@
 {
-  "source_commit": "cffb3ab68ea42173d3b29e393e4ff0d95aa1e68e",
+  "source_commit": "840742611d18b4554df3cc7363bdd0d7dc317407",
   "baseline_commit": "3bb891ea0848acb0d4fc00806e5ef292ca8793bb",
   "baseline_editor_lines": 16647,
   "source_files": 31,
-  "total_lines": 18041,
+  "total_lines": 18047,
   "files": [
     {
       "file": "src/webview/editor.js",
       "physical_lines": 727,
-      "sha256": "f6074aaa0ed00bbf416733a8f4414df68b297d9200c93da4caaf3b0ae2aeb35a"
+      "sha256": "eadac11560fe93a77363e4c89a660dfc76e5d1e96fa290750907e9c15de6b9bb"
     },
     {
       "file": "src/webview/editor/blocks/code-content.js",
@@ -47,8 +47,8 @@
     },
     {
       "file": "src/webview/editor/codec/inline.js",
-      "physical_lines": 518,
-      "sha256": "ead6dd8d01dd36186bee8e186dbe527b1bf2da42e9b510cf46cda851b0ead4bb"
+      "physical_lines": 524,
+      "sha256": "a655ed978bb73fbe0a258df665790efee950094d7e81d02b8e55a26f3590d948"
     },
     {
       "file": "src/webview/editor/core/host.js",
