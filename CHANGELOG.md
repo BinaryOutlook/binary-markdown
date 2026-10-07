@@ -36,7 +36,7 @@ Bring together the editor views, command workspaces, source search, table naviga
 
 ### Known limitations
 
-The inspected `main` validation failed one macOS diagnostic-scrolling browser test. External-write conflict recovery, remaining parser cases and export-reader acceptance also remain unresolved. See the [readiness record](reports/validation/2026-10-07-0.5.0-readiness.md) and [version limitations](release-notes/0.5.0.md#known-limitations); neither a local VSIX nor this changelog is release approval.
+The current dependency audit blocks candidate validation, and the inspected `main` validation failed one macOS diagnostic-scrolling browser test. External-write conflict recovery, remaining parser cases and export-reader acceptance also remain unresolved. See the [readiness record](reports/validation/2026-10-07-0.5.0-readiness.md) and [version limitations](release-notes/0.5.0.md#known-limitations); neither a local VSIX nor this changelog is release approval.
 
 ## 0.4.1
 
