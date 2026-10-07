@@ -34,6 +34,7 @@ Bring together the editor views, command workspaces, source search, table naviga
 - Preserve palette history and command access as toolbars and menus respond to narrow panes.
 - Remove generated JavaScript duplicates of authoritative TypeScript browser specs without reducing platform coverage.
 - Keep Home/End navigation inside expanded block diagnostics, retaining focus and document position without reporting a content edit.
+- Cancel pending HTTP export resources reliably on the minimum supported VS Code runtime, including after garbage collection and while response bodies are loading.
 
 ### Known limitations
 
