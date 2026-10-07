@@ -37,6 +37,14 @@ test('disabled policy, missing baseline, unchanged source and non-runtime change
     assert.equal(isReleaseRelevant('package.nls.zh-cn.json'), true);
     assert.equal(isReleaseRelevant('.github/workflows/ci-vsix.yml'), false);
 });
+test('an editor bundler-only fix is included in the pending VSIX release plan', () => {
+    assert.equal(isReleaseRelevant('scripts/bundle-editor.cjs'), true);
+    const pending = change('fix: preserve editor runtime substitutions', ['scripts/bundle-editor.cjs']);
+    const plan = planRelease(input({ changes: [pending] }));
+    assert.equal(plan.eligible, true);
+    assert.equal(plan.action, 'bump');
+    assert.deepEqual(plan.changes, [pending]);
+});
 test('features, breaking changes and unknown runtime titles require a version decision', () => {
     for (const message of ['feat: add new export', 'fix!: replace format', 'fix: repair\n\nBREAKING CHANGE: new API',
         'Improve exports', 'Merge pull request #12 from fork/topic\n\nfeat: add format']) {

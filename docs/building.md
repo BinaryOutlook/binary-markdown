@@ -44,7 +44,9 @@ npm run package
 
 Replace `COMMIT_ID_OR_RELEASE_TAG` with a real full commit ID or tag, and use that revision's build instructions and runtime. Earlier revisions can require older tools; current build instructions do not promise compatibility for every historical checkout.
 
-The lockfile pins dependency versions. Compilation includes TypeScript, translations, shared/webview assets, and vendors. Mermaid is bundled from the installed, audited dependency graph with the complete bundled license inventory; its upstream prebuilt minified file is not used. Browser control is bundled without a native browser. No Marketplace credentials are needed.
+The lockfile pins dependency versions. Compilation builds TypeScript and translations, copies shared/webview assets, and bundles editor and vendor assets. The editor step follows `scripts/copy-webview.js`: esbuild emits the unminified runtime at `out/webview/editor.js` and an `out/webview/editor.bundle.json` receipt containing runtime and source-file hashes. VS Code, Electron, and browser fixtures consume the same emitted runtime; see [editor architecture](editor-architecture.md) for source ownership and initialization.
+
+Mermaid is bundled from the installed, audited dependency graph with the complete bundled license inventory; its upstream prebuilt minified file is not used. Browser control is bundled without a native browser. No Marketplace credentials are needed.
 
 ## Inspect and install the output
 

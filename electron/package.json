@@ -34,12 +34,11 @@
     ],
     "extraResources": [
       {
-        "from": "../src/webview",
-        "to": "webview",
+        "from": "../out/webview",
+        "to": "out/webview",
         "filter": [
           "editor.js",
-          "styles.css",
-          "table-toolbar.js"
+          "styles.css"
         ]
       },
       {
@@ -58,8 +57,10 @@
         "to": "out/shared",
         "filter": [
           "editor-body-html.js",
+          "editor-script-values.js",
           "table-placement.js",
           "document-aux.js",
+          "document-search.js",
           "math-syntax.js",
           "editor-layout.js",
           "table-format.js"

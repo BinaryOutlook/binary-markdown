@@ -1,4 +1,8 @@
 import { test, expect } from '@playwright/test';
+import * as path from 'path';
+
+const productionWebview = require('../utils/production-webview.cjs');
+const root = path.resolve(__dirname, '../..');
 
 test.beforeEach(async ({ page }) => {
     await page.goto('/standalone-editor.html');
@@ -7,13 +11,9 @@ test.beforeEach(async ({ page }) => {
 
 test('links in the initial document are wired before any later render', async ({ page }) => {
     const href = '/fixtures/03 Labs/Lab2';
-    const initial = Buffer.from(`[Target](${href})\n`).toString('base64');
-    await page.route('**/standalone-editor.html?initial-link', async route => {
-        const response = await route.fetch();
-        const html = await response.text();
-        expect(html).toContain('atob(``)');
-        await route.fulfill({ status: 200, contentType: 'text/html', body: html.replace('atob(``)', `atob(${JSON.stringify(initial)})`) });
-    });
+    const html = productionWebview(root, `[Target](${href})\n`);
+    await page.route('**/standalone-editor.html?initial-link', route =>
+        route.fulfill({ status: 200, contentType: 'text/html', body: html }));
     await page.goto('/standalone-editor.html?initial-link');
     await page.waitForFunction(() => (window as any).__testApi?.ready);
     const messages = await page.evaluate(() => {

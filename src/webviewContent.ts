@@ -9,6 +9,8 @@ import { getExportMessages } from './export/messages';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { generateEditorBodyHtml } = require('./shared/editor-body-html');
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { substituteEditorScript } = require('./shared/editor-script-values');
 
 function getNonce(): string {
     let text = '';
@@ -139,15 +141,14 @@ export function getWebviewContent(
     const katexJsUri = vendorUri('katex.min.js');
     const katexCssUri = vendorUri('katex.min.css');
 
-    const mathScript = fs.readFileSync(path.join(__dirname, 'shared', 'math-syntax.js'), 'utf8');
-    const tableFormatScript = fs.readFileSync(path.join(__dirname, 'shared', 'table-format.js'), 'utf8');
-    const editorScript = (fs.readFileSync(path.join(__dirname, 'webview', 'workspace-ui.js'), 'utf8') + '\n' + tableFormatScript + '\n' + fs.readFileSync(path.join(__dirname, 'shared', 'editor-layout.js'), 'utf8') + '\n' + fs.readFileSync(path.join(__dirname, 'shared', 'table-placement.js'), 'utf8') + '\n' + fs.readFileSync(path.join(__dirname, 'webview', 'table-toolbar.js'), 'utf8') + '\n' + mathScript + '\n' + fs.readFileSync(editorScriptPath, 'utf8'))
-        .replace('__SEARCH_WORKER__', () => JSON.stringify(fs.readFileSync(path.join(__dirname, 'shared', 'document-search.js'), 'utf8')).replace(/</g, '\\u003c'))
-        .replace('__MATH_BACKSLASH__', String(safeConfig.mathBackslashDelimiters))
-        .replace('__DEBUG_MODE__', String(safeConfig.enableDebugLogging ?? false))
-        .replace('__I18N__', JSON.stringify(msg))
-        .replace('__DOCUMENT_BASE_URI__', safeConfig.documentBaseUri || '')
-        .replace('__CONTENT__', `'${base64Content}'`);
+    const editorScript = substituteEditorScript(fs.readFileSync(editorScriptPath, 'utf8'), {
+        __SEARCH_WORKER__: fs.readFileSync(path.join(__dirname, 'shared', 'document-search.js'), 'utf8'),
+        __MATH_BACKSLASH__: safeConfig.mathBackslashDelimiters,
+        __DEBUG_MODE__: safeConfig.enableDebugLogging ?? false,
+        __I18N__: msg,
+        __DOCUMENT_BASE_URI__: safeConfig.documentBaseUri || '',
+        __CONTENT__: base64Content
+    });
 
     return `<!DOCTYPE html>
 <html lang="en" data-theme="${safeConfig.theme}" data-editor-width-mode="${safeConfig.editorWidthMode}" data-editor-max-width="${safeConfig.editorMaxWidth}" data-editor-alignment="${safeConfig.editorAlignment}" data-editor-width-indicators="${safeConfig.editorWidthIndicators}" data-math-source-wrap="${safeConfig.mathSourceWrap}" data-math-source-position="${safeConfig.mathSourcePosition}" data-code-language-order="${safeConfig.codeLanguageOrder}" data-toolbar-mode="${safeConfig.toolbarMode}" data-table-toolbar-position="${safeConfig.tableToolbarPosition}" data-table-source-format="${safeConfig.tableSourceFormat}">

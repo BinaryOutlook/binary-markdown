@@ -1,0 +1,986 @@
+{
+  "status": "proposal; no editor extraction implemented",
+  "source_commit": "3bb891ea0848acb0d4fc00806e5ef292ca8793bb",
+  "source_file": "src/webview/editor.js",
+  "source_sha256": "4116ea853f9c87545ded5f89a689184fac01b9fb49e866beae2a1f2ffbb15662",
+  "physical_lines": 16647,
+  "measurement": "Inclusive original ranges including comments, blank lines and braces; branch fragments are accounting units, not literal cut points.",
+  "estimated_final_total": [
+    17820,
+    21080
+  ],
+  "files": [
+    {
+      "target": "editor.js",
+      "allocated_original_lines": 555,
+      "estimated_final_lines": [
+        600,
+        700
+      ],
+      "purpose": "Bootstrap, host dispatch and compatibility APIs"
+    },
+    {
+      "target": "editor/core/session.js",
+      "allocated_original_lines": 364,
+      "estimated_final_lines": [
+        400,
+        500
+      ],
+      "purpose": "Committed source, save/sync, revisions and shared undo lifecycle"
+    },
+    {
+      "target": "editor/ui/chrome.js",
+      "allocated_original_lines": 870,
+      "estimated_final_lines": [
+        920,
+        1050
+      ],
+      "purpose": "Width, sidebar, outline, status, icons and toolbar layout"
+    },
+    {
+      "target": "editor/ui/commands.js",
+      "allocated_original_lines": 796,
+      "estimated_final_lines": [
+        840,
+        980
+      ],
+      "purpose": "One command executor, insertion requests and shortcuts"
+    },
+    {
+      "target": "editor/ui/menus.js",
+      "allocated_original_lines": 723,
+      "estimated_final_lines": [
+        770,
+        900
+      ],
+      "purpose": "Command catalog, palette and insertion panel bookmarks"
+    },
+    {
+      "target": "editor/ui/search.js",
+      "allocated_original_lines": 270,
+      "estimated_final_lines": [
+        300,
+        370
+      ],
+      "purpose": "Search UI, worker lifecycle and replacement commands"
+    },
+    {
+      "target": "editor/selection/dom.js",
+      "allocated_original_lines": 837,
+      "estimated_final_lines": [
+        880,
+        1000
+      ],
+      "purpose": "DOM caret, selection bookmarks and shared block focus transitions"
+    },
+    {
+      "target": "editor/selection/lines.js",
+      "allocated_original_lines": 471,
+      "estimated_final_lines": [
+        500,
+        580
+      ],
+      "purpose": "Physical line navigation and text-offset helpers"
+    },
+    {
+      "target": "editor/codec/inline.js",
+      "allocated_original_lines": 488,
+      "estimated_final_lines": [
+        520,
+        620
+      ],
+      "purpose": "Inline parsing, escaping and style serialization"
+    },
+    {
+      "target": "editor/codec/blocks.js",
+      "allocated_original_lines": 730,
+      "estimated_final_lines": [
+        780,
+        900
+      ],
+      "purpose": "Block rendering/serialization and retained-source metadata"
+    },
+    {
+      "target": "editor/blocks/render.js",
+      "allocated_original_lines": 324,
+      "estimated_final_lines": [
+        360,
+        440
+      ],
+      "purpose": "Live rendering, front matter/TOC and interactive setup"
+    },
+    {
+      "target": "editor/blocks/export.js",
+      "allocated_original_lines": 275,
+      "estimated_final_lines": [
+        310,
+        390
+      ],
+      "purpose": "Detached export preparation, queues and cancellation"
+    },
+    {
+      "target": "editor/blocks/special.js",
+      "allocated_original_lines": 508,
+      "estimated_final_lines": [
+        550,
+        650
+      ],
+      "purpose": "Shared math/Mermaid wrapper editing and rendering"
+    },
+    {
+      "target": "editor/blocks/code-controls.js",
+      "allocated_original_lines": 517,
+      "estimated_final_lines": [
+        550,
+        650
+      ],
+      "purpose": "Code view identities, controls, edit modes and language picker"
+    },
+    {
+      "target": "editor/blocks/code-content.js",
+      "allocated_original_lines": 424,
+      "estimated_final_lines": [
+        450,
+        550
+      ],
+      "purpose": "Code text, syntax highlighting and normalization helpers"
+    },
+    {
+      "target": "editor/blocks/tables.js",
+      "allocated_original_lines": 620,
+      "estimated_final_lines": [
+        660,
+        800
+      ],
+      "purpose": "Table state, mutation, alignment and resizing"
+    },
+    {
+      "target": "editor/input/dispatch.js",
+      "allocated_original_lines": 387,
+      "estimated_final_lines": [
+        420,
+        520
+      ],
+      "purpose": "One ordered key dispatcher plus beforeinput/input coordination"
+    },
+    {
+      "target": "editor/input/tables.js",
+      "allocated_original_lines": 495,
+      "estimated_final_lines": [
+        530,
+        620
+      ],
+      "purpose": "Table Enter/Tab/arrows and caret exits"
+    },
+    {
+      "target": "editor/input/block-navigation.js",
+      "allocated_original_lines": 459,
+      "estimated_final_lines": [
+        500,
+        620
+      ],
+      "purpose": "Code/special-block/quote key behavior and navigation"
+    },
+    {
+      "target": "editor/input/paragraph-format.js",
+      "allocated_original_lines": 396,
+      "estimated_final_lines": [
+        430,
+        530
+      ],
+      "purpose": "Paragraph/heading formatting keys and indentation"
+    },
+    {
+      "target": "editor/input/paragraph-delete.js",
+      "allocated_original_lines": 473,
+      "estimated_final_lines": [
+        510,
+        620
+      ],
+      "purpose": "Paragraph deletion and merges with neighboring structures"
+    },
+    {
+      "target": "editor/input/list-selection-delete.js",
+      "allocated_original_lines": 549,
+      "estimated_final_lines": [
+        590,
+        700
+      ],
+      "purpose": "Selected-list deletion and early list-boundary cases"
+    },
+    {
+      "target": "editor/input/list-backspace.js",
+      "allocated_original_lines": 691,
+      "estimated_final_lines": [
+        730,
+        850
+      ],
+      "purpose": "Nested-list Backspace context/state/actions"
+    },
+    {
+      "target": "editor/input/list-boundaries.js",
+      "allocated_original_lines": 715,
+      "estimated_final_lines": [
+        760,
+        880
+      ],
+      "purpose": "Remaining list/paragraph boundary deletion and merging"
+    },
+    {
+      "target": "editor/input/list-enter-tab.js",
+      "allocated_original_lines": 492,
+      "estimated_final_lines": [
+        530,
+        640
+      ],
+      "purpose": "List continuation, splitting and indentation keys"
+    },
+    {
+      "target": "editor/editing/lists.js",
+      "allocated_original_lines": 619,
+      "estimated_final_lines": [
+        660,
+        780
+      ],
+      "purpose": "List conversion, indent/outdent and compatible merging"
+    },
+    {
+      "target": "editor/editing/block-patterns.js",
+      "allocated_original_lines": 623,
+      "estimated_final_lines": [
+        660,
+        780
+      ],
+      "purpose": "Typing-triggered block conversion"
+    },
+    {
+      "target": "editor/editing/inline-format.js",
+      "allocated_original_lines": 597,
+      "estimated_final_lines": [
+        640,
+        740
+      ],
+      "purpose": "Inline format commands, pattern conversion and escape"
+    },
+    {
+      "target": "editor/transfer/clipboard.js",
+      "allocated_original_lines": 605,
+      "estimated_final_lines": [
+        650,
+        760
+      ],
+      "purpose": "Copy/cut, drag/drop, image insertion and transfer UI"
+    },
+    {
+      "target": "editor/transfer/paste.js",
+      "allocated_original_lines": 774,
+      "estimated_final_lines": [
+        820,
+        960
+      ],
+      "purpose": "Paste parsing and contextual insertion"
+    }
+  ],
+  "ranges": [
+    {
+      "start": 1,
+      "end": 38,
+      "physical_lines": 38,
+      "owner": "bootstrap",
+      "target": "editor.js"
+    },
+    {
+      "start": 39,
+      "end": 120,
+      "physical_lines": 82,
+      "owner": "view",
+      "target": "editor/ui/chrome.js"
+    },
+    {
+      "start": 121,
+      "end": 126,
+      "physical_lines": 6,
+      "owner": "bootstrap",
+      "target": "editor.js"
+    },
+    {
+      "start": 127,
+      "end": 420,
+      "physical_lines": 294,
+      "owner": "toolbar",
+      "target": "editor/ui/chrome.js"
+    },
+    {
+      "start": 421,
+      "end": 440,
+      "physical_lines": 20,
+      "owner": "search",
+      "target": "editor/ui/search.js"
+    },
+    {
+      "start": 441,
+      "end": 473,
+      "physical_lines": 33,
+      "owner": "bootstrap",
+      "target": "editor.js"
+    },
+    {
+      "start": 474,
+      "end": 506,
+      "physical_lines": 33,
+      "owner": "document-sync",
+      "target": "editor/core/session.js"
+    },
+    {
+      "start": 507,
+      "end": 521,
+      "physical_lines": 15,
+      "owner": "bootstrap",
+      "target": "editor.js"
+    },
+    {
+      "start": 522,
+      "end": 636,
+      "physical_lines": 115,
+      "owner": "selection-dom",
+      "target": "editor/selection/dom.js"
+    },
+    {
+      "start": 637,
+      "end": 640,
+      "physical_lines": 4,
+      "owner": "bootstrap",
+      "target": "editor.js"
+    },
+    {
+      "start": 641,
+      "end": 680,
+      "physical_lines": 40,
+      "owner": "code-ui",
+      "target": "editor/blocks/code-controls.js"
+    },
+    {
+      "start": 681,
+      "end": 703,
+      "physical_lines": 23,
+      "owner": "inline-codec",
+      "target": "editor/codec/inline.js"
+    },
+    {
+      "start": 704,
+      "end": 734,
+      "physical_lines": 31,
+      "owner": "bootstrap",
+      "target": "editor.js"
+    },
+    {
+      "start": 735,
+      "end": 738,
+      "physical_lines": 4,
+      "owner": "bootstrap",
+      "target": "editor.js"
+    },
+    {
+      "start": 739,
+      "end": 766,
+      "physical_lines": 28,
+      "owner": "bootstrap",
+      "target": "editor.js"
+    },
+    {
+      "start": 767,
+      "end": 771,
+      "physical_lines": 5,
+      "owner": "bootstrap",
+      "target": "editor.js"
+    },
+    {
+      "start": 772,
+      "end": 915,
+      "physical_lines": 144,
+      "owner": "document-sync",
+      "target": "editor/core/session.js"
+    },
+    {
+      "start": 916,
+      "end": 946,
+      "physical_lines": 31,
+      "owner": "bootstrap",
+      "target": "editor.js"
+    },
+    {
+      "start": 947,
+      "end": 1041,
+      "physical_lines": 95,
+      "owner": "selection-dom",
+      "target": "editor/selection/dom.js"
+    },
+    {
+      "start": 1042,
+      "end": 1512,
+      "physical_lines": 471,
+      "owner": "selection-lines",
+      "target": "editor/selection/lines.js"
+    },
+    {
+      "start": 1513,
+      "end": 1721,
+      "physical_lines": 209,
+      "owner": "selection-dom",
+      "target": "editor/selection/dom.js"
+    },
+    {
+      "start": 1722,
+      "end": 1739,
+      "physical_lines": 18,
+      "owner": "inline-codec",
+      "target": "editor/codec/inline.js"
+    },
+    {
+      "start": 1740,
+      "end": 1800,
+      "physical_lines": 61,
+      "owner": "block-codec",
+      "target": "editor/codec/blocks.js"
+    },
+    {
+      "start": 1801,
+      "end": 1960,
+      "physical_lines": 160,
+      "owner": "inline-codec",
+      "target": "editor/codec/inline.js"
+    },
+    {
+      "start": 1961,
+      "end": 1981,
+      "physical_lines": 21,
+      "owner": "render-and-doc-aux",
+      "target": "editor/blocks/render.js"
+    },
+    {
+      "start": 1982,
+      "end": 2256,
+      "physical_lines": 275,
+      "owner": "export",
+      "target": "editor/blocks/export.js"
+    },
+    {
+      "start": 2257,
+      "end": 2399,
+      "physical_lines": 143,
+      "owner": "selection-dom",
+      "target": "editor/selection/dom.js"
+    },
+    {
+      "start": 2400,
+      "end": 2437,
+      "physical_lines": 38,
+      "owner": "render-and-doc-aux",
+      "target": "editor/blocks/render.js"
+    },
+    {
+      "start": 2438,
+      "end": 2521,
+      "physical_lines": 84,
+      "owner": "special-blocks",
+      "target": "editor/blocks/special.js"
+    },
+    {
+      "start": 2522,
+      "end": 2583,
+      "physical_lines": 62,
+      "owner": "render-and-doc-aux",
+      "target": "editor/blocks/render.js"
+    },
+    {
+      "start": 2584,
+      "end": 2732,
+      "physical_lines": 149,
+      "owner": "render-and-doc-aux",
+      "target": "editor/blocks/render.js"
+    },
+    {
+      "start": 2733,
+      "end": 2824,
+      "physical_lines": 92,
+      "owner": "block-codec",
+      "target": "editor/codec/blocks.js"
+    },
+    {
+      "start": 2825,
+      "end": 2864,
+      "physical_lines": 40,
+      "owner": "render-and-doc-aux",
+      "target": "editor/blocks/render.js"
+    },
+    {
+      "start": 2865,
+      "end": 3078,
+      "physical_lines": 214,
+      "owner": "selection-dom",
+      "target": "editor/selection/dom.js"
+    },
+    {
+      "start": 3079,
+      "end": 3092,
+      "physical_lines": 14,
+      "owner": "render-and-doc-aux",
+      "target": "editor/blocks/render.js"
+    },
+    {
+      "start": 3093,
+      "end": 3268,
+      "physical_lines": 176,
+      "owner": "special-blocks",
+      "target": "editor/blocks/special.js"
+    },
+    {
+      "start": 3269,
+      "end": 3498,
+      "physical_lines": 230,
+      "owner": "special-blocks",
+      "target": "editor/blocks/special.js"
+    },
+    {
+      "start": 3499,
+      "end": 3793,
+      "physical_lines": 295,
+      "owner": "code-ui",
+      "target": "editor/blocks/code-controls.js"
+    },
+    {
+      "start": 3794,
+      "end": 4217,
+      "physical_lines": 424,
+      "owner": "code-content",
+      "target": "editor/blocks/code-content.js"
+    },
+    {
+      "start": 4218,
+      "end": 4399,
+      "physical_lines": 182,
+      "owner": "code-ui",
+      "target": "editor/blocks/code-controls.js"
+    },
+    {
+      "start": 4400,
+      "end": 5019,
+      "physical_lines": 620,
+      "owner": "table-mutations",
+      "target": "editor/blocks/tables.js"
+    },
+    {
+      "start": 5020,
+      "end": 5642,
+      "physical_lines": 623,
+      "owner": "block-patterns",
+      "target": "editor/editing/block-patterns.js"
+    },
+    {
+      "start": 5643,
+      "end": 6239,
+      "physical_lines": 597,
+      "owner": "inline-format",
+      "target": "editor/editing/inline-format.js"
+    },
+    {
+      "start": 6240,
+      "end": 6268,
+      "physical_lines": 29,
+      "owner": "document-sync",
+      "target": "editor/core/session.js"
+    },
+    {
+      "start": 6269,
+      "end": 6557,
+      "physical_lines": 289,
+      "owner": "block-codec",
+      "target": "editor/codec/blocks.js"
+    },
+    {
+      "start": 6558,
+      "end": 6844,
+      "physical_lines": 287,
+      "owner": "inline-codec",
+      "target": "editor/codec/inline.js"
+    },
+    {
+      "start": 6845,
+      "end": 7132,
+      "physical_lines": 288,
+      "owner": "block-codec",
+      "target": "editor/codec/blocks.js"
+    },
+    {
+      "start": 7133,
+      "end": 7156,
+      "physical_lines": 24,
+      "owner": "input-dispatch",
+      "target": "editor/input/dispatch.js"
+    },
+    {
+      "start": 7157,
+      "end": 7174,
+      "physical_lines": 18,
+      "owner": "special-blocks",
+      "target": "editor/blocks/special.js"
+    },
+    {
+      "start": 7175,
+      "end": 7190,
+      "physical_lines": 16,
+      "owner": "input-dispatch",
+      "target": "editor/input/dispatch.js"
+    },
+    {
+      "start": 7191,
+      "end": 7739,
+      "physical_lines": 549,
+      "owner": "list-delete-early",
+      "target": "editor/input/list-selection-delete.js"
+    },
+    {
+      "start": 7740,
+      "end": 7800,
+      "physical_lines": 61,
+      "owner": "selection-dom",
+      "target": "editor/selection/dom.js"
+    },
+    {
+      "start": 7801,
+      "end": 7857,
+      "physical_lines": 57,
+      "owner": "input-dispatch",
+      "target": "editor/input/dispatch.js"
+    },
+    {
+      "start": 7858,
+      "end": 7904,
+      "physical_lines": 47,
+      "owner": "paragraph-format-keys",
+      "target": "editor/input/paragraph-format.js"
+    },
+    {
+      "start": 7905,
+      "end": 8006,
+      "physical_lines": 102,
+      "owner": "table-keys",
+      "target": "editor/input/tables.js"
+    },
+    {
+      "start": 8007,
+      "end": 8121,
+      "physical_lines": 115,
+      "owner": "code-quote-keys",
+      "target": "editor/input/block-navigation.js"
+    },
+    {
+      "start": 8122,
+      "end": 8404,
+      "physical_lines": 283,
+      "owner": "list-enter-tab",
+      "target": "editor/input/list-enter-tab.js"
+    },
+    {
+      "start": 8405,
+      "end": 8518,
+      "physical_lines": 114,
+      "owner": "paragraph-format-keys",
+      "target": "editor/input/paragraph-format.js"
+    },
+    {
+      "start": 8519,
+      "end": 8525,
+      "physical_lines": 7,
+      "owner": "input-dispatch",
+      "target": "editor/input/dispatch.js"
+    },
+    {
+      "start": 8526,
+      "end": 8581,
+      "physical_lines": 56,
+      "owner": "table-keys",
+      "target": "editor/input/tables.js"
+    },
+    {
+      "start": 8582,
+      "end": 8582,
+      "physical_lines": 1,
+      "owner": "input-dispatch",
+      "target": "editor/input/dispatch.js"
+    },
+    {
+      "start": 8583,
+      "end": 8620,
+      "physical_lines": 38,
+      "owner": "code-quote-keys",
+      "target": "editor/input/block-navigation.js"
+    },
+    {
+      "start": 8621,
+      "end": 8829,
+      "physical_lines": 209,
+      "owner": "list-enter-tab",
+      "target": "editor/input/list-enter-tab.js"
+    },
+    {
+      "start": 8830,
+      "end": 8987,
+      "physical_lines": 158,
+      "owner": "paragraph-format-keys",
+      "target": "editor/input/paragraph-format.js"
+    },
+    {
+      "start": 8988,
+      "end": 9324,
+      "physical_lines": 337,
+      "owner": "table-keys",
+      "target": "editor/input/tables.js"
+    },
+    {
+      "start": 9325,
+      "end": 9578,
+      "physical_lines": 254,
+      "owner": "code-quote-keys",
+      "target": "editor/input/block-navigation.js"
+    },
+    {
+      "start": 9579,
+      "end": 10269,
+      "physical_lines": 691,
+      "owner": "list-delete-state",
+      "target": "editor/input/list-backspace.js"
+    },
+    {
+      "start": 10270,
+      "end": 10328,
+      "physical_lines": 59,
+      "owner": "input-dispatch",
+      "target": "editor/input/dispatch.js"
+    },
+    {
+      "start": 10329,
+      "end": 10548,
+      "physical_lines": 220,
+      "owner": "list-delete-fallback",
+      "target": "editor/input/list-boundaries.js"
+    },
+    {
+      "start": 10549,
+      "end": 10562,
+      "physical_lines": 14,
+      "owner": "input-dispatch",
+      "target": "editor/input/dispatch.js"
+    },
+    {
+      "start": 10563,
+      "end": 10791,
+      "physical_lines": 229,
+      "owner": "list-delete-fallback",
+      "target": "editor/input/list-boundaries.js"
+    },
+    {
+      "start": 10792,
+      "end": 11264,
+      "physical_lines": 473,
+      "owner": "paragraph-delete",
+      "target": "editor/input/paragraph-delete.js"
+    },
+    {
+      "start": 11265,
+      "end": 11316,
+      "physical_lines": 52,
+      "owner": "code-quote-keys",
+      "target": "editor/input/block-navigation.js"
+    },
+    {
+      "start": 11317,
+      "end": 11393,
+      "physical_lines": 77,
+      "owner": "paragraph-format-keys",
+      "target": "editor/input/paragraph-format.js"
+    },
+    {
+      "start": 11394,
+      "end": 11659,
+      "physical_lines": 266,
+      "owner": "list-delete-fallback",
+      "target": "editor/input/list-boundaries.js"
+    },
+    {
+      "start": 11660,
+      "end": 11663,
+      "physical_lines": 4,
+      "owner": "input-dispatch",
+      "target": "editor/input/dispatch.js"
+    },
+    {
+      "start": 11664,
+      "end": 11868,
+      "physical_lines": 205,
+      "owner": "input-dispatch",
+      "target": "editor/input/dispatch.js"
+    },
+    {
+      "start": 11869,
+      "end": 12204,
+      "physical_lines": 336,
+      "owner": "list-operations",
+      "target": "editor/editing/lists.js"
+    },
+    {
+      "start": 12205,
+      "end": 12220,
+      "physical_lines": 16,
+      "owner": "document-sync",
+      "target": "editor/core/session.js"
+    },
+    {
+      "start": 12221,
+      "end": 12332,
+      "physical_lines": 112,
+      "owner": "toolbar",
+      "target": "editor/ui/chrome.js"
+    },
+    {
+      "start": 12333,
+      "end": 12503,
+      "physical_lines": 171,
+      "owner": "command-dispatch",
+      "target": "editor/ui/commands.js"
+    },
+    {
+      "start": 12504,
+      "end": 12557,
+      "physical_lines": 54,
+      "owner": "command-ui",
+      "target": "editor/ui/menus.js"
+    },
+    {
+      "start": 12558,
+      "end": 12882,
+      "physical_lines": 325,
+      "owner": "insert-menu",
+      "target": "editor/ui/menus.js"
+    },
+    {
+      "start": 12883,
+      "end": 13226,
+      "physical_lines": 344,
+      "owner": "command-ui",
+      "target": "editor/ui/menus.js"
+    },
+    {
+      "start": 13227,
+      "end": 13271,
+      "physical_lines": 45,
+      "owner": "command-dispatch",
+      "target": "editor/ui/commands.js"
+    },
+    {
+      "start": 13272,
+      "end": 13347,
+      "physical_lines": 76,
+      "owner": "view",
+      "target": "editor/ui/chrome.js"
+    },
+    {
+      "start": 13348,
+      "end": 13496,
+      "physical_lines": 149,
+      "owner": "view",
+      "target": "editor/ui/chrome.js"
+    },
+    {
+      "start": 13497,
+      "end": 13584,
+      "physical_lines": 88,
+      "owner": "document-sync",
+      "target": "editor/core/session.js"
+    },
+    {
+      "start": 13585,
+      "end": 13741,
+      "physical_lines": 157,
+      "owner": "view",
+      "target": "editor/ui/chrome.js"
+    },
+    {
+      "start": 13742,
+      "end": 14162,
+      "physical_lines": 421,
+      "owner": "shortcuts",
+      "target": "editor/ui/commands.js"
+    },
+    {
+      "start": 14163,
+      "end": 14202,
+      "physical_lines": 40,
+      "owner": "command-dispatch",
+      "target": "editor/ui/commands.js"
+    },
+    {
+      "start": 14203,
+      "end": 14485,
+      "physical_lines": 283,
+      "owner": "list-operations",
+      "target": "editor/editing/lists.js"
+    },
+    {
+      "start": 14486,
+      "end": 14604,
+      "physical_lines": 119,
+      "owner": "command-dispatch",
+      "target": "editor/ui/commands.js"
+    },
+    {
+      "start": 14605,
+      "end": 14890,
+      "physical_lines": 286,
+      "owner": "host-messages",
+      "target": "editor.js"
+    },
+    {
+      "start": 14891,
+      "end": 15137,
+      "physical_lines": 247,
+      "owner": "image-drop",
+      "target": "editor/transfer/clipboard.js"
+    },
+    {
+      "start": 15138,
+      "end": 15495,
+      "physical_lines": 358,
+      "owner": "clipboard-copy",
+      "target": "editor/transfer/clipboard.js"
+    },
+    {
+      "start": 15496,
+      "end": 16269,
+      "physical_lines": 774,
+      "owner": "clipboard-paste",
+      "target": "editor/transfer/paste.js"
+    },
+    {
+      "start": 16270,
+      "end": 16323,
+      "physical_lines": 54,
+      "owner": "document-sync",
+      "target": "editor/core/session.js"
+    },
+    {
+      "start": 16324,
+      "end": 16573,
+      "physical_lines": 250,
+      "owner": "search",
+      "target": "editor/ui/search.js"
+    },
+    {
+      "start": 16574,
+      "end": 16647,
+      "physical_lines": 74,
+      "owner": "bootstrap",
+      "target": "editor.js"
+    }
+  ]
+}

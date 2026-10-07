@@ -8,6 +8,12 @@ From the repository root, run `npm run compile` and `npm run test:unit`. The uni
 
 `npm test` compiles and lints first, then runs the complete unit suite and the full browser suite. Ordinary local unit runs explicitly skip real-converter and package checks when their opt-in prerequisites are absent; they do not establish candidate-level validation. Follow the [candidate instructions](../building.md#validate-a-candidate) to enable those checks and identify the tested VSIX.
 
+## Editor runtime and lifecycle
+
+Run full compilation before `npm run test:build`. Fixtures read the same emitted editor runtime as VS Code and Electron and validate its input and output hashes; stale output is an error rather than a fallback to unbundled source. The [editor architecture](../editor-architecture.md) explains module ownership and initialization order.
+
+The editor module unit checks cover bundle freshness, retained-source serialization, search worker lifecycle and the keyboard stop/continue contract. `editor-readiness.spec.ts` uses generated production webview HTML with delayed runtime loading to check the current-generation readiness handshake. `editor-lifecycle.spec.ts` checks repeated rendering and view switches, one command/history action, and controlled late Mermaid completion or failure. The `editor-script-security.spec.ts` regressions exercise both production HTML generators with synthetic hostile directory names and image attributes, verifying literal data and exact source preservation. Serializer units cover script boundaries and replacement tokens. These complement the full browser suite and the installed save/reopen checks below.
+
 ## Concept rendering review
 
 For concept-to-render evaluation, use the [scoped AI visual review workflow](visual-review.md). It captures the production browser UI, preserves fixed chosen references, and returns section-only PASS/FAIL/BLOCKED verdicts with a correction handoff. AI evaluation is explicit and separate from functional CI and final owner acceptance.

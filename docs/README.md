@@ -15,6 +15,7 @@ Start here for maintained Binary Markdown guidance. These pages describe the sou
 | Maintain CI safely | [CI security](ci-security.md) | [Build instructions](building.md), [release policy](releases-and-support.md) |
 | Test a change | [Validation guide](testing/README.md) | [Export verification](export-verification.md), [Windows checks](testing/windows.md) |
 | Compare an implemented UI with a chosen concept | [Scoped AI visual review](testing/visual-review.md) | [System design](../reports/plans/2026-10-01-ui-ux-visual-fidelity/system-design.md) |
+| Understand editor internals | [Editor architecture](editor-architecture.md) | [Validation guide](testing/README.md) |
 | Understand export | [Architecture](export-architecture.md) | [Requirements and format support](export-subsystem.md) |
 | Understand software freedom, cost, and licensing | [Cost and software freedom](licensing.md#cost-and-software-freedom) | [Commercial redistribution](licensing.md#redistribution-and-commercial-use), [MIT-licensed starting points](licensing.md#mit-licensed-starting-points) |
 | Understand project policy | [Releases and support](releases-and-support.md) | [Roadmap](roadmap.md), [licensing](licensing.md), [branding](branding.md), [license decision](decisions/001-agpl-transition.md) |

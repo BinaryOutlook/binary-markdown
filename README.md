@@ -68,7 +68,7 @@ Export is unavailable in Remote-SSH and other remote hosts, browser VS Code, and
 
 ## Build and contribute
 
-Source builds, focused fixes, translations, accessibility work, and reproducible bug reports are welcome. Start with the [build guide](docs/building.md), [contributor workflow](CONTRIBUTING.md), and [validation guide](docs/testing/README.md). Use **Copy Build Information** when reporting a problem, with a small non-private example and clear reproduction steps.
+Source builds, focused fixes, translations, accessibility work, and reproducible bug reports are welcome. Start with the [build guide](docs/building.md), [contributor workflow](CONTRIBUTING.md), and [validation guide](docs/testing/README.md). The [editor architecture](docs/editor-architecture.md) maps the modules and their state ownership. Use **Copy Build Information** when reporting a problem, with a small non-private example and clear reproduction steps.
 
 The [documentation index](docs/README.md) organizes current guides. [Release notes](release-notes/README.md) describe individual versions; [reports](reports/README.md) preserve observations for specific revisions. Development builds and older commits are covered by the [support policy](docs/releases-and-support.md).
 

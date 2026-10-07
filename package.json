@@ -481,7 +481,7 @@
   "scripts": {
     "check:workflows": "node scripts/check-workflows.cjs",
     "vscode:prepublish": "npm run compile",
-    "compile": "tsc -p ./ && node build-locales.js && node scripts/copy-webview.js && node scripts/copy-vendor.js",
+    "compile": "tsc -p ./ && node build-locales.js && node scripts/copy-webview.js && node scripts/bundle-editor.cjs && node scripts/copy-vendor.js",
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
     "test:document-aux": "node --test test/unit/document-aux.test.js",

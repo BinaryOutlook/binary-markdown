@@ -59,6 +59,15 @@ test('sealed identity rejects changed source, altered images, reference hashes a
     f.write(relative, JSON.stringify(packet));
     f.write('.vscode-test/reference.png', Buffer.concat([pixel, Buffer.from('altered')])); assert.throws(() => core.loadPacket(f.root, relative), /Reference/);
 });
+test('a bundler-only change invalidates a sealed visual capture', t => {
+    const f = fixture(t);
+    f.write('scripts/bundle-editor.cjs', '// original editor bundle configuration');
+    const { relative, packet } = f.capture();
+    f.write('scripts/bundle-editor.cjs', '// changed editor bundle configuration');
+    assert.throws(() => core.loadPacket(f.root, relative), /Stale/);
+    f.write('scripts/bundle-editor.cjs', '// original editor bundle configuration');
+    assert.equal(core.loadPacket(f.root, relative).packetDigest, packet.packetDigest);
+});
 test('rejects self-consistently rehashed scope and capture-state changes', t => {
     const f = fixture(t), { relative, packet } = f.capture();
     packet.excludedRegions.push('required preview'); packet.packetDigest = core.digest(packet); f.write(relative, JSON.stringify(packet));

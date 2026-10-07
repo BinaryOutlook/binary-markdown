@@ -70,9 +70,9 @@ export function generateEditorHtml(
     const { normalize } = require(getResourcePath('src/shared/table-placement.js'));
     const { normalize: normalizeTableFormat } = require(getResourcePath('src/shared/table-format.js'));
     const { normalizeWidthMode, normalizeMaxWidth, normalizeAlignment } = require(getResourcePath('src/shared/editor-layout.js'));
-    const stylesPath = getResourcePath('src/webview/styles.css');
+    const stylesPath = getResourcePath('out/webview/styles.css');
     const auxScript = fs.readFileSync(getResourcePath('src/shared/document-aux.js'), 'utf8');
-    const editorScriptPath = getResourcePath('src/webview/editor.js');
+    const editorScriptPath = getResourcePath('out/webview/editor.js');
     const vendorDir = getResourcePath('vendor');
 
     // Load shared body HTML generator
@@ -84,15 +84,15 @@ export function generateEditorHtml(
         .replace('__FONT_SIZE__', String(config.fontSize))
         .replace('__OUTLINE_ACTIVE_COLOR__', 'var(--link-color)');
 
-    const mathScript = fs.readFileSync(getResourcePath('src/shared/math-syntax.js'), 'utf8');
-    const tableFormatScript = fs.readFileSync(getResourcePath('src/shared/table-format.js'), 'utf8');
-    const editorScript = (fs.readFileSync(getResourcePath('src/webview/workspace-ui.js'), 'utf8') + '\n' + tableFormatScript + '\n' + fs.readFileSync(getResourcePath('src/shared/editor-layout.js'), 'utf8') + '\n' + fs.readFileSync(getResourcePath('src/shared/table-placement.js'), 'utf8') + '\n' + fs.readFileSync(getResourcePath('src/webview/table-toolbar.js'), 'utf8') + '\n' + mathScript + '\n' + fs.readFileSync(editorScriptPath, 'utf8'))
-        .replace('__SEARCH_WORKER__', () => JSON.stringify(fs.readFileSync(getResourcePath('src/shared/document-search.js'), 'utf8')).replace(/</g, '\\u003c'))
-        .replace('__MATH_BACKSLASH__', 'true')
-        .replace('__DEBUG_MODE__', String(config.enableDebugLogging))
-        .replace('__I18N__', JSON.stringify(config.webviewMessages))
-        .replace('__DOCUMENT_BASE_URI__', config.documentBaseUri)
-        .replace('__CONTENT__', `'${Buffer.from(content, 'utf8').toString('base64')}'`);
+    const { substituteEditorScript } = require(getResourcePath('src/shared/editor-script-values.js'));
+    const editorScript = substituteEditorScript(fs.readFileSync(editorScriptPath, 'utf8'), {
+        __SEARCH_WORKER__: fs.readFileSync(getResourcePath('src/shared/document-search.js'), 'utf8'),
+        __MATH_BACKSLASH__: true,
+        __DEBUG_MODE__: config.enableDebugLogging,
+        __I18N__: config.webviewMessages,
+        __DOCUMENT_BASE_URI__: config.documentBaseUri,
+        __CONTENT__: Buffer.from(content, 'utf8').toString('base64')
+    });
 
     const vendorFileUri = (file: string) => fileUri(path.join(vendorDir, file));
 

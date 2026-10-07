@@ -1,0 +1,37 @@
+{
+  "source_commit": "3bb891ea0848acb0d4fc00806e5ef292ca8793bb",
+  "editor_sha256": "4116ea853f9c87545ded5f89a689184fac01b9fb49e866beae2a1f2ffbb15662",
+  "lockfile_sha256": "a7cd003af4fd5a251df5afbed1b1f7c5561cc9a3993b449652e00e110f24f514",
+  "environment": {
+    "platform": "macOS ARM"
+  },
+  "compilation": "passed",
+  "units": {
+    "command": "npm run test:unit",
+    "exit_code": 0,
+    "discovered": 424,
+    "passed": 405,
+    "skipped": 19,
+    "failed": 0,
+    "real_tools_enabled": false,
+    "packaged_vsix_supplied": false,
+    "log_sha256": "b24bfb56305b3b4c95166cf035ea2ee36c9db69fae6814ca56d16d31bf2a1655"
+  },
+  "browser": {
+    "command": "CI=1 npx playwright test <15 explicit suites in baseline.md> --workers=2 --retries=0",
+    "exit_code": 0,
+    "files": 15,
+    "discovered": 265,
+    "passed": 265,
+    "failed": 0,
+    "log_sha256": "17c9e6f17d5e4423ad76e2c2d2275182b721d3b7d0ceadf88e65723acd182d62"
+  },
+  "limits": [
+    "focused browser selection, not full browser suite",
+    "no installed VSIX/native run",
+    "no real converter or output-reader acceptance",
+    "no Electron packaged-app validation",
+    "no other OS or remote CI evidence"
+  ],
+  "runtime_source_unchanged": true
+}
