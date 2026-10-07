@@ -16,6 +16,7 @@ These records preserve observations about particular revisions and environments.
 
 | Date | Plan | Scope and status |
 | --- | --- | --- |
+| Revision-based | [Editor modularization](plans/editor-modularization/plan.md) | Proposed 30-module split, complete original-line accounting, size estimates, behavior capture and staged delegation; no extraction implemented |
 | 2026-10-01 | [Scoped AI visual review system](plans/2026-10-01-ui-ux-visual-fidelity/system-design.md) | System design retained in the first task commit; the [implemented workflow](../docs/testing/visual-review.md) and dated validation report record subsequent execution |
 
 ## Validation
