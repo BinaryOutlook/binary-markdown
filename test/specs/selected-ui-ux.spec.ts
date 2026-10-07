@@ -246,12 +246,28 @@ test('expanded diagnostics expose the parser explanation and support keyboard sc
     });
     await page.setViewportSize({ width: 480, height: 800 });
     await expect.poll(() => detail.evaluate(node => node.scrollHeight > node.clientHeight)).toBe(true);
-    await detail.focus(); await detail.press('End');
-    // Native keyboard scrolling animates. Finish End before testing Home so
-    // each assertion observes its own destination instead of overlapping them.
-    await expect.poll(() => detail.evaluate(node => node.scrollHeight - node.clientHeight - node.scrollTop)).toBe(0);
-    await detail.press('Home');
-    await expect.poll(() => detail.evaluate(node => node.scrollTop)).toBe(0);
+    await detail.focus();
+    const documentScroll = await page.locator('#editorWrapper').evaluate(node => node.scrollTop);
+    const editingNotifications = await page.evaluate(() => (window as any).__testApi.messages.filter((message: any) => message.type === 'editingStateChanged' && message.editing).length);
+    for (let cycle = 0; cycle < 3; cycle++) {
+        await detail.press('End');
+        await expect.poll(() => detail.evaluate(node => node.scrollHeight - node.clientHeight - node.scrollTop)).toBe(0);
+        await detail.press('Home');
+        await expect.poll(() => detail.evaluate(node => node.scrollTop)).toBe(0);
+        await expect(detail).toBeFocused();
+    }
+    expect(await page.locator('#editorWrapper').evaluate(node => node.scrollTop)).toBe(documentScroll);
+    expect(await page.evaluate(() => (window as any).__testApi.messages.filter((message: any) => message.type === 'editingStateChanged' && message.editing).length)).toBe(editingNotifications);
+    expect(await snapshot(page)).toMatchObject({ content, pending: false });
+    await expect(page.locator('#toolbar [data-action="undo"]')).toBeDisabled();
+});
+
+test('Mermaid math labels use the patched renderer and preserve authored source', async ({ page }) => {
+    const content = '```mermaid\nflowchart LR\n A["$$x^2 + 1$$"] --> B[Done]\n```\n';
+    await setup(page, content);
+    await expect(page.locator('.mermaid-diagram svg .katex')).toBeVisible();
+    await expect(page.locator('.mermaid-wrapper')).toHaveAttribute('data-render-error', '');
+    await expect(page.locator('.mermaid-diagram svg .katex-error')).toHaveCount(0);
     expect(await snapshot(page)).toMatchObject({ content, pending: false });
     await expect(page.locator('#toolbar [data-action="undo"]')).toBeDisabled();
 });

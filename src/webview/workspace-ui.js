@@ -185,6 +185,14 @@
                     const summary = document.createElement('summary'); summary.textContent = i18n.diagnosticDetails;
                     const detail = document.createElement('div'); detail.className = 'block-diagnostic-text';
                     detail.tabIndex = 0; detail.setAttribute('role', 'region'); detail.setAttribute('aria-label', i18n.diagnosticDetails);
+                    detail.addEventListener('keydown', event => {
+                        if (!['Home', 'End'].includes(event.key) || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+                        // Keep reading navigation inside the diagnostic region.
+                        // Native scrolling can overlap animations and bubble into
+                        // the surrounding editable document on different hosts.
+                        event.preventDefault(); event.stopPropagation();
+                        detail.scrollTo({ top: event.key === 'Home' ? 0 : detail.scrollHeight, behavior: 'instant' });
+                    });
                     diagnostic.append(summary, detail); chrome.appendChild(diagnostic);
                     block.prepend(chrome);
                 }

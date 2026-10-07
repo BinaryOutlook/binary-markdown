@@ -22,7 +22,7 @@ These records preserve observations about particular revisions and environments.
 
 | Recorded scope | Report | Evidence boundary |
 | --- | --- | --- |
-| 2026-10-07 0.5.0 readiness | [Integrated scope, validation blocker and acceptance checklist](validation/2026-10-07-0.5.0-readiness.md) | Exact inspected `main` baseline and hosted run, documentation/version alignment, local candidate boundaries and remaining release gates |
+| 2026-10-07 0.5.0 readiness | [Integrated scope, candidate acceptance and validation follow-up](validation/2026-10-07-0.5.0-readiness.md) | Exact inspected main baseline, accepted RC2, dependency and diagnostic fixes, candidate boundaries and remaining release gates |
 | 2026-10-02 scoped AI visual fidelity | [Review summary and archived evidence](validation/2026-10-02-ui-ux-visual-fidelity/report.md) | Assessed source, 82 required cases, verdict boundaries, archive checksums and links to complete retained evidence; owner acceptance remains separate |
 | 2026-10-01 selected UI/UX implementation | [Selected designs, screenshots, and security audit](validation/2026-10-01-selected-ui-ux/report.md) | All 12 selected directions, synthetic browser visuals, local regression results, scoped security review, and pending maintainer acceptance |
 | 2026-09-29 0.4.1 readiness draft | [Validation and issue-closure recommendations](validation/2026-09-29-0.4.1-readiness.md) | Exact PR #91 source and development package, passing CI, maintainer-reported manual checks, and unresolved acceptance; not a 0.4.1 release artifact |

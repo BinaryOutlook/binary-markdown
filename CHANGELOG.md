@@ -6,7 +6,7 @@ Changes after the 0.5.0 scope will be recorded here.
 
 ## 0.5.0
 
-Bring together the editor views, command workspaces, source search, table navigation and code controls integrated after 0.4.1. See the [version notes](release-notes/0.5.0.md) for compatibility and known limitations, and the [readiness record](reports/validation/2026-10-07-0.5.0-readiness.md) for the observed release blockers. [GitHub Releases](https://github.com/BinaryOutlook/binary-markdown/releases) establishes publication and the validated package identity.
+Bring together the editor views, command workspaces, source search, table navigation and code controls integrated after 0.4.1. See the [version notes](release-notes/0.5.0.md) for compatibility and known limitations, and the [readiness record](reports/validation/2026-10-07-0.5.0-readiness.md) for candidate acceptance and validation evidence. [GitHub Releases](https://github.com/BinaryOutlook/binary-markdown/releases) establishes publication and the validated package identity.
 
 ### Added
 
@@ -24,7 +24,7 @@ Bring together the editor views, command workspaces, source search, table naviga
 - Make code copying use a labeled accessible control with stable-size success feedback.
 - Build identified development VSIX packages on branch pushes and pull requests, with workflow build/run/attempt fields and matching checksum and build-information sidecars.
 - Run full browser validation across nine platform shards alongside four installed-VSIX lanes; documentation-only PRs use the documented fast path, while releases still require full validation.
-- Update audited runtime and build dependencies, including DOMPurify, and add an explicit scoped AI visual-review workflow separate from functional tests and owner acceptance.
+- Update audited runtime and build dependencies, including DOMPurify and KaTeX 0.18.2, and add an explicit scoped AI visual-review workflow separate from functional tests and owner acceptance. Keep Mermaid's math dependency on the same patched KaTeX version and update the affected development-server and source-map dependencies.
 - Align the README, documentation entry points, roadmap and version metadata with the integrated 0.5.0 scope.
 
 ### Fixed
@@ -33,10 +33,11 @@ Bring together the editor views, command workspaces, source search, table naviga
 - Keep native table selectors within fitted controls and reveal retained cells after navigation or resizing.
 - Preserve palette history and command access as toolbars and menus respond to narrow panes.
 - Remove generated JavaScript duplicates of authoritative TypeScript browser specs without reducing platform coverage.
+- Keep Home/End navigation inside expanded block diagnostics, retaining focus and document position without reporting a content edit.
 
 ### Known limitations
 
-The current dependency audit blocks candidate validation, and the inspected `main` validation failed one macOS diagnostic-scrolling browser test. External-write conflict recovery, remaining parser cases and export-reader acceptance also remain unresolved. See the [readiness record](reports/validation/2026-10-07-0.5.0-readiness.md) and [version limitations](release-notes/0.5.0.md#known-limitations); neither a local VSIX nor this changelog is release approval.
+External-write conflict recovery, remaining parser cases and export-reader acceptance remain unresolved. See the [readiness record](reports/validation/2026-10-07-0.5.0-readiness.md) and [version limitations](release-notes/0.5.0.md#known-limitations). Candidate acceptance, required CI, merging and publication are recorded separately.
 
 ## 0.4.1
 
