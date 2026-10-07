@@ -41,14 +41,14 @@ function createSearch({
     const searchCaseSensitive = document.getElementById('searchCaseSensitive');
     const searchWholeWord = document.getElementById('searchWholeWord');
     const searchRegex = document.getElementById('searchRegex');
-    
+
     // Search state
     let searchMatches = [];
     let currentMatchIndex = -1;
-    
+
     let searchResults, searchFeedback, replaceSelected, selectAllSearch, replacementScope, searchSelectedCount, replacementActions;
     // ==================== Search & Replace Functions ====================
-    
+
     let searchWorker = null, searchWorkerTimer = null, searchId = 0, searchedSource = '', searchTruncated = false;
     let searchSavedRange = null, searchSavedSource = null;
     const selectedSearchMatches = new Set();
@@ -245,7 +245,7 @@ function createSearch({
         searchInput.addEventListener('input', () => {
             performSearch();
         });
-    
+
         searchInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
                 e.preventDefault();
@@ -258,7 +258,7 @@ function createSearch({
                 closeSearchBox();
             }
         });
-    
+
         replaceInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
                 e.preventDefault();
@@ -267,11 +267,11 @@ function createSearch({
                 closeSearchBox();
             }
         });
-    
+
         searchPrev.addEventListener('click', () => goToMatch(currentMatchIndex - 1));
         searchNext.addEventListener('click', () => goToMatch(currentMatchIndex + 1));
         closeSearch.addEventListener('click', closeSearchBox);
-    
+
         toggleReplace.addEventListener('click', () => {
             if (replaceRow.style.display === 'none') {
                 replaceRow.style.display = 'flex';
@@ -279,14 +279,14 @@ function createSearch({
                 replaceRow.style.display = 'none';
             }
         });
-    
+
         replaceOne.addEventListener('click', replaceCurrentMatch);
         replaceAll.addEventListener('click', replaceAllMatches);
-    
+
         searchCaseSensitive.addEventListener('change', performSearch);
         searchWholeWord.addEventListener('change', performSearch);
         searchRegex.addEventListener('change', performSearch);
-    
+
         // Ctrl+F / Cmd+F to open search
         document.addEventListener('keydown', (e) => {
             if ((e.ctrlKey || e.metaKey) && e.key === 'f') {

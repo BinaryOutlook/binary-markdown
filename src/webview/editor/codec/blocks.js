@@ -205,13 +205,13 @@ function createBlockCodec({
                 }
             }
         }
-        
+
         if (maxBackticks === 0) {
             // Protect meaningful edge spaces from code-span padding normalization.
             const needsPadding = content.startsWith(' ') && content.endsWith(' ') && /[^ ]/.test(content);
             return '`' + (needsPadding ? ' ' + content + ' ' : content) + '`';
         }
-        
+
         // Use at least 2 more backticks than the longest sequence found
         // This ensures the fence won't be confused with content
         // e.g., content with ``` needs ````` (5) to wrap safely
@@ -251,7 +251,7 @@ function createBlockCodec({
             case 'h4': return '#### ' + mdGetInlineMarkdown(node) + '\n';
             case 'h5': return '##### ' + mdGetInlineMarkdown(node) + '\n';
             case 'h6': return '###### ' + mdGetInlineMarkdown(node) + '\n';
-            case 'p': 
+            case 'p':
                 const pContent = mdGetInlineMarkdown(node);
                 // Empty paragraphs provide caret positions, not source lines.
                 if (!pContent || pContent === '' || node.innerHTML === '<br>') {
@@ -259,7 +259,7 @@ function createBlockCodec({
                 }
                 // Sibling separators are added by serializeMarkdownBlocks.
                 return pContent + '\n';
-            case 'div': 
+            case 'div':
                 if (node.classList.contains('math-wrapper')) return mathBlockMarkdown(node);
                 // Check if this is a mermaid wrapper
                 if (node.classList.contains('mermaid-wrapper') || node.classList.contains('math-wrapper')) {
@@ -458,7 +458,7 @@ function createBlockCodec({
         let lines = [];
         const codeLines = new Set();
         let currentLine = '';
-        
+
         function processBlockquoteContent(node) {
             if (node.nodeType === 1 && node.classList.contains('math-inline')) {
                 currentLine += inlineMathMarkdown(node); return;
@@ -533,23 +533,23 @@ function createBlockCodec({
                 }
             }
         }
-        
+
         for (const child of bq.childNodes) {
             processBlockquoteContent(child);
         }
-        
+
         // Add the last line only if it has content or if there are already lines
         // This prevents double empty lines when blockquote only contains <br>
         if (currentLine !== '' || lines.length === 0) {
             lines.push(currentLine);
         }
-        
+
         // Keep trailing empty lines - they are intentional user content
         // Only remove if the blockquote is completely empty
         if (lines.length === 1 && lines[0].trim() === '') {
             return '> \n';
         }
-        
+
         // Build markdown with > prefix for each line (including empty lines)
         return lines.map((line, index) => '> ' + (codeLines.has(index) ? line : line.trim())).join('\n') + '\n';
     }
@@ -562,7 +562,7 @@ function createBlockCodec({
         function escapePipeInCell(text) {
             return text.replace(/\|/g, '\\|');
         }
-        
+
         // Process cell content with table delimiter escaping.
         function processCellContent(cell) {
             let cellText = '';
@@ -585,7 +585,7 @@ function createBlockCodec({
             }
             return cellText;
         }
-        
+
         // Recursively process a node, escaping table delimiters.
         function processCellNode(node) {
             if (node.nodeType === 3) {
@@ -593,23 +593,23 @@ function createBlockCodec({
             }
             if (node.nodeType !== 1) return '';
             if (node.classList.contains('math-inline')) return escapePipeInCell(inlineMathMarkdown(node));
-            
+
             const tag = node.tagName.toLowerCase();
-            
+
             if (tag === 'code') {
                 return escapePipeInCell(wrapInlineCode(node.textContent));
             }
-            
+
             if (tag === 'br') {
                 return node.hasAttribute('data-table-placeholder') ? '' : '<br>';
             }
-            
+
             // For other elements, process children and wrap with appropriate markdown
             let innerContent = '';
             for (const child of node.childNodes) {
                 innerContent += processCellNode(child);
             }
-            
+
             // Apply markdown formatting based on tag
             if (tag === 'strong' || tag === 'b') {
                 return '**' + innerContent + '**';
@@ -627,10 +627,10 @@ function createBlockCodec({
                 const alt = node.getAttribute('alt') || '';
                 return '![' + escapePipeInCell(alt) + '](' + escapePipeInCell(src) + ')';
             }
-            
+
             return innerContent;
         }
-        
+
         const headers = Array.from(rows[0].querySelectorAll('th, td'));
         const firstDataCells = rows[1]?.querySelectorAll('td');
         const alignments = headers.map((cell, i) =>
@@ -713,10 +713,10 @@ function createBlockCodec({
 
     function htmlToMarkdown() {
         let md = serializeMarkdownBlocks(editor);
-        
+
         // Remove zero-width spaces (used for cursor positioning in contenteditable)
         md = md.replace(/\u200B/g, '');
-        
+
         // Append directives in a single block if any are set
         // Format:
         // ---
@@ -732,7 +732,7 @@ function createBlockCodec({
         if (directives) {
             md += '\n---\n' + directives.trimEnd();
         }
-        
+
         return md;
     }
 

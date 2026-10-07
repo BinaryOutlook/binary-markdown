@@ -27,7 +27,7 @@ function createCodeContent({
         'csharp', 'go', 'rust', 'bash', 'shell', 'json', 'yaml', 'html', 'css', 'sql',
         'dockerfile', 'php', 'ruby', 'swift', 'kotlin', 'xml', 'mermaid', 'math'
     ];
-    
+
     const LANGUAGE_ALIASES = {
         'js': 'javascript', 'ts': 'typescript', 'py': 'python', 'sh': 'bash', 'zsh': 'bash',
         'htm': 'html', 'yml': 'yaml', 'md': 'markdown', 'c++': 'cpp', 'c#': 'csharp',
@@ -48,7 +48,7 @@ function createCodeContent({
         if (id === 'mermaid') return i18n.languagePickerMermaid || 'Mermaid diagram';
         return LANGUAGE_NAMES[id] || id;
     }
-    
+
     function orderedCodeLanguages() {
         const mode = document.documentElement.dataset.codeLanguageOrder;
         if (mode !== 'a-z' && mode !== 'z-a') return SUPPORTED_LANGUAGES;
@@ -88,11 +88,11 @@ function createCodeContent({
         pre.setAttribute('data-mode', 'edit');
         code.setAttribute('contenteditable', 'true');
         code.removeAttribute('data-trailing-br');
-        
+
         // Replace content with plain text (remove highlight spans)
         // Convert to text nodes with <br> for newlines
         code.innerHTML = '';
-        
+
         // Handle empty code block - add a <br> for minimum height and cursor placement
         if (!plainText || plainText === '' || plainText === '\n') {
             code.appendChild(document.createElement('br'));
@@ -113,7 +113,7 @@ function createCodeContent({
                 codeBlocksWithSentinel.add(pre);
             }
         }
-        
+
         // Focus and place cursor at start
         code.focus();
         const range = document.createRange();
@@ -130,7 +130,7 @@ function createCodeContent({
             sel.addRange(range);
         }
     }
-    
+
     // Enter display mode - apply highlighting, make non-editable
     function enterDisplayMode(pre) {
         const code = pre.querySelector('code');
@@ -152,7 +152,7 @@ function createCodeContent({
         // Apply syntax highlighting (also manages data-trailing-br)
         applyHighlighting(pre);
     }
-    
+
     // Convert a regular code block to a mermaid or math special wrapper block.
     // type: 'mermaid' | 'math'
     function convertToSpecialBlock(pre, type) {
@@ -236,10 +236,10 @@ function createCodeContent({
     function applyHighlighting(pre) {
         const code = pre.querySelector('code');
         if (!code) return;
-        
+
         let lang = pre.getAttribute('data-lang') || '';
         lang = LANGUAGE_ALIASES[lang.toLowerCase()] || lang.toLowerCase();
-        
+
         // Get plain text content, converting <br> to newlines.
         // If there's already a display-only trailing <br> from a previous
         // call, strip it before processing so we don't accumulate extras.
@@ -274,14 +274,14 @@ function createCodeContent({
             code.innerHTML = escapeHtml(text).replace(/\n/g, '<br>') + trailingBr;
             return;
         }
-        
+
         // Escape HTML first
         let html = escapeHtml(text);
-        
+
         // Track which character positions have been highlighted
         const highlighted = new Array(html.length).fill(false);
         const matches = [];
-        
+
         // Find all matches for all patterns
         patterns.forEach(({ regex, className }) => {
             regex.lastIndex = 0;
@@ -289,7 +289,7 @@ function createCodeContent({
             while ((match = regex.exec(html)) !== null) {
                 const start = match.index;
                 const end = start + match[0].length;
-                
+
                 // Check if this region overlaps with already highlighted
                 let overlaps = false;
                 for (let i = start; i < end; i++) {
@@ -298,7 +298,7 @@ function createCodeContent({
                         break;
                     }
                 }
-                
+
                 if (!overlaps) {
                     // Mark as highlighted
                     for (let i = start; i < end; i++) {
@@ -308,14 +308,14 @@ function createCodeContent({
                 }
             }
         });
-        
+
         // Sort by start position
         matches.sort((a, b) => a.start - b.start);
-        
+
         // Build final HTML
         let result = '';
         let lastEnd = 0;
-        
+
         matches.forEach(({ start, end, text: matchText, className }) => {
             if (start > lastEnd) {
                 result += html.substring(lastEnd, start);
@@ -323,19 +323,19 @@ function createCodeContent({
             result += '<span class="' + className + '">' + matchText + '</span>';
             lastEnd = end;
         });
-        
+
         if (lastEnd < html.length) {
             result += html.substring(lastEnd);
         }
-        
+
         // Convert newlines to <br>, with extra <br> for trailing empty line
         code.innerHTML = result.replace(/\n/g, '<br>') + trailingBr;
     }
-    
+
     // Get highlight patterns for a language
     function getHighlightPatterns(lang) {
         const patterns = [];
-        
+
         // Common patterns
         const addCommon = () => {
             // Strings (double and single quotes)
@@ -344,7 +344,7 @@ function createCodeContent({
             // Numbers
             patterns.push({ regex: /\b\d+(\.\d+)?\b/g, className: 'hljs-number' });
         };
-        
+
         switch (lang) {
             case 'javascript':
             case 'typescript':
@@ -359,7 +359,7 @@ function createCodeContent({
                 // Built-ins
                 patterns.push({ regex: /\b(console|document|window|Array|Object|String|Number|Boolean|Promise|Map|Set|JSON|Math|Date|RegExp|Error)\b/g, className: 'hljs-built_in' });
                 break;
-                
+
             case 'python':
                 // Comments
                 patterns.push({ regex: /#.*$/gm, className: 'hljs-comment' });
@@ -372,7 +372,7 @@ function createCodeContent({
                 // Built-ins
                 patterns.push({ regex: /\b(print|len|range|str|int|float|list|dict|set|tuple|bool|type|isinstance|hasattr|getattr|setattr|open|input|super|self)\b/g, className: 'hljs-built_in' });
                 break;
-                
+
             case 'json':
                 addCommon();
                 // Property names
@@ -380,7 +380,7 @@ function createCodeContent({
                 // Literals
                 patterns.push({ regex: /\b(true|false|null)\b/g, className: 'hljs-literal' });
                 break;
-                
+
             case 'bash':
             case 'shell':
                 // Comments
@@ -392,7 +392,7 @@ function createCodeContent({
                 patterns.push({ regex: /\$[a-zA-Z_][a-zA-Z0-9_]*/g, className: 'hljs-built_in' });
                 patterns.push({ regex: /\$\{[^}]+\}/g, className: 'hljs-built_in' });
                 break;
-                
+
             case 'css':
                 // Comments
                 patterns.push({ regex: /\/\*[\s\S]*?\*\//g, className: 'hljs-comment' });
@@ -404,7 +404,7 @@ function createCodeContent({
                 // Keywords
                 patterns.push({ regex: /@[a-z-]+/g, className: 'hljs-keyword' });
                 break;
-                
+
             case 'html':
             case 'xml':
                 // Comments
@@ -415,7 +415,7 @@ function createCodeContent({
                 // Attributes
                 patterns.push({ regex: /[a-zA-Z-]+(?==)/g, className: 'hljs-attr' });
                 break;
-                
+
             case 'sql':
                 // Comments
                 patterns.push({ regex: /--.*$/gm, className: 'hljs-comment' });
@@ -426,7 +426,7 @@ function createCodeContent({
                 // Functions
                 patterns.push({ regex: /\b(COUNT|SUM|AVG|MIN|MAX|COALESCE|NULLIF|CAST|CONVERT|SUBSTRING|CONCAT|UPPER|LOWER|TRIM|LENGTH)\b/gi, className: 'hljs-built_in' });
                 break;
-                
+
             case 'java':
             case 'csharp':
             case 'cpp':
@@ -440,7 +440,7 @@ function createCodeContent({
                 // Types
                 patterns.push({ regex: /\b(String|Integer|Long|Float|Double|Boolean|Object|List|Map|Set|Array|ArrayList|HashMap|HashSet)\b/g, className: 'hljs-type' });
                 break;
-                
+
             case 'go':
                 // Comments
                 patterns.push({ regex: /\/\/.*$/gm, className: 'hljs-comment' });
@@ -451,7 +451,7 @@ function createCodeContent({
                 // Types
                 patterns.push({ regex: /\b(string|int|int8|int16|int32|int64|uint|uint8|uint16|uint32|uint64|float32|float64|bool|byte|rune|error)\b/g, className: 'hljs-type' });
                 break;
-                
+
             case 'rust':
                 // Comments
                 patterns.push({ regex: /\/\/.*$/gm, className: 'hljs-comment' });
@@ -464,7 +464,7 @@ function createCodeContent({
                 // Macros
                 patterns.push({ regex: /[a-z_]+!/g, className: 'hljs-built_in' });
                 break;
-                
+
             case 'yaml':
                 // Comments
                 patterns.push({ regex: /#.*$/gm, className: 'hljs-comment' });
@@ -474,15 +474,15 @@ function createCodeContent({
                 // Literals
                 patterns.push({ regex: /\b(true|false|null|yes|no|on|off)\b/gi, className: 'hljs-literal' });
                 break;
-                
+
             default:
                 // No highlighting for unknown languages
                 return null;
         }
-        
+
         return patterns;
     }
-    
+
     return {
         enterEditMode,
         enterDisplayMode,

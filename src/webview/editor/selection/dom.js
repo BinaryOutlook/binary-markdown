@@ -131,7 +131,7 @@ function createDomSelection({
         const range = document.createRange();
         const sel = window.getSelection();
         if (!sel) return;
-        
+
         let last = element.lastChild;
         // Header resize handles are editor UI, never a text caret destination.
         while (last?.nodeType === 1 && last.classList.contains('table-col-resize-handle')) last = last.previousSibling;
@@ -155,7 +155,7 @@ function createDomSelection({
             range.setStart(element, 0);
             range.collapse(true);
         }
-        
+
         sel.removeAllRanges();
         sel.addRange(range);
         element.focus();
@@ -196,7 +196,7 @@ function createDomSelection({
         const range = document.createRange();
         const sel = window.getSelection();
         if (!sel) return;
-        
+
         if (element.firstChild) {
             if (element.firstChild.nodeType === 3) {
                 range.setStart(element.firstChild, 0);
@@ -208,7 +208,7 @@ function createDomSelection({
             range.selectNodeContents(element);
             range.collapse(true);
         }
-        
+
         sel.removeAllRanges();
         sel.addRange(range);
         element.focus();
@@ -252,14 +252,14 @@ function createDomSelection({
 
     function getSelectedListItems(range, sel) {
         const selectedItems = [];
-        
+
         // Get all LI elements in the editor
         const allLis = Array.from(editor.querySelectorAll('li'));
-        
+
         // Create a document fragment to compare positions
         const startContainer = range.startContainer;
         const endContainer = range.endContainer;
-        
+
         // Find the deepest LI element containing the start position
         let startLi = startContainer;
         while (startLi && startLi !== editor && startLi.nodeType !== 1) {
@@ -268,7 +268,7 @@ function createDomSelection({
         while (startLi && startLi !== editor && startLi.tagName?.toLowerCase() !== 'li') {
             startLi = startLi.parentNode;
         }
-        
+
         // Find the deepest LI element containing the end position
         let endLi = endContainer;
         while (endLi && endLi !== editor && endLi.nodeType !== 1) {
@@ -277,7 +277,7 @@ function createDomSelection({
         while (endLi && endLi !== editor && endLi.tagName?.toLowerCase() !== 'li') {
             endLi = endLi.parentNode;
         }
-        
+
         // Also find the LI element where the cursor (focus) is located
         let focusLi = null;
         if (sel && sel.focusNode) {
@@ -290,14 +290,14 @@ function createDomSelection({
             }
             if (focusLi === editor) focusLi = null;
         }
-        
+
         logger.log('getSelectedListItems:', {
             startLi: startLi?.textContent?.substring(0, 20),
             endLi: endLi?.textContent?.substring(0, 20),
             focusLi: focusLi?.textContent?.substring(0, 20),
             isCollapsed: range.collapsed
         });
-        
+
         if (!startLi || !endLi || startLi === editor || endLi === editor) {
             // If no selection range in li, but cursor is in li, return that
             if (focusLi) {
@@ -305,7 +305,7 @@ function createDomSelection({
             }
             return selectedItems;
         }
-        
+
         // If start and end are the same
         if (startLi === endLi) {
             // Check if focus is in a different li (cursor moved after selection)
@@ -325,11 +325,11 @@ function createDomSelection({
             }
             return [startLi];
         }
-        
+
         // Get indices in the allLis array
         let startIndex = allLis.indexOf(startLi);
         let endIndex = allLis.indexOf(endLi);
-        
+
         // Also consider focus position
         if (focusLi) {
             const focusIndex = allLis.indexOf(focusLi);
@@ -338,26 +338,26 @@ function createDomSelection({
                 if (endIndex !== -1) endIndex = Math.max(endIndex, focusIndex);
             }
         }
-        
+
         logger.log('getSelectedListItems indices:', { startIndex, endIndex });
-        
+
         if (startIndex === -1 || endIndex === -1) {
             return selectedItems;
         }
-        
+
         // Collect all LIs between start and end (inclusive)
         const minIndex = Math.min(startIndex, endIndex);
         const maxIndex = Math.max(startIndex, endIndex);
-        
+
         for (let i = minIndex; i <= maxIndex; i++) {
             selectedItems.push(allLis[i]);
         }
-        
+
         // Filter: only keep items that are siblings (same parent list)
         // Find the common parent list of start and end
         const startParentList = startLi.parentNode;
         const endParentList = endLi.parentNode;
-        
+
         let filteredItems;
         if (startParentList === endParentList) {
             // Same parent list - only keep direct children of that list
@@ -400,19 +400,19 @@ function createDomSelection({
                 });
             }
         }
-        
-        logger.log('getSelectedListItems result:', { 
-            total: selectedItems.length, 
-            filtered: filteredItems.length 
+
+        logger.log('getSelectedListItems result:', {
+            total: selectedItems.length,
+            filtered: filteredItems.length
         });
-        
+
         return filteredItems;
     }
 
     function getCurrentLine() {
         const sel = window.getSelection();
         if (!sel || !sel.rangeCount) return null;
-        
+
         let node = sel.anchorNode;
         while (node && node.parentNode !== editor) {
             node = node.parentNode;

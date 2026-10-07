@@ -14,7 +14,7 @@ window.BinaryMath = require('../shared/math-syntax');
         warn: DEBUG_MODE ? (...args) => console.warn('[DEBUG]', ...args) : () => {},
         error: DEBUG_MODE ? (...args) => console.error('[DEBUG]', ...args) : () => {}
     };
-    
+
     const host = window.hostBridge;
     const mathSyntax = window.BinaryMath;
     const tableFormat = window.BinaryTableFormat;
@@ -33,6 +33,488 @@ window.BinaryMath = require('../shared/math-syntax');
     const sidebar = document.getElementById('sidebar');
     const toolbar = document.getElementById('toolbar');
     const editorWrapper = document.getElementById('editorWrapper');
+
+    const { changeParentListType, areListsCompatible, mergeAdjacentLists, indentListItem, outdentListItem, convertListItemToParagraph, convertToList, convertToTaskList, convertLiToType, convertListToType } = require('./editor/editing/lists').createLists({
+        get editor() { return editor; },
+        get getSelectedListItems() { return getSelectedListItems; },
+        get logger() { return logger; },
+        get setCursorToEnd() { return setCursorToEnd; },
+        get setupInteractiveElements() { return setupInteractiveElements; },
+        get syncMarkdown() { return syncMarkdown; }
+    });
+
+    const { checkTablePattern, convertToTable, checkAllPatterns, checkBlockPatterns } = require('./editor/editing/block-patterns').createBlockPatterns({
+        get addTableResizeHandles() { return addTableResizeHandles; },
+        get changeParentListType() { return changeParentListType; },
+        get checkInlinePatterns() { return checkInlinePatterns; },
+        get editor() { return editor; },
+        get emptyTableCell() { return emptyTableCell; },
+        get logger() { return logger; },
+        get renderMathBlock() { return renderMathBlock; },
+        get renderMermaidDiagram() { return renderMermaidDiagram; },
+        get setCursorToEnd() { return setCursorToEnd; },
+        get setupCodeBlockUI() { return setupCodeBlockUI; },
+        get syncMarkdown() { return syncMarkdown; }
+    });
+
+    const { checkInlinePatterns, replaceInlinePatternAnywhere, checkInlineEscape, toggleStrikethrough, isRangeInsideStrikethroughTag, checkStrikethroughStatus, unwrapStrikethroughInRange, wrapRangeWithTag, toggleUnderline, applyInlineFormat } = require('./editor/editing/inline-format').createInlineFormat({
+        get editor() { return editor; },
+        get editorRange() { return editorRange; },
+        get i18n() { return i18n; },
+        get inlineMathHtml() { return inlineMathHtml; },
+        get isSourceMode() { return isSourceMode; },
+        get logger() { return logger; },
+        get markdown() { return markdown; }, set markdown(value) { markdown = value; },
+        get mathBackslashDelimiters() { return mathBackslashDelimiters; },
+        get mathSyntax() { return mathSyntax; },
+        get readCurrentMarkdown() { return readCurrentMarkdown; },
+        get setupInlineMath() { return setupInlineMath; },
+        get showEditorToast() { return showEditorToast; },
+        get syncMarkdown() { return syncMarkdown; },
+        get syncMarkdownSync() { return syncMarkdownSync; },
+        get undoManager() { return undoManager; }
+    });
+
+    const { renderFromMarkdown, normalizeBlockHtml, blocksAreEqual, isProtectedBlock, updateFromMarkdown, renderFrontMatter, renderTocBlock, assignHeadingAnchors, refreshManagedTocs, insertManagedToc, setupDocumentAux, setupLink, setupInteractiveElements, setupAllCodeBlocks } = require('./editor/blocks/render').createRender({
+        get addTableResizeHandles() { return addTableResizeHandles; },
+        get applyPreviewReadOnly() { return applyPreviewReadOnly; },
+        get cancelScheduledSync() { return cancelScheduledSync; },
+        get captureCodeViews() { return captureCodeViews; },
+        get closeInsertMenu() { return closeInsertMenu; },
+        get closeLanguageSelector() { return closeLanguageSelector; },
+        get documentAux() { return documentAux; },
+        get editor() { return editor; },
+        get editorRenderRevision() { return editorRenderRevision; }, set editorRenderRevision(value) { editorRenderRevision = value; },
+        get escapeHtml() { return escapeHtml; },
+        get frontMatterOpen() { return frontMatterOpen; }, set frontMatterOpen(value) { frontMatterOpen = value; },
+        get getCurrentLine() { return getCurrentLine; },
+        get host() { return host; },
+        get i18n() { return i18n; },
+        get initializedLinks() { return initializedLinks; },
+        get isSourceMode() { return isSourceMode; },
+        get logger() { return logger; },
+        get markActivelyEditing() { return markActivelyEditing; },
+        get markAsEdited() { return markAsEdited; },
+        get markdown() { return markdown; }, set markdown(value) { markdown = value; },
+        get markdownToHtmlFragment() { return markdownToHtmlFragment; },
+        get notifyChangeImmediate() { return notifyChangeImmediate; },
+        get readCurrentMarkdown() { return readCurrentMarkdown; },
+        get removeDirectivesFromMarkdown() { return removeDirectivesFromMarkdown; },
+        get restoreCodeViews() { return restoreCodeViews; },
+        get restoreCursorState() { return restoreCursorState; },
+        get saveCurrentDocument() { return saveCurrentDocument; },
+        get saveCursorState() { return saveCursorState; },
+        get setupCodeBlockUI() { return setupCodeBlockUI; },
+        get setupInlineMath() { return setupInlineMath; },
+        get setupMathBlocks() { return setupMathBlocks; },
+        get setupMermaidDiagrams() { return setupMermaidDiagrams; },
+        get showEditorToast() { return showEditorToast; },
+        get sourceEditor() { return sourceEditor; },
+        get syncMarkdown() { return syncMarkdown; },
+        get syncMarkdownSync() { return syncMarkdownSync; },
+        get tableControls() { return tableControls; },
+        get undoManager() { return undoManager; },
+        get updateOutline() { return updateOutline; },
+        get updatePlaceholder() { return updatePlaceholder; },
+        get updateWordCount() { return updateWordCount; },
+        get visualSourceCurrent() { return visualSourceCurrent; }, set visualSourceCurrent(value) { visualSourceCurrent = value; },
+        get workspaceUi() { return workspaceUi; }
+    });
+
+    const { checkExportCancellation, awaitExportReady, exportWarning, stripExportMetadata, hasUnsafeExportStyle, sanitizeExportTree, createExportFallback, prepareExportDocument } = require('./editor/blocks/export').createExport({
+        get applyHighlighting() { return applyHighlighting; },
+        get assignHeadingAnchors() { return assignHeadingAnchors; },
+        get documentAux() { return documentAux; },
+        get exportRenderSequence() { return exportRenderSequence; }, set exportRenderSequence(value) { exportRenderSequence = value; },
+        get getCodePlainText() { return getCodePlainText; },
+        get initMermaid() { return initMermaid; },
+        get inlineMathMarkdown() { return inlineMathMarkdown; },
+        get markdownToHtmlFragment() { return markdownToHtmlFragment; },
+        get renderInlineMath() { return renderInlineMath; },
+        get renderMathBlock() { return renderMathBlock; }
+    });
+
+    const { isSpecialWrapper, enterSpecialWrapperEditMode, stripSentinelAndRebuildCode, exitSpecialWrapperDisplayMode, waitForMermaid, initMermaid, setBlockDiagnostic, renderMermaidDiagram, setupMermaidDiagrams, inlineMathHtml, inlineMathMarkdown, renderInlineMath, setupInlineMath, editInlineMath, mathBlockHtml, mathBlockMarkdown, waitForKatex, renderMathBlock, setupMathBlocks } = require('./editor/blocks/special').createSpecial({
+        get codeBlocksWithSentinel() { return codeBlocksWithSentinel; },
+        get editor() { return editor; },
+        get escapeHtml() { return escapeHtml; },
+        get finishInlineMathEdit() { return finishInlineMathEdit; }, set finishInlineMathEdit(value) { finishInlineMathEdit = value; },
+        get getCodePlainText() { return getCodePlainText; },
+        get i18n() { return i18n; },
+        get isSourceMode() { return isSourceMode; },
+        get logger() { return logger; },
+        get markdown() { return markdown; }, set markdown(value) { markdown = value; },
+        get mermaidInitialized() { return mermaidInitialized; }, set mermaidInitialized(value) { mermaidInitialized = value; },
+        get mermaidReady() { return mermaidReady; }, set mermaidReady(value) { mermaidReady = value; },
+        get mermaidRenderVersions() { return mermaidRenderVersions; },
+        get readCurrentMarkdown() { return readCurrentMarkdown; },
+        get saveCurrentDocument() { return saveCurrentDocument; },
+        get setCursorToEnd() { return setCursorToEnd; },
+        get setCursorToFirstTextNode() { return setCursorToFirstTextNode; },
+        get setCursorToLastLineStartByDOM() { return setCursorToLastLineStartByDOM; },
+        get stripTrailingNewlines() { return stripTrailingNewlines; },
+        get syncMarkdown() { return syncMarkdown; },
+        get syncMarkdownSync() { return syncMarkdownSync; },
+        get undoManager() { return undoManager; },
+        get workspaceUi() { return workspaceUi; }
+    });
+
+    const { revealTableCaret, scrollTableToCaret, showTableToolbar, hideTableToolbar, deleteTableColumn, deleteTableRow, insertTableRowBelow, insertTableRowAbove, insertTableColumnRight, insertTableColumnLeft, setColumnAlignment, addTableResizeHandles, initializeTableColumnWidths, updateColumnWidth, handleResizeStart, handleResizeMove, handleResizeEnd, initializeAllTableResizeHandles } = require('./editor/blocks/tables').createTables({
+        get activeTable() { return activeTable; }, set activeTable(value) { activeTable = value; },
+        get activeTableCell() { return activeTableCell; }, set activeTableCell(value) { activeTableCell = value; },
+        get editor() { return editor; },
+        get emptyTableCell() { return emptyTableCell; },
+        get isTableColResizing() { return isTableColResizing; }, set isTableColResizing(value) { isTableColResizing = value; },
+        get logger() { return logger; },
+        get resizeStartWidth() { return resizeStartWidth; }, set resizeStartWidth(value) { resizeStartWidth = value; },
+        get resizeStartX() { return resizeStartX; }, set resizeStartX(value) { resizeStartX = value; },
+        get resizingCell() { return resizingCell; }, set resizingCell(value) { resizingCell = value; },
+        get resizingTable() { return resizingTable; }, set resizingTable(value) { resizingTable = value; },
+        get setCursorToEnd() { return setCursorToEnd; },
+        get syncMarkdown() { return syncMarkdown; },
+        get tableControls() { return tableControls; }
+    });
+
+    const { ordinaryCodeBlocks, codeViewId, captureCodeViews, restoreCodeViews, applyCodeWrap, toggleCodeWrap, setupCodeBlockUI, deleteCodeBlock, closeLanguageSelector, positionLanguageSelector, showLanguageSelector, setCodeCopyState, copyCodeBlock } = require('./editor/blocks/code-controls').createCodeControls({
+        get applyHighlighting() { return applyHighlighting; },
+        get codeLanguageName() { return codeLanguageName; },
+        get codeViewIds() { return codeViewIds; },
+        get codeViewSequence() { return codeViewSequence; }, set codeViewSequence(value) { codeViewSequence = value; },
+        get codeViewStates() { return codeViewStates; },
+        get convertToSpecialBlock() { return convertToSpecialBlock; },
+        get editor() { return editor; },
+        get editorWrapper() { return editorWrapper; },
+        get enterDisplayMode() { return enterDisplayMode; },
+        get enterEditMode() { return enterEditMode; },
+        get getCodePlainText() { return getCodePlainText; },
+        get host() { return host; },
+        get htmlToMarkdown() { return htmlToMarkdown; },
+        get i18n() { return i18n; },
+        get isNavigatingIntoBlock() { return isNavigatingIntoBlock; },
+        get isSourceMode() { return isSourceMode; },
+        get LANGUAGE_ALIASES() { return LANGUAGE_ALIASES; },
+        get logger() { return logger; },
+        get LUCIDE_ICONS() { return LUCIDE_ICONS; },
+        get markdown() { return markdown; }, set markdown(value) { markdown = value; },
+        get mdProcessNode() { return mdProcessNode; },
+        get orderedCodeLanguages() { return orderedCodeLanguages; },
+        get setCursorToEnd() { return setCursorToEnd; },
+        get setCursorToFirstTextNode() { return setCursorToFirstTextNode; },
+        get stripTrailingNewlines() { return stripTrailingNewlines; },
+        get syncMarkdownSync() { return syncMarkdownSync; },
+        get undoManager() { return undoManager; },
+        get updateOutline() { return updateOutline; },
+        get updateWordCount() { return updateWordCount; }
+    });
+
+    const { updateWidthIndicators, applyEditorWidth, applyMathSourcePreference, initToolbarIcons, closeToolbarOverflow, positionToolbarOverflow, toolbarMenuChoices, renderToolbarCommandSearch, openToolbarOverflow, scheduleToolbarLayout, layoutToolbarActions, requestHostInsertion, finishHostInsertion, captureToolbarSelection, setSidebarOpen, openSidebar, closeSidebar, applyPreviewReadOnly, scheduleSplitPreview, sourceHeadings, sourceOffset, updateSourceCorrespondence, sourceDomPositions, sourceSelectionFromVisual, restoreVisualFromSource, setEditorMode, toggleSourceMode, updateOutline, setActiveOutlineItem, updateActiveOutlineItem, scheduleActiveOutlineUpdate, updateWordCount, updateStatus } = require('./editor/ui/chrome').createChrome({
+        get activeOutlineIndex() { return activeOutlineIndex; }, set activeOutlineIndex(value) { activeOutlineIndex = value; },
+        get assignHeadingAnchors() { return assignHeadingAnchors; },
+        get cancelScheduledSync() { return cancelScheduledSync; },
+        get closeInsertMenu() { return closeInsertMenu; },
+        get closeLanguageSelector() { return closeLanguageSelector; },
+        get closeSearchBox() { return closeSearchBox; },
+        get createCommandItem() { return createCommandItem; },
+        get documentAux() { return documentAux; },
+        get editor() { return editor; },
+        get editorRange() { return editorRange; },
+        get editorRenderRevision() { return editorRenderRevision; },
+        get editorWrapper() { return editorWrapper; },
+        get escapeHtml() { return escapeHtml; },
+        get hideTableToolbar() { return hideTableToolbar; },
+        get host() { return host; },
+        get hostInsertSequence() { return hostInsertSequence; }, set hostInsertSequence(value) { hostInsertSequence = value; },
+        get i18n() { return i18n; },
+        get imageDirDisplayPath() { return imageDirDisplayPath; },
+        get imageDirSource() { return imageDirSource; },
+        get inlineMathMarkdown() { return inlineMathMarkdown; },
+        get insertActions() { return insertActions; },
+        get insertUnavailable() { return insertUnavailable; },
+        get isSourceMode() { return isSourceMode; }, set isSourceMode(value) { isSourceMode = value; },
+        get isSplitMode() { return isSplitMode; }, set isSplitMode(value) { isSplitMode = value; },
+        get LUCIDE_ICONS() { return LUCIDE_ICONS; },
+        get markdown() { return markdown; }, set markdown(value) { markdown = value; },
+        get markdownToHtmlFragment() { return markdownToHtmlFragment; },
+        get matchingCommandItems() { return matchingCommandItems; },
+        get mathBackslashDelimiters() { return mathBackslashDelimiters; },
+        get mdProcessNode() { return mdProcessNode; },
+        get notifyChangeImmediate() { return notifyChangeImmediate; },
+        get openSidebarBtn() { return openSidebarBtn; },
+        get outline() { return outline; },
+        get outlineHeadings() { return outlineHeadings; }, set outlineHeadings(value) { outlineHeadings = value; },
+        get outlineScrollFrame() { return outlineScrollFrame; }, set outlineScrollFrame(value) { outlineScrollFrame = value; },
+        get pendingHostInsert() { return pendingHostInsert; }, set pendingHostInsert(value) { pendingHostInsert = value; },
+        get readCommittedMarkdown() { return readCommittedMarkdown; },
+        get readCurrentMarkdown() { return readCurrentMarkdown; },
+        get renderFromMarkdown() { return renderFromMarkdown; },
+        get restoreCursorState() { return restoreCursorState; },
+        get saveCursorState() { return saveCursorState; },
+        get savedToolbarRange() { return savedToolbarRange; }, set savedToolbarRange(value) { savedToolbarRange = value; },
+        get searchReplaceBox() { return searchReplaceBox; },
+        get showEditorToast() { return showEditorToast; },
+        get sidebar() { return sidebar; },
+        get sourceEditor() { return sourceEditor; },
+        get sourceModeSelection() { return sourceModeSelection; }, set sourceModeSelection(value) { sourceModeSelection = value; },
+        get splitRenderTimer() { return splitRenderTimer; }, set splitRenderTimer(value) { splitRenderTimer = value; },
+        get statusImageDir() { return statusImageDir; },
+        get tableControls() { return tableControls; },
+        get toolbar() { return toolbar; },
+        get toolbarActions() { return toolbarActions; },
+        get toolbarCommandResults() { return toolbarCommandResults; },
+        get toolbarCommandSearch() { return toolbarCommandSearch; },
+        get toolbarInner() { return toolbarInner; },
+        get toolbarLayoutFrame() { return toolbarLayoutFrame; }, set toolbarLayoutFrame(value) { toolbarLayoutFrame = value; },
+        get toolbarMenuRange() { return toolbarMenuRange; }, set toolbarMenuRange(value) { toolbarMenuRange = value; },
+        get toolbarMenuRevision() { return toolbarMenuRevision; }, set toolbarMenuRevision(value) { toolbarMenuRevision = value; },
+        get toolbarMenuSourceSelection() { return toolbarMenuSourceSelection; }, set toolbarMenuSourceSelection(value) { toolbarMenuSourceSelection = value; },
+        get toolbarMore() { return toolbarMore; },
+        get toolbarOverflow() { return toolbarOverflow; },
+        get toolbarOverflowItems() { return toolbarOverflowItems; },
+        get undoManager() { return undoManager; },
+        get visualModeCursor() { return visualModeCursor; }, set visualModeCursor(value) { visualModeCursor = value; },
+        get widthBounds() { return widthBounds; },
+        get widthExplanation() { return widthExplanation; },
+        get widthGuide() { return widthGuide; },
+        get wordCount() { return wordCount; },
+        get workspaceUi() { return workspaceUi; }
+    });
+
+    const { dispatchToolbarAction, executeCommandPaletteAction, executeEditorCommand, convertToHeading, convertToParagraph, convertToBlockquote, convertToCodeBlock, insertHorizontalRule, wrapWithInlineCode, insertLink } = require('./editor/ui/commands').createCommands({
+        get applyInlineFormat() { return applyInlineFormat; },
+        get commandPalette() { return commandPalette; },
+        get commandPaletteRepositionHandler() { return commandPaletteRepositionHandler; },
+        get commandPaletteSavedRange() { return commandPaletteSavedRange; }, set commandPaletteSavedRange(value) { commandPaletteSavedRange = value; },
+        get commandPaletteVisible() { return commandPaletteVisible; }, set commandPaletteVisible(value) { commandPaletteVisible = value; },
+        get convertListToType() { return convertListToType; },
+        get convertToList() { return convertToList; },
+        get convertToSpecialBlock() { return convertToSpecialBlock; },
+        get convertToTaskList() { return convertToTaskList; },
+        get editInlineMath() { return editInlineMath; },
+        get editor() { return editor; },
+        get editorRange() { return editorRange; },
+        get enterEditMode() { return enterEditMode; },
+        get enterSpecialWrapperEditMode() { return enterSpecialWrapperEditMode; },
+        get escapeHtml() { return escapeHtml; },
+        get getCurrentLine() { return getCurrentLine; },
+        get inlineMathHtml() { return inlineMathHtml; },
+        get insertActions() { return insertActions; },
+        get insertManagedToc() { return insertManagedToc; },
+        get isSpecialWrapper() { return isSpecialWrapper; },
+        get markAsEdited() { return markAsEdited; },
+        get openInsertMenu() { return openInsertMenu; },
+        get openSearchBox() { return openSearchBox; },
+        get openSidebar() { return openSidebar; },
+        get requestHostInsertion() { return requestHostInsertion; },
+        get setCursorToEnd() { return setCursorToEnd; },
+        get setEditorMode() { return setEditorMode; },
+        get setupCodeBlockUI() { return setupCodeBlockUI; },
+        get setupInlineMath() { return setupInlineMath; },
+        get setupLink() { return setupLink; },
+        get stopCommandPaletteOutsideClicks() { return stopCommandPaletteOutsideClicks; },
+        get syncMarkdown() { return syncMarkdown; },
+        get syncMarkdownSync() { return syncMarkdownSync; },
+        get toggleUnderline() { return toggleUnderline; },
+        get undoManager() { return undoManager; }
+    });
+
+    const { createInsertPreview, filterInsertWorkspace, editorRange, insertUnavailable, insertTrigger, positionInsertMenu, updateInsertScroll, restoreInsertRange, focusInsertChoice, closeInsertMenu, openInsertMenu, parseI18nLabel, createCommandPalette, commandItemLabel, matchingCommandItems, createCommandItem, renderCommandPaletteItems, moveCommandPaletteSelection, commandPaletteOutsideClickHandler, stopCommandPaletteOutsideClicks, commandPaletteRepositionHandler, openCommandPalette, closeCommandPalette } = require('./editor/ui/menus').createMenus({
+        get actionDescription() { return actionDescription; },
+        get applyHighlighting() { return applyHighlighting; },
+        get closeToolbarOverflow() { return closeToolbarOverflow; },
+        get COMMAND_PALETTE_GROUPS() { return COMMAND_PALETTE_GROUPS; },
+        get COMMAND_PALETTE_ITEMS() { return COMMAND_PALETTE_ITEMS; },
+        get commandPalette() { return commandPalette; }, set commandPalette(value) { commandPalette = value; },
+        get commandPaletteCategory() { return commandPaletteCategory; }, set commandPaletteCategory(value) { commandPaletteCategory = value; },
+        get commandPaletteCount() { return commandPaletteCount; }, set commandPaletteCount(value) { commandPaletteCount = value; },
+        get commandPaletteInput() { return commandPaletteInput; }, set commandPaletteInput(value) { commandPaletteInput = value; },
+        get commandPaletteList() { return commandPaletteList; }, set commandPaletteList(value) { commandPaletteList = value; },
+        get commandPaletteOutsideClickTimer() { return commandPaletteOutsideClickTimer; }, set commandPaletteOutsideClickTimer(value) { commandPaletteOutsideClickTimer = value; },
+        get commandPaletteSavedRange() { return commandPaletteSavedRange; }, set commandPaletteSavedRange(value) { commandPaletteSavedRange = value; },
+        get commandPaletteVisible() { return commandPaletteVisible; }, set commandPaletteVisible(value) { commandPaletteVisible = value; },
+        get editor() { return editor; },
+        get executeCommandPaletteAction() { return executeCommandPaletteAction; },
+        get i18n() { return i18n; },
+        get insertButton() { return insertButton; },
+        get insertCategory() { return insertCategory; },
+        get insertCategorySelection() { return insertCategorySelection; }, set insertCategorySelection(value) { insertCategorySelection = value; },
+        get insertMenu() { return insertMenu; },
+        get insertMenuRange() { return insertMenuRange; }, set insertMenuRange(value) { insertMenuRange = value; },
+        get insertSamples() { return insertSamples; },
+        get insertSearch() { return insertSearch; },
+        get isSourceMode() { return isSourceMode; },
+        get LUCIDE_ICONS() { return LUCIDE_ICONS; },
+        get savedToolbarRange() { return savedToolbarRange; },
+        get toolbar() { return toolbar; },
+        get toolbarMore() { return toolbarMore; },
+        get undoManager() { return undoManager; }
+    });
+
+    const { readCommittedMarkdown, readCurrentMarkdown, cancelScheduledSync, saveCurrentDocument, debouncedSync, syncMarkdownDeferred, syncMarkdown, syncMarkdownSync, notifyChangeImmediate, notifyChange, markAsEdited, markActivelyEditing, applyQueuedExternalChange } = require('./editor/core/session').createSession({
+        get clientRevision() { return clientRevision; }, set clientRevision(value) { clientRevision = value; },
+        get currentForceRelativePath() { return currentForceRelativePath; }, set currentForceRelativePath(value) { currentForceRelativePath = value; },
+        get currentImageDir() { return currentImageDir; }, set currentImageDir(value) { currentImageDir = value; },
+        get EDITING_IDLE_TIMEOUT() { return EDITING_IDLE_TIMEOUT; },
+        get editingIdleTimer() { return editingIdleTimer; }, set editingIdleTimer(value) { editingIdleTimer = value; },
+        get extractForceRelativePathFromMarkdown() { return extractForceRelativePathFromMarkdown; },
+        get extractImageDirFromMarkdown() { return extractImageDirFromMarkdown; },
+        get finishInlineMathEdit() { return finishInlineMathEdit; },
+        get hasUserEdited() { return hasUserEdited; }, set hasUserEdited(value) { hasUserEdited = value; },
+        get host() { return host; },
+        get htmlToMarkdown() { return htmlToMarkdown; },
+        get isActivelyEditing() { return isActivelyEditing; }, set isActivelyEditing(value) { isActivelyEditing = value; },
+        get isSourceMode() { return isSourceMode; },
+        get logger() { return logger; },
+        get markdown() { return markdown; }, set markdown(value) { markdown = value; },
+        get pendingSave() { return pendingSave; }, set pendingSave(value) { pendingSave = value; },
+        get pendingSync() { return pendingSync; }, set pendingSync(value) { pendingSync = value; },
+        get queuedExternalContent() { return queuedExternalContent; }, set queuedExternalContent(value) { queuedExternalContent = value; },
+        get refreshManagedTocs() { return refreshManagedTocs; },
+        get saveTimeout() { return saveTimeout; }, set saveTimeout(value) { saveTimeout = value; },
+        get showEditorToast() { return showEditorToast; },
+        get sourceEditor() { return sourceEditor; },
+        get syncGeneration() { return syncGeneration; }, set syncGeneration(value) { syncGeneration = value; },
+        get syncTimeout() { return syncTimeout; }, set syncTimeout(value) { syncTimeout = value; },
+        get updateFromMarkdown() { return updateFromMarkdown; },
+        get updateOutline() { return updateOutline; },
+        get updatePlaceholder() { return updatePlaceholder; },
+        get updateStatus() { return updateStatus; },
+        get updateWordCount() { return updateWordCount; },
+        get visualSourceCurrent() { return visualSourceCurrent; }, set visualSourceCurrent(value) { visualSourceCurrent = value; }
+    });
+
+    const { showEditorToast, createDragCursor, showDragCursor, hideDragCursor, readAndInsertImage } = require('./editor/transfer/clipboard').createClipboard({
+        get dragCursor() { return dragCursor; }, set dragCursor(value) { dragCursor = value; },
+        get editor() { return editor; },
+        get externalChangeToast() { return externalChangeToast; }, set externalChangeToast(value) { externalChangeToast = value; },
+        get host() { return host; },
+        get logger() { return logger; },
+        get toastHideTimer() { return toastHideTimer; }, set toastHideTimer(value) { toastHideTimer = value; }
+    });
+
+
+    const { handleMathDelimiterEnter, handleContextSelectAll, handleKeydown } = require('./editor/input/dispatch').createDispatch({
+        get getCurrentLine() { return getCurrentLine; },
+        get mathBackslashDelimiters() { return mathBackslashDelimiters; },
+        get undoManager() { return undoManager; },
+        get mathBlockHtml() { return mathBlockHtml; },
+        get setupMathBlocks() { return setupMathBlocks; },
+        get enterSpecialWrapperEditMode() { return enterSpecialWrapperEditMode; },
+        get syncMarkdown() { return syncMarkdown; },
+        get logger() { return logger; },
+        get handleEarlyListBackspace() { return handleEarlyListBackspace; },
+        get handlePlainShiftEnter() { return handlePlainShiftEnter; },
+        get handleInlineShiftEnter() { return handleInlineShiftEnter; },
+        get handleTableEnter() { return handleTableEnter; },
+        get handleCodeEnter() { return handleCodeEnter; },
+        get handleQuoteEnter() { return handleQuoteEnter; },
+        get handleListEnter() { return handleListEnter; },
+        get handleProseEnter() { return handleProseEnter; },
+        get handleSpacePatterns() { return handleSpacePatterns; },
+        get handleTableTab() { return handleTableTab; },
+        get handleCodeQuoteTab() { return handleCodeQuoteTab; },
+        get handleMultiListTab() { return handleMultiListTab; },
+        get handleSingleListTab() { return handleSingleListTab; },
+        get handleGeneralTab() { return handleGeneralTab; },
+        get handleTableArrows() { return handleTableArrows; },
+        get handleBlockArrows() { return handleBlockArrows; },
+        get handleFallbackEmptyList() { return handleFallbackEmptyList; },
+        get handleParagraphInsideListDelete() { return handleParagraphInsideListDelete; },
+        get handleParagraphDelete() { return handleParagraphDelete; },
+        get handleCodeSpecialDelete() { return handleCodeSpecialDelete; },
+        get handleHeadingQuoteDelete() { return handleHeadingQuoteDelete; },
+        get handleRemainingListDelete() { return handleRemainingListDelete; },
+        get isSourceMode() { return isSourceMode; },
+        get markActivelyEditing() { return markActivelyEditing; },
+        get editor() { return editor; },
+        get handleBackspaceOnList() { return handleBackspaceOnList; }
+    });
+    const { handleEarlyListBackspace } = require('./editor/input/list-selection-delete').createListSelectionDelete({
+        get logger() { return logger; },
+        get editor() { return editor; },
+        get syncMarkdownSync() { return syncMarkdownSync; },
+        get setCursorToEnd() { return setCursorToEnd; },
+        get syncMarkdown() { return syncMarkdown; }
+    });
+    const { handlePlainShiftEnter, handleInlineShiftEnter, handleProseEnter, handleSpacePatterns, handleGeneralTab, handleHeadingQuoteDelete } = require('./editor/input/paragraph-format').createParagraphFormat({
+        get syncMarkdown() { return syncMarkdown; },
+        get logger() { return logger; },
+        get getCurrentLine() { return getCurrentLine; },
+        get setCursorToStart() { return setCursorToStart; },
+        get checkTablePattern() { return checkTablePattern; },
+        get convertToTable() { return convertToTable; },
+        get setCursorToEnd() { return setCursorToEnd; },
+        get checkAllPatterns() { return checkAllPatterns; },
+        get checkInlinePatterns() { return checkInlinePatterns; },
+        get undoManager() { return undoManager; },
+        get checkInlineEscape() { return checkInlineEscape; },
+        get editor() { return editor; }
+    });
+    const { handleTableEnter, handleTableTab, handleTableArrows } = require('./editor/input/tables').createTables({
+        get logger() { return logger; },
+        get emptyTableCell() { return emptyTableCell; },
+        get activeTableCell() { return activeTableCell; }, set activeTableCell(value) { activeTableCell = value; },
+        get setCursorToEnd() { return setCursorToEnd; },
+        get syncMarkdown() { return syncMarkdown; },
+        get editor() { return editor; },
+        get showTableToolbar() { return showTableToolbar; },
+        get setCursorToLastLineStartByDOM() { return setCursorToLastLineStartByDOM; },
+        get navigateToAdjacentElement() { return navigateToAdjacentElement; },
+        get hideTableToolbar() { return hideTableToolbar; },
+        get activeTable() { return activeTable; }, set activeTable(value) { activeTable = value; },
+        get setCursorToStart() { return setCursorToStart; },
+        get revealTableCaret() { return revealTableCaret; }
+    });
+    const { handleCodeEnter, handleQuoteEnter, handleCodeQuoteTab, handleBlockArrows, handleCodeSpecialDelete } = require('./editor/input/block-navigation').createBlockNavigation({
+        get editor() { return editor; },
+        get logger() { return logger; },
+        get exitSpecialWrapperDisplayMode() { return exitSpecialWrapperDisplayMode; },
+        get setCursorToEnd() { return setCursorToEnd; },
+        get syncMarkdown() { return syncMarkdown; },
+        get getCodePlainText() { return getCodePlainText; },
+        get codeBlocksWithSentinel() { return codeBlocksWithSentinel; },
+        get indentLinesInContainer() { return indentLinesInContainer; },
+        get getCurrentLineInBlock() { return getCurrentLineInBlock; },
+        get navigateToAdjacentElement() { return navigateToAdjacentElement; },
+        get enterDisplayMode() { return enterDisplayMode; },
+        get setCursorToLineStart() { return setCursorToLineStart; },
+        get scrollCursorIntoView() { return scrollCursorIntoView; },
+        get setCursorToFirstTextNode() { return setCursorToFirstTextNode; },
+        get isSpecialWrapper() { return isSpecialWrapper; }
+    });
+    const { handleListEnter, handleMultiListTab, handleSingleListTab } = require('./editor/input/list-enter-tab').createListEnterTab({
+        get editor() { return editor; },
+        get setCursorToEnd() { return setCursorToEnd; },
+        get syncMarkdown() { return syncMarkdown; },
+        get getSelectedListItems() { return getSelectedListItems; },
+        get logger() { return logger; },
+        get outdentListItem() { return outdentListItem; },
+        get indentListItem() { return indentListItem; },
+        get setCursorToEndOfLi() { return setCursorToEndOfLi; }
+    });
+    const { handleBackspaceOnList, setCursorToEndOfLi } = require('./editor/input/list-backspace').createListBackspace({
+        get editor() { return editor; },
+        get logger() { return logger; },
+        get setCursorToEnd() { return setCursorToEnd; },
+        get setCursorToStart() { return setCursorToStart; },
+        get syncMarkdown() { return syncMarkdown; }
+    });
+    const { handleFallbackEmptyList, handleParagraphInsideListDelete, handleRemainingListDelete } = require('./editor/input/list-boundaries').createListBoundaries({
+        get logger() { return logger; },
+        get editor() { return editor; },
+        get setCursorToEnd() { return setCursorToEnd; },
+        get syncMarkdown() { return syncMarkdown; }
+    });
+    const { handleParagraphDelete } = require('./editor/input/paragraph-delete').createParagraphDelete({
+        get setCursorToStart() { return setCursorToStart; },
+        get syncMarkdown() { return syncMarkdown; },
+        get setCursorToEndOfLi() { return setCursorToEndOfLi; },
+        get setCursorToEnd() { return setCursorToEnd; },
+        get isNavigatingIntoBlock() { return isNavigatingIntoBlock; }, set isNavigatingIntoBlock(value) { isNavigatingIntoBlock = value; },
+        get enterEditMode() { return enterEditMode; },
+        get resetNavigationFlag() { return resetNavigationFlag; },
+        get isSpecialWrapper() { return isSpecialWrapper; },
+        get enterSpecialWrapperEditMode() { return enterSpecialWrapperEditMode; }
+    });
     let editorRenderRevision = 0;
     let sourceBlockSequence = 0;
     // View identities survive Markdown-driven rebuilds. Wrap preferences live
@@ -44,27 +526,6 @@ window.BinaryMath = require('../shared/math-syntax');
     const widthGuide = document.getElementById('editorWidthGuide');
     const widthBounds = document.getElementById('editorWidthBounds');
     const widthExplanation = document.getElementById('editorWidthExplanation');
-
-    function updateWidthIndicators() {
-        if (!widthGuide) return;
-        const visible = document.documentElement.dataset.editorWidthIndicators !== 'false' && editor.style.display !== 'none';
-        if (!visible && widthGuide.contains(document.activeElement)) {
-            (editor.style.display === 'none' ? sourceEditor : editor).focus({ preventScroll: true });
-        }
-        widthGuide.hidden = !visible;
-        const pane = editorWrapper.getBoundingClientRect();
-        const column = editor.getBoundingClientRect();
-        // Reserve the guide strip while enabled, so revealing the marks cannot
-        // add a scrollbar and oscillate around the width threshold.
-        const capped = visible && document.documentElement.dataset.editorWidthMode !== 'full' && editorWrapper.clientWidth - column.width > 0.5;
-        widthGuide.dataset.capped = String(capped);
-        if (!capped) {
-            if (widthGuide.contains(document.activeElement)) editor.focus({ preventScroll: true });
-            widthExplanation.hidden = true;
-        }
-        widthBounds.style.left = (column.left - pane.left) + 'px';
-        widthBounds.style.width = column.width + 'px';
-    }
     if (widthGuide) {
         for (const mark of widthGuide.querySelectorAll('button')) {
             mark.addEventListener('pointerdown', event => event.preventDefault());
@@ -85,46 +546,7 @@ window.BinaryMath = require('../shared/math-syntax');
         new MutationObserver(updateWidthIndicators).observe(editor, { attributes: true, attributeFilter: ['style'] });
         window.addEventListener('resize', updateWidthIndicators);
     }
-
-    function applyEditorWidth(mode, width, alignment = document.documentElement.dataset.editorAlignment) {
-        const layout = window.BinaryEditorLayout;
-        const preference = layout.normalizeWidthMode(mode);
-        const maximum = layout.normalizeMaxWidth(width);
-        const placement = layout.normalizeAlignment(alignment);
-        const bounds = editorWrapper.getBoundingClientRect();
-        const selection = window.getSelection();
-        const range = selection?.rangeCount && editor.contains(selection.anchorNode) ? selection.getRangeAt(0) : null;
-        const caretBefore = range?.getBoundingClientRect();
-        const keepCaret = caretBefore?.height && caretBefore.top >= bounds.top && caretBefore.bottom <= bounds.bottom;
-        const anchor = Array.from(editor.children).find(child => child.getBoundingClientRect().bottom > bounds.top);
-        const anchorTop = anchor?.getBoundingClientRect().top;
-        document.documentElement.dataset.editorWidthMode = preference;
-        document.documentElement.dataset.editorMaxWidth = String(maximum);
-        document.documentElement.dataset.editorAlignment = placement;
-        // Set only the live editor. Source and detached export preparation keep
-        // their own layout, and no editable nodes or undo snapshots are replaced.
-        editor.style.maxWidth = preference === 'full' ? 'none' : (preference === 'custom' ? maximum : layout.defaultWidth) + 'px';
-        editor.style.marginLeft = placement === 'left' ? '0' : 'auto';
-        editor.style.marginRight = placement === 'right' ? '0' : 'auto';
-        if (keepCaret) editorWrapper.scrollTop += range.getBoundingClientRect().top - caretBefore.top;
-        else if (anchor && anchorTop !== undefined) editorWrapper.scrollTop += anchor.getBoundingClientRect().top - anchorTop;
-        updateWidthIndicators();
-    }
     applyEditorWidth(document.documentElement.dataset.editorWidthMode, Number(document.documentElement.dataset.editorMaxWidth));
-
-    function applyMathSourcePreference(name, value) {
-        const selection = window.getSelection();
-        const range = selection?.rangeCount ? selection.getRangeAt(0) : null;
-        const node = selection?.anchorNode;
-        const wrapper = (node?.nodeType === Node.ELEMENT_NODE ? node : node?.parentElement)?.closest('.math-wrapper[data-mode="edit"]');
-        const caretBefore = wrapper && range?.getBoundingClientRect();
-        const bounds = editorWrapper.getBoundingClientRect();
-        const keepCaret = caretBefore?.height && caretBefore.top >= bounds.top && caretBefore.bottom <= bounds.bottom;
-        document.documentElement.dataset[name] = value;
-        if (workspaceUi) workspaceUi.refresh();
-        // CSS changes the layout without detaching the active editable node.
-        if (keepCaret) editorWrapper.scrollTop += range.getBoundingClientRect().top - caretBefore.top;
-    }
 
     // Reading-position outline state. The active section is the last heading
     // that has crossed the reading line 30% down the visible editor viewport.
@@ -181,14 +603,6 @@ window.BinaryMath = require('../shared/math-syntax');
         'align-center': '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 5H3"/><path d="M17 12H7"/><path d="M19 19H5"/></svg>',
         'align-right': '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 5H3"/><path d="M21 12H9"/><path d="M21 19H7"/></svg>',
     };
-
-    // Populate toolbar buttons with Lucide icons
-    function initToolbarIcons() {
-        toolbar.querySelectorAll('button[data-action]').forEach(function(btn) {
-            var icon = btn.dataset.action === 'contextToolbar' ? null : LUCIDE_ICONS[btn.dataset.action];
-            if (icon) btn.innerHTML = icon;
-        });
-    }
     initToolbarIcons();
 
     // Keep complete actions in the bar and move the remainder into a menu.
@@ -215,147 +629,6 @@ window.BinaryMath = require('../shared/math-syntax');
             button.appendChild(label);
             toolbarActions.push({ button, home, formatting: toolbarInner.contains(button) });
         });
-    }
-
-    function closeToolbarOverflow(restoreFocus) {
-        if (!toolbarOverflow) return;
-        toolbarOverflow.hidden = true;
-        toolbarMore.setAttribute('aria-expanded', 'false');
-        if (editorRange(toolbarMenuRange)) {
-            const selection = window.getSelection();
-            selection.removeAllRanges(); selection.addRange(toolbarMenuRange);
-        }
-        if (toolbarMenuSourceSelection && isSourceMode) {
-            sourceEditor.setSelectionRange(toolbarMenuSourceSelection.start, toolbarMenuSourceSelection.end);
-        }
-        toolbarMenuRange = null; toolbarMenuSourceSelection = null;
-        if (restoreFocus) toolbarMore.focus({ preventScroll: true });
-    }
-
-    function positionToolbarOverflow() {
-        const rect = toolbarMore.getBoundingClientRect();
-        const width = Math.min(300, Math.max(0, window.innerWidth - 16));
-        toolbarOverflow.style.width = width + 'px';
-        toolbarOverflow.style.left = Math.max(8, Math.min(rect.left, window.innerWidth - width - 8)) + 'px';
-        toolbarOverflow.style.top = Math.min(rect.bottom + 4, window.innerHeight - 36) + 'px';
-        toolbarOverflow.style.maxHeight = Math.max(28, window.innerHeight - rect.bottom - 12) + 'px';
-    }
-
-    function toolbarMenuChoices() {
-        return [...toolbarOverflow.querySelectorAll('button:not(:disabled)')].filter(button => button.getClientRects().length);
-    }
-
-    function renderToolbarCommandSearch() {
-        const query = toolbarCommandSearch.value.trim();
-        const searching = Boolean(query) || !toolbarOverflowItems.children.length;
-        toolbarOverflowItems.hidden = searching;
-        toolbarCommandResults.hidden = !searching;
-        toolbarCommandResults.replaceChildren();
-        if (!searching) return;
-        for (const item of matchingCommandItems(query)) {
-            const control = createCommandItem(item);
-            delete control.dataset.action;
-            control.dataset.menuCommand = item.action;
-            control.setAttribute('role', 'menuitem');
-            const reason = isSourceMode && !item.action.startsWith('view') ? i18n.insertUnavailableSource
-                : insertActions.includes(item.action) ? insertUnavailable(item.action, toolbarMenuRange) : '';
-            if (reason) { control.disabled = true; control.querySelector('small').textContent = reason; }
-            toolbarCommandResults.appendChild(control);
-        }
-        if (!toolbarCommandResults.children.length) {
-            const empty = document.createElement('p'); empty.setAttribute('role', 'status');
-            empty.textContent = i18n.noMatchingActions + '. ' + i18n.searchRecovery;
-            const clear = document.createElement('button'); clear.type = 'button'; clear.textContent = i18n.clearSearch;
-            clear.addEventListener('click', event => {
-                event.stopPropagation(); toolbarCommandSearch.value = ''; renderToolbarCommandSearch(); toolbarCommandSearch.focus();
-            });
-            toolbarCommandResults.append(empty, clear);
-        }
-    }
-
-    function openToolbarOverflow(last) {
-        const selection = window.getSelection();
-        const current = selection?.rangeCount ? selection.getRangeAt(0) : null;
-        toolbarMenuRange = editorRange(current) ? current.cloneRange()
-            : editorRange(savedToolbarRange) ? savedToolbarRange.cloneRange() : null;
-        if (!toolbarMenuRange && !isSourceMode) {
-            toolbarMenuRange = document.createRange(); toolbarMenuRange.selectNodeContents(editor); toolbarMenuRange.collapse(false);
-        }
-        toolbarMenuRevision = editorRenderRevision;
-        toolbarMenuSourceSelection = isSourceMode ? { start: sourceEditor.selectionStart, end: sourceEditor.selectionEnd } : null;
-        toolbarCommandSearch.value = '';
-        renderToolbarCommandSearch();
-        toolbarOverflow.hidden = false;
-        toolbarMore.setAttribute('aria-expanded', 'true');
-        positionToolbarOverflow();
-        if (last) toolbarMenuChoices().at(-1)?.focus({ preventScroll: true });
-        else toolbarCommandSearch.focus({ preventScroll: true });
-    }
-
-    function scheduleToolbarLayout() {
-        if (!toolbarMore || toolbarLayoutFrame) return;
-        toolbarLayoutFrame = requestAnimationFrame(layoutToolbarActions);
-    }
-
-    function layoutToolbarActions() {
-        toolbarLayoutFrame = 0;
-        const active = document.activeElement;
-        const focusedAction = toolbarActions.find(item => item.button === active);
-        const wasOpen = !toolbarOverflow.hidden;
-        const full = document.documentElement.dataset.toolbarMode !== 'simple';
-        for (const { button, home } of toolbarActions) {
-            if (button.parentNode !== home.parentNode) home.after(button);
-            button.removeAttribute('role');
-        }
-        toolbarMore.hidden = false;
-        toolbar.querySelectorAll('.toolbar-fixed').forEach(section => section.classList.remove('toolbar-empty'));
-        const utilityWidth = [...toolbar.querySelectorAll('.toolbar-fixed')].reduce((width, section) => width + section.getBoundingClientRect().width, 0);
-        if (toolbar.dataset.utilityWidth !== String(utilityWidth)) {
-            toolbar.dataset.utilityWidth = String(utilityWidth);
-            tableControls.schedule();
-        }
-        const fits = () => {
-            const fixedWidth = [...toolbar.children].filter(child => child !== toolbarInner && child !== toolbarOverflow && child.getClientRects().length)
-                .reduce((width, child) => {
-                    const style = getComputedStyle(child);
-                    return width + child.getBoundingClientRect().width + (parseFloat(style.marginLeft) || 0) + (parseFloat(style.marginRight) || 0);
-                }, 0);
-            return fixedWidth <= toolbar.clientWidth + 0.5 && (!full || toolbarInner.scrollWidth <= toolbarInner.clientWidth);
-        };
-        if (!fits()) {
-            toolbarMore.hidden = false;
-            const candidates = toolbarActions.filter(item => full && item.formatting).reverse()
-                .concat(toolbarActions.filter(item => !item.formatting && item.button.closest('.toolbar-fixed--right')).reverse())
-                .concat(toolbarActions.filter(item => !item.formatting && item.button.closest('.toolbar-fixed--tools')).reverse())
-                .concat(toolbarActions.filter(item => !item.formatting && item.button.closest('.toolbar-fixed--left')).reverse());
-            for (const { button, home } of candidates) {
-                if (fits()) break;
-                if (!button.getClientRects().length) continue;
-                toolbarOverflowItems.appendChild(button);
-                button.setAttribute('role', 'menuitem');
-                const section = home.parentElement.closest('.toolbar-fixed');
-                if (section && ![...section.querySelectorAll('button')].some(item => item.getClientRects().length)) {
-                    section.classList.add('toolbar-empty');
-                }
-            }
-        }
-        // Original order in the menu remains stable as its membership changes.
-        for (const { button } of toolbarActions) {
-            if (button.parentNode === toolbarOverflowItems) toolbarOverflowItems.appendChild(button);
-        }
-        if (wasOpen || focusedAction?.button.parentNode === toolbarOverflowItems) {
-            renderToolbarCommandSearch();
-            toolbarOverflow.hidden = false;
-            toolbarMore.setAttribute('aria-expanded', 'true');
-            positionToolbarOverflow();
-        }
-        if (active.dataset?.menuCommand) toolbarCommandResults.querySelector('[data-menu-command="' + active.dataset.menuCommand + '"]')?.focus({ preventScroll: true });
-        else if (active === toolbarMore && !toolbarMore.hidden) toolbarMore.focus({ preventScroll: true });
-        else if (focusedAction && active.getClientRects().length) active.focus({ preventScroll: true });
-        else if (focusedAction || (active === toolbarMore && toolbarMore.hidden)) {
-            const first = toolbarActions.find(item => item.button.getClientRects().length && !item.button.disabled);
-            first?.button.focus({ preventScroll: true });
-        }
     }
 
     if (toolbarMore) {
@@ -468,42 +741,6 @@ window.BinaryMath = require('../shared/math-syntax');
     let clientRevision = 0;
     let syncGeneration = 0;
     let pendingSave = null;
-
-    // Background reads must leave an in-progress equation edit cancellable.
-    // Capturing export eligibility must never normalize an untouched document.
-    function readCommittedMarkdown() {
-        return isSourceMode ? sourceEditor.value : (hasUserEdited && !visualSourceCurrent ? htmlToMarkdown() : markdown);
-    }
-
-    function readCurrentMarkdown() {
-        if (finishInlineMathEdit) finishInlineMathEdit(true, false);
-        return readCommittedMarkdown();
-    }
-
-    function cancelScheduledSync() {
-        syncGeneration++;
-        clearTimeout(syncTimeout);
-        syncTimeout = null;
-        clearTimeout(saveTimeout);
-        saveTimeout = null;
-        pendingSync = false;
-    }
-
-    function saveCurrentDocument() {
-        try { refreshManagedTocs(false); } catch (error) { showEditorToast(error.message); return; }
-        const content = readCurrentMarkdown();
-        cancelScheduledSync();
-        markdown = content;
-        if (typeof host.respondExport === 'function') {
-            pendingSave = { revision: clientRevision, content: content };
-            host.save(content, clientRevision);
-        } else {
-            // The Electron adapter keeps its existing save contract.
-            if (hasUserEdited) host.syncContent(content);
-            host.save();
-            hasUserEdited = false;
-        }
-    }
     let currentImageDir = null; // IMAGE_DIR directive value (preserved during sync)
     let currentForceRelativePath = null; // FORCE_RELATIVE_PATH directive value (preserved during sync)
     let imageDirDisplayPath = null; // Resolved display path from extension
@@ -564,7 +801,7 @@ window.BinaryMath = require('../shared/math-syntax');
     let editingIdleTimer = null;
     let queuedExternalContent = null; // Queued external change waiting for idle
     const EDITING_IDLE_TIMEOUT = 1500; // 1.5 seconds of inactivity = idle
-    
+
     // Extract IMAGE_DIR from markdown content
     // Supports both standalone and combined directive blocks
     function extractImageDirFromMarkdown(md) {
@@ -573,7 +810,7 @@ window.BinaryMath = require('../shared/math-syntax');
         const match = md.match(pattern);
         return match ? match[1].trim() : null;
     }
-    
+
     // Extract FORCE_RELATIVE_PATH from markdown content
     // Supports both standalone and combined directive blocks
     function extractForceRelativePathFromMarkdown(md) {
@@ -581,30 +818,30 @@ window.BinaryMath = require('../shared/math-syntax');
         const match = md.match(pattern);
         return match ? match[1].toLowerCase() === 'true' : null;
     }
-    
+
     // Remove all directive blocks from markdown content (for rendering)
     // This removes all --- blocks containing IMAGE_DIR or FORCE_RELATIVE_PATH
     function removeDirectivesFromMarkdown(md) {
         // Remove standalone directive blocks (single directive)
         md = md.replace(/\n---\nIMAGE_DIR:\s*[^\n]+\s*$/g, '');
         md = md.replace(/\n---\nFORCE_RELATIVE_PATH:\s*(true|false)\s*$/gi, '');
-        
+
         // Remove combined directive block at end of file
         // Pattern: ---\n followed by any combination of IMAGE_DIR and FORCE_RELATIVE_PATH lines
         md = md.replace(/\n---\n(?:(?:IMAGE_DIR:\s*[^\n]+|FORCE_RELATIVE_PATH:\s*(?:true|false))\n?)+\s*$/gi, '');
-        
+
         return md;
     }
-    
+
     // Initialize currentImageDir and currentForceRelativePath from initial content
     currentImageDir = extractImageDirFromMarkdown(markdown);
     currentForceRelativePath = extractForceRelativePathFromMarkdown(markdown);
-    
+
     // Resolve relative image path to full webview URI
     function resolveImagePath(src) {
         if (!src) return '';
         // If already absolute URL or data URL, return as-is
-        if (src.startsWith('http://') || src.startsWith('https://') || 
+        if (src.startsWith('http://') || src.startsWith('https://') ||
             src.startsWith('data:') || src.startsWith('vscode-resource:') ||
             src.startsWith('vscode-webview:')) {
             return src;
@@ -736,47 +973,6 @@ window.BinaryMath = require('../shared/math-syntax');
     })();
     undoManager.updateButtons();
 
-    // Debounced sync for performance - uses requestIdleCallback to avoid blocking UI
-    function debouncedSync() {
-        if (pendingSync) return; // Skip if already pending
-        clearTimeout(syncTimeout);
-        syncTimeout = null;
-        const generation = syncGeneration;
-        syncTimeout = setTimeout(() => {
-            syncTimeout = null;
-            if (generation !== syncGeneration) return;
-            pendingSync = true;
-            // Use requestIdleCallback to process during idle time, not blocking UI
-            const doSync = () => {
-                if (generation !== syncGeneration) return;
-                markdown = readCommittedMarkdown();
-                notifyChangeImmediate();
-                pendingSync = false;
-            };
-            if (typeof requestIdleCallback !== 'undefined') {
-                requestIdleCallback(doSync, { timeout: 500 });
-            } else {
-                setTimeout(doSync, 0);
-            }
-        }, 1000); // Increased to 1000ms for better typing performance
-    }
-    
-    // Immediate sync for critical operations (Enter key, table operations, etc.)
-    function syncMarkdownDeferred() {
-        markAsEdited(); // Any sync implies user edit
-        clearTimeout(syncTimeout);
-        syncTimeout = null;
-        pendingSync = true;
-        const generation = syncGeneration;
-        // Defer to next frame to not block current operation
-        requestAnimationFrame(() => {
-            if (generation !== syncGeneration) return;
-            markdown = readCommittedMarkdown();
-            notifyChangeImmediate();
-            pendingSync = false;
-        });
-    }
-
     // Check if editor is effectively empty and toggle placeholder class
     function updatePlaceholder() {
         var children = editor.children;
@@ -808,956 +1004,16 @@ window.BinaryMath = require('../shared/math-syntax');
         updatePlaceholder();
     }
 
-    function renderFromMarkdown(codeViews = captureCodeViews()) {
-        closeInsertMenu(false);
-        closeLanguageSelector();
-        editorRenderRevision++;
-        if (tableControls) tableControls.clear();
-        if (isSourceMode) sourceEditor.value = markdown;
-        // Remove IMAGE_DIR and FORCE_RELATIVE_PATH directives before rendering (they're stored in variables)
-        let markdownToRender = removeDirectivesFromMarkdown(markdown);
-        logger.log('[Binary Markdown] renderFromMarkdown: markdown length:', markdown.length, 'after directive removal:', markdownToRender.length);
-        const html = markdownToHtmlFragment(markdownToRender);
-        logger.log('[Binary Markdown] renderFromMarkdown: html length:', html.length, 'first 100 chars:', html.substring(0, 100));
-        editor.innerHTML = html || '<p><br></p>';
-        visualSourceCurrent = true;
-        restoreCodeViews(codeViews);
-        setupInteractiveElements();
-        assignHeadingAnchors(editor, markdown);
-        updatePlaceholder();
-        applyPreviewReadOnly();
-        if (workspaceUi) workspaceUi.refresh();
-    }
-
     // Export uses the same parser/highlighter on a separate document tree. It
     // never calls renderFromMarkdown or attaches the live editor's listeners.
     let exportRenderSequence = 0;
     let exportRenderQueue = Promise.resolve();
     const exportRenderRequests = new Map();
 
-    function checkExportCancellation(signal) {
-        if (signal.aborted) throw new Error('Export preparation was cancelled.');
-    }
-
-    function awaitExportReady(promise, signal) {
-        checkExportCancellation(signal);
-        return new Promise((resolve, reject) => {
-            const onAbort = () => reject(new Error('Export preparation was cancelled.'));
-            signal.addEventListener('abort', onAbort, { once: true });
-            Promise.resolve(promise).then(resolve, reject).finally(() => signal.removeEventListener('abort', onAbort));
-        });
-    }
-
-    function exportWarning(warnings, code, message) {
-        if (!warnings.some(warning => warning.code === code && warning.message === message)) {
-            warnings.push({ code: code, message: message });
-        }
-    }
-
-    function stripExportMetadata(source) {
-        let text = source.replace(/^\uFEFF/, '').replace(/\r\n?/g, '\n');
-        text = documentAux.splitFrontMatter(text).body;
-        // Only a trailing app directive block outside a code fence is metadata.
-        const directiveStart = text.lastIndexOf('\n---\n');
-        if (directiveStart >= 0 && /^(?:(?:IMAGE_DIR:\s*[^\n]+|FORCE_RELATIVE_PATH:\s*(?:true|false))\n?)+\s*$/i.test(text.slice(directiveStart + 5))) {
-            let fence = null;
-            for (const line of text.slice(0, directiveStart).split('\n')) {
-                const match = line.match(/^\s{0,3}(`{3,}|~{3,})(.*)$/);
-                if (!match) continue;
-                if (!fence) fence = { character: match[1][0], length: match[1].length };
-                else if (match[1][0] === fence.character && match[1].length >= fence.length && !match[2].trim()) fence = null;
-            }
-            if (!fence) text = text.slice(0, directiveStart);
-        }
-        return text;
-    }
-
-    function hasUnsafeExportStyle(value) {
-        const withoutLocalReferences = value.replace(/url\(\s*(['"]?)#[^)]+\)/gi, '');
-        return /(?:\\|@import|expression\s*\(|javascript\s*:|url\s*\()/i.test(withoutLocalReferences);
-    }
-
-    function sanitizeExportTree(root, warnings) {
-        const blocked = 'script,iframe,object,embed,link,meta,base,form,button,textarea,select,video,audio,canvas,template,animate,animateMotion,animateTransform,set';
-        root.querySelectorAll(blocked).forEach(element => {
-            const fallback = document.createElement('span');
-            fallback.className = 'export-warning';
-            fallback.textContent = '[Export omitted active ' + element.tagName.toLowerCase() + ' content]';
-            element.replaceWith(fallback);
-            exportWarning(warnings, 'active-content', 'Active document content was replaced with a visible fallback.');
-        });
-        root.querySelectorAll('*').forEach(element => {
-            Array.from(element.attributes).forEach(attribute => {
-                const name = attribute.name.toLowerCase();
-                const value = attribute.value;
-                if (name.startsWith('on') || /^(?:contenteditable|spellcheck|tabindex|draggable|srcdoc|srcset|action|formaction|ping|autofocus|nonce)$/.test(name)) {
-                    element.removeAttribute(attribute.name);
-                    if (name.startsWith('on') || /^(?:srcdoc|action|formaction|ping)$/.test(name)) {
-                        exportWarning(warnings, 'active-content', 'Active document content was replaced with a visible fallback.');
-                    }
-                } else if (/^(?:href|xlink:href|src)$/.test(name)) {
-                    const compact = value.replace(/[\u0000-\u0020\u007f]/g, '');
-                    const safeData = name === 'src' && /^data:image\/(?:png|jpeg|gif|webp|svg\+xml|avif|bmp);/i.test(compact);
-                    const scheme = compact.match(/^([a-z][a-z0-9+.-]*):/i);
-                    const safeScheme = !scheme || /^(?:https?|file|mailto|vscode-resource|vscode-webview)$/i.test(scheme[1]);
-                    if ((!safeScheme && !safeData) || (name !== 'src' && /^data:/i.test(compact)) ||
-                        (element.namespaceURI === 'http://www.w3.org/2000/svg' && /^(?:image|use)$/i.test(element.tagName) && !compact.startsWith('#'))) {
-                        element.removeAttribute(attribute.name);
-                        element.setAttribute('data-export-fallback', 'Unsafe resource or link removed');
-                        const note = document.createElement('span');
-                        note.className = 'export-warning';
-                        note.textContent = '[Unsafe resource or link disabled]';
-                        element.after(note);
-                        exportWarning(warnings, 'unsafe-reference', 'An unsafe resource or link was disabled.');
-                    }
-                } else if (name === 'style' && hasUnsafeExportStyle(value)) {
-                    element.removeAttribute(attribute.name);
-                    exportWarning(warnings, 'active-style', 'An active or external style was removed.');
-                }
-            });
-            if (element.tagName.toLowerCase() === 'style' && hasUnsafeExportStyle(element.textContent || '')) {
-                element.remove();
-                exportWarning(warnings, 'active-style', 'An active or external style was removed.');
-            }
-            if (element.tagName.toLowerCase() === 'input') {
-                if (element.getAttribute('type') === 'checkbox') element.setAttribute('disabled', '');
-                else element.remove();
-            }
-            if (element.tagName.toLowerCase() === 'a') {
-                element.removeAttribute('target');
-                element.setAttribute('rel', 'noreferrer noopener');
-            }
-        });
-    }
-
-    function createExportFallback(wrapper, label, source, warnings, code) {
-        const fallback = document.createElement('div');
-        fallback.className = 'export-fallback';
-        const note = document.createElement('p');
-        note.className = 'export-warning';
-        note.textContent = label;
-        const pre = document.createElement('pre');
-        const content = document.createElement('code');
-        content.textContent = source;
-        pre.appendChild(content);
-        fallback.append(note, pre);
-        wrapper.replaceWith(fallback);
-        exportWarning(warnings, code, label);
-    }
-
-    async function prepareExportDocument(source, appearance, signal) {
-        checkExportCancellation(signal);
-        const warnings = [];
-        const diagrams = [];
-        const template = document.createElement('template');
-        const normalizedSource = stripExportMetadata(source);
-        template.innerHTML = markdownToHtmlFragment(normalizedSource, true);
-        assignHeadingAnchors(template.content, normalizedSource);
-        template.content.querySelectorAll('.toc-refresh').forEach(button => button.remove());
-        template.content.querySelectorAll('[data-toc-source]').forEach(block => block.removeAttribute('data-toc-source'));
-        sanitizeExportTree(template.content, warnings);
-        // These are diagnostics about the current rendered output, not a new
-        // Markdown parser. Literal notation stays exactly as the user sees it.
-        const diagnosticTree = template.content.cloneNode(true);
-        diagnosticTree.querySelectorAll('pre,code,.math-wrapper,.math-inline,.mermaid-wrapper').forEach(element => element.remove());
-        const visibleSource = (diagnosticTree.textContent || '').replace(/\\\$/g, '');
-        if (/\$\$[\s\S]*?\$\$|\$(?!\$)(?=\S)[^$\n]*?[^\s$]\$(?![\d$])/.test(visibleSource)) {
-            exportWarning(warnings, 'renderer-math-source', 'Unrecognized equation delimiters remain visible source in the exported document.');
-        }
-        if (/\[TOC\]/i.test(visibleSource)) {
-            exportWarning(warnings, 'renderer-toc-source', 'A literal [TOC] marker remains visible. HTML/PDF do not generate a table of contents from that marker in the current renderer.');
-        }
-        if (/\[\^[^\]\n]+\]/.test(visibleSource)) {
-            exportWarning(warnings, 'renderer-footnote-source', 'Footnote markers and definitions remain visible source. HTML/PDF do not generate linked footnotes in the current renderer.');
-        }
-        const container = document.createElement('div');
-        container.className = 'editor export-preparation';
-        container.dataset.theme = appearance.theme;
-        container.setAttribute('aria-hidden', 'true');
-        container.setAttribute('inert', '');
-        container.style.cssText = 'position:fixed;left:-100000px;top:0;width:860px;max-height:none;overflow:visible;pointer-events:none;';
-        container.style.setProperty('--font-size', appearance.fontSize + 'px');
-        container.style.fontSize = 'var(--font-size)';
-        container.style.fontFamily = 'var(--font-family)';
-        container.style.color = 'var(--text-color)';
-        // Asset fetching/embedding belongs to the host so files are read once at
-        // original resolution. Do not trigger duplicate image loads in this tree.
-        const images = Array.from(template.content.querySelectorAll('img')).map(image => {
-            const original = image.getAttribute('src');
-            image.removeAttribute('src');
-            return { image: image, original: original };
-        });
-        container.appendChild(template.content);
-        document.body.appendChild(container);
-        try {
-            container.querySelectorAll('pre:not([data-lang="math"]):not([data-lang="mermaid"])').forEach(pre => {
-                applyHighlighting(pre);
-                const code = pre.querySelector('code');
-                // Mark display-only breaks before sanitization removes editor
-                // attributes. PDF metadata must never count a caret placeholder.
-                if (code && code.lastChild?.nodeName === 'BR' &&
-                    (code.dataset.trailingBr === 'true' || Number(pre.dataset.exportCodeLines) <= 1)) {
-                    code.lastChild.setAttribute('data-export-display-break', '');
-                }
-            });
-            for (const span of container.querySelectorAll('.math-inline')) {
-                checkExportCancellation(signal);
-                const output = document.createElement('span');
-                try {
-                    renderInlineMath(span, true);
-                    output.className = 'math-inline-display';
-                    output.innerHTML = span.innerHTML;
-                } catch (error) {
-                    output.className = 'export-warning';
-                    output.textContent = inlineMathMarkdown(span);
-                    exportWarning(warnings, 'math-fallback', 'An inline equation could not be rendered; its source is preserved.');
-                }
-                span.replaceWith(output);
-            }
-            for (const wrapper of Array.from(container.querySelectorAll('.math-wrapper'))) {
-                checkExportCancellation(signal);
-                const code = wrapper.querySelector('pre code');
-                const mathSource = code ? getCodePlainText(code).trim() : '';
-                if (typeof katex === 'undefined') {
-                    createExportFallback(wrapper, 'Math rendering is unavailable; the expression is preserved below.', mathSource, warnings, 'math-unavailable');
-                    continue;
-                }
-                renderMathBlock(wrapper, true);
-                const display = wrapper.querySelector('.math-display');
-                if (!display || !display.innerHTML || display.querySelector('.katex-error, .math-error')) {
-                    createExportFallback(wrapper, 'This mathematical expression could not be rendered; its source is preserved below.', mathSource, warnings, 'math-fallback');
-                } else {
-                    wrapper.replaceWith(display);
-                }
-            }
-            for (const wrapper of Array.from(container.querySelectorAll('.mermaid-wrapper'))) {
-                checkExportCancellation(signal);
-                const code = wrapper.querySelector('pre code');
-                const diagramSource = code ? getCodePlainText(code).trim() : '';
-                if (typeof mermaid === 'undefined') {
-                    createExportFallback(wrapper, 'Diagram rendering is unavailable; the diagram source is preserved below.', diagramSource, warnings, 'diagram-unavailable');
-                    continue;
-                }
-                initMermaid();
-                const previousConfig = mermaid.mermaidAPI.getConfig();
-                const id = 'binary-export-diagram-' + (++exportRenderSequence);
-                const measurement = document.createElement('div');
-                container.appendChild(measurement);
-                try {
-                    // Reuse the production Mermaid library with strict settings;
-                    // never run click handlers or document-provided directives.
-                    // Start with the captured palette. getConfig() includes
-                    // resolved themeVariables which would otherwise retain the
-                    // live editor's dark colours even when theme is changed.
-                    mermaid.initialize({
-                        theme: ['dark', 'night'].includes(appearance.theme) ? 'dark' : 'default',
-                        securityLevel: 'strict', startOnLoad: false, htmlLabels: false,
-                        secure: Array.from(new Set([...(previousConfig.secure || []), 'securityLevel', 'htmlLabels', 'flowchart'])),
-                        flowchart: { useMaxWidth: true, htmlLabels: false },
-                        sequence: { useMaxWidth: true }
-                    });
-                    const result = await awaitExportReady(mermaid.render(id, diagramSource, measurement), signal);
-                    checkExportCancellation(signal);
-                    const fragment = document.createElement('template');
-                    fragment.innerHTML = result.svg;
-                    sanitizeExportTree(fragment.content, warnings);
-                    const svg = fragment.content.querySelector('svg');
-                    if (!svg) throw new Error('The diagram renderer produced no SVG.');
-                    diagrams.push({ source: diagramSource, svg: svg.outerHTML });
-                    wrapper.replaceWith(svg);
-                } catch (error) {
-                    checkExportCancellation(signal);
-                    createExportFallback(wrapper, 'This diagram could not be rendered; its source is preserved below.', diagramSource, warnings, 'diagram-fallback');
-                } finally {
-                    mermaid.initialize(previousConfig);
-                    // Mermaid can leave its owned error container after rejection.
-                    const failedContainer = document.getElementById('d' + id);
-                    if (failedContainer && container.contains(failedContainer)) failedContainer.remove();
-                    measurement.remove();
-                }
-            }
-            if (document.fonts && document.fonts.ready) await awaitExportReady(document.fonts.ready, signal);
-            checkExportCancellation(signal);
-            sanitizeExportTree(container, warnings);
-            container.querySelectorAll('[data-mode], [data-trailing-br], [data-mermaid-setup], [data-math-setup]').forEach(element => {
-                element.removeAttribute('data-mode');
-                element.removeAttribute('data-trailing-br');
-                element.removeAttribute('data-mermaid-setup');
-                element.removeAttribute('data-math-setup');
-            });
-            // Move back to an inert document before restoring src: even an
-            // unattached HTMLImageElement in the live document starts fetching.
-            const output = document.createElement('template');
-            while (container.firstChild) output.content.appendChild(container.firstChild);
-            images.forEach(entry => {
-                if (entry.original !== null && output.content.contains(entry.image)) entry.image.setAttribute('src', entry.original);
-            });
-            return {
-                html: '<article class="editor export-document">' + output.innerHTML + '</article>',
-                warnings: warnings,
-                diagrams: diagrams,
-                theme: appearance.theme,
-                fontSize: appearance.fontSize
-            };
-        } finally {
-            container.remove();
-        }
-    }
-
-    /**
-     * Normalize block HTML for comparison (collapse whitespace differences).
-     */
-    function normalizeBlockHtml(html) {
-        return html
-            .replace(/\s+/g, ' ')
-            .replace(/>\s+</g, '><')
-            .replace(/\s*contenteditable="[^"]*"/g, '')  // Ignore contenteditable attr diffs
-            .trim();
-    }
-
-    /**
-     * Check if two block elements are semantically equal.
-     */
-    function blocksAreEqual(a, b) {
-        if (a.tagName !== b.tagName) return false;
-        // Formatting-only external changes still replace the table's retained source.
-        if (a.tagName === 'TABLE' && a.dataset.tableSource !== b.dataset.tableSource) return false;
-        if (a.tagName === 'HR' && b.tagName === 'HR') return true;
-        if (a.getAttribute('data-lang') !== b.getAttribute('data-lang')) return false;
-        if (a.className !== b.className) return false;
-        return normalizeBlockHtml(a.innerHTML) === normalizeBlockHtml(b.innerHTML);
-    }
-
-    /**
-     * Check if a block is in a special interactive state that should not be replaced.
-     */
-    function isProtectedBlock(block) {
-        // Code block in edit mode
-        if (block.tagName === 'PRE' && block.getAttribute('data-mode') === 'edit') {
-            return true;
-        }
-        // Mermaid/Math block in edit mode
-        if (block.classList &&
-            (block.classList.contains('mermaid-wrapper') || block.classList.contains('math-wrapper')) &&
-            block.getAttribute('data-mode') === 'edit') {
-            return true;
-        }
-        return false;
-    }
-
-    // Helper: check if element is a special wrapper (mermaid or math)
-    function isSpecialWrapper(el) {
-        return el && el.tagName === 'DIV' && el.classList &&
-            (el.classList.contains('mermaid-wrapper') || el.classList.contains('math-wrapper'));
-    }
-
-    // Helper: enter special wrapper edit mode and set cursor
-    function enterSpecialWrapperEditMode(wrapper, cursorPosition) {
-        wrapper.setAttribute('data-mode', 'edit');
-        var preSelector = wrapper.classList.contains('mermaid-wrapper')
-            ? 'pre[data-lang="mermaid"]' : 'pre[data-lang="math"]';
-        var pre = wrapper.querySelector(preSelector);
-        if (pre) {
-            var code = pre.querySelector('code');
-            if (code) {
-                // The display-only trailing <br> (data-trailing-br) doubles as
-                // the edit-mode visibility <br> for trailing empty lines.
-                // Keep it in the DOM but switch tracking from data-trailing-br
-                // to codeBlocksWithSentinel so Markdown conversion strips it.
-                if (code.getAttribute('data-trailing-br') === 'true') {
-                    code.removeAttribute('data-trailing-br');
-                    codeBlocksWithSentinel.add(wrapper);
-                }
-                code.focus();
-                if (cursorPosition === 'end') {
-                    setCursorToEnd(code);
-                } else if (cursorPosition === 'start') {
-                    setCursorToFirstTextNode(code);
-                } else if (cursorPosition === 'lastLineStart') {
-                    setCursorToLastLineStartByDOM(code);
-                }
-            }
-        }
-    }
-
-    // Helper: strip sentinel \n from code element and rebuild its DOM.
-    // Used by enterDisplayMode and exitSpecialWrapperDisplayMode when
-    // transitioning from edit mode back to display mode.
-    function stripSentinelAndRebuildCode(code) {
-        var plainText = getCodePlainText(code);
-        if (plainText.endsWith('\n')) {
-            plainText = plainText.slice(0, -1);
-        }
-        if (!plainText || plainText === '') {
-            code.innerHTML = '<br>';
-            code.removeAttribute('data-trailing-br');
-        } else if (plainText.endsWith('\n')) {
-            code.innerHTML = escapeHtml(plainText).replace(/\n/g, '<br>') + '<br>';
-            code.setAttribute('data-trailing-br', 'true');
-        } else {
-            code.innerHTML = escapeHtml(plainText).replace(/\n/g, '<br>');
-            code.removeAttribute('data-trailing-br');
-        }
-    }
-
-    // Helper: exit special wrapper to display mode and re-render
-    function exitSpecialWrapperDisplayMode(wrapper) {
-        var hasSentinel = codeBlocksWithSentinel.has(wrapper);
-        wrapper.setAttribute('data-mode', 'display');
-
-        if (hasSentinel) {
-            codeBlocksWithSentinel.delete(wrapper);
-            var preSelector = wrapper.classList.contains('mermaid-wrapper')
-                ? 'pre[data-lang="mermaid"]' : 'pre[data-lang="math"]';
-            var pre = wrapper.querySelector(preSelector);
-            if (pre) {
-                var code = pre.querySelector('code');
-                if (code) {
-                    stripSentinelAndRebuildCode(code);
-                }
-            }
-        }
-
-        if (wrapper.classList.contains('mermaid-wrapper')) {
-            renderMermaidDiagram(wrapper);
-        } else if (wrapper.classList.contains('math-wrapper')) {
-            renderMathBlock(wrapper);
-        }
-    }
-
-    /**
-     * Cursor-preserving DOM update for external changes.
-     * Diffs at block level and only replaces changed blocks.
-     */
-    function updateFromMarkdown() {
-        logger.log('[Binary Markdown] updateFromMarkdown: cursor-preserving update');
-
-        // 1. Save cursor state
-        const cursorState = saveCursorState();
-        const codeViews = captureCodeViews();
-
-        // 2. Generate new HTML into a temporary container
-        let markdownToRender = removeDirectivesFromMarkdown(markdown);
-        const newHtml = markdownToHtmlFragment(markdownToRender);
-        const tempDiv = document.createElement('div');
-        tempDiv.innerHTML = newHtml || '<p><br></p>';
-
-        // 3. Block-level diff and patch
-        const oldBlocks = Array.from(editor.children);
-        const newBlocks = Array.from(tempDiv.children);
-        const maxLen = Math.max(oldBlocks.length, newBlocks.length);
-        let changed = false;
-
-        for (let i = 0; i < maxLen; i++) {
-            const oldBlock = oldBlocks[i];
-            const newBlock = newBlocks[i];
-
-            if (!oldBlock && newBlock) {
-                // Block added
-                editor.appendChild(newBlock.cloneNode(true));
-                changed = true;
-            } else if (oldBlock && !newBlock) {
-                // Block removed
-                editor.removeChild(oldBlock);
-                changed = true;
-                // Adjust index since we removed an element
-                oldBlocks.splice(i, 1);
-                i--;
-            } else if (oldBlock && newBlock) {
-                if (!blocksAreEqual(oldBlock, newBlock)) {
-                    if (isProtectedBlock(oldBlock)) {
-                        logger.log('[Binary Markdown] updateFromMarkdown: skipping protected block at index', i);
-                        continue;
-                    }
-                    const replacement = newBlock.cloneNode(true);
-                    editor.replaceChild(replacement, oldBlock);
-                    changed = true;
-                }
-            }
-        }
-
-        if (changed) {
-            // Re-setup interactive elements for the updated DOM
-            restoreCodeViews(codeViews);
-            setupInteractiveElements();
-            logger.log('[Binary Markdown] updateFromMarkdown: DOM patched');
-        } else {
-            logger.log('[Binary Markdown] updateFromMarkdown: no changes detected');
-        }
-
-        // 4. Restore cursor
-        restoreCursorState(cursorState);
-        updatePlaceholder();
-    }
-
-    // Convert markdown to HTML fragment (reusable for both full render and partial paste)
-    function renderFrontMatter(raw) {
-        return '<div class="document-aux front-matter" contenteditable="false"><details' + (frontMatterOpen ? ' open' : '') + '>' +
-            '<summary>' + escapeHtml(i18n.frontMatterYaml) + '</summary>' +
-            '<textarea class="front-matter-source" aria-label="' + (i18n.frontMatter || 'Front matter').replace(/"/g, '&quot;') +
-            '" spellcheck="false" rows="7">' + escapeHtml(raw) + '</textarea></details></div>';
-    }
-
-    function renderTocBlock(raw) {
-        const label = i18n.tocGenerated;
-        const refreshLabel = i18n.refreshToc || 'Refresh table of contents';
-        let list = '<ul>';
-        for (const line of raw.split('\n')) {
-            const item = /^( *)- \[(.*)\]\(#(.*)\)$/.exec(line);
-            if (!item) continue;
-            const text = item[2].replace(/\\([\\[\]`*_~])/g, '$1');
-            list += '<li style="margin-left:' + (item[1].length / 2) + 'em"><a href="#' +
-                encodeURIComponent(item[3]) + '">' + escapeHtml(text) + '</a></li>';
-        }
-        list += '</ul>';
-        if (/^\[toc\]$/i.test(raw)) list += '<p class="toc-pending">' + escapeHtml(i18n.tocPending || 'Save or refresh to generate contents.') + '</p>';
-        return '<div class="document-aux toc-block" contenteditable="false" data-toc-source="' + encodeURIComponent(raw) + '">' +
-            '<div class="toc-heading"><strong>' + escapeHtml(label) + '</strong><button class="toc-refresh" type="button" aria-label="' +
-            refreshLabel.replace(/"/g, '&quot;') + '" title="' + refreshLabel.replace(/"/g, '&quot;') + '">' + escapeHtml(i18n.refreshLabel) + '</button></div><p class="toc-help">' + escapeHtml(i18n.refreshOnSave) + '</p>' + list + '</div>';
-    }
-
-    function assignHeadingAnchors(root, source) {
-        if (!root.querySelector('.toc-block')) return;
-        let headings;
-        try { headings = documentAux.scan(source).headings; }
-        catch (_) { return; } // Keep malformed source editable; save/export report it.
-        const nodes = Array.from(root.querySelectorAll('h1,h2,h3,h4,h5,h6')).filter(h => !h.closest('.document-aux'));
-        nodes.forEach((node, index) => { if (headings[index]) node.id = headings[index].id; });
-    }
-
-    function refreshManagedTocs(notify) {
-        const current = readCurrentMarkdown();
-        const next = documentAux.refreshTocs(current);
-        if (next === current) return false;
-        cancelScheduledSync();
-        markdown = current;
-        undoManager.saveSnapshot();
-        if (isSourceMode) {
-            const start = sourceEditor.selectionStart, end = sourceEditor.selectionEnd;
-            sourceEditor.value = next;
-            // Keep selection on the same source text when the generated list grows.
-            let prefix = 0, suffix = 0;
-            while (prefix < current.length && prefix < next.length && current[prefix] === next[prefix]) prefix++;
-            while (suffix < current.length - prefix && suffix < next.length - prefix && current[current.length - 1 - suffix] === next[next.length - 1 - suffix]) suffix++;
-            const map = offset => offset <= prefix ? offset : offset >= current.length - suffix ? offset + next.length - current.length : prefix;
-            if (sourceEditor.setSelectionRange) sourceEditor.setSelectionRange(map(start), map(end));
-        } else {
-            const parsed = documentAux.scan(next);
-            const replacements = parsed.tocs;
-            if (editor.querySelectorAll('.toc-block').length !== replacements.length) {
-                markdown = next;
-                const cursor = saveCursorState();
-                renderFromMarkdown();
-                if (cursor) restoreCursorState(cursor);
-            }
-            editor.querySelectorAll('.toc-block').forEach((block, index) => {
-                if (!replacements[index]) return;
-                const holder = document.createElement('template');
-                holder.innerHTML = renderTocBlock(replacements[index].source);
-                block.replaceWith(holder.content.firstElementChild);
-            });
-            setupDocumentAux();
-        }
-        markdown = next;
-        markAsEdited();
-        visualSourceCurrent = true;
-        updateOutline();
-        updateWordCount();
-        if (notify) notifyChangeImmediate();
-        return true;
-    }
-
-    function insertManagedToc() {
-        try {
-            const current = readCurrentMarkdown();
-            const parsed = documentAux.scan(current);
-            if (parsed.tocs.length || parsed.markers.length) { refreshManagedTocs(true); return; }
-            const raw = documentAux.generateToc(parsed.headings);
-            markdown = current;
-            undoManager.saveSnapshot();
-            cancelScheduledSync();
-            if (isSourceMode) {
-                const at = Math.max(sourceEditor.selectionStart || 0, parsed.front.raw.length);
-                sourceEditor.value = current.slice(0, at) + '\n\n' + raw + '\n\n' + current.slice(at);
-                markdown = sourceEditor.value;
-                markAsEdited();
-                notifyChangeImmediate();
-            } else {
-                const holder = document.createElement('template');
-                holder.innerHTML = renderTocBlock(raw);
-                const block = holder.content.firstElementChild;
-                const line = getCurrentLine();
-                if (line && line.parentNode === editor && !line.classList.contains('front-matter')) {
-                    if (line.tagName === 'P' && !line.textContent.trim()) line.replaceWith(block);
-                    else line.after(block);
-                } else {
-                    const metadata = editor.querySelector(':scope > .front-matter');
-                    if (metadata) metadata.after(block); else editor.prepend(block);
-                }
-                if (!block.nextSibling) { const p = document.createElement('p'); p.innerHTML = '<br>'; block.after(p); }
-                setupDocumentAux();
-                syncMarkdownSync();
-                updateOutline();
-            }
-        } catch (error) { showEditorToast(error.message); }
-    }
-
-    function setupDocumentAux() {
-        editor.querySelectorAll('.toc-block').forEach(block => {
-            if (block.dataset.auxSetup) return;
-            block.dataset.auxSetup = 'true';
-            block.querySelector('.toc-refresh').addEventListener('click', e => {
-                e.preventDefault(); e.stopPropagation();
-                try { refreshManagedTocs(true); } catch (error) { showEditorToast(error.message); }
-            });
-            block.querySelectorAll('a').forEach(a => a.addEventListener('click', e => {
-                e.preventDefault(); e.stopPropagation();
-                const id = decodeURIComponent(a.getAttribute('href').slice(1));
-                const target = Array.from(editor.querySelectorAll('h1,h2,h3,h4,h5,h6')).find(h => h.id === id);
-                if (target) target.scrollIntoView({ block: 'start', behavior: 'smooth' });
-            }));
-        });
-        editor.querySelectorAll('.front-matter').forEach(block => {
-            if (block.dataset.auxSetup) return;
-            block.dataset.auxSetup = 'true';
-            const details = block.querySelector('details');
-            const input = block.querySelector('textarea');
-            details.addEventListener('toggle', () => { frontMatterOpen = details.open; });
-            input.addEventListener('beforeinput', () => { undoManager.saveSnapshotDebounced(); });
-            input.addEventListener('input', e => {
-                e.stopPropagation();
-                markActivelyEditing();
-                syncMarkdownSync();
-            });
-            input.addEventListener('keydown', e => {
-                e.stopPropagation();
-                if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') { e.preventDefault(); saveCurrentDocument(); }
-                if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
-                    e.preventDefault();
-                    if (e.shiftKey) undoManager.redo(); else undoManager.undo();
-                }
-            });
-        });
-    }
-
-    function setupLink(a) {
-        if (a.closest('.toc-block')) return;
-        // DOM-only details; keep this shared by rendered, inserted, and pasted links.
-        if (!a.hasAttribute('title')) a.title = a.getAttribute('href') || '';
-        if (initializedLinks.has(a)) return;
-        initializedLinks.add(a);
-        a.addEventListener('click', e => {
-            e.preventDefault();
-            host.openLink(a.getAttribute('href'));
-        });
-    }
-
-    function setupInteractiveElements() {
-        setupInlineMath();
-        setupDocumentAux();
-        // Make checkboxes work
-        editor.querySelectorAll('input[type="checkbox"]').forEach(cb => {
-            cb.addEventListener('change', () => {
-                markAsEdited(); // User has made an edit
-                syncMarkdown();
-            });
-        });
-
-        // Handle link clicks
-        editor.querySelectorAll('a').forEach(setupLink);
-
-        // Make table cells editable
-        editor.querySelectorAll('th, td').forEach(cell => {
-            cell.setAttribute('contenteditable', 'true');
-        });
-        
-        // Add resize handles to tables
-        editor.querySelectorAll('table').forEach(table => {
-            addTableResizeHandles(table);
-        });
-        
-        // Setup code block UI for all code blocks
-        setupAllCodeBlocks();
-    }
-
-    // Setup all code blocks in the editor
-    function setupAllCodeBlocks() {
-        editor.querySelectorAll('pre').forEach(pre => {
-            // Skip mermaid/math code blocks (they are handled by their own setup functions)
-            if (pre.getAttribute('data-lang') === 'mermaid') return;
-            if (pre.getAttribute('data-lang') === 'math') return;
-            setupCodeBlockUI(pre);
-        });
-
-        // Setup Mermaid diagrams
-        setupMermaidDiagrams();
-        // Setup Math blocks
-        setupMathBlocks();
-    }
-    
     // ========== MERMAID DIAGRAM FUNCTIONALITY ==========
-    
+
     var mermaidInitialized = false;
     var mermaidReady = false;
-    
-    // Wait for mermaid to be loaded
-    function waitForMermaid(callback, maxAttempts = 50) {
-        let attempts = 0;
-        logger.log('waitForMermaid started');
-        const check = () => {
-            logger.log('waitForMermaid check attempt:', attempts, 'mermaid defined:', typeof mermaid !== 'undefined');
-            if (typeof mermaid !== 'undefined') {
-                mermaidReady = true;
-                logger.log('Mermaid is ready, calling callback');
-                callback();
-            } else if (attempts < maxAttempts) {
-                attempts++;
-                setTimeout(check, 100);
-            } else {
-                logger.warn('Mermaid library failed to load after', maxAttempts, 'attempts');
-            }
-        };
-        check();
-    }
-    
-    function initMermaid() {
-        logger.log('initMermaid called, initialized:', mermaidInitialized, 'mermaid defined:', typeof mermaid !== 'undefined');
-        if (typeof mermaid === 'undefined') return false;
-        if (mermaidInitialized) return true;
-        
-        // Determine theme based on current editor theme
-        const theme = document.documentElement.dataset.theme;
-        const mermaidTheme = (theme === 'night' || theme === 'dark') ? 'dark' : 'default';
-        
-        logger.log('Initializing mermaid with theme:', mermaidTheme);
-        mermaid.initialize({
-            startOnLoad: false,
-            theme: mermaidTheme,
-            securityLevel: 'strict',
-            flowchart: { useMaxWidth: true },
-            sequence: { useMaxWidth: true }
-        });
-        mermaidInitialized = true;
-        logger.log('Mermaid initialized successfully');
-        return true;
-    }
-    
-    function setBlockDiagnostic(wrapper, error, source = '') {
-        wrapper.dataset.renderError = error ? String(error.message || error).slice(0, 1000) : '';
-        const expected = error?.hash?.expected;
-        // Mermaid's SQE token is a square node-shape terminator. Derive the
-        // recovery hint from the actual parser expectation, not guessed source.
-        wrapper.dataset.renderErrorSummary = Array.isArray(expected) && expected.some(token => String(token).replace(/['"]/g, '') === 'SQE') ? i18n.diagramExpectedNodeEnd : '';
-        const reported = error?.hash?.loc?.first_line;
-        // Jison locations are one-based. Plain message text is not a reliable authored-source coordinate.
-        const line = Number.isInteger(reported) && reported > 0 && reported <= source.split('\n').length ? reported : Number.isInteger(error?.position) && error.position >= 0 && error.position <= source.length ? source.slice(0, error.position).split('\n').length : null;
-        if (line) wrapper.dataset.errorLine = String(line); else delete wrapper.dataset.errorLine;
-        if (workspaceUi) workspaceUi.refresh();
-    }
-    async function renderMermaidDiagram(wrapper) {
-        const version = (mermaidRenderVersions.get(wrapper) || 0) + 1; mermaidRenderVersions.set(wrapper, version);
-        logger.log('renderMermaidDiagram called');
-        if (!initMermaid()) {
-            logger.log('initMermaid returned false, skipping render');
-            return;
-        }
-        
-        const pre = wrapper.querySelector('pre[data-lang="mermaid"]');
-        const diagramDiv = wrapper.querySelector('.mermaid-diagram');
-        logger.log('pre found:', !!pre, 'diagramDiv found:', !!diagramDiv);
-        if (!pre || !diagramDiv) return;
-        
-        // Get code content, converting <br> back to newlines
-        const code = pre.querySelector('code');
-        let mermaidCode = '';
-        if (code) {
-            mermaidCode = getCodePlainText(code);
-        }
-        mermaidCode = mermaidCode.trim();
-        logger.log('mermaidCode length:', mermaidCode.length);
-        
-        if (!mermaidCode) {
-            diagramDiv.innerHTML = '<div class="mermaid-error">' + escapeHtml(i18n.diagramSyntaxError) + '</div>';
-            setBlockDiagnostic(wrapper, new Error(i18n.diagramSyntaxError));
-            return;
-        }
-        
-        try {
-            const id = 'mermaid-' + Math.random().toString(36).substr(2, 9);
-            logger.log('Calling mermaid.render with id:', id);
-            const { svg } = await mermaid.render(id, mermaidCode);
-            logger.log('mermaid.render succeeded, svg length:', svg?.length);
-            if (mermaidRenderVersions.get(wrapper) !== version || !wrapper.isConnected) return;
-            diagramDiv.innerHTML = svg;
-            setBlockDiagnostic(wrapper, null);
-        } catch (err) {
-            if (mermaidRenderVersions.get(wrapper) !== version || !wrapper.isConnected) return;
-            setBlockDiagnostic(wrapper, err, mermaidCode);
-            logger.error('mermaid.render failed:', err);
-            diagramDiv.innerHTML = '<div class="mermaid-error">' + escapeHtml(i18n.diagramSyntaxError) + '</div>';
-        }
-    }
-    
-    function setupMermaidDiagrams() {
-        const wrappers = editor.querySelectorAll('.mermaid-wrapper');
-        logger.log('setupMermaidDiagrams called, found wrappers:', wrappers.length);
-        if (wrappers.length === 0) return;
-        
-        // Wait for mermaid to be loaded before rendering
-        waitForMermaid(() => {
-            logger.log('waitForMermaid callback, processing', wrappers.length, 'wrappers');
-            wrappers.forEach(wrapper => {
-                // Skip if already setup
-                if (wrapper.dataset.mermaidSetup) {
-                    logger.log('Wrapper already setup, skipping');
-                    return;
-                }
-                wrapper.dataset.mermaidSetup = 'true';
-                logger.log('Setting up wrapper');
-                
-                renderMermaidDiagram(wrapper);
-                
-                // Add click handler to enter editing mode
-                wrapper.addEventListener('click', function(e) {
-                    // Don't enter edit mode if clicking on the diagram itself when already in display mode
-                    if (wrapper.getAttribute('data-mode') !== 'edit') {
-                        wrapper.setAttribute('data-mode', 'edit');
-                        const pre = wrapper.querySelector('pre[data-lang="mermaid"]');
-                        if (pre) {
-                            const code = pre.querySelector('code');
-                            if (code) {
-                                code.focus();
-                                setCursorToEnd(code);
-                            }
-                        }
-                    }
-                });
-                
-                // Add focusout handler to return to display mode and re-render
-                const pre = wrapper.querySelector('pre[data-lang="mermaid"]');
-                if (pre) {
-                    const code = pre.querySelector('code');
-                    if (code) {
-                        // Add input handler for live diagram updates
-                        let renderTimeout = null;
-                        pre.addEventListener('input', () => {
-                            logger.log('Mermaid input event fired (setupMermaidDiagrams)');
-                            // Debounce rendering to avoid too frequent updates
-                            if (renderTimeout) {
-                                clearTimeout(renderTimeout);
-                            }
-                            renderTimeout = setTimeout(() => {
-                                logger.log('Rendering mermaid diagram after input');
-                                renderMermaidDiagram(wrapper);
-                            }, 500);
-                        });
-                        
-                        code.addEventListener('focusout', (e) => {
-                            setTimeout(() => {
-                                const activeEl = document.activeElement;
-                                if (!wrapper.contains(activeEl)) {
-                                    if (wrapper.getAttribute('data-mode') === 'edit') {
-                                        wrapper.setAttribute('data-mode', 'display');
-                                        // Re-render the diagram with updated code
-                                        renderMermaidDiagram(wrapper);
-                                        syncMarkdown();
-                                    }
-                                }
-                            }, 100);
-                        });
-                    }
-                }
-            });
-        });
-    }
-    
-    // ========== KATEX MATH BLOCK FUNCTIONALITY ==========
-
-    function inlineMathHtml(equation) {
-        return '<span class="math-inline" contenteditable="false" tabindex="0" role="button"' +
-            ' aria-label="' + escapeHtml(i18n.editEquation || 'Edit equation') + '"' +
-            ' data-math-raw="' + escapeHtml(encodeURIComponent(equation.raw)) + '"' +
-            ' data-math-tex="' + escapeHtml(encodeURIComponent(equation.tex)) + '"' +
-            ' data-math-open="' + escapeHtml(equation.open) + '" data-math-close="' + escapeHtml(equation.close) + '">' +
-            escapeHtml(equation.raw) + '</span>';
-    }
-
-    function inlineMathMarkdown(span) {
-        return decodeURIComponent(span.dataset.mathRaw || '');
-    }
-
-    function renderInlineMath(span, strict = false) {
-        span.innerHTML = katex.renderToString(decodeURIComponent(span.dataset.mathTex), {
-            displayMode: false, throwOnError: strict, trust: false, output: 'html'
-        });
-    }
-
-    function setupInlineMath() {
-        const spans = editor.querySelectorAll('.math-inline');
-        if (!spans.length) return;
-        waitForKatex(() => spans.forEach(span => {
-            if (span.dataset.mathSetup) return;
-            span.dataset.mathSetup = 'true';
-            renderInlineMath(span);
-        }));
-    }
-
-    function editInlineMath(span) {
-        if (isSourceMode) return;
-        if (finishInlineMathEdit) finishInlineMathEdit(true, false);
-        const input = document.createElement('input');
-        input.className = 'math-inline-input';
-        input.setAttribute('aria-label', i18n.editEquation || 'Edit equation');
-        input.title = i18n.equationEditHint || 'Enter to apply; Escape to cancel';
-        input.spellcheck = false;
-        const original = decodeURIComponent(span.dataset.mathTex);
-        input.value = original;
-        const rect = span.getBoundingClientRect();
-        const inputWidth = Math.min(480, window.innerWidth - 16);
-        input.style.left = Math.max(8, Math.min(rect.left, window.innerWidth - inputWidth - 8)) + 'px';
-        input.style.top = Math.max(8, Math.min(rect.bottom + 4, window.innerHeight - 50)) + 'px';
-        document.body.appendChild(input);
-        const finish = (apply, focus) => {
-            if (finishInlineMathEdit !== finish) return;
-            finishInlineMathEdit = null;
-            const value = input.value;
-            input.remove();
-            if (!span.isConnected) return;
-            if (apply && value !== original) {
-                markdown = readCurrentMarkdown();
-                undoManager.saveSnapshot();
-                if (value.trim()) {
-                    span.dataset.mathTex = encodeURIComponent(value);
-                    span.dataset.mathRaw = encodeURIComponent(span.dataset.mathOpen + value + span.dataset.mathClose);
-                    renderInlineMath(span);
-                } else {
-                    // Empty inline delimiters are ambiguous with display math.
-                    const placeholder = document.createTextNode('');
-                    span.replaceWith(placeholder);
-                    span = placeholder;
-                }
-                syncMarkdownSync();
-            }
-            if (focus) {
-                editor.focus();
-                const range = document.createRange();
-                range.setStartAfter(span); range.collapse(true);
-                const selection = window.getSelection(); selection.removeAllRanges(); selection.addRange(range);
-            }
-        };
-        finishInlineMathEdit = finish;
-        input.addEventListener('blur', () => finish(true, false));
-        input.addEventListener('keydown', event => {
-            event.stopPropagation();
-            if (event.isComposing) return;
-            if (event.key === 'Enter' || event.key === 'Escape') {
-                event.preventDefault(); finish(event.key === 'Enter', true);
-            } else if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 's') {
-                event.preventDefault(); finish(true, false); saveCurrentDocument();
-            }
-        });
-        input.focus(); input.select();
-    }
 
     editor.addEventListener('click', event => {
         const span = event.target.closest && event.target.closest('.math-inline');
@@ -1771,641 +1027,9 @@ window.BinaryMath = require('../shared/math-syntax');
             editInlineMath(event.target);
         }
     }, true);
-
-    function mathBlockHtml(block) {
-        const trailing = block.tex.endsWith('\n');
-        const code = block.tex ? escapeHtml(block.tex).replace(/\n/g, '<br>') + (trailing ? '<br>' : '') : '<br>';
-        return '<div class="math-wrapper" data-mode="display" contenteditable="false"' +
-            ' data-math-original="' + escapeHtml(encodeURIComponent(block.raw)) + '"' +
-            ' data-math-initial="' + escapeHtml(encodeURIComponent(block.tex)) + '"' +
-            ' data-math-open="' + escapeHtml(block.open) + '" data-math-close="' + escapeHtml(block.close) + '"' +
-            ' data-math-single="' + Boolean(block.singleLine) + '">' +
-            '<pre data-lang="math" contenteditable="true"><code' + (trailing ? ' data-trailing-br="true"' : '') + '>' + code + '</code></pre>' +
-            '<div class="math-display"></div></div>';
-    }
-
-    function mathBlockMarkdown(wrapper) {
-        const code = wrapper.querySelector('pre code');
-        const tex = code && code.innerHTML !== '<br>' ? stripTrailingNewlines(getCodePlainText(code), code, wrapper) : '';
-        if (wrapper.hasAttribute('data-math-original') && tex === decodeURIComponent(wrapper.dataset.mathInitial)) {
-            return decodeURIComponent(wrapper.dataset.mathOriginal) + '\n';
-        }
-        const open = wrapper.dataset.mathOpen || '```math';
-        const close = wrapper.dataset.mathClose || '```';
-        if (wrapper.dataset.mathSingle === 'true' && !tex.includes('\n')) return open + tex + close + '\n';
-        return open + '\n' + tex + '\n' + close + '\n';
-    }
-
-    function waitForKatex(callback, maxAttempts) {
-        maxAttempts = maxAttempts || 50;
-        var attempts = 0;
-        var check = function() {
-            if (typeof katex !== 'undefined') {
-                callback();
-            } else if (attempts < maxAttempts) {
-                attempts++;
-                setTimeout(check, 100);
-            } else {
-                logger.warn('KaTeX library failed to load after', maxAttempts, 'attempts');
-            }
-        };
-        check();
-    }
-
-    function renderMathBlock(wrapper, strict) {
-        var pre = wrapper.querySelector('pre[data-lang="math"]');
-        var displayDiv = wrapper.querySelector('.math-display');
-        if (!pre || !displayDiv) return;
-
-        var code = pre.querySelector('code');
-        var texCode = code ? getCodePlainText(code).trim() : '';
-
-        if (!texCode) {
-            displayDiv.innerHTML = '<div class="math-error">' + escapeHtml(i18n.equationUnsupported) + '</div>';
-            setBlockDiagnostic(wrapper, new Error(i18n.equationUnsupported));
-            return;
-        }
-        let diagnostic = null;
-        try { katex.renderToString(texCode, { displayMode: true, throwOnError: true, trust: false, output: 'html' }); }
-        catch (error) { diagnostic = error; }
-        setBlockDiagnostic(wrapper, diagnostic, texCode);
-        try {
-            // Newlines are TeX whitespace. Environments such as aligned and
-            // matrices must reach KaTeX as one expression, including their rows.
-            displayDiv.innerHTML = katex.renderToString(texCode, {
-                displayMode: true,
-                throwOnError: Boolean(strict),
-                trust: false,
-                output: 'html'
-            });
-        } catch (err) {
-            displayDiv.innerHTML = '<div class="math-error">Error: ' +
-                escapeHtml(err.message || 'Invalid LaTeX') + '</div>';
-        }
-    }
-
-    function setupMathBlocks() {
-        var wrappers = editor.querySelectorAll('.math-wrapper');
-        if (wrappers.length === 0) return;
-
-        waitForKatex(function() {
-            wrappers.forEach(function(wrapper) {
-                if (wrapper.dataset.mathSetup) return;
-                wrapper.dataset.mathSetup = 'true';
-
-                renderMathBlock(wrapper);
-
-                // Click → edit mode
-                wrapper.addEventListener('click', function(e) {
-                    if (wrapper.getAttribute('data-mode') !== 'edit') {
-                        wrapper.setAttribute('data-mode', 'edit');
-                        var pre = wrapper.querySelector('pre[data-lang="math"]');
-                        if (pre) {
-                            var code = pre.querySelector('code');
-                            if (code) {
-                                code.focus();
-                                setCursorToEnd(code);
-                            }
-                        }
-                    }
-                });
-
-                // Input → debounce re-render
-                var pre = wrapper.querySelector('pre[data-lang="math"]');
-                if (pre) {
-                    var renderTimeout = null;
-                    pre.addEventListener('input', function() {
-                        if (renderTimeout) clearTimeout(renderTimeout);
-                        renderTimeout = setTimeout(function() {
-                            renderMathBlock(wrapper);
-                        }, 500);
-                    });
-
-                    var code = pre.querySelector('code');
-                    if (code) {
-                        // Focusout → display mode
-                        code.addEventListener('focusout', function(e) {
-                            setTimeout(function() {
-                                if (!wrapper.contains(document.activeElement)) {
-                                    if (wrapper.getAttribute('data-mode') === 'edit') {
-                                        wrapper.setAttribute('data-mode', 'display');
-                                        renderMathBlock(wrapper);
-                                        syncMarkdown();
-                                    }
-                                }
-                            }, 100);
-                        });
-                    }
-                }
-            });
-        });
-    }
-
-    function ordinaryCodeBlocks() {
-        return Array.from(editor.querySelectorAll('pre')).filter(pre =>
-            pre.querySelector('code') && !pre.closest('.math-wrapper,.mermaid-wrapper') &&
-            !['math', 'mermaid'].includes(pre.getAttribute('data-lang')));
-    }
-
-    function codeViewId(pre) {
-        if (!codeViewIds.has(pre)) codeViewIds.set(pre, ++codeViewSequence);
-        return codeViewIds.get(pre);
-    }
-
-    function captureCodeViews() {
-        return ordinaryCodeBlocks().map(pre => ({ id: codeViewId(pre), source: mdProcessNode(pre) }));
-    }
-
-    function restoreCodeViews(previous) {
-        const blocks = ordinaryCodeBlocks();
-        const unused = new Set(previous);
-        const pending = [];
-        for (const [index, pre] of blocks.entries()) {
-            const existing = codeViewIds.get(pre);
-            if (existing) {
-                const match = previous.find(view => view.id === existing);
-                unused.delete(match);
-            } else pending.push({ pre, index, source: mdProcessNode(pre) });
-        }
-        // Match unchanged blocks first, including nested blocks and duplicates.
-        // Positional fallback retains the identity of a source-edited block when
-        // the number of blocks is unchanged, without assigning it to an insertion.
-        for (const item of pending) {
-            const match = previous.find(view => unused.has(view) && view.source === item.source);
-            if (match) { codeViewIds.set(item.pre, match.id); unused.delete(match); }
-        }
-        for (const { pre, index } of pending) {
-            if (codeViewIds.has(pre)) continue;
-            const match = blocks.length === previous.length && unused.has(previous[index]) ? previous[index] : null;
-            if (match) { codeViewIds.set(pre, match.id); unused.delete(match); }
-            else codeViewId(pre);
-        }
-    }
-
-    function applyCodeWrap(pre) {
-        const state = codeViewStates.get(codeViewId(pre));
-        const wrapped = state?.wrapped === true;
-        pre.classList.toggle('code-wrapped', wrapped);
-        pre.querySelector('.code-wrap-btn')?.setAttribute('aria-pressed', String(wrapped));
-        const notice = pre.querySelector('.code-wrap-notice');
-        if (notice) notice.hidden = !wrapped;
-    }
-
-    function toggleCodeWrap(pre) {
-        const code = pre.querySelector('code');
-        if (!code) return;
-        const id = codeViewId(pre);
-        const state = codeViewStates.get(id) || { wrapped: false, scrollLeft: 0 };
-        const selection = window.getSelection();
-        const range = selection?.rangeCount && code.contains(selection.anchorNode) ? selection.getRangeAt(0) : null;
-        const caret = range?.getBoundingClientRect();
-        const pane = editorWrapper.getBoundingClientRect();
-        const keepCaret = caret?.height && caret.top >= pane.top && caret.bottom <= pane.bottom;
-        if (!state.wrapped) state.scrollLeft = code.scrollLeft;
-        state.wrapped = !state.wrapped;
-        codeViewStates.set(id, state);
-        applyCodeWrap(pre);
-        code.scrollLeft = state.wrapped ? 0 : state.scrollLeft;
-        if (keepCaret) editorWrapper.scrollTop += range.getBoundingClientRect().top - caret.top;
-    }
-
-    // Setup UI for a single code block (header, highlight)
-    function setupCodeBlockUI(pre) {
-        // Skip if already setup
-        if (pre.querySelector('.code-block-header')) return;
-        
-        const code = pre.querySelector('code');
-        if (!code) return;
-        pre.classList.add('code-block-with-toolbar');
-        
-        // Ensure display mode attributes
-        if (!pre.hasAttribute('data-mode')) {
-            pre.setAttribute('data-mode', 'display');
-        }
-        if (!code.hasAttribute('contenteditable')) {
-            code.setAttribute('contenteditable', 'false');
-        }
-        
-        // Create header with language tag and copy button
-        const header = document.createElement('div');
-        header.className = 'code-block-header';
-        header.setAttribute('contenteditable', 'false');
-        
-        const lang = pre.getAttribute('data-lang') || 'plaintext';
-        const langTag = document.createElement('button');
-        langTag.type = 'button';
-        langTag.className = 'code-lang-tag';
-        langTag.textContent = lang || 'plaintext';
-        langTag.title = langTag.textContent;
-        langTag.setAttribute('contenteditable', 'false');
-        langTag.setAttribute('aria-haspopup', 'listbox');
-        langTag.setAttribute('aria-expanded', 'false');
-        langTag.setAttribute('aria-label', (i18n.languagePickerLabel || 'Code language') + ': ' + langTag.textContent);
-        langTag.addEventListener('mousedown', e => e.preventDefault());
-        langTag.addEventListener('keydown', event => {
-            // Button activation must not also run the editable document's Enter handler.
-            if (!event.ctrlKey && !event.metaKey) event.stopPropagation();
-            if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
-                event.preventDefault(); showLanguageSelector(pre, langTag);
-            }
-        });
-        langTag.addEventListener('click', (e) => {
-            e.stopPropagation();
-            showLanguageSelector(pre, langTag);
-        });
-        
-        const copyBtn = document.createElement('button');
-        copyBtn.type = 'button';
-        copyBtn.className = 'code-copy-btn';
-        copyBtn.innerHTML = LUCIDE_ICONS.copy;
-        const copyLabel = document.createElement('span'); copyLabel.className = 'code-action-label'; copyLabel.textContent = i18n.copyCode; copyBtn.appendChild(copyLabel);
-        copyBtn.title = i18n.copyCode || 'Copy code';
-        copyBtn.setAttribute('aria-label', copyBtn.title);
-        copyBtn.dataset.copyState = 'idle';
-        copyBtn.setAttribute('contenteditable', 'false');
-        copyBtn.addEventListener('keydown', event => {
-            if (!event.ctrlKey && !event.metaKey) event.stopPropagation();
-        });
-        copyBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            // Switch to display mode if in edit mode
-            if (pre.getAttribute('data-mode') === 'edit') {
-                enterDisplayMode(pre);
-            }
-            copyCodeBlock(pre);
-        });
-
-        const wrapBtn = document.createElement('button');
-        wrapBtn.type = 'button';
-        wrapBtn.className = 'code-wrap-btn';
-        wrapBtn.title = i18n.wrapCode || 'Wrap code';
-        wrapBtn.setAttribute('aria-label', wrapBtn.title);
-        wrapBtn.setAttribute('aria-pressed', 'false');
-        wrapBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M3 12h14a4 4 0 0 1 0 8h-4m3-3-3 3 3 3M3 18h4"/></svg>';
-        const wrapLabel = document.createElement('span'); wrapLabel.className = 'code-action-label'; wrapLabel.textContent = i18n.wrapCode; wrapBtn.appendChild(wrapLabel);
-        wrapBtn.addEventListener('pointerdown', event => event.preventDefault());
-        wrapBtn.addEventListener('keydown', event => {
-            if (!event.ctrlKey && !event.metaKey) event.stopPropagation();
-        });
-        wrapBtn.addEventListener('click', event => { event.stopPropagation(); toggleCodeWrap(pre); });
-        const wrapNotice = document.createElement('span');
-        wrapNotice.className = 'code-wrap-notice';
-        wrapNotice.textContent = i18n.codeWrapped || 'Wrapped';
-        wrapNotice.title = i18n.codeWrappedHelp || 'Visual wrapping only. Source line breaks are unchanged.';
-        wrapNotice.hidden = true;
-        
-        // Expand/collapse button
-        const expandBtn = document.createElement('button');
-        expandBtn.type = 'button';
-        expandBtn.className = 'code-expand-btn';
-        expandBtn.textContent = '⤢';
-        expandBtn.title = i18n.expandCodeBlock || 'Expand';
-        expandBtn.setAttribute('contenteditable', 'false');
-        expandBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const isExpanded = pre.classList.toggle('code-expanded');
-            expandBtn.textContent = isExpanded ? '⤡' : '⤢';
-            expandBtn.title = isExpanded ? (i18n.collapseCodeBlock || 'Collapse') : (i18n.expandCodeBlock || 'Expand');
-            
-            if (isExpanded) {
-                // Calculate width to fill editor-wrapper
-                const editorWrapper = document.querySelector('.editor-wrapper');
-                const editorEl = document.getElementById('editor');
-                if (editorWrapper && editorEl) {
-                    const wrapperRect = editorWrapper.getBoundingClientRect();
-                    const editorRect = editorEl.getBoundingClientRect();
-                    const preRect = pre.getBoundingClientRect();
-                    
-                    // Calculate how much to expand left and right
-                    const leftOffset = preRect.left - wrapperRect.left - 20; // 20px padding
-                    const rightOffset = wrapperRect.right - preRect.right - 20;
-                    const newWidth = preRect.width + leftOffset + rightOffset;
-                    
-                    pre.style.width = newWidth + 'px';
-                    pre.style.marginLeft = -leftOffset + 'px';
-                }
-            } else {
-                // Reset to default
-                pre.style.width = '';
-                pre.style.marginLeft = '';
-            }
-        });
-
-        // Delete the complete fenced block without requiring a text selection.
-        const deleteBtn = document.createElement('button');
-        deleteBtn.type = 'button';
-        deleteBtn.className = 'code-delete-btn';
-        deleteBtn.title = i18n.deleteCodeBlock || 'Delete code block';
-        deleteBtn.setAttribute('aria-label', deleteBtn.title);
-        deleteBtn.setAttribute('contenteditable', 'false');
-        deleteBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>';
-        deleteBtn.addEventListener('mousedown', (e) => {
-            // Keep the current block from losing its selection before the
-            // click handler captures the undo snapshot.
-            e.preventDefault();
-        });
-        deleteBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            deleteCodeBlock(pre);
-        });
-        
-        header.appendChild(expandBtn);
-        header.appendChild(langTag);
-        header.appendChild(wrapNotice);
-        header.appendChild(wrapBtn);
-        header.appendChild(copyBtn);
-        const openCode = document.createElement('button'); openCode.type = 'button'; openCode.className = 'code-open-btn'; openCode.title = i18n.openInTextEditor; openCode.setAttribute('aria-label', openCode.title); openCode.innerHTML = LUCIDE_ICONS.openInTextEditor || LUCIDE_ICONS.code;
-        const openLabel = document.createElement('span'); openLabel.className = 'code-action-label'; openLabel.textContent = i18n.openInTextEditor; openCode.appendChild(openLabel);
-        openCode.addEventListener('mousedown', event => event.preventDefault());
-        openCode.addEventListener('click', event => { event.stopPropagation(); host.openInTextEditor(); });
-        header.appendChild(openCode);
-        header.appendChild(deleteBtn);
-        const status = document.createElement('span');
-        status.className = 'code-block-status';
-        status.setAttribute('role', 'status');
-        status.setAttribute('aria-live', 'polite');
-        status.setAttribute('aria-atomic', 'true');
-        header.appendChild(status);
-        pre.insertBefore(header, pre.firstChild);
-        applyCodeWrap(pre);
-        
-        // Apply syntax highlighting for display mode
-        if (pre.getAttribute('data-mode') === 'display') {
-            applyHighlighting(pre);
-        }
-        
-        // Add click handler to enter edit mode
-        code.addEventListener('click', (e) => {
-            if (pre.getAttribute('data-mode') === 'display') {
-                e.stopPropagation();
-                enterEditMode(pre);
-            }
-        });
-
-        // Add focusout handler to return to display mode
-        code.addEventListener('focusout', (e) => {
-            // Delay to check if focus moved to language selector
-            setTimeout(() => {
-                // Suppress during arrow-key navigation into this block
-                if (isNavigatingIntoBlock) return;
-                const activeEl = document.activeElement;
-                // Nested contenteditable code can retain the outer editor's
-                // focus. A view toggle must not end that active code selection.
-                const selectionInCode = activeEl === editor && code.contains(window.getSelection()?.anchorNode);
-                if (!pre.contains(activeEl) && !selectionInCode && !document.querySelector('.lang-selector')) {
-                    if (pre.getAttribute('data-mode') === 'edit') {
-                        enterDisplayMode(pre);
-                    }
-                }
-            }, 100);
-        });
-    }
-
-    function deleteCodeBlock(pre) {
-        if (!pre || !editor.contains(pre)) return;
-
-        // Commit any in-progress edit before capturing the pre-delete state so
-        // Undo restores exactly what the user saw, including their latest text.
-        if (pre.getAttribute('data-mode') === 'edit') {
-            enterDisplayMode(pre);
-        }
-        markdown = htmlToMarkdown();
-        undoManager.saveSnapshot();
-
-        const nextBlock = pre.nextElementSibling;
-        const previousBlock = pre.previousElementSibling;
-        pre.remove();
-
-        let focusTarget = nextBlock || previousBlock;
-        if (!editor.children.length) {
-            focusTarget = document.createElement('p');
-            focusTarget.innerHTML = '<br>';
-            editor.appendChild(focusTarget);
-        }
-
-        syncMarkdownSync();
-        updateOutline();
-        updateWordCount();
-
-        if (focusTarget && /^(P|H[1-6]|DIV|BLOCKQUOTE|LI)$/.test(focusTarget.tagName)) {
-            if (focusTarget === nextBlock) setCursorToFirstTextNode(focusTarget);
-            else setCursorToEnd(focusTarget);
-        } else {
-            editor.focus({ preventScroll: true });
-        }
-    }
-    
-    function closeLanguageSelector(restoreFocus = false) {
-        document.querySelector('.lang-selector')?.closePicker?.(restoreFocus);
-    }
-
-    // The input remains visible while its result list scrolls in short panes.
-    function positionLanguageSelector() {
-        const selector = document.querySelector('.lang-selector');
-        const anchor = selector?.languageAnchor;
-        if (!anchor) return;
-        if (!anchor.isConnected || !anchor.getClientRects().length) { closeLanguageSelector(); return; }
-        const rect = anchor.getBoundingClientRect();
-        if (rect.bottom < 0 || rect.top > window.innerHeight) { closeLanguageSelector(); return; }
-        const below = window.innerHeight - rect.bottom - 8;
-        const above = rect.top - 8;
-        const upward = below < 250 && above > below;
-        const compact = Math.max(above, below) < 120;
-        selector.style.maxHeight = Math.max(0, Math.min(300, compact ? window.innerHeight - 8 : upward ? above : below)) + 'px';
-        selector.style.width = Math.min(260, Math.max(0, window.innerWidth - 8)) + 'px';
-        selector.style.top = compact ? '4px' : upward ? 'auto' : Math.max(4, rect.bottom + 4) + 'px';
-        selector.style.bottom = compact || !upward ? 'auto' : Math.max(4, window.innerHeight - rect.top + 4) + 'px';
-        selector.style.left = Math.max(4, Math.min(rect.left, window.innerWidth - selector.offsetWidth - 4)) + 'px';
-    }
     window.addEventListener('resize', positionLanguageSelector);
     editorWrapper.addEventListener('scroll', positionLanguageSelector);
     new ResizeObserver(positionLanguageSelector).observe(editorWrapper);
-
-    function showLanguageSelector(pre, langTag) {
-        closeLanguageSelector();
-        const selection = window.getSelection();
-        const savedRange = selection.rangeCount && editor.contains(selection.getRangeAt(0).commonAncestorContainer)
-            ? selection.getRangeAt(0).cloneRange() : null;
-        const wasEditing = pre.getAttribute('data-mode') === 'edit';
-        const current = pre.getAttribute('data-lang') || 'plaintext';
-        const currentId = LANGUAGE_ALIASES[current.toLowerCase()] || current.toLowerCase();
-        const selector = document.createElement('div');
-        selector.className = 'lang-selector';
-        const input = document.createElement('input');
-        input.type = 'text'; input.className = 'lang-selector-search';
-        input.autocomplete = 'off'; input.spellcheck = false;
-        input.placeholder = i18n.languagePickerPlaceholder || 'Search names or aliases';
-        input.setAttribute('role', 'combobox');
-        input.setAttribute('aria-label', i18n.languagePickerLabel || 'Code language');
-        input.setAttribute('aria-autocomplete', 'list'); input.setAttribute('aria-expanded', 'true');
-        input.setAttribute('aria-controls', 'codeLanguageOptions');
-        const currentLabel = document.createElement('div'); currentLabel.className = 'lang-selector-current';
-        currentLabel.textContent = (i18n.languagePickerCurrent || 'Current language') + ': ' + current;
-        currentLabel.title = currentLabel.textContent;
-        const list = document.createElement('div'); list.className = 'lang-selector-options';
-        list.id = 'codeLanguageOptions'; list.setAttribute('role', 'listbox');
-        list.setAttribute('aria-label', i18n.languagePickerLabel || 'Code language');
-        const empty = document.createElement('div'); empty.className = 'lang-selector-empty'; empty.setAttribute('role', 'status');
-        empty.textContent = i18n.languagePickerNoResults || 'No matching languages.';
-        selector.append(input, currentLabel, list, empty);
-        let results = [], active = -1, closed = false;
-        const observer = new MutationObserver(() => { if (!editor.contains(pre)) closeLanguageSelector(); });
-        const outside = event => { if (!selector.contains(event.target) && event.target !== langTag) closeLanguageSelector(); };
-        selector.closePicker = restoreFocus => {
-            if (closed) return;
-            closed = true; observer.disconnect(); document.removeEventListener('pointerdown', outside, true);
-            selector.remove(); langTag.setAttribute('aria-expanded', 'false');
-            if (restoreFocus && editor.contains(pre)) {
-                const code = pre.querySelector('code');
-                const target = wasEditing && savedRange && code.contains(savedRange.commonAncestorContainer) ? code : langTag;
-                target.focus({ preventScroll: true });
-                if (savedRange?.startContainer.isConnected && savedRange.endContainer.isConnected) {
-                    selection.removeAllRanges(); selection.addRange(savedRange);
-                }
-            }
-        };
-        const activate = index => {
-            active = index;
-            for (let i = 0; i < list.children.length; i++) list.children[i].setAttribute('aria-selected', String(i === active));
-            const option = list.children[active];
-            if (option) { input.setAttribute('aria-activedescendant', option.id); option.scrollIntoView({ block: 'nearest' }); }
-            else input.removeAttribute('aria-activedescendant');
-        };
-        const choose = id => {
-            if (isSourceMode || !editor.contains(pre)) { closeLanguageSelector(); return; }
-            closeLanguageSelector(true);
-            if (id === current) return;
-            // Capture the latest code edit, then make the language choice one undo step.
-            markdown = htmlToMarkdown(); undoManager.saveSnapshot();
-            if (id === 'mermaid' || id === 'math') {
-                convertToSpecialBlock(pre, id);
-                editor.focus({ preventScroll: true });
-                return;
-            }
-            pre.setAttribute('data-lang', id); langTag.textContent = id; langTag.title = id;
-            langTag.setAttribute('aria-label', (i18n.languagePickerLabel || 'Code language') + ': ' + id);
-            if (pre.getAttribute('data-mode') === 'display') applyHighlighting(pre);
-            syncMarkdownSync();
-        };
-        const render = (keepActive = false) => {
-            const selected = keepActive ? results[active] : undefined;
-            const query = input.value.trim().toLowerCase();
-            results = orderedCodeLanguages().map(id => {
-                const terms = [id, codeLanguageName(id).toLowerCase(), ...Object.keys(LANGUAGE_ALIASES).filter(alias => LANGUAGE_ALIASES[alias] === id)];
-                const rank = !query ? 0 : terms.some(term => term === query) ? 0 : terms.some(term => term.startsWith(query)) ? 1 : terms.some(term => term.includes(query)) ? 2 : 3;
-                return { id, rank };
-            }).filter(item => item.rank < 3).sort((a, b) => a.rank - b.rank).map(item => item.id);
-            list.replaceChildren();
-            for (const id of results) {
-                const item = document.createElement('div'); item.className = 'lang-selector-item';
-                item.id = 'codeLanguageOption-' + id; item.dataset.language = id; item.setAttribute('role', 'option');
-                item.dataset.currentLanguage = String(id === currentId);
-                const name = document.createElement('span'); name.textContent = codeLanguageName(id);
-                const identifier = document.createElement('small'); identifier.textContent = id;
-                item.append(name, identifier);
-                if (id === currentId) {
-                    const mark = document.createElement('span'); mark.className = 'lang-selector-current-mark';
-                    mark.textContent = '✓'; mark.setAttribute('aria-hidden', 'true'); item.appendChild(mark);
-                    item.setAttribute('aria-label', codeLanguageName(id) + ': ' + (i18n.languagePickerCurrent || 'Current language'));
-                }
-                item.addEventListener('mousedown', event => event.preventDefault());
-                item.addEventListener('click', () => choose(id)); list.appendChild(item);
-            }
-            empty.hidden = results.length > 0;
-            activate(selected && results.includes(selected) ? results.indexOf(selected) :
-                query ? (results.length ? 0 : -1) : Math.max(0, results.indexOf(currentId)));
-            positionLanguageSelector();
-        };
-        input.addEventListener('input', () => render());
-        selector.refreshOrder = () => render(true);
-        selector.addEventListener('keydown', event => {
-            event.stopPropagation();
-            if (event.isComposing) return;
-            if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
-                event.preventDefault();
-                if (results.length) activate((active + (event.key === 'ArrowDown' ? 1 : -1) + results.length) % results.length);
-            } else if (event.key === 'Enter') {
-                event.preventDefault(); if (results[active]) choose(results[active]);
-            } else if (event.key === 'Escape') {
-                event.preventDefault(); closeLanguageSelector(true);
-            } else if (event.key === 'Tab') closeLanguageSelector(true);
-        });
-        selector.languageAnchor = langTag;
-        document.body.appendChild(selector); langTag.setAttribute('aria-expanded', 'true');
-        observer.observe(editor, { childList: true, subtree: true });
-        document.addEventListener('pointerdown', outside, true);
-        render(); input.focus({ preventScroll: true });
-    }
-    
-    function setCodeCopyState(pre, state) {
-        const button = pre.querySelector('.code-copy-btn');
-        const status = pre.querySelector('.code-block-status');
-        if (!button || !status) return;
-        clearTimeout(button.copyFeedbackTimer);
-        // Temporary feedback must not shift neighboring controls. Keep long
-        // failure details in the tooltip/status rather than in the button row.
-        button.style.minWidth = state === 'idle' ? '' : button.getBoundingClientRect().width + 'px';
-        button.dataset.copyState = state;
-        button.innerHTML = state === 'copied' ? LUCIDE_ICONS.check : LUCIDE_ICONS.copy;
-        const message = state === 'copied' ? (i18n.copiedCode || 'Copied') :
-            state === 'error' ? (i18n.copyCodeFailed || 'Could not copy code. Try again.') : '';
-        const label = document.createElement('span'); label.className = 'code-action-label'; label.textContent = state === 'copied' ? message : i18n.copyCode; button.appendChild(label);
-        status.textContent = message;
-        status.dataset.copyState = state;
-        button.title = message || (i18n.copyCode || 'Copy code');
-        if (state !== 'idle') button.copyFeedbackTimer = setTimeout(() => setCodeCopyState(pre, 'idle'), 2000);
-    }
-
-    // Copy code block content to clipboard
-    function copyCodeBlock(pre) {
-        const code = pre.querySelector('code');
-        if (!code) return;
-        
-        // Preserve rendered line breaks, excluding browser-only placeholders.
-        // Do not trim: indentation and trailing blank lines are user content.
-        const isEmptyCodeBlock = code.childNodes.length === 1 &&
-            code.firstChild.nodeType === 1 && code.firstChild.tagName === 'BR';
-        const text = isEmptyCodeBlock
-            ? ''
-            : stripTrailingNewlines(getCodePlainText(code), code, pre);
-        setCodeCopyState(pre, 'idle');
-        navigator.clipboard.writeText(text).then(() => {
-            setCodeCopyState(pre, 'copied');
-        }).catch((err) => {
-            setCodeCopyState(pre, 'error');
-            logger.error('Failed to copy to clipboard:', err);
-        });
-    }
-
-    // ========== TABLE FUNCTIONALITY ==========
-
-    function revealTableCaret(element) {
-        const cell = element.closest?.('td, th');
-        if (!cell || !editor.contains(cell)) return;
-        cell.scrollIntoView({ block: 'nearest', inline: 'nearest' });
-        scrollTableToCaret(cell);
-    }
-
-    function scrollTableToCaret(cell, previousWidth) {
-        const table = cell.closest('table');
-        const selection = window.getSelection();
-        if (!table || !editor.contains(cell) || !table.clientWidth || !selection?.isCollapsed || !selection.rangeCount || !cell.contains(selection.anchorNode)) return;
-        const caret = selection.getRangeAt(0).getBoundingClientRect();
-        if (!caret.height && !caret.width) return;
-        const bounds = table.getBoundingClientRect();
-        // A single unbroken cell can be wider than the pane: reveal its caret,
-        // rather than repeatedly aligning the cell's other edge with the pane.
-        const left = bounds.left + table.clientLeft;
-        const right = left + table.clientWidth;
-        // Resize correction is only for a caret newly clipped by shrinkage.
-        // A caret already outside the old viewport may have been deliberately
-        // scrolled away; neither shrinking nor growing should pull it back.
-        if (previousWidth !== undefined && (table.clientWidth >= previousWidth ||
-            caret.left < left - 1 || caret.right > left + previousWidth + 1)) return;
-        if (caret.left < left + 2) table.scrollLeft -= left + 2 - caret.left;
-        else if (caret.right > right - 2) table.scrollLeft += caret.right - right + 2;
-    }
 
     let activeTableCell = null;
     let activeTable = null;
@@ -2442,492 +1066,15 @@ window.BinaryMath = require('../shared/math-syntax');
             showTableToolbar(activeTable);
         }
     });
-    function showTableToolbar(table) {
-        activeTable = table;
-        tableControls.show(table, activeTableCell);
-    }
-    function hideTableToolbar() {
-        tableControls?.clear();
-    }
-
-    function deleteTableColumn() {
-        if (!activeTableCell || !activeTable) return;
-        
-        // Verify elements are still in DOM
-        if (!editor.contains(activeTableCell) || !editor.contains(activeTable)) {
-            logger.log('Table elements not in DOM, skipping deleteTableColumn');
-            return;
-        }
-        
-        const cellIndex = activeTableCell.cellIndex;
-        if (cellIndex < 0) return;
-        
-        const currentRow = activeTableCell.closest('tr');
-        if (!currentRow) return;
-        
-        const rows = activeTable.querySelectorAll('tr');
-        
-        // Don't delete if only one column
-        if (rows[0] && rows[0].cells.length <= 1) return;
-        
-        // Store rowIndex before deleting
-        const rowIndex = Array.from(rows).indexOf(currentRow);
-        
-        rows.forEach(row => {
-            if (row.cells[cellIndex]) {
-                row.cells[cellIndex].remove();
-            }
-        });
-        
-        // Move activeTableCell to adjacent cell in the SAME row
-        const updatedRows = activeTable.querySelectorAll('tr');
-        const targetRow = updatedRows[rowIndex];
-        if (targetRow && targetRow.cells.length > 0) {
-            // Stay in the same row, move to left (new last column if was at end)
-            const newIndex = Math.min(cellIndex, targetRow.cells.length - 1);
-            if (newIndex >= 0 && targetRow.cells[newIndex]) {
-                activeTableCell = targetRow.cells[newIndex];
-                setCursorToEnd(activeTableCell);
-            }
-        }
-        
-        syncMarkdown();
-    }
-
-    function deleteTableRow() {
-        if (!activeTableCell || !activeTable) return;
-        
-        // Verify elements are still in DOM
-        if (!editor.contains(activeTableCell) || !editor.contains(activeTable)) {
-            logger.log('Table elements not in DOM, skipping deleteTableRow');
-            return;
-        }
-        
-        const row = activeTableCell.closest('tr');
-        if (!row) return;
-        
-        // Don't delete header row or if only one row
-        const rows = activeTable.querySelectorAll('tr');
-        if (rows.length <= 1) return;
-        if (row === rows[0]) return; // Don't delete header
-        
-        const rowIndex = Array.from(rows).indexOf(row);
-        const cellIndex = activeTableCell.cellIndex;
-        if (cellIndex < 0) return;
-        
-        row.remove();
-        
-        // Move activeTableCell to adjacent row
-        const newRows = activeTable.querySelectorAll('tr');
-        if (newRows.length > 0) {
-            // Try to select same column in previous row (or the row above deleted one)
-            // If was last row, go to new last row
-            const newRowIndex = Math.min(rowIndex, newRows.length - 1);
-            // Prefer row above if not header
-            const targetRowIndex = newRowIndex > 0 ? Math.max(1, rowIndex - 1) : newRowIndex;
-            const newRow = newRows[targetRowIndex] || newRows[newRowIndex];
-            
-            if (newRow && newRow.cells[cellIndex]) {
-                activeTableCell = newRow.cells[cellIndex];
-                setCursorToEnd(activeTableCell);
-            } else if (newRow && newRow.cells[0]) {
-                activeTableCell = newRow.cells[0];
-                setCursorToEnd(activeTableCell);
-            }
-        }
-        
-        syncMarkdown();
-    }
-
-    function insertTableRowBelow() {
-        if (!activeTableCell) return;
-        
-        // Verify activeTableCell is still in DOM
-        if (!editor.contains(activeTableCell)) {
-            logger.log('activeTableCell not in DOM, skipping insertTableRowBelow');
-            return;
-        }
-        
-        const row = activeTableCell.closest('tr');
-        if (!row) return;
-        
-        const table = row.closest('table');
-        if (!table || !editor.contains(table)) return;
-        
-        const colCount = row.cells.length;
-        if (colCount === 0) return;
-        
-        const newRow = document.createElement('tr');
-        
-        for (let i = 0; i < colCount; i++) {
-            const cell = document.createElement('td');
-            cell.setAttribute('contenteditable', 'true');
-            cell.innerHTML = emptyTableCell;
-            newRow.appendChild(cell);
-        }
-        
-        row.after(newRow);
-        // Update activeTableCell to the new row's cell at same column
-        const cellIndex = activeTableCell.cellIndex;
-        activeTableCell = newRow.cells[cellIndex] || newRow.cells[0];
-        activeTable = table;
-        setCursorToEnd(activeTableCell);
-        syncMarkdown();
-    }
-
-    function insertTableRowAbove() {
-        if (!activeTableCell) return;
-        
-        // Verify activeTableCell is still in DOM
-        if (!editor.contains(activeTableCell)) {
-            logger.log('activeTableCell not in DOM, skipping insertTableRowAbove');
-            return;
-        }
-        
-        const row = activeTableCell.closest('tr');
-        if (!row) return;
-        
-        const table = row.closest('table');
-        if (!table || !editor.contains(table)) return;
-        
-        // Check if current row is header row (first row)
-        const rows = table.querySelectorAll('tr');
-        const isHeaderRow = rows.length > 0 && row === rows[0];
-        
-        if (isHeaderRow) {
-            logger.log('Cannot insert row above header row');
-            return; // Do nothing if in header row
-        }
-        
-        const colCount = row.cells.length;
-        if (colCount === 0) return;
-        
-        const newRow = document.createElement('tr');
-        
-        for (let i = 0; i < colCount; i++) {
-            const cell = document.createElement('td');
-            cell.setAttribute('contenteditable', 'true');
-            cell.innerHTML = emptyTableCell;
-            newRow.appendChild(cell);
-        }
-        
-        row.before(newRow);
-        // Update activeTableCell to the new row's cell at same column
-        const cellIndex = activeTableCell.cellIndex;
-        activeTableCell = newRow.cells[cellIndex] || newRow.cells[0];
-        activeTable = table;
-        setCursorToEnd(activeTableCell);
-        syncMarkdown();
-    }
-
-    function insertTableColumnRight() {
-        if (!activeTableCell) return;
-        
-        // Verify activeTableCell is still in DOM
-        if (!editor.contains(activeTableCell)) {
-            logger.log('activeTableCell not in DOM, skipping insertTableColumnRight');
-            return;
-        }
-        
-        const table = activeTableCell.closest('table');
-        if (!table || !editor.contains(table)) return;
-        
-        const cellIndex = activeTableCell.cellIndex;
-        if (cellIndex < 0) return; // Invalid cell index
-        
-        const currentRow = activeTableCell.closest('tr');
-        if (!currentRow) return;
-        
-        const rows = table.querySelectorAll('tr');
-        if (rows.length === 0) return;
-        
-        // Store current row index for later lookup
-        const currentRowIndex = Array.from(rows).indexOf(currentRow);
-        
-        let newCellInCurrentRow = null;
-        
-        rows.forEach((row, rowIndex) => {
-            const isHeader = rowIndex === 0;
-            const newCell = document.createElement(isHeader ? 'th' : 'td');
-            newCell.setAttribute('contenteditable', 'true');
-            newCell.innerHTML = isHeader ? 'Header' : emptyTableCell;
-            
-            // Insert after current cell (to the right)
-            if (cellIndex + 1 < row.cells.length) {
-                row.cells[cellIndex + 1].before(newCell);
-            } else {
-                row.appendChild(newCell);
-            }
-            
-            // Track the new cell in current row
-            if (rowIndex === currentRowIndex) {
-                newCellInCurrentRow = newCell;
-            }
-        });
-        
-        // Move cursor to the new column in current row
-        if (newCellInCurrentRow && editor.contains(newCellInCurrentRow)) {
-            activeTableCell = newCellInCurrentRow;
-            activeTable = table;
-            setCursorToEnd(newCellInCurrentRow);
-        }
-        
-        // Re-add resize handles after adding column
-        addTableResizeHandles(table);
-        
-        syncMarkdown();
-    }
-
-    function insertTableColumnLeft() {
-        if (!activeTableCell) return;
-        
-        // Verify activeTableCell is still in DOM
-        if (!editor.contains(activeTableCell)) {
-            logger.log('activeTableCell not in DOM, skipping insertTableColumnLeft');
-            return;
-        }
-        
-        const table = activeTableCell.closest('table');
-        if (!table || !editor.contains(table)) return;
-        
-        const cellIndex = activeTableCell.cellIndex;
-        if (cellIndex < 0) return; // Invalid cell index
-        
-        const currentRow = activeTableCell.closest('tr');
-        if (!currentRow) return;
-        
-        const rows = table.querySelectorAll('tr');
-        if (rows.length === 0) return;
-        
-        // Store current row index for later lookup
-        const currentRowIndex = Array.from(rows).indexOf(currentRow);
-        
-        let newCellInCurrentRow = null;
-        
-        rows.forEach((row, rowIndex) => {
-            const isHeader = rowIndex === 0;
-            const newCell = document.createElement(isHeader ? 'th' : 'td');
-            newCell.setAttribute('contenteditable', 'true');
-            newCell.innerHTML = isHeader ? 'Header' : emptyTableCell;
-            
-            // Insert before current cell (to the left)
-            row.cells[cellIndex].before(newCell);
-            
-            // Track the new cell in current row
-            if (rowIndex === currentRowIndex) {
-                newCellInCurrentRow = newCell;
-            }
-        });
-        
-        // Move cursor to the new column in current row
-        if (newCellInCurrentRow && editor.contains(newCellInCurrentRow)) {
-            activeTableCell = newCellInCurrentRow;
-            activeTable = table;
-            setCursorToEnd(newCellInCurrentRow);
-        }
-        
-        // Re-add resize handles after adding column
-        addTableResizeHandles(table);
-        
-        syncMarkdown();
-    }
-
-    // Set column alignment for the current column
-    function setColumnAlignment(align) {
-        if (!activeTableCell || !activeTable) return;
-        
-        // Verify elements are still in DOM
-        if (!editor.contains(activeTableCell) || !editor.contains(activeTable)) {
-            logger.log('Table elements not in DOM, skipping setColumnAlignment');
-            return;
-        }
-        
-        const colIndex = activeTableCell.cellIndex;
-        if (colIndex < 0) return;
-        
-        // Markdown column alignment applies to the header and body alike.
-        const rows = activeTable.querySelectorAll('tr');
-        rows.forEach(row => {
-            const cells = row.querySelectorAll('th, td');
-            if (cells[colIndex]) {
-                cells[colIndex].dataset.tableAlign = align;
-                cells[colIndex].style.textAlign = align;
-            }
-        });
-        
-        syncMarkdown();
-    }
 
     // ========== TABLE COLUMN RESIZE FUNCTIONALITY ==========
-    
+
     let isTableColResizing = false;
     let resizeStartX = 0;
     let resizeStartWidth = 0;
     let resizingCell = null;
     let resizingTable = null;
-    
-    // Add resize handles to all header cells in a table
-    function addTableResizeHandles(table) {
-        if (!table) return;
-        
-        const headerCells = table.querySelectorAll('th');
-        headerCells.forEach((th, index) => {
-            // Skip if already has a resize handle
-            if (th.querySelector('.table-col-resize-handle')) return;
-            
-            const handle = document.createElement('div');
-            handle.className = 'table-col-resize-handle';
-            handle.setAttribute('contenteditable', 'false');
-            handle.dataset.colIndex = index.toString();
-            th.appendChild(handle);
-        });
-        
-        // Don't initialize widths here - let browser handle natural widths
-        // Widths will be set when user starts resizing
-    }
-    
-    // Initialize column widths when starting resize (called on first resize)
-    function initializeTableColumnWidths(table) {
-        const headerCells = table.querySelectorAll('th');
-        if (headerCells.length === 0) return;
-        
-        // Skip if already initialized (has fixed layout)
-        if (table.style.tableLayout === 'fixed') return;
-        
-        // Get current natural widths before switching to fixed layout
-        const widths = [];
-        headerCells.forEach(th => {
-            // Use offsetWidth which includes padding and border
-            widths.push(Math.max(th.offsetWidth, 80)); // Ensure minimum width
-        });
-        
-        // Now set table-layout: fixed and apply the widths
-        table.style.tableLayout = 'fixed';
-        
-        let totalWidth = 0;
-        headerCells.forEach((th, index) => {
-            th.style.width = widths[index] + 'px';
-            th.style.minWidth = widths[index] + 'px';
-            totalWidth += widths[index];
-        });
-        
-        // Set table width to sum of column widths
-        table.style.width = totalWidth + 'px';
-        
-        // Also set widths for td cells in each column
-        const rows = table.querySelectorAll('tr');
-        rows.forEach((row, rowIndex) => {
-            if (rowIndex === 0) return; // Skip header row
-            const cells = row.querySelectorAll('td');
-            cells.forEach((td, colIndex) => {
-                if (widths[colIndex]) {
-                    td.style.width = widths[colIndex] + 'px';
-                    td.style.minWidth = widths[colIndex] + 'px';
-                }
-            });
-        });
-    }
-    
-    // Update column width for all cells in a column
-    function updateColumnWidth(table, colIndex, newWidth) {
-        const minWidth = 80; // Minimum column width
-        const finalWidth = Math.max(minWidth, newWidth);
-        
-        const rows = table.querySelectorAll('tr');
-        rows.forEach(row => {
-            const cells = row.querySelectorAll('th, td');
-            if (cells[colIndex]) {
-                cells[colIndex].style.width = finalWidth + 'px';
-                // The table is a scroll box; retain the requested width in its
-                // anonymous inner table even when the visible box is narrower.
-                cells[colIndex].style.minWidth = finalWidth + 'px';
-            }
-        });
-        
-        // Update table width to be sum of all column widths
-        const headerCells = table.querySelectorAll('th');
-        let totalWidth = 0;
-        headerCells.forEach(th => {
-            totalWidth += th.offsetWidth;
-        });
-        table.style.width = totalWidth + 'px';
-    }
-    
-    // Handle resize start
-    function handleResizeStart(e) {
-        const handle = e.target.closest('.table-col-resize-handle');
-        if (!handle) return;
-        
-        e.preventDefault();
-        e.stopPropagation();
-        
-        resizingCell = handle.closest('th');
-        resizingTable = handle.closest('table');
-        
-        // Initialize column widths on first resize
-        if (resizingTable) {
-            initializeTableColumnWidths(resizingTable);
-        }
-        
-        isTableColResizing = true;
-        resizeStartX = e.clientX;
-        
-        if (resizingCell) {
-            resizeStartWidth = resizingCell.offsetWidth;
-        }
-        
-        handle.classList.add('resizing');
-        document.body.classList.add('table-resizing');
-        
-        // Add document-level listeners for drag
-        document.addEventListener('mousemove', handleResizeMove);
-        document.addEventListener('mouseup', handleResizeEnd);
-    }
-    
-    // Handle resize drag
-    function handleResizeMove(e) {
-        if (!isTableColResizing || !resizingCell || !resizingTable) return;
-        
-        e.preventDefault();
-        
-        const deltaX = e.clientX - resizeStartX;
-        const newWidth = resizeStartWidth + deltaX;
-        const colIndex = parseInt(resizingCell.querySelector('.table-col-resize-handle')?.dataset.colIndex || '0');
-        
-        updateColumnWidth(resizingTable, colIndex, newWidth);
-    }
-    
-    // Handle resize end
-    function handleResizeEnd(e) {
-        if (!isTableColResizing) return;
-        
-        isTableColResizing = false;
-        
-        // Remove resizing class from handle
-        if (resizingCell) {
-            const handle = resizingCell.querySelector('.table-col-resize-handle');
-            if (handle) {
-                handle.classList.remove('resizing');
-            }
-        }
-        
-        document.body.classList.remove('table-resizing');
-        
-        // Remove document-level listeners
-        document.removeEventListener('mousemove', handleResizeMove);
-        document.removeEventListener('mouseup', handleResizeEnd);
-        
-        resizingCell = null;
-        resizingTable = null;
-    }
-    
-    // Add resize handles to all existing tables
-    function initializeAllTableResizeHandles() {
-        editor.querySelectorAll('table').forEach(table => {
-            addTableResizeHandles(table);
-        });
-    }
-    
+
     // Listen for mousedown on resize handles
     editor.addEventListener('mousedown', function(e) {
         const handle = e.target.closest('.table-col-resize-handle');
@@ -2935,7 +1082,7 @@ window.BinaryMath = require('../shared/math-syntax');
             handleResizeStart(e);
         }
     });
-    
+
     // Initialize resize handles for existing tables
     initializeAllTableResizeHandles();
 
@@ -2960,7 +1107,7 @@ window.BinaryMath = require('../shared/math-syntax');
             if (table) {
                 showTableToolbar(table);
             }
-            
+
             // Triple-click in table cell - select cell contents only (same behavior as Cmd+A)
             // This prevents browser's native line selection which can break table structure on paste
             if (e.detail === 3) {
@@ -2976,7 +1123,7 @@ window.BinaryMath = require('../shared/math-syntax');
             // Clicked outside table - hide toolbar
             hideTableToolbar();
         }
-        
+
         // Handle code block edit mode exit on click outside
         const clickedPre = e.target.closest ? e.target.closest('pre') : null;
         editor.querySelectorAll('pre[data-mode="edit"]').forEach(pre => {
@@ -2984,7 +1131,7 @@ window.BinaryMath = require('../shared/math-syntax');
                 enterDisplayMode(pre);
             }
         });
-        
+
         // Handle mermaid/math wrapper edit mode exit on click outside
         const clickedSpecialWrapper = e.target.closest ? (e.target.closest('.mermaid-wrapper') || e.target.closest('.math-wrapper')) : null;
         editor.querySelectorAll('.mermaid-wrapper[data-mode="edit"], .math-wrapper[data-mode="edit"]').forEach(wrapper => {
@@ -2994,1253 +1141,6 @@ window.BinaryMath = require('../shared/math-syntax');
             }
         });
     });
-
-
-
-    // Detect markdown table pattern: | col1 | col2 |
-    function checkTablePattern(text) {
-        // Match: | something | something | (at least 2 columns)
-        // Using [|] to match pipe character without needing complex escaping
-        if (!text.startsWith('|') || !text.trim().endsWith('|')) return null;
-        
-        const cells = text.split('|').filter(c => c.trim() !== '');
-        if (cells.length < 2) return null;
-        
-        return cells.map(c => c.trim());
-    }
-
-    function convertToTable(cells, node) {
-        const table = document.createElement('table');
-        const headerRow = document.createElement('tr');
-        
-        cells.forEach(cellText => {
-            const th = document.createElement('th');
-            th.setAttribute('contenteditable', 'true');
-            th.textContent = cellText;
-            headerRow.appendChild(th);
-        });
-        
-        table.appendChild(headerRow);
-        
-        // Add one empty data row
-        const dataRow = document.createElement('tr');
-        cells.forEach(() => {
-            const td = document.createElement('td');
-            td.setAttribute('contenteditable', 'true');
-            td.innerHTML = emptyTableCell;
-            dataRow.appendChild(td);
-        });
-        table.appendChild(dataRow);
-        
-        node.replaceWith(table);
-        
-        // Add resize handles to the new table
-        addTableResizeHandles(table);
-        
-        setCursorToEnd(dataRow.cells[0]);
-        syncMarkdown();
-    }
-
-    // ========== LIVE CONVERSION ==========
-
-    // Check all patterns (called on Space or Enter)
-    function checkAllPatterns(trigger) {
-        // First check inline patterns
-        if (checkInlinePatterns(trigger)) return true;
-        // Then check block patterns
-        if (checkBlockPatterns(trigger)) return true;
-        return false;
-    }
-
-    // Check block-level patterns (headings, lists, etc.)
-    function checkBlockPatterns(trigger) {
-        const sel = window.getSelection();
-        if (!sel || !sel.rangeCount) return false;
-
-        const range = sel.getRangeAt(0);
-        let node = range.startContainer;
-        
-        // Check if we're inside a code block (pre element)
-        // If so, skip all block conversions - code blocks should preserve literal text
-        // Use closest() for more reliable detection
-        const startElement = node.nodeType === 3 ? node.parentElement : node;
-        if (startElement && startElement.closest && startElement.closest('pre')) {
-            logger.log('checkBlockPatterns: Inside code block, skipping conversion');
-            return false; // Don't convert patterns inside code blocks
-        }
-        
-        // Check if we're inside a heading (H1-H6)
-        // If so, skip all block/inline conversions (except heading-to-heading conversion)
-        let currentHeadingNode = null;
-        let headingNode = node;
-        while (headingNode && headingNode !== editor) {
-            if (headingNode.tagName && /^H[1-6]$/i.test(headingNode.tagName)) {
-                currentHeadingNode = headingNode;
-                break;
-            }
-            headingNode = headingNode.parentNode;
-        }
-        
-        // Check if we're inside a list item first (for task list conversion)
-        let liNode = node;
-        while (liNode && liNode !== editor) {
-            if (liNode.tagName && liNode.tagName.toUpperCase() === 'LI') {
-                break;
-            }
-            liNode = liNode.parentNode;
-        }
-        
-        // List type inter-conversion within existing list items
-        // Supports: bullet ↔ ordered ↔ task (any direction)
-        if (liNode && liNode.tagName && liNode.tagName.toUpperCase() === 'LI' && trigger === 'space') {
-            // Get only direct text content of the li (excluding nested lists)
-            let liDirectText = '';
-            for (const child of liNode.childNodes) {
-                if (child.nodeType === 3) { // Text node
-                    liDirectText += child.textContent;
-                } else if (child.nodeType === 1) { // Element node
-                    const tag = child.tagName.toLowerCase();
-                    // Skip nested lists
-                    if (tag !== 'ul' && tag !== 'ol') {
-                        liDirectText += child.textContent;
-                    }
-                }
-            }
-
-            // Check if current item has a direct child checkbox
-            var hasCheckbox = false;
-            for (const child of liNode.childNodes) {
-                if (child.nodeType === 1 && child.tagName === 'INPUT' && child.type === 'checkbox') {
-                    hasCheckbox = true;
-                    break;
-                }
-            }
-            const parentList = liNode.parentNode;
-            const parentTag = parentList ? parentList.tagName.toLowerCase() : '';
-
-            // Helper: collect nested lists for preservation
-            const collectNestedLists = () => {
-                const lists = [];
-                for (const child of Array.from(liNode.childNodes)) {
-                    if (child.nodeType === 1 && (child.tagName.toLowerCase() === 'ul' || child.tagName.toLowerCase() === 'ol')) {
-                        lists.push(child.cloneNode(true));
-                    }
-                }
-                return lists;
-            };
-
-            // Helper: restore nested lists after rebuilding li content
-            const restoreNestedLists = (lists) => {
-                for (const nested of lists) {
-                    liNode.appendChild(nested);
-                }
-            };
-
-            // Helper: set cursor at start of li text (after checkbox if present)
-            const setCursorToLiTextStart = () => {
-                const r = document.createRange();
-                const s = window.getSelection();
-                // Find first text node (skipping checkbox)
-                for (const child of liNode.childNodes) {
-                    if (child.nodeType === 3 && child.textContent.length > 0) {
-                        r.setStart(child, 0);
-                        r.collapse(true);
-                        s.removeAllRanges();
-                        s.addRange(r);
-                        return;
-                    }
-                    if (child.nodeType === 1 && child.tagName === 'INPUT') {
-                        continue; // Skip checkbox
-                    }
-                }
-                // Fallback
-                setCursorToEnd(liNode);
-            };
-
-            // 1. Task list conversion: [ ] or [x] at beginning
-            const taskInListMatch = liDirectText.match(/^\[([ xX])\] (.*)$/);
-            if (taskInListMatch) {
-                if (hasCheckbox) return false; // Already a task item
-
-                const existingText = taskInListMatch[2] || '';
-                const checked = taskInListMatch[1].toLowerCase() === 'x';
-                const nestedLists = collectNestedLists();
-
-                liNode.innerHTML = '';
-                const checkbox = document.createElement('input');
-                checkbox.type = 'checkbox';
-                checkbox.checked = checked;
-                liNode.appendChild(checkbox);
-                let textNode = null;
-                if (existingText) {
-                    textNode = document.createTextNode(existingText);
-                    liNode.appendChild(textNode);
-                }
-                restoreNestedLists(nestedLists);
-
-                // Change parent to ul if needed (e.g. from ol)
-                if (parentTag !== 'ul') {
-                    changeParentListType(liNode, 'ul');
-                }
-
-                // Set cursor after checkbox
-                const range = document.createRange();
-                const sel = window.getSelection();
-                if (existingText && textNode) {
-                    range.setStart(textNode, 0);
-                } else {
-                    range.setStartAfter(checkbox);
-                }
-                range.collapse(true);
-                sel.removeAllRanges();
-                sel.addRange(range);
-
-                syncMarkdown();
-                return true;
-            }
-
-            // 2. Bullet list conversion: - or * or + at beginning
-            const bulletMatch = liDirectText.match(/^[-*+] (.*)$/);
-            if (bulletMatch) {
-                // Skip if already a regular bullet (ul without checkbox)
-                if (parentTag === 'ul' && !hasCheckbox) return false;
-
-                const existingText = bulletMatch[1] || '';
-                const nestedLists = collectNestedLists();
-
-                liNode.innerHTML = '';
-                if (existingText) {
-                    liNode.appendChild(document.createTextNode(existingText));
-                } else {
-                    liNode.innerHTML = '<br>';
-                }
-                restoreNestedLists(nestedLists);
-
-                // Change parent to ul if needed (from ol), or just remove checkbox (already ul for task)
-                if (parentTag !== 'ul') {
-                    changeParentListType(liNode, 'ul');
-                }
-
-                setCursorToLiTextStart();
-                syncMarkdown();
-                return true;
-            }
-
-            // 3. Ordered list conversion: N. at beginning
-            const orderedMatch = liDirectText.match(/^(\d+)\. (.*)$/);
-            if (orderedMatch) {
-                if (parentTag === 'ol') return false; // Already ordered
-
-                const existingText = orderedMatch[2] || '';
-                const nestedLists = collectNestedLists();
-
-                liNode.innerHTML = '';
-                if (existingText) {
-                    liNode.appendChild(document.createTextNode(existingText));
-                } else {
-                    liNode.innerHTML = '<br>';
-                }
-                restoreNestedLists(nestedLists);
-
-                changeParentListType(liNode, 'ol');
-
-                setCursorToLiTextStart();
-                syncMarkdown();
-                return true;
-            }
-        }
-        
-        // Get the current block element
-        while (node && node !== editor && node.parentNode !== editor) {
-            node = node.parentNode;
-        }
-        
-        if (!node || node === editor) return false;
-
-        const text = node.textContent || '';
-
-        // Heading: # + space (with optional existing text)
-        // Matches: "# ", "## ", ..., "# existing text", "## existing text", etc.
-        // This is allowed even when inside a heading (heading-to-heading conversion)
-        const headingMatch = text.match(/^(#{1,6}) (.*)$/);
-        if (headingMatch && trigger === 'space') {
-            const level = headingMatch[1].length;
-            const existingText = headingMatch[2] || '';
-            const heading = document.createElement('h' + level);
-            if (existingText) {
-                heading.textContent = existingText;
-            } else {
-                heading.innerHTML = '<br>';
-            }
-            // If we're inside a heading, replace that heading; otherwise replace the current node
-            const targetNode = currentHeadingNode || node;
-            targetNode.replaceWith(heading);
-            setCursorToEnd(heading);
-            syncMarkdown();
-            return true;
-        }
-
-        // If we're inside a heading, don't allow other conversions
-        if (currentHeadingNode) {
-            return false;
-        }
-
-        // Task list: - [ ] + space (with optional existing text)
-        // MUST be checked BEFORE unordered list to avoid matching "- " first
-        const taskMatch = text.match(/^[-*+] \[([ xX])\] (.*)$/);
-        if (taskMatch && trigger === 'space') {
-            const existingText = taskMatch[2] || '';
-            const li = document.createElement('li');
-            const checkbox = document.createElement('input');
-            checkbox.type = 'checkbox';
-            checkbox.checked = taskMatch[1].toLowerCase() === 'x';
-            li.appendChild(checkbox);
-            if (existingText) {
-                li.appendChild(document.createTextNode(existingText));
-            }
-            
-            // Check for adjacent task list to merge with
-            const nextSibling = node.nextElementSibling;
-            const prevSibling = node.previousElementSibling;
-            
-            // Helper to check if element is a task list (ul with checkbox in first li)
-            const isTaskList = (el) => {
-                if (!el || el.tagName?.toLowerCase() !== 'ul') return false;
-                const firstLi = el.querySelector('li');
-                return firstLi && firstLi.querySelector('input[type="checkbox"]');
-            };
-            
-            if (isTaskList(nextSibling)) {
-                // Merge with next task list - prepend new item
-                nextSibling.insertBefore(li, nextSibling.firstChild);
-                node.remove();
-            } else if (isTaskList(prevSibling)) {
-                // Merge with previous task list - append new item
-                prevSibling.appendChild(li);
-                node.remove();
-            } else {
-                // Create new task list
-                const ul = document.createElement('ul');
-                ul.appendChild(li);
-                node.replaceWith(ul);
-            }
-            setCursorToEnd(li);
-            syncMarkdown();
-            return true;
-        }
-
-        // Unordered list: - + space or * + space (with optional existing text)
-        const ulMatch = text.match(/^[-*+] (.*)$/);
-        if (ulMatch && trigger === 'space') {
-            const existingText = ulMatch[1] || '';
-            const li = document.createElement('li');
-            if (existingText) {
-                li.textContent = existingText;
-            } else {
-                li.innerHTML = '<br>';
-            }
-            
-            // Check for adjacent ul to merge with (but not task lists)
-            const nextSibling = node.nextElementSibling;
-            const prevSibling = node.previousElementSibling;
-            
-            // Helper to check if element is a regular ul (not task list)
-            const isRegularUl = (el) => {
-                if (!el || el.tagName?.toLowerCase() !== 'ul') return false;
-                const firstLi = el.querySelector('li');
-                // It's a task list if first li has checkbox
-                return !(firstLi && firstLi.querySelector('input[type="checkbox"]'));
-            };
-            
-            if (isRegularUl(nextSibling)) {
-                // Merge with next ul - prepend new item
-                nextSibling.insertBefore(li, nextSibling.firstChild);
-                node.remove();
-            } else if (isRegularUl(prevSibling)) {
-                // Merge with previous ul - append new item
-                prevSibling.appendChild(li);
-                node.remove();
-            } else {
-                // Create new ul
-                const ul = document.createElement('ul');
-                ul.appendChild(li);
-                node.replaceWith(ul);
-            }
-            setCursorToEnd(li);
-            syncMarkdown();
-            return true;
-        }
-
-        // Ordered list: 1. + space (with optional existing text)
-        const olMatch = text.match(/^(\d+)\. (.*)$/);
-        if (olMatch && trigger === 'space') {
-            const existingText = olMatch[2] || '';
-            const li = document.createElement('li');
-            if (existingText) {
-                li.textContent = existingText;
-            } else {
-                li.innerHTML = '<br>';
-            }
-            
-            // Check for adjacent ol to merge with
-            const nextSibling = node.nextElementSibling;
-            const prevSibling = node.previousElementSibling;
-            
-            if (nextSibling && nextSibling.tagName?.toLowerCase() === 'ol') {
-                // Merge with next ol - prepend new item
-                nextSibling.insertBefore(li, nextSibling.firstChild);
-                node.remove();
-            } else if (prevSibling && prevSibling.tagName?.toLowerCase() === 'ol') {
-                // Merge with previous ol - append new item
-                prevSibling.appendChild(li);
-                node.remove();
-            } else {
-                // Create new ol
-                const ol = document.createElement('ol');
-                ol.appendChild(li);
-                node.replaceWith(ol);
-            }
-            setCursorToEnd(li);
-            syncMarkdown();
-            return true;
-        }
-
-        // Blockquote: > + space (with optional existing text)
-        const bqMatch = text.match(/^> (.*)$/);
-        if (bqMatch && trigger === 'space') {
-            const existingText = bqMatch[1] || '';
-            const blockquote = document.createElement('blockquote');
-            if (existingText) {
-                blockquote.textContent = existingText;
-            } else {
-                blockquote.innerHTML = '<br>';
-            }
-            node.replaceWith(blockquote);
-            setCursorToEnd(blockquote);
-            syncMarkdown();
-            return true;
-        }
-
-        // Horizontal rule: --- + space or enter
-        if (/^-{3,}$/.test(text.trim()) && node.tagName && node.tagName.toUpperCase() === 'P') {
-            const hr = document.createElement('hr');
-            const p = document.createElement('p');
-            p.innerHTML = '<br>';
-            node.replaceWith(hr);
-            hr.after(p);
-            setCursorToEnd(p);
-            syncMarkdown();
-            return true;
-        }
-
-        // Code block: \`\`\` + enter
-        // Support both <p> and <div> tags (div is created when pressing Enter after header)
-        if (/^\`\`\`/.test(text) && trigger === 'enter' && node.tagName && (node.tagName.toUpperCase() === 'P' || node.tagName.toUpperCase() === 'DIV')) {
-            // Extract the language tag from the opening code fence.
-            const langMatch = text.match(/^\`\`\`(\w*)/);
-            const lang = langMatch ? langMatch[1].trim() : '';
-            
-            // Special handling for mermaid
-            if (lang === 'mermaid') {
-                const wrapper = document.createElement('div');
-                wrapper.className = 'mermaid-wrapper';
-                wrapper.setAttribute('data-mode', 'edit');
-                wrapper.setAttribute('contenteditable', 'false');
-                
-                const pre = document.createElement('pre');
-                pre.setAttribute('data-lang', 'mermaid');
-                pre.setAttribute('contenteditable', 'true');
-                
-                const code = document.createElement('code');
-                code.appendChild(document.createTextNode('\n'));
-                pre.appendChild(code);
-                
-                const diagramDiv = document.createElement('div');
-                diagramDiv.className = 'mermaid-diagram';
-                diagramDiv.innerHTML = '<div class="mermaid-error">Empty diagram</div>';
-                
-                wrapper.appendChild(pre);
-                wrapper.appendChild(diagramDiv);
-                
-                const p = document.createElement('p');
-                p.innerHTML = '<br>';
-                node.replaceWith(wrapper);
-                wrapper.after(p);
-                
-                // Mark as setup
-                wrapper.dataset.mermaidSetup = 'true';
-                
-                // Add click handler to enter editing mode
-                wrapper.addEventListener('click', function(e) {
-                    if (wrapper.getAttribute('data-mode') !== 'edit') {
-                        wrapper.setAttribute('data-mode', 'edit');
-                        code.focus();
-                        setCursorToEnd(code);
-                    }
-                });
-                
-                // Add input handler for live diagram updates
-                let renderTimeout = null;
-                pre.addEventListener('input', () => {
-                    logger.log('Mermaid input event fired');
-                    if (renderTimeout) {
-                        clearTimeout(renderTimeout);
-                    }
-                    renderTimeout = setTimeout(() => {
-                        logger.log('Rendering mermaid diagram after input');
-                        renderMermaidDiagram(wrapper);
-                    }, 500);
-                });
-                
-                // Add focusout handler
-                code.addEventListener('focusout', (e) => {
-                    setTimeout(() => {
-                        const activeEl = document.activeElement;
-                        if (!wrapper.contains(activeEl)) {
-                            if (wrapper.getAttribute('data-mode') === 'edit') {
-                                wrapper.setAttribute('data-mode', 'display');
-                                renderMermaidDiagram(wrapper);
-                                syncMarkdown();
-                            }
-                        }
-                    }, 100);
-                });
-                
-                // Set cursor at the start of the code element
-                const range = document.createRange();
-                const sel = window.getSelection();
-                range.setStart(code.firstChild, 0);
-                range.collapse(true);
-                sel.removeAllRanges();
-                sel.addRange(range);
-                code.focus();
-                syncMarkdown();
-                return true;
-            }
-
-            // Special handling for math
-            if (lang === 'math') {
-                const wrapper = document.createElement('div');
-                wrapper.className = 'math-wrapper';
-                wrapper.setAttribute('data-mode', 'edit');
-                wrapper.setAttribute('contenteditable', 'false');
-
-                const pre = document.createElement('pre');
-                pre.setAttribute('data-lang', 'math');
-                pre.setAttribute('contenteditable', 'true');
-
-                const code = document.createElement('code');
-                code.appendChild(document.createTextNode('\n'));
-                pre.appendChild(code);
-
-                const displayDiv = document.createElement('div');
-                displayDiv.className = 'math-display';
-                displayDiv.innerHTML = '<div class="math-error">Empty expression</div>';
-
-                wrapper.appendChild(pre);
-                wrapper.appendChild(displayDiv);
-
-                const p = document.createElement('p');
-                p.innerHTML = '<br>';
-                node.replaceWith(wrapper);
-                wrapper.after(p);
-
-                wrapper.dataset.mathSetup = 'true';
-
-                wrapper.addEventListener('click', function(e) {
-                    if (wrapper.getAttribute('data-mode') !== 'edit') {
-                        wrapper.setAttribute('data-mode', 'edit');
-                        code.focus();
-                        setCursorToEnd(code);
-                    }
-                });
-
-                let renderTimeout = null;
-                pre.addEventListener('input', function() {
-                    if (renderTimeout) clearTimeout(renderTimeout);
-                    renderTimeout = setTimeout(function() {
-                        renderMathBlock(wrapper);
-                    }, 500);
-                });
-
-                code.addEventListener('focusout', function(e) {
-                    setTimeout(function() {
-                        if (!wrapper.contains(document.activeElement)) {
-                            if (wrapper.getAttribute('data-mode') === 'edit') {
-                                wrapper.setAttribute('data-mode', 'display');
-                                renderMathBlock(wrapper);
-                                syncMarkdown();
-                            }
-                        }
-                    }, 100);
-                });
-
-                const range = document.createRange();
-                const sel = window.getSelection();
-                range.setStart(code.firstChild, 0);
-                range.collapse(true);
-                sel.removeAllRanges();
-                sel.addRange(range);
-                code.focus();
-                syncMarkdown();
-                return true;
-            }
-
-            const pre = document.createElement('pre');
-            pre.setAttribute('contenteditable', 'true');
-            pre.setAttribute('data-mode', 'edit'); // Start in edit mode
-            if (lang) {
-                pre.setAttribute('data-lang', lang);
-            } else {
-                pre.setAttribute('data-lang', '');
-            }
-            const code = document.createElement('code');
-            code.setAttribute('contenteditable', 'true');
-            // Use a text node with newline so cursor has somewhere to go
-            code.appendChild(document.createTextNode('\n'));
-            pre.appendChild(code);
-            const p = document.createElement('p');
-            p.innerHTML = '<br>';
-            node.replaceWith(pre);
-            pre.after(p);
-            // Setup code block UI (header, etc.)
-            setupCodeBlockUI(pre);
-            // Set cursor at the start of the code element
-            const range = document.createRange();
-            const sel = window.getSelection();
-            range.setStart(code.firstChild, 0);
-            range.collapse(true);
-            sel.removeAllRanges();
-            sel.addRange(range);
-            code.focus();
-            syncMarkdown();
-            return true;
-        }
-
-        return false;
-    }
-
-    // Check inline patterns (bold, italic, etc.) - called on Space or Enter only
-    function checkInlinePatterns(trigger) {
-        const sel = window.getSelection();
-        if (!sel || !sel.rangeCount) return false;
-
-        const range = sel.getRangeAt(0);
-        if (!range.collapsed) return false;
-
-        let node = range.startContainer;
-        if (node.nodeType !== 3) return false; // Must be text node
-
-        // Check if we're inside a code block (pre element) or inline code (code element)
-        // If so, skip all inline conversions - code should preserve literal text
-        // Use closest() for more reliable detection
-        const startElement = node.parentElement;
-        if (startElement && startElement.closest && startElement.closest('pre, code')) {
-            logger.log('checkInlinePatterns: Inside code block or inline code, skipping conversion');
-            return false; // Don't convert patterns inside code blocks or inline code
-        }
-
-        // Check if we're inside a heading (H1-H6)
-        // If so, skip all inline conversions
-        if (startElement && startElement.closest && startElement.closest('h1, h2, h3, h4, h5, h6')) {
-            // Already inside a heading - don't convert to inline elements
-            return false;
-        }
-
-        const text = node.textContent;
-        const offset = range.startOffset;
-        // Check text before the trigger character (space/enter adds a char, so check before that)
-        const checkOffset = trigger === 'space' ? offset - 1 : offset;
-        if (checkOffset < 0) return false;
-        
-        const beforeCursor = text.substring(0, checkOffset);
-
-        const equation = mathSyntax.inline(beforeCursor, mathBackslashDelimiters)[0];
-        if (equation) {
-            const template = document.createElement('template');
-            template.innerHTML = inlineMathHtml(equation);
-            const span = template.content.firstElementChild;
-            const replacement = document.createRange();
-            replacement.setStart(node, equation.start); replacement.setEnd(node, equation.end);
-            replacement.deleteContents(); replacement.insertNode(span);
-            const after = span.nextSibling;
-            if (after && after.nodeType === 3) range.setStart(after, Math.min(after.textContent.length, offset - equation.end));
-            else range.setStartAfter(span);
-            range.collapse(true); sel.removeAllRanges(); sel.addRange(range);
-            setupInlineMath(); syncMarkdown();
-            return true;
-        }
-
-        // Inline code \`text\` + space/enter (FIRST - to protect content from other formatting)
-        // Must be processed before bold/italic/strikethrough to prevent `**text**` from becoming bold
-        const codeMatch = beforeCursor.match(/\`([^\`]+)\`/);
-        if (codeMatch) {
-            replaceInlinePatternAnywhere(node, codeMatch, 'code', checkOffset, trigger === 'space');
-            return true;
-        }
-
-        // Bold **text** + space/enter (anywhere in text)
-        const boldMatch = beforeCursor.match(/\*\*([^*]+)\*\*/);
-        if (boldMatch) {
-            replaceInlinePatternAnywhere(node, boldMatch, 'strong', checkOffset, trigger === 'space');
-            return true;
-        }
-
-        // Italic *text* + space/enter (but not **text**)
-        const italicMatch = beforeCursor.match(/(?<!\*)\*([^*]+)\*(?!\*)/);
-        if (italicMatch) {
-            replaceInlinePatternAnywhere(node, italicMatch, 'em', checkOffset, trigger === 'space');
-            return true;
-        }
-
-        // Strikethrough ~~text~~ + space/enter
-        const strikeMatch = beforeCursor.match(/~~([^~]+)~~/);
-        if (strikeMatch) {
-            replaceInlinePatternAnywhere(node, strikeMatch, 'del', checkOffset, trigger === 'space');
-            return true;
-        }
-
-        return false;
-    }
-
-    function replaceInlinePatternAnywhere(textNode, match, tagName, cursorOffset, hasSpaceAfter) {
-        const fullMatch = match[0];
-        const innerText = match[1];
-        const matchIndex = match.index; // Where the match starts in the string
-
-        const text = textNode.textContent;
-        const before = text.substring(0, matchIndex);
-        // Get text between the pattern and cursor (excluding the trigger space if present)
-        const after = text.substring(matchIndex + fullMatch.length, cursorOffset);
-        // Get remaining text after cursor (and after the trigger space if present)
-        const remaining = text.substring(hasSpaceAfter ? cursorOffset + 1 : cursorOffset);
-
-        const parent = textNode.parentNode;
-        
-        // Create new nodes
-        if (before) {
-            const beforeNode = document.createTextNode(before);
-            parent.insertBefore(beforeNode, textNode);
-        }
-        
-        const element = document.createElement(tagName);
-        element.textContent = innerText;
-        parent.insertBefore(element, textNode);
-        
-        // Create text node after the element with remaining text (no extra space - space was already consumed as trigger)
-        const afterContent = after + remaining;
-        
-        // Use zero-width space to ensure cursor is positioned outside the inline element
-        // This prevents the browser from placing the cursor inside the inline element
-        const ZWSP = '\u200B';
-        const afterNode = document.createTextNode(ZWSP + afterContent);
-        parent.insertBefore(afterNode, textNode);
-        
-        parent.removeChild(textNode);
-
-        // Set cursor after the zero-width space (position 1)
-        const newRange = document.createRange();
-        const sel = window.getSelection();
-        newRange.setStart(afterNode, 1); // After the ZWSP
-        newRange.collapse(true);
-        sel.removeAllRanges();
-        sel.addRange(newRange);
-
-        syncMarkdown();
-    }
-
-    // ========== INLINE ELEMENT ESCAPE ==========
-    
-    // Check if cursor is inside an inline element and user typed ending marker + space
-    // Returns true if escape was performed
-    function checkInlineEscape() {
-        const sel = window.getSelection();
-        if (!sel || !sel.rangeCount) return false;
-        
-        const range = sel.getRangeAt(0);
-        if (!range.collapsed) return false;
-        
-        // Check if we're inside a code block (pre element)
-        // If so, skip all inline escape - code blocks should preserve literal text
-        let node = range.startContainer;
-        const startElement = node.nodeType === 3 ? node.parentElement : node;
-        if (startElement && startElement.closest && startElement.closest('pre')) {
-            logger.log('checkInlineEscape: Inside code block, skipping');
-            return false;
-        }
-        
-        // Find the inline element we might be inside
-        let inlineElement = null;
-        let markerInfo = null;
-        
-        // Check if we're in a text node inside an inline element
-        while (node && node !== editor) {
-            if (node.nodeType === 1) {
-                const tag = node.tagName.toLowerCase();
-                if (tag === 'strong' || tag === 'b') {
-                    inlineElement = node;
-                    markerInfo = { marker: '**', tag: tag };
-                    break;
-                } else if (tag === 'em' || tag === 'i') {
-                    inlineElement = node;
-                    markerInfo = { marker: '*', tag: tag };
-                    break;
-                } else if (tag === 'del' || tag === 's') {
-                    inlineElement = node;
-                    markerInfo = { marker: '~~', tag: tag };
-                    break;
-                } else if (tag === 'code') {
-                    // Only inline code, not code inside pre
-                    if (!node.closest('pre')) {
-                        inlineElement = node;
-                        markerInfo = { marker: '\`', tag: tag };
-                        break;
-                    }
-                }
-            }
-            node = node.parentNode;
-        }
-        
-        if (!inlineElement || !markerInfo) return false;
-        
-        // Get text content and check if it ends with the marker + space
-        const textNode = range.startContainer;
-        if (textNode.nodeType !== 3) return false;
-        
-        const text = textNode.textContent;
-        const offset = range.startOffset;
-        
-        // Check if text before cursor ends with marker + space (space was just typed)
-        const beforeCursor = text.substring(0, offset);
-        const expectedEnding = markerInfo.marker + ' ';
-        
-        if (!beforeCursor.endsWith(expectedEnding)) return false;
-        
-        // Remove the marker + space from the text
-        const newText = beforeCursor.slice(0, -expectedEnding.length) + text.substring(offset);
-        textNode.textContent = newText;
-        
-        // Move cursor outside the inline element (after it)
-        const parent = inlineElement.parentNode;
-        
-        // Create a space text node after the inline element
-        const spaceNode = document.createTextNode(' ');
-        if (inlineElement.nextSibling) {
-            parent.insertBefore(spaceNode, inlineElement.nextSibling);
-        } else {
-            parent.appendChild(spaceNode);
-        }
-        
-        // Set cursor after the space
-        const newRange = document.createRange();
-        newRange.setStart(spaceNode, 1);
-        newRange.collapse(true);
-        sel.removeAllRanges();
-        sel.addRange(newRange);
-        
-        syncMarkdown();
-        return true;
-    }
-
-    // ========== INLINE FORMATTING ==========
-    
-    /**
-     * Toggle strikethrough formatting manually.
-     * This is needed because execCommand('strikeThrough') uses <strike> tag,
-     * but our Markdown conversion uses <del> tag.
-     */
-    function toggleStrikethrough(range, sel) {
-        const strikethroughTags = ['del', 's', 'strike'];
-        
-        // Check if all selected content is wrapped in strikethrough tags
-        const fragment = range.cloneContents();
-        const tempDiv = document.createElement('div');
-        tempDiv.appendChild(fragment);
-        
-        logger.log('toggleStrikethrough - selection HTML:', tempDiv.innerHTML);
-        
-        // First check: look at the cloned content
-        let strikethroughStatus = checkStrikethroughStatus(tempDiv, strikethroughTags);
-        
-        logger.log('toggleStrikethrough - from cloned content - hasAny:', strikethroughStatus.hasAny, 'isAll:', strikethroughStatus.isAll);
-        
-        // Second check: if the cloned content has no strikethrough tags,
-        // also check if the selection is INSIDE a strikethrough tag in the actual DOM
-        // (cloneContents doesn't include parent tags that wrap the selection)
-        if (!strikethroughStatus.hasAny) {
-            const isInsideStrikethrough = isRangeInsideStrikethroughTag(range, strikethroughTags);
-            logger.log('toggleStrikethrough - isRangeInsideStrikethroughTag:', isInsideStrikethrough);
-            if (isInsideStrikethrough) {
-                strikethroughStatus = { hasAny: true, isAll: true };
-            }
-        }
-        
-        logger.log('toggleStrikethrough - final hasAnyStrikethrough:', strikethroughStatus.hasAny, 'isAllStrikethrough:', strikethroughStatus.isAll);
-        
-        // If any text is in strikethrough, remove it (toggle off)
-        // Only add strikethrough if NO text is currently in strikethrough
-        if (strikethroughStatus.hasAny) {
-            // Remove strikethrough - unwrap the tags
-            logger.log('toggleStrikethrough - removing strikethrough');
-            unwrapStrikethroughInRange(range, sel, strikethroughTags);
-        } else {
-            // Add strikethrough - wrap with <del> tag
-            logger.log('toggleStrikethrough - adding strikethrough');
-            wrapRangeWithTag(range, sel, 'del');
-        }
-    }
-    
-    /**
-     * Check if the selection range is inside a strikethrough tag in the actual DOM
-     */
-    function isRangeInsideStrikethroughTag(range, tagNames) {
-        // Check start container's ancestors
-        let node = range.startContainer;
-        while (node && node !== editor) {
-            if (node.nodeType === 1 && tagNames.includes(node.tagName.toLowerCase())) {
-                return true;
-            }
-            node = node.parentElement;
-        }
-        
-        // Check end container's ancestors (in case selection spans multiple elements)
-        node = range.endContainer;
-        while (node && node !== editor) {
-            if (node.nodeType === 1 && tagNames.includes(node.tagName.toLowerCase())) {
-                return true;
-            }
-            node = node.parentElement;
-        }
-        
-        return false;
-    }
-    
-    /**
-     * Check strikethrough status of text content
-     * Returns { hasAny: boolean, isAll: boolean }
-     * - hasAny: true if any text is inside strikethrough tags
-     * - isAll: true if all text is inside strikethrough tags
-     */
-    function checkStrikethroughStatus(container, tagNames) {
-        // If container is empty, return false for both
-        if (!container.textContent || container.textContent.trim() === '') {
-            logger.log('checkStrikethroughStatus - empty container');
-            return { hasAny: false, isAll: false };
-        }
-        
-        // Check if the container itself is a strikethrough tag
-        if (container.nodeType === 1 && tagNames.includes(container.tagName.toLowerCase())) {
-            logger.log('checkStrikethroughStatus - container is strikethrough tag');
-            return { hasAny: true, isAll: true };
-        }
-        
-        // Get all text nodes
-        const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, null, false);
-        let textNode;
-        let textNodesChecked = 0;
-        let textNodesInStrikethrough = 0;
-        
-        while ((textNode = walker.nextNode())) {
-            // Skip empty text nodes
-            if (!textNode.textContent || textNode.textContent.trim() === '') {
-                continue;
-            }
-            
-            textNodesChecked++;
-            
-            // Check if this text node is inside a strikethrough tag
-            let parent = textNode.parentElement;
-            let isInStrikethrough = false;
-            
-            while (parent && parent !== container) {
-                if (tagNames.includes(parent.tagName.toLowerCase())) {
-                    isInStrikethrough = true;
-                    break;
-                }
-                parent = parent.parentElement;
-            }
-            
-            logger.log('checkStrikethroughStatus - text node:', textNode.textContent.substring(0, 20), 'isInStrikethrough:', isInStrikethrough);
-            
-            if (isInStrikethrough) {
-                textNodesInStrikethrough++;
-            }
-        }
-        
-        const hasAny = textNodesInStrikethrough > 0;
-        const isAll = textNodesChecked > 0 && textNodesInStrikethrough === textNodesChecked;
-        
-        logger.log('checkStrikethroughStatus - checked:', textNodesChecked, 'inStrikethrough:', textNodesInStrikethrough, 'hasAny:', hasAny, 'isAll:', isAll);
-        return { hasAny, isAll };
-    }
-    
-    /**
-     * Unwrap strikethrough tags from the selected range
-     */
-    function unwrapStrikethroughInRange(range, sel, tagNames) {
-        // Get the common ancestor
-        const commonAncestor = range.commonAncestorContainer;
-        const startContainer = range.startContainer;
-        const endContainer = range.endContainer;
-        const startOffset = range.startOffset;
-        const endOffset = range.endOffset;
-        
-        // Find all strikethrough elements that intersect with the selection
-        const elementsToUnwrap = [];
-        
-        // Helper to check if an element intersects with the range
-        function intersectsRange(element) {
-            const elemRange = document.createRange();
-            elemRange.selectNodeContents(element);
-            
-            // Check if ranges intersect
-            const startsBeforeEnd = range.compareBoundaryPoints(Range.START_TO_END, elemRange) >= 0;
-            const endsAfterStart = range.compareBoundaryPoints(Range.END_TO_START, elemRange) <= 0;
-            
-            return startsBeforeEnd && endsAfterStart;
-        }
-        
-        // Find the container to search in
-        let searchContainer = commonAncestor;
-        if (searchContainer.nodeType === 3) {
-            searchContainer = searchContainer.parentElement;
-        }
-        
-        // Also check parent elements
-        let parent = searchContainer;
-        while (parent && parent !== editor) {
-            if (tagNames.includes(parent.tagName?.toLowerCase())) {
-                elementsToUnwrap.push(parent);
-            }
-            parent = parent.parentElement;
-        }
-        
-        // Find all strikethrough elements within the search container
-        for (const tagName of tagNames) {
-            const elements = searchContainer.querySelectorAll(tagName);
-            for (const elem of elements) {
-                if (intersectsRange(elem) && !elementsToUnwrap.includes(elem)) {
-                    elementsToUnwrap.push(elem);
-                }
-            }
-        }
-        
-        // Sort elements by depth (deepest first) to avoid issues when unwrapping
-        elementsToUnwrap.sort((a, b) => {
-            let depthA = 0, depthB = 0;
-            let p = a;
-            while (p) { depthA++; p = p.parentElement; }
-            p = b;
-            while (p) { depthB++; p = p.parentElement; }
-            return depthB - depthA;
-        });
-        
-        // Unwrap each element
-        for (const elem of elementsToUnwrap) {
-            // Move all children out of the element
-            const parent = elem.parentNode;
-            if (!parent) continue;
-            
-            while (elem.firstChild) {
-                parent.insertBefore(elem.firstChild, elem);
-            }
-            parent.removeChild(elem);
-        }
-        
-        // Normalize the text nodes
-        if (searchContainer.normalize) {
-            searchContainer.normalize();
-        }
-        
-        syncMarkdown();
-    }
-    
-    /**
-     * Wrap the selected range with a tag
-     */
-    function wrapRangeWithTag(range, sel, tagName) {
-        // Extract the selected content
-        const fragment = range.extractContents();
-        
-        // Create the wrapper element
-        const wrapper = document.createElement(tagName);
-        wrapper.appendChild(fragment);
-        
-        // Insert the wrapped content
-        range.insertNode(wrapper);
-        
-        // Select the wrapped content
-        const newRange = document.createRange();
-        newRange.selectNodeContents(wrapper);
-        sel.removeAllRanges();
-        sel.addRange(newRange);
-        
-        syncMarkdown();
-    }
-
-    function toggleUnderline() {
-        const selection = window.getSelection();
-        const range = selection && selection.rangeCount ? selection.getRangeAt(0) : null;
-        if (isSourceMode || !editorRange(range)) return;
-        const protectedSelector = 'pre, code, .math-inline, .math-wrapper, .mermaid-wrapper, .front-matter, .toc-block';
-        const element = node => node.nodeType === Node.ELEMENT_NODE ? node : node.parentElement;
-        const protectedContent = element(range.startContainer).closest(protectedSelector) ||
-            element(range.endContainer).closest(protectedSelector) ||
-            (!range.collapsed && [...editor.querySelectorAll(protectedSelector)].some(node => range.intersectsNode(node)));
-        if (protectedContent) { showEditorToast(i18n.underlineUnavailable); return; }
-        const formatsSelection = !range.collapsed;
-        if (formatsSelection) {
-            markdown = readCurrentMarkdown();
-            undoManager.saveSnapshot();
-        }
-        document.execCommand('underline');
-        // A caret-only toggle affects subsequent typing; it is not a document edit.
-        if (formatsSelection) syncMarkdownSync();
-    }
-
-    // Apply inline formatting (bold, italic, strikethrough) with proper handling
-    // for blockquotes and table cells where line breaks should be preserved
-    function applyInlineFormat(tagName) {
-        const sel = window.getSelection();
-        if (!sel || sel.rangeCount === 0) return;
-        
-        const range = sel.getRangeAt(0);
-        
-        // Check if selection is collapsed (no text selected)
-        if (range.collapsed) {
-            // No selection - just use execCommand for toggle behavior
-            document.execCommand(tagName === 'strong' ? 'bold' : tagName === 'em' ? 'italic' : 'strikeThrough');
-            return;
-        }
-        
-        // For strikethrough, we need manual handling because execCommand('strikeThrough')
-        // uses <strike> tag but our Markdown conversion uses <del> tag
-        if (tagName === 'del') {
-            toggleStrikethrough(range, sel);
-            return;
-        }
-        
-        // Check if we're inside a blockquote or table cell
-        const startContainer = range.startContainer;
-        const endContainer = range.endContainer;
-        const startElement = startContainer.nodeType === 3 ? startContainer.parentElement : startContainer;
-        const endElement = endContainer.nodeType === 3 ? endContainer.parentElement : endContainer;
-        
-        const blockquote = startElement?.closest('blockquote');
-        const tableCell = startElement?.closest('td, th');
-        
-        // If not in blockquote or table cell, use standard execCommand
-        if (!blockquote && !tableCell) {
-            document.execCommand(tagName === 'strong' ? 'bold' : tagName === 'em' ? 'italic' : 'strikeThrough');
-            return;
-        }
-        
-        // Get the selected content
-        const fragment = range.cloneContents();
-        const tempDiv = document.createElement('div');
-        tempDiv.appendChild(fragment);
-        
-        // Check if selection contains line breaks (newlines in text or <br> elements)
-        const hasLineBreaks = tempDiv.innerHTML.includes('<br>') || 
-                              tempDiv.textContent.includes('\n') ||
-                              tempDiv.querySelectorAll('br').length > 0;
-        
-        if (!hasLineBreaks) {
-            // Single line - use standard execCommand
-            document.execCommand(tagName === 'strong' ? 'bold' : tagName === 'em' ? 'italic' : 'strikeThrough');
-            return;
-        }
-        
-        // Multiple lines - need to apply formatting to each line separately
-        // Strategy: Split by line breaks, wrap each non-empty segment, rejoin
-        
-        // Delete the selected content first
-        range.deleteContents();
-        
-        // Process the content and apply formatting to each line
-        const result = document.createDocumentFragment();
-        
-        function processNode(node, isFirst) {
-            if (node.nodeType === 3) {
-                // Text node - split by newlines
-                const text = node.textContent || '';
-                const parts = text.split('\n');
-                
-                for (let i = 0; i < parts.length; i++) {
-                    if (i > 0) {
-                        // Add newline character (will be rendered as line break in blockquote)
-                        result.appendChild(document.createTextNode('\n'));
-                    }
-                    
-                    const part = parts[i];
-                    if (part.length > 0) {
-                        // Wrap non-empty text in formatting tag
-                        const wrapper = document.createElement(tagName);
-                        wrapper.textContent = part;
-                        result.appendChild(wrapper);
-                    }
-                }
-            } else if (node.nodeType === 1) {
-                const tag = node.tagName.toLowerCase();
-                
-                if (tag === 'br') {
-                    // Line break - add it and mark that next content is a new line
-                    result.appendChild(document.createElement('br'));
-                } else if (tag === tagName || 
-                           (tagName === 'strong' && tag === 'b') ||
-                           (tagName === 'em' && tag === 'i') ||
-                           (tagName === 'del' && (tag === 's' || tag === 'strike'))) {
-                    // Already has this formatting - just add the content
-                    for (const child of node.childNodes) {
-                        processNode(child, false);
-                    }
-                } else {
-                    // Other element - process children
-                    for (const child of node.childNodes) {
-                        processNode(child, false);
-                    }
-                }
-            }
-        }
-        
-        // Process all nodes in the temp div
-        for (const child of tempDiv.childNodes) {
-            processNode(child, result.childNodes.length === 0);
-        }
-        
-        // Insert the processed content
-        range.insertNode(result);
-        
-        // Collapse selection to end
-        sel.collapseToEnd();
-    }
-
-    // ========== HTML TO MARKDOWN ==========
-
-    // Use requestAnimationFrame for non-blocking sync
-    function syncMarkdown() {
-        markAsEdited(); // Any sync implies user edit
-        // Cancel any pending sync from debouncedSync
-        clearTimeout(syncTimeout);
-        syncTimeout = null;
-        pendingSync = true;
-        const generation = syncGeneration;
-        requestAnimationFrame(() => {
-            if (generation !== syncGeneration) return;
-            markdown = readCommittedMarkdown();
-            notifyChange();
-            pendingSync = false;
-            updatePlaceholder();
-        });
-    }
-    
-    // Synchronous version for cases where we need immediate result
-    function syncMarkdownSync() {
-        markAsEdited(); // Any sync implies user edit
-        markdown = htmlToMarkdown();
-        notifyChange();
-        updatePlaceholder();
-    }
 
     // ========== EVENT HANDLERS ==========
 
@@ -4261,4536 +1161,26 @@ window.BinaryMath = require('../shared/math-syntax');
     }, true); // true = capture phase
 
     // Key input handler
-    editor.addEventListener('keydown', function(e) {
-        if (e.target.closest && e.target.closest('.front-matter')) return;
-        logger.log('Editor keydown:', e.key);
-        if (isSourceMode) return;
-
-        if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
-            const line = getCurrentLine();
-            const delimiter = line && line.tagName === 'P' ? line.textContent.trim() : '';
-            if (delimiter === '$$' || (mathBackslashDelimiters && delimiter === '\\[')) {
-                e.preventDefault();
-                undoManager.saveSnapshot();
-                const close = delimiter === '$$' ? '$$' : '\\]';
-                const template = document.createElement('template');
-                template.innerHTML = mathBlockHtml({ open: delimiter, close, tex: '', raw: delimiter + '\n\n' + close });
-                const wrapper = template.content.firstElementChild;
-                line.replaceWith(wrapper);
-                setupMathBlocks();
-                enterSpecialWrapperEditMode(wrapper, 'start');
-                syncMarkdown();
-                return;
-            }
-        }
-
-        // Mark as actively editing for non-navigation keys
-        if (!e.key.startsWith('Arrow') && !['Shift', 'Control', 'Alt', 'Meta', 'CapsLock', 'Escape', 'Tab'].includes(e.key)) {
-            markActivelyEditing();
-        }
-
-        // Backspace key - handle nested list items
-        // Case: Cursor at beginning of non-empty li that is the first child of a nested list
-        // Action: Merge with parent li's content
-        if (e.key === 'Backspace') {
-            undoManager.saveSnapshot();
-            logger.log('Backspace key pressed');
-            const sel = window.getSelection();
-            if (!sel || !sel.rangeCount) return;
-            
-            const range = sel.getRangeAt(0);
-            
-            // Handle selection deletion (e.g., triple-click then backspace, or partial text selection)
-            if (!range.collapsed) {
-                logger.log('Backspace with selection (early handler) - range:', {
-                    startContainer: range.startContainer.nodeName,
-                    startOffset: range.startOffset,
-                    endContainer: range.endContainer.nodeName,
-                    endOffset: range.endOffset
-                });
-
-                // Find the li element that contains the selection start
-                let liElement = null;
-                let node = range.startContainer;
-                while (node && node !== editor) {
-                    if (node.nodeType === 1 && node.tagName.toLowerCase() === 'li') {
-                        liElement = node;
-                        break;
-                    }
-                    node = node.parentNode;
-                }
-
-                if (liElement) {
-                    logger.log('Backspace with selection - li found, handling');
-                    e.preventDefault();
-
-                    // Before deleteContents, collect endLi and all <li> elements in between
-                    let endLi = null;
-                    let endNode = range.endContainer;
-                    while (endNode && endNode !== editor) {
-                        if (endNode.nodeType === 1 && endNode.tagName.toLowerCase() === 'li') {
-                            endLi = endNode;
-                            break;
-                        }
-                        endNode = endNode.parentNode;
-                    }
-
-                    // Collect all <li> elements between startLi and endLi (exclusive of startLi)
-                    const affectedLis = [];
-                    if (endLi && endLi !== liElement) {
-                        const allLis = Array.from(editor.querySelectorAll('li'));
-                        const startIdx = allLis.indexOf(liElement);
-                        const endIdx = allLis.indexOf(endLi);
-                        if (startIdx !== -1 && endIdx !== -1) {
-                            const minIdx = Math.min(startIdx, endIdx);
-                            const maxIdx = Math.max(startIdx, endIdx);
-                            for (let i = minIdx + 1; i <= maxIdx; i++) {
-                                affectedLis.push(allLis[i]);
-                            }
-                        }
-                    }
-
-                    // Get nested list before deletion
-                    const nestedList = liElement.querySelector(':scope > ul, :scope > ol');
-                    const checkbox = liElement.querySelector(':scope > input[type="checkbox"]');
-
-                    // Save cursor position before deletion - after deleteContents,
-                    // the range collapses to the start of the deleted region
-                    range.deleteContents();
-
-                    // Clean up empty <li> elements that were in the selection (excluding startLi)
-                    for (const affectedLi of affectedLis) {
-                        if (!affectedLi.isConnected) continue;
-                        // Check if this li is now empty (no direct text content)
-                        let hasContent = false;
-                        for (const child of affectedLi.childNodes) {
-                            if (child.nodeType === 3 && child.textContent.trim()) {
-                                hasContent = true;
-                                break;
-                            }
-                            if (child.nodeType === 1) {
-                                const tag = child.tagName?.toLowerCase();
-                                if (tag === 'ul' || tag === 'ol' || tag === 'br' || tag === 'input') continue;
-                                if (child.textContent.trim()) {
-                                    hasContent = true;
-                                    break;
-                                }
-                            }
-                        }
-                        if (!hasContent) {
-                            const parentList = affectedLi.parentNode;
-                            // Promote nested list children to parent list before removing
-                            const nestedLists = Array.from(affectedLi.querySelectorAll(':scope > ul, :scope > ol'));
-                            for (const nl of nestedLists) {
-                                while (nl.firstChild) {
-                                    parentList.insertBefore(nl.firstChild, affectedLi);
-                                }
-                                nl.remove();
-                            }
-                            affectedLi.remove();
-                            // Clean up empty parent list
-                            if (parentList && parentList.isConnected &&
-                                (parentList.tagName?.toLowerCase() === 'ul' || parentList.tagName?.toLowerCase() === 'ol') &&
-                                parentList.children.length === 0) {
-                                parentList.remove();
-                            }
-                        }
-                    }
-
-                    // After deleteContents, the selection range is collapsed at the deletion point.
-                    // We preserve this cursor position for partial text deletions.
-                    const cursorRange = sel.getRangeAt(0);
-
-                    // Check if li is now empty (only has br, checkbox, or nested list)
-                    let hasDirectText = false;
-                    for (const child of liElement.childNodes) {
-                        if (child.nodeType === 3 && child.textContent.trim()) {
-                            hasDirectText = true;
-                            break;
-                        }
-                        if (child.nodeType === 1) {
-                            const tag = child.tagName?.toLowerCase();
-                            if (tag !== 'br' && tag !== 'input' && tag !== 'ul' && tag !== 'ol') {
-                                if (child.textContent.trim()) {
-                                    hasDirectText = true;
-                                    break;
-                                }
-                            }
-                        }
-                    }
-
-                    // If no direct text content, ensure there's a <br> for cursor positioning
-                    if (!hasDirectText) {
-                        // Remove any existing empty text nodes
-                        const emptyTextNodes = [];
-                        for (const child of liElement.childNodes) {
-                            if (child.nodeType === 3 && !child.textContent.trim()) {
-                                emptyTextNodes.push(child);
-                            }
-                        }
-                        emptyTextNodes.forEach(n => n.remove());
-
-                        // Check if there's already a <br>
-                        let hasBr = false;
-                        for (const child of liElement.childNodes) {
-                            if (child.nodeType === 1 && child.tagName?.toLowerCase() === 'br') {
-                                hasBr = true;
-                                break;
-                            }
-                        }
-
-                        // Add <br> if needed, after checkbox if present
-                        if (!hasBr) {
-                            const br = document.createElement('br');
-                            if (checkbox) {
-                                checkbox.after(br);
-                            } else if (nestedList) {
-                                liElement.insertBefore(br, nestedList);
-                            } else {
-                                liElement.insertBefore(br, liElement.firstChild);
-                            }
-                        }
-
-                        // Only reposition cursor when li is empty (need to place at br)
-                        const newRange = document.createRange();
-                        const brInLi = liElement.querySelector(':scope > br');
-                        if (brInLi) {
-                            newRange.setStartBefore(brInLi);
-                        } else {
-                            newRange.setStart(liElement, checkbox ? 1 : 0);
-                        }
-                        newRange.collapse(true);
-                        sel.removeAllRanges();
-                        sel.addRange(newRange);
-                    }
-                    // When hasDirectText is true, the cursor stays at the deletion point
-                    // (where deleteContents left it) - no need to reposition
-
-                    syncMarkdownSync();
-                    logger.log('Handled selection deletion in list item (early handler)');
-                    return;
-                }
-
-                // Not in a list item, let browser handle it
-                return;
-            }
-            
-            // Only handle collapsed selection from here
-            
-            // Find the <li> element if cursor is inside a list
-            let liElement = null;
-            let node = sel.anchorNode;
-            while (node && node !== editor) {
-                if (node.tagName && node.tagName.toLowerCase() === 'li') {
-                    liElement = node;
-                    break;
-                }
-                node = node.parentNode;
-            }
-            
-            if (liElement) {
-                const list = liElement.parentNode;
-                const nestedListInItem = liElement.querySelector(':scope > ul, :scope > ol');
-                const isNestedList = list && list.parentNode && list.parentNode.tagName && list.parentNode.tagName.toLowerCase() === 'li';
-                
-                // Get only direct text content (excluding nested lists and br)
-                let directTextContent = '';
-                for (const child of liElement.childNodes) {
-                    if (child.nodeType === 3) {
-                        directTextContent += child.textContent;
-                    } else if (child.nodeType === 1) {
-                        const childTag = child.tagName ? child.tagName.toLowerCase() : '';
-                        if (childTag !== 'ul' && childTag !== 'ol' && childTag !== 'input' && childTag !== 'br') {
-                            directTextContent += child.textContent;
-                        }
-                    }
-                }
-                directTextContent = directTextContent.trim();
-                const isEmptyItem = directTextContent === '';
-                
-                // Check if cursor is at the beginning of the li
-                const isAtBeginning = (() => {
-                    // Get the first text position in the li (excluding nested lists)
-                    let firstTextNode = null;
-                    const walker = document.createTreeWalker(liElement, NodeFilter.SHOW_TEXT, {
-                        acceptNode: (node) => {
-                            // Skip text nodes inside nested lists
-                            let parent = node.parentNode;
-                            while (parent && parent !== liElement) {
-                                if (parent.tagName && (parent.tagName.toLowerCase() === 'ul' || parent.tagName.toLowerCase() === 'ol')) {
-                                    return NodeFilter.FILTER_REJECT;
-                                }
-                                parent = parent.parentNode;
-                            }
-                            return NodeFilter.FILTER_ACCEPT;
-                        }
-                    });
-                    firstTextNode = walker.nextNode();
-
-                    // Case: cursor is on the li element itself (e.g. before checkbox)
-                    if (range.startContainer === liElement) {
-                        if (range.startOffset === 0) return true;
-                        // offset 1 with checkbox as first child = cursor just after checkbox = beginning of text
-                        var childAtOffset = liElement.childNodes[range.startOffset];
-                        var childBefore = liElement.childNodes[range.startOffset - 1];
-                        if (childBefore && childBefore.nodeType === 1 && childBefore.tagName === 'INPUT' &&
-                            childBefore.type === 'checkbox') {
-                            return true;
-                        }
-                    }
-
-                    if (!firstTextNode) {
-                        // No text node, check if cursor is at position 0 of the li
-                        return range.startContainer === liElement && range.startOffset === 0;
-                    }
-
-                    // Check if cursor is at the beginning of the first text node
-                    return range.startContainer === firstTextNode && range.startOffset === 0;
-                })();
-                
-                logger.log('Backspace on li:', {
-                    isNestedList: isNestedList,
-                    hasNestedList: !!nestedListInItem,
-                    isAtBeginning: isAtBeginning,
-                    isEmptyItem: isEmptyItem,
-                    liHTML: liElement.innerHTML.substring(0, 100)
-                });
-                
-                // Case 1: Cursor at beginning of NON-EMPTY li, li is in a nested list, and li is the first child
-                // Check if there's a previous sibling list (e.g. ol before ul in mixed nested lists)
-                // If so, merge with the last li of that sibling list instead of parent li
-                // Note: Empty li items are handled by the existing logic (convert to paragraph)
-                if (isAtBeginning && isNestedList && !liElement.previousElementSibling && !isEmptyItem) {
-                    const parentLi = list.parentNode;
-
-                    // Check for previous sibling list within the same parent li
-                    const prevSiblingList = list.previousElementSibling;
-                    const hasPrevSiblingList = prevSiblingList && prevSiblingList.tagName &&
-                        (prevSiblingList.tagName.toLowerCase() === 'ul' || prevSiblingList.tagName.toLowerCase() === 'ol');
-
-                    if (hasPrevSiblingList && prevSiblingList.lastElementChild) {
-                        // Case 1a: Merge with last li of the previous sibling list
-                        logger.log('At beginning of first nested li (non-empty) - merging with previous sibling list last li');
-
-                        e.preventDefault();
-
-                        // Drill down to the deepest last li (visually the line just above)
-                        var targetLi = prevSiblingList.lastElementChild;
-                        var deepNestedList = targetLi ? targetLi.querySelector(':scope > ul, :scope > ol') : null;
-                        while (deepNestedList && deepNestedList.lastElementChild) {
-                            targetLi = deepNestedList.lastElementChild;
-                            deepNestedList = targetLi.querySelector(':scope > ul, :scope > ol');
-                        }
-
-                        // Get content of current li (excluding nested list and checkbox)
-                        const currentContent = [];
-                        for (const child of Array.from(liElement.childNodes)) {
-                            if (child.nodeType === 1 && (child.tagName.toLowerCase() === 'ul' || child.tagName.toLowerCase() === 'ol')) {
-                                continue; // Skip nested lists
-                            }
-                            if (child.nodeType === 1 && child.tagName === 'INPUT' && child.type === 'checkbox') {
-                                continue; // Skip checkbox
-                            }
-                            currentContent.push(child);
-                        }
-
-                        // Save the nested list from current li if any
-                        const savedNestedList = nestedListInItem;
-                        if (savedNestedList) {
-                            savedNestedList.remove();
-                        }
-
-                        // Find position in targetLi (before any nested lists)
-                        let insertBeforeNode = null;
-                        for (const child of targetLi.childNodes) {
-                            if (child.nodeType === 1 && (child.tagName === 'UL' || child.tagName === 'OL')) {
-                                insertBeforeNode = child;
-                                break;
-                            }
-                        }
-
-                        // Remove trailing <br> from target li
-                        const targetLastChild = insertBeforeNode ? insertBeforeNode.previousSibling : targetLi.lastChild;
-                        if (targetLastChild && targetLastChild.nodeType === 1 && targetLastChild.tagName.toLowerCase() === 'br') {
-                            targetLastChild.remove();
-                        }
-
-                        // Mark cursor position (end of target li's text)
-                        let cursorNode = insertBeforeNode ? insertBeforeNode.previousSibling : targetLi.lastChild;
-                        let cursorOffset = cursorNode && cursorNode.nodeType === 3 ? cursorNode.textContent.length : 0;
-
-                        // Append content from current li to target li
-                        for (const child of currentContent) {
-                            if (insertBeforeNode) {
-                                targetLi.insertBefore(child, insertBeforeNode);
-                            } else {
-                                targetLi.appendChild(child);
-                            }
-                        }
-
-                        // Move nested lists from current li to target li
-                        if (savedNestedList) {
-                            targetLi.appendChild(savedNestedList);
-                        }
-
-                        // Remove current li
-                        liElement.remove();
-
-                        // If current list is now empty, remove it
-                        if (list.children.length === 0) {
-                            list.remove();
-                        }
-
-                        // Set cursor position
-                        if (cursorNode && cursorNode.nodeType === 3 && cursorNode.isConnected) {
-                            const newRange = document.createRange();
-                            newRange.setStart(cursorNode, cursorOffset);
-                            newRange.collapse(true);
-                            sel.removeAllRanges();
-                            sel.addRange(newRange);
-                        } else {
-                            setCursorToEnd(targetLi);
-                        }
-
-                        syncMarkdownSync();
-                        return;
-
-                    } else if (parentLi && parentLi.tagName && parentLi.tagName.toLowerCase() === 'li') {
-                        // Case 1b: Original behavior - merge with parent li's content
-                        logger.log('At beginning of first nested li (non-empty) - merging with parentLi');
-                        logger.log('parentLi.innerHTML BEFORE:', parentLi.innerHTML);
-
-                        e.preventDefault();
-
-                        // Get content of current li (excluding nested list and checkbox)
-                        const currentContent = [];
-                        for (const child of Array.from(liElement.childNodes)) {
-                            if (child.nodeType === 1 && (child.tagName.toLowerCase() === 'ul' || child.tagName.toLowerCase() === 'ol')) {
-                                continue; // Skip nested lists
-                            }
-                            if (child.nodeType === 1 && child.tagName === 'INPUT' && child.type === 'checkbox') {
-                                continue; // Skip checkbox
-                            }
-                            currentContent.push(child);
-                        }
-
-                        // Strip leading whitespace from first text node (task list items have
-                        // a formatting space " b" after the checkbox that should not appear
-                        // in the merged text)
-                        if (currentContent.length > 0 && currentContent[0].nodeType === 3) {
-                            currentContent[0].textContent = currentContent[0].textContent.replace(/^\s+/, '');
-                            if (!currentContent[0].textContent) {
-                                currentContent.shift();
-                            }
-                        }
-
-                        // Save the nested list from current li if any
-                        const savedNestedList = nestedListInItem;
-                        if (savedNestedList) {
-                            savedNestedList.remove();
-                        }
-
-                        // Find the position to insert content in parentLi (before the nested list)
-                        const parentNestedList = parentLi.querySelector(':scope > ul, :scope > ol');
-
-                        // Remove the <br> from parentLi if it exists (it's a placeholder for empty li)
-                        const parentBr = parentLi.querySelector(':scope > br');
-                        if (parentBr && parentNestedList && parentBr.nextSibling === parentNestedList) {
-                            parentBr.remove();
-                        }
-
-                        // Insert current li's content into parentLi (before the nested list)
-                        for (const child of currentContent) {
-                            if (parentNestedList) {
-                                parentNestedList.before(child);
-                            } else {
-                                parentLi.appendChild(child);
-                            }
-                        }
-
-                        // Remove the current li
-                        liElement.remove();
-
-                        // If the list is now empty, remove it
-                        if (list.children.length === 0) {
-                            list.remove();
-                        }
-
-                        // If there was a nested list in current li, insert it before the remaining siblings.
-                        // b was the first item, so its children (c) must come BEFORE d, e, ...
-                        if (savedNestedList) {
-                            const existingNestedList = parentLi.querySelector(':scope > ul, :scope > ol');
-                            if (existingNestedList) {
-                                if (savedNestedList.tagName === existingNestedList.tagName) {
-                                    // Same list type: merge items at the BEGINNING (before d)
-                                    const firstExistingChild = existingNestedList.firstChild;
-                                    while (savedNestedList.firstChild) {
-                                        existingNestedList.insertBefore(savedNestedList.firstChild, firstExistingChild);
-                                    }
-                                } else {
-                                    // Different list type: insert savedNestedList itself before existingNestedList
-                                    // (preserves list type of c, keeps visual order c before d)
-                                    existingNestedList.parentNode.insertBefore(savedNestedList, existingNestedList);
-                                }
-                            } else {
-                                parentLi.appendChild(savedNestedList);
-                            }
-                        }
-                        
-                        // Set cursor at the end of parentLi's original text (before the merged content)
-                        // This is the correct position - at the junction point between original and merged content
-                        const newSel = window.getSelection();
-                        const newRange = document.createRange();
-                        
-                        // Find the last text node in parentLi that is NOT inside a nested list
-                        // and is BEFORE the merged content
-                        const findCursorPosition = () => {
-                            // We need to find the text position just before where we inserted content
-                            // The content was inserted before parentNestedList (if exists) or at the end
-                            
-                            // Get all text nodes in parentLi (excluding nested lists)
-                            const textNodes = [];
-                            const walker = document.createTreeWalker(parentLi, NodeFilter.SHOW_TEXT);
-                            let textNode;
-                            while (textNode = walker.nextNode()) {
-                                // Skip text nodes inside nested lists
-                                let parent = textNode.parentNode;
-                                let inNestedList = false;
-                                while (parent && parent !== parentLi) {
-                                    if (parent.tagName && (parent.tagName.toLowerCase() === 'ul' || parent.tagName.toLowerCase() === 'ol')) {
-                                        inNestedList = true;
-                                        break;
-                                    }
-                                    parent = parent.parentNode;
-                                }
-                                if (!inNestedList) {
-                                    textNodes.push(textNode);
-                                }
-                            }
-                            
-                            if (textNodes.length === 0) {
-                                // No text nodes in parentLi - this shouldn't happen after merge
-                                // but if it does, return null to use fallback
-                                return null;
-                            }
-                            
-                            // If we moved content, find the position just before the first moved content
-                            if (currentContent.length > 0) {
-                                const firstMovedContent = currentContent[0];
-                                
-                                // Find the text node that ends just before the first moved content
-                                for (let i = 0; i < textNodes.length; i++) {
-                                    const tn = textNodes[i];
-                                    // Check if this text node is part of the moved content
-                                    let isMovedContent = false;
-                                    for (const mc of currentContent) {
-                                        if (mc === tn || (mc.contains && mc.contains(tn))) {
-                                            isMovedContent = true;
-                                            break;
-                                        }
-                                    }
-                                    
-                                    if (isMovedContent) {
-                                        // The previous text node (if any) is where we should place cursor
-                                        if (i > 0) {
-                                            const prevTextNode = textNodes[i - 1];
-                                            return { node: prevTextNode, offset: prevTextNode.length };
-                                        } else {
-                                            // No previous text node - parent li was empty before merge
-                                            // Set cursor at the beginning of the first moved content
-                                            if (firstMovedContent.nodeType === 3) {
-                                                return { node: firstMovedContent, offset: 0 };
-                                            } else {
-                                                // Find first text node in moved content
-                                                const firstTextInMoved = firstMovedContent.nodeType === 3 
-                                                    ? firstMovedContent 
-                                                    : firstMovedContent.querySelector ? 
-                                                        (function() {
-                                                            const w = document.createTreeWalker(firstMovedContent, NodeFilter.SHOW_TEXT);
-                                                            return w.nextNode();
-                                                        })() : null;
-                                                if (firstTextInMoved) {
-                                                    return { node: firstTextInMoved, offset: 0 };
-                                                }
-                                                return null;
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                            
-                            // Fallback: cursor at end of last text node
-                            const lastText = textNodes[textNodes.length - 1];
-                            return { node: lastText, offset: lastText.length };
-                        };
-                        
-                        const cursorPos = findCursorPosition();
-                        if (cursorPos && cursorPos.node) {
-                            newRange.setStart(cursorPos.node, cursorPos.offset);
-                            newRange.collapse(true);
-                            newSel.removeAllRanges();
-                            newSel.addRange(newRange);
-                        } else {
-                            // Fallback: use setCursorToEnd
-                            setCursorToEnd(parentLi);
-                        }
-                        
-                        logger.log('parentLi.innerHTML FINAL:', parentLi.innerHTML);
-                        logger.log('editor.innerHTML FINAL:', editor.innerHTML);
-
-                        // Merge adjacent text nodes so "a" + "b" → "ab"
-                        // (browser auto-updates live Range objects on normalize)
-                        parentLi.normalize();
-
-                        syncMarkdown();
-                        return;
-                    }
-                }
-            }
-        }
-
-        // Cmd+A / Ctrl+A - select all within current context (table cell, blockquote, code block)
-        if ((e.metaKey || e.ctrlKey) && e.key === 'a') {
-            const sel = window.getSelection();
-            if (!sel || !sel.rangeCount) return;
-            
-            let anchorNode = sel.anchorNode;
-            let startElement = anchorNode.nodeType === 3 ? anchorNode.parentElement : anchorNode;
-            
-            // Check if inside table cell
-            const tableCell = startElement.closest('td, th');
-            if (tableCell) {
-                e.preventDefault();
-                e.stopPropagation();
-                const range = document.createRange();
-                range.selectNodeContents(tableCell);
-                sel.removeAllRanges();
-                sel.addRange(range);
-                logger.log('Cmd+A: Selected all in table cell');
-                return;
-            }
-            
-            // Check if inside code block (pre > code)
-            const codeElement = startElement.closest('pre code');
-            const preElement = startElement.closest('pre');
-            if (codeElement) {
-                e.preventDefault();
-                e.stopPropagation();
-                const range = document.createRange();
-                range.selectNodeContents(codeElement);
-                sel.removeAllRanges();
-                sel.addRange(range);
-                logger.log('Cmd+A: Selected all in code element');
-                return;
-            } else if (preElement) {
-                e.preventDefault();
-                e.stopPropagation();
-                const range = document.createRange();
-                range.selectNodeContents(preElement);
-                sel.removeAllRanges();
-                sel.addRange(range);
-                logger.log('Cmd+A: Selected all in pre element');
-                return;
-            }
-            
-            // Check if inside blockquote
-            const blockquoteElement = startElement.closest('blockquote');
-            if (blockquoteElement) {
-                e.preventDefault();
-                e.stopPropagation();
-                const range = document.createRange();
-                range.selectNodeContents(blockquoteElement);
-                sel.removeAllRanges();
-                sel.addRange(range);
-                logger.log('Cmd+A: Selected all in blockquote');
-                return;
-            }
-            
-            // Not in special context - let default behavior (select all) happen
-            return;
-        }
-
-        // Enter key - check patterns and handle special cases
-        if (e.key === 'Enter') {
-            undoManager.saveSnapshot();
-            logger.log('Enter key detected:', {
-                shiftKey: e.shiftKey,
-                isComposing: e.isComposing,
-                keyCode: e.keyCode
-            });
-            
-            // Skip if IME is composing (for Japanese/Chinese input)
-            // But allow Shift+Enter even during composition for explicit line breaks
-            if ((e.isComposing || e.keyCode === 229) && !e.shiftKey) {
-                logger.log('Skipping - IME composing');
-                return;
-            }
-            
-            const sel = window.getSelection();
-            if (!sel || !sel.rangeCount) return;
-            
-            // Use closest() for more reliable element detection
-            let anchorNode = sel.anchorNode;
-            let startElement = anchorNode.nodeType === 3 ? anchorNode.parentElement : anchorNode;
-            
-            // Detect special elements (with null check)
-            const preElement = startElement?.closest?.('pre');
-            const blockquoteElement = startElement?.closest?.('blockquote');
-            const tableCell = startElement?.closest?.('td, th');
-            const listItem = startElement?.closest?.('li');
-
-            if (e.shiftKey && !preElement && !blockquoteElement && !tableCell && !listItem &&
-                !startElement.closest('strong, em, del, code')) {
-                e.preventDefault();
-                const range = sel.getRangeAt(0);
-                range.deleteContents();
-                const br = document.createElement('br');
-                br.dataset.mdHardBreak = 'spaces';
-                range.insertNode(br);
-                if (!br.nextSibling || (br.nextSibling.nodeType === 3 && !br.nextSibling.textContent && !br.nextSibling.nextSibling)) {
-                    const placeholder = document.createElement('br');
-                    placeholder.dataset.editorPlaceholder = 'true';
-                    br.after(placeholder);
-                }
-                range.setStartAfter(br); range.collapse(true);
-                sel.removeAllRanges(); sel.addRange(range);
-                syncMarkdown();
-                return;
-            }
-            
-            logger.log('Enter pressed, detected:', {
-                pre: !!preElement,
-                blockquote: !!blockquoteElement,
-                tableCell: !!tableCell,
-                listItem: !!listItem,
-                startElement: startElement?.tagName,
-                shiftKey: e.shiftKey
-            });
-            
-            // Handle Shift+Enter inside inline elements (strong, em, del, code)
-            // Close the inline element first, then insert line break
-            if (e.shiftKey) {
-                const inlineElement = startElement.closest('strong, em, del, code:not(pre code)');
-                if (inlineElement && !preElement) {
-                    e.preventDefault();
-                    logger.log('Shift+Enter in inline element:', inlineElement.tagName);
-                    
-                    // Move cursor to after the inline element
-                    const range = sel.getRangeAt(0);
-                    
-                    // Get text after cursor within the inline element
-                    const textAfter = range.cloneRange();
-                    textAfter.selectNodeContents(inlineElement);
-                    textAfter.setStart(range.endContainer, range.endOffset);
-                    const afterContent = textAfter.cloneContents();
-                    
-                    // Remove text after cursor from inline element
-                    textAfter.deleteContents();
-                    
-                    // Create a new range after the inline element
-                    const newRange = document.createRange();
-                    newRange.setStartAfter(inlineElement);
-                    newRange.collapse(true);
-                    
-                    // Insert line break after inline element
-                    const br = document.createElement('br');
-                    newRange.insertNode(br);
-                    
-                    // If there was content after cursor, insert it after the br
-                    if (afterContent.textContent) {
-                        const textNode = document.createTextNode(afterContent.textContent);
-                        br.after(textNode);
-                    }
-                    
-                    // Move cursor after the br
-                    const cursorRange = document.createRange();
-                    cursorRange.setStartAfter(br);
-                    cursorRange.collapse(true);
-                    sel.removeAllRanges();
-                    sel.addRange(cursorRange);
-                    
-                    syncMarkdown();
-                    return;
-                }
-            }
-            
-            // Handle table cell Enter/Shift+Enter
-            if (tableCell) {
-                logger.log('In table cell, shiftKey:', e.shiftKey);
-                if (e.shiftKey) {
-                    // Shift+Enter: insert line break within cell
-                    e.preventDefault();
-                    e.stopPropagation();
-                    logger.log('Inserting line break in table cell');
-                    logger.log('Cell content before:', tableCell.innerHTML);
-                    
-                    // Get fresh selection
-                    const currentSel = window.getSelection();
-                    if (!currentSel.rangeCount) {
-                        logger.log('No selection range');
-                        return;
-                    }
-                    
-                    const range = currentSel.getRangeAt(0);
-                    
-                    // Check if cursor is at the end of the cell content
-                    // If at end AND no trailing <br> exists, we need two <br>s (one for line break, one for cursor positioning)
-                    // Otherwise, one <br> is sufficient
-                    const isAtEnd = (() => {
-                        const testRange = document.createRange();
-                        testRange.selectNodeContents(tableCell);
-                        testRange.setStart(range.endContainer, range.endOffset);
-                        const afterContent = testRange.toString();
-                        return afterContent.trim() === '';
-                    })();
-                    
-                    // Check if there's already a trailing <br> after cursor position
-                    const hasTrailingBr = (() => {
-                        if (!isAtEnd) return false;
-                        // Check if the last child of the cell is a <br>
-                        const lastChild = tableCell.lastChild;
-                        if (lastChild && lastChild.nodeName === 'BR') {
-                            return true;
-                        }
-                        // Also check if cursor is right before a <br> at the end
-                        const nextSibling = range.endContainer.nodeType === Node.TEXT_NODE 
-                            ? range.endContainer.nextSibling 
-                            : range.endContainer.childNodes[range.endOffset];
-                        if (nextSibling && nextSibling.nodeName === 'BR' && !nextSibling.nextSibling) {
-                            return true;
-                        }
-                        return false;
-                    })();
-                    
-                    logger.log('Cursor at end of cell:', isAtEnd, 'hasTrailingBr:', hasTrailingBr);
-                    
-                    // Delete any selected content
-                    range.deleteContents();
-                    
-                    // Create and insert BR(s)
-                    const br1 = document.createElement('br');
-                    range.insertNode(br1);
-                    
-                    if (isAtEnd && !hasTrailingBr) {
-                        // At end with no trailing BR: need second BR for cursor positioning
-                        const br2 = document.createElement('br');
-                        br1.after(br2);
-                    }
-                    
-                    // Move cursor after the first BR
-                    const newRange = document.createRange();
-                    newRange.setStartAfter(br1);
-                    newRange.setEndAfter(br1);
-                    currentSel.removeAllRanges();
-                    currentSel.addRange(newRange);
-                    
-                    logger.log('Cell content after:', tableCell.innerHTML);
-                    logger.log('Line break inserted');
-                    
-                    // Don't call syncMarkdown immediately - let it sync on blur or other events
-                    // This prevents delay when typing
-                    return;
-                } else {
-                    // Enter: insert new row below and move to leftmost column
-                    e.preventDefault();
-                    const row = tableCell.closest('tr');
-                    if (row) {
-                        const table = row.closest('table');
-                        const colCount = row.cells.length;
-                        const newRow = document.createElement('tr');
-                        
-                        for (let i = 0; i < colCount; i++) {
-                            const cell = document.createElement('td');
-                            cell.setAttribute('contenteditable', 'true');
-                            cell.innerHTML = emptyTableCell;
-                            newRow.appendChild(cell);
-                        }
-                        
-                        row.after(newRow);
-                        // Move cursor to leftmost cell of new row
-                        activeTableCell = newRow.cells[0];
-                        setCursorToEnd(newRow.cells[0]);
-                        syncMarkdown();
-                    }
-                }
-                return;
-            }
-            
-            // Check if we're inside a code block (pre element)
-            if (preElement && editor.contains(preElement)) {
-                e.preventDefault();
-                logger.log('Inside code block, shiftKey:', e.shiftKey);
-                
-                if (e.shiftKey) {
-                    // Shift+Enter: Exit code block and move to next paragraph
-                    const p = document.createElement('p');
-                    p.innerHTML = '<br>';
-                    
-                    // Check if this pre is inside a mermaid-wrapper or math-wrapper
-                    const specialWrapper = preElement.closest('.mermaid-wrapper') || preElement.closest('.math-wrapper');
-                    if (specialWrapper) {
-                        // For mermaid/math blocks, add paragraph after the wrapper and exit edit mode
-                        exitSpecialWrapperDisplayMode(specialWrapper);
-                        specialWrapper.after(p);
-                        logger.log('Exited special wrapper block with Shift+Enter');
-                    } else {
-                        // For regular code blocks, add paragraph after the pre
-                        preElement.after(p);
-                        logger.log('Exited code block with Shift+Enter');
-                    }
-                    setCursorToEnd(p);
-                    syncMarkdown();
-                } else {
-                    // Enter: Insert newline within code block, preserving leading whitespace
-                    const sel = window.getSelection();
-                    if (sel.rangeCount > 0) {
-                        const range = sel.getRangeAt(0);
-                        
-                        // Get the current line's leading whitespace
-                        let currentLineText = '';
-                        let node = range.startContainer;
-                        
-                        // Find the text content of the current line
-                        if (node.nodeType === 3) { // Text node
-                            // Get text from start of this text node to cursor
-                            const textBeforeCursor = node.textContent.substring(0, range.startOffset);
-                            // Find the last newline before cursor
-                            const lastNewlineIndex = textBeforeCursor.lastIndexOf('\n');
-                            if (lastNewlineIndex >= 0) {
-                                currentLineText = textBeforeCursor.substring(lastNewlineIndex + 1);
-                            } else {
-                                // No newline in this text node, check previous siblings
-                                currentLineText = textBeforeCursor;
-                                let prevNode = node.previousSibling;
-                                while (prevNode) {
-                                    if (prevNode.nodeType === 3) {
-                                        const prevText = prevNode.textContent;
-                                        const prevNewlineIndex = prevText.lastIndexOf('\n');
-                                        if (prevNewlineIndex >= 0) {
-                                            currentLineText = prevText.substring(prevNewlineIndex + 1) + currentLineText;
-                                            break;
-                                        } else {
-                                            currentLineText = prevText + currentLineText;
-                                        }
-                                    } else if (prevNode.nodeName === 'BR') {
-                                        break;
-                                    }
-                                    prevNode = prevNode.previousSibling;
-                                }
-                            }
-                        }
-                        
-                        // Extract leading whitespace (spaces and tabs)
-                        const leadingWhitespace = currentLineText.match(/^[ \t]*/)[0];
-                        
-                        // Insert line break and the leading whitespace
-                        document.execCommand('insertLineBreak');
-                        if (leadingWhitespace) {
-                            document.execCommand('insertText', false, leadingWhitespace);
-                        }
-                    } else {
-                        // Fallback: just insert line break
-                        document.execCommand('insertLineBreak');
-                    }
-                    // Track sentinel only when insertLineBreak was at the END of content.
-                    // The browser adds a sentinel \n only at the end; mid-content Enter
-                    // does not produce a sentinel, so registering it would miscount lines.
-                    const codeForSentinel = preElement.querySelector('code') || preElement;
-                    // Chromium can represent the final line break and visibility
-                    // sentinel as BR nodes; textContent would omit both of them.
-                    const textAfterInsert = getCodePlainText(codeForSentinel);
-                    if (textAfterInsert.endsWith('\n')) {
-                        const sentinelTarget = preElement.closest('.mermaid-wrapper') || preElement.closest('.math-wrapper') || preElement;
-                        codeBlocksWithSentinel.add(sentinelTarget);
-                    }
-                    syncMarkdown();
-                    logger.log('Inserted newline in code block with indent preservation');
-                }
-                return;
-            }
-
-            // Check if we're inside a blockquote
-            if (blockquoteElement && editor.contains(blockquoteElement)) {
-                e.preventDefault();
-                logger.log('Inside blockquote, shiftKey:', e.shiftKey);
-                
-                if (e.shiftKey) {
-                    // Shift+Enter: Exit blockquote and move to next paragraph
-                    const p = document.createElement('p');
-                    p.innerHTML = '<br>';
-                    blockquoteElement.after(p);
-                    setCursorToEnd(p);
-                    syncMarkdown();
-                    logger.log('Exited blockquote with Shift+Enter');
-                } else {
-                    // Enter: Insert line break within blockquote
-                    document.execCommand('insertLineBreak');
-                    syncMarkdown();
-                    logger.log('Inserted line break in blockquote');
-                }
-                return;
-            }
-            
-            // Handle list item continuation (using closest() for proper nested list detection)
-            if (listItem && editor.contains(listItem)) {
-                const list = listItem.parentNode;
-
-                // Check for empty item - only check direct text content, not nested lists
-                const checkbox = listItem.querySelector(':scope > input[type="checkbox"]');
-                const nestedListInItem = listItem.querySelector(':scope > ul, :scope > ol');
-                
-                // Get only direct text content (excluding nested lists and br)
-                let directTextContent = '';
-                for (const child of listItem.childNodes) {
-                    if (child.nodeType === 3) { // Text node
-                        directTextContent += child.textContent;
-                    } else if (child.nodeType === 1) { // Element node
-                        const tag = child.tagName?.toLowerCase();
-                        // Exclude ul, ol, input, and br (br is used as placeholder in empty items)
-                        if (tag !== 'ul' && tag !== 'ol' && tag !== 'input' && tag !== 'br') {
-                            directTextContent += child.textContent;
-                        }
-                    }
-                }
-                directTextContent = directTextContent.trim();
-                
-                // Item is empty if it has no text content (br is just a placeholder for empty items)
-                const isEmptyItem = directTextContent === '' || (checkbox && directTextContent === '');
-
-                if (isEmptyItem) {
-                    // Empty item - outdent (keep position) or exit list
-                    e.preventDefault();
-                    
-                    // Check if this is a nested list (parent list is inside a LI)
-                    const parentLi = list.parentNode?.tagName === 'LI' ? list.parentNode : null;
-                    if (parentLi) {
-                        // Nested list - outdent: convert to parent level item AT SAME POSITION
-                        // The empty item's own nested list AND following siblings stay at the SAME nest level
-                        
-                        // Get the empty item's own nested list (children)
-                        const ownNestedList = listItem.querySelector(':scope > ul, :scope > ol');
-                        
-                        // Get following siblings
-                        const followingSiblings = [];
-                        let sibling = listItem.nextElementSibling;
-                        while (sibling) {
-                            followingSiblings.push(sibling);
-                            sibling = sibling.nextElementSibling;
-                        }
-                        
-                        // Remove the empty item from nested list
-                        listItem.remove();
-                        
-                        // Create new LI at parent level
-                        const newLi = document.createElement('li');
-                        newLi.innerHTML = '<br>';
-                        
-                        // Collect items to put in the new nested list under newLi:
-                        // 1. Items from the empty item's own nested list (children)
-                        // 2. Following siblings (stay at same nest level)
-                        const itemsToNest = [];
-                        
-                        // Add items from own nested list
-                        if (ownNestedList) {
-                            while (ownNestedList.firstChild) {
-                                itemsToNest.push(ownNestedList.firstChild);
-                                ownNestedList.firstChild.remove();
-                            }
-                            ownNestedList.remove();
-                        }
-                        
-                        // Add following siblings
-                        for (const sib of followingSiblings) {
-                            sib.remove();
-                            itemsToNest.push(sib);
-                        }
-                        
-                        // If there are items to nest, create a nested list under newLi
-                        if (itemsToNest.length > 0) {
-                            const newNestedList = document.createElement(list.tagName);
-                            for (const item of itemsToNest) {
-                                newNestedList.appendChild(item);
-                            }
-                            newLi.appendChild(newNestedList);
-                        }
-                        
-                        // Insert new LI after parentLi (at parent level, same position visually)
-                        parentLi.after(newLi);
-                        
-                        // Remove nested list if empty
-                        if (list.children.length === 0) list.remove();
-                        
-                        // Set cursor to the beginning of newLi (before any nested list)
-                        const newRange = document.createRange();
-                        const firstChild = newLi.firstChild;
-                        if (firstChild && firstChild.nodeType === 3) {
-                            newRange.setStart(firstChild, 0);
-                        } else if (firstChild && firstChild.tagName === 'BR') {
-                            newRange.setStartBefore(firstChild);
-                        } else {
-                            newRange.setStart(newLi, 0);
-                        }
-                        newRange.collapse(true);
-                        sel.removeAllRanges();
-                        sel.addRange(newRange);
-                    } else {
-                        // Top-level empty list item - convert to paragraph AT SAME POSITION
-                        // Check if this LI has nested lists (children)
-                        const nestedList = listItem.querySelector(':scope > ul, :scope > ol');
-                        
-                        // Get siblings after this item
-                        const followingSiblings = [];
-                        let sibling = listItem.nextElementSibling;
-                        while (sibling) {
-                            followingSiblings.push(sibling);
-                            sibling = sibling.nextElementSibling;
-                        }
-                        
-                        // Remove the empty item
-                        listItem.remove();
-                        
-                        // Create blank paragraph
-                        const p = document.createElement('p');
-                        p.innerHTML = '<br>';
-                        
-                        // Build the structure: [remaining list] -> paragraph -> [nested list if any] -> [following siblings list if any]
-                        let insertAfter = list;
-                        
-                        // Insert paragraph after the list
-                        list.after(p);
-                        insertAfter = p;
-                        
-                        // If there was a nested list, it becomes a top-level list after the paragraph
-                        if (nestedList) {
-                            nestedList.remove();
-                            insertAfter.after(nestedList);
-                            insertAfter = nestedList;
-                        }
-                        
-                        // If there are following siblings, create a new list for them
-                        if (followingSiblings.length > 0) {
-                            const newList = document.createElement(list.tagName);
-                            for (const sib of followingSiblings) {
-                                sib.remove();
-                                newList.appendChild(sib);
-                            }
-                            insertAfter.after(newList);
-                        }
-                        
-                        // Remove list if empty
-                        if (list.children.length === 0) list.remove();
-                        
-                        setCursorToEnd(p);
-                    }
-                    syncMarkdown();
-                } else {
-                    // Continue list - split at cursor position
-                    // Text after cursor goes to new item
-                    // Nested lists stay with original item (NOT moved to new item)
-                    e.preventDefault();
-                    
-                    const range = sel.getRangeAt(0);
-                    
-                    // Find nested lists in this item (they will stay with original item)
-                    const nestedLists = Array.from(listItem.querySelectorAll(':scope > ul, :scope > ol'));
-                    
-                    // Get text content after cursor (excluding nested lists)
-                    const afterRange = range.cloneRange();
-                    
-                    // Find the end point - should be before any nested list
-                    let endNode = listItem;
-                    let endOffset = listItem.childNodes.length;
-                    
-                    // Adjust end to exclude nested lists
-                    for (let i = listItem.childNodes.length - 1; i >= 0; i--) {
-                        const child = listItem.childNodes[i];
-                        if (child.nodeType === 1 && (child.tagName === 'UL' || child.tagName === 'OL')) {
-                            continue; // Skip nested lists
-                        }
-                        endNode = listItem;
-                        endOffset = i + 1;
-                        break;
-                    }
-                    
-                    afterRange.setStart(range.endContainer, range.endOffset);
-                    afterRange.setEnd(endNode, endOffset);
-                    
-                    // Extract content after cursor (text only)
-                    const afterContent = afterRange.extractContents();
-                    
-                    // Clean up: if listItem text part now ends with just whitespace or <br>, remove it
-                    // But keep nested lists in place
-                    for (let i = listItem.childNodes.length - 1; i >= 0; i--) {
-                        const child = listItem.childNodes[i];
-                        if (child.nodeType === 1 && (child.tagName === 'UL' || child.tagName === 'OL')) {
-                            continue; // Keep nested lists
-                        }
-                        if (child.nodeType === 3 && child.textContent.trim() === '') {
-                            child.remove();
-                        } else if (child.nodeType === 1 && child.tagName.toLowerCase() === 'br') {
-                            child.remove();
-                        } else {
-                            break;
-                        }
-                    }
-                    
-                    // Create new list item
-                    const newLi = document.createElement('li');
-                    
-                    if (checkbox) {
-                        // For task list, add checkbox to new item
-                        const newCb = document.createElement('input');
-                        newCb.type = 'checkbox';
-                        newLi.appendChild(newCb);
-                    }
-
-                    // Append the extracted content to new item
-                    if (afterContent.textContent.trim() !== '') {
-                        newLi.appendChild(afterContent);
-                    } else {
-                        // If no content after cursor, add <br> for empty item
-                        if (!checkbox) {
-                            newLi.innerHTML = '<br>';
-                        }
-                    }
-                    
-                    // Insert new item after current item
-                    // If there are nested lists, insert BEFORE them (new item becomes sibling, not parent)
-                    if (nestedLists.length > 0) {
-                        // Insert new LI after current LI (nested lists stay with original)
-                        listItem.after(newLi);
-                        // Move nested lists to be children of the new LI
-                        for (const nestedList of nestedLists) {
-                            newLi.appendChild(nestedList);
-                        }
-                    } else {
-                        listItem.after(newLi);
-                    }
-                    
-                    // Set cursor to start of new item (after checkbox if present)
-                    if (checkbox && newLi.querySelector('input[type="checkbox"]')) {
-                        // Position cursor after the checkbox
-                        const cb = newLi.querySelector('input[type="checkbox"]');
-                        const nextNode = cb.nextSibling;
-                        const newRange = document.createRange();
-                        if (nextNode) {
-                            if (nextNode.nodeType === 3) {
-                                newRange.setStart(nextNode, 0);
-                            } else {
-                                newRange.setStartBefore(nextNode);
-                            }
-                        } else {
-                            newRange.setStartAfter(cb);
-                        }
-                        newRange.collapse(true);
-                        sel.removeAllRanges();
-                        sel.addRange(newRange);
-                    } else {
-                        // Position cursor at start of new item content (before nested lists)
-                        const firstChild = newLi.firstChild;
-                        if (firstChild) {
-                            const newRange = document.createRange();
-                            // Skip nested lists when positioning cursor
-                            if (firstChild.nodeType === 1 && (firstChild.tagName === 'UL' || firstChild.tagName === 'OL')) {
-                                // First child is nested list, position cursor before it
-                                newRange.setStartBefore(firstChild);
-                            } else if (firstChild.nodeType === 3) {
-                                newRange.setStart(firstChild, 0);
-                            } else if (firstChild.tagName && firstChild.tagName.toLowerCase() === 'br') {
-                                newRange.setStartBefore(firstChild);
-                            } else {
-                                newRange.setStart(firstChild, 0);
-                            }
-                            newRange.collapse(true);
-                            sel.removeAllRanges();
-                            sel.addRange(newRange);
-                        } else {
-                            setCursorToEnd(newLi);
-                        }
-                    }
-                    
-                    syncMarkdown();
-                }
-                return;
-            }
-            
-            // First check for pattern conversions (---, \`\`\`, inline patterns)
-            // Use setTimeout to let the default behavior happen first for inline patterns
-            const currentLine = getCurrentLine();
-            if (!currentLine) return;
-
-            const tag = currentLine.tagName ? currentLine.tagName.toLowerCase() : '';
-            const text = currentLine.textContent || '';
-
-            // Handle heading: Enter at the start of heading inserts empty paragraph before
-            if (['h1', 'h2', 'h3', 'h4', 'h5', 'h6'].includes(tag)) {
-                const range = sel.getRangeAt(0);
-                // Check if cursor is at the very beginning of the heading
-                const contentRange = document.createRange();
-                contentRange.selectNodeContents(currentLine);
-                contentRange.setEnd(range.startContainer, range.startOffset);
-                const textBeforeCursor = contentRange.toString();
-                
-                if (textBeforeCursor.length === 0 && range.collapsed) {
-                    // Cursor is at the start of heading - insert empty paragraph before
-                    e.preventDefault();
-                    const p = document.createElement('p');
-                    p.innerHTML = '<br>';
-                    currentLine.before(p);
-                    // Keep cursor at the start of the heading (not the new paragraph)
-                    setCursorToStart(currentLine);
-                    syncMarkdown();
-                    logger.log('Inserted paragraph before heading');
-                    return;
-                }
-            }
-
-            // Check for markdown table pattern: | col1 | col2 |
-            const tableCells = checkTablePattern(text);
-            if (tableCells && (tag === 'p' || tag === 'div')) {
-                e.preventDefault();
-                convertToTable(tableCells, currentLine);
-                return;
-            }
-
-            // Check for horizontal rule: ---
-            const trimmedText = text.trim();
-            logger.log('Checking HR pattern:', { text: text, trimmed: trimmedText, tag: tag, match: /^-{3,}$/.test(trimmedText) });
-            if (/^-{3,}$/.test(trimmedText) && (tag === 'p' || tag === 'div')) {
-                e.preventDefault();
-                // Directly convert to HR here
-                const hr = document.createElement('hr');
-                const p = document.createElement('p');
-                p.innerHTML = '<br>';
-                currentLine.replaceWith(hr);
-                hr.after(p);
-                setCursorToEnd(p);
-                syncMarkdown();
-                logger.log('HR inserted');
-                return;
-            }
-
-            // Check for code block: \`\`\`
-            // Support both <p> and <div> tags (div is created when pressing Enter after header)
-            if (/^\`\`\`/.test(text) && (tag === 'p' || tag === 'div')) {
-                e.preventDefault();
-                checkAllPatterns('enter');
-                return;
-            }
-
-            // Check inline patterns before Enter
-            if (checkInlinePatterns('enter')) {
-                e.preventDefault();
-                return;
-            }
-
-            // A prose paragraph is a semantic block. Do not encode its boundary
-            // by creating a second, empty paragraph or by a lone source newline.
-            e.preventDefault();
-            const previousBlock = getCurrentLine();
-            document.execCommand('defaultParagraphSeparator', false, 'p');
-            document.execCommand('insertParagraph');
-            const nextBlock = getCurrentLine();
-            if (nextBlock && nextBlock !== previousBlock) {
-                for (const attribute of Array.from(nextBlock.attributes)) {
-                    // The last fragment inherits the original outgoing source
-                    // boundary; its text is newly authored, never a source copy.
-                    if (attribute.name.startsWith('data-md-') && !['data-md-id', 'data-md-trailing'].includes(attribute.name)) {
-                        nextBlock.removeAttribute(attribute.name);
-                    }
-                }
-            }
-            syncMarkdown();
-
-        }
-
-        // Space key - check for inline escape first, then all conversions
-        // Skip all conversions if inside a code block
-        if (e.key === ' ') {
-            undoManager.saveSnapshot();
-            // Check if inside code block or inline code - if so, skip all conversions
-            const sel = window.getSelection();
-            if (sel && sel.rangeCount) {
-                const range = sel.getRangeAt(0);
-                const node = range.startContainer;
-                const startElement = node.nodeType === 3 ? node.parentElement : node;
-                if (startElement && startElement.closest && startElement.closest('pre, code')) {
-                    logger.log('Space key: Inside code block or inline code, skipping all conversions');
-                    return; // Don't process any conversions in code blocks or inline code
-                }
-            }
-            
-            setTimeout(() => {
-                // First check if we should escape from an inline element
-                if (checkInlineEscape()) return;
-                // Then check for pattern conversions
-                checkAllPatterns('space');
-            }, 0);
-        }
-
-        // Tab key - table cell navigation or list indent
-        if (e.key === 'Tab') {
-            // #region agent log
-            logger.log('Tab key pressed', {shiftKey: e.shiftKey});
-            // #endregion
-            e.preventDefault(); // Always prevent default Tab behavior
-            
-            // Check if in a table cell first
-            const sel = window.getSelection();
-            if (sel && sel.rangeCount) {
-                let node = sel.anchorNode;
-                let tableCellNode = null;
-                while (node && node !== editor) {
-                    if (node.nodeType === 1 && node.tagName && 
-                        (node.tagName.toLowerCase() === 'td' || node.tagName.toLowerCase() === 'th')) {
-                        tableCellNode = node;
-                        break;
-                    }
-                    node = node.parentNode;
-                }
-                
-                if (tableCellNode) {
-                    // Navigate between table cells
-                    activeTableCell = tableCellNode;
-                    const row = tableCellNode.closest('tr');
-                    const table = tableCellNode.closest('table');
-                    const cellIndex = tableCellNode.cellIndex;
-                    const rows = table.querySelectorAll('tr');
-                    const rowIndex = Array.from(rows).indexOf(row);
-                    
-                    if (e.shiftKey) {
-                        // Shift+Tab: move to previous cell
-                        if (cellIndex > 0) {
-                            // Move to left cell
-                            activeTableCell = row.cells[cellIndex - 1];
-                            setCursorToEnd(activeTableCell);
-                        } else if (rowIndex > 0) {
-                            // Move to last cell of previous row
-                            const prevRow = rows[rowIndex - 1];
-                            activeTableCell = prevRow.cells[prevRow.cells.length - 1];
-                            setCursorToEnd(activeTableCell);
-                        }
-                    } else {
-                        // Tab: move to next cell
-                        if (cellIndex < row.cells.length - 1) {
-                            // Move to right cell
-                            activeTableCell = row.cells[cellIndex + 1];
-                            setCursorToEnd(activeTableCell);
-                        } else if (rowIndex < rows.length - 1) {
-                            // Move to first cell of next row
-                            const nextRow = rows[rowIndex + 1];
-                            activeTableCell = nextRow.cells[0];
-                            setCursorToEnd(activeTableCell);
-                        }
-                    }
-                    // Capture the new cell/range before a following Alt+F10.
-                    // selectionchange is asynchronous and can still describe
-                    // the previous cell when toolbar focus is requested.
-                    showTableToolbar(table);
-                    return;
-                }
-            }
-
-            undoManager.saveSnapshot();
-            // Check if inside a code block or blockquote
-            if (sel && sel.rangeCount) {
-                let anchorEl = sel.anchorNode;
-                let startEl = anchorEl && anchorEl.nodeType === 3 ? anchorEl.parentElement : anchorEl;
-
-                const preEl = startEl?.closest?.('pre');
-                if (preEl && editor.contains(preEl)) {
-                    const codeEl = preEl.querySelector('code') || preEl;
-                    if (!sel.isCollapsed) {
-                        // Multi-line selection: indent/dedent all selected lines
-                        indentLinesInContainer(codeEl, e.shiftKey);
-                        syncMarkdown();
-                    } else if (e.shiftKey) {
-                        // Single-line Shift+Tab: dedent current line
-                        indentLinesInContainer(codeEl, true);
-                        syncMarkdown();
-                    } else {
-                        // Single-line Tab: insert 4 spaces at cursor
-                        document.execCommand('insertText', false, '    ');
-                    }
-                    return;
-                }
-
-                const bqEl = startEl?.closest?.('blockquote');
-                if (bqEl && editor.contains(bqEl)) {
-                    if (!sel.isCollapsed) {
-                        indentLinesInContainer(bqEl, e.shiftKey);
-                        syncMarkdown();
-                    } else if (e.shiftKey) {
-                        indentLinesInContainer(bqEl, true);
-                        syncMarkdown();
-                    } else {
-                        document.execCommand('insertText', false, '    ');
-                    }
-                    return;
-                }
-            }
-
-            // Check for multi-line selection in list items (or cursor in list)
-            if (sel && sel.rangeCount) {
-                const range = sel.getRangeAt(0);
-                const selectedLiElements = getSelectedListItems(range, sel);
-
-                logger.log('Multi-selection Tab:', {
-                    selectedCount: selectedLiElements.length,
-                    shiftKey: e.shiftKey,
-                    isCollapsed: sel.isCollapsed
-                });
-                
-                if (selectedLiElements.length > 1) {
-                    // Multiple list items selected - indent/outdent all
-                    // Save selection before modifying DOM
-                    const savedRange = range.cloneRange();
-                    const startContainer = savedRange.startContainer;
-                    const startOffset = savedRange.startOffset;
-                    const endContainer = savedRange.endContainer;
-                    const endOffset = savedRange.endOffset;
-                    
-                    if (e.shiftKey) {
-                        // Shift+Tab: outdent all selected items
-                        // Process from bottom to top to maintain structure
-                        for (let i = selectedLiElements.length - 1; i >= 0; i--) {
-                            outdentListItem(selectedLiElements[i]);
-                        }
-                    } else {
-                        // Tab: indent all selected items together
-                        // Check if first item can be indented (has previous sibling)
-                        const firstLi = selectedLiElements[0];
-                        const prevSibling = firstLi.previousElementSibling;
-                        if (!prevSibling || prevSibling.tagName.toLowerCase() !== 'li') {
-                            logger.log('Cannot indent: first selected item has no previous sibling');
-                            return; // Can't indent if first item has no previous sibling
-                        }
-                        
-                        // Get or create nested list in previous sibling
-                        // Use querySelectorAll to get the LAST nested list (Section 16: querySelector returns only the first match)
-                        const parentList = firstLi.parentNode;
-                        const nestedLists = prevSibling.querySelectorAll(':scope > ul, :scope > ol');
-                        let nestedList;
-                        if (nestedLists.length > 0) {
-                            nestedList = nestedLists[nestedLists.length - 1];
-                        } else {
-                            nestedList = document.createElement(parentList.tagName.toLowerCase());
-                            prevSibling.appendChild(nestedList);
-                        }
-                        
-                        // Move all selected items to the nested list
-                        for (const li of selectedLiElements) {
-                            nestedList.appendChild(li);
-                        }
-                    }
-                    
-                    // Restore selection (cursor position)
-                    try {
-                        const newRange = document.createRange();
-                        newRange.setStart(startContainer, startOffset);
-                        newRange.setEnd(endContainer, endOffset);
-                        sel.removeAllRanges();
-                        sel.addRange(newRange);
-                    } catch (err) {
-                        logger.log('Failed to restore selection after multi-item indent:', err);
-                    }
-                    
-                    syncMarkdown();
-                    return;
-                }
-            }
-            
-            // Find the LI element by traversing up from the selection
-            let liElement = null;
-            if (sel && sel.rangeCount) {
-                let node = sel.anchorNode;
-                while (node && node !== editor) {
-                    if (node.nodeType === 1 && node.tagName && node.tagName.toLowerCase() === 'li') {
-                        liElement = node;
-                        break;
-                    }
-                    node = node.parentNode;
-                }
-            }
-            // #region agent log
-            logger.log('Found LI element:', {hasLi: !!liElement, tagName: liElement?.tagName});
-            // #endregion
-            
-            if (liElement) {
-                // #region agent log
-                logger.log('In LI element, will indent/outdent');
-                // #endregion
-                
-                // Save cursor position relative to the li element
-                const range = sel.getRangeAt(0);
-                const startContainer = range.startContainer;
-                const startOffset = range.startOffset;
-                
-                // Calculate the text offset within the li (excluding nested lists)
-                let textOffset = 0;
-                let foundCursor = false;
-                
-                const calculateOffset = (node) => {
-                    if (foundCursor) return;
-                    
-                    if (node === startContainer) {
-                        if (node.nodeType === 3) {
-                            textOffset += startOffset;
-                        }
-                        foundCursor = true;
-                        return;
-                    }
-                    
-                    if (node.nodeType === 3) {
-                        textOffset += node.textContent.length;
-                    } else if (node.nodeType === 1) {
-                        const tag = node.tagName.toLowerCase();
-                        // Skip nested lists
-                        if (tag !== 'ul' && tag !== 'ol') {
-                            for (const child of node.childNodes) {
-                                calculateOffset(child);
-                                if (foundCursor) return;
-                            }
-                        }
-                    }
-                };
-                
-                // Calculate offset within the li's direct content (not nested lists)
-                for (const child of liElement.childNodes) {
-                    const tag = child.nodeType === 1 ? child.tagName?.toLowerCase() : '';
-                    if (tag !== 'ul' && tag !== 'ol') {
-                        calculateOffset(child);
-                        if (foundCursor) break;
-                    }
-                }
-                
-                if (e.shiftKey) {
-                    // Shift+Tab: outdent
-                    outdentListItem(liElement);
-                } else {
-                    // Tab: indent
-                    indentListItem(liElement);
-                }
-
-                // If liElement was converted to a paragraph and removed from DOM
-                // (e.g. Shift+Tab on top-level item), convertListItemToParagraph
-                // already set the cursor and called syncMarkdown – nothing left to do.
-                if (!liElement.isConnected) {
-                    return;
-                }
-
-                // Restore cursor position using the saved text offset
-                try {
-                    let currentOffset = 0;
-                    let targetNode = null;
-                    let targetOffset = 0;
-                    
-                    const findPosition = (node) => {
-                        if (targetNode) return;
-                        
-                        if (node.nodeType === 3) {
-                            const len = node.textContent.length;
-                            if (currentOffset + len >= textOffset) {
-                                targetNode = node;
-                                targetOffset = textOffset - currentOffset;
-                                return;
-                            }
-                            currentOffset += len;
-                        } else if (node.nodeType === 1) {
-                            const tag = node.tagName.toLowerCase();
-                            // Skip nested lists
-                            if (tag !== 'ul' && tag !== 'ol') {
-                                for (const child of node.childNodes) {
-                                    findPosition(child);
-                                    if (targetNode) return;
-                                }
-                            }
-                        }
-                    };
-                    
-                    // Find the position within the li's direct content
-                    for (const child of liElement.childNodes) {
-                        const tag = child.nodeType === 1 ? child.tagName?.toLowerCase() : '';
-                        if (tag !== 'ul' && tag !== 'ol') {
-                            findPosition(child);
-                            if (targetNode) break;
-                        }
-                    }
-                    
-                    if (targetNode) {
-                        const newRange = document.createRange();
-                        newRange.setStart(targetNode, targetOffset);
-                        newRange.collapse(true);
-                        sel.removeAllRanges();
-                        sel.addRange(newRange);
-                    } else {
-                        // Fallback: set cursor to end of li's text content
-                        setCursorToEndOfLi(liElement);
-                    }
-                } catch (err) {
-                    logger.log('Failed to restore cursor after indent:', err);
-                    // Fallback: set cursor to end of li
-                    try {
-                        setCursorToEndOfLi(liElement);
-                    } catch (e2) {
-                        // ignore
-                    }
-                }
-                
-                syncMarkdown();
-            } else {
-                // Check if selection spans multiple block elements
-                const selCheck = window.getSelection();
-                if (selCheck && selCheck.rangeCount && !selCheck.isCollapsed) {
-                    const rangeCheck = selCheck.getRangeAt(0);
-                    let startBlock = rangeCheck.startContainer;
-                    while (startBlock && startBlock !== editor && startBlock.parentNode !== editor) {
-                        startBlock = startBlock.parentNode;
-                    }
-                    let endBlock = rangeCheck.endContainer;
-                    while (endBlock && endBlock !== editor && endBlock.parentNode !== editor) {
-                        endBlock = endBlock.parentNode;
-                    }
-                    if (startBlock !== endBlock && startBlock && endBlock) {
-                        // Selection spans multiple blocks - apply Tab/Shift+Tab to each block
-                        // Collect all block elements in the range
-                        var blocks = [];
-                        var current = startBlock;
-                        while (current) {
-                            blocks.push(current);
-                            if (current === endBlock) break;
-                            current = current.nextElementSibling;
-                        }
-
-                        // Save selection range endpoints
-                        var savedStartContainer = rangeCheck.startContainer;
-                        var savedStartOffset = rangeCheck.startOffset;
-                        var savedEndContainer = rangeCheck.endContainer;
-                        var savedEndOffset = rangeCheck.endOffset;
-
-                        for (var bi = 0; bi < blocks.length; bi++) {
-                            var block = blocks[bi];
-                            if (e.shiftKey) {
-                                // Shift+Tab: remove up to 4 leading spaces from block
-                                var firstText = null;
-                                // Find the first text node in the block
-                                var tw = document.createTreeWalker(block, NodeFilter.SHOW_TEXT, null, false);
-                                firstText = tw.nextNode();
-                                if (firstText && firstText.textContent) {
-                                    var txt = firstText.textContent;
-                                    var spCount = 0;
-                                    while (spCount < 4 && spCount < txt.length && txt[spCount] === ' ') {
-                                        spCount++;
-                                    }
-                                    if (spCount > 0) {
-                                        firstText.textContent = txt.slice(spCount);
-                                        // Adjust saved selection offsets if they reference this text node
-                                        if (savedStartContainer === firstText) {
-                                            savedStartOffset = Math.max(0, savedStartOffset - spCount);
-                                        }
-                                        if (savedEndContainer === firstText) {
-                                            savedEndOffset = Math.max(0, savedEndOffset - spCount);
-                                        }
-                                    }
-                                }
-                            } else {
-                                // Tab: insert 4 spaces at start of block
-                                var firstText2 = null;
-                                var tw2 = document.createTreeWalker(block, NodeFilter.SHOW_TEXT, null, false);
-                                firstText2 = tw2.nextNode();
-                                if (firstText2) {
-                                    firstText2.textContent = '    ' + firstText2.textContent;
-                                    // Adjust saved selection offsets if they reference this text node
-                                    if (savedStartContainer === firstText2) {
-                                        savedStartOffset += 4;
-                                    }
-                                    if (savedEndContainer === firstText2) {
-                                        savedEndOffset += 4;
-                                    }
-                                } else {
-                                    // No text node - prepend a text node with spaces
-                                    var spaceNode = document.createTextNode('    ');
-                                    block.insertBefore(spaceNode, block.firstChild);
-                                }
-                            }
-                        }
-
-                        // Restore selection
-                        try {
-                            var newRange = document.createRange();
-                            newRange.setStart(savedStartContainer, savedStartOffset);
-                            newRange.setEnd(savedEndContainer, savedEndOffset);
-                            selCheck.removeAllRanges();
-                            selCheck.addRange(newRange);
-                        } catch (err) {
-                            logger.log('Failed to restore selection after multi-block Tab:', err);
-                        }
-
-                        syncMarkdown();
-                        return;
-                    }
-                }
-
-                if (e.shiftKey) {
-                    // Shift+Tab: remove up to 4 leading spaces from current line
-                    const sel2 = window.getSelection();
-                    if (!sel2 || !sel2.rangeCount) { return; }
-                    const range2 = sel2.getRangeAt(0);
-                    let curNode = range2.startContainer;
-                    let curOffset = range2.startOffset;
-
-                    // When cursor is at an element node (e.g. <code> after <br>),
-                    // resolve to the actual text node for the current line.
-                    if (curNode.nodeType === 1) {
-                        const children = curNode.childNodes;
-                        if (curOffset < children.length) {
-                            const child = children[curOffset];
-                            if (child.nodeType === 3) {
-                                // Cursor is right before a text node
-                                curNode = child;
-                                curOffset = 0;
-                            } else if (child.nodeName === 'BR' && curOffset + 1 < children.length && children[curOffset + 1].nodeType === 3) {
-                                // Cursor is at a <br>, next sibling is text
-                                curNode = children[curOffset + 1];
-                                curOffset = 0;
-                            }
-                        }
-                        // If offset points past all children, try the last text node
-                        if (curNode.nodeType === 1 && curOffset > 0 && curOffset <= children.length) {
-                            const prev = children[curOffset - 1];
-                            if (prev && prev.nodeType === 3) {
-                                curNode = prev;
-                                curOffset = prev.textContent.length;
-                            }
-                        }
-                    }
-
-                    // Find the text node containing the current line start
-                    // The cursor is in a text node: find the line start within it
-                    // (lines are separated by <br> or \n within text nodes)
-                    if (curNode.nodeType === 3) {
-                        const text = curNode.textContent;
-                        // Find start of current line by looking backwards for \n
-                        let lineStart = text.lastIndexOf('\n', curOffset - 1) + 1;
-                        // Count leading spaces from line start (up to 4)
-                        let spaces = 0;
-                        while (spaces < 4 && lineStart + spaces < text.length && text[lineStart + spaces] === ' ') {
-                            spaces++;
-                        }
-                        if (spaces > 0) {
-                            curNode.textContent = text.slice(0, lineStart) + text.slice(lineStart + spaces);
-                            // Adjust cursor position
-                            const newOffset = Math.max(lineStart, curOffset - spaces);
-                            const newRange = document.createRange();
-                            newRange.setStart(curNode, newOffset);
-                            newRange.collapse(true);
-                            sel2.removeAllRanges();
-                            sel2.addRange(newRange);
-                            syncMarkdown();
-                        }
-                    }
-                } else {
-                    // Tab: insert 4 spaces
-                    document.execCommand('insertText', false, '    ');
-                }
-            }
-            return;
-        }
-
-        // Arrow keys for table cell navigation
-        if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-            const sel = window.getSelection();
-            if (sel && sel.rangeCount) {
-                let node = sel.anchorNode;
-                let tableCellNode = null;
-                while (node && node !== editor) {
-                    if (node.nodeType === 1 && node.tagName && 
-                        (node.tagName.toLowerCase() === 'td' || node.tagName.toLowerCase() === 'th')) {
-                        tableCellNode = node;
-                        break;
-                    }
-                    node = node.parentNode;
-                }
-                
-                if (tableCellNode) {
-                    const row = tableCellNode.closest('tr');
-                    const table = tableCellNode.closest('table');
-                    const cellIndex = tableCellNode.cellIndex;
-                    const rows = table.querySelectorAll('tr');
-                    const rowIndex = Array.from(rows).indexOf(row);
-                    
-                    // Get all text positions (lines) in the cell
-                    // Each line is separated by <br>
-                    const getLineInfo = () => {
-                        const range = sel.getRangeAt(0);
-                        const cursorNode = range.startContainer;
-                        const cursorOffset = range.startOffset;
-                        
-                        // Collect all nodes in order: text nodes and BR elements
-                        const nodes = [];
-                        const collectNodes = (node) => {
-                            for (const child of node.childNodes) {
-                                if (child.nodeType === 3) { // Text node
-                                    nodes.push({ type: 'text', node: child });
-                                } else if (child.nodeType === 1) { // Element
-                                    if (child.tagName === 'BR') {
-                                        nodes.push({ type: 'br', node: child });
-                                    } else {
-                                        collectNodes(child);
-                                    }
-                                }
-                            }
-                        };
-                        collectNodes(tableCellNode);
-                        
-                        // Count lines (BR count + 1, but empty trailing doesn't count as separate)
-                        const brCount = nodes.filter(n => n.type === 'br').length;
-                        const textNodes = nodes.filter(n => n.type === 'text');
-                        const hasTextContent = textNodes.some(n => n.node.textContent.length > 0);
-                        
-                        // If cell has only a single BR and no text, treat as single line (empty cell placeholder)
-                        // But if there are multiple BRs, treat as multi-line (user intentionally created multiple lines)
-                        const isSingleEmptyCell = brCount === 1 && !hasTextContent;
-                        const lineCount = isSingleEmptyCell ? 1 : brCount + 1;
-                        
-                        // Find which line the cursor is on
-                        let currentLine = 0;
-                        let foundCursor = false;
-                        const brNodes = nodes.filter(n => n.type === 'br');
-                        
-                        // If cursor is directly in the cell (not in a text node or BR)
-                        // This needs to be checked first because it's the most reliable method
-                        if (cursorNode === tableCellNode) {
-                            // Count BRs before cursorOffset in childNodes
-                            let brsBefore = 0;
-                            for (let i = 0; i < cursorOffset && i < tableCellNode.childNodes.length; i++) {
-                                if (tableCellNode.childNodes[i].nodeName === 'BR') {
-                                    brsBefore++;
-                                }
-                            }
-                            currentLine = brsBefore;
-                            foundCursor = true;
-                            logger.log('getLineInfo: cursor in cell, cursorOffset =', cursorOffset, 'brsBefore =', brsBefore, 'currentLine =', currentLine);
-                        }
-                        
-                        // If cursor is in a child node, find which line it's on
-                        if (!foundCursor) {
-                            // Build a map of which line each node belongs to
-                            let lineNum = 0;
-                            for (let i = 0; i < nodes.length; i++) {
-                                const n = nodes[i];
-                                if (n.type === 'text') {
-                                    if (n.node === cursorNode) {
-                                        currentLine = lineNum;
-                                        foundCursor = true;
-                                        break;
-                                    }
-                                } else if (n.type === 'br') {
-                                    // Check if cursor is positioned at this BR
-                                    if (n.node === cursorNode) {
-                                        // Cursor on BR element itself - treat as being on the line before the BR
-                                        currentLine = lineNum;
-                                        foundCursor = true;
-                                        break;
-                                    }
-                                    lineNum++;
-                                }
-                            }
-                        }
-                        
-                        // If cursor is still not found, it might be after the last BR with no text after it
-                        // In this case, cursor is on the last line
-                        if (!foundCursor) {
-                            currentLine = lineCount - 1;
-                        }
-                        
-                        // Clamp currentLine to valid range
-                        if (currentLine < 0) currentLine = 0;
-                        if (currentLine >= lineCount) currentLine = lineCount - 1;
-                        
-                        const isMultiLine = lineCount > 1;
-                        const isAtFirstLine = currentLine === 0;
-                        
-                        // Check if the last line is empty (no text after the last BR)
-                        // If so, treat the line before it as the last line for navigation purposes
-                        // This allows ArrowDown to skip empty trailing lines
-                        let isLastLineEmpty = false;
-                        if (lineCount > 1) {
-                            const childNodes = Array.from(tableCellNode.childNodes);
-                            // Find the last BR
-                            let lastBrIndex = -1;
-                            for (let i = childNodes.length - 1; i >= 0; i--) {
-                                if (childNodes[i].nodeName === 'BR') {
-                                    lastBrIndex = i;
-                                    break;
-                                }
-                            }
-                            if (lastBrIndex >= 0) {
-                                // Check if there's any text content after the last BR
-                                let hasTextAfterLastBr = false;
-                                for (let i = lastBrIndex + 1; i < childNodes.length; i++) {
-                                    const node = childNodes[i];
-                                    if (node.nodeType === 3 && node.textContent.trim().length > 0) {
-                                        hasTextAfterLastBr = true;
-                                        break;
-                                    }
-                                }
-                                isLastLineEmpty = !hasTextAfterLastBr;
-                            }
-                        }
-                        
-                        // For ArrowDown: if last line is empty and we're on the line before it, treat as last line
-                        // For ArrowUp: don't skip empty first line - let user navigate to it
-                        const isAtLastLine = currentLine >= lineCount - 1 || 
-                            (isLastLineEmpty && currentLine >= lineCount - 2);
-                        
-                        return { lineCount, currentLine, isMultiLine, isAtFirstLine, isAtLastLine, nodes };
-                    };
-                    
-                    const { lineCount, currentLine, isMultiLine, isAtFirstLine, isAtLastLine, nodes } = getLineInfo();
-                    
-                    // #region agent log
-                    const debugRange = sel.getRangeAt(0);
-                    const childNodesInfo = Array.from(tableCellNode.childNodes).map(n => n.nodeName);
-                    logger.log('Table arrow key:', { 
-                        key: e.key, 
-                        rowIndex, 
-                        cellIndex, 
-                        lineCount,
-                        currentLine,
-                        isMultiLine, 
-                        isAtFirstLine, 
-                        isAtLastLine,
-                        cursorNodeName: debugRange.startContainer.nodeName,
-                        cursorOffset: debugRange.startOffset,
-                        childNodes: childNodesInfo.join(','),
-                        childNodesLength: tableCellNode.childNodes.length,
-                        cursorNodeIsCell: debugRange.startContainer === tableCellNode,
-                        willMoveToNextCell: !isMultiLine || isAtLastLine,
-                        willMoveToPrevCell: !isMultiLine || isAtFirstLine
-                    });
-                    // #endregion
-                    
-                    // Helper: Move cursor to specific line in cell
-                    const moveCursorToLine = (targetLine) => {
-                        if (targetLine < 0 || targetLine >= lineCount) return false;
-                        
-                        logger.log('moveCursorToLine: targetLine =', targetLine, 'lineCount =', lineCount);
-                        
-                        // Strategy: Use cell's childNodes directly to position cursor
-                        // This is more reliable than trying to find text nodes
-                        const childNodes = Array.from(tableCellNode.childNodes);
-                        
-                        logger.log('moveCursorToLine: childNodes =', childNodes.map(n => n.nodeName));
-                        
-                        if (targetLine === 0) {
-                            // Move to start of cell (before first child or at position 0)
-                            const range = document.createRange();
-                            if (childNodes.length > 0 && childNodes[0].nodeType === 3) {
-                                // First child is text node
-                                range.setStart(childNodes[0], 0);
-                            } else {
-                                // Position at start of cell
-                                range.setStart(tableCellNode, 0);
-                            }
-                            range.collapse(true);
-                            sel.removeAllRanges();
-                            sel.addRange(range);
-                            logger.log('moveCursorToLine: moved to line 0');
-                            return true;
-                        }
-                        
-                        // For lines > 0, find the nth BR and position after it
-                        // Line N starts after the Nth BR (0-indexed: after BR[N-1])
-                        // So for targetLine, we need to find BR number targetLine (1-indexed)
-                        let brCount = 0;
-                        for (let i = 0; i < childNodes.length; i++) {
-                            const child = childNodes[i];
-                            if (child.nodeName === 'BR') {
-                                brCount++;
-                                logger.log('moveCursorToLine: found BR at index', i, 'brCount now =', brCount);
-                                if (brCount === targetLine) {
-                                    // Position cursor after this BR (start of line targetLine)
-                                    const range = document.createRange();
-                                    // Check if next node is a text node
-                                    if (i + 1 < childNodes.length && childNodes[i + 1].nodeType === 3) {
-                                        range.setStart(childNodes[i + 1], 0);
-                                        logger.log('moveCursorToLine: positioned at text node after BR index', i);
-                                    } else {
-                                        // Position at index after BR in the cell
-                                        // This handles empty lines (consecutive BRs)
-                                        range.setStart(tableCellNode, i + 1);
-                                        logger.log('moveCursorToLine: positioned at cell index', i + 1, '(after BR at index', i, ')');
-                                    }
-                                    range.collapse(true);
-                                    sel.removeAllRanges();
-                                    sel.addRange(range);
-                                    
-                                    // Force focus to ensure cursor is visible
-                                    tableCellNode.focus();
-                                    
-                                    logger.log('moveCursorToLine: AFTER - anchorNode =', sel.anchorNode?.nodeName, 'anchorOffset =', sel.anchorOffset);
-                                    return true;
-                                }
-                            }
-                        }
-                        
-                        // Fallback: just set to start of cell
-                        logger.log('moveCursorToLine: fallback to start (brCount reached', brCount, ')');
-                        const range = document.createRange();
-                        range.selectNodeContents(tableCellNode);
-                        range.collapse(true);
-                        sel.removeAllRanges();
-                        sel.addRange(range);
-                        return true;
-                    };
-                    
-                    if (e.key === 'ArrowUp') {
-                        // If Shift is pressed, let browser handle selection
-                        if (e.shiftKey) {
-                            return;
-                        }
-                        
-                        e.preventDefault();
-                        
-                        logger.log('ArrowUp decision:', { isMultiLine, isAtFirstLine, willMoveUp: !isMultiLine || isAtFirstLine });
-                        
-                        if (isMultiLine && !isAtFirstLine) {
-                            // Move to previous line within cell
-                            moveCursorToLine(currentLine - 1);
-                        } else {
-                            // Move to cell above
-                            if (rowIndex > 0) {
-                                const prevRow = rows[rowIndex - 1];
-                                const targetCell = prevRow.cells[Math.min(cellIndex, prevRow.cells.length - 1)];
-                                if (targetCell) {
-                                    activeTableCell = targetCell;
-                                    setCursorToLastLineStartByDOM(targetCell);
-                                }
-                            } else {
-                                // At first row, exit table upward
-                                const prevElement = table.previousElementSibling;
-                                if (prevElement) {
-                                    navigateToAdjacentElement(prevElement, 'up', true);
-                                } else {
-                                    const p = document.createElement('p');
-                                    p.innerHTML = '<br>';
-                                    table.before(p);
-                                    setCursorToEnd(p);
-                                }
-                                hideTableToolbar();
-                                activeTable = null;
-                                activeTableCell = null;
-                                return;
-                            }
-                        }
-                    } else if (e.key === 'ArrowDown') {
-                        // If Shift is pressed, let browser handle selection
-                        if (e.shiftKey) {
-                            return;
-                        }
-                        
-                        e.preventDefault();
-                        
-                        logger.log('ArrowDown decision:', { isMultiLine, isAtLastLine, willMoveDown: !isMultiLine || isAtLastLine });
-                        
-                        if (isMultiLine && !isAtLastLine) {
-                            // Move to next line within cell
-                            moveCursorToLine(currentLine + 1);
-                        } else {
-                            // Move to cell below
-                            if (rowIndex < rows.length - 1) {
-                                const nextRow = rows[rowIndex + 1];
-                                const targetCell = nextRow.cells[Math.min(cellIndex, nextRow.cells.length - 1)];
-                                if (targetCell) {
-                                    activeTableCell = targetCell;
-                                    setCursorToStart(targetCell);
-                                }
-                            } else {
-                                // At last row, exit table downward
-                                const nextElement = table.nextElementSibling;
-                                if (nextElement) {
-                                    navigateToAdjacentElement(nextElement, 'down', true);
-                                } else {
-                                    // No next element, create a paragraph after table
-                                    const p = document.createElement('p');
-                                    p.innerHTML = '<br>';
-                                    table.after(p);
-                                    setCursorToEnd(p);
-                                }
-                                hideTableToolbar();
-                                activeTable = null;
-                                activeTableCell = null;
-                                return;
-                            }
-                        }
-                    }
-                    // IMPORTANT: return after table cell arrow handling to prevent
-                    // the "invasion code" below from also running and overwriting cursor position
-                    revealTableCaret(activeTableCell || tableCellNode);
-                    showTableToolbar(table);
-                    return;
-                }
-            }
-        }
-
-        // Arrow keys for code block and blockquote navigation
-        if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-            const sel = window.getSelection();
-            if (!sel || !sel.rangeCount) return;
-            
-            let node = sel.anchorNode;
-            let blockNode = null; // Either <pre> or <blockquote>
-            
-            // Check if we're inside a code block or blockquote
-            while (node && node !== editor) {
-                if (node.nodeType === 1) {
-                    const tag = node.tagName.toLowerCase();
-                    if (tag === 'pre' || tag === 'blockquote') {
-                        blockNode = node;
-                        break;
-                    }
-                }
-                node = node.parentNode;
-            }
-
-            // Inside a block (code or blockquote)
-            if (blockNode) {
-                // If Shift is pressed, let browser handle selection
-                if (e.shiftKey) {
-                    return;
-                }
-                
-                // Check if this block is inside a mermaid-wrapper or math-wrapper
-                const specialWrapperBlock = blockNode.closest('.mermaid-wrapper') || blockNode.closest('.math-wrapper');
-
-                // Wrapped source lines can span several visual rows.
-                // Let Chromium keep the caret column while moving within those rows;
-                // retain the existing block-exit behavior at the visual boundaries.
-                if (blockNode.classList.contains('code-wrapped') ||
-                    (specialWrapperBlock?.classList.contains('math-wrapper') && document.documentElement.dataset.mathSourceWrap === 'true')) {
-                    const code = blockNode.querySelector('code') || blockNode;
-                    const caret = sel.getRangeAt(0).getBoundingClientRect();
-                    const bounds = code.getBoundingClientRect();
-                    const lineHeight = parseFloat(getComputedStyle(code).lineHeight) || caret.height;
-                    if (caret.height && ((e.key === 'ArrowUp' && caret.top >= bounds.top + lineHeight) ||
-                        (e.key === 'ArrowDown' && caret.bottom <= bounds.bottom - lineHeight))) return;
-                }
-
-                const { currentLineIndex, totalLines } = getCurrentLineInBlock(blockNode, sel);
-
-                // #region agent log
-                logger.log('Arrow in block:', { key: e.key, currentLineIndex, totalLines, tag: blockNode.tagName, inSpecialWrapper: !!specialWrapperBlock });
-                // #endregion
-                
-                if (e.key === 'ArrowUp') {
-                    if (currentLineIndex === 0) {
-                        // At first line, exit block upward
-                        e.preventDefault();
-                        
-                        if (specialWrapperBlock) {
-                            // Exit special wrapper - set display mode and go to previous sibling of wrapper
-                            exitSpecialWrapperDisplayMode(specialWrapperBlock);
-                            const prev = specialWrapperBlock.previousElementSibling;
-                            if (prev) {
-                                navigateToAdjacentElement(prev, 'up', false);
-                            }
-                        } else {
-                            // If this is a code block in edit mode, switch to display mode
-                            if (blockNode.tagName.toLowerCase() === 'pre' && blockNode.getAttribute('data-mode') === 'edit') {
-                                enterDisplayMode(blockNode);
-                            }
-                            const prev = blockNode.previousElementSibling;
-                            if (prev) {
-                                navigateToAdjacentElement(prev, 'up', false);
-                            } else {
-                                // No previous element, create a new paragraph
-                                const newP = document.createElement('p');
-                                newP.innerHTML = '<br>';
-                                blockNode.parentNode.insertBefore(newP, blockNode);
-                                setCursorToEnd(newP);
-                            }
-                        }
-                    } else {
-                        // Move to previous line
-                        e.preventDefault();
-                        setCursorToLineStart(blockNode, currentLineIndex - 1); scrollCursorIntoView();
-                    }
-                    return;
-                }
-
-                if (e.key === 'ArrowDown') {
-                    if (currentLineIndex >= totalLines - 1) {
-                        // At last line, exit block downward
-                        logger.log('Last line, exiting block downward');
-                        e.preventDefault();
-
-                        if (specialWrapperBlock) {
-                            // Exit special wrapper - set display mode and go to next sibling of wrapper
-                            exitSpecialWrapperDisplayMode(specialWrapperBlock);
-                            const next = specialWrapperBlock.nextElementSibling;
-                            if (next) {
-                                navigateToAdjacentElement(next, 'down', false);
-                            } else {
-                                // No next element, create a new paragraph
-                                const newP = document.createElement('p');
-                                newP.innerHTML = '<br>';
-                                specialWrapperBlock.parentNode.insertBefore(newP, specialWrapperBlock.nextSibling);
-                                setCursorToEnd(newP);
-                            }
-                        } else {
-                            // If this is a code block in edit mode, switch to display mode
-                            if (blockNode.tagName.toLowerCase() === 'pre' && blockNode.getAttribute('data-mode') === 'edit') {
-                                enterDisplayMode(blockNode);
-                            }
-                            const next = blockNode.nextElementSibling;
-                            logger.log('Next element:', next ? next.tagName : 'null');
-                            if (next) {
-                                navigateToAdjacentElement(next, 'down', false);
-                            } else {
-                                // No next element, create a new paragraph
-                                logger.log('Creating new paragraph');
-                                const newP = document.createElement('p');
-                                newP.innerHTML = '<br>';
-                                blockNode.parentNode.insertBefore(newP, blockNode.nextSibling);
-                                setCursorToFirstTextNode(newP);
-                            }
-                        }
-                    } else {
-                        // Move to next line
-                        e.preventDefault();
-                        setCursorToLineStart(blockNode, currentLineIndex + 1); scrollCursorIntoView();
-                    }
-                    return;
-                }
-                
-                return;
-            }
-            
-            // Outside blocks - check if we should enter a code block or blockquote
-            let currentElement = sel.anchorNode;
-            while (currentElement && currentElement !== editor && currentElement.nodeType !== 1) {
-                currentElement = currentElement.parentNode;
-            }
-            if (currentElement && currentElement !== editor) {
-                // Get direct child of editor
-                while (currentElement.parentNode && currentElement.parentNode !== editor) {
-                    currentElement = currentElement.parentNode;
-                }
-
-                // Helper: check if cursor is at the first visual line of the element
-                // Uses getBoundingClientRect to compare cursor Y with the element's first line Y
-                function isCursorAtFirstLine(element) {
-                    // Empty paragraph (<p><br></p>) is always first line
-                    if (element.tagName === 'P' && (element.innerHTML === '<br>' || element.textContent.trim() === '')) {
-                        return true;
-                    }
-                    const range = sel.getRangeAt(0);
-                    // Get cursor rect
-                    let cursorRect = range.getBoundingClientRect();
-                    // If collapsed range has no rect, insert temp span
-                    if (cursorRect.height === 0) {
-                        const tempSpan = document.createElement('span');
-                        tempSpan.textContent = '\u200B';
-                        range.insertNode(tempSpan);
-                        cursorRect = tempSpan.getBoundingClientRect();
-                        tempSpan.parentNode.removeChild(tempSpan);
-                    }
-                    // If still zero height, need extra check for lists
-                    if (cursorRect.height === 0) {
-                        // For ul/ol, check if cursor is actually in the first <li> (document order)
-                        if (element.tagName === 'UL' || element.tagName === 'OL') {
-                            var firstLi = element.querySelector('li');
-                            if (firstLi) {
-                                var cn = sel.anchorNode;
-                                while (cn && (cn.nodeType !== 1 || cn.tagName !== 'LI')) cn = cn.parentElement;
-                                return cn === firstLi;
-                            }
-                        }
-                        return true;
-                    }
-                    // Get element's first line rect
-                    const elemRect = element.getBoundingClientRect();
-                    // Cursor is at first line if its top is close to element's top
-                    // Tolerance of 2px to avoid floating-point false positives:
-                    // line-height values like 25.6px can't be represented exactly in IEEE 754,
-                    // so (elemRect.top + cursorRect.height) may be slightly larger than cursorRect.top
-                    // for the second visual line, causing incorrect "first line" detection.
-                    return cursorRect.top < elemRect.top + cursorRect.height - 2;
-                }
-
-                // Helper: check if cursor is at the last visual line of the element
-                function isCursorAtLastLine(element) {
-                    // Empty paragraph (<p><br></p>) is always last line
-                    if (element.tagName === 'P' && (element.innerHTML === '<br>' || element.textContent.trim() === '')) {
-                        return true;
-                    }
-                    const range = sel.getRangeAt(0);
-                    let cursorRect = range.getBoundingClientRect();
-                    if (cursorRect.height === 0) {
-                        const tempSpan = document.createElement('span');
-                        tempSpan.textContent = '\u200B';
-                        range.insertNode(tempSpan);
-                        cursorRect = tempSpan.getBoundingClientRect();
-                        tempSpan.parentNode.removeChild(tempSpan);
-                    }
-                    // If still zero height, need extra check for lists
-                    if (cursorRect.height === 0) {
-                        // For ul/ol, check if cursor is actually in the last <li> (document order)
-                        if (element.tagName === 'UL' || element.tagName === 'OL') {
-                            var allLis = element.querySelectorAll('li');
-                            var lastLi = allLis.length > 0 ? allLis[allLis.length - 1] : null;
-                            if (lastLi) {
-                                var cn = sel.anchorNode;
-                                while (cn && (cn.nodeType !== 1 || cn.tagName !== 'LI')) cn = cn.parentElement;
-                                return cn === lastLi;
-                            }
-                        }
-                        return true;
-                    }
-                    const elemRect = element.getBoundingClientRect();
-                    // Cursor is at last line if its bottom is close to element's bottom
-                    // Tolerance of 2px to avoid floating-point false positives (see isCursorAtFirstLine)
-                    return cursorRect.bottom > elemRect.bottom - cursorRect.height + 2;
-                }
-
-                if (e.key === 'ArrowUp') {
-                    // Navigate to previous element if cursor is at the first line
-                    if (!isCursorAtFirstLine(currentElement)) return;
-
-                    // If Shift is pressed, let browser handle selection
-                    if (e.shiftKey) {
-                        return;
-                    }
-
-                    let prev = currentElement.previousElementSibling;
-                    if (prev) {
-                        e.preventDefault();
-                        navigateToAdjacentElement(prev, 'up', false);
-                        return;
-                    }
-                } else if (e.key === 'ArrowDown') {
-                    // Navigate to next element if cursor is at the last line
-                    if (!isCursorAtLastLine(currentElement)) return;
-
-                    // If Shift is pressed, let browser handle selection
-                    if (e.shiftKey) {
-                        return;
-                    }
-
-                    let next = currentElement.nextElementSibling;
-                    if (next) {
-                        e.preventDefault();
-                        navigateToAdjacentElement(next, 'down', false);
-                        return;
-                    }
-                }
-            }
-        }
-
-        // ========================================
-        // State Machine Based Backspace Handler
-        // ========================================
-        
-        /**
-         * Get editor context for backspace handling
-         * Collects all necessary information about cursor position and surrounding elements
-         */
-        function getBackspaceContext(sel, range) {
-            const context = {
-                // Basic cursor info
-                sel: sel,
-                range: range,
-                isAtStart: range.startOffset === 0 && range.collapsed,
-                
-                // Element references
-                liElement: null,
-                list: null,
-                paragraphElement: null,
-                parentLi: null,  // Parent li if in nested structure
-                
-                // Li state
-                isInLi: false,
-                isEmptyLi: false,
-                hasNestedList: false,
-                nestedLists: [],
-                
-                // Paragraph state
-                isInParagraph: false,
-                isEmptyParagraph: false,
-                paragraphInLi: false,
-                
-                // Sibling info
-                precedingSiblings: [],
-                followingSiblings: [],
-                
-                // For paragraph in li
-                prevSiblingInLi: null,
-                nextSiblingInLi: null,
-                prevIsList: false,
-                nextIsList: false,
-                prevIsText: false,
-                prevIsBr: false
-            };
-            
-            // Find paragraph element
-            let pNode = sel.anchorNode;
-            while (pNode && pNode !== editor) {
-                if (pNode.nodeType === 1 && pNode.tagName?.toLowerCase() === 'p') {
-                    context.paragraphElement = pNode;
-                    context.isInParagraph = true;
-                    context.isEmptyParagraph = pNode.innerHTML === '<br>' || pNode.textContent.trim() === '';
-                    
-                    // Check if paragraph is inside li
-                    let parent = pNode.parentNode;
-                    while (parent && parent !== editor) {
-                        if (parent.tagName?.toLowerCase() === 'li') {
-                            context.paragraphInLi = true;
-                            context.parentLi = parent;
-                            break;
-                        }
-                        parent = parent.parentNode;
-                    }
-                    break;
-                }
-                pNode = pNode.parentNode;
-            }
-            
-            // Find li element
-            let node = sel.anchorNode;
-            while (node && node !== editor) {
-                if (node.tagName?.toLowerCase() === 'li') {
-                    context.liElement = node;
-                    context.isInLi = true;
-                    context.list = node.parentNode;
-                    
-                    // Check if nested (for parentLi reference)
-                    if (context.list && context.list.parentNode?.tagName?.toLowerCase() === 'li') {
-                        context.parentLi = context.list.parentNode;
-                    }
-                    
-                    // Get nested lists
-                    context.nestedLists = Array.from(node.querySelectorAll(':scope > ul, :scope > ol'));
-                    context.hasNestedList = context.nestedLists.length > 0;
-                    
-                    // Calculate if empty (direct text content only)
-                    let directText = '';
-                    for (const child of node.childNodes) {
-                        if (child.nodeType === 3) {
-                            directText += child.textContent;
-                        } else if (child.nodeType === 1) {
-                            const tag = child.tagName?.toLowerCase();
-                            if (tag !== 'ul' && tag !== 'ol' && tag !== 'input' && tag !== 'br' && tag !== 'p') {
-                                directText += child.textContent;
-                            }
-                        }
-                    }
-                    context.isEmptyLi = directText.trim() === '';
-                    
-                    // Get siblings
-                    let sib = node.previousElementSibling;
-                    while (sib) {
-                        context.precedingSiblings.unshift(sib);
-                        sib = sib.previousElementSibling;
-                    }
-                    sib = node.nextElementSibling;
-                    while (sib) {
-                        context.followingSiblings.push(sib);
-                        sib = sib.nextElementSibling;
-                    }
-                    
-                    break;
-                }
-                node = node.parentNode;
-            }
-            
-            // If in paragraph inside li, get sibling info
-            if (context.paragraphInLi && context.paragraphElement) {
-                let prev = context.paragraphElement.previousSibling;
-                while (prev && prev.nodeType === 3 && prev.textContent.trim() === '') {
-                    prev = prev.previousSibling;
-                }
-                context.prevSiblingInLi = prev;
-                
-                let next = context.paragraphElement.nextSibling;
-                while (next && next.nodeType === 3 && next.textContent.trim() === '') {
-                    next = next.nextSibling;
-                }
-                context.nextSiblingInLi = next;
-                
-                if (prev) {
-                    const prevTag = prev.tagName?.toLowerCase();
-                    context.prevIsList = prevTag === 'ul' || prevTag === 'ol';
-                    context.prevIsBr = prevTag === 'br';
-                    context.prevIsText = prev.nodeType === 3 || (prev.nodeType === 1 && !context.prevIsList);
-                }
-                if (next) {
-                    const nextTag = next.tagName?.toLowerCase();
-                    context.nextIsList = nextTag === 'ul' || nextTag === 'ol';
-                }
-            }
-            
-            return context;
-        }
-        
-        /**
-         * Detect backspace state from context
-         */
-        function detectBackspaceState(context) {
-            // Must be at start of element
-            if (!context.isAtStart) {
-                return 'DEFAULT';
-            }
-            
-            // Priority 1: Empty paragraph inside li
-            if (context.isInParagraph && context.paragraphInLi && context.isEmptyParagraph) {
-                logger.log('[detectBackspaceState] returning EMPTY_PARAGRAPH_IN_LI');
-                return 'EMPTY_PARAGRAPH_IN_LI';
-            }
-            
-            // Priority 2: Empty li (not in paragraph) - unified, no nested/toplevel distinction
-            if (context.isInLi && context.isEmptyLi && !context.isInParagraph) {
-                logger.log('[detectBackspaceState] returning EMPTY_LI');
-                return 'EMPTY_LI';
-            }
-            
-            // Priority 3: Non-empty li at start
-            if (context.isInLi && !context.isEmptyLi && !context.isInParagraph) {
-                logger.log('[detectBackspaceState] returning NONEMPTY_LI_START');
-                return 'NONEMPTY_LI_START';
-            }
-            
-            logger.log('[detectBackspaceState] returning DEFAULT, context:', JSON.stringify({
-                isInParagraph: context.isInParagraph,
-                paragraphInLi: context.paragraphInLi,
-                isEmptyParagraph: context.isEmptyParagraph,
-                isInLi: context.isInLi,
-                isEmptyLi: context.isEmptyLi,
-                isAtStart: context.isAtStart
-            }));
-            return 'DEFAULT';
-        }
-        
-        /**
-         * Find the visually previous element (deepest last li in nested structure)
-         */
-        function findVisuallyPreviousElement(element) {
-            // If element has previous sibling
-            const prevSibling = element.previousElementSibling;
-            if (prevSibling) {
-                // If previous sibling is a li with nested list, go to deepest last
-                if (prevSibling.tagName?.toLowerCase() === 'li') {
-                    return findDeepestLastLi(prevSibling);
-                }
-                return prevSibling;
-            }
-            
-            // No previous sibling - go to parent
-            const parent = element.parentNode;
-            if (parent?.tagName?.toLowerCase() === 'ul' || parent?.tagName?.toLowerCase() === 'ol') {
-                const grandParent = parent.parentNode;
-                if (grandParent?.tagName?.toLowerCase() === 'li') {
-                    // Return the parent li (the text part before the nested list)
-                    return grandParent;
-                }
-            }
-            
-            return null;
-        }
-        
-        /**
-         * Find the deepest last li in a nested structure
-         */
-        function findDeepestLastLi(li) {
-            // Find the LAST child list (not first) - an li may have multiple
-            // sibling lists of different types (ul, task-ul, ol) as direct children
-            const nestedLists = li.querySelectorAll(':scope > ul, :scope > ol');
-            const lastNestedList = nestedLists.length > 0 ? nestedLists[nestedLists.length - 1] : null;
-            if (lastNestedList && lastNestedList.lastElementChild) {
-                return findDeepestLastLi(lastNestedList.lastElementChild);
-            }
-            return li;
-        }
-        
-        /**
-         * Set cursor to end of element, handling br and nested lists
-         */
-        function setCursorToEndOfLi(li) {
-            var sel = window.getSelection();
-            // Find the last text position before any nested list
-            let targetNode = null;
-            let targetOffset = 0;
-            
-            for (const child of li.childNodes) {
-                if (child.nodeType === 1) {
-                    const tag = child.tagName?.toLowerCase();
-                    if (tag === 'ul' || tag === 'ol') {
-                        break; // Stop at nested list
-                    }
-                    if (tag === 'br') {
-                        // Set cursor before br
-                        const range = document.createRange();
-                        range.setStartBefore(child);
-                        range.collapse(true);
-                        sel.removeAllRanges();
-                        sel.addRange(range);
-                        return;
-                    }
-                    // For other elements, try to find text inside
-                    const lastText = findLastTextNode(child);
-                    if (lastText) {
-                        targetNode = lastText;
-                        targetOffset = lastText.textContent.length;
-                    }
-                } else if (child.nodeType === 3) {
-                    targetNode = child;
-                    targetOffset = child.textContent.length;
-                }
-            }
-            
-            if (targetNode) {
-                const range = document.createRange();
-                range.setStart(targetNode, targetOffset);
-                range.collapse(true);
-                sel.removeAllRanges();
-                sel.addRange(range);
-            } else {
-                // Fallback: set cursor at the start of li (before any nested list)
-                // Find the first nested list or set cursor at start of li
-                const range = document.createRange();
-                let insertPoint = 0;
-                for (let i = 0; i < li.childNodes.length; i++) {
-                    const child = li.childNodes[i];
-                    if (child.nodeType === 1) {
-                        const tag = child.tagName?.toLowerCase();
-                        if (tag === 'ul' || tag === 'ol') {
-                            insertPoint = i;
-                            break;
-                        }
-                    }
-                    insertPoint = i + 1;
-                }
-                range.setStart(li, Math.min(insertPoint, li.childNodes.length));
-                range.collapse(true);
-                sel.removeAllRanges();
-                sel.addRange(range);
-            }
-        }
-        
-        /**
-         * Find last text node in element
-         */
-        function findLastTextNode(element) {
-            if (element.nodeType === 3) return element;
-            for (let i = element.childNodes.length - 1; i >= 0; i--) {
-                const result = findLastTextNode(element.childNodes[i]);
-                if (result) return result;
-            }
-            return null;
-        }
-        
-        // ========================================
-        // Backspace Action Handlers
-        // ========================================
-        
-        /**
-         * Handle empty li - convert to paragraph
-         * Unified handler for both nested and top-level empty li
-         */
-        function handleEmptyLi(context) {
-            const { liElement, list, nestedLists, precedingSiblings, followingSiblings, sel } = context;
-            
-            logger.log('[handleEmptyLi] precedingSiblings:', precedingSiblings.length, 'followingSiblings:', followingSiblings.length, 'nestedLists:', nestedLists.length);
-            
-            // Remove nested lists from li first (save them for later)
-            const savedNestedLists = [];
-            for (const nl of nestedLists) {
-                nl.remove();
-                savedNestedLists.push(nl);
-            }
-            
-            // Remove the li
-            liElement.remove();
-            
-            // Create paragraph
-            const p = document.createElement('p');
-            p.innerHTML = '<br>';
-            
-            // Insert paragraph based on position
-            if (list.children.length === 0) {
-                // List is now empty - replace it with paragraph
-                list.replaceWith(p);
-            } else if (precedingSiblings.length === 0) {
-                // First item - insert paragraph before list
-                list.before(p);
-            } else if (followingSiblings.length === 0) {
-                // Last item - insert paragraph after list
-                list.after(p);
-            } else {
-                // Middle item - split list
-                const newList = document.createElement(list.tagName);
-                for (const fs of followingSiblings) {
-                    newList.appendChild(fs);
-                }
-                list.after(p);
-                p.after(newList);
-            }
-            
-            // Always insert saved nested lists after paragraph (as independent lists)
-            // The nesting/merging will happen on the 2nd Backspace
-            let insertAfter = p;
-            for (const nl of savedNestedLists) {
-                insertAfter.after(nl);
-                insertAfter = nl;
-            }
-            
-            setCursorToEnd(p);
-            return true;
-        }
-        
-        /**
-         * Handle empty paragraph inside li
-         * Simply: remove paragraph and move cursor to end of visually previous element
-         */
-        function handleEmptyParagraphInLi(context) {
-            const { paragraphElement, parentLi, prevSiblingInLi, sel } = context;
-            
-            logger.log('[handleEmptyParagraphInLi] prevSiblingInLi:', prevSiblingInLi?.tagName, prevSiblingInLi?.innerHTML?.substring(0, 50));
-            
-            // Find the visually previous element (where cursor should go)
-            let cursorTarget = null;
-            
-            if (prevSiblingInLi) {
-                // There's something before the paragraph in this li
-                const prevTag = prevSiblingInLi.tagName?.toLowerCase();
-                logger.log('[handleEmptyParagraphInLi] prevTag:', prevTag);
-                if (prevTag === 'ul' || prevTag === 'ol') {
-                    // Previous is a list - go to deepest last li
-                    const deepestLi = findDeepestLastLi(prevSiblingInLi.lastElementChild);
-                    logger.log('[handleEmptyParagraphInLi] deepestLi:', deepestLi?.innerHTML?.substring(0, 50));
-                    if (deepestLi) {
-                        // Remove the paragraph first
-                        paragraphElement.remove();
-                        // Set cursor to end of deepest li
-                        setCursorToEndOfLi(deepestLi);
-                        logger.log('[handleEmptyParagraphInLi] cursor set to deepestLi');
-                        return true;
-                    }
-                }
-                // Previous is text, br, or other element
-                cursorTarget = prevSiblingInLi;
-            } else {
-                // Nothing before paragraph - find visual previous (parent li's text part)
-                // The visual previous is the text content of the parent li itself
-                // Look for text node or br before any nested list in parent li
-                for (const child of parentLi.childNodes) {
-                    if (child === paragraphElement) break;
-                    if (child.nodeType === 3 && child.textContent.trim() !== '') {
-                        cursorTarget = child;
-                    } else if (child.nodeType === 1) {
-                        const tag = child.tagName?.toLowerCase();
-                        if (tag === 'br') {
-                            cursorTarget = child;
-                        } else if (tag !== 'ul' && tag !== 'ol' && tag !== 'p') {
-                            cursorTarget = child;
-                        }
-                    }
-                }
-                
-                // If still no target, try parent li's previous sibling
-                if (!cursorTarget) {
-                    const visualPrev = findVisuallyPreviousElement(parentLi);
-                    if (visualPrev) {
-                        paragraphElement.remove();
-                        if (visualPrev.tagName?.toLowerCase() === 'li') {
-                            setCursorToEndOfLi(visualPrev);
-                        } else {
-                            setCursorToEnd(visualPrev);
-                        }
-                        return true;
-                    }
-                }
-            }
-            
-            // Remove the paragraph
-            paragraphElement.remove();
-            
-            // Set cursor to the target
-            if (cursorTarget) {
-                if (cursorTarget.nodeType === 3) {
-                    // Text node
-                    const range = document.createRange();
-                    range.setStart(cursorTarget, cursorTarget.textContent.length);
-                    range.collapse(true);
-                    sel.removeAllRanges();
-                    sel.addRange(range);
-                } else if (cursorTarget.tagName?.toLowerCase() === 'br') {
-                    // BR element
-                    const range = document.createRange();
-                    range.setStartBefore(cursorTarget);
-                    range.collapse(true);
-                    sel.removeAllRanges();
-                    sel.addRange(range);
-                } else if (cursorTarget.tagName?.toLowerCase() === 'li') {
-                    setCursorToEndOfLi(cursorTarget);
-                } else {
-                    setCursorToEnd(cursorTarget);
-                }
-            } else {
-                // Fallback to parent li
-                setCursorToEnd(parentLi);
-            }
-            
-            return true;
-        }
-        
-        /**
-         * Handle non-empty li at start - merge with previous element
-         */
-        function handleNonEmptyLiStart(context) {
-            const { liElement, list, precedingSiblings, sel } = context;
-            
-            // Find visual previous element
-            const visualPrev = findVisuallyPreviousElement(liElement);
-            
-            if (!visualPrev) {
-                // No previous element - convert to paragraph
-                const p = document.createElement('p');
-                // Move li content to paragraph (skip checkbox)
-                while (liElement.firstChild) {
-                    const child = liElement.firstChild;
-                    if (child.tagName?.toLowerCase() === 'ul' || child.tagName?.toLowerCase() === 'ol') {
-                        break; // Don't move nested lists
-                    }
-                    if (child.nodeType === 1 && child.tagName === 'INPUT' && child.type === 'checkbox') {
-                        child.remove();
-                        continue;
-                    }
-                    p.appendChild(child);
-                }
-                
-                // Get nested lists
-                const nestedLists = Array.from(liElement.querySelectorAll(':scope > ul, :scope > ol'));
-                
-                liElement.remove();
-                
-                if (list.children.length === 0) {
-                    list.replaceWith(p);
-                } else {
-                    list.before(p);
-                }
-                
-                // Insert nested lists after paragraph
-                let insertAfter = p;
-                for (const nl of nestedLists) {
-                    insertAfter.after(nl);
-                    insertAfter = nl;
-                }
-                
-                setCursorToStart(p);
-                return true;
-            }
-            
-            // Merge into previous element
-            if (visualPrev.tagName?.toLowerCase() === 'li') {
-                // Save cursor position (end of prev li text)
-                let cursorNode = null;
-                let cursorOffset = 0;
-                
-                for (const child of visualPrev.childNodes) {
-                    if (child.nodeType === 1 && (child.tagName === 'UL' || child.tagName === 'OL')) {
-                        break;
-                    }
-                    if (child.nodeType === 3) {
-                        cursorNode = child;
-                        cursorOffset = child.textContent.length;
-                    } else if (child.nodeType === 1 && child.tagName !== 'BR') {
-                        const lastText = findLastTextNode(child);
-                        if (lastText) {
-                            cursorNode = lastText;
-                            cursorOffset = lastText.textContent.length;
-                        }
-                    }
-                }
-                
-                // Remove trailing br from prev li
-                const lastChild = visualPrev.lastChild;
-                if (lastChild?.tagName?.toLowerCase() === 'br') {
-                    const nextOfBr = lastChild.nextSibling;
-                    if (!nextOfBr || (nextOfBr.tagName !== 'UL' && nextOfBr.tagName !== 'OL')) {
-                        lastChild.remove();
-                    }
-                }
-                
-                // Find insert position (before nested list)
-                let insertBefore = null;
-                for (const child of visualPrev.childNodes) {
-                    if (child.nodeType === 1 && (child.tagName === 'UL' || child.tagName === 'OL')) {
-                        insertBefore = child;
-                        break;
-                    }
-                }
-                
-                // Move content from current li to prev li (skip checkbox)
-                const nodesToMove = [];
-                for (const child of liElement.childNodes) {
-                    if (child.tagName?.toLowerCase() === 'ul' || child.tagName?.toLowerCase() === 'ol') {
-                        break;
-                    }
-                    if (child.nodeType === 1 && child.tagName === 'INPUT' && child.type === 'checkbox') {
-                        continue;
-                    }
-                    nodesToMove.push(child);
-                }
-
-                // Strip leading whitespace from first text node (task list items have
-                // a formatting space " b" after the checkbox that should not appear in merged text)
-                if (nodesToMove.length > 0 && nodesToMove[0].nodeType === 3) {
-                    nodesToMove[0].textContent = nodesToMove[0].textContent.replace(/^\s+/, '');
-                    if (!nodesToMove[0].textContent) {
-                        nodesToMove.shift();
-                    }
-                }
-
-                // Save first moved node for cursor positioning when prev li was empty
-                const firstMovedNode = nodesToMove.length > 0 ? nodesToMove[0] : null;
-
-                for (const node of nodesToMove) {
-                    if (insertBefore) {
-                        visualPrev.insertBefore(node, insertBefore);
-                    } else {
-                        visualPrev.appendChild(node);
-                    }
-                }
-                
-                // Handle nested lists from current li - MUST save before removing li
-                const nestedLists = Array.from(liElement.querySelectorAll(':scope > ul, :scope > ol'));
-                // Remove nested lists from li first (to preserve them)
-                for (const nl of nestedLists) {
-                    nl.remove();
-                }
-                
-                liElement.remove();
-                
-                // If list is now empty, remove it
-                if (list.children.length === 0) {
-                    list.remove();
-                }
-                
-                // Add nested lists to visualPrev
-                // b was the first item, so its children (nestedLists) must come BEFORE
-                // any existing sibling content already in visualPrev.
-                if (nestedLists.length > 0) {
-                    // Check if visualPrev already has a nested list
-                    const existingNestedList = visualPrev.querySelector(':scope > ul, :scope > ol');
-                    if (existingNestedList) {
-                        for (const nl of nestedLists) {
-                            if (nl.tagName === existingNestedList.tagName) {
-                                // Same list type: insert items at the BEGINNING (before existing children)
-                                const firstExistingChild = existingNestedList.firstChild;
-                                while (nl.firstChild) {
-                                    existingNestedList.insertBefore(nl.firstChild, firstExistingChild);
-                                }
-                            } else {
-                                // Different list type: insert the whole sub-list before existingNestedList
-                                existingNestedList.parentNode.insertBefore(nl, existingNestedList);
-                            }
-                        }
-                    } else {
-                        // Add nested lists as children of visualPrev
-                        for (const nl of nestedLists) {
-                            visualPrev.appendChild(nl);
-                        }
-                    }
-                }
-
-                // Set cursor
-                if (cursorNode) {
-                    // Previous li had text - place cursor at end of that text (= boundary)
-                    try {
-                        const range = document.createRange();
-                        range.setStart(cursorNode, cursorOffset);
-                        range.collapse(true);
-                        sel.removeAllRanges();
-                        sel.addRange(range);
-                    } catch (e) {
-                        setCursorToEnd(visualPrev);
-                    }
-                } else if (firstMovedNode) {
-                    // Previous li was empty - place cursor at start of moved content
-                    try {
-                        const range = document.createRange();
-                        if (firstMovedNode.nodeType === 3) {
-                            range.setStart(firstMovedNode, 0);
-                        } else {
-                            range.setStartBefore(firstMovedNode);
-                        }
-                        range.collapse(true);
-                        sel.removeAllRanges();
-                        sel.addRange(range);
-                    } catch (e) {
-                        setCursorToStart(visualPrev);
-                    }
-                } else {
-                    setCursorToEnd(visualPrev);
-                }
-
-                // Merge adjacent text nodes so "a" + "b" → "ab"
-                // (browser auto-updates live Range objects on normalize)
-                visualPrev.normalize();
-
-                return true;
-            }
-            
-            return false;
-        }
-        
-        /**
-         * Main backspace handler for list elements
-         */
-        function handleBackspaceOnList(e, sel, range) {
-            const context = getBackspaceContext(sel, range);
-            const state = detectBackspaceState(context);
-            
-            logger.log('Backspace state:', state, context);
-            
-            let handled = false;
-            
-            switch (state) {
-                case 'EMPTY_LI':
-                    handled = handleEmptyLi(context);
-                    break;
-                case 'EMPTY_PARAGRAPH_IN_LI':
-                    handled = handleEmptyParagraphInLi(context);
-                    break;
-                case 'NONEMPTY_LI_START':
-                    handled = handleNonEmptyLiStart(context);
-                    break;
-                default:
-                    return false;
-            }
-            
-            if (handled) {
-                e.preventDefault();
-                syncMarkdown();
-                return true;
-            }
-            
-            return false;
-        }
-
-        // Backspace at beginning
-        if (e.key === 'Backspace') {
-            const sel = window.getSelection();
-            if (!sel || !sel.rangeCount) return;
-
-            const range = sel.getRangeAt(0);
-            
-            // Selection deletion is handled in the early Backspace handler (around line 4083)
-            // This handler only deals with collapsed selection
-            if (!range.collapsed) return;
-            
-            // Try state machine handler first
-            if (handleBackspaceOnList(e, sel, range)) {
-                return;
-            }
-            
-            const currentLine = getCurrentLine();
-            if (!currentLine) return;
-
-            const tag = currentLine.tagName ? currentLine.tagName.toLowerCase() : '';
-            
-            // Check if cursor is inside a paragraph first (before checking li)
-            // This is important for handling paragraphs inside list items
-            let cursorInParagraph = false;
-            let paragraphInLi = null;
-            let pCheckNode = sel.anchorNode;
-            while (pCheckNode && pCheckNode !== editor) {
-                if (pCheckNode.nodeType === 1 && pCheckNode.tagName?.toLowerCase() === 'p') {
-                    // Check if this paragraph is inside a li
-                    let parentNode = pCheckNode.parentNode;
-                    while (parentNode && parentNode !== editor) {
-                        if (parentNode.tagName?.toLowerCase() === 'li') {
-                            cursorInParagraph = true;
-                            paragraphInLi = pCheckNode;
-                            break;
-                        }
-                        parentNode = parentNode.parentNode;
-                    }
-                    break;
-                }
-                pCheckNode = pCheckNode.parentNode;
-            }
-            
-            // Find the <li> element if cursor is inside a list
-            let liElement = null;
-            let node = sel.anchorNode;
-            while (node && node !== editor) {
-                if (node.tagName && node.tagName.toLowerCase() === 'li') {
-                    liElement = node;
-                    break;
-                }
-                node = node.parentNode;
-            }
-
-            // If cursor is in a paragraph inside a li, skip the li empty item handling
-            // and let the paragraph handling code below deal with it
-            if (cursorInParagraph && paragraphInLi && range.startOffset === 0 && range.collapsed) {
-                logger.log('Cursor in paragraph inside li, skipping li handling');
-                // Fall through to paragraph handling below
-            } else if (liElement) {
-                const list = liElement.parentNode;
-                const textContent = liElement.textContent.trim();
-                const checkbox = liElement.querySelector(':scope > input[type="checkbox"]');
-                const nestedListInItem = liElement.querySelector(':scope > ul, :scope > ol');
-                
-                // Get only direct text content (excluding nested lists and br)
-                let directTextContent = '';
-                for (const child of liElement.childNodes) {
-                    if (child.nodeType === 3) { // Text node
-                        directTextContent += child.textContent;
-                    } else if (child.nodeType === 1) { // Element node
-                        const childTag = child.tagName?.toLowerCase();
-                        // Exclude ul, ol, input, and br (br is used as placeholder in empty items)
-                        if (childTag !== 'ul' && childTag !== 'ol' && childTag !== 'input' && childTag !== 'br') {
-                            directTextContent += child.textContent;
-                        }
-                    }
-                }
-                directTextContent = directTextContent.trim();
-                
-                // Item is empty if it has no text content (br is just a placeholder for empty items)
-                const isEmptyItem = directTextContent === '' || (checkbox && directTextContent === '');
-                
-                // Check if this is a standalone single-item list at top level
-                const isTopLevel = list && list.parentNode === editor;
-                const isSingleItem = list && list.children.length === 1;
-                const isStandaloneSingleList = isTopLevel && isSingleItem && !nestedListInItem;
-                
-                // Check if this is a nested list item
-                const isNestedList = list && list.parentNode && list.parentNode.tagName?.toLowerCase() === 'li';
-                
-                logger.log('Backspace on li:', {
-                    directTextContent: directTextContent,
-                    isEmptyItem: isEmptyItem,
-                    isTopLevel: isTopLevel,
-                    isSingleItem: isSingleItem,
-                    hasNestedList: !!nestedListInItem,
-                    isStandaloneSingleList: isStandaloneSingleList,
-                    isNestedList: isNestedList,
-                    startOffset: range.startOffset,
-                    collapsed: range.collapsed
-                });
-                
-                // Standalone single empty list item - convert to paragraph regardless of cursor position
-                if (isEmptyItem && isStandaloneSingleList) {
-                    e.preventDefault();
-                    const p = document.createElement('p');
-                    p.innerHTML = '<br>';
-                    list.replaceWith(p);
-                    setCursorToEnd(p);
-                    syncMarkdown();
-                    return;
-                }
-                
-                // Top-level empty list item with nested list - convert to paragraph and preserve nested list
-                if (isEmptyItem && isTopLevel && nestedListInItem && range.startOffset === 0 && range.collapsed) {
-                    e.preventDefault();
-                    
-                    // Get ALL nested lists in this li (there may be multiple)
-                    const allNestedLists = Array.from(liElement.querySelectorAll(':scope > ul, :scope > ol'));
-                    
-                    // Get following siblings in the list
-                    const followingSiblings = [];
-                    let sibling = liElement.nextElementSibling;
-                    while (sibling) {
-                        followingSiblings.push(sibling);
-                        sibling = sibling.nextElementSibling;
-                    }
-                    
-                    // First, remove all nested lists from the li (before removing li)
-                    for (const nestedList of allNestedLists) {
-                        nestedList.remove();
-                    }
-                    
-                    // Remove the empty item
-                    liElement.remove();
-                    
-                    // Create paragraph
-                    const p = document.createElement('p');
-                    p.innerHTML = '<br>';
-                    
-                    // Insert paragraph after the list
-                    list.after(p);
-                    let insertAfter = p;
-                    
-                    // All nested lists become sibling lists after the paragraph
-                    for (const nestedList of allNestedLists) {
-                        insertAfter.after(nestedList);
-                        insertAfter = nestedList;
-                    }
-                    
-                    // If there are following siblings, create a new list for them
-                    if (followingSiblings.length > 0) {
-                        const newList = document.createElement(list.tagName);
-                        for (const sib of followingSiblings) {
-                            sib.remove();
-                            newList.appendChild(sib);
-                        }
-                        insertAfter.after(newList);
-                    }
-                    
-                    // Remove the original list if empty
-                    if (list.children.length === 0) {
-                        list.remove();
-                    }
-                    
-                    setCursorToEnd(p);
-                    syncMarkdown();
-                    return;
-                }
-                
-                // Empty nested list item at beginning - handle based on preceding siblings
-                if (isEmptyItem && isNestedList && range.startOffset === 0 && range.collapsed) {
-                    e.preventDefault();
-                    
-                    const parentLi = list.parentNode;
-                    
-                    // Get preceding siblings in the nested list
-                    const precedingSiblings = [];
-                    let prevSib = liElement.previousElementSibling;
-                    while (prevSib) {
-                        precedingSiblings.unshift(prevSib);
-                        prevSib = prevSib.previousElementSibling;
-                    }
-                    
-                    // Get following siblings in the nested list
-                    const followingSiblings = [];
-                    let sibling = liElement.nextElementSibling;
-                    while (sibling) {
-                        followingSiblings.push(sibling);
-                        sibling = sibling.nextElementSibling;
-                    }
-                    
-                    // Get the nested list from this item (if any)
-                    const ownNestedList = nestedListInItem;
-                    
-                    logger.log('Empty nested list item:', {
-                        precedingSiblings: precedingSiblings.length,
-                        followingSiblings: followingSiblings.length,
-                        hasOwnNestedList: !!ownNestedList
-                    });
-                    
-                    // Check if the previous sibling has a nested list (different indent level)
-                    const prevItem = liElement.previousElementSibling;
-                    const prevItemHasNestedList = prevItem ? prevItem.querySelector(':scope > ul, :scope > ol') !== null : false;
-                    
-                    logger.log('prevItem check:', {
-                        hasPrevItem: !!prevItem,
-                        prevItemHasNestedList: prevItemHasNestedList
-                    });
-                    
-                    // Always convert to paragraph (requirement 7-9)
-                    // Empty nested list item -> convert to paragraph while maintaining indent
-                    
-                    // Remove the empty item first
-                    liElement.remove();
-                    
-                    // Create paragraph
-                    const p = document.createElement('p');
-                    p.innerHTML = '<br>';
-                    
-                    if (precedingSiblings.length === 0 && followingSiblings.length === 0) {
-                        // Only item in the list - replace list with paragraph
-                        list.replaceWith(p);
-                        
-                        // If there was own nested list, insert it after the paragraph
-                        if (ownNestedList) {
-                            ownNestedList.remove();
-                            p.after(ownNestedList);
-                        }
-                    } else if (precedingSiblings.length === 0) {
-                        // First item with following siblings
-                        // Insert paragraph before the list
-                        list.before(p);
-                        
-                        // If there was own nested list, insert it after the paragraph
-                        if (ownNestedList) {
-                            ownNestedList.remove();
-                            p.after(ownNestedList);
-                        }
-                    } else if (followingSiblings.length === 0) {
-                        // Last item with preceding siblings (and prev has nested list)
-                        // Insert paragraph after the list (but still inside parent li)
-                        list.after(p);
-                        
-                        // If there was own nested list, insert it after the paragraph
-                        if (ownNestedList) {
-                            ownNestedList.remove();
-                            p.after(ownNestedList);
-                        }
-                        
-                        logger.log('After paragraph insertion - parentLi innerHTML:', parentLi.innerHTML.substring(0, 200));
-                    } else {
-                        // Middle item with preceding siblings (and prev has nested list)
-                        // Create new list for following siblings
-                        const newList = document.createElement(list.tagName);
-                        for (const sib of followingSiblings) {
-                            newList.appendChild(sib);
-                        }
-                        
-                        // Insert paragraph after the original list
-                        list.after(p);
-                        
-                        // If there was own nested list, insert it after the paragraph
-                        if (ownNestedList) {
-                            ownNestedList.remove();
-                            p.after(ownNestedList);
-                            ownNestedList.after(newList);
-                        } else {
-                            p.after(newList);
-                        }
-                    }
-                    
-                    setCursorToEnd(p);
-                    syncMarkdown();
-                    return;
-                }
-            }
-
-            // Other Backspace handling requires cursor at beginning
-            if (range.startOffset === 0 && range.collapsed) {
-
-                // Check if cursor is inside a paragraph (even if nested inside li)
-                let paragraphElement = null;
-                let pNode = sel.anchorNode;
-                while (pNode && pNode !== editor) {
-                    if (pNode.nodeType === 1 && pNode.tagName?.toLowerCase() === 'p') {
-                        paragraphElement = pNode;
-                        break;
-                    }
-                    pNode = pNode.parentNode;
-                }
-                
-                // Handle paragraph inside list item
-                if (paragraphElement) {
-                    const parentElement = paragraphElement.parentNode;
-                    const parentIsLi = parentElement && parentElement.tagName?.toLowerCase() === 'li';
-                    const isEmptyParagraph = paragraphElement.innerHTML === '<br>' || paragraphElement.textContent.trim() === '';
-                    
-                    // Special case: Empty paragraph inside a list item (indented paragraph)
-                    if (isEmptyParagraph && parentIsLi) {
-                        // Check if there's a list before and after the paragraph
-                        let prevSibling = paragraphElement.previousSibling;
-                        while (prevSibling && prevSibling.nodeType === 3 && prevSibling.textContent.trim() === '') {
-                            prevSibling = prevSibling.previousSibling;
-                        }
-                        let nextSibling = paragraphElement.nextSibling;
-                        while (nextSibling && nextSibling.nodeType === 3 && nextSibling.textContent.trim() === '') {
-                            nextSibling = nextSibling.nextSibling;
-                        }
-                        
-                        const prevIsList = prevSibling && prevSibling.nodeType === 1 && 
-                            (prevSibling.tagName?.toLowerCase() === 'ul' || prevSibling.tagName?.toLowerCase() === 'ol');
-                        const nextIsList = nextSibling && nextSibling.nodeType === 1 && 
-                            (nextSibling.tagName?.toLowerCase() === 'ul' || nextSibling.tagName?.toLowerCase() === 'ol');
-                        
-                        // Check if prev is text (not list) - parent li has text before paragraph
-                        const prevIsText = prevSibling && (prevSibling.nodeType === 3 || 
-                            (prevSibling.nodeType === 1 && prevSibling.tagName?.toLowerCase() !== 'ul' && prevSibling.tagName?.toLowerCase() !== 'ol'));
-                        
-                        logger.log('Empty paragraph in li:', {
-                            prevSibling: prevSibling ? (prevSibling.nodeType === 3 ? 'TEXT: ' + prevSibling.textContent : prevSibling.tagName) : null,
-                            nextSibling: nextSibling ? (nextSibling.nodeType === 3 ? 'TEXT: ' + nextSibling.textContent : nextSibling.tagName) : null,
-                            prevIsList: prevIsList,
-                            nextIsList: nextIsList,
-                            prevIsText: prevIsText
-                        });
-                        
-                        if (prevIsList && nextIsList) {
-                            // Case 1: List before and after - merge them
-                            // Example:
-                            // - dd
-                            // |        ← empty paragraph
-                            // - fff
-                            // → merge to: - dd
-                            //             - fff
-                            logger.log('Case 1: prevIsList && nextIsList - merging lists');
-                            e.preventDefault();
-                            
-                            const prevList = prevSibling;
-                            const nextList = nextSibling;
-                            
-                            // Save the last item of prev list BEFORE merging (for cursor position)
-                            const lastItemBeforeMerge = prevList.lastElementChild;
-                            
-                            // Move all items from next list to prev list
-                            while (nextList.firstChild) {
-                                prevList.appendChild(nextList.firstChild);
-                            }
-                            nextList.remove();
-                            paragraphElement.remove();
-                            
-                            // Set cursor to the last item of the original prev list (before merge)
-                            if (lastItemBeforeMerge) {
-                                setCursorToEnd(lastItemBeforeMerge);
-                            } else {
-                                setCursorToEnd(prevList.lastElementChild);
-                            }
-                            
-                            syncMarkdown();
-                            return;
-                        }
-                        
-                        if (prevIsText && nextIsList) {
-                            // Case 2: Text before (parent li text) and list after
-                            // Example:
-                            // - bbb
-                            //   |      ← empty paragraph (inside li for bbb)
-                            //     - dd
-                            //     - fff
-                            // → merge to: - bbb
-                            //               - dd
-                            //               - fff
-                            // The next list should become a direct child of the parent li
-                            logger.log('Case 2: prevIsText && nextIsList - removing paragraph');
-                            e.preventDefault();
-                            
-                            const nextList = nextSibling;
-                            const parentLi = parentElement;
-                            
-                            // Remove the paragraph
-                            paragraphElement.remove();
-                            
-                            // The nextList is already a child of parentLi, just need to set cursor
-                            // Set cursor to end of parent li's text content (before the list)
-                            let cursorTarget = nextList.previousSibling;
-                            while (cursorTarget && cursorTarget.nodeType === 3 && cursorTarget.textContent.trim() === '') {
-                                cursorTarget = cursorTarget.previousSibling;
-                            }
-                            
-                            if (cursorTarget && cursorTarget.nodeType === 3) {
-                                const newRange = document.createRange();
-                                newRange.setStart(cursorTarget, cursorTarget.textContent.length);
-                                newRange.collapse(true);
-                                sel.removeAllRanges();
-                                sel.addRange(newRange);
-                            } else if (cursorTarget && cursorTarget.nodeType === 1 && cursorTarget.tagName?.toLowerCase() === 'br') {
-                                // cursorTarget is a <br> element - set cursor before it
-                                const newRange = document.createRange();
-                                newRange.setStartBefore(cursorTarget);
-                                newRange.collapse(true);
-                                sel.removeAllRanges();
-                                sel.addRange(newRange);
-                            } else {
-                                // Find text node or br in parent li
-                                let found = false;
-                                for (const child of parentLi.childNodes) {
-                                    if (child.nodeType === 3 && child.textContent.trim() !== '') {
-                                        const newRange = document.createRange();
-                                        newRange.setStart(child, child.textContent.length);
-                                        newRange.collapse(true);
-                                        sel.removeAllRanges();
-                                        sel.addRange(newRange);
-                                        found = true;
-                                        break;
-                                    } else if (child.nodeType === 1 && child.tagName?.toLowerCase() === 'br') {
-                                        const newRange = document.createRange();
-                                        newRange.setStartBefore(child);
-                                        newRange.collapse(true);
-                                        sel.removeAllRanges();
-                                        sel.addRange(newRange);
-                                        found = true;
-                                        break;
-                                    }
-                                }
-                                if (!found) {
-                                    setCursorToEnd(parentLi);
-                                }
-                            }
-                            
-                            syncMarkdown();
-                            return;
-                        }
-                        
-                        if (prevIsList && !nextIsList) {
-                            // Case 3: List before, no list after
-                            // Remove the paragraph and set cursor to end of prev list's deepest last item
-                            logger.log('Case 3: prevIsList && !nextIsList - removing paragraph');
-                            e.preventDefault();
-                            
-                            const prevList = prevSibling;
-                            paragraphElement.remove();
-                            
-                            // Find the deepest last li in the prev list (visually the line above)
-                            let deepestLastLi = prevList.lastElementChild;
-                            while (deepestLastLi) {
-                                const nestedLists = deepestLastLi.querySelectorAll(':scope > ul, :scope > ol');
-                                const lastNestedList = nestedLists.length > 0 ? nestedLists[nestedLists.length - 1] : null;
-                                if (lastNestedList && lastNestedList.lastElementChild) {
-                                    deepestLastLi = lastNestedList.lastElementChild;
-                                } else {
-                                    break;
-                                }
-                            }
-                            
-                            if (deepestLastLi) {
-                                setCursorToEnd(deepestLastLi);
-                            }
-                            
-                            syncMarkdown();
-                            return;
-                        }
-                        
-                        if (prevIsText && !nextIsList && !nextSibling) {
-                            // Case 4: Text before (parent li text), no list after, no next sibling
-                            // This is the case where nested list was the only child and is now empty paragraph
-                            // Example:
-                            // - aaa
-                            //   |      ← empty paragraph (inside li for aaa, no nested list after)
-                            // - ccc
-                            // → should become: - aaa|  (cursor at end of aaa)
-                            //                  - ccc
-                            logger.log('Case 4: prevIsText && !nextIsList && !nextSibling - removing paragraph and moving to parent text');
-                            e.preventDefault();
-                            
-                            const parentLi = parentElement;
-                            
-                            // Remove the paragraph
-                            paragraphElement.remove();
-                            
-                            // Set cursor to end of parent li's text content
-                            let cursorTarget = null;
-                            for (const child of parentLi.childNodes) {
-                                if (child.nodeType === 3 && child.textContent.trim() !== '') {
-                                    cursorTarget = child;
-                                    break;
-                                }
-                            }
-                            
-                            if (cursorTarget) {
-                                const newRange = document.createRange();
-                                newRange.setStart(cursorTarget, cursorTarget.textContent.length);
-                                newRange.collapse(true);
-                                sel.removeAllRanges();
-                                sel.addRange(newRange);
-                            } else {
-                                setCursorToEnd(parentLi);
-                            }
-                            
-                            syncMarkdown();
-                            return;
-                        }
-                        
-                        // Default: just move cursor to previous element
-                        logger.log('Default case - moving cursor');
-                        e.preventDefault();
-                        if (prevSibling) {
-                            if (prevSibling.nodeType === 3) {
-                                const newRange = document.createRange();
-                                newRange.setStart(prevSibling, prevSibling.textContent.length);
-                                newRange.collapse(true);
-                                sel.removeAllRanges();
-                                sel.addRange(newRange);
-                            } else {
-                                setCursorToEnd(prevSibling);
-                            }
-                        }
-                        syncMarkdown();
-                        return;
-                    }
-                }
-
-                // Handle paragraph at beginning - merge with previous element
-                if (tag === 'p') {
-                    const prevElement = currentLine.previousElementSibling;
-                    const nextElement = currentLine.nextElementSibling;
-                    const isEmptyParagraph = currentLine.innerHTML === '<br>' || currentLine.textContent.trim() === '';
-                    
-                    // Special case: Empty paragraph with no previous element - just remove it
-                    if (isEmptyParagraph && !prevElement && nextElement) {
-                        e.preventDefault();
-                        currentLine.remove();
-                        setCursorToStart(nextElement);
-                        syncMarkdown();
-                        return;
-                    }
-                    
-                    // Special case: Empty paragraph sandwiched between two lists
-                    const prevIsList = prevElement && (prevElement.tagName.toLowerCase() === 'ul' || prevElement.tagName.toLowerCase() === 'ol');
-                    const nextIsList = nextElement && (nextElement.tagName.toLowerCase() === 'ul' || nextElement.tagName.toLowerCase() === 'ol');
-                    
-                    if (isEmptyParagraph && prevIsList && nextIsList) {
-                        e.preventDefault();
-                        
-                        // Requirement 5-5 (updated): Merge next list items into prev list at the same level
-                        const lastItemBeforeMerge = prevElement.lastElementChild;
-                        
-                        // Find the deepest last li BEFORE merging (this is the "visually previous line")
-                        const findDeepestLastLi = (li) => {
-                            const nestedLists = li.querySelectorAll(':scope > ul, :scope > ol');
-                            const lastNestedList = nestedLists.length > 0 ? nestedLists[nestedLists.length - 1] : null;
-                            if (lastNestedList && lastNestedList.lastElementChild) {
-                                return findDeepestLastLi(lastNestedList.lastElementChild);
-                            }
-                            return li;
-                        };
-                        const deepestLastLi = lastItemBeforeMerge ? findDeepestLastLi(lastItemBeforeMerge) : null;
-                        
-                        // Move all items from next list to prev list (same level, not nested)
-                        while (nextElement.firstChild) {
-                            prevElement.appendChild(nextElement.firstChild);
-                        }
-                        nextElement.remove();
-                        currentLine.remove();
-                        
-                        // Set cursor to the end of the deepest last li (visually previous line)
-                        if (deepestLastLi) {
-                            setCursorToEndOfLi(deepestLastLi);
-                        } else {
-                            setCursorToEnd(prevElement.lastElementChild);
-                        }
-                        
-                        syncMarkdown();
-                        return;
-                    }
-                    
-                    if (prevElement) {
-                        const prevTag = prevElement.tagName.toLowerCase();
-                        
-                        // If previous element is a list, merge paragraph into last list item
-                        if (prevTag === 'ul' || prevTag === 'ol') {
-                            e.preventDefault();
-                            
-                            const lastLi = prevElement.lastElementChild;
-                            const paragraphContent = currentLine.innerHTML === '<br>' ? '' : currentLine.innerHTML;
-                            const isEmptyParagraph = !paragraphContent || paragraphContent === '<br>';
-                            
-                            if (lastLi) {
-                                // Find the deepest last li in the list (including nested lists)
-                                const findDeepestLastLi = (li) => {
-                                    const nestedLists = li.querySelectorAll(':scope > ul, :scope > ol');
-                                    const lastNestedList = nestedLists.length > 0 ? nestedLists[nestedLists.length - 1] : null;
-                                    if (lastNestedList && lastNestedList.lastElementChild) {
-                                        return findDeepestLastLi(lastNestedList.lastElementChild);
-                                    }
-                                    return li;
-                                };
-                                const deepestLastLi = findDeepestLastLi(lastLi);
-                                
-                                // Use deepestLastLi for merging content (not lastLi)
-                                // This ensures content is merged into the deepest nested item
-                                const targetLi = deepestLastLi;
-                                
-                                // Find position to insert (before any nested lists in target li)
-                                let insertBeforeNode = null;
-                                for (const child of targetLi.childNodes) {
-                                    if (child.nodeType === 1 && (child.tagName === 'UL' || child.tagName === 'OL')) {
-                                        insertBeforeNode = child;
-                                        break;
-                                    }
-                                }
-                                
-                                // Remove trailing <br> from target li if present
-                                // BUT only if there's no nested list after it (the <br> represents empty content before nested list)
-                                const lastChild = insertBeforeNode ? insertBeforeNode.previousSibling : targetLi.lastChild;
-                                if (lastChild && lastChild.nodeType === 1 && lastChild.tagName.toLowerCase() === 'br') {
-                                    // Check if there's a nested list after the <br>
-                                    const nextSiblingOfBr = lastChild.nextSibling;
-                                    const hasNestedListAfter = nextSiblingOfBr && nextSiblingOfBr.nodeType === 1 && 
-                                        (nextSiblingOfBr.tagName === 'UL' || nextSiblingOfBr.tagName === 'OL');
-                                    if (!hasNestedListAfter) {
-                                        lastChild.remove();
-                                    }
-                                }
-                                
-                                // Save cursor position BEFORE appending content
-                                // Cursor should be at the end of existing text in targetLi
-                                let cursorNode = null;
-                                let cursorOffset = 0;
-                                
-                                // Find the last text node before any nested list
-                                const findLastTextPosition = (li) => {
-                                    let lastTextNode = null;
-                                    let lastOffset = 0;
-                                    for (const child of li.childNodes) {
-                                        if (child.nodeType === 1 && (child.tagName === 'UL' || child.tagName === 'OL')) {
-                                            break; // Stop at nested list
-                                        }
-                                        if (child.nodeType === 3) { // Text node
-                                            lastTextNode = child;
-                                            lastOffset = child.textContent.length;
-                                        } else if (child.nodeType === 1 && child.tagName !== 'BR') {
-                                            // Element node (like <strong>, <em>, etc.)
-                                            const textInside = child.lastChild;
-                                            if (textInside && textInside.nodeType === 3) {
-                                                lastTextNode = textInside;
-                                                lastOffset = textInside.textContent.length;
-                                            } else if (textInside) {
-                                                lastTextNode = child;
-                                                lastOffset = child.childNodes.length;
-                                            }
-                                        }
-                                    }
-                                    return { node: lastTextNode, offset: lastOffset };
-                                };
-                                
-                                const cursorPos = findLastTextPosition(targetLi);
-                                cursorNode = cursorPos.node;
-                                cursorOffset = cursorPos.offset;
-                                
-                                // Append paragraph content to target li (if not empty)
-                                if (!isEmptyParagraph) {
-                                    const tempDiv = document.createElement('div');
-                                    tempDiv.innerHTML = paragraphContent;
-                                    while (tempDiv.firstChild) {
-                                        if (insertBeforeNode) {
-                                            targetLi.insertBefore(tempDiv.firstChild, insertBeforeNode);
-                                        } else {
-                                            targetLi.appendChild(tempDiv.firstChild);
-                                        }
-                                    }
-                                }
-                                
-                                // Remove the paragraph
-                                currentLine.remove();
-                                
-                                // Check if next element is a list of the same type - merge them
-                                if (nextElement && nextElement.tagName.toLowerCase() === prevTag) {
-                                    // Move all items from next list to previous list
-                                    while (nextElement.firstChild) {
-                                        prevElement.appendChild(nextElement.firstChild);
-                                    }
-                                    nextElement.remove();
-                                }
-                                
-                                // Set cursor to the saved position (end of original text, before merged content)
-                                if (cursorNode) {
-                                    try {
-                                        const newRange = document.createRange();
-                                        newRange.setStart(cursorNode, cursorOffset);
-                                        newRange.collapse(true);
-                                        sel.removeAllRanges();
-                                        sel.addRange(newRange);
-                                    } catch (e) {
-                                        // Fallback to end of targetLi
-                                        setCursorToEnd(targetLi);
-                                    }
-                                } else {
-                                    // No text content found, set cursor to end
-                                    setCursorToEnd(targetLi);
-                                }
-                            }
-                            
-                            syncMarkdown();
-                            return;
-                        }
-                        
-                        // If previous element is a paragraph, merge into it
-                        if (prevTag === 'p') {
-                            e.preventDefault();
-                            
-                            const prevContent = prevElement.innerHTML === '<br>' ? '' : prevElement.innerHTML;
-                            const currentContent = currentLine.innerHTML === '<br>' ? '' : currentLine.innerHTML;
-                            const isPrevEmpty = !prevContent || prevContent === '';
-                            const isCurrentEmpty = !currentContent || currentContent === '';
-                            
-                            // If current paragraph is empty, just remove it (don't merge empty into empty)
-                            if (isCurrentEmpty) {
-                                currentLine.remove();
-                                setCursorToEnd(prevElement);
-                                syncMarkdown();
-                                return;
-                            }
-                            
-                            // Mark cursor position (end of previous paragraph)
-                            let cursorNode = prevElement.lastChild;
-                            let cursorOffset = cursorNode && cursorNode.nodeType === 3 ? cursorNode.textContent.length : 0;
-                            
-                            // Remove trailing <br> from previous paragraph
-                            if (prevElement.lastChild && prevElement.lastChild.nodeType === 1 && 
-                                prevElement.lastChild.tagName.toLowerCase() === 'br') {
-                                prevElement.lastChild.remove();
-                                cursorNode = prevElement.lastChild;
-                                cursorOffset = cursorNode && cursorNode.nodeType === 3 ? cursorNode.textContent.length : 0;
-                            }
-                            
-                            // Append current paragraph content
-                            if (currentContent) {
-                                const tempDiv = document.createElement('div');
-                                tempDiv.innerHTML = currentContent;
-                                while (tempDiv.firstChild) {
-                                    prevElement.appendChild(tempDiv.firstChild);
-                                }
-                            }
-
-                            // Remove current paragraph
-                            currentLine.remove();
-
-                            // Set cursor position
-                            if (cursorNode && cursorNode.nodeType === 3) {
-                                const newRange = document.createRange();
-                                newRange.setStart(cursorNode, cursorOffset);
-                                newRange.collapse(true);
-                                sel.removeAllRanges();
-                                sel.addRange(newRange);
-                            } else if (isPrevEmpty) {
-                                // Previous paragraph was empty - cursor should be at start of merged content
-                                setCursorToStart(prevElement);
-                            } else {
-                                setCursorToEnd(prevElement);
-                            }
-                            
-                            syncMarkdown();
-                            return;
-                        }
-                        
-                        // If previous element is a code block, merge paragraph into code block's last line
-                        if (prevTag === 'pre') {
-                            e.preventDefault();
-                            
-                            const currentContent = currentLine.innerHTML === '<br>' ? '' : currentLine.textContent;
-                            const isCurrentEmpty = !currentContent || currentContent.trim() === '';
-                            
-                            // If current paragraph is empty, just remove it
-                            if (isCurrentEmpty) {
-                                currentLine.remove();
-                                // Enter edit mode and set cursor to end
-                                isNavigatingIntoBlock = true;
-                                enterEditMode(prevElement);
-                                setTimeout(() => {
-                                    const code = prevElement.querySelector('code');
-                                    if (code) {
-                                        setCursorToEnd(code);
-                                    }
-                                    resetNavigationFlag();
-                                }, 0);
-                                syncMarkdown();
-                                return;
-                            }
-
-                            // Merge paragraph content into code block's last line
-                            const code = prevElement.querySelector('code');
-                            if (code) {
-                                // Enter edit mode first
-                                isNavigatingIntoBlock = true;
-                                enterEditMode(prevElement);
-                                
-                                setTimeout(() => {
-                                    // Append paragraph content to code block
-                                    const codeEl = prevElement.querySelector('code');
-                                    if (codeEl) {
-                                        // Remove trailing empty text nodes and trailing <br>
-                                        while (codeEl.lastChild) {
-                                            if (codeEl.lastChild.nodeType === 3 && codeEl.lastChild.textContent === '') {
-                                                codeEl.lastChild.remove();
-                                            } else if (codeEl.lastChild.nodeName === 'BR') {
-                                                codeEl.lastChild.remove();
-                                            } else {
-                                                break;
-                                            }
-                                        }
-                                        // Add exactly one <br> as line separator, then the content
-                                        if (codeEl.lastChild) {
-                                            codeEl.appendChild(document.createElement('br'));
-                                        }
-                                        codeEl.appendChild(document.createTextNode(currentContent));
-                                        setCursorToEnd(codeEl);
-                                    }
-                                    resetNavigationFlag();
-                                    syncMarkdown();
-                                }, 0);
-                            }
-                            
-                            // Remove current paragraph
-                            currentLine.remove();
-                            return;
-                        }
-                        
-                        // If previous element is a mermaid/math wrapper, enter edit mode and set cursor to end
-                        if (prevTag === 'div' && isSpecialWrapper(prevElement)) {
-                            e.preventDefault();
-
-                            const currentContent = currentLine.innerHTML === '<br>' ? '' : currentLine.textContent;
-                            const isCurrentEmpty = !currentContent || currentContent.trim() === '';
-
-                            // If current paragraph is empty, just remove it and enter wrapper edit mode
-                            if (isCurrentEmpty) {
-                                currentLine.remove();
-                                enterSpecialWrapperEditMode(prevElement, 'end');
-                                syncMarkdown();
-                                return;
-                            }
-
-                            // If paragraph has content, enter wrapper edit mode and append content as new line
-                            var wrapperPreSelector = prevElement.classList.contains('mermaid-wrapper')
-                                ? 'pre[data-lang="mermaid"]' : 'pre[data-lang="math"]';
-                            prevElement.setAttribute('data-mode', 'edit');
-                            var wrapperPre = prevElement.querySelector(wrapperPreSelector);
-                            if (wrapperPre) {
-                                var wrapperCode = wrapperPre.querySelector('code');
-                                if (wrapperCode) {
-                                    setTimeout(function() {
-                                        // Add the paragraph content as a new line
-                                        if (wrapperCode.lastChild && wrapperCode.lastChild.nodeName !== 'BR') {
-                                            wrapperCode.appendChild(document.createElement('br'));
-                                        }
-                                        wrapperCode.appendChild(document.createTextNode(currentContent));
-                                        setCursorToEnd(wrapperCode);
-                                        syncMarkdown();
-                                    }, 0);
-                                }
-                            }
-
-                            // Remove current paragraph
-                            currentLine.remove();
-                            return;
-                        }
-                        
-                        // If previous element is a horizontal rule, just remove the paragraph (don't delete hr)
-                        if (prevTag === 'hr') {
-                            e.preventDefault();
-                            
-                            const isCurrentEmpty = currentLine.innerHTML === '<br>' || currentLine.textContent.trim() === '';
-                            
-                            if (isCurrentEmpty) {
-                                // Empty paragraph after hr - just remove the paragraph
-                                // and set cursor right before the hr (like arrow key navigation)
-                                currentLine.remove();
-                                
-                                // Set cursor right before the hr element (same as arrow key behavior)
-                                const newRange = document.createRange();
-                                newRange.setStartBefore(prevElement);
-                                newRange.collapse(true);
-                                sel.removeAllRanges();
-                                sel.addRange(newRange);
-                                
-                                syncMarkdown();
-                                return;
-                            }
-                            
-                            // Non-empty paragraph after hr - just set cursor to start (don't merge)
-                            // This prevents accidental deletion of hr
-                            setCursorToStart(currentLine);
-                            syncMarkdown();
-                            return;
-                        }
-
-                        // If previous element is a heading, blockquote, or other block element,
-                        // merge paragraph content into it (similar to p+p merge)
-                        if (/^h[1-6]$/.test(prevTag) || prevTag === 'blockquote' || prevTag === 'table') {
-                            e.preventDefault();
-
-                            const currentContent = currentLine.innerHTML === '<br>' ? '' : currentLine.innerHTML;
-                            const isCurrentEmpty = !currentContent || currentContent === '';
-
-                            if (isCurrentEmpty) {
-                                // Empty paragraph - just remove it and move cursor to end of previous element
-                                currentLine.remove();
-                                setCursorToEnd(prevElement);
-                                syncMarkdown();
-                                return;
-                            }
-
-                            // For table, just move cursor to last cell
-                            if (prevTag === 'table') {
-                                setCursorToEnd(prevElement);
-                                return;
-                            }
-
-                            // For blockquote, merge paragraph content as a new line in the blockquote
-                            if (prevTag === 'blockquote') {
-                                // Add <br> then paragraph content to blockquote
-                                const lastChild = prevElement.lastChild;
-                                if (lastChild && lastChild.nodeName !== 'BR') {
-                                    prevElement.appendChild(document.createElement('br'));
-                                }
-                                // Mark cursor position
-                                const cursorMarker = document.createTextNode('');
-                                prevElement.appendChild(cursorMarker);
-
-                                // Append paragraph content
-                                const tempDiv2 = document.createElement('div');
-                                tempDiv2.innerHTML = currentContent;
-                                while (tempDiv2.firstChild) {
-                                    prevElement.appendChild(tempDiv2.firstChild);
-                                }
-
-                                currentLine.remove();
-
-                                // Set cursor at the start of appended content
-                                const newRange = document.createRange();
-                                newRange.setStartAfter(cursorMarker);
-                                newRange.collapse(true);
-                                sel.removeAllRanges();
-                                sel.addRange(newRange);
-                                // Clean up empty marker
-                                if (cursorMarker.parentNode) cursorMarker.remove();
-
-                                syncMarkdown();
-                                return;
-                            }
-
-                            // For headings: merge paragraph content into heading
-                            // Mark cursor position at end of heading's current content
-                            const prevContent = prevElement.innerHTML === '<br>' ? '' : prevElement.innerHTML;
-                            const isPrevEmpty = !prevContent || prevContent === '';
-
-                            // Remove trailing <br> from heading
-                            if (prevElement.lastChild && prevElement.lastChild.nodeType === 1 &&
-                                prevElement.lastChild.tagName.toLowerCase() === 'br') {
-                                prevElement.lastChild.remove();
-                            }
-
-                            let cursorNode = prevElement.lastChild;
-                            let cursorOffset = cursorNode && cursorNode.nodeType === 3 ? cursorNode.textContent.length : 0;
-
-                            // Append current paragraph content
-                            const tempDiv = document.createElement('div');
-                            tempDiv.innerHTML = currentContent;
-                            while (tempDiv.firstChild) {
-                                prevElement.appendChild(tempDiv.firstChild);
-                            }
-
-                            // Remove current paragraph
-                            currentLine.remove();
-
-                            // Set cursor position
-                            if (!isPrevEmpty && cursorNode && cursorNode.nodeType === 3) {
-                                const newRange = document.createRange();
-                                newRange.setStart(cursorNode, cursorOffset);
-                                newRange.collapse(true);
-                                sel.removeAllRanges();
-                                sel.addRange(newRange);
-                            } else if (isPrevEmpty) {
-                                setCursorToStart(prevElement);
-                            } else {
-                                setCursorToEnd(prevElement);
-                            }
-
-                            syncMarkdown();
-                            return;
-                        }
-                    }
-                }
-
-                // Convert empty code block back to paragraph, or block backspace at start of non-empty code block
-                if (tag === 'pre') {
-                    const codeElement = currentLine.querySelector('code');
-                    const codeContent = codeElement ? codeElement.textContent : currentLine.textContent;
-                    // Check if code block is empty (only whitespace/newlines)
-                    const isEmpty = !codeContent || codeContent.trim() === '' || codeContent === '\n';
-
-                    logger.log('Backspace in pre:', { isEmpty, codeContent: JSON.stringify(codeContent) });
-
-                    if (isEmpty) {
-                        e.preventDefault();
-                        const p = document.createElement('p');
-                        p.innerHTML = '<br>';
-                        currentLine.replaceWith(p);
-                        setCursorToEnd(p);
-                        syncMarkdown();
-                        return;
-                    }
-                    // Non-empty code block: check if cursor is at the very beginning
-                    // If so, prevent backspace from merging with previous element
-                    if (codeElement) {
-                        const contentRange = document.createRange();
-                        contentRange.selectNodeContents(codeElement);
-                        contentRange.setEnd(range.startContainer, range.startOffset);
-                        const textBeforeCursor = contentRange.toString();
-                        if (textBeforeCursor.length === 0) {
-                            e.preventDefault();
-                            return;
-                        }
-                    }
-                }
-
-                // Convert empty mermaid/math wrapper back to paragraph
-                if (tag === 'div' && isSpecialWrapper(currentLine)) {
-                    const wrapperPre = currentLine.querySelector('pre[data-lang="mermaid"], pre[data-lang="math"]');
-                    const wrapperCode = wrapperPre ? wrapperPre.querySelector('code') : null;
-                    const wrapperContent = wrapperCode ? wrapperCode.textContent : '';
-                    const isEmpty = !wrapperContent || wrapperContent.trim() === '' || wrapperContent === '\n';
-
-                    logger.log('Backspace in special wrapper:', { isEmpty, wrapperContent: JSON.stringify(wrapperContent), type: currentLine.className });
-
-                    if (isEmpty) {
-                        e.preventDefault();
-                        const p = document.createElement('p');
-                        p.innerHTML = '<br>';
-                        currentLine.replaceWith(p);
-                        setCursorToEnd(p);
-                        syncMarkdown();
-                        return;
-                    }
-                }
-
-                // Convert heading/blockquote back to paragraph
-                if (['h1', 'h2', 'h3', 'h4', 'h5', 'h6'].includes(tag)) {
-                    e.preventDefault();
-                    const p = document.createElement('p');
-                    p.innerHTML = currentLine.innerHTML || '<br>';
-                    currentLine.replaceWith(p);
-                    setCursorToStart(p);
-                    syncMarkdown();
-                    return;
-                }
-                
-                // Handle blockquote - only convert to paragraph if at the very beginning
-                if (tag === 'blockquote') {
-                    // Check if cursor is truly at the beginning of the blockquote
-                    // (not just at offset 0 of some node in the middle)
-                    const contentRange = document.createRange();
-                    contentRange.selectNodeContents(currentLine);
-                    contentRange.setEnd(range.startContainer, range.startOffset);
-                    const textBeforeCursor = contentRange.toString();
-                    
-                    logger.log('Backspace in blockquote:', { textBeforeCursor, length: textBeforeCursor.length });
-                    
-                    if (textBeforeCursor.length === 0) {
-                        // Truly at the beginning - convert to paragraph(s)
-                        e.preventDefault();
-
-                        // Split blockquote content by <br> and \n into individual paragraphs
-                        // Blockquote content may use \n text nodes (from markdownToHtmlFragment)
-                        // or <br> elements (from insertLineBreak on Enter)
-                        const childNodes = Array.from(currentLine.childNodes);
-                        const lines = [];
-                        let currentFragment = document.createDocumentFragment();
-
-                        for (const node of childNodes) {
-                            if (node.nodeName === 'BR' && !node.hasAttribute?.('data-trailing-br')) {
-                                lines.push(currentFragment);
-                                currentFragment = document.createDocumentFragment();
-                            } else if (node.nodeType === 3 && node.textContent.includes('\n')) {
-                                // Text node containing \n - split it
-                                const parts = node.textContent.split('\n');
-                                for (let i = 0; i < parts.length; i++) {
-                                    if (i > 0) {
-                                        lines.push(currentFragment);
-                                        currentFragment = document.createDocumentFragment();
-                                    }
-                                    if (parts[i] !== '') {
-                                        currentFragment.appendChild(document.createTextNode(parts[i]));
-                                    }
-                                }
-                            } else {
-                                currentFragment.appendChild(node.cloneNode(true));
-                            }
-                        }
-                        lines.push(currentFragment);
-
-                        // Create <p> elements for each line
-                        const paragraphs = [];
-                        for (const fragment of lines) {
-                            const p = document.createElement('p');
-                            if (fragment.childNodes.length === 0 || (fragment.childNodes.length === 1 && fragment.firstChild.nodeType === 3 && fragment.firstChild.textContent === '')) {
-                                p.innerHTML = '<br>';
-                            } else {
-                                p.appendChild(fragment);
-                            }
-                            paragraphs.push(p);
-                        }
-
-                        // Replace blockquote with paragraphs
-                        const firstP = paragraphs[0];
-                        currentLine.replaceWith(...paragraphs);
-                        setCursorToStart(firstP);
-                        syncMarkdown();
-                    }
-                    // Otherwise, let default backspace behavior handle it (delete previous char/br)
-                    return;
-                }
-
-                // Handle list item at beginning of line (for non-standalone cases)
-                if (liElement) {
-                    const list = liElement.parentNode;
-                    const textContent = liElement.textContent.trim();
-                    const checkbox = liElement.querySelector(':scope > input[type="checkbox"]');
-                    
-                    // Get only direct text content (excluding nested lists and br)
-                    let directTextContent = '';
-                    for (const child of liElement.childNodes) {
-                        if (child.nodeType === 3) { // Text node
-                            directTextContent += child.textContent;
-                        } else if (child.nodeType === 1) { // Element node
-                            const childTag = child.tagName?.toLowerCase();
-                            // Exclude ul, ol, input, and br (br is used as placeholder in empty items)
-                            if (childTag !== 'ul' && childTag !== 'ol' && childTag !== 'input' && childTag !== 'br') {
-                                directTextContent += child.textContent;
-                            }
-                        }
-                    }
-                    directTextContent = directTextContent.trim();
-                    
-                    // Item is empty if it has no text content (br is just a placeholder for empty items)
-                    const isEmptyItem = directTextContent === '';
-                    const prevLi = liElement.previousElementSibling;
-                    const isFirstItem = !prevLi;
-                    const isTopLevel = list && list.parentNode === editor;
-                    const prevElement = list.previousElementSibling;
-                    
-                    if (isEmptyItem) {
-                        e.preventDefault();
-                        const p = document.createElement('p');
-                        p.innerHTML = '<br>';
-                        
-                        // Get preceding and following siblings
-                        const precedingSiblings = [];
-                        let prevSib = liElement.previousElementSibling;
-                        while (prevSib) {
-                            precedingSiblings.unshift(prevSib);
-                            prevSib = prevSib.previousElementSibling;
-                        }
-                        
-                        const followingSiblings = [];
-                        let nextSib = liElement.nextElementSibling;
-                        while (nextSib) {
-                            followingSiblings.push(nextSib);
-                            nextSib = nextSib.nextElementSibling;
-                        }
-                        
-                        // Remove the empty item
-                        liElement.remove();
-                        
-                        if (precedingSiblings.length === 0 && followingSiblings.length === 0) {
-                            // Only item - replace list with paragraph
-                            list.replaceWith(p);
-                        } else if (precedingSiblings.length === 0) {
-                            // First item - insert paragraph before list
-                            list.before(p);
-                        } else if (followingSiblings.length === 0) {
-                            // Last item - insert paragraph after list
-                            list.after(p);
-                        } else {
-                            // Middle item - split list and insert paragraph in between
-                            const newList = document.createElement(list.tagName);
-                            for (const sib of followingSiblings) {
-                                newList.appendChild(sib);
-                            }
-                            list.after(p);
-                            p.after(newList);
-                        }
-                        
-                        // Remove list if empty
-                        if (list.children.length === 0) list.remove();
-                        
-                        setCursorToEnd(p);
-                        syncMarkdown();
-                    } else if (isFirstItem && isTopLevel) {
-                        // First item with text at top level - convert to paragraph
-                        e.preventDefault();
-                        
-                        // Get nested lists from current item (to preserve them)
-                        const nestedLists = Array.from(liElement.querySelectorAll(':scope > ul, :scope > ol'));
-                        
-                        // Get text/inline content from current item (excluding nested lists and checkbox)
-                        const contentNodes = [];
-                        for (const child of liElement.childNodes) {
-                            if (child.nodeType === 1 && (child.tagName === 'UL' || child.tagName === 'OL')) {
-                                continue; // Skip nested lists
-                            }
-                            if (child.nodeType === 1 && child.tagName === 'INPUT') {
-                                continue; // Skip checkbox
-                            }
-                            contentNodes.push(child.cloneNode(true));
-                        }
-                        
-                        // No previous element or previous element is paragraph/heading - convert to paragraph (don't merge)
-                        if (!prevElement || prevElement.tagName.toLowerCase() === 'p' || /^h[1-6]$/.test(prevElement.tagName.toLowerCase())) {
-                            // Previous element is paragraph/heading - convert list item to paragraph (don't merge)
-                            // Create new paragraph with the content
-                            const p = document.createElement('p');
-                            for (const node of contentNodes) {
-                                p.appendChild(node);
-                            }
-                            if (p.childNodes.length === 0) {
-                                p.innerHTML = '<br>';
-                            }
-                            
-                            // Insert paragraph before the list
-                            list.before(p);
-                            
-                            // Remove current item
-                            liElement.remove();
-                            
-                            // If there are nested lists, insert them after the paragraph
-                            let insertAfter = p;
-                            for (const nestedList of nestedLists) {
-                                insertAfter.after(nestedList);
-                                insertAfter = nestedList;
-                            }
-                            
-                            // Remove list if empty
-                            if (list.children.length === 0) list.remove();
-                            
-                            // Set cursor to beginning of the new paragraph
-                            const newRange = document.createRange();
-                            if (p.firstChild) {
-                                newRange.setStart(p.firstChild, 0);
-                            } else {
-                                newRange.setStart(p, 0);
-                            }
-                            newRange.collapse(true);
-                            sel.removeAllRanges();
-                            sel.addRange(newRange);
-                            
-                            syncMarkdown();
-                        } else if (prevElement && (prevElement.tagName.toLowerCase() === 'ul' || prevElement.tagName.toLowerCase() === 'ol')) {
-                            // Previous element is a list - merge into last item of that list
-                            const lastLi = prevElement.lastElementChild;
-                            if (lastLi) {
-                                // Remove trailing <br> from last li
-                                if (lastLi.lastChild && lastLi.lastChild.nodeType === 1 && 
-                                    lastLi.lastChild.tagName.toLowerCase() === 'br') {
-                                    lastLi.lastChild.remove();
-                                }
-                                
-                                // Mark cursor position
-                                let cursorNode = lastLi.lastChild;
-                                let cursorOffset = cursorNode && cursorNode.nodeType === 3 ? cursorNode.textContent.length : 0;
-                                
-                                // Append content to last li
-                                for (const node of contentNodes) {
-                                    lastLi.appendChild(node);
-                                }
-                                
-                                // Move nested lists to last li
-                                for (const nestedList of nestedLists) {
-                                    lastLi.appendChild(nestedList);
-                                }
-                                
-                                // Remove current item
-                                liElement.remove();
-                                
-                                // If current list is now empty, remove it
-                                if (list.children.length === 0) {
-                                    list.remove();
-                                } else {
-                                    // Move remaining items from current list to previous list
-                                    while (list.firstChild) {
-                                        prevElement.appendChild(list.firstChild);
-                                    }
-                                    list.remove();
-                                }
-                                
-                                // Set cursor position
-                                if (cursorNode && cursorNode.nodeType === 3) {
-                                    const newRange = document.createRange();
-                                    newRange.setStart(cursorNode, cursorOffset);
-                                    newRange.collapse(true);
-                                    sel.removeAllRanges();
-                                    sel.addRange(newRange);
-                                } else {
-                                    setCursorToEnd(lastLi);
-                                }
-                                
-                                syncMarkdown();
-                            }
-                        }
-                    } else if (prevLi && prevLi.tagName.toLowerCase() === 'li') {
-                        // Non-first item - merge with previous item (or its deepest last nested item)
-                        e.preventDefault();
-                        
-                        // Get nested lists from current item (to preserve them)
-                        const nestedLists = Array.from(liElement.querySelectorAll(':scope > ul, :scope > ol'));
-                        
-                        // Get text content from current item (excluding nested lists)
-                        const textNodes = [];
-                        for (const child of liElement.childNodes) {
-                            if (child.nodeType === 1 && (child.tagName === 'UL' || child.tagName === 'OL')) {
-                                continue; // Skip nested lists
-                            }
-                            if (child.nodeType === 1 && child.tagName === 'INPUT') {
-                                continue; // Skip checkbox
-                            }
-                            textNodes.push(child.cloneNode(true));
-                        }
-                        
-                        // Find the deepest last li in prevLi's nested lists
-                        // This handles the case where prevLi has nested lists and we should merge into the deepest last item
-                        let targetLi = prevLi;
-                        let prevNestedLists = prevLi.querySelectorAll(':scope > ul, :scope > ol');
-                        let lastNestedList = prevNestedLists.length > 0 ? prevNestedLists[prevNestedLists.length - 1] : null;
-                        while (lastNestedList && lastNestedList.lastElementChild) {
-                            targetLi = lastNestedList.lastElementChild;
-                            prevNestedLists = targetLi.querySelectorAll(':scope > ul, :scope > ol');
-                            lastNestedList = prevNestedLists.length > 0 ? prevNestedLists[prevNestedLists.length - 1] : null;
-                        }
-                        
-                        // Find position to insert in target item (before any nested lists)
-                        let insertBeforeNode = null;
-                        for (const child of targetLi.childNodes) {
-                            if (child.nodeType === 1 && (child.tagName === 'UL' || child.tagName === 'OL')) {
-                                insertBeforeNode = child;
-                                break;
-                            }
-                        }
-                        
-                        // Remove trailing <br> from target item if present
-                        const targetLastChild = insertBeforeNode ? insertBeforeNode.previousSibling : targetLi.lastChild;
-                        if (targetLastChild && targetLastChild.nodeType === 1 && targetLastChild.tagName.toLowerCase() === 'br') {
-                            targetLastChild.remove();
-                        }
-                        
-                        // Mark position for cursor (end of target item's text)
-                        let cursorNode = insertBeforeNode ? insertBeforeNode.previousSibling : targetLi.lastChild;
-                        let cursorOffset = cursorNode && cursorNode.nodeType === 3 ? cursorNode.textContent.length : 0;
-                        
-                        // Append text content from current item to target item
-                        for (const node of textNodes) {
-                            if (insertBeforeNode) {
-                                targetLi.insertBefore(node, insertBeforeNode);
-                            } else {
-                                targetLi.appendChild(node);
-                            }
-                        }
-                        
-                        // Move nested lists from current item to target item
-                        for (const nestedListItem of nestedLists) {
-                            targetLi.appendChild(nestedListItem);
-                        }
-                        
-                        // Remove current item
-                        liElement.remove();
-                        
-                        // Set cursor position
-                        if (cursorNode && cursorNode.nodeType === 3) {
-                            const newRange = document.createRange();
-                            newRange.setStart(cursorNode, cursorOffset);
-                            newRange.collapse(true);
-                            sel.removeAllRanges();
-                            sel.addRange(newRange);
-                        } else {
-                            setCursorToEnd(targetLi);
-                        }
-                        
-                        syncMarkdown();
-                    }
-                }
-            }
-        }
-    });
+    editor.addEventListener('keydown', handleKeydown);
 
     // BeforeInput handler - handle triple-click selection replacement
     editor.addEventListener('beforeinput', function(e) {
         if (e.target.closest && e.target.closest('.front-matter')) return;
         if (isSourceMode) return;
-        
+
         const sel = window.getSelection();
         if (!sel || !sel.rangeCount) return;
-        
+
         const range = sel.getRangeAt(0);
-        
+
         // Only handle when there's a selection (not collapsed)
         if (range.collapsed) return;
-        
+
         // Check if this is a triple-click style selection (selection includes element boundaries)
         // Triple-click typically selects from start of element to start of next element
         const startContainer = range.startContainer;
         const endContainer = range.endContainer;
-        
+
         // Detect triple-click selection patterns:
         // 1. startContainer is an element (not text node) with offset 0
         // 2. endContainer is different from startContainer
@@ -8798,12 +1188,12 @@ window.BinaryMath = require('../shared/math-syntax');
         const isTripleClickSelection = (
             (startContainer.nodeType === 1 && range.startOffset === 0) ||
             (endContainer.nodeType === 1 && range.endOffset === 0) ||
-            (startContainer !== endContainer && 
+            (startContainer !== endContainer &&
              (startContainer.nodeType === 1 || endContainer.nodeType === 1))
         );
-        
+
         if (!isTripleClickSelection) return;
-        
+
         // Find the li element that contains the selection start
         let liElement = null;
         let node = startContainer;
@@ -8814,18 +1204,18 @@ window.BinaryMath = require('../shared/math-syntax');
             }
             node = node.parentNode;
         }
-        
+
         if (!liElement) return;
-        
+
         // Handle insertText (typing characters)
         if (e.inputType === 'insertText' || e.inputType === 'insertReplacementText') {
             logger.log('BeforeInput: Triple-click selection detected in li, handling insertText');
             e.preventDefault();
-            
+
             // Get nested list and checkbox before deletion
             const nestedList = liElement.querySelector(':scope > ul, :scope > ol');
             const checkbox = liElement.querySelector(':scope > input[type="checkbox"]');
-            
+
             // Clear the li content but preserve structure
             // Remove all direct text and inline elements, keep nested list and checkbox
             const nodesToRemove = [];
@@ -8840,7 +1230,7 @@ window.BinaryMath = require('../shared/math-syntax');
                 }
             }
             nodesToRemove.forEach(n => n.remove());
-            
+
             // Insert the new text
             const textNode = document.createTextNode(e.data || '');
             if (checkbox) {
@@ -8850,27 +1240,27 @@ window.BinaryMath = require('../shared/math-syntax');
             } else {
                 liElement.appendChild(textNode);
             }
-            
+
             // Set cursor after the inserted text
             const newRange = document.createRange();
             newRange.setStartAfter(textNode);
             newRange.collapse(true);
             sel.removeAllRanges();
             sel.addRange(newRange);
-            
+
             syncMarkdownSync();
             return;
         }
-        
+
         // Handle deleteContentBackward/Forward (backspace/delete with selection)
         if (e.inputType === 'deleteContentBackward' || e.inputType === 'deleteContentForward') {
             logger.log('BeforeInput: Triple-click selection detected in li, handling delete');
             e.preventDefault();
-            
+
             // Get nested list and checkbox before deletion
             const nestedList = liElement.querySelector(':scope > ul, :scope > ol');
             const checkbox = liElement.querySelector(':scope > input[type="checkbox"]');
-            
+
             // Clear the li content but preserve structure
             const nodesToRemove = [];
             for (const child of liElement.childNodes) {
@@ -8884,7 +1274,7 @@ window.BinaryMath = require('../shared/math-syntax');
                 }
             }
             nodesToRemove.forEach(n => n.remove());
-            
+
             // Add a br if li is now empty (no text, no nested list)
             let hasContent = false;
             for (const child of liElement.childNodes) {
@@ -8897,7 +1287,7 @@ window.BinaryMath = require('../shared/math-syntax');
                     break;
                 }
             }
-            
+
             if (!hasContent) {
                 const br = document.createElement('br');
                 if (checkbox) {
@@ -8906,7 +1296,7 @@ window.BinaryMath = require('../shared/math-syntax');
                     liElement.appendChild(br);
                 }
             }
-            
+
             // Set cursor in the li
             const newRange = document.createRange();
             if (checkbox && checkbox.nextSibling) {
@@ -8917,7 +1307,7 @@ window.BinaryMath = require('../shared/math-syntax');
             newRange.collapse(true);
             sel.removeAllRanges();
             sel.addRange(newRange);
-            
+
             syncMarkdownSync();
             return;
         }
@@ -8977,343 +1367,6 @@ window.BinaryMath = require('../shared/math-syntax');
         updatePlaceholder();
     });
 
-    // ========== LIST TYPE CHANGE ==========
-
-    // Change the parent list type of a given li element.
-    // If the li is the only child, just swap the tag.
-    // If there are siblings, split into up to 3 lists: before (original), target (new), after (original).
-    // Then merge adjacent compatible lists.
-    function changeParentListType(li, targetTag) {
-        var parentList = li.parentNode;
-        if (!parentList) return;
-        var currentTag = parentList.tagName.toLowerCase();
-        if (currentTag === targetTag) return; // Already correct type
-
-        var siblings = Array.from(parentList.children);
-        var liIndex = siblings.indexOf(li);
-
-        if (siblings.length === 1) {
-            // Only child — replace parent tag in-place
-            var newList = document.createElement(targetTag);
-            // Copy attributes if any
-            for (var i = 0; i < parentList.attributes.length; i++) {
-                var attr = parentList.attributes[i];
-                newList.setAttribute(attr.name, attr.value);
-            }
-            newList.appendChild(li);
-            parentList.replaceWith(newList);
-        } else {
-            // Multiple siblings — split into before/target/after
-            var parentOfList = parentList.parentNode;
-            var insertRef = parentList.nextSibling;
-
-            // Build "after" list (items after li)
-            var afterItems = siblings.slice(liIndex + 1);
-            var afterList = null;
-            if (afterItems.length > 0) {
-                afterList = document.createElement(currentTag);
-                for (var j = 0; j < afterItems.length; j++) {
-                    afterList.appendChild(afterItems[j]);
-                }
-            }
-
-            // Build "target" list (just the converted li)
-            var targetList = document.createElement(targetTag);
-            targetList.appendChild(li);
-
-            // parentList now only contains "before" items (items before li)
-            // If parentList is now empty, remove it
-            if (parentList.children.length === 0) {
-                parentOfList.insertBefore(targetList, insertRef);
-                if (afterList) parentOfList.insertBefore(afterList, targetList.nextSibling);
-                parentList.remove();
-            } else {
-                // Insert target and after lists after the (now shortened) parentList
-                parentOfList.insertBefore(targetList, insertRef);
-                if (afterList) parentOfList.insertBefore(afterList, targetList.nextSibling);
-            }
-
-            // Merge adjacent compatible lists
-            mergeAdjacentLists(targetList);
-        }
-    }
-
-    // Check if two list elements are compatible for merging
-    // Regular ul and task ul are NOT compatible
-    function areListsCompatible(a, b) {
-        if (!a || !b) return false;
-        if (a.tagName !== b.tagName) return false;
-        // Both must be same type (ul or ol)
-        if (a.tagName.toLowerCase() === 'ul') {
-            // Check if one is task list and other is not
-            var aHasCheckbox = a.querySelector(':scope > li > input[type="checkbox"]') !== null;
-            var bHasCheckbox = b.querySelector(':scope > li > input[type="checkbox"]') !== null;
-            // Only merge if both are task or both are non-task
-            return aHasCheckbox === bHasCheckbox;
-        }
-        return true; // ol lists are always compatible with other ol
-    }
-
-    // Merge targetList with its adjacent compatible siblings
-    function mergeAdjacentLists(targetList) {
-        // Merge with next sibling
-        var next = targetList.nextElementSibling;
-        if (next && areListsCompatible(targetList, next)) {
-            while (next.firstChild) {
-                targetList.appendChild(next.firstChild);
-            }
-            next.remove();
-        }
-
-        // Merge with previous sibling
-        var prev = targetList.previousElementSibling;
-        if (prev && areListsCompatible(prev, targetList)) {
-            while (targetList.firstChild) {
-                prev.appendChild(targetList.firstChild);
-            }
-            targetList.remove();
-        }
-    }
-
-    // ========== LIST INDENTATION ==========
-
-    function indentListItem(li) {
-        // #region agent log
-        logger.log('indentListItem called', {
-            liText: li.textContent,
-            parentTag: li.parentNode?.tagName,
-            hasPrevSibling: !!li.previousElementSibling,
-            prevSiblingTag: li.previousElementSibling?.tagName
-        });
-        // #endregion
-
-        let prevSibling = li.previousElementSibling;
-        if (!prevSibling || prevSibling.tagName.toLowerCase() !== 'li') {
-            // No previous sibling within the same list.
-            // Check if the parent list has a previous sibling list element
-            // (cross-list-boundary indent: e.g., <ul><li>a</li></ul><ol><li>b</li></ol>)
-            const parentList = li.parentNode;
-            const prevList = parentList ? parentList.previousElementSibling : null;
-            if (prevList && (prevList.tagName.toLowerCase() === 'ul' || prevList.tagName.toLowerCase() === 'ol')) {
-                // Get the last li of the previous list
-                const lastLiOfPrev = prevList.lastElementChild;
-                if (lastLiOfPrev && lastLiOfPrev.tagName.toLowerCase() === 'li') {
-                    // Move this li (and remaining siblings) into a nested list under lastLiOfPrev
-                    // Use querySelectorAll to get the LAST nested list (Section 16)
-                    const currentListTag = parentList.tagName.toLowerCase();
-                    const crossNestedLists = lastLiOfPrev.querySelectorAll(':scope > ul, :scope > ol');
-                    let nestedList;
-                    if (crossNestedLists.length > 0) {
-                        nestedList = crossNestedLists[crossNestedLists.length - 1];
-                    } else {
-                        nestedList = document.createElement(currentListTag);
-                        lastLiOfPrev.appendChild(nestedList);
-                    }
-                    nestedList.appendChild(li);
-                    // If the parent list is now empty, remove it
-                    if (parentList.children.length === 0) {
-                        parentList.remove();
-                    }
-                    logger.log('indentListItem: Cross-list indent done');
-                    return;
-                }
-            }
-            // #region agent log
-            logger.log('indentListItem: No valid previous sibling, cannot indent');
-            // #endregion
-            return; // Can't indent first item or item without previous sibling
-        }
-
-        // #region agent log
-        logger.log('indentListItem: Found previous sibling, will indent');
-        // #endregion
-
-        // Check if previous sibling already has a nested list
-        // Use querySelectorAll to get the LAST nested list (Section 16: querySelector returns only the first match)
-        const nestedLists = prevSibling.querySelectorAll(':scope > ul, :scope > ol');
-        let nestedList;
-        if (nestedLists.length > 0) {
-            nestedList = nestedLists[nestedLists.length - 1];
-        } else {
-            // Create a new nested list of the same type as parent
-            const parentList = li.parentNode;
-            nestedList = document.createElement(parentList.tagName.toLowerCase());
-            prevSibling.appendChild(nestedList);
-        }
-
-        // Move the li into the nested list
-        nestedList.appendChild(li);
-        // Note: Cursor position is preserved by the caller
-        // #region agent log
-        logger.log('indentListItem: Done, li moved to nested list');
-        // #endregion
-    }
-
-    function outdentListItem(li) {
-        logger.log('outdentListItem called', { liText: li.textContent });
-        const parentList = li.parentNode;
-        const grandparentLi = parentList.parentNode;
-        logger.log('outdentListItem: structure', {
-            parentListTag: parentList?.tagName,
-            grandparentLiTag: grandparentLi?.tagName,
-            grandparentLiIsLi: grandparentLi?.tagName?.toLowerCase() === 'li'
-        });
-
-        // Check if we're in a nested list
-        if (!grandparentLi || grandparentLi.tagName.toLowerCase() !== 'li') {
-            // Already at top level - convert to paragraph
-            logger.log('outdentListItem: At top level, converting to paragraph');
-            convertListItemToParagraph(li);
-            return;
-        }
-
-        const grandparentList = grandparentLi.parentNode;
-
-        // Move all following siblings (within same list) to stay in the nested list
-        const followingSiblings = [];
-        let sibling = li.nextElementSibling;
-        while (sibling) {
-            followingSiblings.push(sibling);
-            sibling = sibling.nextElementSibling;
-        }
-
-        // Collect trailing sibling lists after parentList in grandparentLi
-        // These are ul/ol elements that come AFTER the current list under the same parent li.
-        // In mixed-type lists, items in these lists are visually "below" the current item,
-        // so they must be moved under the outdented item to preserve line order.
-        var trailingSiblingLists = [];
-        var nextOfParent = parentList.nextElementSibling;
-        while (nextOfParent) {
-            var nextTag = nextOfParent.tagName ? nextOfParent.tagName.toLowerCase() : '';
-            if (nextTag === 'ul' || nextTag === 'ol') {
-                trailingSiblingLists.push(nextOfParent);
-            }
-            nextOfParent = nextOfParent.nextElementSibling;
-        }
-        logger.log('outdentListItem: collected', {
-            followingSiblings: followingSiblings.length,
-            trailingSiblingLists: trailingSiblingLists.length
-        });
-
-        // Insert li after grandparent li
-        grandparentList.insertBefore(li, grandparentLi.nextElementSibling);
-
-        // If there were following siblings, keep them nested under the moved item
-        if (followingSiblings.length > 0) {
-            let newNestedList = li.querySelector('ul, ol');
-            if (!newNestedList) {
-                newNestedList = document.createElement(parentList.tagName.toLowerCase());
-                li.appendChild(newNestedList);
-            }
-            followingSiblings.forEach(s => newNestedList.appendChild(s));
-        }
-
-        // Move trailing sibling lists under the moved item to preserve line order
-        for (var i = 0; i < trailingSiblingLists.length; i++) {
-            li.appendChild(trailingSiblingLists[i]);
-        }
-
-        // Remove empty parent list
-        if (parentList.children.length === 0) {
-            parentList.remove();
-        }
-
-        // Note: Cursor position is preserved by the caller
-    }
-
-    function convertListItemToParagraph(li) {
-        logger.log('convertListItemToParagraph called', { liText: li.textContent });
-        const parentList = li.parentNode;
-        const listTagName = parentList.tagName.toLowerCase();
-
-        // Get text content (excluding checkbox if any)
-        // Also collect nested lists (ul/ol) to preserve them
-        let content = '';
-        var nestedLists = [];
-        for (const child of li.childNodes) {
-            if (child.nodeType === 3) {
-                content += child.textContent;
-            } else if (child.nodeType === 1) {
-                var childTag = child.tagName.toLowerCase();
-                if (childTag === 'ul' || childTag === 'ol') {
-                    nestedLists.push(child);
-                } else if (childTag !== 'input') {
-                    content += child.outerHTML;
-                }
-            }
-        }
-        logger.log('convertListItemToParagraph: content extracted', { content, nestedListCount: nestedLists.length });
-
-        // Collect following siblings of li in the parent list.
-        // They must be placed into a new list AFTER the paragraph to preserve line order.
-        var followingItems = [];
-        var sib = li.nextElementSibling;
-        while (sib) {
-            followingItems.push(sib);
-            sib = sib.nextElementSibling;
-        }
-        for (var j = 0; j < followingItems.length; j++) {
-            followingItems[j].remove();
-        }
-
-        // Create paragraph
-        const p = document.createElement('p');
-        p.innerHTML = content.trim() || '<br>';
-
-        // Remove the li from the list
-        li.remove();
-
-        // Determine insertion point for the paragraph:
-        // - If parentList still has children (items that preceded the target li),
-        //   insert p after parentList.
-        // - If parentList is now empty (li was the first or only item),
-        //   insert p at parentList's position and remove parentList.
-        if (parentList.children.length === 0) {
-            parentList.parentNode.insertBefore(p, parentList);
-            parentList.remove();
-        } else {
-            if (parentList.nextSibling) {
-                parentList.parentNode.insertBefore(p, parentList.nextSibling);
-            } else {
-                parentList.parentNode.appendChild(p);
-            }
-        }
-
-        // Insert elements after p in correct visual order:
-        // 1. nestedLists (children of the original li – visually below li's own text)
-        // 2. followingItems as a new list (siblings of li – visually after all of li's content)
-        var insertAfter = p;
-        for (var i = 0; i < nestedLists.length; i++) {
-            if (insertAfter.nextSibling) {
-                insertAfter.parentNode.insertBefore(nestedLists[i], insertAfter.nextSibling);
-            } else {
-                insertAfter.parentNode.appendChild(nestedLists[i]);
-            }
-            insertAfter = nestedLists[i];
-        }
-
-        if (followingItems.length > 0) {
-            var newList = document.createElement(listTagName);
-            for (var k = 0; k < followingItems.length; k++) {
-                newList.appendChild(followingItems[k]);
-            }
-            if (insertAfter.nextSibling) {
-                insertAfter.parentNode.insertBefore(newList, insertAfter.nextSibling);
-            } else {
-                insertAfter.parentNode.appendChild(newList);
-            }
-        }
-        logger.log('convertListItemToParagraph: paragraph and nested lists inserted');
-
-        logger.log('convertListItemToParagraph: li removed, setting cursor');
-
-        // Set cursor to the new paragraph
-        setCursorToEnd(p);
-
-        syncMarkdown();
-        logger.log('convertListItemToParagraph: done');
-    }
-
     // Both editable views share the document undo manager.
     sourceEditor.addEventListener('beforeinput', () => {
         if (isSourceMode) undoManager.saveSnapshotDebounced();
@@ -9336,50 +1389,6 @@ window.BinaryMath = require('../shared/math-syntax');
     let savedToolbarRange = null;
     let pendingHostInsert = null;
     let hostInsertSequence = 0;
-
-    function requestHostInsertion(action) {
-        if (pendingHostInsert || isSourceMode) return;
-        const selection = window.getSelection();
-        const range = selection && selection.rangeCount ? selection.getRangeAt(0) : null;
-        if (!editorRange(range)) return;
-        const requestId = 'insert-' + Date.now().toString(36) + '-' + (++hostInsertSequence);
-        pendingHostInsert = { requestId, action, range: range.cloneRange(), startNode: range.startContainer, endNode: range.endContainer, renderRevision: editorRenderRevision };
-        if (action === 'link') host.requestInsertLink(selection.toString() || '', requestId);
-        else host.requestInsertImage(requestId);
-    }
-
-    function finishHostInsertion(message, committed) {
-        // Clipboard/drop image responses retain their existing insertion route.
-        if (!message.requestId) return true;
-        if (!pendingHostInsert || message.requestId !== pendingHostInsert.requestId) return false;
-        const pending = pendingHostInsert;
-        if (committed && message.type !== (pending.action === 'link' ? 'insertLinkHtml' : 'insertImageHtml')) return false;
-        pendingHostInsert = null;
-        // Live Ranges collapse onto the editor when their original nodes are
-        // removed. Retain node identity so a reload cannot redirect a response.
-        if (isSourceMode || pending.renderRevision !== editorRenderRevision || !editorRange(pending.range) || !pending.startNode.isConnected || !pending.endNode.isConnected) {
-            if (committed) showEditorToast(i18n.insertUnavailableSelection);
-            return false;
-        }
-        editor.focus({ preventScroll: true });
-        const selection = window.getSelection();
-        selection.removeAllRanges();
-        selection.addRange(pending.range);
-        if (committed) {
-            markdown = readCurrentMarkdown();
-            undoManager.saveSnapshot();
-        }
-        return true;
-    }
-    function captureToolbarSelection(e) {
-        if (tableControls.owns(e.target)) return;
-        const btn = e.target.closest('button');
-        if (!btn) return;
-        const sel = window.getSelection();
-        if (sel && sel.rangeCount > 0 && editor.contains(sel.getRangeAt(0).commonAncestorContainer)) {
-            savedToolbarRange = sel.getRangeAt(0).cloneRange();
-        }
-    }
     toolbar.addEventListener('mousedown', captureToolbarSelection);
     toolbar.addEventListener('focusin', captureToolbarSelection);
 
@@ -9440,178 +1449,6 @@ window.BinaryMath = require('../shared/math-syntax');
                 break;
         }
     });
-
-    // Shared action dispatcher used by both toolbar and command palette
-    function dispatchToolbarAction(action) {
-        switch (action) {
-            case 'bold':
-                applyInlineFormat('strong');
-                syncMarkdown();
-                break;
-            case 'italic':
-                applyInlineFormat('em');
-                syncMarkdown();
-                break;
-            case 'underline':
-                toggleUnderline();
-                break;
-            case 'strikethrough':
-                applyInlineFormat('del');
-                syncMarkdown();
-                break;
-            case 'code':
-                var codeSel = window.getSelection();
-                if (codeSel.toString()) {
-                    document.execCommand('insertHTML', false, '<code>' + escapeHtml(codeSel.toString()) + '</code>');
-                    syncMarkdown();
-                }
-                break;
-            case 'heading1':
-            case 'heading2':
-            case 'heading3':
-            case 'heading4':
-            case 'heading5':
-            case 'heading6':
-                var headingLevel = action.replace('heading', '');
-                var headingLine = getCurrentLine();
-                if (headingLine) {
-                    var h = document.createElement('h' + headingLevel);
-                    h.innerHTML = headingLine.innerHTML || '<br>';
-                    headingLine.replaceWith(h);
-                    setCursorToEnd(h);
-                    syncMarkdown();
-                }
-                break;
-            case 'ul':
-                if (!convertListToType('ul')) {
-                    convertToList('ul');
-                }
-                break;
-            case 'ol':
-                if (!convertListToType('ol')) {
-                    convertToList('ol');
-                }
-                break;
-            case 'task':
-                if (!convertListToType('task')) {
-                    convertToTaskList();
-                }
-                break;
-            case 'quote':
-                var bq = document.createElement('blockquote');
-                bq.innerHTML = '<br>';
-                var currentLine3 = getCurrentLine();
-                if (currentLine3) {
-                    currentLine3.after(bq);
-                } else {
-                    editor.appendChild(bq);
-                }
-                setCursorToEnd(bq);
-                syncMarkdown();
-                break;
-            case 'codeblock': {
-                var pre = document.createElement('pre');
-                pre.setAttribute('data-lang', '');
-                pre.setAttribute('data-mode', 'display');
-                var codeEl = document.createElement('code');
-                codeEl.setAttribute('contenteditable', 'false');
-                pre.appendChild(codeEl);
-                var currentLine4 = getCurrentLine();
-                if (currentLine4) {
-                    var lineText = currentLine4.textContent?.trim() || '';
-                    if (lineText === '' || currentLine4.innerHTML === '<br>') {
-                        currentLine4.replaceWith(pre);
-                    } else {
-                        currentLine4.after(pre);
-                    }
-                } else {
-                    editor.appendChild(pre);
-                }
-                setupCodeBlockUI(pre);
-                enterEditMode(pre);
-                syncMarkdown();
-                break;
-            }
-            case 'mermaid':
-            case 'math': {
-                var preM = document.createElement('pre');
-                preM.setAttribute('data-lang', action);
-                preM.setAttribute('data-mode', 'display');
-                var codeElM = document.createElement('code');
-                codeElM.innerHTML = '<br>';
-                preM.appendChild(codeElM);
-                var currentLineM = getCurrentLine();
-                if (currentLineM) {
-                    var lineTextM = currentLineM.textContent?.trim() || '';
-                    if (lineTextM === '' || currentLineM.innerHTML === '<br>') {
-                        currentLineM.replaceWith(preM);
-                    } else {
-                        currentLineM.after(preM);
-                    }
-                } else {
-                    editor.appendChild(preM);
-                }
-                var nextSibM = preM.nextSibling;
-                var parentElM = preM.parentNode;
-                convertToSpecialBlock(preM, action);
-                var wrapperM = nextSibM ? nextSibM.previousSibling : parentElM.lastChild;
-                if (wrapperM && isSpecialWrapper(wrapperM)) {
-                    if (action === 'math') {
-                        wrapperM.dataset.mathOpen = '$$';
-                        wrapperM.dataset.mathClose = '$$';
-                        syncMarkdown();
-                    }
-                    enterSpecialWrapperEditMode(wrapperM, 'start');
-                }
-                break;
-            }
-            case 'inlineMath': {
-                const selection = window.getSelection();
-                const range = selection && selection.rangeCount ? selection.getRangeAt(0) : null;
-                if (!editorRange(range)) break;
-                const tex = selection.toString() || 'x';
-                const equation = { open: '$', close: '$', tex, raw: '$' + tex + '$' };
-                const template = document.createElement('template');
-                template.innerHTML = inlineMathHtml(equation);
-                const span = template.content.firstElementChild;
-                // insertHTML strips this noneditable span inside lists/cells.
-                // Retain the same math node and source attributes in every context.
-                range.deleteContents(); range.insertNode(span);
-                range.setStartAfter(span); range.collapse(true);
-                selection.removeAllRanges(); selection.addRange(range);
-                setupInlineMath(); syncMarkdownSync();
-                editInlineMath(span);
-                break;
-            }
-            case 'link':
-            case 'image':
-                requestHostInsertion(action);
-                break;
-            case 'toc':
-                insertManagedToc();
-                break;
-            case 'table':
-                var tableHtml = '<table><tr><th>Header 1</th><th>Header 2</th></tr><tr><td>Cell</td><td>Cell</td></tr></table>';
-                document.execCommand('insertHTML', false, tableHtml);
-                syncMarkdown();
-                break;
-            case 'hr':
-                var hr = document.createElement('hr');
-                var p = document.createElement('p');
-                p.innerHTML = '<br>';
-                var currentLine5 = getCurrentLine();
-                if (currentLine5) {
-                    currentLine5.after(hr);
-                    hr.after(p);
-                } else {
-                    editor.appendChild(hr);
-                    editor.appendChild(p);
-                }
-                setCursorToEnd(p);
-                syncMarkdown();
-                break;
-        }
-    }
 
     // ========== COMMAND PALETTE ==========
 
@@ -9678,188 +1515,6 @@ window.BinaryMath = require('../shared/math-syntax');
     const insertSamples = { inlineMath: '$x^2$', math: '$$\\frac{a+b}{c}$$', table: '| A | B |\n| --- | --- |', codeblock: '```javascript\nconst value = 1;\n```', link: '[text](https://example.com)', image: '![description](image.png)', mermaid: 'graph TD\n  A --> B', toc: '[TOC]' };
     const actionDescription = action => ['viewUndo','viewRedo'].includes(action) ? i18n.historyDescription : action.startsWith('view') ? i18n.viewDescription : i18n['insertDescription' + action[0].toUpperCase() + action.slice(1)] || (['bold','italic','underline','strikethrough','code'].includes(action) ? i18n.formatDescription : i18n.blockDescription);
     let insertSearch = null, insertCategorySelection = 'allCategory';
-
-    // Only fixed illustrative samples enter previews. These are view controls,
-    // never authored editor content or an additional command execution path.
-    function createInsertPreview(action) {
-        const preview = document.createElement('span');
-        preview.className = 'insert-preview insert-preview-' + action;
-        preview.setAttribute('aria-hidden', 'true');
-        if (action === 'table') {
-            const grid = document.createElement('span'); grid.className = 'insert-table-preview';
-            for (const value of ['A', 'B', 'C', '', '', '']) {
-                const cell = document.createElement('span'); cell.textContent = value; grid.appendChild(cell);
-            }
-            preview.appendChild(grid);
-        } else if (action === 'inlineMath' || action === 'math') {
-            const sample = action === 'inlineMath' ? 'E=mc^2' : '\\frac{a+b}{c}';
-            if (window.katex) window.katex.render(sample, preview, { throwOnError: false, trust: false, displayMode: false });
-            else preview.textContent = action === 'inlineMath' ? 'E = mc²' : '(a + b) / c';
-        } else if (action === 'codeblock') {
-            const pre = document.createElement('pre'); pre.dataset.lang = 'javascript'; const code = document.createElement('code');
-            code.className = 'language-javascript'; code.textContent = 'const value = 1;';
-            pre.appendChild(code); applyHighlighting(pre); preview.appendChild(code);
-        } else if (action === 'image') {
-            preview.innerHTML = LUCIDE_ICONS.image; // Static project-owned icon.
-        } else if (action === 'toc') {
-            preview.textContent = '1. Research notes\n   1.1 Method\n   1.2 Results';
-        } else {
-            preview.textContent = insertSamples[action];
-        }
-        return preview;
-    }
-    function filterInsertWorkspace() {
-        const query = (insertSearch?.value || '').trim().toLocaleLowerCase();
-        let visible = 0;
-        insertMenu.querySelectorAll('[data-insert-action]').forEach(item => {
-            item.hidden = Boolean((insertCategorySelection !== 'allCategory' && insertCategory[item.dataset.insertAction] !== insertCategorySelection) || (query && !(item.textContent + ' ' + item.dataset.insertAction).toLocaleLowerCase().includes(query)));
-            if (!item.hidden) visible++;
-        });
-        const empty = insertMenu.querySelector('.insert-empty');
-        if (empty) empty.hidden = visible > 0;
-        const options = insertMenu.querySelector('.insert-options');
-        if (options) options.scrollTop = 0;
-        if (!insertMenu.hidden) positionInsertMenu();
-        insertMenu.querySelectorAll('[data-insert-category]').forEach(item => item.setAttribute('aria-pressed', String(item.dataset.insertCategory === insertCategorySelection)));
-    }
-
-    function editorRange(range) {
-        return range && range.startContainer.isConnected && range.endContainer.isConnected &&
-            editor.contains(range.startContainer) && editor.contains(range.endContainer);
-    }
-
-    function insertUnavailable(action, range) {
-        if (isSourceMode) return i18n.insertUnavailableSource;
-        if (!editorRange(range)) return i18n.insertUnavailableSelection;
-        const element = node => node.nodeType === Node.ELEMENT_NODE ? node : node.parentElement;
-        const start = element(range.startContainer), end = element(range.endContainer);
-        const protectedBlock = 'pre, .math-wrapper, .mermaid-wrapper, .front-matter, .toc-block, .math-inline';
-        if (start.closest(protectedBlock) || end.closest(protectedBlock)) return i18n.insertUnavailableContext;
-        const inline = ['inlineMath', 'link', 'image'].includes(action);
-        if (!inline && (start.closest('li, td, th, blockquote') || end.closest('li, td, th, blockquote'))) {
-            return i18n.insertUnavailableBlock;
-        }
-        return '';
-    }
-
-    function insertTrigger() {
-        return insertButton?.getClientRects().length ? insertButton : toolbarMore;
-    }
-
-    function positionInsertMenu() {
-        const rect = insertTrigger().getBoundingClientRect();
-        const width = Math.min(960, Math.max(0, window.innerWidth - 16));
-        insertMenu.style.width = width + 'px';
-        insertMenu.style.left = Math.max(8, Math.min(rect.left, window.innerWidth - width - 8)) + 'px';
-        insertMenu.style.top = Math.max(8, Math.min(rect.bottom + 4, window.innerHeight - 320)) + 'px';
-        insertMenu.style.maxHeight = Math.max(80, window.innerHeight - parseFloat(insertMenu.style.top) - 8) + 'px';
-        const options = insertMenu.querySelector('.insert-options');
-        if (options) {
-            options.style.maxHeight = '';
-            if (window.innerWidth <= 760) {
-                const available = window.innerHeight - parseFloat(insertMenu.style.top)
-                    - insertMenu.querySelector('.insert-search').getBoundingClientRect().height
-                    - insertMenu.querySelector('.insert-categories').getBoundingClientRect().height - 64;
-                let used = 16;
-                const rows = [...options.querySelectorAll('.insert-command:not([hidden])')];
-                for (const row of rows) {
-                    const pitch = row.getBoundingClientRect().height + 8;
-                    if (used + pitch > available) break;
-                    used += pitch;
-                }
-                const tallest = Math.max(0, ...rows.map(row => row.getBoundingClientRect().height)) + 16;
-                options.style.maxHeight = Math.max(80, Math.min(available, Math.max(used, tallest))) + 'px';
-            }
-        }
-        requestAnimationFrame(updateInsertScroll);
-    }
-
-    function updateInsertScroll() {
-        const list = insertMenu.querySelector('.insert-options');
-        const footer = insertMenu.querySelector('.insert-scroll');
-        if (!list || !footer) return;
-        const rows = [...list.querySelectorAll('.insert-command:not([hidden])')];
-        const overflow = list.scrollHeight > list.clientHeight + 1;
-        footer.hidden = !overflow;
-        const bounds = list.getBoundingClientRect();
-        const narrow = window.innerWidth <= 760;
-        const visible = [];
-        rows.forEach((row, index) => {
-            const rect = row.getBoundingClientRect();
-            const complete = rect.top >= bounds.top + 7 && rect.bottom <= bounds.bottom - 7;
-            row.classList.toggle('insert-command-clipped', narrow && !complete);
-            if (complete) visible.push(index);
-        });
-        const atEnd = list.scrollTop + list.clientHeight >= list.scrollHeight - 1;
-        footer.querySelector('[data-direction="previous"]').disabled = list.scrollTop <= 1;
-        footer.querySelector('[data-direction="next"]').disabled = atEnd;
-        if (narrow && atEnd && visible.length) {
-            // Whole-card clipping can leave a partial preceding card's empty
-            // space above the final page. Fit that page to its complete rows,
-            // preserving the bottom anchor and every command's hit target.
-            const gap = rows[visible[0]].getBoundingClientRect().top - bounds.top - 8;
-            if (gap > 8) {
-                list.style.maxHeight = Math.max(80, list.clientHeight - gap) + 'px';
-                list.scrollTop = list.scrollHeight;
-                requestAnimationFrame(updateInsertScroll);
-                return;
-            }
-        }
-        footer.querySelector('output').textContent = visible.length ? (visible[0] + 1) + '–' + (visible.at(-1) + 1) + ' / ' + rows.length : String(rows.length);
-    }
-
-    function restoreInsertRange() {
-        if (!editorRange(insertMenuRange)) return false;
-        const selection = window.getSelection();
-        selection.removeAllRanges();
-        selection.addRange(insertMenuRange);
-        return true;
-    }
-
-    function focusInsertChoice(choice) {
-        const list = insertMenu.querySelector('.insert-options');
-        const bounds = list.getBoundingClientRect(), rect = choice.getBoundingClientRect();
-        if (rect.top < bounds.top + 8) list.scrollTop += rect.top - bounds.top - 8;
-        else if (rect.bottom > bounds.bottom - 8) list.scrollTop += rect.bottom - bounds.bottom + 8;
-        // Reveal the whole card before focusing: a visibility-hidden partial
-        // card cannot accept keyboard focus in a narrow workspace.
-        updateInsertScroll(); choice.focus({ preventScroll: true });
-    }
-
-    function closeInsertMenu(restoreFocus) {
-        if (!insertMenu) return;
-        insertMenu.hidden = true;
-        insertButton?.setAttribute('aria-expanded', 'false');
-        restoreInsertRange();
-        if (restoreFocus) insertTrigger().focus({ preventScroll: true });
-    }
-
-    function openInsertMenu(last) {
-        const selection = window.getSelection();
-        const current = selection && selection.rangeCount ? selection.getRangeAt(0) : null;
-        insertMenuRange = editorRange(current) ? current.cloneRange()
-            : editorRange(savedToolbarRange) ? savedToolbarRange.cloneRange() : null;
-        if (!insertMenuRange) {
-            insertMenuRange = document.createRange();
-            insertMenuRange.selectNodeContents(editor);
-            insertMenuRange.collapse(false);
-        }
-        toolbar.dispatchEvent(new CustomEvent('toolbar-submenu-open', { bubbles: true }));
-        for (const item of insertMenu.querySelectorAll('button[data-insert-action]')) {
-            const reason = insertUnavailable(item.dataset.insertAction, insertMenuRange);
-            item.setAttribute('aria-disabled', String(Boolean(reason)));
-            const description = item.querySelector('small');
-            description.textContent = reason || actionDescription(item.dataset.insertAction);
-            description.hidden = false;
-        }
-        insertMenu.hidden = false;
-        insertButton?.setAttribute('aria-expanded', 'true');
-        insertSearch.value = ''; insertCategorySelection = 'allCategory'; filterInsertWorkspace();
-        positionInsertMenu();
-        const choices = [...insertMenu.querySelectorAll('button[data-insert-action]')];
-        if (last) focusInsertChoice(choices.at(-1));
-        else insertSearch.focus({ preventScroll: true });
-    }
 
     if (insertMenu) {
         const searchBar = document.createElement('div'); searchBar.className = 'insert-search';
@@ -10001,412 +1656,13 @@ window.BinaryMath = require('../shared/math-syntax');
     var commandPaletteCategory = '';
     var commandPaletteCount = null;
 
-    function parseI18nLabel(i18nKey) {
-        var fullText = i18n[i18nKey] || i18nKey;
-        var match = fullText.match(/^(.+?)\s*\((.+)\)$/);
-        if (match) {
-            return { label: match[1], shortcut: match[2] };
-        }
-        return { label: fullText, shortcut: '' };
-    }
-
-    function createCommandPalette() {
-        if (commandPalette) return;
-
-        commandPalette = document.createElement('div');
-        commandPalette.id = 'commandPalette';
-        commandPalette.className = 'command-palette';
-        commandPalette.setAttribute('role', 'dialog'); commandPalette.setAttribute('aria-label', i18n.allActions);
-        commandPalette.style.display = 'none';
-
-        // Search area
-        var searchDiv = document.createElement('div');
-        searchDiv.className = 'command-palette-search';
-        commandPaletteInput = document.createElement('input');
-        commandPaletteInput.type = 'text';
-        commandPaletteInput.setAttribute('aria-label', i18n.commandPaletteFilter);
-        commandPaletteInput.className = 'command-palette-input';
-        commandPaletteInput.placeholder = i18n.commandPaletteFilter || 'Type to filter...';
-        searchDiv.appendChild(commandPaletteInput);
-        commandPalette.appendChild(searchDiv);
-
-        const categories = document.createElement('div'); categories.className = 'command-palette-categories';
-        categories.setAttribute('role', 'group'); categories.setAttribute('aria-label', i18n.commandPaletteFilter);
-        for (const key of ['', ...Object.keys(COMMAND_PALETTE_GROUPS)]) {
-            const category = document.createElement('button'); category.type = 'button'; category.dataset.paletteCategory = key;
-            category.textContent = key ? COMMAND_PALETTE_GROUPS[key]() : i18n.allCategory;
-            category.addEventListener('click', () => { commandPaletteCategory = key; renderCommandPaletteItems(commandPaletteInput.value); commandPaletteInput.focus(); });
-            categories.appendChild(category);
-        }
-        commandPalette.appendChild(categories);
-
-        // List area
-        commandPaletteList = document.createElement('div');
-        commandPaletteList.className = 'command-palette-list';
-        commandPalette.appendChild(commandPaletteList);
-        commandPaletteCount = document.createElement('output'); commandPaletteCount.className = 'command-palette-count';
-        commandPaletteCount.setAttribute('aria-live', 'polite'); commandPalette.appendChild(commandPaletteCount);
-
-        // Prevent focus loss when clicking palette (except input)
-        commandPalette.addEventListener('mousedown', function(e) {
-            if (e.target === commandPaletteInput) return;
-            e.preventDefault();
-        });
-
-        // Handle item click
-        commandPaletteList.addEventListener('click', function(e) {
-            var item = e.target.closest('.command-palette-item');
-            if (!item) return;
-            executeCommandPaletteAction(item.dataset.action);
-        });
-
-        // Unify hover and keyboard selection: mousemove moves .selected
-        commandPaletteList.addEventListener('mousemove', function(e) {
-            var item = e.target.closest('.command-palette-item');
-            if (!item) return;
-            if (item.classList.contains('selected')) return;
-            var prev = commandPaletteList.querySelector('.command-palette-item.selected');
-            if (prev) prev.classList.remove('selected');
-            item.classList.add('selected');
-        });
-
-        // Handle input for filtering
-        commandPaletteInput.addEventListener('input', function() {
-            renderCommandPaletteItems(commandPaletteInput.value);
-        });
-
-        // Handle keyboard navigation within the palette
-        commandPaletteInput.addEventListener('keydown', function(e) {
-            if (e.key === 'ArrowDown') {
-                e.preventDefault();
-                moveCommandPaletteSelection(1);
-            } else if (e.key === 'ArrowUp') {
-                e.preventDefault();
-                moveCommandPaletteSelection(-1);
-            } else if (e.key === 'Enter') {
-                e.preventDefault();
-                var selected = commandPaletteList.querySelector('.command-palette-item.selected');
-                if (selected) {
-                    executeCommandPaletteAction(selected.dataset.action);
-                }
-            } else if (e.key === 'Escape') {
-                e.preventDefault();
-                closeCommandPalette();
-            }
-        });
-
-        document.body.appendChild(commandPalette);
-    }
-
-    function commandItemLabel(item) {
-        return item.action === 'viewExport'
-            ? { label: document.getElementById('exportButton').getAttribute('aria-label'), shortcut: '' }
-            : parseI18nLabel(item.i18nKey);
-    }
-
-    function matchingCommandItems(filter) {
-        const query = (filter || '').trim().toLocaleLowerCase();
-        return COMMAND_PALETTE_ITEMS.filter(item => {
-            if (item.action === 'viewExport' && !document.getElementById('exportButton')) return false;
-            const parsed = commandItemLabel(item);
-            return !query || [parsed.label, item.action, parsed.shortcut, actionDescription(item.action)]
-                .join(' ').toLocaleLowerCase().includes(query);
-        });
-    }
-
-    function createCommandItem(item) {
-        const parsed = commandItemLabel(item);
-        const isMac = navigator.platform.toUpperCase().includes('MAC');
-        var el = document.createElement('button'); el.type = 'button';
-        el.className = 'command-palette-item';
-        el.dataset.action = item.action;
-        if (item.action === 'viewUndo') el.disabled = !undoManager.canUndo;
-        if (item.action === 'viewRedo') el.disabled = !undoManager.canRedo;
-
-        // Icon
-        var iconSpan = document.createElement('span');
-        iconSpan.className = 'command-palette-icon';
-        iconSpan.innerHTML = LUCIDE_ICONS[item.icon] || '';
-        el.appendChild(iconSpan);
-
-        // Label
-        var labelSpan = document.createElement('span');
-        labelSpan.className = 'command-palette-label';
-        labelSpan.textContent = parsed.label;
-        const description = document.createElement('small'); description.textContent = actionDescription(item.action);
-        labelSpan.appendChild(description);
-        el.appendChild(labelSpan);
-
-        // Shortcut
-        if (parsed.shortcut) {
-            var shortcutSpan = document.createElement('span');
-            shortcutSpan.className = 'command-palette-shortcut';
-            shortcutSpan.textContent = isMac ? parsed.shortcut.replace(/Ctrl/g, 'Cmd') : parsed.shortcut;
-            el.appendChild(shortcutSpan);
-        }
-
-        return el;
-    }
-
-    function renderCommandPaletteItems(filter) {
-        commandPaletteList.innerHTML = '';
-
-        var currentGroup = null;
-        var visibleIndex = 0;
-
-        for (const item of matchingCommandItems(filter)) {
-            if (commandPaletteCategory && item.group !== commandPaletteCategory) continue;
-            // Insert group header if new group
-            if (item.group !== currentGroup) {
-                currentGroup = item.group;
-                var groupLabel = document.createElement('div');
-                groupLabel.className = 'command-palette-group-label';
-                groupLabel.textContent = COMMAND_PALETTE_GROUPS[item.group]();
-                commandPaletteList.appendChild(groupLabel);
-            }
-
-            const el = createCommandItem(item);
-            if (visibleIndex === 0) el.classList.add('selected');
-            commandPaletteList.appendChild(el);
-            visibleIndex++;
-        }
-        if (!visibleIndex) {
-            const empty = document.createElement('p'); empty.className = 'command-palette-empty'; empty.setAttribute('role', 'status');
-            empty.textContent = i18n.noMatchingActions + '. ' + i18n.searchRecovery; commandPaletteList.appendChild(empty);
-            const clear = document.createElement('button'); clear.type = 'button'; clear.className = 'command-palette-clear'; clear.textContent = i18n.clearSearch;
-            clear.addEventListener('click', event => { event.stopPropagation(); commandPaletteInput.value = ''; commandPaletteCategory = ''; renderCommandPaletteItems(''); commandPaletteInput.focus(); });
-            commandPaletteList.appendChild(clear);
-        }
-        commandPalette.querySelectorAll('[data-palette-category]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.paletteCategory === commandPaletteCategory)));
-        commandPaletteCount.textContent = (i18n.paletteActionCount || '{count} actions').replace('{count}', String(visibleIndex));
-    }
-
-    function moveCommandPaletteSelection(direction) {
-        var items = commandPaletteList.querySelectorAll('.command-palette-item:not(:disabled)');
-        if (items.length === 0) return;
-
-        var currentIdx = -1;
-        for (var i = 0; i < items.length; i++) {
-            if (items[i].classList.contains('selected')) {
-                currentIdx = i;
-                break;
-            }
-        }
-
-        if (currentIdx >= 0) {
-            items[currentIdx].classList.remove('selected');
-        }
-
-        var newIdx = currentIdx + direction;
-        if (newIdx < 0) newIdx = items.length - 1;
-        if (newIdx >= items.length) newIdx = 0;
-
-        items[newIdx].classList.add('selected');
-        // Temporarily disable pointer-events to prevent mousemove from
-        // overriding keyboard selection when scrollIntoView moves items
-        // under the stationary mouse cursor
-        commandPaletteList.style.pointerEvents = 'none';
-        items[newIdx].scrollIntoView({ block: 'nearest' });
-        requestAnimationFrame(function() {
-            if (commandPaletteList) commandPaletteList.style.pointerEvents = '';
-        });
-    }
-
-    function commandPaletteOutsideClickHandler(e) {
-        if (commandPalette && !commandPalette.contains(e.target)) {
-            closeCommandPalette();
-        }
-    }
-
-    function stopCommandPaletteOutsideClicks() {
-        clearTimeout(commandPaletteOutsideClickTimer);
-        commandPaletteOutsideClickTimer = null;
-        document.removeEventListener('click', commandPaletteOutsideClickHandler);
-    }
-
-    function commandPaletteRepositionHandler() {
-        if (commandPaletteVisible) closeCommandPalette();
-    }
-
-    function openCommandPalette() {
-        if (isSourceMode) return;
-        stopCommandPaletteOutsideClicks();
-        closeToolbarOverflow(false);
-        createCommandPalette();
-
-        // Save editor selection
-        var sel = window.getSelection();
-        if (sel && sel.rangeCount > 0) {
-            commandPaletteSavedRange = sel.getRangeAt(0).cloneRange();
-        } else {
-            commandPaletteSavedRange = null;
-        }
-
-        // Get cursor line rect for positioning
-        var anchorRect = null;
-        if (commandPaletteSavedRange) {
-            var rects = commandPaletteSavedRange.getClientRects();
-            if (rects.length > 0 && (rects[0].width > 0 || rects[0].height > 0)) {
-                anchorRect = rects[0];
-            }
-            // Collapsed range at empty line may return zero rect - use parent element
-            if (!anchorRect) {
-                var node = commandPaletteSavedRange.startContainer;
-                var el = node.nodeType === 3 ? node.parentElement : node;
-                if (el && el.getBoundingClientRect) {
-                    var elRect = el.getBoundingClientRect();
-                    if (elRect.height > 0) anchorRect = elRect;
-                }
-            }
-        }
-        if (!anchorRect) {
-            anchorRect = toolbar.getBoundingClientRect();
-        }
-
-        // Position below cursor line (or above if not enough space below)
-        commandPaletteCategory = ''; commandPaletteInput.value = ''; renderCommandPaletteItems('');
-        commandPalette.style.maxHeight = Math.max(120, window.innerHeight - 16) + 'px';
-        commandPalette.style.display = 'flex';
-        var paletteHeight = commandPalette.getBoundingClientRect().height;
-        var paletteWidth = Math.min(360, window.innerWidth - 16);
-        var top, left;
-
-        if (anchorRect.bottom + paletteHeight + 4 <= window.innerHeight) {
-            // Below cursor line
-            top = anchorRect.bottom + 4;
-        } else {
-            // Above cursor line
-            top = anchorRect.top - paletteHeight - 4;
-            if (top < 0) top = 4;
-        }
-        left = anchorRect.left;
-
-        if (left + paletteWidth > window.innerWidth) {
-            left = window.innerWidth - paletteWidth - 8;
-        }
-        if (left < 4) left = 4;
-
-        commandPalette.style.top = top + 'px';
-        commandPalette.style.left = left + 'px';
-        commandPalette.style.display = 'flex';
-        commandPaletteVisible = true;
-        for (const id of ['formatButton', 'allActionsButton']) document.getElementById(id)?.setAttribute('aria-expanded', 'true');
-
-        // Show selection highlight via CSS Custom Highlight API (persists when input gets focus)
-        if (commandPaletteSavedRange && !commandPaletteSavedRange.collapsed && CSS.highlights) {
-            CSS.highlights.set('command-palette-selection', new Highlight(commandPaletteSavedRange));
-        }
-
-        // Focus the input
-        requestAnimationFrame(function() {
-            commandPaletteInput.focus();
-        });
-
-        // Close on click outside
-        commandPaletteOutsideClickTimer = setTimeout(function() {
-            commandPaletteOutsideClickTimer = null;
-            if (commandPaletteVisible) document.addEventListener('click', commandPaletteOutsideClickHandler);
-        }, 0);
-
-        // Close on scroll/resize
-        window.addEventListener('resize', commandPaletteRepositionHandler);
-        editor.addEventListener('scroll', commandPaletteRepositionHandler);
-    }
-
-    function closeCommandPalette() {
-        if (!commandPalette || !commandPaletteVisible) return;
-
-        commandPalette.style.display = 'none';
-        commandPaletteVisible = false;
-        for (const id of ['formatButton', 'allActionsButton']) document.getElementById(id)?.setAttribute('aria-expanded', 'false');
-        stopCommandPaletteOutsideClicks();
-        window.removeEventListener('resize', commandPaletteRepositionHandler);
-        editor.removeEventListener('scroll', commandPaletteRepositionHandler);
-
-        // Remove custom highlight
-        if (CSS.highlights) CSS.highlights.delete('command-palette-selection');
-
-        // Restore editor focus and selection without scrolling
-        editor.focus({ preventScroll: true });
-        if (commandPaletteSavedRange) {
-            var sel = window.getSelection();
-            sel.removeAllRanges();
-            sel.addRange(commandPaletteSavedRange);
-            commandPaletteSavedRange = null;
-        }
-    }
-
-    function executeCommandPaletteAction(action) {
-        if ((action === 'viewUndo' && !undoManager.canUndo) || (action === 'viewRedo' && !undoManager.canRedo)) return;
-        // Close palette
-        commandPalette.style.display = 'none';
-        commandPaletteVisible = false;
-        for (const id of ['formatButton', 'allActionsButton']) document.getElementById(id)?.setAttribute('aria-expanded', 'false');
-        stopCommandPaletteOutsideClicks();
-        window.removeEventListener('resize', commandPaletteRepositionHandler);
-        editor.removeEventListener('scroll', commandPaletteRepositionHandler);
-
-        // Remove custom highlight
-        if (CSS.highlights) CSS.highlights.delete('command-palette-selection');
-
-        // Restore editor focus and selection without scrolling
-        editor.focus({ preventScroll: true });
-        if (commandPaletteSavedRange) {
-            var sel = window.getSelection();
-            sel.removeAllRanges();
-            sel.addRange(commandPaletteSavedRange);
-            commandPaletteSavedRange = null;
-        }
-
-        executeEditorCommand(action);
-    }
-
-    function executeEditorCommand(action) {
-        const views = {
-            viewUndo: () => undoManager.undo(), viewRedo: () => undoManager.redo(),
-            viewInsert: () => openInsertMenu(false), viewContextual: () => document.getElementById('contextToolbarToggle')?.click(),
-            viewVisual: () => setEditorMode('visual'), viewSource: () => setEditorMode('source'), viewSplit: () => setEditorMode('split'),
-            viewOutline: openSidebar, viewFind: () => openSearchBox(false), viewReplace: () => openSearchBox(true),
-            viewExport: () => document.getElementById('exportButton')?.click(),
-        };
-        if (views[action]) { views[action](); return; }
-        // Save undo snapshot before action
-        if (!['link', 'image', 'underline'].includes(action)) {
-            undoManager.saveSnapshot();
-            markAsEdited();
-        }
-
-        // Dispatch via shared function (same as toolbar)
-        dispatchToolbarAction(action);
-        if (insertActions.includes(action) && !['link', 'image', 'toc'].includes(action)) syncMarkdownSync();
-    }
-
     // ========== UTILITIES ==========
 
     // Sidebar toggle functions
     const openSidebarBtn = document.getElementById('openSidebarBtn');
     const closeSidebarBtn = document.getElementById('closeSidebar');
     const sidebarResizer = document.getElementById('sidebarResizer');
-    
-    function setSidebarOpen(open) {
-        sidebar.dataset.overlayOpen = String(open && innerWidth <= 700);
-        sidebar.classList.toggle('hidden', !open);
-        openSidebarBtn.classList.toggle('hidden', open);
-        if (!open) {
-            // Clear inline width so .hidden class can take effect
-            sidebar.style.width = '';
-        }
-        host.reportOutlineState(open);
-    }
 
-    function openSidebar() {
-        setSidebarOpen(true);
-    }
-    
-    function closeSidebar() {
-        setSidebarOpen(false);
-    }
-    
     // Close sidebar button handler
     closeSidebarBtn.addEventListener('click', function() {
         closeSidebar();
@@ -10430,7 +1686,7 @@ window.BinaryMath = require('../shared/math-syntax');
     let isResizing = false;
     let startX = 0;
     let startWidth = 0;
-    
+
     sidebarResizer.addEventListener('mousedown', function(e) {
         isResizing = true;
         startX = e.clientX;
@@ -10440,14 +1696,14 @@ window.BinaryMath = require('../shared/math-syntax');
         document.body.style.userSelect = 'none';
         e.preventDefault();
     });
-    
+
     document.addEventListener('mousemove', function(e) {
         if (!isResizing) return;
         const diff = e.clientX - startX;
         const newWidth = Math.min(Math.max(startWidth + diff, 150), 500);
         sidebar.style.width = newWidth + 'px';
     });
-    
+
     document.addEventListener('mouseup', function() {
         if (isResizing) {
             isResizing = false;
@@ -10456,415 +1712,32 @@ window.BinaryMath = require('../shared/math-syntax');
             document.body.style.userSelect = '';
         }
     });
-
-    function applyPreviewReadOnly() {
-        editor.contentEditable = isSourceMode ? 'false' : 'true';
-        if (!isSourceMode) return;
-        editor.querySelectorAll('[contenteditable]').forEach(node => { node.contentEditable = 'false'; });
-        editor.querySelectorAll('button,input,textarea,select').forEach(node => { node.disabled = true; });
-    }
-
-    function scheduleSplitPreview() {
-        clearTimeout(splitRenderTimer);
-        if (!isSplitMode) return;
-        splitRenderTimer = setTimeout(() => {
-            const scroll = editor.scrollTop;
-            markdown = sourceEditor.value;
-            renderFromMarkdown();
-            editor.scrollTop = scroll;
-            updateOutline();
-            updateSourceCorrespondence(false);
-        }, 150);
-    }
-
-    function sourceHeadings() {
-        const headings = [];
-        const frontLines = documentAux.splitFrontMatter(readCommittedMarkdown()).raw.split('\n').length - 1;
-        const visit = block => {
-            if (block.type === 'heading' && block.map) {
-                const text = block.children.find(child => child.type === 'inline')?.content || '';
-                headings.push({ text, level: Number(block.tag?.slice(1)) || 1, line: block.map[0] + frontLines });
-            }
-            block.children.forEach(visit);
-        };
-        window.BinaryMarkdownBlocks.parse(readCommittedMarkdown(), { backslashDelimiters: mathBackslashDelimiters }).blocks.forEach(visit);
-        return headings;
-    }
-
-    function sourceOffset(line) {
-        const lines = sourceEditor.value.split('\n');
-        return lines.slice(0, line).reduce((offset, text) => offset + text.length + 1, 0);
-    }
-
-    function updateSourceCorrespondence(scroll = true) {
-        if (!isSourceMode) return;
-        const line = sourceEditor.value.slice(0, sourceEditor.selectionStart || 0).split('\n').length - 1;
-        const headings = sourceHeadings();
-        let index = -1;
-        headings.forEach((heading, i) => { if (heading.line <= line) index = i; });
-        const nodes = [...editor.querySelectorAll('h1,h2,h3,h4,h5,h6')];
-        nodes.forEach((node, i) => node.classList.toggle('source-correspondence', isSplitMode && i === index));
-        if (workspaceUi) workspaceUi.markSourceHeading(headings[index]?.line);
-        if (index >= 0) setActiveOutlineItem(index, false);
-        if (isSplitMode && scroll && nodes[index]) nodes[index].scrollIntoView({ block: 'nearest' });
-        const position = document.getElementById('documentPosition');
-        if (position) position.textContent = (i18n.sourceLine || 'Source line') + ' ' + (line + 1);
-    }
-
-    function sourceDomPositions(source) {
-        const positions = []; let boundary = 0;
-        for (const block of editor.children) {
-            let raw = block.dataset.mdSource ? decodeURIComponent(block.dataset.mdSource) : '';
-            let at = raw ? source.indexOf(raw, boundary) : -1;
-            if (at < 0) { raw = mdProcessNode(block).trimEnd(); at = raw ? source.indexOf(raw, boundary) : -1; }
-            if (at < 0) continue;
-            boundary = at + raw.length;
-            const walker = document.createTreeWalker(block, NodeFilter.SHOW_TEXT, { acceptNode(node) {
-                return node.parentElement?.closest('.code-block-header,.block-chrome,.document-aux,.math-display,.mermaid-diagram,.math-inline') ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT;
-            } });
-            let cursor = 0, node;
-            while ((node = walker.nextNode())) {
-                if (!node.textContent) continue;
-                const found = raw.indexOf(node.textContent, cursor);
-                if (found < 0) continue;
-                positions.push({ node, start: at + found, end: at + found + node.textContent.length }); cursor = found + node.textContent.length;
-            }
-        }
-        return positions;
-    }
-    function sourceSelectionFromVisual(source) {
-        const selection = window.getSelection();
-        const range = editorRange(savedToolbarRange) ? savedToolbarRange : selection?.rangeCount ? selection.getRangeAt(0) : null;
-        if (!editorRange(range)) return null;
-        const positions = sourceDomPositions(source);
-        const start = positions.find(item => item.node === range.startContainer);
-        const end = positions.find(item => item.node === range.endContainer);
-        if (start && end) return { start: start.start + range.startOffset, end: end.start + range.endOffset, scroll: 0 };
-        return null;
-    }
-    function restoreVisualFromSource(start, end) {
-        const positions = sourceDomPositions(markdown);
-        const first = positions.find(item => start >= item.start && start <= item.end);
-        const last = positions.findLast(item => end >= item.start && end <= item.end);
-        if (!first || !last) return false;
-        const range = document.createRange(); range.setStart(first.node, start - first.start); range.setEnd(last.node, end - last.start);
-        const selection = window.getSelection(); selection.removeAllRanges(); selection.addRange(range);
-        first.node.parentElement.scrollIntoView({ block: 'nearest' }); return true;
-    }
-
-    function setEditorMode(mode) {
-        if (!['visual', 'source', 'split'].includes(mode)) return;
-        const previous = isSplitMode ? 'split' : isSourceMode ? 'source' : 'visual';
-        if (mode === previous) return;
-        closeInsertMenu(false);
-        closeLanguageSelector();
-        hideTableToolbar();
-        if (typeof closeSearchBox === 'function' && searchReplaceBox.style.display !== 'none') closeSearchBox();
-        markdown = readCurrentMarkdown();
-        cancelScheduledSync();
-        clearTimeout(splitRenderTimer);
-        if (!isSourceMode) { visualModeCursor = saveCursorState(); sourceModeSelection = sourceSelectionFromVisual(markdown) || sourceModeSelection; }
-        else sourceModeSelection = { start: sourceEditor.selectionStart, end: sourceEditor.selectionEnd, scroll: sourceEditor.scrollTop };
-        isSourceMode = mode !== 'visual';
-        isSplitMode = mode === 'split';
-        document.documentElement.dataset.editorMode = mode;
-        sourceEditor.style.display = isSourceMode ? 'block' : 'none';
-        editor.style.display = mode === 'source' ? 'none' : 'block';
-        for (const id of ['sourcePaneHeading', 'previewPaneHeading']) { const label = document.getElementById(id); if (label) label.hidden = !isSplitMode; }
-        if (isSourceMode) {
-            sourceEditor.value = markdown;
-            if (isSplitMode) renderFromMarkdown();
-            sourceEditor.focus({ preventScroll: true });
-            sourceEditor.setSelectionRange(sourceModeSelection.start, sourceModeSelection.end);
-            sourceEditor.scrollTop = sourceModeSelection.scroll;
-        } else {
-            renderFromMarkdown();
-            editor.focus({ preventScroll: true });
-            if (!restoreVisualFromSource(sourceModeSelection.start, sourceModeSelection.end) && visualModeCursor) restoreCursorState(visualModeCursor);
-        }
-        savedToolbarRange = null;
-        document.querySelectorAll('button[data-editor-mode]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.editorMode === mode)));
-        toolbarActions.filter(item => item.formatting || item.button.dataset.action === 'insertMenu').forEach(item => { item.button.disabled = isSourceMode; });
-        for (const id of ['formatButton', 'allActionsButton']) {
-            const control = document.getElementById(id);
-            if (control) control.disabled = isSourceMode;
-        }
-        const help = document.getElementById('modeHelp');
-        if (help) { help.hidden = !isSourceMode; help.textContent = isSplitMode ? i18n.splitHelp : i18n.insertUnavailableSource; }
-        notifyChangeImmediate();
-        updateOutline();
-        updateWordCount();
-        updateWidthIndicators();
-        updateSourceCorrespondence();
-        if (workspaceUi) workspaceUi.refresh();
-    }
-
-    function toggleSourceMode() { setEditorMode(isSourceMode ? 'visual' : 'source'); }
     document.querySelectorAll('button[data-editor-mode]').forEach(button => button.addEventListener('click', () => setEditorMode(button.dataset.editorMode)));
     for (const type of ['click', 'beforeinput']) editor.addEventListener(type, event => {
         if (isSourceMode) { event.preventDefault(); event.stopImmediatePropagation(); }
     }, true);
     for (const type of ['select', 'keyup']) sourceEditor.addEventListener(type, () => updateSourceCorrespondence());
 
-    // Immediate notification - called after debounce in debouncedSync
-    function notifyChangeImmediate() {
-        // Only save if user has made edits (prevents saving on initial load)
-        if (!hasUserEdited) return;
-        host.syncContent(markdown);
-        updateOutline();
-        updateWordCount();
-        updateStatus();
-    }
-
-    // Debounced notification - for syncMarkdown() calls
-    function notifyChange() {
-        // Only save if user has made edits (prevents saving on initial load)
-        if (!hasUserEdited) return;
-        clearTimeout(saveTimeout);
-        const generation = syncGeneration;
-        saveTimeout = setTimeout(() => {
-            saveTimeout = null;
-            if (generation !== syncGeneration) return;
-            host.syncContent(markdown);
-            updateOutline();
-            updateWordCount();
-            updateStatus();
-        }, 300);
-    }
-    
-    // Mark document as edited by user
-    function markAsEdited() {
-        visualSourceCurrent = false;
-        clientRevision++;
-        if (!hasUserEdited) {
-            hasUserEdited = true;
-            logger.log('Document marked as edited by user');
-        }
-    }
-
-    /**
-     * Mark the user as actively editing. Resets the idle timer.
-     * While actively editing, external changes are queued instead of applied.
-     */
-    function markActivelyEditing() {
-        const wasIdle = !isActivelyEditing;
-        isActivelyEditing = true;
-
-        if (wasIdle) {
-            host.reportEditingState(true);
-        }
-
-        clearTimeout(editingIdleTimer);
-        editingIdleTimer = setTimeout(function() {
-            // Flush any pending sync before going idle
-            if (pendingSync) {
-                clearTimeout(syncTimeout);
-                syncTimeout = null;
-                markdown = htmlToMarkdown();
-                notifyChangeImmediate();
-                pendingSync = false;
-            }
-
-            isActivelyEditing = false;
-            host.reportEditingState(false);
-
-            // Apply queued external changes now that we're idle
-            applyQueuedExternalChange();
-        }, EDITING_IDLE_TIMEOUT);
-    }
-
-    /**
-     * Apply queued external change with cursor preservation.
-     */
-    function applyQueuedExternalChange() {
-        if (queuedExternalContent === null) return;
-
-        logger.log('[Binary Markdown] applying queued external change');
-        markdown = queuedExternalContent;
-        queuedExternalContent = null;
-        currentImageDir = extractImageDirFromMarkdown(markdown);
-        currentForceRelativePath = extractForceRelativePathFromMarkdown(markdown);
-        if (isSourceMode) {
-            sourceEditor.value = markdown;
-        } else {
-            updateFromMarkdown();
-        }
-        updateOutline();
-        updateWordCount();
-        updateStatus();
-    }
-
-    function updateOutline() {
-        assignHeadingAnchors(editor, readCommittedMarkdown());
-        const headings = editor.querySelectorAll('h1, h2, h3, h4, h5, h6');
-        const headingsArray = Array.from(headings);
-        const sourceItems = isSourceMode ? sourceHeadings() : null;
-        outlineHeadings = headingsArray;
-        outline.innerHTML = (sourceItems || headingsArray).map((h, i) => {
-            const level = sourceItems ? h.level : h.tagName[1];
-            return '<button type="button" class="outline-item" data-level="' + level + '" data-index="' + i + '">' + escapeHtml(sourceItems ? h.text : h.textContent) + '</button>';
-        }).join('');
-        // The links were recreated, so reapply the active state even if the
-        // numerical heading index did not change.
-        activeOutlineIndex = -1;
-
-        outline.querySelectorAll('.outline-item').forEach(item => {
-            item.addEventListener('click', () => {
-                const idx = parseInt(item.dataset.index);
-                if (isSourceMode && sourceItems[idx]) {
-                    const offset = sourceOffset(sourceItems[idx].line);
-                    sourceEditor.focus({ preventScroll: true });
-                    sourceEditor.setSelectionRange(offset, offset);
-                    // A textarea's selection is not automatically revealed by setSelectionRange.
-                    const lineHeight = parseFloat(getComputedStyle(sourceEditor).lineHeight) || 21;
-                    sourceEditor.scrollTop = Math.max(0, sourceItems[idx].line * lineHeight - sourceEditor.clientHeight / 3);
-                    updateSourceCorrespondence();
-                    return;
-                }
-                if (headingsArray[idx]) {
-                    setActiveOutlineItem(idx, false);
-                    const wrapper = editorWrapper || editor.closest('.editor-wrapper');
-                    if (wrapper) {
-                        const wrapperRect = wrapper.getBoundingClientRect();
-                        const headingRect = headingsArray[idx].getBoundingClientRect();
-                        wrapper.scrollTo({ top: wrapper.scrollTop + headingRect.top - wrapperRect.top, behavior: 'smooth' });
-                    } else {
-                        headingsArray[idx].scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    }
-                }
-            });
-        });
-
-        updateActiveOutlineItem();
-        if (isSourceMode) updateSourceCorrespondence(false);
-        if (workspaceUi) workspaceUi.refresh();
-    }
-
-    function setActiveOutlineItem(index, ensureVisible = true) {
-        const items = outline.querySelectorAll('.outline-item');
-        if (!items.length) {
-            activeOutlineIndex = -1;
-            return;
-        }
-
-        const boundedIndex = Math.max(0, Math.min(index, items.length - 1));
-        if (activeOutlineIndex !== boundedIndex) {
-            items.forEach((item, itemIndex) => {
-                const active = itemIndex === boundedIndex;
-                item.classList.toggle('is-active', active);
-                if (active) item.setAttribute('aria-current', 'location');
-                else item.removeAttribute('aria-current');
-            });
-            activeOutlineIndex = boundedIndex;
-            if (workspaceUi) workspaceUi.refresh();
-        }
-
-        if (!ensureVisible) return;
-        const activeItem = items[boundedIndex];
-        const outlineRect = outline.getBoundingClientRect();
-        const itemRect = activeItem.getBoundingClientRect();
-        const margin = 8;
-        if (itemRect.top < outlineRect.top + margin) {
-            outline.scrollTop -= outlineRect.top + margin - itemRect.top;
-        } else if (itemRect.bottom > outlineRect.bottom - margin) {
-            outline.scrollTop += itemRect.bottom - (outlineRect.bottom - margin);
-        }
-    }
-
-    function updateActiveOutlineItem() {
-        if (!outlineHeadings.length || isSourceMode) {
-            activeOutlineIndex = -1;
-            outline.querySelectorAll('.outline-item').forEach(item => {
-                item.classList.remove('is-active');
-                item.removeAttribute('aria-current');
-            });
-            return;
-        }
-
-        const wrapper = editorWrapper || editor.closest('.editor-wrapper');
-        if (!wrapper) {
-            setActiveOutlineItem(0);
-            return;
-        }
-
-        const wrapperRect = wrapper.getBoundingClientRect();
-        const readingLine = wrapperRect.top + wrapper.clientHeight * 0.3;
-        let activeIndex = 0;
-        for (let index = 0; index < outlineHeadings.length; index++) {
-            if (outlineHeadings[index].getBoundingClientRect().top <= readingLine + 1) {
-                activeIndex = index;
-            } else {
-                break;
-            }
-        }
-        setActiveOutlineItem(activeIndex);
-    }
-
-    function scheduleActiveOutlineUpdate() {
-        if (outlineScrollFrame !== null) return;
-        outlineScrollFrame = requestAnimationFrame(() => {
-            outlineScrollFrame = null;
-            updateActiveOutlineItem();
-        });
-    }
-
     if (editorWrapper) {
         editorWrapper.addEventListener('scroll', scheduleActiveOutlineUpdate, { passive: true });
     }
     window.addEventListener('resize', scheduleActiveOutlineUpdate);
 
-    function updateWordCount() {
-        let plain = editor.cloneNode(true);
-        if (isSourceMode) {
-            const template = document.createElement('template'); template.innerHTML = markdownToHtmlFragment(sourceEditor.value);
-            plain = template.content;
-        }
-        plain.querySelectorAll('.math-inline').forEach(span => { span.textContent = inlineMathMarkdown(span); });
-        plain.querySelectorAll('.math-display,.mermaid-diagram,.document-aux,.code-block-header,.block-chrome').forEach(display => display.remove());
-        const text = plain.textContent || '';
-        const words = text.trim().split(/\s+/).filter(w => w.length > 0).length;
-        const chars = text.length;
-        const lines = markdown.split('\n').length;
-
-        wordCount.textContent = words + ' ' + i18n.words + ' · ' + chars + ' ' + i18n.characters + ' · ' + lines + ' ' + i18n.lines;
-        if (workspaceUi) workspaceUi.refresh();
-    }
-
-    function updateStatus() {
-        // Update IMAGE_DIR display in sidebar footer
-        if (statusImageDir) {
-            const pathEl = document.getElementById('imageDirPath');
-            const sourceEl = document.getElementById('imageDirSource');
-            if (pathEl && imageDirDisplayPath !== null) {
-                pathEl.textContent = imageDirDisplayPath;
-                pathEl.title = imageDirDisplayPath;
-            }
-            if (sourceEl && imageDirSource) {
-                const labels = {
-                    file: i18n.imageDirSourceFile || 'File',
-                    settings: i18n.imageDirSourceSettings || 'Settings',
-                    default: i18n.imageDirSourceDefault || 'Default'
-                };
-                sourceEl.textContent = labels[imageDirSource] || imageDirSource;
-            }
-        }
-    }
-
     // Keyboard shortcuts
     document.addEventListener('keydown', async function(e) {
         const isMod = e.ctrlKey || e.metaKey;
-        
+
         // Handle paste shortcut for Kiro only
         // Kiro's paste event doesn't include image data, so we need to use Clipboard API
         // VSCode/Cursor paste event works normally, so skip this for them
         const isKiro = navigator.userAgent.includes('Kiro');
         if (isMod && e.key === 'v' && isKiro) {
             logger.log('Cmd/Ctrl+V keydown detected (Kiro)');
-            
+
             if (navigator.clipboard && navigator.clipboard.read) {
                 try {
                     const items = await navigator.clipboard.read();
-                    
+
                     for (const item of items) {
                         for (const type of item.types) {
                             if (type.startsWith('image/')) {
@@ -10889,7 +1762,7 @@ window.BinaryMath = require('../shared/math-syntax');
                 }
             }
         }
-        
+
         // Undo (Ctrl+Z / Cmd+Z)
         if (isMod && !e.shiftKey && e.key === 'z') {
             e.preventDefault();
@@ -10922,7 +1795,7 @@ window.BinaryMath = require('../shared/math-syntax');
             saveCurrentDocument();
             return;
         }
-        
+
         // Bold (Ctrl+B)
         if (isMod && !e.shiftKey && e.key === 'b') {
             e.preventDefault();
@@ -10931,7 +1804,7 @@ window.BinaryMath = require('../shared/math-syntax');
             syncMarkdown();
             return;
         }
-        
+
         // Italic (Ctrl+I)
         if (isMod && !e.shiftKey && e.key === 'i') {
             e.preventDefault();
@@ -10940,7 +1813,7 @@ window.BinaryMath = require('../shared/math-syntax');
             syncMarkdown();
             return;
         }
-        
+
         // Underline (Ctrl+U / Cmd+U)
         if (isMod && !e.shiftKey && e.key.toLowerCase() === 'u') {
             e.preventDefault(); e.stopPropagation();
@@ -10956,7 +1829,7 @@ window.BinaryMath = require('../shared/math-syntax');
             syncMarkdown();
             return;
         }
-        
+
         // Heading shortcuts (Ctrl+1 to Ctrl+6)
         if (isMod && !e.shiftKey && e.key >= '1' && e.key <= '6') {
             e.preventDefault();
@@ -10965,7 +1838,7 @@ window.BinaryMath = require('../shared/math-syntax');
             convertToHeading(level);
             return;
         }
-        
+
         // Paragraph (Ctrl+0)
         if (isMod && !e.shiftKey && e.key === '0') {
             e.preventDefault();
@@ -10973,7 +1846,7 @@ window.BinaryMath = require('../shared/math-syntax');
             convertToParagraph();
             return;
         }
-        
+
         // Unordered list (Ctrl+Shift+U)
         if (isMod && e.shiftKey && e.key === 'U') {
             e.preventDefault();
@@ -11003,7 +1876,7 @@ window.BinaryMath = require('../shared/math-syntax');
             }
             return;
         }
-        
+
         // Blockquote (Ctrl+Shift+Q)
         if (isMod && e.shiftKey && e.key === 'Q') {
             e.preventDefault();
@@ -11011,7 +1884,7 @@ window.BinaryMath = require('../shared/math-syntax');
             convertToBlockquote();
             return;
         }
-        
+
         // Code block (Ctrl+Shift+K)
         if (isMod && e.shiftKey && e.key === 'K') {
             e.preventDefault();
@@ -11019,7 +1892,7 @@ window.BinaryMath = require('../shared/math-syntax');
             convertToCodeBlock();
             return;
         }
-        
+
         // Table (Ctrl+T)
         if (isMod && !e.shiftKey && e.key === 't') {
             e.preventDefault();
@@ -11027,7 +1900,7 @@ window.BinaryMath = require('../shared/math-syntax');
             insertTable();
             return;
         }
-        
+
         // Horizontal rule (Ctrl+Shift+-)
         if (isMod && e.shiftKey && (e.key === '-' || e.key === '_')) {
             e.preventDefault();
@@ -11055,7 +1928,7 @@ window.BinaryMath = require('../shared/math-syntax');
             wrapWithInlineCode();
             return;
         }
-        
+
         // Link (Ctrl+K)
         if (isMod && !e.shiftKey && e.key === 'k') {
             e.preventDefault();
@@ -11063,7 +1936,7 @@ window.BinaryMath = require('../shared/math-syntax');
             insertLink();
             return;
         }
-        
+
         // Image (Ctrl+Shift+I)
         if (isMod && e.shiftKey && e.key === 'I') {
             e.preventDefault();
@@ -11271,448 +2144,6 @@ window.BinaryMath = require('../shared/math-syntax');
             return;
         }
     });
-    
-    // ========== SHORTCUT HELPER FUNCTIONS ==========
-    
-    function convertToHeading(level) {
-        const sel = window.getSelection();
-        if (!sel || !sel.rangeCount) return;
-        
-        let node = sel.anchorNode;
-        while (node && node.parentNode !== editor) {
-            node = node.parentNode;
-        }
-        if (!node || node === editor) return;
-        
-        const text = node.textContent || '';
-        const heading = document.createElement('h' + level);
-        heading.textContent = text || '';
-        if (!heading.textContent) heading.innerHTML = '<br>';
-        node.replaceWith(heading);
-        setCursorToEnd(heading);
-        syncMarkdown();
-    }
-    
-    function convertToParagraph() {
-        const sel = window.getSelection();
-        if (!sel || !sel.rangeCount) return;
-        
-        let node = sel.anchorNode;
-        while (node && node.parentNode !== editor) {
-            node = node.parentNode;
-        }
-        if (!node || node === editor) return;
-        
-        const text = node.textContent || '';
-        const p = document.createElement('p');
-        p.textContent = text || '';
-        if (!p.textContent) p.innerHTML = '<br>';
-        node.replaceWith(p);
-        setCursorToEnd(p);
-        syncMarkdown();
-    }
-    
-    function convertToList(type) {
-        const sel = window.getSelection();
-        if (!sel || !sel.rangeCount) return;
-        
-        let node = sel.anchorNode;
-        while (node && node.parentNode !== editor) {
-            node = node.parentNode;
-        }
-        if (!node || node === editor) return;
-        
-        const text = node.textContent || '';
-        const nextSibling = node.nextElementSibling;
-        
-        // Check if the next sibling is the same type of list
-        if (nextSibling && nextSibling.tagName.toLowerCase() === type) {
-            // Merge with existing list - prepend new item
-            const li = document.createElement('li');
-            li.textContent = text || '';
-            if (!li.textContent) li.innerHTML = '<br>';
-            nextSibling.insertBefore(li, nextSibling.firstChild);
-            node.remove();
-            setCursorToEnd(li);
-            syncMarkdown();
-            return;
-        }
-        
-        // Check if the previous sibling is the same type of list
-        const prevSibling = node.previousElementSibling;
-        if (prevSibling && prevSibling.tagName.toLowerCase() === type) {
-            // Merge with existing list - append new item
-            const li = document.createElement('li');
-            li.textContent = text || '';
-            if (!li.textContent) li.innerHTML = '<br>';
-            prevSibling.appendChild(li);
-            node.remove();
-            setCursorToEnd(li);
-            syncMarkdown();
-            return;
-        }
-        
-        // No adjacent list of same type - create new list
-        const list = document.createElement(type);
-        const li = document.createElement('li');
-        li.textContent = text || '';
-        if (!li.textContent) li.innerHTML = '<br>';
-        list.appendChild(li);
-        node.replaceWith(list);
-        setCursorToEnd(li);
-        syncMarkdown();
-    }
-    
-    function convertToTaskList() {
-        const sel = window.getSelection();
-        if (!sel || !sel.rangeCount) return;
-        
-        let node = sel.anchorNode;
-        while (node && node.parentNode !== editor) {
-            node = node.parentNode;
-        }
-        if (!node || node === editor) return;
-        
-        const text = node.textContent || '';
-        const nextSibling = node.nextElementSibling;
-        
-        // Check if the next sibling is a task list (ul with checkbox)
-        if (nextSibling && nextSibling.tagName.toLowerCase() === 'ul') {
-            const firstLi = nextSibling.querySelector('li');
-            if (firstLi && firstLi.querySelector('input[type="checkbox"]')) {
-                // Merge with existing task list - prepend new item
-                const li = document.createElement('li');
-                const checkbox = document.createElement('input');
-                checkbox.type = 'checkbox';
-                li.appendChild(checkbox);
-                li.appendChild(document.createTextNode(text));
-                nextSibling.insertBefore(li, nextSibling.firstChild);
-                node.remove();
-                setCursorToEnd(li);
-                syncMarkdown();
-                return;
-            }
-        }
-        
-        // Check if the previous sibling is a task list
-        const prevSibling = node.previousElementSibling;
-        if (prevSibling && prevSibling.tagName.toLowerCase() === 'ul') {
-            const firstLi = prevSibling.querySelector('li');
-            if (firstLi && firstLi.querySelector('input[type="checkbox"]')) {
-                // Merge with existing task list - append new item
-                const li = document.createElement('li');
-                const checkbox = document.createElement('input');
-                checkbox.type = 'checkbox';
-                li.appendChild(checkbox);
-                li.appendChild(document.createTextNode(text));
-                prevSibling.appendChild(li);
-                node.remove();
-                setCursorToEnd(li);
-                syncMarkdown();
-                return;
-            }
-        }
-        
-        // No adjacent task list - create new list
-        const ul = document.createElement('ul');
-        const li = document.createElement('li');
-        const checkbox = document.createElement('input');
-        checkbox.type = 'checkbox';
-        li.appendChild(checkbox);
-        li.appendChild(document.createTextNode(text));
-        ul.appendChild(li);
-        node.replaceWith(ul);
-        setCursorToEnd(li);
-        syncMarkdown();
-    }
-    
-    // Convert a single <li> element's content to the target type.
-    // Handles adding/removing checkboxes and preserves nested lists.
-    // Returns the new <li> element.
-    function convertLiToType(sourceLi, targetType) {
-        var newLi = document.createElement('li');
-        var hasCheckbox = !!sourceLi.querySelector(':scope > input[type="checkbox"]');
-
-        if (targetType === 'task' && !hasCheckbox) {
-            // Add checkbox, keep all children (including nested lists)
-            var checkbox = document.createElement('input');
-            checkbox.type = 'checkbox';
-            newLi.appendChild(checkbox);
-            for (var i = 0; i < sourceLi.childNodes.length; i++) {
-                newLi.appendChild(sourceLi.childNodes[i].cloneNode(true));
-            }
-        } else if (targetType !== 'task' && hasCheckbox) {
-            // Remove checkbox, keep everything else (including nested lists)
-            var skipNextSpace = false;
-            for (var i = 0; i < sourceLi.childNodes.length; i++) {
-                var child = sourceLi.childNodes[i];
-                if (child.nodeType === 1 && child.tagName === 'INPUT') { skipNextSpace = true; continue; }
-                if (skipNextSpace && child.nodeType === 3 && child.textContent === ' ') { skipNextSpace = false; continue; }
-                skipNextSpace = false;
-                newLi.appendChild(child.cloneNode(true));
-            }
-        } else {
-            // No checkbox change needed - clone all children
-            for (var i = 0; i < sourceLi.childNodes.length; i++) {
-                newLi.appendChild(sourceLi.childNodes[i].cloneNode(true));
-            }
-        }
-
-        if (!newLi.hasChildNodes() || newLi.innerHTML.trim() === '') {
-            newLi.innerHTML = '<br>';
-        }
-
-        return newLi;
-    }
-
-    // Convert the list items at cursor or selection to a different list type.
-    // targetType: 'ul' | 'ol' | 'task'
-    // Returns true if conversion was performed, false if cursor was not in a list.
-    function convertListToType(targetType) {
-        var sel = window.getSelection();
-        if (!sel || !sel.rangeCount) return false;
-
-        // Find the closest <li> ancestor from cursor
-        var node = sel.anchorNode;
-        var cursorLi = null;
-        while (node && node !== editor) {
-            if (node.nodeType === 1 && node.tagName === 'LI') {
-                cursorLi = node;
-                break;
-            }
-            node = node.parentNode;
-        }
-        if (!cursorLi) return false;
-
-        var parentList = cursorLi.parentElement;
-        if (!parentList || (parentList.tagName !== 'UL' && parentList.tagName !== 'OL')) return false;
-
-        // Get items to convert (single cursor = 1 item, selection = multiple items)
-        var range = sel.getRangeAt(0);
-        var targetItems = range.collapsed
-            ? [cursorLi]
-            : getSelectedListItems(range, sel);
-
-        if (targetItems.length === 0) return false;
-
-        // Filter to only direct children of the same parent list
-        var itemsToConvert = targetItems.filter(function(li) { return li.parentNode === parentList; });
-        if (itemsToConvert.length === 0) return false;
-
-        // Check if all target items are already the target type
-        var allAlreadyTarget = itemsToConvert.every(function(li) {
-            var liHasCheckbox = !!li.querySelector(':scope > input[type="checkbox"]');
-            var liType = parentList.tagName === 'OL' ? 'ol' : (liHasCheckbox ? 'task' : 'ul');
-            return liType === targetType;
-        });
-        if (allAlreadyTarget) return true;
-
-        // Determine parent tag for target type
-        var targetParentTag = targetType === 'ol' ? 'OL' : 'UL';
-        var currentParentTag = parentList.tagName; // 'UL' or 'OL'
-
-        // Gather all direct <li> children of parentList in order
-        var allItems = [];
-        for (var i = 0; i < parentList.children.length; i++) {
-            if (parentList.children[i].tagName === 'LI') {
-                allItems.push(parentList.children[i]);
-            }
-        }
-        var convertSet = new Set(itemsToConvert);
-
-        // Find the index range of items to convert
-        var firstConvertIdx = -1;
-        var lastConvertIdx = -1;
-        for (var i = 0; i < allItems.length; i++) {
-            if (convertSet.has(allItems[i])) {
-                if (firstConvertIdx === -1) firstConvertIdx = i;
-                lastConvertIdx = i;
-            }
-        }
-
-        if (targetParentTag === currentParentTag) {
-            // CASE A: Same parent tag (ul<->task) - modify <li> items in-place
-            var newCursorLi = null;
-            for (var i = 0; i < itemsToConvert.length; i++) {
-                var li = itemsToConvert[i];
-                var newLi = convertLiToType(li, targetType);
-                li.replaceWith(newLi);
-                if (li === cursorLi) newCursorLi = newLi;
-            }
-            setupInteractiveElements();
-            setCursorToEnd(newCursorLi || itemsToConvert[0]);
-            syncMarkdown();
-            return true;
-        }
-
-        // CASE B: Different parent tag - need to split the list
-        var beforeItems = allItems.slice(0, firstConvertIdx);
-        var convertItems = allItems.slice(firstConvertIdx, lastConvertIdx + 1);
-        var afterItems = allItems.slice(lastConvertIdx + 1);
-
-        var fragments = [];
-
-        // 1. Before list (keep original type)
-        if (beforeItems.length > 0) {
-            var beforeList = document.createElement(currentParentTag.toLowerCase());
-            for (var i = 0; i < beforeItems.length; i++) {
-                beforeList.appendChild(beforeItems[i]); // Move, not clone
-            }
-            fragments.push(beforeList);
-        }
-
-        // 2. Converted items (new type)
-        var newList = document.createElement(targetParentTag.toLowerCase());
-        var newCursorLi = null;
-        for (var i = 0; i < convertItems.length; i++) {
-            var newLi = convertLiToType(convertItems[i], targetType);
-            newList.appendChild(newLi);
-            if (convertItems[i] === cursorLi) newCursorLi = newLi;
-        }
-        fragments.push(newList);
-
-        // 3. After list (keep original type)
-        if (afterItems.length > 0) {
-            var afterList = document.createElement(currentParentTag.toLowerCase());
-            for (var i = 0; i < afterItems.length; i++) {
-                afterList.appendChild(afterItems[i]); // Move, not clone
-            }
-            fragments.push(afterList);
-        }
-
-        // Replace parentList with the fragments
-        var parentParent = parentList.parentNode;
-        var refNode = parentList.nextSibling;
-        parentList.remove();
-
-        for (var i = 0; i < fragments.length; i++) {
-            parentParent.insertBefore(fragments[i], refNode);
-        }
-
-        setupInteractiveElements();
-        setCursorToEnd(newCursorLi || newList.firstElementChild);
-        syncMarkdown();
-        return true;
-    }
-
-    function convertToBlockquote() {
-        const sel = window.getSelection();
-        if (!sel || !sel.rangeCount) return;
-        
-        let node = sel.anchorNode;
-        while (node && node.parentNode !== editor) {
-            node = node.parentNode;
-        }
-        if (!node || node === editor) return;
-        
-        const text = node.textContent || '';
-        const blockquote = document.createElement('blockquote');
-        blockquote.textContent = text || '';
-        if (!blockquote.textContent) blockquote.innerHTML = '<br>';
-        node.replaceWith(blockquote);
-        setCursorToEnd(blockquote);
-        syncMarkdown();
-    }
-    
-    function convertToCodeBlock() {
-        const sel = window.getSelection();
-        if (!sel || !sel.rangeCount) return;
-        
-        let node = sel.anchorNode;
-        while (node && node.parentNode !== editor) {
-            node = node.parentNode;
-        }
-        if (!node || node === editor) return;
-        
-        const text = node.textContent || '';
-        const pre = document.createElement('pre');
-        pre.setAttribute('data-lang', '');
-        const code = document.createElement('code');
-        code.textContent = text || '';
-        if (!code.textContent) code.innerHTML = '<br>';
-        pre.appendChild(code);
-        node.replaceWith(pre);
-        setCursorToEnd(code);
-        syncMarkdown();
-    }
-    
-    function insertHorizontalRule() {
-        const sel = window.getSelection();
-        if (!sel || !sel.rangeCount) return;
-        
-        let node = sel.anchorNode;
-        while (node && node.parentNode !== editor) {
-            node = node.parentNode;
-        }
-        
-        const hr = document.createElement('hr');
-        const p = document.createElement('p');
-        p.innerHTML = '<br>';
-        
-        if (node && node !== editor) {
-            node.after(hr);
-            hr.after(p);
-        } else {
-            editor.appendChild(hr);
-            editor.appendChild(p);
-        }
-        setCursorToEnd(p);
-        syncMarkdown();
-    }
-    
-    function wrapWithInlineCode() {
-        const sel = window.getSelection();
-        if (!sel || !sel.rangeCount) return;
-        
-        const range = sel.getRangeAt(0);
-        const selectedText = range.toString();
-        
-        if (selectedText) {
-            const code = document.createElement('code');
-            code.textContent = selectedText;
-            range.deleteContents();
-            range.insertNode(code);
-            
-            // Move cursor after the code element
-            const newRange = document.createRange();
-            newRange.setStartAfter(code);
-            newRange.collapse(true);
-            sel.removeAllRanges();
-            sel.addRange(newRange);
-        } else {
-            // Insert empty code element
-            const code = document.createElement('code');
-            code.innerHTML = '&nbsp;';
-            range.insertNode(code);
-            setCursorToEnd(code);
-        }
-        syncMarkdown();
-    }
-    
-    function insertLink() {
-        const sel = window.getSelection();
-        if (!sel || !sel.rangeCount) return;
-        
-        const range = sel.getRangeAt(0);
-        const selectedText = range.toString() || 'link';
-        
-        const a = document.createElement('a');
-        a.href = '#';
-        a.textContent = selectedText;
-        setupLink(a);
-        
-        range.deleteContents();
-        range.insertNode(a);
-        
-        // Move cursor after the link
-        const newRange = document.createRange();
-        newRange.setStartAfter(a);
-        newRange.collapse(true);
-        sel.removeAllRanges();
-        sel.addRange(newRange);
-        
-        syncMarkdown();
-    }
 
     // Handle messages from host (VSCode / Electron / test)
     host.onMessage(function(message) {
@@ -11922,7 +2353,7 @@ window.BinaryMath = require('../shared/math-syntax');
             img.onload = function() {
                 logger.log('Image loaded successfully');
             };
-            
+
             editor.focus();
             const sel = window.getSelection();
             if (sel && sel.rangeCount) {
@@ -11945,7 +2376,7 @@ window.BinaryMath = require('../shared/math-syntax');
             a.href = message.url;
             a.textContent = message.text;
             setupLink(a);
-            
+
             const sel = window.getSelection();
             if (sel && sel.rangeCount) {
                 const range = sel.getRangeAt(0);
@@ -11977,7 +2408,7 @@ window.BinaryMath = require('../shared/math-syntax');
                         .trim()
                         .replace(/[^\w\s\u3040-\u309f\u30a0-\u30ff\u4e00-\u9faf\uac00-\ud7af-]/g, '') // Keep alphanumeric, Japanese, Chinese, Korean, hyphen
                         .replace(/\s+/g, '-'); // Replace spaces with hyphens
-                    
+
                     if (slug === anchor || heading.id === anchor) {
                         const wrapper = editor.closest('.editor-wrapper');
                         if (wrapper) {
@@ -12004,78 +2435,8 @@ window.BinaryMath = require('../shared/math-syntax');
     let externalChangeToast = null;
     let toastHideTimer = null;
 
-    function showEditorToast(msg) {
-        if (!externalChangeToast) {
-            externalChangeToast = document.createElement('div');
-            externalChangeToast.className = 'external-change-toast';
-            externalChangeToast.setAttribute('role', 'status');
-            const messageDiv = document.createElement('div');
-            messageDiv.className = 'toast-message';
-            externalChangeToast.appendChild(messageDiv);
-            document.body.appendChild(externalChangeToast);
-        }
-        const messageDiv = externalChangeToast.querySelector('.toast-message');
-        messageDiv.textContent = msg || 'File modified externally. Click outside editor to reload.';
-        // Show
-        if (toastHideTimer) clearTimeout(toastHideTimer);
-        requestAnimationFrame(() => {
-            externalChangeToast.classList.add('show');
-        });
-        // Auto-hide after 5 seconds
-        toastHideTimer = setTimeout(() => {
-            externalChangeToast.classList.remove('show');
-        }, 5000);
-    }
-
     // Drag cursor indicator element
     let dragCursor = null;
-    
-    function createDragCursor() {
-        if (!dragCursor) {
-            dragCursor = document.createElement('div');
-            dragCursor.className = 'drag-cursor';
-            dragCursor.style.cssText = 'position:fixed;width:2px;height:20px;background:#0969da;pointer-events:none;z-index:9999;display:none;';
-            document.body.appendChild(dragCursor);
-        }
-    }
-    
-    function showDragCursor(x, y) {
-        createDragCursor();
-        // Try to get caret position
-        const range = document.caretRangeFromPoint(x, y);
-        if (range) {
-            const rect = range.getBoundingClientRect();
-            // If rect has valid dimensions, use it
-            if (rect.height > 0) {
-                dragCursor.style.left = rect.left + 'px';
-                dragCursor.style.top = rect.top + 'px';
-                dragCursor.style.height = rect.height + 'px';
-                dragCursor.style.display = 'block';
-            } else {
-                // For empty lines, find the nearest element and position there
-                const element = document.elementFromPoint(x, y);
-                if (element && editor.contains(element)) {
-                    const elemRect = element.getBoundingClientRect();
-                    dragCursor.style.left = (elemRect.left + 5) + 'px';
-                    dragCursor.style.top = elemRect.top + 'px';
-                    dragCursor.style.height = Math.max(elemRect.height, 20) + 'px';
-                    dragCursor.style.display = 'block';
-                }
-            }
-        } else {
-            // Fallback: show cursor at mouse position
-            dragCursor.style.left = x + 'px';
-            dragCursor.style.top = y + 'px';
-            dragCursor.style.height = '20px';
-            dragCursor.style.display = 'block';
-        }
-    }
-    
-    function hideDragCursor() {
-        if (dragCursor) {
-            dragCursor.style.display = 'none';
-        }
-    }
 
     // Handle drag and drop for images - capture at document level for reliability
     document.addEventListener('dragenter', function(e) {
@@ -12111,18 +2472,18 @@ window.BinaryMath = require('../shared/math-syntax');
         if (!editor.contains(e.target) && e.target !== editor) {
             return; // Not on editor
         }
-        
+
         e.preventDefault();
         e.stopPropagation();
         editor.classList.remove('drag-over');
         hideDragCursor();
-        
+
         logger.log('Drop event fired on editor');
         logger.log('dataTransfer:', e.dataTransfer);
         logger.log('files:', e.dataTransfer?.files);
         logger.log('items:', e.dataTransfer?.items);
         logger.log('types:', e.dataTransfer?.types);
-        
+
         // Get drop position first
         const dropRange = document.caretRangeFromPoint(e.clientX, e.clientY);
         if (dropRange) {
@@ -12130,27 +2491,27 @@ window.BinaryMath = require('../shared/math-syntax');
             sel.removeAllRanges();
             sel.addRange(dropRange);
         }
-        
+
         // Try to get files first
         const files = e.dataTransfer?.files;
-        
+
         if (files && files.length > 0) {
             const file = files[0];
             logger.log('Dropped file from files:', file.name, file.type, file.size);
-            
+
             if (file.type.startsWith('image/')) {
                 readAndInsertImage(file);
                 return;
             }
         }
-        
+
         // Fallback: try items
         const items = e.dataTransfer?.items;
         if (items && items.length > 0) {
             for (let i = 0; i < items.length; i++) {
                 const item = items[i];
                 logger.log('Item:', item.kind, item.type);
-                
+
                 if (item.kind === 'file' && item.type.startsWith('image/')) {
                     const file = item.getAsFile();
                     if (file) {
@@ -12161,16 +2522,16 @@ window.BinaryMath = require('../shared/math-syntax');
                 }
             }
         }
-        
+
         // Check for file URI drop (from Finder/Explorer via VS Code)
         const uriList = e.dataTransfer?.getData('text/uri-list');
         const plainText = e.dataTransfer?.getData('text/plain');
         logger.log('URI list:', uriList);
         logger.log('Plain text:', plainText);
-        
+
         // Try to get file path from various sources
         let filePath = null;
-        
+
         if (uriList) {
             // Parse URI list (can contain multiple URIs, one per line)
             const uris = uriList.split('\n').filter(u => u.trim());
@@ -12184,7 +2545,7 @@ window.BinaryMath = require('../shared/math-syntax');
                 }
             }
         }
-        
+
         if (!filePath && plainText) {
             // Sometimes the path is in plain text
             if (plainText.startsWith('file://')) {
@@ -12196,14 +2557,14 @@ window.BinaryMath = require('../shared/math-syntax');
                 filePath = plainText;
             }
         }
-        
+
         if (filePath) {
             logger.log('Found image file path:', filePath);
             // Send to extension to read the file
             host.readAndInsertImage(filePath);
             return;
         }
-        
+
         // Check for web URL drop
         const url = uriList || plainText;
         if (url && url.startsWith('http') && url.match(/\.(png|jpg|jpeg|gif|webp|svg)(\?.*)?$/i)) {
@@ -12213,7 +2574,7 @@ window.BinaryMath = require('../shared/math-syntax');
             img.src = url;
             img.alt = 'image';
             img.style.maxWidth = '100%';
-            
+
             const sel = window.getSelection();
             if (sel && sel.rangeCount) {
                 const range = sel.getRangeAt(0);
@@ -12226,42 +2587,26 @@ window.BinaryMath = require('../shared/math-syntax');
             syncMarkdown();
             return;
         }
-        
+
         logger.log('No image found in drop');
     });
-    
-    function readAndInsertImage(file) {
-        const reader = new FileReader();
-        reader.onload = function(event) {
-            logger.log('FileReader onload called');
-            const dataUrl = event.target.result;
-            
-            // Send to extension to save as file (filename always generated by extension as timestamp)
-            host.saveImageAndInsert(dataUrl);
-            logger.log('Image sent to extension for saving');
-        };
-        reader.onerror = function(err) {
-            logger.error('FileReader error:', err);
-        };
-        reader.readAsDataURL(file);
-    }
 
     // Copy handler - convert selection to Markdown and set to clipboard
     editor.addEventListener('copy', function(e) {
         if (e.target.closest && e.target.closest('.front-matter')) return;
         if (isSourceMode) return;
-        
+
         const sel = window.getSelection();
         if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return;
-        
+
         e.preventDefault();
-        
+
         // Get the selected HTML
         const range = sel.getRangeAt(0);
         const fragment = range.cloneContents();
         const tempDiv = document.createElement('div');
         tempDiv.appendChild(fragment);
-        
+
         // Handle triple-click selection: when selection ends at offset 0 of next element,
         // remove the trailing empty element that was included
         const endOffset = range.endOffset;
@@ -12273,7 +2618,7 @@ window.BinaryMath = require('../shared/math-syntax');
                 tempDiv.removeChild(lastChild);
             }
         }
-        
+
         // Handle triple-click on nested list item: when selection includes parent li with only nested list,
         // unwrap to get just the nested list content
         // Pattern: <li><ul><li>content</li></ul></li> -> should become just the nested li content
@@ -12299,7 +2644,7 @@ window.BinaryMath = require('../shared/math-syntax');
                         }
                     }
                 }
-                
+
                 if (!hasDirectText && nestedList) {
                     // Replace the parent li with the nested list's content
                     tempDiv.innerHTML = '';
@@ -12309,26 +2654,26 @@ window.BinaryMath = require('../shared/math-syntax');
                 }
             }
         }
-        
+
         const selectedHtml = clipboardHtml(tempDiv);
-        
+
         logger.log('Copy - selected HTML:', selectedHtml.substring(0, 500));
         logger.log('Copy - tempDiv children count:', tempDiv.childNodes.length);
         logger.log('Copy - tempDiv children:', Array.from(tempDiv.childNodes).map(n => n.nodeName + '(' + (n.textContent || '').substring(0, 30) + ')').join(', '));
-        
+
         try {
             let md = '';
-            
+
             // Check if the selection is just text (no block elements)
             const hasBlockElements = tempDiv.querySelector('p, h1, h2, h3, h4, h5, h6, ul, ol, li, pre, blockquote, table, hr');
-            
+
             logger.log('Copy - hasBlockElements:', hasBlockElements ? hasBlockElements.tagName : 'null');
-            
+
             if (!hasBlockElements) {
                 // Selection is just text - need to check if it's a full element selection or partial
                 const startContainer = range.startContainer;
                 let contextNode = startContainer;
-                
+
                 // Find the nearest block-level parent
                 while (contextNode && contextNode !== editor) {
                     if (contextNode.nodeType === 1) {
@@ -12339,16 +2684,16 @@ window.BinaryMath = require('../shared/math-syntax');
                     }
                     contextNode = contextNode.parentNode;
                 }
-                
+
                 logger.log('Copy - context node:', contextNode ? contextNode.tagName : 'none');
-                
+
                 // Check if the selection covers the entire text content of the context node
                 const selectedText = sel.toString();
                 let isFullSelection = false;
-                
+
                 if (contextNode && contextNode !== editor && contextNode.nodeType === 1) {
                     const tag = contextNode.tagName.toLowerCase();
-                    
+
                     // Get the text content of the context node (excluding nested lists for li)
                     let contextText = '';
                     if (tag === 'li') {
@@ -12367,12 +2712,12 @@ window.BinaryMath = require('../shared/math-syntax');
                         contextText = contextNode.textContent;
                     }
                     contextText = contextText.trim();
-                    
+
                     // Check if selection matches the full text content
                     isFullSelection = selectedText.trim() === contextText;
-                    
+
                     logger.log('Copy - selectedText:', selectedText, 'contextText:', contextText, 'isFullSelection:', isFullSelection);
-                    
+
                     if (isFullSelection) {
                         // Full selection - apply context-specific formatting
                         if (tag === 'li') {
@@ -12388,7 +2733,7 @@ window.BinaryMath = require('../shared/math-syntax');
                                 }
                                 listParent = listParent.parentNode;
                             }
-                            
+
                             // Check for checkbox
                             const checkbox = contextNode.querySelector(':scope > input[type="checkbox"]');
                             if (checkbox) {
@@ -12440,13 +2785,13 @@ window.BinaryMath = require('../shared/math-syntax');
             } else {
                 // Selection contains block elements - process normally
                 logger.log('Copy - processing block elements, childNodes count:', tempDiv.childNodes.length);
-                
+
                 // Special case: If selection starts with text node followed by nested list,
                 // and the selection started inside a list item, we need to wrap the text as a list item
                 const firstChild = tempDiv.childNodes[0];
                 const hasNestedList = tempDiv.querySelector('ul, ol');
                 const startContainer = range.startContainer;
-                
+
                 // Find if selection started inside a list item
                 let startLi = null;
                 let node = startContainer;
@@ -12457,24 +2802,24 @@ window.BinaryMath = require('../shared/math-syntax');
                     }
                     node = node.parentNode;
                 }
-                
+
                 // Check if first child is text OR if it's a checkbox followed by text (task list case)
                 // Also check for inline elements (strong, em, a, code, etc.) that are not block elements
                 const isFirstChildText = firstChild && firstChild.nodeType === 3;
-                const isFirstChildInlineElement = firstChild && firstChild.nodeType === 1 && 
+                const isFirstChildInlineElement = firstChild && firstChild.nodeType === 1 &&
                     !['ul', 'ol', 'li', 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'pre', 'blockquote', 'table', 'hr', 'div'].includes(firstChild.tagName.toLowerCase());
-                const isTaskListSelection = firstChild && firstChild.nodeName === 'INPUT' && 
-                    firstChild.type === 'checkbox' && 
-                    tempDiv.childNodes.length >= 2 && 
+                const isTaskListSelection = firstChild && firstChild.nodeName === 'INPUT' &&
+                    firstChild.type === 'checkbox' &&
+                    tempDiv.childNodes.length >= 2 &&
                     tempDiv.childNodes[1].nodeType === 3;
-                
+
                 logger.log('Copy - firstChild is text:', isFirstChildText);
                 logger.log('Copy - firstChild is inline element:', isFirstChildInlineElement);
                 logger.log('Copy - isTaskListSelection:', isTaskListSelection);
                 logger.log('Copy - hasNestedList:', !!hasNestedList);
                 logger.log('Copy - startLi:', startLi ? 'found' : 'null');
                 logger.log('Copy - startLi has checkbox:', startLi ? !!startLi.querySelector(':scope > input[type="checkbox"]') : false);
-                
+
                 // If first child is text/inline element (or checkbox+text for task list), followed by a list, and we started in a list item
                 if ((isFirstChildText || isFirstChildInlineElement || isTaskListSelection) && hasNestedList && startLi) {
                     // Calculate indent based on list nesting level
@@ -12488,7 +2833,7 @@ window.BinaryMath = require('../shared/math-syntax');
                         }
                         listParent = listParent.parentNode;
                     }
-                    
+
                     // Determine marker type
                     const parentList = startLi.parentNode;
                     let marker = '-';
@@ -12497,11 +2842,11 @@ window.BinaryMath = require('../shared/math-syntax');
                         const index = siblings.indexOf(startLi) + 1;
                         marker = index + '.';
                     }
-                    
+
                     // Get text content - for task list, it's the second child; for normal list, it's the first child
                     let textContent;
                     let startIndex; // Index to start processing remaining children
-                    
+
                     if (isTaskListSelection) {
                         // Task list: INPUT, #text, UL...
                         textContent = tempDiv.childNodes[1].textContent.trim();
@@ -12530,7 +2875,7 @@ window.BinaryMath = require('../shared/math-syntax');
                             inlineContent += mdProcessNode(child);
                         }
                         textContent = inlineContent.trim();
-                        
+
                         // Check for checkbox in the original list item
                         const checkbox = startLi.querySelector(':scope > input[type="checkbox"]');
                         if (checkbox) {
@@ -12540,7 +2885,7 @@ window.BinaryMath = require('../shared/math-syntax');
                             md = indent + marker + ' ' + textContent + '\n';
                         }
                     }
-                    
+
                     // Process remaining children (the nested list)
                     for (let i = startIndex; i < tempDiv.childNodes.length; i++) {
                         const child = tempDiv.childNodes[i];
@@ -12548,21 +2893,21 @@ window.BinaryMath = require('../shared/math-syntax');
                         // Nested list should have increased indent
                         md += mdProcessNode(child, indent + '  ');
                     }
-                    
+
                     logger.log('Copy - used list item wrapping for text + nested list');
                 } else {
                     md = serializeMarkdownFragment(tempDiv);
                 }
                 md = md.trim();
             }
-            
+
             logger.log('Copy - converted markdown:', md.substring(0, 200));
-            
+
             // Set clipboard data
             e.clipboardData.setData('text/plain', md);
             e.clipboardData.setData('text/html', selectedHtml);
             e.clipboardData.setData('text/x-binary-markdown', md);
-            
+
         } catch (err) {
             logger.error('Copy error:', err);
             // Fallback to plain text
@@ -12574,810 +2919,50 @@ window.BinaryMath = require('../shared/math-syntax');
     editor.addEventListener('cut', function(e) {
         if (e.target.closest && e.target.closest('.front-matter')) return;
         if (isSourceMode) return;
-        
+
         const sel = window.getSelection();
         if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return;
-        
+
         e.preventDefault();
         markAsEdited();
-        
+
         // Get the selected HTML
         const range = sel.getRangeAt(0);
         const fragment = range.cloneContents();
         const tempDiv = document.createElement('div');
         tempDiv.appendChild(fragment);
         const selectedHtml = clipboardHtml(tempDiv);
-        
+
         // Convert to Markdown using the same logic as htmlToMarkdown()
         try {
             const md = serializeMarkdownFragment(tempDiv);
-            
+
             e.clipboardData.setData('text/plain', md);
             e.clipboardData.setData('text/html', selectedHtml);
             e.clipboardData.setData('text/x-binary-markdown', md);
         } catch (err) {
             e.clipboardData.setData('text/plain', sel.toString());
         }
-        
+
         // Delete the selection
         range.deleteContents();
         syncMarkdown();
     });
 
     // Paste handler - insert Markdown into source, then re-render
-    editor.addEventListener('paste', function(e) {
-        if (e.target.closest && e.target.closest('.front-matter')) return;
-        if (isSourceMode) return;
-
-        undoManager.saveSnapshot();
-        markAsEdited();
-        
-        logger.log('Paste event triggered');
-        
-        // Check for image files first
-        const items = e.clipboardData?.items;
-        if (items) {
-            for (let i = 0; i < items.length; i++) {
-                const item = items[i];
-                if (item.kind === 'file' && item.type.startsWith('image/')) {
-                    e.preventDefault();
-                    logger.log('Image found in paste event');
-                    const file = item.getAsFile();
-                    if (file) {
-                        logger.log('Pasting image from clipboard:', file.type);
-                        const reader = new FileReader();
-                        reader.onload = function(event) {
-                            const dataUrl = event.target.result;
-                            host.saveImageAndInsert(dataUrl);
-                            logger.log('Image sent to extension for saving');
-                        };
-                        reader.readAsDataURL(file);
-                    }
-                    return; // Stop processing - image handled
-                }
-            }
-        }
-        
-        // No image - handle as text/html paste
-        e.preventDefault();
-        
-        // Check for internal copy (has our custom marker)
-        const internalMd = e.clipboardData.getData('text/x-binary-markdown');
-        const html = e.clipboardData.getData('text/html');
-        const text = e.clipboardData.getData('text/plain');
-        
-        logger.log('Internal MD:', internalMd ? 'yes' : 'no');
-        logger.log('HTML length:', html ? html.length : 0);
-        
-        let pastedMd = '';
-        
-        // Priority: internal markdown > external HTML > plain text
-        if (internalMd) {
-            // Internal copy - use the markdown directly (same format as htmlToMarkdown)
-            pastedMd = internalMd;
-            logger.log('Using internal markdown');
-        } else if (html && typeof TurndownService !== 'undefined') {
-            // External HTML - convert via Turndown
-            try {
-                const turndownService = new TurndownService({
-                    headingStyle: 'atx',
-                    codeBlockStyle: 'fenced',
-                    emDelimiter: '*',
-                    bulletListMarker: '-'
-                });
-                if (typeof turndownPluginGfm !== 'undefined') {
-                    turndownService.use(turndownPluginGfm.gfm);
-                }
-
-                // Override GFM tableCell rule to:
-                // 1. Escape pipe characters in cell content (prevents table structure breakage)
-                // 2. Convert newlines to <br> (table cells must be single-line in markdown)
-                turndownService.addRule('tableCellEscapePipe', {
-                    filter: ['th', 'td'],
-                    replacement: function(content, node) {
-                        var index = Array.prototype.indexOf.call(node.parentNode.childNodes, node);
-                        var prefix = ' ';
-                        if (index === 0) prefix = '| ';
-                        // Convert newlines to <br> (table cells must stay on one line)
-                        content = content.replace(/\n/g, '<br>');
-                        // Collapse multiple <br> into single
-                        content = content.replace(/(<br>)+/g, '<br>');
-                        // Trim leading/trailing <br>
-                        content = content.replace(/^(<br>)+/, '').replace(/(<br>)+$/, '');
-                        // Escape pipe characters in cell content
-                        content = content.replace(/\|/g, '\\|');
-                        return prefix + content + ' |';
-                    }
-                });
-
-                // Custom rule: Remove empty span tags and Apple-converted-space spans
-                turndownService.addRule('cleanupSpans', {
-                    filter: function(node) {
-                        if (node.nodeName !== 'SPAN') return false;
-                        // Apple-converted-space spans contain only &nbsp;
-                        if (node.classList && node.classList.contains('Apple-converted-space')) {
-                            return true;
-                        }
-                        // Empty styling spans (no meaningful content)
-                        const hasOnlyStyleAttr = node.attributes.length === 1 && 
-                                                  node.hasAttribute('style');
-                        const hasNoContent = !node.textContent || node.textContent.trim() === '';
-                        return hasOnlyStyleAttr && hasNoContent;
-                    },
-                    replacement: function(content, node, options) {
-                        // For Apple-converted-space, return a single space
-                        if (node.classList && node.classList.contains('Apple-converted-space')) {
-                            return ' ';
-                        }
-                        return content;
-                    }
-                });
-                
-                // Retain the supported underline wrapper, without source attributes.
-                turndownService.addRule('underline', {
-                    filter: 'u',
-                    replacement: function(content) { return content ? '<u>' + content + '</u>' : ''; }
-                });
-
-                // Custom rule: CSS style-based bold recognition
-                // Handles <span style="font-weight: bold"> etc. from Google Docs, web pages
-                turndownService.addRule('styledBold', {
-                    filter: function(node) {
-                        if (node.nodeName !== 'SPAN') return false;
-                        const fw = node.style.fontWeight;
-                        return fw === 'bold' || fw === 'bolder' || (parseInt(fw) >= 700);
-                    },
-                    replacement: function(content) {
-                        content = content.trim();
-                        if (!content) return '';
-                        return '**' + content + '**';
-                    }
-                });
-
-                // Custom rule: CSS style-based italic recognition
-                turndownService.addRule('styledItalic', {
-                    filter: function(node) {
-                        if (node.nodeName !== 'SPAN') return false;
-                        const fs = node.style.fontStyle;
-                        return fs === 'italic' || fs === 'oblique';
-                    },
-                    replacement: function(content) {
-                        content = content.trim();
-                        if (!content) return '';
-                        return '*' + content + '*';
-                    }
-                });
-
-                // Custom rule: CSS style-based strikethrough recognition
-                turndownService.addRule('styledStrikethrough', {
-                    filter: function(node) {
-                        if (node.nodeName !== 'SPAN') return false;
-                        const td = node.style.textDecoration || node.style.textDecorationLine || '';
-                        return td.includes('line-through');
-                    },
-                    replacement: function(content) {
-                        content = content.trim();
-                        if (!content) return '';
-                        return '~~' + content + '~~';
-                    }
-                });
-
-                // Custom rule: Robust fenced code block with language extraction
-                // Handles Shiki-styled code blocks (language= attribute instead of class=)
-                // and code blocks with indented whitespace before <code>
-                turndownService.addRule('fencedCodeWithLang', {
-                    filter: function(node) {
-                        return node.nodeName === 'PRE' && node.querySelector('code');
-                    },
-                    replacement: function(content, node) {
-                        var code = node.querySelector('code');
-                        var cls = code.className || '';
-                        // Extract language from: class="language-xxx", language="xxx" attr, or data-lang="xxx"
-                        var lang = (cls.match(/language-(\S+)/) || [null, ''])[1];
-                        if (!lang) lang = code.getAttribute('language') || node.getAttribute('language') || '';
-                        if (!lang) lang = node.getAttribute('data-lang') || '';
-                        // Clean language: remove non-alphanumeric suffixes like "theme={null}"
-                        lang = lang.split(/\s+/)[0] || '';
-                        // Filter out non-language class names
-                        if (['hljs', 'nohighlight', 'shiki'].indexOf(lang) !== -1) lang = '';
-                        var text = code.textContent || '';
-                        return '\n\n```' + lang + '\n' + text.replace(/\n$/, '') + '\n```\n\n';
-                    }
-                });
-
-                // Custom rule: Normalize link content
-                // When <a> tags contain block elements (div, span) or newlines,
-                // Turndown produces multi-line markdown links like:
-                //   [\n  How Claude Code works\n  ](/docs/en/...)
-                // This rule collapses whitespace/newlines into a single-line link.
-                turndownService.addRule('normalizeLink', {
-                    filter: function(node) {
-                        return node.nodeName === 'A' && node.getAttribute('href');
-                    },
-                    replacement: function(content, node) {
-                        var href = node.getAttribute('href');
-                        if (href) href = href.replace(/([()])/g, '\\$1');
-                        var title = node.getAttribute('title');
-                        if (title) title = ' "' + title.replace(/"/g, '\\"') + '"';
-                        else title = '';
-                        // Collapse multi-line link text (e.g. <a><div>text</div></a>)
-                        content = content.replace(/\n+/g, ' ').replace(/\s+/g, ' ').trim();
-                        if (!content) return '';
-                        return '[' + content + '](' + href + title + ')';
-                    }
-                });
-
-                // Custom rule: Compact list items (remove blank lines between items)
-                // Turndown's default listItem rule produces "loose" lists with blank lines
-                // when <li> contains <p> elements (common in web pages, Google Docs).
-                // Override to always produce "tight" lists without blank lines.
-                turndownService.addRule('compactListItem', {
-                    filter: 'li',
-                    replacement: function (content, node, options) {
-                        content = content
-                            .replace(/^\n+/, '')           // remove leading newlines
-                            .replace(/\n+$/, '');          // remove trailing newlines
-                        // Indent nested content (only internal newlines, not trailing)
-                        content = content.replace(/\n/gm, '\n    ');
-
-                        var prefix = options.bulletListMarker + ' ';
-                        var parent = node.parentNode;
-                        if (parent.nodeName === 'OL') {
-                            var start = parent.getAttribute('start');
-                            var index = Array.prototype.indexOf.call(parent.children, node);
-                            prefix = (start ? Number(start) + index : index + 1) + '. ';
-                        }
-
-                        return (
-                            prefix + content + (node.nextSibling ? '\n' : '')
-                        );
-                    }
-                });
-
-                pastedMd = turndownService.turndown(html);
-
-                // Post-process: Un-escape Markdown block-level syntax markers
-                // Turndown escapes characters like -, +, #, > at line starts to prevent
-                // Markdown interpretation (preserving original HTML paragraph semantics).
-                // Since we're pasting into a Markdown editor, we want these interpreted as Markdown.
-                pastedMd = pastedMd.replace(/^\\([-+*]) /gm, '$1 ');         // list markers: \- , \+ , \*
-                pastedMd = pastedMd.replace(/^\\(#{1,6}) /gm, '$1 ');        // headings: \# , \## , etc.
-                pastedMd = pastedMd.replace(/^\\(>) ?/gm, '$1 ');            // blockquote: \>
-                pastedMd = pastedMd.replace(/^(\d+)\\(\. )/gm, '$1$2');      // ordered list: 1\.
-                pastedMd = pastedMd.replace(/^\\(~~~)/gm, '$1');             // code fence: \~~~
-
-                // Post-process: Remove blank lines between consecutive list items
-                // Safety net for edge cases where the custom listItem rule doesn't catch all cases
-                var prevPastedMd;
-                do {
-                    prevPastedMd = pastedMd;
-                    pastedMd = pastedMd.replace(
-                        /(^[ \t]*(?:[-*+]|\d+\.)\s+.*)\n{2,}([ \t]*(?:[-*+]|\d+\.)\s)/gm,
-                        '$1\n$2'
-                    );
-                } while (pastedMd !== prevPastedMd);
-
-                logger.log('Converted external HTML to markdown via Turndown');
-            } catch (err) {
-                logger.error('Turndown error:', err);
-                pastedMd = text || '';
-            }
-        } else {
-            pastedMd = text || '';
-            logger.log('Using plain text');
-        }
-        
-        if (!pastedMd) {
-            logger.log('No content to paste');
-            return;
-        }
-        
-        logger.log('Pasted markdown (raw):', pastedMd.substring(0, 100));
-        
-        // Check if cursor is inside a list item (for special handling)
-        const sel = window.getSelection();
-        if (!sel || sel.rangeCount === 0) {
-            logger.log('No selection for paste');
-            return;
-        }
-        
-        const range = sel.getRangeAt(0);
-        
-        // Find if we're inside a list item
-        let pasteTargetLi = null;
-        let tempNode = range.startContainer;
-        while (tempNode && tempNode !== editor) {
-            if (tempNode.nodeType === Node.ELEMENT_NODE && tempNode.tagName === 'LI') {
-                pasteTargetLi = tempNode;
-                break;
-            }
-            tempNode = tempNode.parentNode;
-        }
-        
-        // When pasting into a list item, trim leading/trailing newlines from the pasted content
-        // This prevents paragraph text (which includes trailing newline when triple-clicked) 
-        // from being treated as block content
-        if (pasteTargetLi) {
-            const originalMd = pastedMd;
-            // Trim leading and trailing newlines (but preserve internal structure)
-            pastedMd = pastedMd.replace(/^\n+/, '').replace(/\n+$/, '');
-            if (originalMd !== pastedMd) {
-                logger.log('Trimmed newlines for list paste:', originalMd.length, '->', pastedMd.length);
-            }
-        }
-        
-        logger.log('Pasted markdown:', pastedMd.substring(0, 100));
-        
-        // Determine if pasted content is inline or block
-        // Block patterns: starts with #, -, *, +, >, digit., \`\`\`, |, or contains newlines
-        const blockPatterns = /^(#{1,6}\s|[-*+]\s|\d+\.\s|>\s?|\`\`\`|\|)/;
-        const isBlockPaste = pastedMd.includes('\n') || blockPatterns.test(pastedMd.trim());
-        const isInlinePaste = !isBlockPaste;
-        logger.log('Is inline paste:', isInlinePaste, 'Block pattern match:', blockPatterns.test(pastedMd.trim()));
-        
-        // Debug: Log cursor position DOM structure
-        logger.log('Paste cursor position:', {
-            startContainer: range.startContainer,
-            startContainerTag: range.startContainer.nodeName,
-            startContainerParent: range.startContainer.parentNode ? range.startContainer.parentNode.nodeName : null,
-            startOffset: range.startOffset
-        });
-        
-        // Check if we're inside a code block (pre > code) or blockquote
-        let cursorNode = range.startContainer;
-        let codeElement = null;
-        let blockquoteElement = null;
-        let preElement = null;
-        
-        while (cursorNode && cursorNode !== editor) {
-            if (cursorNode.nodeType === Node.ELEMENT_NODE) {
-                const tagName = cursorNode.tagName.toUpperCase();
-                if (tagName === 'CODE' && cursorNode.parentNode && cursorNode.parentNode.tagName && cursorNode.parentNode.tagName.toUpperCase() === 'PRE') {
-                    codeElement = cursorNode;
-                    preElement = cursorNode.parentNode;
-                }
-                if (tagName === 'PRE') {
-                    preElement = cursorNode;
-                }
-                if (tagName === 'BLOCKQUOTE') {
-                    blockquoteElement = cursorNode;
-                }
-            }
-            cursorNode = cursorNode.parentNode;
-        }
-        
-        // Handle paste inside code block - insert as plain text
-        if (codeElement || preElement) {
-            logger.log('Paste inside code block');
-            const textToPaste = e.clipboardData.getData('text/plain') || '';
-            if (textToPaste) {
-                range.deleteContents();
-                const textNode = document.createTextNode(textToPaste);
-                range.insertNode(textNode);
-                
-                // Move cursor to end of inserted text
-                range.setStartAfter(textNode);
-                range.collapse(true);
-                sel.removeAllRanges();
-                sel.addRange(range);
-                
-                syncMarkdownSync();
-                logger.log('Code block paste completed');
-            }
-            return;
-        }
-        
-        // Handle paste inside blockquote - insert as plain text (preserving line breaks as <br>)
-        if (blockquoteElement) {
-            logger.log('Paste inside blockquote');
-            const textToPaste = e.clipboardData.getData('text/plain') || '';
-            if (textToPaste) {
-                range.deleteContents();
-                
-                // Split by newlines and insert with <br> tags
-                const lines = textToPaste.split('\n');
-                const frag = document.createDocumentFragment();
-                
-                lines.forEach((line, index) => {
-                    if (index > 0) {
-                        frag.appendChild(document.createElement('br'));
-                    }
-                    if (line) {
-                        frag.appendChild(document.createTextNode(line));
-                    }
-                });
-                
-                range.insertNode(frag);
-                
-                // Move cursor to end of inserted content
-                range.collapse(false);
-                sel.removeAllRanges();
-                sel.addRange(range);
-                
-                syncMarkdownSync();
-                logger.log('Blockquote paste completed');
-            }
-            return;
-        }
-        
-        // Handle paste inside table cell - insert as plain text (preserving line breaks as <br>)
-        const tableCellElement = (() => {
-            let node = range.startContainer;
-            while (node && node !== editor) {
-                if (node.nodeType === Node.ELEMENT_NODE && (node.tagName === 'TD' || node.tagName === 'TH')) {
-                    return node;
-                }
-                node = node.parentNode;
-            }
-            return null;
-        })();
-        
-        if (tableCellElement) {
-            logger.log('Paste inside table cell');
-            const textToPaste = e.clipboardData.getData('text/plain') || '';
-            if (textToPaste) {
-                range.deleteContents();
-                
-                // Split by newlines and insert with <br> tags
-                const lines = textToPaste.split('\n');
-                const frag = document.createDocumentFragment();
-                
-                lines.forEach((line, index) => {
-                    if (index > 0) {
-                        frag.appendChild(document.createElement('br'));
-                    }
-                    if (line) {
-                        frag.appendChild(document.createTextNode(line));
-                    }
-                });
-                
-                range.insertNode(frag);
-                
-                // Move cursor to end of inserted content
-                range.collapse(false);
-                sel.removeAllRanges();
-                sel.addRange(range);
-                
-                syncMarkdownSync();
-                logger.log('Table cell paste completed');
-            }
-            return;
-        }
-        
-        // URL auto-link on paste
-        // If clipboard contains a URL (not from internal copy), auto-create a link
-        if (!internalMd) {
-            const plainText = (text || '').trim();
-            const urlRegex = /^https?:\/\/[^\s]+$/;
-            if (plainText && !plainText.includes('\n') && urlRegex.test(plainText)) {
-                const selectedText = range.toString();
-
-                if (selectedText && !selectedText.includes('\n')) {
-                    // Case 2: Text is selected + URL in clipboard → wrap selected text as link
-                    logger.log('URL paste: wrapping selected text as link:', selectedText, '->', plainText);
-                    const a = document.createElement('a');
-                    a.href = plainText;
-                    a.textContent = selectedText;
-                    setupLink(a);
-                    range.deleteContents();
-                    range.insertNode(a);
-
-                    // Move cursor after the link
-                    const newRange = document.createRange();
-                    newRange.setStartAfter(a);
-                    newRange.collapse(true);
-                    sel.removeAllRanges();
-                    sel.addRange(newRange);
-
-                    syncMarkdown();
-                    return;
-                } else if (!selectedText || selectedText.trim() === '') {
-                    // Case 1: No selection + URL paste → auto-create link with URL as text
-                    logger.log('URL paste: auto-linking URL:', plainText);
-                    const a = document.createElement('a');
-                    a.href = plainText;
-                    a.textContent = plainText;
-                    setupLink(a);
-                    range.deleteContents();
-                    range.insertNode(a);
-
-                    // Move cursor after the link
-                    const newRange = document.createRange();
-                    newRange.setStartAfter(a);
-                    newRange.collapse(true);
-                    sel.removeAllRanges();
-                    sel.addRange(newRange);
-
-                    syncMarkdown();
-                    return;
-                }
-                // If selection spans multiple lines, fall through to normal paste
-            }
-        }
-
-        // Detect triple-click selection pattern for paste
-        // Triple-click typically selects from start of element to start of next element
-        const isTripleClickSelection = (
-            (range.startContainer.nodeType === 1 && range.startOffset === 0) ||
-            (range.endContainer.nodeType === 1 && range.endOffset === 0) ||
-            (range.startContainer !== range.endContainer && 
-             (range.startContainer.nodeType === 1 || range.endContainer.nodeType === 1))
-        );
-        
-        // Handle triple-click selection in list item for paste
-        if (isTripleClickSelection && pasteTargetLi && !range.collapsed) {
-            logger.log('Paste: Triple-click selection detected in li');
-            
-            // Get nested list and checkbox before deletion
-            const nestedList = pasteTargetLi.querySelector(':scope > ul, :scope > ol');
-            const checkbox = pasteTargetLi.querySelector(':scope > input[type="checkbox"]');
-            
-            // Clear the li content but preserve structure
-            const nodesToRemove = [];
-            for (const child of pasteTargetLi.childNodes) {
-                if (child.nodeType === 3) {
-                    nodesToRemove.push(child);
-                } else if (child.nodeType === 1) {
-                    const tag = child.tagName?.toLowerCase();
-                    if (tag !== 'ul' && tag !== 'ol' && tag !== 'input') {
-                        nodesToRemove.push(child);
-                    }
-                }
-            }
-            nodesToRemove.forEach(n => n.remove());
-            
-            // Set range to insert position
-            const newRange = document.createRange();
-            if (checkbox) {
-                newRange.setStartAfter(checkbox);
-            } else if (nestedList) {
-                newRange.setStart(pasteTargetLi, 0);
-            } else {
-                newRange.setStart(pasteTargetLi, 0);
-            }
-            newRange.collapse(true);
-            sel.removeAllRanges();
-            sel.addRange(newRange);
-            range.setStart(newRange.startContainer, newRange.startOffset);
-            range.collapse(true);
-        } else {
-            range.deleteContents();
-        }
-        
-        if (isInlinePaste) {
-            // INLINE PASTE: Insert directly at cursor using DOM API
-            // Parse the inline markdown to HTML and insert
-            const tempSpan = document.createElement('span');
-            tempSpan.innerHTML = parseInline(pastedMd);
-            
-            // Insert all child nodes
-            const frag = document.createDocumentFragment();
-            while (tempSpan.firstChild) {
-                frag.appendChild(tempSpan.firstChild);
-            }
-            
-            // If cursor is inside a <br> tag, replace the <br> with the content
-            // This happens when pasting into an empty heading like "## "
-            if (range.startContainer.nodeName === 'BR') {
-                const brElement = range.startContainer;
-                const parent = brElement.parentNode;
-                if (parent) {
-                    parent.replaceChild(frag, brElement);
-                    logger.log('Replaced <br> with pasted content');
-                }
-            } else {
-                range.insertNode(frag);
-            }
-            
-            // Debug: Log DOM after insert
-            let parentBlock = range.startContainer;
-            while (parentBlock && parentBlock !== editor && parentBlock.parentNode !== editor) {
-                parentBlock = parentBlock.parentNode;
-            }
-            logger.log('After insert - parent block:', parentBlock ? parentBlock.outerHTML.substring(0, 200) : 'null');
-            
-            // Move cursor to end of inserted content
-            range.collapse(false);
-            sel.removeAllRanges();
-            sel.addRange(range);
-            
-            // Sync to markdown (this updates the internal state)
-            syncMarkdownSync();
-            
-            // Ensure editor stays focused
-            editor.focus();
-            
-            logger.log('Inline paste completed via DOM');
-        } else {
-            // BLOCK PASTE: Insert as block element(s) using DOM manipulation
-            
-            // Convert pasted markdown to HTML first to check what we're pasting
-            const pastedHtml = markdownToHtmlFragment(pastedMd);
-            logger.log('Block paste - pastedHtml:', pastedHtml.substring(0, 200));
-            
-            // Create a temporary container to parse the HTML
-            const tempContainer = document.createElement('div');
-            tempContainer.innerHTML = pastedHtml;
-            
-            // Get all the new block elements
-            const newElements = Array.from(tempContainer.children);
-            logger.log('Block paste - newElements count:', newElements.length);
-            
-            if (newElements.length === 0) {
-                logger.log('Block paste - no elements to insert');
-                return;
-            }
-            
-            // Check if pasted content is a list (ul or ol)
-            const pastedIsList = newElements.length === 1 && 
-                (newElements[0].tagName === 'UL' || newElements[0].tagName === 'OL');
-            
-            // Check if cursor is inside a list item
-            let listItemElement = null;
-            let parentListElement = null;
-            let tempNode = range.startContainer;
-            while (tempNode && tempNode !== editor) {
-                if (tempNode.nodeType === Node.ELEMENT_NODE) {
-                    if (tempNode.tagName === 'LI' && !listItemElement) {
-                        listItemElement = tempNode;
-                    }
-                    if ((tempNode.tagName === 'UL' || tempNode.tagName === 'OL') && !parentListElement) {
-                        parentListElement = tempNode;
-                    }
-                }
-                tempNode = tempNode.parentNode;
-            }
-            
-            logger.log('Block paste - listItemElement:', listItemElement ? 'found' : 'null');
-            logger.log('Block paste - parentListElement:', parentListElement ? parentListElement.tagName : 'null');
-            logger.log('Block paste - pastedIsList:', pastedIsList);
-            
-            // Track the last inserted element for cursor positioning
-            let lastInsertedElement = null;
-            
-            // Special handling: Pasting list into list item
-            if (listItemElement && parentListElement && pastedIsList) {
-                const pastedList = newElements[0];
-                const pastedListItems = Array.from(pastedList.children).filter(el => el.tagName === 'LI');
-                
-                // Check if current list item is empty (only whitespace or <br>)
-                const liText = listItemElement.textContent || '';
-                const isEmptyLi = liText.trim() === '' || 
-                    (listItemElement.childNodes.length === 1 && listItemElement.firstChild.nodeName === 'BR');
-                
-                logger.log('Block paste - isEmptyLi:', isEmptyLi);
-                logger.log('Block paste - pastedListItems count:', pastedListItems.length);
-                
-                if (isEmptyLi) {
-                    // Pattern 1: Empty list item - replace with pasted list items
-                    // The pasted items should be inserted at the same level as the empty li
-                    const nextSibling = listItemElement.nextSibling;
-                    const parentList = listItemElement.parentNode;
-                    
-                    // Remove the empty list item
-                    parentList.removeChild(listItemElement);
-                    
-                    // Insert pasted list items at the same position
-                    pastedListItems.forEach(li => {
-                        const clonedLi = li.cloneNode(true);
-                        if (nextSibling) {
-                            parentList.insertBefore(clonedLi, nextSibling);
-                        } else {
-                            parentList.appendChild(clonedLi);
-                        }
-                        lastInsertedElement = clonedLi;
-                    });
-                    
-                    logger.log('Block paste - replaced empty li with pasted list items');
-                } else {
-                    // Pattern 2: Non-empty list item - insert pasted items after current li
-                    let insertAfterLi = listItemElement;
-                    const parentList = listItemElement.parentNode;
-                    
-                    pastedListItems.forEach(li => {
-                        const clonedLi = li.cloneNode(true);
-                        if (insertAfterLi.nextSibling) {
-                            parentList.insertBefore(clonedLi, insertAfterLi.nextSibling);
-                        } else {
-                            parentList.appendChild(clonedLi);
-                        }
-                        insertAfterLi = clonedLi;
-                        lastInsertedElement = clonedLi;
-                    });
-                    
-                    logger.log('Block paste - inserted pasted list items after current li');
-                }
-            } else {
-                // Standard block paste behavior (non-list or pasting into non-list)
-                // Find the current block element
-                let blockElement = range.startContainer;
-                while (blockElement && blockElement.nodeType !== Node.ELEMENT_NODE) {
-                    blockElement = blockElement.parentNode;
-                }
-                while (blockElement && blockElement !== editor && blockElement.parentNode !== editor) {
-                    blockElement = blockElement.parentNode;
-                }
-                
-                const isEmptyBlock = blockElement && (!blockElement.textContent || blockElement.textContent.trim() === '');
-                logger.log('Block paste - isEmptyBlock:', isEmptyBlock);
-                logger.log('Block paste - blockElement:', blockElement ? blockElement.tagName : 'null');
-                
-                if (isEmptyBlock && blockElement) {
-                    // Replace empty block with pasted content
-                    const parent = blockElement.parentNode;
-                    const nextSibling = blockElement.nextSibling;
-                    
-                    // Remove the empty block
-                    parent.removeChild(blockElement);
-                    
-                    // Insert all new elements
-                    newElements.forEach(el => {
-                        if (nextSibling) {
-                            parent.insertBefore(el, nextSibling);
-                        } else {
-                            parent.appendChild(el);
-                        }
-                        lastInsertedElement = el;
-                    });
-                } else if (blockElement) {
-                    // Insert after current block
-                    let insertAfter = blockElement;
-                    newElements.forEach(el => {
-                        if (insertAfter.nextSibling) {
-                            insertAfter.parentNode.insertBefore(el, insertAfter.nextSibling);
-                        } else {
-                            insertAfter.parentNode.appendChild(el);
-                        }
-                        insertAfter = el;
-                        lastInsertedElement = el;
-                    });
-                } else {
-                    // No block element found, append to editor
-                    newElements.forEach(el => {
-                        editor.appendChild(el);
-                        lastInsertedElement = el;
-                    });
-                }
-            }
-            
-            // Setup interactive elements for the newly inserted content
-            setupInteractiveElements();
-            
-            // Move cursor to end of last inserted element
-            if (lastInsertedElement) {
-                const newRange = document.createRange();
-                
-                // Find the deepest last text node or element
-                let cursorTarget = lastInsertedElement;
-                while (cursorTarget.lastChild) {
-                    cursorTarget = cursorTarget.lastChild;
-                }
-                
-                // If it's a text node, position at end
-                if (cursorTarget.nodeType === Node.TEXT_NODE) {
-                    newRange.setStart(cursorTarget, cursorTarget.length);
-                    newRange.setEnd(cursorTarget, cursorTarget.length);
-                } else {
-                    // Element node - position after it
-                    newRange.selectNodeContents(cursorTarget);
-                    newRange.collapse(false);
-                }
-                
-                sel.removeAllRanges();
-                sel.addRange(newRange);
-                
-                logger.log('Block paste - cursor positioned at:', cursorTarget.nodeName);
-            }
-            
-            // Sync to markdown
-            syncMarkdownSync();
-            
-            // Ensure editor stays focused
-            editor.focus();
-            
-            logger.log('Block paste completed via DOM manipulation');
-        }
+    const { handlePaste } = require('./editor/transfer/paste').createPaste({
+        editor, logger, getSourceMode: () => isSourceMode,
+        saveSnapshot: () => undoManager.saveSnapshot(),
+        markAsEdited: (...args) => markAsEdited(...args),
+        saveImageAndInsert: (...args) => host.saveImageAndInsert(...args),
+        syncMarkdown: (...args) => syncMarkdown(...args),
+        syncMarkdownSync: (...args) => syncMarkdownSync(...args),
+        setupLink: (...args) => setupLink(...args),
+        parseInline: (...args) => parseInline(...args),
+        markdownToHtmlFragment: (...args) => markdownToHtmlFragment(...args),
+        setupInteractiveElements: (...args) => setupInteractiveElements(...args)
     });
+    editor.addEventListener('paste', handlePaste);
 
     // Focus/blur notifications for sync policy
     editor.addEventListener('focus', function() {
@@ -13432,7 +3017,7 @@ window.BinaryMath = require('../shared/math-syntax');
             host.syncContent(markdown);
         }
     });
-    
+
     search.initialize();
 
     workspaceUi = window.BinaryWorkspaceUi?.create({
@@ -13468,7 +3053,7 @@ window.BinaryMath = require('../shared/math-syntax');
         window.__testApi.updateOutline = updateOutline;
         window.__testApi.updateActiveOutlineItem = updateActiveOutlineItem;
         window.__testApi.ready = true;
-        
+
         // Table operation functions for testing
         window.__testApi.initializeTableColumnWidths = initializeTableColumnWidths;
         window.__testApi.updateColumnWidth = updateColumnWidth;
@@ -13481,7 +3066,7 @@ window.BinaryMath = require('../shared/math-syntax');
         window.__testApi.convertListToType = convertListToType;
         window.__testApi.convertToList = convertToList;
         window.__testApi.convertToTaskList = convertToTaskList;
-        
+
         // Also expose directly on window for backward compatibility with existing tests
         window.initializeTableColumnWidths = initializeTableColumnWidths;
         window.updateColumnWidth = updateColumnWidth;
@@ -13492,7 +3077,7 @@ window.BinaryMath = require('../shared/math-syntax');
             markdown = md;
             renderFromMarkdown();
         };
-        
+
         // Expose activeTableCell and activeTable as properties
         Object.defineProperty(window, 'activeTableCell', {
             get: () => activeTableCell,
