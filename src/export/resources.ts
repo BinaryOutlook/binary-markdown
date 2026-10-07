@@ -1,12 +1,19 @@
 import * as fs from 'fs/promises';
+import * as http from 'http';
+import * as https from 'https';
 import * as path from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
+import { promisify } from 'util';
+import { brotliDecompress, gunzip, inflate } from 'zlib';
 import { checkCancelled, ExportResource } from './types';
 
 const mimeTypes: Record<string, string> = {
     '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.gif': 'image/gif',
     '.webp': 'image/webp', '.svg': 'image/svg+xml', '.woff2': 'font/woff2',
     '.woff': 'font/woff', '.ttf': 'font/ttf', '.css': 'text/css'
+};
+const decompressors: Record<string, (bytes: Buffer) => Promise<Buffer>> = {
+    gzip: promisify(gunzip), deflate: promisify(inflate), br: promisify(brotliDecompress)
 };
 
 export function resourceUrl(reference: string, base: string): URL {
@@ -68,6 +75,48 @@ function requirePortableSvg(bytes: Buffer): void {
     }
 }
 
+/** Keep cancellation attached to the request, including while its body is pending. */
+async function loadHttpResource(url: URL, signal: AbortSignal, redirects = 0): Promise<ExportResource> {
+    checkCancelled(signal);
+    if (url.username || url.password) { throw new Error('Resource URLs must not contain credentials.'); }
+    // VS Code 1.85 embeds Node 18.15, whose fetch can garbage-collect its
+    // internal abort controller while a request is still pending (undici #1926).
+    // The host's http/https modules retain cancellation and its proxy support.
+    const response = await new Promise<http.IncomingMessage>((resolve, reject) => {
+        const request = (url.protocol === 'https:' ? https : http).get(url, {
+            signal, headers: { 'Accept-Encoding': 'gzip, deflate, br' }
+        }, resolve);
+        request.on('error', reject);
+    });
+    try {
+        const status = response.statusCode || 0;
+        if ([301, 302, 303, 307, 308].includes(status) && response.headers.location) {
+            if (redirects >= 20) { throw new Error('Too many resource redirects.'); }
+            const redirected = new URL(response.headers.location, url);
+            if (!['http:', 'https:'].includes(redirected.protocol)) { throw new Error('Unsupported resource redirect scheme.'); }
+            response.destroy();
+            return await loadHttpResource(redirected, signal, redirects + 1);
+        }
+        if (status < 200 || status >= 300) { throw new Error('Resource request failed (' + status + '): ' + url); }
+        const chunks: Buffer[] = [];
+        for await (const chunk of response) { chunks.push(Buffer.from(chunk)); }
+        checkCancelled(signal);
+        let bytes: Buffer = Buffer.concat(chunks);
+        const encodings = String(response.headers['content-encoding'] || '').split(',').map(value => value.trim().toLowerCase()).filter(Boolean);
+        for (const encoding of encodings.reverse()) {
+            if (Object.hasOwn(decompressors, encoding)) { bytes = await decompressors[encoding](bytes); }
+            else if (encoding !== 'identity') { throw new Error('Unsupported resource content encoding: ' + encoding); }
+        }
+        checkCancelled(signal);
+        const mime = String(response.headers['content-type'] || '').split(';')[0].trim().toLowerCase()
+            || mimeTypes[path.extname(url.pathname).toLowerCase()] || 'application/octet-stream';
+        return { bytes, mime };
+    } catch (error) {
+        checkCancelled(signal);
+        throw error;
+    } finally { response.destroy(); }
+}
+
 /** Fetch only explicit references, once per job. No document content is uploaded. */
 export function createResourceLoader(signal: AbortSignal) {
     const cache = new Map<string, Promise<ExportResource>>();
@@ -90,6 +139,8 @@ export function createResourceLoader(signal: AbortSignal) {
                     const file = fileURLToPath(url);
                     bytes = await fs.readFile(file, { signal });
                     mime = mimeTypes[path.extname(file).toLowerCase()] || 'application/octet-stream';
+                } else if (url.protocol === 'http:' || url.protocol === 'https:') {
+                    ({ bytes, mime } = await loadHttpResource(url, signal));
                 } else {
                     const response = await fetch(key, { signal, credentials: 'omit' });
                     if (!response.ok) { throw new Error('Resource request failed (' + response.status + '): ' + reference); }

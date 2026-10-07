@@ -65,6 +65,8 @@ The inspected extension declares VS Code `^1.85.0`. Account for its supported ex
 
 Resolve relative assets against the Markdown file, not a webview URI or process working directory. Retrieve only necessary referenced resources, including required references in selected styles; do not crawl ordinary hyperlinks. Capture resolved asset data for the job, account for failed retrievals, and ensure the final standalone HTML does not require a network connection. Keep conversion local.
 
+The host captures HTTP/HTTPS resources through cancellable requests, following at most 20 redirects within those protocols and decoding gzip, deflate or Brotli content. Credential-bearing URLs are rejected, and no cookies or document content are sent. Cancellation remains attached while waiting for both headers and body bytes. This avoids the older built-in fetch cancellation defect in the minimum VS Code runtime; local files and data URIs retain their separate loading routes. The job caches captured resources and validates portable SVG content before embedding it.
+
 Generate and validate complete bytes before exposing a successful final output. Hash those exact bytes when needed; do not change them after choosing a hash suffix or insert a self-referential final filename into them. Use a finalization strategy that handles concurrent candidate claims without overwriting and cleans up owned temporary/partial files on failure or cancellation. Exact filesystem primitives are an implementation choice to verify on the required host.
 
 ## Output finalization

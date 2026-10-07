@@ -10,7 +10,7 @@ An open-source visual Markdown editor for VS Code. Write in a rendered view, swi
 
 Built on [Any Markdown by raggbal and contributors](https://github.com/raggbal/any-markdown), which provides the visual editor and much of its existing functionality under MIT. BinaryOutlook independently maintains Binary Markdown's changes, releases, and support. See [Acknowledgments](ACKNOWLEDGMENTS.md) for provenance.
 
-**Version 0.4.1** improves paragraph and table source preservation, ordered lists, literal inline code, and Save/Undo reliability. Read the [release notes](release-notes/0.4.1.md) and [changelog](CHANGELOG.md#041) for the changes and known limitations. Available packages, exact source revisions and checksums are listed on [GitHub Releases](https://github.com/BinaryOutlook/binary-markdown/releases).
+**Version 0.5.0 is being prepared** from the editor improvements integrated on `main`: Visual/Source/Split views, command search, source-based Find and Replace, spatial table controls, and per-block code wrapping. Read the [0.5.0 notes](release-notes/0.5.0.md), [changelog](CHANGELOG.md#050), and [readiness record](reports/validation/2026-10-07-0.5.0-readiness.md). Available packages, exact source revisions and checksums are listed on [GitHub Releases](https://github.com/BinaryOutlook/binary-markdown/releases); release preparation does not establish publication.
 
 ## Install
 
@@ -64,7 +64,7 @@ Save a named Markdown file in a trusted local workspace, then open the sharing-a
 
 Tools are user-installed. Follow [export help](media/export-help.md) for setup, executable paths, output naming, and format-specific settings, or start with the [HTML export tutorial](docs/export-tutorial.md).
 
-Export is unavailable in Remote-SSH and other remote hosts, browser VS Code, and the standalone desktop app. DOCX numbering remains experimental: Enter on an empty numbered line can end numbering and change formatting; copying and reading order vary by reader. PDF gutters can appear in copied text. The [reader checkpoint](reports/validation/2026-09-21-docx-reader-checkpoint.md) records tested versions and remaining checks. Long custom DOCX language labels can extend outside their tab in Word. Review the [0.4.1 known limitations](release-notes/0.4.1.md#known-limitations), especially external writes that can still replace unsaved editor content, when working on important documents.
+Export is unavailable in Remote-SSH and other remote hosts, browser VS Code, and the standalone desktop app. DOCX numbering remains experimental: Enter on an empty numbered line can end numbering and change formatting; copying and reading order vary by reader. PDF gutters can appear in copied text. The [reader checkpoint](reports/validation/2026-09-21-docx-reader-checkpoint.md) records tested versions and remaining checks. Long custom DOCX language labels can extend outside their tab in Word. Review the [0.5.0 known limitations](release-notes/0.5.0.md#known-limitations), especially external writes that can still replace unsaved editor content, when working on important documents.
 
 ## Build and contribute
 

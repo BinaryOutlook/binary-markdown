@@ -232,11 +232,23 @@ Wide tables scroll horizontally within the table, keeping the surrounding docume
 
 ### Supported code languages
 
-The editor supports syntax highlighting for the following languages:
+The language picker includes these identifiers:
 
 `javascript`, `typescript`, `python`, `json`, `bash`, `shell`, `css`, `html`, `xml`, `sql`, `java`, `go`, `rust`, `yaml`, `markdown`, `c`, `cpp`, `csharp`, `php`, `ruby`, `swift`, `kotlin`, `dockerfile`, `plaintext`
 
 **Language Aliases:** `js`→javascript, `ts`→typescript, `py`→python, `sh`→bash, `yml`→yaml, `md`→markdown, `c++`→cpp, `c#`→csharp
+
+For highlighting, put the language after the opening fence, or select it through the code block's language button. For example:
+
+````markdown
+```java
+System.out.println("Hello");
+```
+````
+
+This uses the optional language info string supported by [CommonMark](https://spec.commonmark.org/0.31.2/#fenced-code-blocks) and [GitHub Flavored Markdown](https://github.github.io/gfm/#fenced-code-blocks). A fence without a language is still a valid code block. The editor does not guess the language automatically.
+
+Highlighting patterns are available for JavaScript, TypeScript, Python, JSON, Bash/Shell, CSS, HTML/XML, SQL, Java, C, C++, C#, Go, Rust and YAML. Plain text and other identifiers retain their code without syntax coloring. Available colors depend on the theme; selecting an identifier does not promise the same appearance in another Markdown viewer.
 
 ### Search for a language
 
@@ -317,6 +329,8 @@ $$
 - KaTeX renders supported TeX commands; this is not full MathJax or LaTeX support. Invalid expressions show an error and retain editable source. Empty display blocks show "Empty expression".
 
 Equation blocks label **Source** and **Preview** and show the Shift+Enter exit hint. Each pane offers labeled horizontal scroll buttons when its content overflows. Unsupported commands retain their source and expose a plain-text diagnostic with a source line when available.
+
+For equations and Mermaid diagrams, expand **Diagnostic details** and focus the details panel to read long explanations. Home moves to its top and End to its bottom. These keys retain focus and the surrounding document's scroll position without changing Markdown or reporting an edit. Pointer, arrow-key and page-key scrolling retain the host's usual behavior.
 
 Choose `binary-markdown.mathSourcePosition` in VS Code Settings, or **Equation source position** in desktop Preferences, to place editable block-equation source **Above preview** (default) or **Below preview**. The preference applies immediately and persists across reopened documents. Changing it retains the active source selection and edit mode; it does not change the equation, add an undo step, or affect inline equations, Source mode, or exported content.
 

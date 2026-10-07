@@ -2,17 +2,43 @@
 
 ## Unreleased
 
-### Fixed
+Changes after the 0.5.0 scope will be recorded here.
 
-- Keep code-block controls anchored above the visible block while long code scrolls horizontally, without covering its first line.
+## 0.5.0
 
-### Changed
-
-- Replace the code Copy text with an accessible icon and stable-size success feedback.
+Bring together the editor views, command workspaces, source search, table navigation and code controls integrated after 0.4.1. See the [version notes](release-notes/0.5.0.md) for compatibility and known limitations, and the [readiness record](reports/validation/2026-10-07-0.5.0-readiness.md) for candidate acceptance and validation evidence. [GitHub Releases](https://github.com/BinaryOutlook/binary-markdown/releases) establishes publication and the validated package identity.
 
 ### Added
 
+- Visual, Source and Split view controls, with an editable source pane and read-only live preview sharing the same save route and Undo/Redo history.
+- Outline/Document navigation tabs, source/preview heading location, and document counts and section progress.
+- Searchable formatting and insertion commands through the permanent three-dot menu, category-filtered Insert workspace and Action Palette, plus contextual tools when the formatting row is collapsed.
+- Source-based Find and Replace with surrounding text, selected replacements, case/whole-word/regular-expression matching, bounded search and one-step replacement undo.
+- Spatial table controls with row/column navigation, directional insertion, boundary append buttons and overflow menus for constrained panes.
+- Source/Preview labels and plain-text diagnostics for equation and diagram blocks, plus export progress, warning and completion feedback.
 - Optional per-block soft wrapping, off by default, with a persistent **Wrapped** notice. Wrapping preserves code content, editing state, source/save/copy behavior, and independent export layout. See [code controls and soft wrapping](docs/editor-guide.md#code-controls-and-soft-wrapping).
+
+### Changed
+
+- Align code, equation, insertion, palette and outline presentation with the selected UI designs while preserving settings and extension identity.
+- Make code copying use a labeled accessible control with stable-size success feedback.
+- Build identified development VSIX packages on branch pushes and pull requests, with workflow build/run/attempt fields and matching checksum and build-information sidecars.
+- Run full browser validation across nine platform shards alongside four installed-VSIX lanes; documentation-only PRs use the documented fast path, while releases still require full validation.
+- Update audited runtime and build dependencies, including DOMPurify and KaTeX 0.18.2, and add an explicit scoped AI visual-review workflow separate from functional tests and owner acceptance. Keep Mermaid's math dependency on the same patched KaTeX version and update the affected development-server and source-map dependencies.
+- Align the README, documentation entry points, roadmap and version metadata with the integrated 0.5.0 scope.
+
+### Fixed
+
+- Keep code-block controls anchored above the visible block while long code scrolls horizontally, without covering its first line.
+- Keep native table selectors within fitted controls and reveal retained cells after navigation or resizing.
+- Preserve palette history and command access as toolbars and menus respond to narrow panes.
+- Remove generated JavaScript duplicates of authoritative TypeScript browser specs without reducing platform coverage.
+- Keep Home/End navigation inside expanded block diagnostics, retaining focus and document position without reporting a content edit.
+- Cancel pending HTTP export resources reliably on the minimum supported VS Code runtime, including after garbage collection and while response bodies are loading.
+
+### Known limitations
+
+External-write conflict recovery, remaining parser cases and export-reader acceptance remain unresolved. See the [readiness record](reports/validation/2026-10-07-0.5.0-readiness.md) and [version limitations](release-notes/0.5.0.md#known-limitations). Candidate acceptance, required CI, merging and publication are recorded separately.
 
 ## 0.4.1
 

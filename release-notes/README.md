@@ -2,6 +2,7 @@
 
 Version-specific notes are source material for release preparation. The [published release page](https://github.com/BinaryOutlook/binary-markdown/releases) identifies actual publication, source and downloadable artifacts; a file here does not publish a release.
 
+- [0.5.0](0.5.0.md): Visual/Source/Split views, command workspaces, source-based Find and Replace, spatial table tools, block feedback, code wrapping and identified development packages; see the [readiness record](../reports/validation/2026-10-07-0.5.0-readiness.md) for release gates.
 - [0.4.1](0.4.1.md): paragraph/table source preservation, ordered-list and inline-code fixes, reliable Save/Undo, and updated documentation with known limitations.
 - [0.4.0](0.4.0.md): published on 2026-09-23; editor/export integration, changed defaults, and disclosed acceptance limits.
 - [0.4.0 RC1](0.4.0-rc.1.md): the earlier human-review candidate record; numeric package version `0.4.0`.
