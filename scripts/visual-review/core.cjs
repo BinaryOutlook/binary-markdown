@@ -59,7 +59,7 @@ function walk(root, relative, result) {
 }
 function sourceIdentity(root) {
     const files = [];
-    for (const relative of ['src', 'vendor', 'package.json', 'package-lock.json', '.node-version', 'test/build-standalone.js', 'build-locales.js', 'scripts/copy-webview.js', 'scripts/copy-vendor.js']) walk(root, relative, files);
+    for (const relative of ['src', 'vendor', 'package.json', 'package-lock.json', '.node-version', 'test/build-standalone.js', 'build-locales.js', 'scripts/copy-webview.js', 'scripts/bundle-editor.cjs', 'scripts/copy-vendor.js']) walk(root, relative, files);
     return { commit: git(root, 'rev-parse', 'HEAD').toString().trim(), dirty: Boolean(git(root, 'status', '--porcelain').length), productHash: hash(canonical(files)) };
 }
 function contract(root) {

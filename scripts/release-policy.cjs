@@ -39,7 +39,7 @@ function latestOfficialRelease(releases) {
 // themselves justify distributing a new VSIX. Unknown runtime commit types
 // remain visible in the plan and require a maintainer's version decision.
 function isReleaseRelevant(file) {
-    return /^(src\/|media\/|LICENSES\/|package(?:\.nls(?:\.[\w-]+)?\.json|\.json|-lock\.json)$|LICENSE$|NOTICE$|\.node-version$|\.vscodeignore$|tsconfig\.json$|build-locales\.js$|scripts\/(?:package-vsix|build-identity|bundle-mermaid|copy-vendor|copy-webview)\.(?:c?js)$)/.test(file);
+    return /^(src\/|media\/|LICENSES\/|package(?:\.nls(?:\.[\w-]+)?\.json|\.json|-lock\.json)$|LICENSE$|NOTICE$|\.node-version$|\.vscodeignore$|tsconfig\.json$|build-locales\.js$|scripts\/(?:package-vsix|build-identity|bundle-editor|bundle-mermaid|copy-vendor|copy-webview)\.(?:c?js)$)/.test(file);
 }
 
 function patchEligible(change) {
