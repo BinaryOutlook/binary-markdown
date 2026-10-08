@@ -15,8 +15,7 @@ async function tableOverflowChecks({ editor, keyboard, resize, setPosition, reco
         await editor.waitForFunction(value => document.documentElement.dataset.tableToolbarPosition === value, position);
         await editor.locator('#editor td').first().click();
         await editor.waitForFunction(({ controls, position }) => document.querySelector(controls).dataset.placement === position, { controls, position });
-        // The compact directional diamond fits in the old 520px test pane.
-        // Use the same narrow pane as the browser overflow regression.
+        // Exercise the compact strip and its permanent action menu in a narrow pane.
         await resize(420, 260);
         await editor.locator('#editor td').first().scrollIntoViewIfNeeded();
         const more = editor.locator(`${controls} [data-action="more"]`);
@@ -31,8 +30,8 @@ async function tableOverflowChecks({ editor, keyboard, resize, setPosition, reco
         await more.click();
         await editor.locator(overflow).waitFor({ state: 'visible' });
         const actions = await editor.evaluate(({ controls, overflow }) => [controls, overflow].flatMap(selector =>
-            [...document.querySelectorAll(`${selector} button:not([data-action="more"])`)].filter(button => button.getClientRects().length).map(button => button.dataset.action)), { controls, overflow });
-        assert.deepEqual(actions, ['add-col-left', 'add-col-right', 'add-row-above', 'add-row-below', 'align-left', 'align-center', 'align-right', 'del-col', 'del-row', 'placement']);
+            [...document.querySelectorAll(`${selector} button[data-action]:not([data-action="more"])`)].filter(button => button.getClientRects().length).map(button => button.dataset.action)), { controls, overflow });
+        assert.deepEqual([...actions].sort(), ['add-col-left', 'add-col-right', 'add-row-above', 'add-row-below', 'align-left', 'align-center', 'align-right', 'del-col', 'del-row', 'placement'].sort());
         await keyboard.press('End');
         assert.equal(await editor.evaluate(() => document.activeElement.dataset.action), 'placement');
         await keyboard.press('Enter');
@@ -47,18 +46,12 @@ async function tableOverflowChecks({ editor, keyboard, resize, setPosition, reco
         assert.equal(await editor.evaluate(() => window.htmlToMarkdown()), source);
         const smallestViewport = await editor.evaluate(() => ({ width: innerWidth, height: innerHeight }));
         await resize(1400, 1000);
-        // A max-width on an installed webview cannot enlarge its OS window or
-        // reclaim space from VS Code's sidebars. Keep testing real reachability
-        // when the restored pane still legitimately requires overflow.
-        if (canEnlargeWindow) await more.waitFor({ state: 'hidden' });
-        else {
-            await editor.waitForFunction(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve(true)))));
-            if (await more.isVisible()) await more.click();
-            const restoredActions = await editor.evaluate(({ controls, overflow }) => [controls, overflow].flatMap(selector =>
-                [...document.querySelectorAll(`${selector} button:not([data-action="more"])`)].filter(button => button.getClientRects().length).map(button => button.dataset.action)), { controls, overflow });
-            assert.deepEqual(restoredActions, actions, 'Every action remains reachable in the actual restored pane');
-            if (await editor.locator(overflow).isVisible()) await keyboard.press('Escape');
-        }
+        await more.waitFor({ state: 'visible' });
+        await more.click();
+        const restoredActions = await editor.evaluate(({ controls, overflow }) => [controls, overflow].flatMap(selector =>
+            [...document.querySelectorAll(`${selector} button[data-action]:not([data-action="more"])`)].filter(button => button.getClientRects().length).map(button => button.dataset.action)), { controls, overflow });
+        assert.deepEqual([...restoredActions].sort(), [...actions].sort(), 'Every action remains reachable in the actual restored pane');
+        await keyboard.press('Escape');
         const restoredViewport = await editor.evaluate(() => ({ width: innerWidth, height: innerHeight }));
         assert.equal(await editor.locator('html').getAttribute('data-table-toolbar-position'), position);
         record('table-overflow', { position, wholeButtons: true, allActionsReachable: true, openPickerResized: true, sourceUnchanged: true,

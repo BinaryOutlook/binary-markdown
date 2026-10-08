@@ -27,7 +27,7 @@ for (const position of ['auto', 'top-left', 'top-right', 'bottom-left', 'bottom-
     test(`${position}: add row keeps target, selection and undo in agreement`, async ({ page }) => {
         await setup(page, position);
         await expect(page.locator(controls)).toBeVisible();
-        await page.locator(controls + ' [data-action="add-row-below"]').click();
+        await clickTableAction(page, 'add-row-below');
         await expect(page.locator('#editor tr')).toHaveCount(4);
         await expect.poll(() => page.evaluate(() => {
             const node = getSelection()?.anchorNode;
@@ -63,7 +63,7 @@ test('Full mode gives docked column insertion its own row in a narrow editor', a
     await expect(page.locator('.table-toolbar-row')).toBeVisible();
     await expect(page.locator('.table-toolbar-toggle')).toBeHidden();
     await expect(page.locator(controls)).toBeVisible();
-    await page.locator(controls + ' [data-action="add-col-right"]').click();
+    await clickTableAction(page, 'add-col-right');
     await expect(page.locator('#editor th')).toHaveCount(4);
 });
 
@@ -124,9 +124,9 @@ test('toolbar keyboard navigation and Escape return to the retained table cell',
     await setup(page, 'left');
     await expect(page.locator(controls)).toBeVisible();
     await page.keyboard.press('Alt+F10');
-    await expect(page.locator(controls + ' [data-action="add-col-left"]')).toBeFocused();
+    await expect(page.locator(controls + ' .table-coordinate-chip')).toBeFocused();
     await page.keyboard.press('ArrowDown');
-    await expect(page.locator(controls + ' [data-action="add-col-right"]')).toBeFocused();
+    await expect(page.locator(controls + ' [data-action="align-left"]')).toBeFocused();
     await page.keyboard.press('Escape');
     expect(await page.evaluate(() => !!document.querySelector('#editor td')?.contains(getSelection()?.anchorNode || null))).toBe(true);
 });
@@ -195,7 +195,7 @@ test('Automatic docks around occupied content and returns after space becomes av
     await page.evaluate(() => (window as any).__hostMessageHandler({ type: 'editorWidth', mode: 'full', maxWidth: 860 }));
     await expect(page.locator('#editor')).toHaveCSS('max-width', 'none');
     // Deterministic document geometry, retaining the production toolbar and scroll container.
-    await page.addStyleTag({ content: '#editor{padding:8px} #editor table{width:100%;margin:0} #editor h1,#editor p{margin:0} #editorWrapper{scrollbar-gutter:stable}' });
+    await page.addStyleTag({ content: '#editor{padding:8px} #editor table{width:100%;margin:0} #editor h1,#editor p{margin:0} #editor p:last-child{min-height:400px} #editorWrapper{scrollbar-gutter:stable}' });
     await page.mouse.move(1, 1);
     await expect(page.locator(controls)).toHaveAttribute('data-placement', 'top-bar');
     await page.addStyleTag({ content: '#editor table{width:300px;margin:160px auto}' });
@@ -204,8 +204,9 @@ test('Automatic docks around occupied content and returns after space becomes av
     await page.setViewportSize({ width: 1250, height: 790 });
     await expect(page.locator(controls)).toHaveAttribute('data-placement', selected!);
     await page.setViewportSize({ width: 480, height: 500 });
+    await page.addStyleTag({ content: '#editor table{width:100%;margin:0}' });
     await expect(page.locator(controls)).toHaveAttribute('data-placement', 'top-bar');
-    await expect(page.locator('.table-toolbar-toggle')).toBeVisible();
+    await expect(page.locator(`${controls} [data-action="more"]`)).toBeVisible();
 });
 
 test('scrolling offscreen keeps Automatic reachable, while a fixed toolbar hides', async ({ page }) => {
@@ -277,7 +278,7 @@ test('switching tables updates the action target before the next click', async (
     await page.evaluate(text => (window as any).__testApi.setMarkdown(text + '\n' + text.replace('# Table', '# Second')), documentText);
     await page.locator('#editor table').nth(0).locator('td').first().click();
     await page.locator('#editor table').nth(1).locator('td').first().click();
-    await page.locator(`${controls} [data-action="add-row-below"]`).click();
+    await clickTableAction(page, 'add-row-below');
     await expect(page.locator('#editor table').nth(0).locator('tr')).toHaveCount(3);
     await expect(page.locator('#editor table').nth(1).locator('tr')).toHaveCount(4);
 });

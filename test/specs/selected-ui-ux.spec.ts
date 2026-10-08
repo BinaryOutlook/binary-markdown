@@ -596,23 +596,39 @@ test('palette navigation and export actions are view-only', async ({ page }) => 
     expect(await snapshot(page)).toMatchObject({ content: authored, pending: false });
 });
 
-test('table directions, boundary insertion and cell navigation retain one edit history', async ({ page }) => {
+test('table boundary handles and coordinate navigation retain one edit history', async ({ page }) => {
     const content = '| A | B |\n| --- | --- |\n| one | two |\n| three | four |\n';
     await setup(page, content);
     await page.locator('#editor td').first().click();
     const toolbar = page.locator('.table-toolbar:not(.table-toolbar-measure)');
-    await expect(toolbar.locator('[data-action="add-row-above"]')).toBeVisible();
-    const arrow = async (action: string) => toolbar.locator(`[data-action="${action}"]`).boundingBox();
-    const up = await arrow('add-row-above'), left = await arrow('add-col-left'), right = await arrow('add-col-right'), down = await arrow('add-row-below');
-    expect(up!.y).toBeLessThan(left!.y); expect(left!.y).toBe(right!.y); expect(left!.x).toBeLessThan(right!.x); expect(down!.y).toBeGreaterThan(right!.y);
-    await toolbar.getByRole('combobox', { name: 'Rows', exact: true }).selectOption({ value: '2' });
-    await toolbar.getByRole('combobox', { name: 'Columns', exact: true }).selectOption({ value: '1' });
+    const boundaries = page.locator('.table-boundary-actions');
+    for (const action of ['add-row-above', 'add-col-left', 'add-col-right', 'add-row-below']) {
+        await expect(boundaries.locator(`[data-action="${action}"]`)).toBeVisible();
+    }
+    const handle = async (action: string) => boundaries.locator(`[data-action="${action}"]`).boundingBox();
+    const up = await handle('add-row-above'), left = await handle('add-col-left'), right = await handle('add-col-right'), down = await handle('add-row-below');
+    const cell = (await page.locator('#editor td').first().boundingBox())!;
+    expect(left!.x + left!.width / 2).toBeCloseTo(cell.x);
+    expect(right!.x + right!.width / 2).toBeCloseTo(cell.x + cell.width);
+    expect(left!.y).toBe(right!.y);
+    expect(up!.x).toBe(down!.x);
+    expect(up!.y + up!.height / 2).toBeCloseTo(cell.y);
+    expect(down!.y + down!.height / 2).toBeCloseTo(cell.y + cell.height);
+    expect(up!.x + up!.width).toBeLessThanOrEqual(cell.x);
+    expect(left!.y + left!.height).toBeLessThanOrEqual(cell.y);
+    await toolbar.locator('.table-coordinate-chip').click();
+    const navigation = page.locator('.table-navigation-menu');
+    await navigation.getByRole('combobox', { name: 'Rows', exact: true }).selectOption({ value: '2' });
+    await navigation.getByRole('combobox', { name: 'Columns', exact: true }).selectOption({ value: '1' });
+    await page.keyboard.press('Escape');
+    await expect(navigation).toBeHidden();
     expect(await page.evaluate(() => { const node = getSelection()!.anchorNode!; return (node.nodeType === 3 ? node.parentElement : node as Element)?.closest('td')?.textContent; })).toBe('four');
     expect(await snapshot(page)).toMatchObject({ content, pending: false });
     await page.locator('.table-boundary-actions [data-action="add-row-below"]').click();
     await expect(page.locator('#editor tr')).toHaveCount(4);
     await page.locator('[data-action="undo"]').click();
     expect((await snapshot(page)).content).toBe(content);
+    await expect(page.locator('[data-action="undo"]')).toBeDisabled();
 });
 
 test('equation and diagram diagnostics are readable without changing the source', async ({ page }) => {
@@ -634,26 +650,37 @@ test('equation and diagram diagnostics are readable without changing the source'
     expect(await snapshot(page)).toMatchObject({ content: invalid, pending: false });
 });
 
-test('table coordinates remain outside authored cells and boundary plus appends at the edge', async ({ page }) => {
+test('table coordinates stay outside authored cells and boundary insertion follows the selected cell', async ({ page }) => {
     const content = '| A | B |\n| --- | --- |\n| one | two |\n| three | four |\n';
     await setup(page, content);
     await page.locator('#editor td').first().click();
     await expect(page.locator('.table-coordinate-gutters')).toContainText('A');
     await expect(page.locator('#editor .table-coordinate-gutters')).toHaveCount(0);
     expect(await snapshot(page)).toMatchObject({ content, pending: false });
-    await page.locator('.table-boundary-actions [data-action="add-col-right"]').click();
-    await expect(page.locator('#editor th')).toHaveCount(3);
-    await expect(page.locator('#editor th').nth(0)).toHaveText('A');
-    await expect(page.locator('#editor th').nth(1)).toHaveText('B');
-    await expect(page.locator('#editor tr').nth(1).locator('td').nth(1)).toHaveText('two');
-    await page.locator('[data-action="undo"]').click();
-    expect((await snapshot(page)).content).toBe(content);
-    await page.locator('#editor td').first().click();
-    await page.locator('.table-boundary-actions [data-action="add-row-below"]').click();
-    await expect(page.locator('#editor tr')).toHaveCount(4);
-    await expect(page.locator('#editor tr').nth(2)).toContainText('three');
-    await page.locator('[data-action="undo"]').click();
-    expect((await snapshot(page)).content).toBe(content);
+    // Insert inside the table, then append by selecting its last column or row.
+    for (const column of [0, 1]) {
+        await page.locator('#editor tr').nth(1).locator('td').nth(column).click();
+        await page.locator('.table-boundary-actions [data-action="add-col-right"]').click();
+        await expect(page.locator('#editor th')).toHaveCount(3);
+        await expect(page.locator('#editor th').nth(0)).toHaveText('A');
+        const retainedColumn = column === 0 ? 2 : 1;
+        await expect(page.locator('#editor th').nth(retainedColumn)).toHaveText('B');
+        await expect(page.locator('#editor tr').nth(1).locator('td').nth(retainedColumn)).toHaveText('two');
+        await expect(page.locator('#editor tr').nth(1).locator('td').nth(column + 1)).toHaveText('');
+        await page.locator('[data-action="undo"]').click();
+        expect((await snapshot(page)).content).toBe(content);
+        await expect(page.locator('[data-action="undo"]')).toBeDisabled();
+    }
+    for (const row of [1, 2]) {
+        await page.locator('#editor tr').nth(row).locator('td').first().click();
+        await page.locator('.table-boundary-actions [data-action="add-row-below"]').click();
+        await expect(page.locator('#editor tr')).toHaveCount(4);
+        await expect(page.locator('#editor tr').nth(row + 1)).toHaveText('');
+        await expect(page.locator('#editor tr').nth(row === 1 ? 3 : 2)).toContainText('three');
+        await page.locator('[data-action="undo"]').click();
+        expect((await snapshot(page)).content).toBe(content);
+        await expect(page.locator('[data-action="undo"]')).toBeDisabled();
+    }
 });
 
 test('front matter disclosure and Contents help preserve YAML comments and key order', async ({ page }) => {

@@ -100,13 +100,15 @@ for (const mode of ['simple', 'full']) {
 test('mode changes preserve focused table controls and an open placement menu', async ({ page }) => {
     await setup(page);
     await page.keyboard.press('Alt+F10');
-    const first = page.locator(`${controls} [data-action="add-col-left"]`);
+    const first = page.locator(`${controls} .table-coordinate-chip`);
     await expect(first).toBeFocused();
     for (const mode of ['simple', 'full']) {
         await page.evaluate(value => (window as any).__hostMessageHandler({ type: 'toolbarMode', value }), mode);
         await expect(first).toBeFocused();
         await expect(page.locator('.table-toolbar-row')).toBeVisible({ visible: mode === 'full' });
     }
+    await page.keyboard.press('End');
+    await page.keyboard.press('Enter');
     await page.keyboard.press('End');
     await page.keyboard.press('Enter');
     const auto = page.locator('.table-placement-menu [data-position="auto"]');
@@ -131,8 +133,8 @@ test('second-row overflow responds to sidebar changes and clears with table cont
     await page.keyboard.press('End');
     await expect(page.locator('.table-overflow-menu [data-action="placement"]')).toBeFocused();
     await page.locator('#sidebar').evaluate(node => { node.classList.add('hidden'); node.style.width = ''; });
-    await expect(page.locator(`${controls} [data-action="placement"]`)).toBeFocused();
-    await expect(page.locator('.table-overflow-menu')).toBeHidden();
+    await expect(page.locator('.table-overflow-menu [data-action="placement"]')).toBeFocused();
+    await expect(page.locator('.table-overflow-menu')).toBeVisible();
     await geometry(page);
     await page.keyboard.press('Escape');
     await page.setViewportSize({ width: 300, height: 420 });
@@ -147,11 +149,10 @@ test('docking leaves one undo step for the actual table edit and both rows are k
     const before = await page.evaluate(() => (window as any).htmlToMarkdown());
     await page.locator('#toolbar button[data-editor-mode="split"]').focus();
     await page.keyboard.press('Tab');
-    await expect(page.locator(`${controls} select`).first()).toBeFocused();
-    await page.keyboard.press('Tab');
-    await page.keyboard.press('Tab');
-    await expect(page.locator(`${controls} [data-action="add-col-left"]`)).toBeFocused();
-    await page.keyboard.press('ArrowRight');
+    await expect(page.locator(`${controls} .table-coordinate-chip`)).toBeFocused();
+    await page.keyboard.press('End');
+    await page.keyboard.press('Enter');
+    await page.keyboard.press('ArrowDown');
     await page.keyboard.press('Enter');
     await expect(page.locator('#editor th')).toHaveCount(3);
     for (const value of ['simple', 'full']) await page.evaluate(value => (window as any).__hostMessageHandler({ type: 'toolbarMode', value }), value);
@@ -163,7 +164,7 @@ test('docking leaves one undo step for the actual table edit and both rows are k
 
 test('Automatic docking remains stable after the contextual row changes viewport height', async ({ page }) => {
     await setup(page, 'full', 'auto', 600);
-    await expect(page.locator(controls)).toHaveAttribute('data-placement', 'top-bar');
+    const initialPlacement = await page.locator(controls).getAttribute('data-placement');
     const placements = await page.evaluate(async controls => {
         const result = [];
         for (let frame = 0; frame < 30; frame++) {
@@ -172,7 +173,7 @@ test('Automatic docking remains stable after the contextual row changes viewport
         }
         return result;
     }, controls);
-    expect(new Set(placements)).toEqual(new Set(['top-bar']));
+    expect(new Set(placements)).toEqual(new Set([initialPlacement]));
     await geometry(page);
 });
 

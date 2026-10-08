@@ -15,6 +15,8 @@ test('short tables favor a safe horizontal corner; tall tables favor a gutter', 
     const tall = choose({ ...base, table: box(200, 120, 400, 550) });
     assert.equal(tall.vertical, true);
     assert.ok(fits(tall, base.bounds));
+    const compact = choose({ ...base, vertical: { width: 62, height: 146 } });
+    assert.equal(compact.vertical, false);
 });
 test('obstacles reject occupied positions and all blocked candidates dock', () => {
     const occupied = box(0, 40, 1000, 210);
@@ -35,6 +37,12 @@ test('manual preferences retain their anchor and orientation in narrow panes', (
         assert.equal(result.placement, preference);
         assert.ok(fits(result, input.bounds));
     }
+});
+test('top and left toolbars leave room for coordinate navigation and insertion handles', () => {
+    const top = choose({ ...base, preference: 'top-right' });
+    const left = choose({ ...base, preference: 'left' });
+    assert.ok(top.bottom <= base.table.top - 28);
+    assert.ok(left.right <= base.table.left - 32);
 });
 test('offscreen selected tables dock in automatic mode and hide in fixed mode', () => {
     const table = box(200, -300, 400, 100);

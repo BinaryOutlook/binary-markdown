@@ -13,6 +13,7 @@
         let menuOpen = false;
         const listeners = [];
         const scrollHints = new Map();
+        const letters = index => { let result = ''; for (let n = index + 1; n; n = Math.floor((n - 1) / 26)) result = String.fromCharCode(65 + (n - 1) % 26) + result; return result; };
         const listen = (node, type, handler, capture = false) => {
             node.addEventListener(type, handler, capture);
             listeners.push(() => node.removeEventListener(type, handler, capture));
@@ -48,6 +49,7 @@
             button.title = label(key, fallback);
             button.setAttribute('aria-label', button.title);
             button.tabIndex = -1;
+            button.hidden = !action.startsWith('align-');
             if (text) { button.textContent = text; button.className = 'text-btn'; }
             else button.innerHTML = icons[action];
             if (action === 'placement') { button.setAttribute('aria-haspopup', 'menu'); button.setAttribute('aria-expanded', 'false'); }
@@ -55,9 +57,16 @@
             else controls.appendChild(button);
         }
         const selectionInspector = document.createElement('div'); selectionInspector.className = 'table-selection-inspector';
+        const navigate = document.createElement('button');
+        navigate.type = 'button'; navigate.className = 'table-coordinate-chip'; navigate.textContent = 'A1 ▾';
+        navigate.setAttribute('aria-haspopup', 'dialog'); navigate.setAttribute('aria-expanded', 'false');
+        selectionInspector.appendChild(navigate);
+        const navigationMenu = document.createElement('div'); navigationMenu.className = 'table-navigation-menu'; navigationMenu.hidden = true;
+        navigationMenu.setAttribute('role', 'dialog'); navigationMenu.setAttribute('aria-label', label('tableControls', 'Table controls'));
+        document.body.appendChild(navigationMenu);
         const navigator = key => {
             const field = document.createElement('label'); field.textContent = label(key, key === 'tableRows' ? 'Rows' : 'Columns');
-            const select = document.createElement('select'); select.setAttribute('aria-label', field.textContent); field.appendChild(select); selectionInspector.appendChild(field); return select;
+            const select = document.createElement('select'); select.setAttribute('aria-label', field.textContent); field.appendChild(select); navigationMenu.appendChild(field); return select;
         };
         const rowSelect = navigator('tableRows'), columnSelect = navigator('tableColumns');
         controls.prepend(selectionInspector);
@@ -69,20 +78,20 @@
         const insertGroup = group('table-direction-group', 'insertTableGroup', 'Insert'); insertGroup.appendChild(direction); controls.appendChild(insertGroup);
         const alignmentGroup = group('table-alignment-group', 'tableAlignment', 'Alignment');
         const advancedGroup = group('table-advanced-group', 'tableAdvanced', 'Advanced');
-        for (const button of [...controls.querySelectorAll('button')]) {
+        for (const button of [...controls.querySelectorAll('button[data-action]')]) {
             if (button.dataset.action.startsWith('align-')) alignmentGroup.appendChild(button);
             else if (!button.dataset.action.startsWith('add-')) advancedGroup.appendChild(button);
         }
         controls.querySelectorAll('.separator').forEach(node => node.remove());
         controls.append(alignmentGroup, advancedGroup);
         const gutters = document.createElement('div'); gutters.className = 'table-coordinate-gutters'; gutters.hidden = true;
-        gutters.setAttribute('aria-hidden', 'true'); document.body.appendChild(gutters);
+        gutters.setAttribute('role', 'group'); gutters.setAttribute('aria-label', label('tableControls', 'Table controls')); document.body.appendChild(gutters);
         const boundaries = document.createElement('div'); boundaries.className = 'table-boundary-actions'; boundaries.hidden = true;
-        for (const [action, key] of [['add-col-right','addColRight'], ['add-row-below','addRowBelow']]) {
+        for (const [action, key] of [['add-col-left','addColLeft'], ['add-col-right','addColRight'], ['add-row-above','addRowAbove'], ['add-row-below','addRowBelow']]) {
             const button = document.createElement('button'); button.type = 'button'; button.dataset.action = action; button.textContent = '+'; button.setAttribute('aria-label', label(key, action)); button.title = button.getAttribute('aria-label'); boundaries.appendChild(button);
         }
         document.body.appendChild(boundaries);
-        controls.querySelector('button').tabIndex = 0;
+        navigate.tabIndex = 0;
         document.body.appendChild(controls);
         const dock = document.createElement('div');
         dock.className = 'table-toolbar-dock';
@@ -108,17 +117,7 @@
         picker.setAttribute('aria-label', label('tablePlacement', 'Table toolbar position'));
         picker.hidden = true;
         document.body.appendChild(picker);
-        const sizes = [false, true, 'dock'].map(layout => {
-            const clone = controls.cloneNode(true);
-            clone.className = 'table-toolbar visible table-toolbar-measure'; clone.hidden = false;
-            clone.dataset.vertical = String(layout === true);
-            clone.dataset.docked = String(layout === 'dock');
-            clone.setAttribute('aria-hidden', 'true');
-            clone.inert = true;
-            document.body.appendChild(clone);
-            return clone;
-        });
-        const actions = [...controls.querySelectorAll('button')];
+        const actions = [...controls.querySelectorAll('button[data-action]')];
         const more = document.createElement('button');
         more.type = 'button';
         more.dataset.action = 'more';
@@ -128,8 +127,16 @@
         more.setAttribute('aria-haspopup', 'menu');
         more.setAttribute('aria-expanded', 'false');
         more.tabIndex = -1;
-        more.hidden = true;
         controls.appendChild(more);
+        const sizes = [false, true, 'dock'].map(layout => {
+            const clone = controls.cloneNode(true);
+            clone.className = 'table-toolbar visible table-toolbar-measure'; clone.hidden = false;
+            clone.dataset.vertical = String(layout === true);
+            clone.dataset.docked = String(layout === 'dock');
+            clone.setAttribute('aria-hidden', 'true'); clone.inert = true;
+            document.body.appendChild(clone);
+            return clone;
+        });
         const overflow = document.createElement('div');
         overflow.className = 'table-overflow-menu';
         overflow.setAttribute('role', 'menu');
@@ -138,6 +145,7 @@
         const overflowActions = actions.map(button => {
             const copy = button.cloneNode(false);
             copy.removeAttribute('class');
+            copy.hidden = !button.hidden;
             copy.setAttribute('role', 'menuitem');
             const icon = button.querySelector('svg');
             if (icon) copy.appendChild(icon.cloneNode(true));
@@ -163,16 +171,19 @@
         const mutations = new MutationObserver(() => schedule());
         mutations.observe(editor, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['style', 'class'] });
 
-        function owns(node) { return controls.contains(node) || boundaries.contains(node) || dock.contains(node) || picker.contains(node) || overflow.contains(node) || [...scrollHints.values()].some(hint => hint.contains(node)); }
+        function owns(node) { return controls.contains(node) || boundaries.contains(node) || gutters.contains(node) || navigationMenu.contains(node) || dock.contains(node) || picker.contains(node) || overflow.contains(node) || [...scrollHints.values()].some(hint => hint.contains(node)); }
         function valid() { return table && cell && editor.contains(table) && table.contains(cell) && !options.isSourceMode(); }
-        function closeMenus() {
+        function closeMenus(keepControls = false) {
             picker.hidden = true;
             overflow.hidden = true;
+            navigationMenu.hidden = true; navigate.setAttribute('aria-expanded', 'false');
             more.setAttribute('aria-expanded', 'false');
             overflowActions[overflowActions.length - 1].setAttribute('aria-expanded', 'false');
-            menuOpen = false;
-            if (current === 'top-bar' && !toggle.hidden) { controls.classList.remove('visible'); controls.hidden = true; }
-            toggle.setAttribute('aria-expanded', 'false');
+            if (!keepControls) {
+                menuOpen = false;
+                if (current === 'top-bar' && !toggle.hidden) { controls.classList.remove('visible'); controls.hidden = true; }
+                toggle.setAttribute('aria-expanded', 'false');
+            }
             controls.querySelector('[data-action="placement"]').setAttribute('aria-expanded', 'false');
         }
         function hide() {
@@ -196,7 +207,11 @@
         function show(nextTable, nextCell) {
             if (!nextCell || !nextTable?.contains(nextCell)) return clear();
             if (table !== nextTable) {
-                if (table) resize.unobserve(table);
+                if (table) {
+                    resize.unobserve(table);
+                    table.classList.remove('table-inspected');
+                    table.querySelectorAll('.table-context-row,.table-context-column').forEach(node => node.classList.remove('table-context-row','table-context-column'));
+                }
                 table = nextTable;
                 resize.observe(table);
                 current = null;
@@ -210,12 +225,21 @@
                 item.classList.toggle('table-context-column', c === cell.cellIndex);
             }));
             const fill = (select, length, selected) => {
-                select.replaceChildren();
-                for (let i = 0; i < length; i++) { const option = document.createElement('option'); option.value = String(i); option.textContent = String(i + 1); select.appendChild(option); }
+                if (select.options.length !== length) {
+                    select.replaceChildren();
+                    for (let i = 0; i < length; i++) { const option = document.createElement('option'); option.value = String(i); option.textContent = String(i + 1); select.appendChild(option); }
+                }
                 select.value = String(selected);
             };
             fill(rowSelect, table.rows.length, cell.parentElement.rowIndex);
             fill(columnSelect, table.rows[0].cells.length, cell.cellIndex);
+            const coordinates = letters(cell.cellIndex) + (cell.parentElement.rowIndex + 1);
+            navigate.textContent = coordinates + ' ▾';
+            navigate.title = label('tableRows', 'Rows') + ' ' + (cell.parentElement.rowIndex + 1) + ', ' + label('tableColumns', 'Columns') + ' ' + letters(cell.cellIndex);
+            navigate.setAttribute('aria-label', navigate.title);
+            for (const size of sizes) size.querySelector('.table-coordinate-chip').textContent = navigate.textContent;
+            const alignment = cell.style.textAlign || table.rows[0].cells[cell.cellIndex].dataset.tableAlign || 'left';
+            actions.filter(button => button.dataset.action.startsWith('align-')).forEach(button => button.setAttribute('aria-pressed', String(button.dataset.action === 'align-' + alignment)));
             const headerRow = cell.parentElement === table.rows[0];
             controls.querySelector('[data-action="add-row-above"]').disabled = headerRow;
             controls.querySelector('[data-action="del-row"]').disabled = headerRow;
@@ -226,9 +250,12 @@
         }
         for (const field of [rowSelect, columnSelect]) field.addEventListener('change', event => {
             if (!valid()) return;
-            const next = table.rows[Number(rowSelect.value)]?.cells[Number(columnSelect.value)];
+            const rowIndex = field === rowSelect ? Number(field.value) : cell.parentElement.rowIndex;
+            const columnIndex = field === columnSelect ? Number(field.value) : cell.cellIndex;
+            const next = table.rows[rowIndex]?.cells[columnIndex];
             if (!next) return;
             savedRange = null; options.onContext(next); show(table, next); restore(true);
+            if (!navigationMenu.hidden) field.focus({ preventScroll: true });
         });
         function restore(reveal = false) {
             if (!valid()) return;
@@ -290,78 +317,30 @@
         }
         function fitActions(width, height) {
             const vertical = controls.dataset.vertical === 'true';
-            const measure = sizes[controls.dataset.docked === 'true' ? 2 : Number(vertical)];
-            const natural = measure.getBoundingClientRect();
-            const measured = [...measure.querySelectorAll('button')];
-            const style = getComputedStyle(controls);
-            const endPadding = parseFloat(vertical ? style.paddingBottom : style.paddingRight) + parseFloat(vertical ? style.borderBottomWidth : style.borderRightWidth);
-            const horizontalPadding = parseFloat(style.paddingLeft) + parseFloat(style.paddingRight) + parseFloat(style.borderLeftWidth) + parseFloat(style.borderRightWidth);
-            const verticalPadding = parseFloat(style.paddingTop) + parseFloat(style.paddingBottom) + parseFloat(style.borderTopWidth) + parseFloat(style.borderBottomWidth);
-            const moreStyle = getComputedStyle(more);
-            const moreSize = parseFloat(vertical ? moreStyle.height : moreStyle.width);
-            const gap = parseFloat(vertical ? style.rowGap : style.columnGap);
-            const limit = vertical ? height : width;
-            const compactMenu = controls.getAttribute('role') === 'menu';
-            const selectionSize = measure.querySelector('.table-selection-inspector').getBoundingClientRect();
-            // Keep the insertion diamond reachable before falling back to the
-            // complete compact menu. Measure hidden navigation consistently.
-            const navigationInOverflow = !compactMenu && width < (vertical ? 150 : selectionSize.width + 158);
-            const focusedNavigation = selectionInspector.contains(document.activeElement) ? document.activeElement : null;
-            const navigationParent = navigationInOverflow ? overflow : controls;
-            if (selectionInspector.parentElement !== navigationParent) {
-                navigationParent.prepend(selectionInspector);
-                if (focusedNavigation) focusedNavigation.focus({ preventScroll: true });
-            }
-            selectionInspector.hidden = false;
-            const omitted = navigationInOverflow ? (vertical ? selectionSize.height : selectionSize.width) + gap : 0;
-            let count = actions.length;
-            const navigationTrigger = navigationInOverflow ? moreSize + gap : 0;
-            if (!compactMenu && (natural.width - (vertical ? 0 : omitted) + (vertical ? 0 : navigationTrigger) > width || natural.height - (vertical ? omitted : 0) + (vertical ? navigationTrigger : 0) > height)) {
-                count = 0;
-                for (const button of measured) {
-                    const rect = button.getBoundingClientRect();
-                    const end = (vertical ? rect.bottom - natural.top : rect.right - natural.left) - omitted;
-                    // Reserve the overflow trigger before accepting another whole action.
-                    if (end + gap + moreSize + endPadding > limit || rect.width > width - horizontalPadding || rect.height > height - verticalPadding) break;
-                    count++;
-                }
-            }
-            if (count < 4) count = 0; // Keep the four directional controls together.
-            if (count > 4 && count < 7) count = 4; // Keep Alignment together.
-            // Advanced is a three-column grid even when individual buttons are
-            // hidden; overflow the whole group to leave room for More.
-            if (count > 7 && count < actions.length) count = 7;
-            direction.hidden = count === 0;
+            const measure = sizes[controls.dataset.docked === 'true' ? 2 : Number(vertical)].getBoundingClientRect();
+            const alignmentFits = measure.width <= width && measure.height <= height;
             const focused = document.activeElement;
-            const focusedAction = actions.indexOf(focused) >= 0 ? actions.indexOf(focused) : overflowActions.indexOf(focused);
+            const focusedAction = actions.includes(focused) ? actions.indexOf(focused) : overflowActions.indexOf(focused);
             actions.forEach((button, index) => {
-                button.hidden = index >= count;
-                overflowActions[index].hidden = index < count;
+                button.hidden = !button.dataset.action.startsWith('align-') || !alignmentFits;
+                overflowActions[index].hidden = !button.hidden;
                 overflowActions[index].disabled = button.disabled;
             });
-            for (const separator of controls.querySelectorAll('.separator')) {
-                const next = separator.nextElementSibling;
-                separator.hidden = !next || next.hidden;
-            }
-            more.hidden = count === actions.length && !navigationInOverflow;
-            if (more.hidden) { overflow.hidden = true; more.setAttribute('aria-expanded', 'false'); }
+            direction.hidden = true;
+            more.hidden = false;
             if (focusedAction >= 0 && focused.hidden) {
-                if (actions[focusedAction].hidden) {
-                    overflow.hidden = false;
-                    more.setAttribute('aria-expanded', 'true');
-                    overflowActions[focusedAction].focus({ preventScroll: true });
-                } else {
-                    overflow.hidden = true;
-                    more.setAttribute('aria-expanded', 'false');
-                    actions[focusedAction].focus({ preventScroll: true });
-                }
-            } else if (focused === more && more.hidden) actions.find(button => !button.disabled)?.focus({ preventScroll: true });
-            const visible = [...actions, more].filter(button => !button.hidden && !button.disabled);
+                const target = actions[focusedAction].hidden ? overflowActions[focusedAction] : actions[focusedAction];
+                overflow.hidden = !actions[focusedAction].hidden;
+                more.setAttribute('aria-expanded', String(!overflow.hidden));
+                target.focus({ preventScroll: true });
+            }
+            const visible = [navigate, ...actions, more].filter(button => !button.hidden && !button.disabled);
             const tabStop = visible.includes(document.activeElement) ? document.activeElement : visible.find(button => button.tabIndex === 0) || visible[0];
-            [...actions, more].forEach(button => { button.tabIndex = button === tabStop ? 0 : -1; });
+            [navigate, ...actions, more].forEach(button => { button.tabIndex = button === tabStop ? 0 : -1; });
             if (!overflow.hidden) placeMenu(overflow, more);
+            if (!navigationMenu.hidden) placeMenu(navigationMenu, navigate);
             if (overflow.contains(document.activeElement)) document.activeElement.scrollIntoView({ block: 'nearest', inline: 'nearest' });
-            if (!picker.hidden) placeMenu(picker, pickerAnchor.getClientRects().length ? pickerAnchor : more.hidden ? actions[actions.length - 1] : more);
+            if (!picker.hidden) placeMenu(picker, pickerAnchor.getClientRects().length ? pickerAnchor : more);
         }
         function updateDockHost(docked) {
             const secondRow = docked && document.documentElement.dataset.toolbarMode !== 'simple';
@@ -388,19 +367,44 @@
             if (gutters.hidden) return;
             gutters.style.left = left + 'px'; gutters.style.top = top + 'px';
             gutters.style.width = (rect.width + 32) + 'px'; gutters.style.height = (rect.height + 28) + 'px';
-            gutters.replaceChildren();
-            const coordinate = (value, x, y, width, height, active) => {
-                const node = document.createElement('span'); node.textContent = value; node.classList.toggle('is-active', active);
-                Object.assign(node.style, { left: x + 'px', top: y + 'px', width: width + 'px', height: height + 'px' }); gutters.appendChild(node);
+            const previous = new Map([...gutters.children].map(node => [node.dataset.coordinate, node]));
+            const retained = new Set();
+            const coordinate = (kind, index, value, x, y, width, height, active) => {
+                const key = kind + index;
+                const node = previous.get(key) || document.createElement('button');
+                node.type = 'button'; node.dataset.coordinate = key; node.dataset[kind] = String(index);
+                node.textContent = value; node.classList.toggle('is-active', active);
+                node.setAttribute('aria-label', label(kind === 'row' ? 'tableRows' : 'tableColumns', kind) + ' ' + value);
+                node.setAttribute('aria-pressed', String(active));
+                node.tabIndex = node === document.activeElement || active ? 0 : -1;
+                Object.assign(node.style, { left: x + 'px', top: y + 'px', width: width + 'px', height: height + 'px' });
+                if (!node.parentElement) gutters.appendChild(node);
+                retained.add(key);
             };
-            const letters = index => { let result = ''; for (let n = index + 1; n; n = Math.floor((n - 1) / 26)) result = String.fromCharCode(65 + (n - 1) % 26) + result; return result; };
             for (const [index, heading] of [...table.rows[0].cells].entries()) {
                 const box = heading.getBoundingClientRect();
-                if (box.left >= rect.left - 1 && box.right <= rect.right + 1) coordinate(letters(index), box.left - left, 0, box.width, 28, index === cell.cellIndex);
+                if (top >= bounds.top && box.left >= rect.left - 1 && box.right <= rect.right + 1)
+                    coordinate('column', index, letters(index), box.left - left, 0, box.width, 28, index === cell.cellIndex);
             }
             for (const [index, row] of [...table.rows].entries()) {
                 const box = row.getBoundingClientRect();
-                if (box.top >= bounds.top && box.bottom <= bounds.bottom) coordinate(String(index + 1), 0, box.top - top, 32, box.height, index === cell.parentElement.rowIndex);
+                if (left >= bounds.left && box.top >= bounds.top && box.bottom <= bounds.bottom)
+                    coordinate('row', index, String(index + 1), 0, box.top - top, 32, box.height, index === cell.parentElement.rowIndex);
+            }
+            for (const [key, node] of previous) if (!retained.has(key)) node.remove();
+        }
+        function renderBoundaries(bounds, rect, selected) {
+            boundaries.hidden = rect.bottom < bounds.top || rect.top > bounds.bottom;
+            if (boundaries.hidden) return;
+            for (const button of boundaries.children) {
+                const action = button.dataset.action;
+                const column = action.startsWith('add-col');
+                const x = column ? (action.endsWith('left') ? selected.left : selected.right) - 12 : rect.left - 30;
+                const y = column ? rect.top - 26 : (action.endsWith('above') ? selected.top : selected.bottom) - 12;
+                button.disabled = actions.find(candidate => candidate.dataset.action === action).disabled;
+                button.hidden = x < bounds.left || x + 24 > Math.min(innerWidth, bounds.right) || y < bounds.top || y + 24 > Math.min(innerHeight, bounds.bottom)
+                    || (column && (selected.width < 28 || x < rect.left - 12 || x > rect.right - 12));
+                button.style.left = x + 'px'; button.style.top = y + 'px';
             }
         }
         function renderScrollHints() {
@@ -445,14 +449,7 @@
                 document.documentElement.style.setProperty('--table-inspector-height', sizes[0].getBoundingClientRect().height + 'px');
                 document.documentElement.style.setProperty('--table-inspector-width', sizes[1].getBoundingClientRect().width + 'px');
                 renderGutters(bounds, rect);
-                boundaries.hidden = rect.bottom < bounds.top || rect.top > bounds.bottom;
-                if (!boundaries.hidden) {
-                    const right = boundaries.children[0], below = boundaries.children[1];
-                    right.style.left = (rect.right + 6) + 'px'; right.style.top = Math.max(bounds.top + 4, Math.min(selected.top + selected.height / 2 - 12, bounds.bottom - 28)) + 'px';
-                    below.style.left = (rect.left - 30) + 'px'; below.style.top = (rect.bottom + 8) + 'px';
-                    right.hidden = rect.right + 30 > Math.min(innerWidth, bounds.right);
-                    below.hidden = rect.bottom + 32 > Math.min(innerHeight, bounds.bottom);
-                }
+                renderBoundaries(bounds, rect, selected);
             } else { boundaries.hidden = true; gutters.hidden = true; }
             if (!valid()) return clear();
             const palette = document.querySelector('.command-palette');
@@ -491,6 +488,7 @@
                     document.activeElement.scrollIntoView({ block: 'nearest', inline: 'nearest' });
                 }
                 if (!picker.hidden) placeMenu(picker, pickerAnchor.getClientRects().length ? pickerAnchor : more);
+                if (!navigationMenu.hidden) placeMenu(navigationMenu, navigate);
                 return;
             }
             const horizontal = sizes[0].getBoundingClientRect(), vertical = sizes[1].getBoundingClientRect();
@@ -519,11 +517,7 @@
                 available = dockWidth();
                 dock.hidden = false;
                 dock.style.maxWidth = available + 'px';
-                const dockStyle = getComputedStyle(sizes[2]);
-                const minimumDock = sizes[2].querySelector('.table-direction-group').getBoundingClientRect().width
-                    + parseFloat(getComputedStyle(more).width) + parseFloat(dockStyle.columnGap)
-                    + parseFloat(dockStyle.paddingLeft) + parseFloat(dockStyle.paddingRight)
-                    + parseFloat(dockStyle.borderLeftWidth) + parseFloat(dockStyle.borderRightWidth);
+                const minimumDock = navigate.getBoundingClientRect().width + 42;
                 const compact = available < minimumDock;
                 toggle.hidden = !compact;
                 if (compact) {
@@ -579,14 +573,22 @@
             picker.firstElementChild.tabIndex = 0;
             picker.firstElementChild.focus({ preventScroll: true });
         }
-        for (const node of [controls, dock, picker, overflow, boundaries]) {
+        for (const node of [controls, dock, picker, overflow, navigationMenu, boundaries, gutters]) {
             listen(node, 'mousedown', event => { if (!event.target.closest('select')) event.preventDefault(); event.stopPropagation(); });
             listen(node, 'click', event => event.stopPropagation());
         }
         function activate(event) {
             const button = event.target.closest('button');
             if (!button || button.disabled || !valid()) return;
+            if (button === navigate) {
+                const opening = navigationMenu.hidden;
+                closeMenus(true); navigationMenu.hidden = !opening; navigate.setAttribute('aria-expanded', String(opening));
+                if (opening) { placeMenu(navigationMenu, navigate); rowSelect.focus({ preventScroll: true }); }
+                else navigate.focus({ preventScroll: true });
+                return;
+            }
             if (button === more) {
+                navigationMenu.hidden = true; navigate.setAttribute('aria-expanded', 'false');
                 overflow.hidden = !overflow.hidden;
                 more.setAttribute('aria-expanded', String(!overflow.hidden));
                 if (!overflow.hidden) {
@@ -598,10 +600,6 @@
             }
             if (button.dataset.action === 'placement') return openPicker(false, button);
             closeMenus();
-            if (boundaries.contains(button)) {
-                const edge = button.dataset.action === 'add-col-right' ? table.rows[cell.parentElement.rowIndex].cells[table.rows[0].cells.length - 1] : table.rows[table.rows.length - 1].cells[cell.cellIndex];
-                savedRange = null; options.onContext(edge); show(table, edge);
-            }
             restore();
             options.onAction(button.dataset.action);
             schedule();
@@ -609,6 +607,28 @@
         listen(controls, 'click', activate);
         listen(boundaries, 'click', activate);
         listen(overflow, 'click', activate);
+        listen(gutters, 'click', event => {
+            const button = event.target.closest('button');
+            if (!button || !valid()) return;
+            const rowIndex = button.dataset.row === undefined ? cell.parentElement.rowIndex : Number(button.dataset.row);
+            const columnIndex = button.dataset.column === undefined ? cell.cellIndex : Number(button.dataset.column);
+            const next = table.rows[rowIndex]?.cells[columnIndex];
+            if (!next) return;
+            closeMenus(); savedRange = null; options.onContext(next); show(table, next); restore(true);
+        });
+        listen(gutters, 'keydown', event => {
+            const button = event.target.closest('button');
+            if (!button) return;
+            if (event.key === 'Escape') return keyboard(event);
+            const kind = button.dataset.row === undefined ? 'column' : 'row';
+            const keys = kind === 'row' ? ['ArrowUp', 'ArrowDown'] : ['ArrowLeft', 'ArrowRight'];
+            if (!['Home', 'End', ...keys].includes(event.key)) return;
+            const buttons = [...gutters.querySelectorAll('button[data-' + kind + ']')];
+            const index = buttons.indexOf(button);
+            const next = event.key === 'Home' ? 0 : event.key === 'End' ? buttons.length - 1 : Math.max(0, Math.min(buttons.length - 1, index + (event.key === keys[1] ? 1 : -1)));
+            event.preventDefault(); event.stopPropagation();
+            buttons.forEach((item, i) => { item.tabIndex = i === next ? 0 : -1; }); buttons[next].focus({ preventScroll: true });
+        });
         listen(picker, 'click', event => {
             const value = event.target.closest('button')?.dataset.position;
             if (!value) return;
@@ -625,7 +645,7 @@
             if (menuOpen) { placeMenu(controls, toggle); controls.querySelector('button').focus({ preventScroll: true }); }
         });
         function keyboard(event) {
-            if (event.target.closest('select')) return;
+            if (event.key !== 'Escape' && event.target.closest('select')) return;
             const container = picker.contains(event.target) ? picker : overflow.contains(event.target) ? overflow : controls;
             if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); closeMenus(); restore(true); hovering = false; schedule(); return; }
             const vertical = container !== controls || controls.dataset.vertical === 'true';
@@ -643,7 +663,8 @@
         listen(controls, 'keydown', keyboard);
         listen(picker, 'keydown', keyboard);
         listen(overflow, 'keydown', keyboard);
-        for (const node of [controls, dock, picker, overflow]) listen(node, 'focusout', () => queueMicrotask(() => {
+        listen(navigationMenu, 'keydown', keyboard);
+        for (const node of [controls, dock, picker, overflow, navigationMenu, gutters, boundaries]) listen(node, 'focusout', () => queueMicrotask(() => {
             if (!owns(document.activeElement)) { closeMenus(); schedule(); }
         }));
         listen(document, 'keydown', event => {
@@ -685,7 +706,7 @@
             resize.disconnect(); scrollResize.disconnect(); mutations.disconnect(); listeners.forEach(remove => remove());
             for (const hint of scrollHints.values()) hint.remove();
             scrollHints.clear();
-            [controls, dock, row, picker, overflow, boundaries, gutters, ...sizes].forEach(node => node.remove());
+            [controls, dock, row, picker, overflow, navigationMenu, boundaries, gutters, ...sizes].forEach(node => node.remove());
         }
         listen(window, 'pagehide', dispose);
         request();

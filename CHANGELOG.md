@@ -2,7 +2,13 @@
 
 ## Unreleased
 
-Changes after the 0.5.0 scope will be recorded here.
+### Changed
+
+- Compact table controls into a coordinate chip, alignment buttons and a permanent More menu. Clickable row/column gutters navigate the table, and four boundary handles insert around the active cell.
+
+### Fixed
+
+- Distinguish selected characters from the active table row and column with a subtle context tint and stronger text-selection colors in all seven editor themes.
 
 ## 0.5.0
 
