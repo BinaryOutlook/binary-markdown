@@ -21,10 +21,11 @@
             const side = placement === 'left' || placement === 'right';
             const size = side ? vertical : horizontal;
             let x = placement.endsWith('right') ? table.right - size.width : table.left;
-            // Keep the 24px lower boundary button and its 8px offset clear.
-            let y = placement.startsWith('bottom') ? table.bottom + 38 : table.top - size.height - gap;
+            // Bottom controls clear the scroll hints; top controls clear the
+            // coordinate gutter and its insertion handles.
+            let y = placement.startsWith('bottom') ? table.bottom + 38 : table.top - size.height - gap - 28;
             if (side) {
-                x = placement === 'left' ? table.left - size.width - gap : table.right + gap;
+                x = placement === 'left' ? table.left - size.width - gap - 32 : table.right + gap;
                 y = (visibleTop + visibleBottom - size.height) / 2;
             }
             return { placement, vertical: side, ...box(x, y, size.width, size.height) };
@@ -43,7 +44,8 @@
         // Returning from docking needs extra clearance, preventing boundary oscillation.
         const eligible = input.current === 'top-bar' ? safe.filter(candidate => input.allowUndock !== false &&
             fits(candidate, bounds, 16) && !(input.obstacles || []).some(obstacle => overlaps(candidate, obstacle, 10))) : safe;
-        const preferSide = visibleBottom - visibleTop >= vertical.height + gap * 2;
+        // Prefer the horizontal strip for short tables when space allows.
+        const preferSide = visibleBottom - visibleTop >= Math.max(vertical.height + gap * 2, horizontal.width);
         const cell = input.cell || table;
         const distance = candidate => Math.abs((candidate.left + candidate.right - cell.left - cell.right) / 2) +
             Math.abs((candidate.top + candidate.bottom - cell.top - cell.bottom) / 2);

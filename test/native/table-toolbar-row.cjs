@@ -57,7 +57,9 @@ async function tableRowChecks({ editor, keyboard, resize, setMode, setPosition, 
     await editor.locator('#editor td').first().click();
     await editor.waitForFunction(() => !document.querySelector('.table-toolbar-row').hidden);
     await keyboard.press('Alt+F10');
-    await keyboard.press('ArrowRight');
+    await keyboard.press('End');
+    await keyboard.press('Enter');
+    await keyboard.press('ArrowDown');
     await keyboard.press('Enter');
     await editor.waitForFunction(() => document.querySelectorAll('#editor th').length === 3);
     await setMode('simple');

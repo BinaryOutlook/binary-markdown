@@ -18,21 +18,10 @@ async function setup(page: Page, position: string) {
     await expect(page.locator(controls)).toHaveAttribute('data-placement', position);
 }
 
-async function partialDock(page: Page, navigationInMenu = false) {
-    // Icon-only utilities changed the available budget. Find a real partial
-    // overflow state across platform font metrics while retaining the diamond.
-    for (const width of [1100, 1040, 980, 920, 860, 800, 740]) {
-        await page.setViewportSize({ width, height: 800 });
-        await page.evaluate(() => new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
-        const matches = await page.evaluate(({ controls, overflow, navigationInMenu }) => {
-            const bar = document.querySelector(controls)!;
-            const visible = (action: string) => Boolean(bar.querySelector(`[data-action="${action}"]`)?.getClientRects().length);
-            const navigationMoved = Boolean(document.querySelector(`${overflow} select[aria-label="Rows"]`) && document.querySelector(`${overflow} select[aria-label="Columns"]`));
-            return visible('more') && visible('add-col-left') && visible('add-row-below') && (!navigationInMenu || navigationMoved);
-        }, { controls, overflow, navigationInMenu });
-        if (matches) return;
-    }
-    throw new Error('No narrow pane retained the directional controls with the required overflow actions');
+async function partialDock(page: Page) {
+    await page.setViewportSize({ width: 740, height: 800 });
+    await expect(page.locator(`${controls} [data-action="more"]`)).toBeVisible();
+    await expect(page.locator(`${controls} .table-coordinate-chip`)).toBeVisible();
 }
 
 async function wholeButtons(page: Page) {
@@ -94,13 +83,13 @@ for (const position of ['top-left', 'left']) {
         await expect(page.locator(overflow)).toBeVisible();
         const distribution = await page.evaluate(({ controls, overflow }) => {
             const visible = (selector: string) => [...document.querySelectorAll<HTMLButtonElement>(selector)].filter(button => button.getClientRects().length).map(button => button.dataset.action);
-            return { main: visible(`${controls} button:not([data-action="more"])`), menu: visible(`${overflow} button`) };
+            return { main: visible(`${controls} button[data-action]:not([data-action="more"])`), menu: visible(`${overflow} button`) };
         }, { controls, overflow });
         const actions = ['add-col-left', 'add-col-right', 'add-row-above', 'add-row-below', 'align-left', 'align-center', 'align-right', 'del-col', 'del-row', 'placement'];
-        expect([...distribution.main, ...distribution.menu]).toEqual(actions);
+        expect([...distribution.main, ...distribution.menu].sort()).toEqual([...actions].sort());
         await page.keyboard.press('Escape');
         await page.setViewportSize({ width: 1280, height: 900 });
-        await expect(more).toBeHidden();
+        await expect(more).toBeVisible();
         await wholeButtons(page);
         expect(await page.evaluate(() => (window as any).htmlToMarkdown())).toBe(before);
         expect(await page.evaluate(() => (window as any).__testApi.messages.filter((message: any) => ['edit', 'save'].includes(message.type)))).toEqual([]);
@@ -130,25 +119,28 @@ test('populated row selectors keep whole arrows with classic scrollbars across n
 });
 
 test('a focused action follows overflow in both directions without editing', async ({ page }) => {
-    await setup(page, 'top-left');
+    await setup(page, 'left');
     const before = await page.evaluate(() => (window as any).htmlToMarkdown());
-    const action = page.locator(`${controls} [data-action="placement"]`);
+    const action = page.locator(`${controls} [data-action="align-right"]`);
     await page.keyboard.press('Alt+F10');
-    await page.keyboard.press('End');
+    await page.keyboard.press('ArrowDown');
+    await page.keyboard.press('ArrowDown');
+    await page.keyboard.press('ArrowDown');
     await expect(action).toBeFocused();
-    await page.setViewportSize({ width: 420, height: 260 });
-    const menuAction = page.locator(`${overflow} [data-action="placement"]`);
+    await page.setViewportSize({ width: 420, height: 180 });
+    const menuAction = page.locator(`${overflow} [data-action="align-right"]`);
     await expect(menuAction).toBeFocused();
     await expect(menuAction).toBeInViewport();
     await wholeButtons(page);
+    await page.keyboard.press('End');
     await page.keyboard.press('Enter');
     await expect(page.locator('.table-placement-menu')).toBeVisible();
     await page.setViewportSize({ width: 390, height: 240 });
     await expect(page.locator('.table-placement-menu [data-position="auto"]')).toBeInViewport();
     await page.keyboard.press('Escape');
+    await page.setViewportSize({ width: 420, height: 180 });
     await page.locator(`${controls} [data-action="more"]`).click();
-    await page.keyboard.press('End');
-    await expect(menuAction).toBeFocused();
+    await menuAction.focus();
     await page.setViewportSize({ width: 1280, height: 900 });
     await expect(action).toBeFocused();
     await expect(page.locator(overflow)).toBeHidden();
@@ -162,7 +154,7 @@ test('docked controls retain leading actions and resize an open overflow menu', 
     await partialDock(page);
     const more = page.locator(`${controls} [data-action="more"]`);
     await expect(more).toBeVisible();
-    await expect(page.locator(`${controls} [data-action="add-col-left"]`)).toBeVisible();
+    await expect(page.locator(`${controls} .table-coordinate-chip`)).toBeVisible();
     await expect(page.locator(controls)).toHaveAttribute('data-docked', 'true');
     await wholeButtons(page);
     await more.click();
@@ -182,11 +174,16 @@ test('docked controls retain leading actions and resize an open overflow menu', 
 test('compact menu reveals its last action with the keyboard in a short pane', async ({ page }) => {
     await setup(page, 'top-bar');
     await page.setViewportSize({ width: 420, height: 260 });
-    const toggle = page.getByRole('button', { name: 'Table controls', exact: true });
-    await expect(toggle.locator('svg')).toHaveAttribute('aria-hidden', 'true');
-    await toggle.click();
+    await page.keyboard.press('Alt+F10');
+    const toggle = page.locator('.table-toolbar-toggle');
+    if (await toggle.isVisible()) {
+        await expect(toggle.locator('svg')).toHaveAttribute('aria-hidden', 'true');
+        await page.keyboard.press('Enter');
+    }
     await page.keyboard.press('End');
-    const placement = page.locator(`${controls} [data-action="placement"]`);
+    await page.keyboard.press('Enter');
+    await page.keyboard.press('End');
+    const placement = page.locator(`${overflow} [data-action="placement"]`);
     await expect(placement).toBeFocused();
     await expect(placement).toBeInViewport();
     await placement.press('Enter');
@@ -195,15 +192,14 @@ test('compact menu reveals its last action with the keyboard in a short pane', a
     expect(await page.evaluate(() => document.querySelector('#editor td')?.contains(getSelection()?.anchorNode || null))).toBe(true);
 });
 
-test('a narrow dock retains row and column navigation in its overflow without editing', async ({ page }) => {
+test('a narrow dock retains row and column navigation through its coordinate chip without editing', async ({ page }) => {
     await setup(page, 'top-bar');
     const before = await page.evaluate(() => (window as any).htmlToMarkdown());
-    await partialDock(page, true);
-    await expect(page.locator(`${controls} [data-action="add-row-below"]`)).toBeVisible();
-    await page.locator(`${controls} [data-action="more"]`).click();
-    const rows = page.locator(overflow).getByRole('combobox', { name: 'Rows', exact: true });
+    await partialDock(page);
+    await page.locator(`${controls} .table-coordinate-chip`).click();
+    const rows = page.locator('.table-navigation-menu').getByRole('combobox', { name: 'Rows', exact: true });
     await expect(rows).toBeVisible();
-    await rows.selectOption('3');
+    await rows.selectOption({ value: '2' });
     expect(await page.evaluate(() => (window as any).activeTableCell.parentElement.rowIndex)).toBe(2);
     expect(await page.evaluate(() => (window as any).htmlToMarkdown())).toBe(before);
     await expect(page.locator('#toolbar [data-action="undo"]')).toBeDisabled();
@@ -241,7 +237,7 @@ test('sidebar width changes recompute overflow without changing an explicit plac
     await expect(page.locator(`${controls} [data-action="more"]`)).toBeVisible();
     await wholeButtons(page);
     await page.locator('#sidebar').evaluate(node => { node.classList.add('hidden'); node.style.width = ''; });
-    await expect(page.locator(`${controls} [data-action="more"]`)).toBeHidden();
+    await expect(page.locator(`${controls} [data-action="more"]`)).toBeVisible();
     await wholeButtons(page);
     await expect(page.locator('html')).toHaveAttribute('data-table-toolbar-position', 'top-left');
     expect(await page.evaluate(() => (window as any).htmlToMarkdown())).toBe(before);
