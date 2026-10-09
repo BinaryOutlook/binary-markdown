@@ -6,6 +6,7 @@ Start here for maintained Binary Markdown guidance. These pages describe the sou
 | --- | --- | --- |
 | Install or update the extension | [Installation](../README.md#install) | [Migration](migration.md) |
 | Find the original fork or update Git remotes | [Repository transition](repository-transition.md) | [Historical releases](https://github.com/BinaryOutlook/binary-markdown-fork/releases) |
+| Review the 0.5.1 toolbar update | [Release notes and apology](../release-notes/0.5.1.md) | [Changelog](../CHANGELOG.md#051), [table operations](editor-guide.md#table-operations) |
 | Review the 0.5.0 release scope | [Release notes](../release-notes/0.5.0.md) | [Changelog](../CHANGELOG.md#050), [readiness and acceptance checklist](../reports/validation/2026-10-07-0.5.0-readiness.md) |
 | Find a published package | [GitHub Releases](https://github.com/BinaryOutlook/binary-markdown/releases) | [Version history](../release-notes/README.md), [build and checksum instructions](building.md#inspect-and-install-the-output) |
 | Write and format Markdown | [Editor guide](editor-guide.md) | [Front matter and table of contents](yaml-toc.md) |
