@@ -2,9 +2,13 @@
 
 ## Unreleased
 
+## 0.5.1
+
+A rapid toolbar stability update following 0.5.0. We apologize for the disruption and the short notice. This was a very last-minute decision: further testing revealed instability in the previous version's table toolbar, prompting its replacement with a more stable, compact toolbar and this rapid update. See the [0.5.1 notes](release-notes/0.5.1.md) for details and inherited limitations. [GitHub Releases](https://github.com/BinaryOutlook/binary-markdown/releases) identifies published packages and their validation.
+
 ### Changed
 
-- Compact table controls into a coordinate chip, alignment buttons and a permanent More menu. Clickable row/column gutters navigate the table, and four boundary handles insert around the active cell.
+- Replace the previous unstable table toolbar with a more stable, compact toolbar containing a coordinate chip, alignment buttons and a permanent More menu. Clickable row/column gutters navigate the table, and four boundary handles insert around the active cell.
 
 ### Fixed
 
