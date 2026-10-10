@@ -1,0 +1,1105 @@
+{
+  "date": "2026-09-30",
+  "sourceCommit": "944b4dd2781c906ee9a912295c814e77a0a9f3f0",
+  "branch": "feat/ui-ux-visual-review",
+  "status": "Static visual proposals; no application changes",
+  "audience": "Provisional: students and developers writing technical documents",
+  "style": "Consistent minimalist Binary Markdown desktop-editor language. Flat off-white canvas #FAFAF8, pale neutral rail #F3F4F5, charcoal text #242830, one restrained blue accent #4266B0. For dark subjects use charcoal #1B1E26 and slate surfaces #272D38 with legible pale tokens and the same blue accent. Familiar system sans typography and monospace only for source. Crisp 1px dividers, 6px corner radii, 8px spacing increments, no decorative gradients, no glass, no giant cards, no marketing art, no invented logo. Preserve the real Markdown-editor identity and useful commands. This is a proposed static design concept, not a working product. Show one option only, with readable exact short labels and synthetic research-note content.",
+  "captures": {
+    "01-overview.jpg": "Current wide editor \u00b7 Full toolbar \u00b7 Things theme",
+    "01-empty-document.jpg": "Current empty document \u00b7 writing hint already present",
+    "02-narrow-toolbar.jpg": "Current narrow pane \u00b7 600 \u00d7 720",
+    "02-toolbar-overflow.jpg": "Current narrow More menu \u00b7 commands retained",
+    "03-insert-menu.jpg": "Current Insert menu \u00b7 keyboard focus visible",
+    "04-palette-no-results.jpg": "Current Action Palette \u00b7 unmatched query",
+    "05-table-controls.jpg": "Current table controls \u00b7 Automatic placement",
+    "06-code-night.jpg": "Current JavaScript block \u00b7 Night theme",
+    "06-language-picker.jpg": "Current searchable language picker",
+    "07-outline.jpg": "Current nested outline and footer",
+    "08-equation-error.jpg": "Current unsupported equation \u00b7 preview",
+    "08-equation-edit.jpg": "Current unsupported equation \u00b7 source and preview",
+    "09-mermaid-error.jpg": "Current valid and invalid Mermaid diagrams",
+    "10-find-replace.jpg": "Current Find and Replace \u00b7 filled Find field",
+    "11-metadata-toc.jpg": "Current front matter and generated contents",
+    "11-metadata-expanded.jpg": "Current raw YAML editor",
+    "12-source-mode.jpg": "Current Source mode and utility icons",
+    "13-export-menu.jpg": "Current export menu \u00b7 simulated tool availability",
+    "14-export-failure.jpg": "Current failure banner \u00b7 simulated host status",
+    "14-export-warnings.jpg": "Current expanded warnings \u00b7 simulated host status"
+  },
+  "items": [
+    {
+      "id": "01-canvas",
+      "title": "Writing canvas and visual hierarchy",
+      "designs": [
+        "Make the smallest practical correction: retain the outline and current full toolbar, reduce the writing canvas top inset to about 40px, use a readable 740px body measure, retain 16px body text, make H1 charcoal and H2 charcoal with restrained rules, show subtle width markers only when focused. Keep the code block and table content intact. Numbered callouts: 1 near the first heading = Less empty space before writing; 2 near heading hierarchy = Quiet, consistent typography; 3 near width marker = Guides appear when useful.",
+        "Use a quiet document header with a small filename Research notes.md and an explicit Visual / Source switch, then compact grouped toolbar beneath. Reduce top whitespace, use a centered reading column, offer a clearly labeled Focus action, and make outline a slim 220px rail. Numbered callouts: 1 at header = Clear document and mode; 2 at column = Comfortable reading measure; 3 at Focus = Optional distraction reduction.",
+        "Explore an optional writing-focus workspace: collapsed outline as a slim navigation rail, minimal document header, small contextual formatting strip at an actual selected paragraph, body text centered within a calm reading column, transient width guide that stays out of normal reading. Keep Insert and Source visibly available. Numbered callouts: 1 at rail = Navigation on demand; 2 at contextual strip = Formatting follows selection; 3 at header = Essential actions remain reachable."
+      ],
+      "priority": "Medium \u00b7 daily writing",
+      "kind": "Design judgment",
+      "current": [
+        "01-overview.jpg",
+        "01-empty-document.jpg"
+      ],
+      "observation": "At 1280 \u00d7 720, the first heading starts about 126 px below the editor box top. The source gives the editor and Source view 100 px of top padding. Persistent corner width markers and blue section headings add emphasis outside the prose. Empty documents already show a writing hint; this proposal improves its placement and prominence rather than inventing a missing empty state.",
+      "source": [
+        [
+          "src/webview/styles.css",
+          418,
+          "Writing inset and reading width"
+        ],
+        [
+          "src/webview/styles.css",
+          445,
+          "Source view inset"
+        ]
+      ],
+      "preserve": "Keep the existing width, alignment, outline and font-size preferences, Markdown content, scroll position and selection. Use an optional focus view rather than replacing the baseline.",
+      "rationales": [
+        "A smaller top inset gives short panes useful writing space while retaining the familiar page and outline. Quiet typography makes document structure clear without competing with the content.",
+        "A document header clarifies the current file and mode. A narrower rail and optional Focus control provide stronger organization, with more layout work than the first option.",
+        "An optional focus workspace prioritizes sustained writing. Contextual tools reduce permanent chrome, but require careful keyboard access and selection behavior."
+      ],
+      "tradeoffs": [
+        "Low to medium effort. Tune spacing at multiple pane widths; do not change saved width preferences.",
+        "Medium effort. Header and focus behavior need a host-aware file identity and explicit mode state.",
+        "High effort. Contextual positioning, focus recovery and discoverability need interaction prototypes."
+      ],
+      "acceptance": [
+        "At short and narrow pane sizes, the first editable line remains visible without scrolling.",
+        "Opening or closing navigation and width guidance preserves the selection and authored Markdown.",
+        "Empty-document guidance is readable and disappears at the appropriate time without adding document content."
+      ],
+      "options": [
+        {
+          "level": "Recommended",
+          "id": "01-canvas-recommended",
+          "image": "images/generated/01-canvas-recommended.png",
+          "intent": "Make the smallest practical correction: retain the outline and current full toolbar, reduce the writing canvas top inset to about 40px, use a readable 740px body measure, retain 16px body text, make H1 charcoal and H2 charcoal with restrained rules, show subtle width markers only when focused. Keep the code block and table content intact. Numbered callouts: 1 near the first heading = Less empty space before writing; 2 near heading hierarchy = Quiet, consistent typography; 3 near width marker = Guides appear when useful.",
+          "annotations": [
+            "Less empty space before writing: reduce the top inset while keeping a comfortable reading column",
+            "Quiet hierarchy: use charcoal headings and restrained section rules",
+            "Guides when useful: expose width assistance on focus rather than during ordinary reading"
+          ],
+          "rationale": "A smaller top inset gives short panes useful writing space while retaining the familiar page and outline. Quiet typography makes document structure clear without competing with the content.",
+          "tradeoff": "Low to medium effort. Tune spacing at multiple pane widths; do not change saved width preferences."
+        },
+        {
+          "level": "Moderate",
+          "id": "01-canvas-moderate",
+          "image": "images/generated/01-canvas-moderate.png",
+          "intent": "Use a quiet document header with a small filename Research notes.md and an explicit Visual / Source switch, then compact grouped toolbar beneath. Reduce top whitespace, use a centered reading column, offer a clearly labeled Focus action, and make outline a slim 220px rail. Numbered callouts: 1 at header = Clear document and mode; 2 at column = Comfortable reading measure; 3 at Focus = Optional distraction reduction.",
+          "annotations": [
+            "Clear document and mode: add a compact filename and Visual/Source control",
+            "Comfortable reading measure: center the article and reduce rail width",
+            "Optional Focus: reduce distractions through an explicit user choice"
+          ],
+          "rationale": "A document header clarifies the current file and mode. A narrower rail and optional Focus control provide stronger organization, with more layout work than the first option.",
+          "tradeoff": "Medium effort. Header and focus behavior need a host-aware file identity and explicit mode state."
+        },
+        {
+          "level": "Experimental",
+          "id": "01-canvas-experimental",
+          "image": "images/generated/01-canvas-experimental.png",
+          "intent": "Explore an optional writing-focus workspace: collapsed outline as a slim navigation rail, minimal document header, small contextual formatting strip at an actual selected paragraph, body text centered within a calm reading column, transient width guide that stays out of normal reading. Keep Insert and Source visibly available. Numbered callouts: 1 at rail = Navigation on demand; 2 at contextual strip = Formatting follows selection; 3 at header = Essential actions remain reachable.",
+          "annotations": [
+            "Navigation on demand: use an optional collapsed rail",
+            "Formatting follows selection: move secondary tools close to the active text",
+            "Essential actions stay reachable: preserve visible Insert and Source access"
+          ],
+          "rationale": "An optional focus workspace prioritizes sustained writing. Contextual tools reduce permanent chrome, but require careful keyboard access and selection behavior.",
+          "tradeoff": "High effort. Contextual positioning, focus recovery and discoverability need interaction prototypes."
+        }
+      ]
+    },
+    {
+      "id": "02-toolbar",
+      "title": "Toolbar hierarchy and narrow-pane overflow",
+      "reference": "01-overview.jpg",
+      "extra": "02-toolbar-overflow.jpg",
+      "designs": [
+        "Retain Full and Simple preferences and all existing commands. In the Full toolbar replace six permanently exposed H1\u2013H6 buttons with one labeled Heading dropdown; group B/I/U and lists with thin separators; keep Insert, labeled Source and Export controls visible; put rare actions into a categorized More menu. Show a small narrow-pane inset using the same toolbar. Pins: 1 Heading menu replaces six equal buttons; 2 grouped formatting improves scanning; 3 labeled essential actions and grouped overflow preserve access.",
+        "Create two restrained rows: a document/mode utility header and a formatting strip with Text, Lists, Insert groups. Show the active formatting state and a compact grouped More panel for narrow panes. Pins: 1 utilities separated from formatting; 2 active formatting is visible; 3 narrow layout uses categorized commands.",
+        "Explore a user-selectable context-aware toolbar: concise permanent Insert, Format, Visual/Source, Export controls; a contextual formatting strip near selected text; a searchable all-actions panel that stays keyboard reachable. Pins: 1 permanent essential commands; 2 selection-specific tools; 3 search exposes the complete command set. Show this as an optional workflow, not forced automatic personalization."
+      ],
+      "priority": "High \u00b7 frequent controls",
+      "kind": "Design judgment",
+      "current": [
+        "01-overview.jpg",
+        "02-narrow-toolbar.jpg",
+        "02-toolbar-overflow.jpg"
+      ],
+      "observation": "The wide Full toolbar presents H1\u2013H6 as six peer buttons among many icons. At 600 \u00d7 720, most formatting commands move into a tall, flat More menu while the outline occupies 260 px. Overflow works and retains commands; the opportunity is faster scanning and clearer essential actions.",
+      "source": [
+        [
+          "src/shared/editor-body-html.js",
+          77,
+          "Toolbar groups and utility actions"
+        ],
+        [
+          "src/webview/styles.css",
+          262,
+          "Toolbar and overflow styling"
+        ]
+      ],
+      "preserve": "Keep Full and Simple preferences, all six heading levels, existing command identities and platform-correct shortcuts. Grouping must not silently drop rarely used commands.",
+      "rationales": [
+        "A Heading menu and clear groups reduce visual competition with a small behavioral change. Labeled Source and Export controls remove reliance on icon recognition.",
+        "Separating document utilities from formatting creates a stronger mental grouping. Active-format feedback helps authors understand the selected text, but uses additional vertical space.",
+        "Contextual formatting can make the permanent toolbar much lighter. A complete searchable actions panel remains essential so hidden tools stay discoverable."
+      ],
+      "tradeoffs": [
+        "Medium effort. Check heading access, keyboard menus and overflow thresholds across locales.",
+        "Medium to high effort. A second row must adapt to short panes and selection-dependent active state.",
+        "High effort. Optional contextual tools require positioning, focus restoration and a complete fallback."
+      ],
+      "acceptance": [
+        "Every current toolbar action is reachable in Full and Simple at wide and narrow pane widths.",
+        "Menus stay within the pane; Escape returns focus and restores the editing selection.",
+        "Selected formatting and mode states are understandable without relying on color alone."
+      ],
+      "options": [
+        {
+          "level": "Recommended",
+          "id": "02-toolbar-recommended",
+          "image": "images/generated/02-toolbar-recommended.png",
+          "intent": "Retain Full and Simple preferences and all existing commands. In the Full toolbar replace six permanently exposed H1\u2013H6 buttons with one labeled Heading dropdown; group B/I/U and lists with thin separators; keep Insert, labeled Source and Export controls visible; put rare actions into a categorized More menu. Show a small narrow-pane inset using the same toolbar. Pins: 1 Heading menu replaces six equal buttons; 2 grouped formatting improves scanning; 3 labeled essential actions and grouped overflow preserve access.",
+          "annotations": [
+            "Heading menu replaces six equal buttons",
+            "Grouped formatting improves scanning",
+            "Labeled essential actions and grouped overflow preserve access"
+          ],
+          "rationale": "A Heading menu and clear groups reduce visual competition with a small behavioral change. Labeled Source and Export controls remove reliance on icon recognition.",
+          "tradeoff": "Medium effort. Check heading access, keyboard menus and overflow thresholds across locales."
+        },
+        {
+          "level": "Moderate",
+          "id": "02-toolbar-moderate",
+          "image": "images/generated/02-toolbar-moderate.png",
+          "intent": "Create two restrained rows: a document/mode utility header and a formatting strip with Text, Lists, Insert groups. Show the active formatting state and a compact grouped More panel for narrow panes. Pins: 1 utilities separated from formatting; 2 active formatting is visible; 3 narrow layout uses categorized commands.",
+          "annotations": [
+            "Utilities separated from formatting",
+            "Active formatting is visible",
+            "Narrow layout uses categorized commands"
+          ],
+          "rationale": "Separating document utilities from formatting creates a stronger mental grouping. Active-format feedback helps authors understand the selected text, but uses additional vertical space.",
+          "tradeoff": "Medium to high effort. A second row must adapt to short panes and selection-dependent active state."
+        },
+        {
+          "level": "Experimental",
+          "id": "02-toolbar-experimental",
+          "image": "images/generated/02-toolbar-experimental.png",
+          "intent": "Explore a user-selectable context-aware toolbar: concise permanent Insert, Format, Visual/Source, Export controls; a contextual formatting strip near selected text; a searchable all-actions panel that stays keyboard reachable. Pins: 1 permanent essential commands; 2 selection-specific tools; 3 search exposes the complete command set. Show this as an optional workflow, not forced automatic personalization.",
+          "annotations": [
+            "Permanent essential commands",
+            "Selection-specific tools",
+            "Search exposes the complete command set"
+          ],
+          "rationale": "Contextual formatting can make the permanent toolbar much lighter. A complete searchable actions panel remains essential so hidden tools stay discoverable.",
+          "tradeoff": "High effort. Optional contextual tools require positioning, focus restoration and a complete fallback."
+        }
+      ]
+    },
+    {
+      "id": "03-commands",
+      "title": "Insert and Action Palette discovery",
+      "reference": "04-palette-no-results.jpg",
+      "extra": "03-insert-menu.jpg",
+      "designs": [
+        "Show an Action Palette with query unmatched-command and explicit no-results state 'No matching actions', guidance 'Try table, equation, or heading', and a Clear search text button. Include a small companion Insert menu with readable Structure and Media groups and keyboard hints. Pins: 1 explain empty search; 2 provide useful recovery examples; 3 group Insert without changing actions.",
+        "Show a searchable Insert popover with matching results for table and a separate no-results state for unmatched-command. Shared command names and short purpose descriptions connect Insert with the Action Palette; existing keyboard hints remain visible.",
+        "Explore a larger optional command workspace opened by the existing shortcut, with search at top, a left group list, and compact previews for Table, Equation, Code block. For unmatched-command show clear no-results guidance. Pins: 1 categories support exploration; 2 preview describes the insertion; 3 search recovery is always available. No AI suggestion, no invented command execution."
+      ],
+      "priority": "High \u00b7 discovery and recovery",
+      "kind": "Observed feedback gap + design judgment",
+      "current": [
+        "04-palette-no-results.jpg",
+        "03-insert-menu.jpg"
+      ],
+      "observation": "Entering unmatched-command in the Action Palette leaves the input visible with an empty result area and no explanation. The renderer clears the list and appends only matches. Insert has working menu roles and a visible focus outline, but its flat list gives equations the same emphasis as broadly used insertions.",
+      "source": [
+        [
+          "src/webview/editor.js",
+          12505,
+          "Palette filtering and list rendering"
+        ],
+        [
+          "src/shared/editor-body-html.js",
+          115,
+          "Insert menu container"
+        ]
+      ],
+      "preserve": "Keep the existing palette shortcut, insertion location, keyboard navigation and command routing. Clearing a query is a view action and must not modify the document.",
+      "rationales": [
+        "An explicit no-results message and a clear recovery action resolve the observed ambiguity with limited implementation work. Grouped Insert rows support quick scanning.",
+        "Shared names and descriptions connect Insert with the Action Palette. Searchable Insert adds flexibility, at the cost of another input and more localization.",
+        "A larger optional command workspace supports exploration through previews and categories. It is useful for learning, but can interrupt writing and requires a broader command model."
+      ],
+      "tradeoffs": [
+        "Low to medium effort. Add localized empty-state text, announcement and query recovery.",
+        "Medium effort. Reuse command metadata and preserve consistent filtering across entry points.",
+        "High effort. Previews, categories and workspace focus management need new UI contracts."
+      ],
+      "acceptance": [
+        "A query with zero matches announces and visibly explains the state; Clear search restores actions.",
+        "Keyboard and pointer insertion use the same saved selection and command behavior.",
+        "Visible shortcuts follow the platform and do not invent new bindings."
+      ],
+      "options": [
+        {
+          "level": "Recommended",
+          "id": "03-commands-recommended",
+          "image": "images/generated/03-commands-recommended.png",
+          "intent": "Show an Action Palette with query unmatched-command and explicit no-results state 'No matching actions', guidance 'Try table, equation, or heading', and a Clear search text button. Include a small companion Insert menu with readable Structure and Media groups and keyboard hints. Pins: 1 explain empty search; 2 provide useful recovery examples; 3 group Insert without changing actions.",
+          "annotations": [
+            "Explain empty search",
+            "Provide useful recovery examples",
+            "Group Insert without changing actions"
+          ],
+          "rationale": "An explicit no-results message and a clear recovery action resolve the observed ambiguity with limited implementation work. Grouped Insert rows support quick scanning.",
+          "tradeoff": "Low to medium effort. Add localized empty-state text, announcement and query recovery."
+        },
+        {
+          "level": "Moderate",
+          "id": "03-commands-moderate",
+          "image": "images/generated/03-commands-moderate.png",
+          "intent": "Show a searchable Insert popover with matching results for table and a separate no-results state for unmatched-command. Shared command names and short purpose descriptions connect Insert with the Action Palette; existing keyboard hints remain visible.",
+          "annotations": [
+            "Matching results use shared names and short descriptions",
+            "Empty results explain the state and offer Clear search",
+            "Shared command details retain existing keyboard hints"
+          ],
+          "rationale": "Shared names and descriptions connect Insert with the Action Palette. Searchable Insert adds flexibility, at the cost of another input and more localization.",
+          "tradeoff": "Medium effort. Reuse command metadata and preserve consistent filtering across entry points."
+        },
+        {
+          "level": "Experimental",
+          "id": "03-commands-experimental",
+          "image": "images/generated/03-commands-experimental.png",
+          "intent": "Explore a larger optional command workspace opened by the existing shortcut, with search at top, a left group list, and compact previews for Table, Equation, Code block. For unmatched-command show clear no-results guidance. Pins: 1 categories support exploration; 2 preview describes the insertion; 3 search recovery is always available. No AI suggestion, no invented command execution.",
+          "annotations": [
+            "Categories support exploration",
+            "Preview describes the insertion",
+            "Search recovery is always available"
+          ],
+          "rationale": "A larger optional command workspace supports exploration through previews and categories. It is useful for learning, but can interrupt writing and requires a broader command model.",
+          "tradeoff": "High effort. Previews, categories and workspace focus management need new UI contracts."
+        }
+      ]
+    },
+    {
+      "id": "04-outline",
+      "title": "Outline hierarchy and sidebar footer",
+      "reference": "07-outline.jpg",
+      "designs": [
+        "Preserve current heading nesting, long-title wrapping, active-section indicator, and sidebar resizing. Improve hierarchy with slightly stronger section labels, consistent indentation and row padding, and a compact readable footer: Words 30, image location ./assets, labeled Settings control. Pins: 1 nesting is easier to scan; 2 active section stays distinct without a huge fill; 3 footer controls and status are readable.",
+        "Use a slim document-navigation header with a Filter headings field, optional collapse chevrons beside parent sections, and a collapsible Document details footer showing word count and image folder. Pins: 1 filter long documents; 2 collapse sections on demand; 3 secondary status has its own disclosure. Preserve actual heading order.",
+        "Explore an optional Outline / Document tabbed rail: Outline retains the semantic tree; Document offers compact section navigation and document details without cards. A thin reading-position marker follows the active section. Pins: 1 navigation modes are explicit; 2 progress supports orientation; 3 document details leave the main writing area clear. No automatic source rewriting."
+      ],
+      "priority": "Medium \u00b7 document orientation",
+      "kind": "Design judgment",
+      "current": [
+        "07-outline.jpg"
+      ],
+      "observation": "The current outline already nests headings, wraps long titles and highlights the active section. The small, muted footer combines word statistics and icon-only settings affordances. A quieter active marker and stronger footer hierarchy could improve reading and discovery. The blank image-folder value in the mock host is not evidence of a product failure.",
+      "source": [
+        [
+          "src/webview/styles.css",
+          168,
+          "Heading hierarchy and active row"
+        ],
+        [
+          "src/webview/styles.css",
+          192,
+          "Footer typography and actions"
+        ],
+        [
+          "src/shared/editor-body-html.js",
+          48,
+          "Outline and status structure"
+        ]
+      ],
+      "preserve": "Keep heading order, nesting, long-title wrapping, resizing and active-section navigation. Folder values must come from the host; ./assets in concepts is synthetic.",
+      "rationales": [
+        "The existing tree is useful and needs refinement rather than replacement. Readable footer labels improve orientation with little new interaction.",
+        "Filtering and collapsing long outlines reduce navigation effort. A Document details disclosure keeps secondary information available without dominating the rail.",
+        "An optional tabbed rail separates navigation from document information. A reading-position marker could help long documents, but adds state and scroll synchronization."
+      ],
+      "tradeoffs": [
+        "Low to medium effort. Validate text sizes, target sizes and long localized labels.",
+        "Medium effort. Filter and collapsed state need accessible tree behavior and sensible persistence.",
+        "High effort. Additional navigation modes and reading-position semantics require user testing."
+      ],
+      "acceptance": [
+        "A long title remains readable and all heading levels keep their semantic order.",
+        "Selecting a heading scrolls to the correct section and preserves document content.",
+        "Footer actions have understandable labels and host-derived status at high zoom."
+      ],
+      "options": [
+        {
+          "level": "Recommended",
+          "id": "04-outline-recommended",
+          "image": "images/generated/04-outline-recommended.png",
+          "intent": "Preserve current heading nesting, long-title wrapping, active-section indicator, and sidebar resizing. Improve hierarchy with slightly stronger section labels, consistent indentation and row padding, and a compact readable footer: Words 30, image location ./assets, labeled Settings control. Pins: 1 nesting is easier to scan; 2 active section stays distinct without a huge fill; 3 footer controls and status are readable.",
+          "annotations": [
+            "Nesting is easier to scan",
+            "Active section stays distinct without a huge fill",
+            "Footer controls and status are readable"
+          ],
+          "rationale": "The existing tree is useful and needs refinement rather than replacement. Readable footer labels improve orientation with little new interaction.",
+          "tradeoff": "Low to medium effort. Validate text sizes, target sizes and long localized labels."
+        },
+        {
+          "level": "Moderate",
+          "id": "04-outline-moderate",
+          "image": "images/generated/04-outline-moderate.png",
+          "intent": "Use a slim document-navigation header with a Filter headings field, optional collapse chevrons beside parent sections, and a collapsible Document details footer showing word count and image folder. Pins: 1 filter long documents; 2 collapse sections on demand; 3 secondary status has its own disclosure. Preserve actual heading order.",
+          "annotations": [
+            "Filter long documents",
+            "Collapse sections on demand",
+            "Secondary status has its own disclosure"
+          ],
+          "rationale": "Filtering and collapsing long outlines reduce navigation effort. A Document details disclosure keeps secondary information available without dominating the rail.",
+          "tradeoff": "Medium effort. Filter and collapsed state need accessible tree behavior and sensible persistence."
+        },
+        {
+          "level": "Experimental",
+          "id": "04-outline-experimental",
+          "image": "images/generated/04-outline-experimental.png",
+          "intent": "Explore an optional Outline / Document tabbed rail: Outline retains the semantic tree; Document offers compact section navigation and document details without cards. A thin reading-position marker follows the active section. Pins: 1 navigation modes are explicit; 2 progress supports orientation; 3 document details leave the main writing area clear. No automatic source rewriting.",
+          "annotations": [
+            "Navigation modes are explicit",
+            "Progress supports orientation",
+            "Document details leave the main writing area clear"
+          ],
+          "rationale": "An optional tabbed rail separates navigation from document information. A reading-position marker could help long documents, but adds state and scroll synchronization.",
+          "tradeoff": "High effort. Additional navigation modes and reading-position semantics require user testing."
+        }
+      ]
+    },
+    {
+      "id": "05-tables",
+      "title": "Contextual table controls",
+      "reference": "05-table-controls.jpg",
+      "designs": [
+        "Keep Automatic placement and existing geometry policy, but render a compact contextual table toolbar with labeled Rows and Columns menus, alignment buttons, and More. Place destructive actions inside menus with clear text. Show the selected cell with a restrained blue outline. Pins: 1 labeled operations replace cryptic abbreviations; 2 selection association is visible; 3 destructive commands separated from frequent insertion.",
+        "Use a docked second formatting row labeled Table when a cell is active, with Insert row, Insert column, Alignment and More controls, and a small cell-coordinate indicator. Preserve narrow-pane overflow. Pins: 1 stable table-specific row; 2 coordinate and selection establish context; 3 overflow keeps complete actions accessible.",
+        "Explore a spreadsheet-like optional interaction: subtle row/column headers, inline plus buttons at insertion boundaries, and a small selection inspector with Rows, Columns and Alignment. Keep the document aesthetic and preserve plain Markdown table semantics. Pins: 1 direct insertion at boundaries; 2 row/column association is visible; 3 advanced operations remain in a compact inspector. No formulas or data-grid feature promises."
+      ],
+      "priority": "Medium \u00b7 editing confidence",
+      "kind": "Design judgment",
+      "current": [
+        "05-table-controls.jpg"
+      ],
+      "observation": "Automatic placement puts a vertical toolbar beside the active table in this capture. Labels such as \u2190Col and Row\u2193 are compact, while deletion appears as repeated trash icons. The controls already have descriptive accessible labels and a placement preference. The proposal targets visible clarity and association with the selected cell, not a proven placement defect.",
+      "source": [
+        [
+          "src/webview/table-toolbar.js",
+          22,
+          "Accessible labels and visible abbreviations"
+        ],
+        [
+          "src/webview/table-toolbar.js",
+          283,
+          "Docked toolbar handling"
+        ],
+        [
+          "src/webview/table-toolbar.js",
+          383,
+          "Existing placement choices"
+        ]
+      ],
+      "preserve": "Keep Automatic and explicit placement choices, header-row protections, activeTableCell routing, Markdown table serialization and one appropriate undo step per action. Repositioning controls must not change the selected table.",
+      "rationales": [
+        "Rows and Columns menus explain operations without adding a second editing model. Separating destructive actions lowers the chance of a mistaken command.",
+        "A stable table row can make repeated editing easier and uses an existing docking capability. A coordinate indicator clarifies context but occupies toolbar space.",
+        "Boundary insertion and row/column headers make operations direct. This is a stronger interaction departure and must remain compatible with plain Markdown tables."
+      ],
+      "tradeoffs": [
+        "Medium effort. Labels, menu geometry and selection retention need careful checks.",
+        "Medium effort. Reuse existing docking; verify short panes and narrow overflow.",
+        "High effort. Hit testing, headers, keyboard mapping and accessibility need a dedicated prototype."
+      ],
+      "acceptance": [
+        "Insert/delete/alignment actions affect only the intended table cell, row or column.",
+        "Controls stay usable after scrolling, outline resizing, zoom and pane changes.",
+        "Header protections, source switching, save and undo preserve the expected Markdown."
+      ],
+      "options": [
+        {
+          "level": "Recommended",
+          "id": "05-tables-recommended",
+          "image": "images/generated/05-tables-recommended.png",
+          "intent": "Keep Automatic placement and existing geometry policy, but render a compact contextual table toolbar with labeled Rows and Columns menus, alignment buttons, and More. Place destructive actions inside menus with clear text. Show the selected cell with a restrained blue outline. Pins: 1 labeled operations replace cryptic abbreviations; 2 selection association is visible; 3 destructive commands separated from frequent insertion.",
+          "annotations": [
+            "Labeled operations replace cryptic abbreviations",
+            "Selection association is visible",
+            "Destructive commands separated from frequent insertion"
+          ],
+          "rationale": "Rows and Columns menus explain operations without adding a second editing model. Separating destructive actions lowers the chance of a mistaken command.",
+          "tradeoff": "Medium effort. Labels, menu geometry and selection retention need careful checks."
+        },
+        {
+          "level": "Moderate",
+          "id": "05-tables-moderate",
+          "image": "images/generated/05-tables-moderate.png",
+          "intent": "Use a docked second formatting row labeled Table when a cell is active, with Insert row, Insert column, Alignment and More controls, and a small cell-coordinate indicator. Preserve narrow-pane overflow. Pins: 1 stable table-specific row; 2 coordinate and selection establish context; 3 overflow keeps complete actions accessible.",
+          "annotations": [
+            "Stable table-specific row",
+            "Coordinate and selection establish context",
+            "Overflow keeps complete actions accessible"
+          ],
+          "rationale": "A stable table row can make repeated editing easier and uses an existing docking capability. A coordinate indicator clarifies context but occupies toolbar space.",
+          "tradeoff": "Medium effort. Reuse existing docking; verify short panes and narrow overflow."
+        },
+        {
+          "level": "Experimental",
+          "id": "05-tables-experimental",
+          "image": "images/generated/05-tables-experimental.png",
+          "intent": "Explore a spreadsheet-like optional interaction: subtle row/column headers, inline plus buttons at insertion boundaries, and a small selection inspector with Rows, Columns and Alignment. Keep the document aesthetic and preserve plain Markdown table semantics. Pins: 1 direct insertion at boundaries; 2 row/column association is visible; 3 advanced operations remain in a compact inspector. No formulas or data-grid feature promises.",
+          "annotations": [
+            "Direct insertion at boundaries",
+            "Row/column association is visible",
+            "Advanced operations remain in a compact inspector"
+          ],
+          "rationale": "Boundary insertion and row/column headers make operations direct. This is a stronger interaction departure and must remain compatible with plain Markdown tables.",
+          "tradeoff": "High effort. Hit testing, headers, keyboard mapping and accessibility need a dedicated prototype."
+        }
+      ]
+    },
+    {
+      "id": "06-code",
+      "title": "Code readability and block controls",
+      "reference": "06-code-night.jpg",
+      "extra": "06-language-picker.jpg",
+      "designs": [
+        "Use the dark version of the shared minimalist language. Keep source text identical but change Night-theme syntax colors to pale readable strings and numbers and higher-contrast comments. Give JavaScript, Copy, Expand and More a dedicated compact header row above source so controls do not overlap the first line in narrow panes. Put Delete code block in More. Pins: 1 readable token contrast; 2 a separate header protects source text; 3 destructive action in More.",
+        "Use a calm code header with JavaScript dropdown, optional Wrap control, Copy and Open in text editor. A compact language-search popover uses readable names and identifiers with a clear selected row. Show a copied confirmation as a quiet text state. Pins: 1 language is an explicit control; 2 wrapping reduces horizontal friction; 3 copy feedback is understandable. Dark slate surfaces, no neon.",
+        "Explore an optional code-focus workspace embedded in the document: an Edit / Preview segmented control, larger source area, and a side language/details inspector. Keep nearby prose visible as context and make Return to document clear. Pins: 1 explicit edit mode; 2 source gets a focused space; 3 clear return preserves document context. No code execution or AI tools."
+      ],
+      "priority": "High \u00b7 measurable readability",
+      "kind": "Measured contrast issue + design judgment",
+      "current": [
+        "06-code-night.jpg",
+        "06-language-picker.jpg"
+      ],
+      "observation": "In the captured Night theme, JavaScript strings use #032F62 on #24283B (1.10:1) and numbers use #005CC5 (2.31:1). Keywords and comments are also below 4.5:1 in this sample. Generic token colors have Dark overrides but no matching Night overrides. The existing language picker already supports search and selection. Narrow code blocks can place controls over the first source line.",
+      "source": [
+        [
+          "src/webview/styles.css",
+          917,
+          "Generic and Dark syntax-token colors"
+        ],
+        [
+          "src/webview/editor.js",
+          3396,
+          "Code language and block controls"
+        ],
+        [
+          "test/specs/codeblock-theme-contrast.spec.ts",
+          18,
+          "Existing test scope: plain quoted code foreground"
+        ]
+      ],
+      "preserve": "Keep source text, fence language, indentation, code copy behavior, language aliases and undo. The concepts do not add code execution. Existing language search should be retained.",
+      "rationales": [
+        "Readable token colors address the strongest objective finding. A dedicated header prevents controls from competing with source text and leaves deletion in a clearly labeled menu.",
+        "Explicit language, wrap and copy feedback make block operations easier to understand. Wrapping is optional so source-oriented users can keep horizontal scrolling.",
+        "A code-focus view can support long examples with a clear return path. It is substantially more work and risks creating a second editor inside the document."
+      ],
+      "tradeoffs": [
+        "Medium effort. Measure every relevant token across supported themes and editing states.",
+        "Medium to high effort. Optional wrapping and feedback must preserve copy and serialization.",
+        "High effort. Additional mode, inspector and selection transitions need architectural work."
+      ],
+      "acceptance": [
+        "Normal-size code tokens meet a measured contrast target of at least 4.5:1 against their actual background.",
+        "The first source line stays unobstructed at narrow widths and long language names.",
+        "Copy, editing, language changes, source switching, save and undo preserve the authored code."
+      ],
+      "options": [
+        {
+          "level": "Recommended",
+          "id": "06-code-recommended",
+          "image": "images/generated/06-code-recommended.png",
+          "intent": "Use the dark version of the shared minimalist language. Keep source text identical but change Night-theme syntax colors to pale readable strings and numbers and higher-contrast comments. Give JavaScript, Copy, Expand and More a dedicated compact header row above source so controls do not overlap the first line in narrow panes. Put Delete code block in More. Pins: 1 readable token contrast; 2 a separate header protects source text; 3 destructive action in More.",
+          "annotations": [
+            "Readable token contrast",
+            "A separate header protects source text",
+            "Destructive action in More"
+          ],
+          "rationale": "Readable token colors address the strongest objective finding. A dedicated header prevents controls from competing with source text and leaves deletion in a clearly labeled menu.",
+          "tradeoff": "Medium effort. Measure every relevant token across supported themes and editing states."
+        },
+        {
+          "level": "Moderate",
+          "id": "06-code-moderate",
+          "image": "images/generated/06-code-moderate.png",
+          "intent": "Use a calm code header with JavaScript dropdown, optional Wrap control, Copy and Open in text editor. A compact language-search popover uses readable names and identifiers with a clear selected row. Show a copied confirmation as a quiet text state. Pins: 1 language is an explicit control; 2 wrapping reduces horizontal friction; 3 copy feedback is understandable. Dark slate surfaces, no neon.",
+          "annotations": [
+            "Language is an explicit control",
+            "Wrapping reduces horizontal friction",
+            "Copy feedback is understandable"
+          ],
+          "rationale": "Explicit language, wrap and copy feedback make block operations easier to understand. Wrapping is optional so source-oriented users can keep horizontal scrolling.",
+          "tradeoff": "Medium to high effort. Optional wrapping and feedback must preserve copy and serialization."
+        },
+        {
+          "level": "Experimental",
+          "id": "06-code-experimental",
+          "image": "images/generated/06-code-experimental.png",
+          "intent": "Explore an optional code-focus workspace embedded in the document: an Edit / Preview segmented control, larger source area, and a side language/details inspector. Keep nearby prose visible as context and make Return to document clear. Pins: 1 explicit edit mode; 2 source gets a focused space; 3 clear return preserves document context. No code execution or AI tools.",
+          "annotations": [
+            "Explicit edit mode",
+            "Source gets a focused space",
+            "Clear return preserves document context"
+          ],
+          "rationale": "A code-focus view can support long examples with a clear return path. It is substantially more work and risks creating a second editor inside the document.",
+          "tradeoff": "High effort. Additional mode, inspector and selection transitions need architectural work."
+        }
+      ]
+    },
+    {
+      "id": "07-equations",
+      "title": "Equation source and error recovery",
+      "reference": "08-equation-edit.jpg",
+      "designs": [
+        "Retain the existing inline source and preview arrangement. Add a compact header 'Equation' and labels Source and Preview; show a clear inline warning 'Unknown command' linked to the visible unsupported command in the source. Keep the authored TeX unchanged and add short existing keyboard guidance 'Shift+Enter to return to text'. Pins: 1 source and preview are distinguished; 2 plain error explains the red command; 3 exit guidance reduces mode uncertainty. Render a simple a+b over c expression, and show unsupported command as an error, not corrected silently.",
+        "Use a bounded equation editor with Source and Preview regions plus a Wrap control and explicit Done action. An error row states 'Unknown command' and points to the source token; preserve source on close. Pins: 1 explicit editing boundary; 2 error connects to source; 3 controls make wrapping and exit discoverable. Do not silently modify equations.",
+        "Explore an optional equation workbench in a side panel: focused source editor, live preview, and a restrained error detail area with a source-location link. Keep the document behind visible and offer Return to document. Pins: 1 dedicated space for long TeX; 2 live preview stays connected; 3 errors point back to authored source. No symbolic solving or unsupported validation guarantees."
+      ],
+      "priority": "High \u00b7 error recovery",
+      "kind": "Observed ambiguity + design judgment",
+      "current": [
+        "08-equation-error.jpg",
+        "08-equation-edit.jpg"
+      ],
+      "observation": "The unsupported TeX command is rendered in red; clicking into the block exposes authored source above the preview. The relationship between error, source and preview has little visible explanation. The existing Shift+Enter exit behavior is a useful capability to expose, subject to confirming its exact context in an implementation.",
+      "source": [
+        [
+          "src/webview/editor.js",
+          3164,
+          "Inline math rendering options"
+        ],
+        [
+          "src/webview/editor.js",
+          3305,
+          "Display math rendering options"
+        ],
+        [
+          "src/webview/editor.js",
+          7736,
+          "Existing special-block exit handling"
+        ]
+      ],
+      "preserve": "Keep TeX source exactly as authored, including unsupported commands and delimiters. Explanatory warnings and view changes must not silently correct or serialize a different equation.",
+      "rationales": [
+        "Labels and a concise warning make the current source/preview arrangement understandable. This offers useful recovery without a new equation application.",
+        "A bounded editing region with Done clarifies entry and exit. Optional wrapping helps long source, while a nearby error keeps attention on the authored token.",
+        "A side workbench gives long TeX more room and keeps preview visible. It adds focus, synchronization and layout complexity and should remain optional."
+      ],
+      "tradeoffs": [
+        "Medium effort. Map KaTeX errors to helpful text without claiming a full TeX validator.",
+        "Medium effort. Define Done and keyboard behavior without dropping selection or edits.",
+        "High effort. Workbench synchronization and error-location mapping need a prototype."
+      ],
+      "acceptance": [
+        "Unsupported TeX remains editable and survives save, source switching and export fallback.",
+        "The error explains the problem in text and points to the relevant source where reliable.",
+        "Mouse and keyboard users can enter and leave the equation without losing nearby prose."
+      ],
+      "options": [
+        {
+          "level": "Recommended",
+          "id": "07-equations-recommended",
+          "image": "images/generated/07-equations-recommended.png",
+          "intent": "Retain the existing inline source and preview arrangement. Add a compact header 'Equation' and labels Source and Preview; show a clear inline warning 'Unknown command' linked to the visible unsupported command in the source. Keep the authored TeX unchanged and add short existing keyboard guidance 'Shift+Enter to return to text'. Pins: 1 source and preview are distinguished; 2 plain error explains the red command; 3 exit guidance reduces mode uncertainty. Render a simple a+b over c expression, and show unsupported command as an error, not corrected silently.",
+          "annotations": [
+            "Source and preview are distinguished",
+            "Plain error explains the red command",
+            "Exit guidance reduces mode uncertainty"
+          ],
+          "rationale": "Labels and a concise warning make the current source/preview arrangement understandable. This offers useful recovery without a new equation application.",
+          "tradeoff": "Medium effort. Map KaTeX errors to helpful text without claiming a full TeX validator."
+        },
+        {
+          "level": "Moderate",
+          "id": "07-equations-moderate",
+          "image": "images/generated/07-equations-moderate.png",
+          "intent": "Use a bounded equation editor with Source and Preview regions plus a Wrap control and explicit Done action. An error row states 'Unknown command' and points to the source token; preserve source on close. Pins: 1 explicit editing boundary; 2 error connects to source; 3 controls make wrapping and exit discoverable. Do not silently modify equations.",
+          "annotations": [
+            "Explicit editing boundary",
+            "Error connects to source",
+            "Controls make wrapping and exit discoverable"
+          ],
+          "rationale": "A bounded editing region with Done clarifies entry and exit. Optional wrapping helps long source, while a nearby error keeps attention on the authored token.",
+          "tradeoff": "Medium effort. Define Done and keyboard behavior without dropping selection or edits."
+        },
+        {
+          "level": "Experimental",
+          "id": "07-equations-experimental",
+          "image": "images/generated/07-equations-experimental.png",
+          "intent": "Explore an optional equation workbench in a side panel: focused source editor, live preview, and a restrained error detail area with a source-location link. Keep the document behind visible and offer Return to document. Pins: 1 dedicated space for long TeX; 2 live preview stays connected; 3 errors point back to authored source. No symbolic solving or unsupported validation guarantees.",
+          "annotations": [
+            "Dedicated space for long TeX",
+            "Live preview stays connected",
+            "Errors point back to authored source"
+          ],
+          "rationale": "A side workbench gives long TeX more room and keeps preview visible. It adds focus, synchronization and layout complexity and should remain optional.",
+          "tradeoff": "High effort. Workbench synchronization and error-location mapping need a prototype."
+        }
+      ]
+    },
+    {
+      "id": "08-diagrams",
+      "title": "Diagram errors and edit affordance",
+      "reference": "09-mermaid-error.jpg",
+      "designs": [
+        "Keep the diagram embedded in the document, show a concise error heading 'Diagram could not render', a plain summary 'A node label is missing its closing bracket', a clearly labeled Edit source action, and a Technical details disclosure containing the parser message. Do not auto-correct source. Pins: 1 concise human-readable error; 2 visible recovery action; 3 raw parser output is disclosed on demand. Show a valid Draft to Review to Export diagram above as context.",
+        "Render a compact Mermaid block header with Preview / Source modes, a status label Needs attention, an editable source region, and a concise error with the problematic line emphasized. Pins: 1 explicit source/preview modes; 2 local error near its source; 3 valid content retains calm diagram styling. No auto-fix button.",
+        "Explore an optional diagram workspace with source on the left and preview on the right, a small error navigator, and Return to document. The preview area has a quiet error placeholder instead of a giant parser dump. Pins: 1 source and diagram side by side; 2 error navigator supports large diagrams; 3 embedded-document return is clear. No drag-and-drop node editing promise."
+      ],
+      "priority": "High \u00b7 error recovery",
+      "kind": "Observed diagnostic overload + design judgment",
+      "current": [
+        "09-mermaid-error.jpg"
+      ],
+      "observation": "A valid diagram renders above the invalid example. The invalid block shows a large Mermaid parser dump including token names. The renderer inserts the parser message directly into an error region. Editing is available through the block interaction, but a visible labeled recovery action would be easier to find.",
+      "source": [
+        [
+          "src/webview/editor.js",
+          3058,
+          "Empty diagram state"
+        ],
+        [
+          "src/webview/editor.js",
+          3070,
+          "Raw parser message rendering"
+        ]
+      ],
+      "preserve": "Keep Mermaid source intact, retain a path to technical diagnostics, and preserve diagram copy/export behavior. Human summaries must fall back safely when the parser cannot identify a cause.",
+      "rationales": [
+        "A short error, Edit source and expandable diagnostics support both novices and experienced authors. This reduces visual overload with limited workflow change.",
+        "Explicit Preview and Source modes make the editing state clearer. Local line emphasis can help fix syntax when parser locations are trustworthy.",
+        "A source/preview workspace supports large diagrams. It provides room for diagnostics but adds a separate interaction and more synchronization work."
+      ],
+      "tradeoffs": [
+        "Medium effort. Derive reliable summaries and retain raw details without exposing private paths.",
+        "Medium to high effort. Define source-mode and error-line behavior across Mermaid versions.",
+        "High effort. Workspace navigation, preview sizing and error linking require deeper design."
+      ],
+      "acceptance": [
+        "Valid diagrams remain unchanged; invalid source is preserved and recoverable.",
+        "A concise summary and labeled edit action are visible; technical details remain available.",
+        "Long parser messages do not dominate or overflow the writing pane."
+      ],
+      "options": [
+        {
+          "level": "Recommended",
+          "id": "08-diagrams-recommended",
+          "image": "images/generated/08-diagrams-recommended.png",
+          "intent": "Keep the diagram embedded in the document, show a concise error heading 'Diagram could not render', a plain summary 'A node label is missing its closing bracket', a clearly labeled Edit source action, and a Technical details disclosure containing the parser message. Do not auto-correct source. Pins: 1 concise human-readable error; 2 visible recovery action; 3 raw parser output is disclosed on demand. Show a valid Draft to Review to Export diagram above as context.",
+          "annotations": [
+            "Concise human-readable error",
+            "Visible recovery action",
+            "Raw parser output is disclosed on demand"
+          ],
+          "rationale": "A short error, Edit source and expandable diagnostics support both novices and experienced authors. This reduces visual overload with limited workflow change.",
+          "tradeoff": "Medium effort. Derive reliable summaries and retain raw details without exposing private paths."
+        },
+        {
+          "level": "Moderate",
+          "id": "08-diagrams-moderate",
+          "image": "images/generated/08-diagrams-moderate.png",
+          "intent": "Render a compact Mermaid block header with Preview / Source modes, a status label Needs attention, an editable source region, and a concise error with the problematic line emphasized. Pins: 1 explicit source/preview modes; 2 local error near its source; 3 valid content retains calm diagram styling. No auto-fix button.",
+          "annotations": [
+            "Explicit source/preview modes",
+            "Local error near its source",
+            "Valid content retains calm diagram styling"
+          ],
+          "rationale": "Explicit Preview and Source modes make the editing state clearer. Local line emphasis can help fix syntax when parser locations are trustworthy.",
+          "tradeoff": "Medium to high effort. Define source-mode and error-line behavior across Mermaid versions."
+        },
+        {
+          "level": "Experimental",
+          "id": "08-diagrams-experimental",
+          "image": "images/generated/08-diagrams-experimental.png",
+          "intent": "Explore an optional diagram workspace with source on the left and preview on the right, a small error navigator, and Return to document. The preview area has a quiet error placeholder instead of a giant parser dump. Pins: 1 source and diagram side by side; 2 error navigator supports large diagrams; 3 embedded-document return is clear. No drag-and-drop node editing promise.",
+          "annotations": [
+            "Source highlights the parser-reported problem",
+            "Preview explains why the diagram cannot render",
+            "Error navigator links a reliable parser location to source"
+          ],
+          "rationale": "A source/preview workspace supports large diagrams. It provides room for diagnostics but adds a separate interaction and more synchronization work.",
+          "tradeoff": "High effort. Workspace navigation, preview sizing and error linking require deeper design. The board illustrates error navigation; an explicit Return to document control must be added before implementing this workspace."
+        }
+      ]
+    },
+    {
+      "id": "09-find",
+      "title": "Find and Replace labeling and control hierarchy",
+      "reference": "10-find-replace.jpg",
+      "designs": [
+        "Keep the existing floating find/replace box, but add persistent Find and Replace field labels, separate match count from navigation, and a clearly labeled Replace disclosure. Keep Case sensitive, Whole word and Regex options. Distinguish Replace all as a secondary bulk action, with a concise count hint. Pins: 1 persistent field labels; 2 match count and navigation are clear; 3 bulk replacement has an explicit scope cue. Show Find draft, 1 of 3, Replace field empty.",
+        "Use a compact anchored panel with Find and Replace sections, a clear 1 of 3 matches line, labeled navigation, optional regex help, and a preview line 'Replace 3 matches'. Pins: 1 search and replacement are separate steps; 2 regex help is discoverable; 3 bulk action explains impact before activation. Preserve one-step undo semantics as a specification, not a rendered proof.",
+        "Explore an optional search-results rail listing three source-context matches with document highlights, replacement text at top, and Replace selected / Replace all actions. Pins: 1 results give context; 2 replacement scope is selectable; 3 highlights connect results to text. Keep this as an ambitious new interaction with extra implementation effort."
+      ],
+      "priority": "High \u00b7 control clarity",
+      "kind": "Observed labeling gap + design judgment",
+      "current": [
+        "10-find-replace.jpg"
+      ],
+      "observation": "Find and Replace are represented by placeholders in a compact floating box. DOM inspection found no explicit aria-label, aria-labelledby or associated label element for either input. Filled fields therefore lose their visible purpose cue. Match count, small navigation buttons and bulk replacement share a dense layout. This is a targeted labeling observation, not a complete assistive-technology audit.",
+      "source": [
+        [
+          "src/shared/editor-body-html.js",
+          125,
+          "Find and Replace input structure"
+        ],
+        [
+          "src/webview/editor.js",
+          15691,
+          "Search matching"
+        ],
+        [
+          "src/webview/editor.js",
+          15837,
+          "Bulk replacement behavior"
+        ]
+      ],
+      "preserve": "Keep current search scope, case/word/regex semantics, source and visual behavior, replacements and undo. A future scope selector must describe precisely what it changes.",
+      "rationales": [
+        "Persistent labels and a clear count improve orientation immediately. A scope hint makes Replace all easier to distinguish from replacing one match.",
+        "Separate Find and Replace sections guide the task in sequence. Regex help and an affected-match count clarify more advanced use.",
+        "A results rail can provide context and selective replacement. It is a new interaction that needs a reliable result-to-source mapping."
+      ],
+      "tradeoffs": [
+        "Low to medium effort. Add labels, accessible names and a less cramped layout.",
+        "Medium effort. Impact count and regex feedback must stay accurate as edits occur.",
+        "High effort. Results selection and replacement mapping need robust state and undo tests."
+      ],
+      "acceptance": [
+        "Inputs retain visible purpose labels when filled and have stable accessible names.",
+        "Counts and navigation remain readable at narrow widths and high zoom.",
+        "Replace one/all and undo preserve the intended source and accurately report scope."
+      ],
+      "options": [
+        {
+          "level": "Recommended",
+          "id": "09-find-recommended",
+          "image": "images/generated/09-find-recommended.png",
+          "intent": "Keep the existing floating find/replace box, but add persistent Find and Replace field labels, separate match count from navigation, and a clearly labeled Replace disclosure. Keep Case sensitive, Whole word and Regex options. Distinguish Replace all as a secondary bulk action, with a concise count hint. Pins: 1 persistent field labels; 2 match count and navigation are clear; 3 bulk replacement has an explicit scope cue. Show Find draft, 1 of 3, Replace field empty.",
+          "annotations": [
+            "Persistent field labels",
+            "Match count and navigation are clear",
+            "Bulk replacement has an explicit scope cue"
+          ],
+          "rationale": "Persistent labels and a clear count improve orientation immediately. A scope hint makes Replace all easier to distinguish from replacing one match.",
+          "tradeoff": "Low to medium effort. Add labels, accessible names and a less cramped layout."
+        },
+        {
+          "level": "Moderate",
+          "id": "09-find-moderate",
+          "image": "images/generated/09-find-moderate.png",
+          "intent": "Use a compact anchored panel with Find and Replace sections, a clear 1 of 3 matches line, labeled navigation, optional regex help, and a preview line 'Replace 3 matches'. Pins: 1 search and replacement are separate steps; 2 regex help is discoverable; 3 bulk action explains impact before activation. Preserve one-step undo semantics as a specification, not a rendered proof.",
+          "annotations": [
+            "Search and replacement are separate steps",
+            "Regex help is discoverable",
+            "Bulk action explains impact before activation"
+          ],
+          "rationale": "Separate Find and Replace sections guide the task in sequence. Regex help and an affected-match count clarify more advanced use.",
+          "tradeoff": "Medium effort. Impact count and regex feedback must stay accurate as edits occur."
+        },
+        {
+          "level": "Experimental",
+          "id": "09-find-experimental",
+          "image": "images/generated/09-find-experimental.png",
+          "intent": "Explore an optional search-results rail listing three source-context matches with document highlights, replacement text at top, and Replace selected / Replace all actions. Pins: 1 results give context; 2 replacement scope is selectable; 3 highlights connect results to text. Keep this as an ambitious new interaction with extra implementation effort.",
+          "annotations": [
+            "Results give context",
+            "Replacement scope is selectable",
+            "Highlights connect results to text"
+          ],
+          "rationale": "A results rail can provide context and selective replacement. It is a new interaction that needs a reliable result-to-source mapping.",
+          "tradeoff": "High effort. Results selection and replacement mapping need robust state and undo tests."
+        }
+      ]
+    },
+    {
+      "id": "10-metadata",
+      "title": "Metadata and generated contents ownership",
+      "reference": "11-metadata-toc.jpg",
+      "extra": "11-metadata-expanded.jpg",
+      "designs": [
+        "Keep raw YAML editing and the generated TOC in place. Label the disclosure 'Front matter \u00b7 YAML' and the contents block 'Contents \u00b7 Generated'; add concise help 'Refreshes on save' and a labeled Refresh action. Use a small clear distinction between editable source and generated content. Pins: 1 raw metadata ownership is explicit; 2 generated entries are identified; 3 refresh behavior is explained. Do not turn YAML into a form or rewrite authored comments.",
+        "Use a compact document-structure header with separate Metadata and Contents disclosures. Expanded metadata shows a raw YAML editor; expanded Contents shows current headings and a Refresh contents action. Pins: 1 structured controls reduce visual bulk; 2 metadata stays raw source; 3 generated content has explicit refresh. Keep the article primary.",
+        "Explore an optional Document inspector rail with Metadata and Contents sections. Metadata offers raw YAML source with a read-only field summary; Contents explains its generated ownership and refresh timing. Pins: 1 structure moves to an optional inspector; 2 raw source remains authoritative; 3 generated content management is explicit. No publishing integrations or validation guarantees."
+      ],
+      "priority": "Medium \u00b7 source ownership",
+      "kind": "Design judgment",
+      "current": [
+        "11-metadata-toc.jpg",
+        "11-metadata-expanded.jpg"
+      ],
+      "observation": "Front matter is already a disclosure containing an accessible raw-source textarea. Contents has an accessible Refresh button. These useful controls do not visually explain that YAML is authored source while the TOC is generated, or when an existing generated block refreshes. Pending [toc] blocks already have save/refresh guidance; retain that positive behavior.",
+      "source": [
+        [
+          "src/webview/editor.js",
+          2481,
+          "Raw front matter disclosure"
+        ],
+        [
+          "src/webview/editor.js",
+          2489,
+          "Contents and refresh labels"
+        ],
+        [
+          "src/webview/editor.js",
+          2516,
+          "Managed TOC refresh"
+        ]
+      ],
+      "preserve": "Keep YAML raw text, key order, comments and delimiters. Keep existing TOC ownership markers, generated heading order and refresh-on-save contract. A view disclosure must not refresh or rewrite contents merely by opening.",
+      "rationales": [
+        "Explicit YAML and Generated labels clarify ownership at little interaction cost. A visible Refresh label makes the existing capability easier to discover.",
+        "A structure header groups auxiliary blocks while leaving the article primary. The metadata editor remains raw source rather than a lossy form.",
+        "An optional inspector can move structural controls outside the prose. A read-only summary may help orientation, but raw YAML must remain authoritative."
+      ],
+      "tradeoffs": [
+        "Low to medium effort. Sync labels and help with actual refresh behavior in every host.",
+        "Medium effort. Disclosure placement and selection transitions need source-preservation checks.",
+        "High effort. A summary/inspector must handle arbitrary YAML without rewriting it."
+      ],
+      "acceptance": [
+        "Opening disclosures or reading a summary leaves authored YAML byte-for-byte unchanged.",
+        "Refresh and save update only managed contents according to the established contract.",
+        "Generated ownership and pending/stale state are understandable without icon-only cues."
+      ],
+      "options": [
+        {
+          "level": "Recommended",
+          "id": "10-metadata-recommended",
+          "image": "images/generated/10-metadata-recommended.png",
+          "intent": "Keep raw YAML editing and the generated TOC in place. Label the disclosure 'Front matter \u00b7 YAML' and the contents block 'Contents \u00b7 Generated'; add concise help 'Refreshes on save' and a labeled Refresh action. Use a small clear distinction between editable source and generated content. Pins: 1 raw metadata ownership is explicit; 2 generated entries are identified; 3 refresh behavior is explained. Do not turn YAML into a form or rewrite authored comments.",
+          "annotations": [
+            "Raw metadata ownership is explicit",
+            "Generated entries are identified",
+            "Refresh behavior is explained"
+          ],
+          "rationale": "Explicit YAML and Generated labels clarify ownership at little interaction cost. A visible Refresh label makes the existing capability easier to discover.",
+          "tradeoff": "Low to medium effort. Sync labels and help with actual refresh behavior in every host."
+        },
+        {
+          "level": "Moderate",
+          "id": "10-metadata-moderate",
+          "image": "images/generated/10-metadata-moderate.png",
+          "intent": "Use a compact document-structure header with separate Metadata and Contents disclosures. Expanded metadata shows a raw YAML editor; expanded Contents shows current headings and a Refresh contents action. Pins: 1 structured controls reduce visual bulk; 2 metadata stays raw source; 3 generated content has explicit refresh. Keep the article primary.",
+          "annotations": [
+            "Structured controls reduce visual bulk",
+            "Metadata stays raw source",
+            "Generated content has explicit refresh"
+          ],
+          "rationale": "A structure header groups auxiliary blocks while leaving the article primary. The metadata editor remains raw source rather than a lossy form.",
+          "tradeoff": "Medium effort. Disclosure placement and selection transitions need source-preservation checks."
+        },
+        {
+          "level": "Experimental",
+          "id": "10-metadata-experimental",
+          "image": "images/generated/10-metadata-experimental.png",
+          "intent": "Explore an optional Document inspector rail with Metadata and Contents sections. Metadata offers raw YAML source with a read-only field summary; Contents explains its generated ownership and refresh timing. Pins: 1 structure moves to an optional inspector; 2 raw source remains authoritative; 3 generated content management is explicit. No publishing integrations or validation guarantees.",
+          "annotations": [
+            "Structure moves to an optional inspector",
+            "Raw source remains authoritative",
+            "Generated content management is explicit"
+          ],
+          "rationale": "An optional inspector can move structural controls outside the prose. A read-only summary may help orientation, but raw YAML must remain authoritative.",
+          "tradeoff": "High effort. A summary/inspector must handle arbitrary YAML without rewriting it."
+        }
+      ]
+    },
+    {
+      "id": "11-source",
+      "title": "Visual and Source mode identity",
+      "reference": "12-source-mode.jpg",
+      "designs": [
+        "Keep the existing Source textarea and document outline. Replace the ambiguous icon-only mode control with a clearly selected Visual / Source segmented switch, label Open in VS Code separately, and visibly dim unavailable visual-formatting commands while Source is active. Add no syntax-editor features. Pins: 1 current mode is explicit; 2 host text editor is a distinct action; 3 commands communicate context.",
+        "Offer an optional Visual / Source / Split switch with a source pane and read-only preview side by side in Split. Use shared heading markers and preserve the selected source location. Pins: 1 optional split view; 2 visible correspondence between source and preview; 3 one document and one undo history remain the design constraint. Split is a new proposal.",
+        "Explore optional block-level source lenses: the document remains visually rendered while the active paragraph or block opens its source inline, with a clearly labeled Full source action in the header. Pins: 1 source close to its rendered block; 2 explicit editing boundary; 3 full source remains available. This requires new selection and undo architecture and is exploratory."
+      ],
+      "priority": "High \u00b7 mode clarity",
+      "kind": "Observed ambiguity + design judgment",
+      "current": [
+        "12-source-mode.jpg"
+      ],
+      "observation": "Source mode shows the Markdown textarea while the full visual formatting toolbar remains visible. The active icon is blue, but there is no persistent text label naming the current mode. Open in text editor sits alongside Source as a separate icon. The switch code reads the current document before changing mode; preserve that source-current behavior.",
+      "source": [
+        [
+          "src/shared/editor-body-html.js",
+          107,
+          "Host text editor and Source controls"
+        ],
+        [
+          "src/shared/editor-body-html.js",
+          146,
+          "Source textarea"
+        ],
+        [
+          "src/webview/editor.js",
+          12813,
+          "Source-mode transition"
+        ]
+      ],
+      "preserve": "Keep the latest edits, selection, save behavior and single document authority when switching. Open in VS Code is a separate host action; standalone hosts need their own appropriate label.",
+      "rationales": [
+        "An explicit Visual/Source switch resolves mode uncertainty with the existing editor model. Context-aware command availability explains which actions apply.",
+        "An optional split view helps authors compare source with rendering. It needs a defined authoritative editor and synchronized position rather than two independent documents.",
+        "Inline source lenses bring source near the active rendered block. They are ambitious because block mapping, selection, serialization and undo must all stay coherent."
+      ],
+      "tradeoffs": [
+        "Medium effort. Determine applicable commands and preserve current switching semantics.",
+        "High effort. Split layout and scroll/source mapping need a dedicated interaction design.",
+        "Very high effort. Block lenses require new selection and undo architecture."
+      ],
+      "acceptance": [
+        "The current mode is named and visibly selected; host editor access stays distinct.",
+        "Rapid switching captures the latest edit and never modifies a view-only document.",
+        "Disabled or hidden commands communicate context while remaining discoverable through an appropriate path."
+      ],
+      "options": [
+        {
+          "level": "Recommended",
+          "id": "11-source-recommended",
+          "image": "images/generated/11-source-recommended.png",
+          "intent": "Keep the existing Source textarea and document outline. Replace the ambiguous icon-only mode control with a clearly selected Visual / Source segmented switch, label Open in VS Code separately, and visibly dim unavailable visual-formatting commands while Source is active. Add no syntax-editor features. Pins: 1 current mode is explicit; 2 host text editor is a distinct action; 3 commands communicate context.",
+          "annotations": [
+            "Current mode is explicit",
+            "Host text editor is a distinct action",
+            "Commands communicate context"
+          ],
+          "rationale": "An explicit Visual/Source switch resolves mode uncertainty with the existing editor model. Context-aware command availability explains which actions apply.",
+          "tradeoff": "Medium effort. Determine applicable commands and preserve current switching semantics."
+        },
+        {
+          "level": "Moderate",
+          "id": "11-source-moderate",
+          "image": "images/generated/11-source-moderate.png",
+          "intent": "Offer an optional Visual / Source / Split switch with a source pane and read-only preview side by side in Split. Use shared heading markers and preserve the selected source location. Pins: 1 optional split view; 2 visible correspondence between source and preview; 3 one document and one undo history remain the design constraint. Split is a new proposal.",
+          "annotations": [
+            "Optional split view",
+            "Visible correspondence between source and preview",
+            "One document and one undo history remain the design constraint"
+          ],
+          "rationale": "An optional split view helps authors compare source with rendering. It needs a defined authoritative editor and synchronized position rather than two independent documents.",
+          "tradeoff": "High effort. Split layout and scroll/source mapping need a dedicated interaction design."
+        },
+        {
+          "level": "Experimental",
+          "id": "11-source-experimental",
+          "image": "images/generated/11-source-experimental.png",
+          "intent": "Explore optional block-level source lenses: the document remains visually rendered while the active paragraph or block opens its source inline, with a clearly labeled Full source action in the header. Pins: 1 source close to its rendered block; 2 explicit editing boundary; 3 full source remains available. This requires new selection and undo architecture and is exploratory.",
+          "annotations": [
+            "Source close to its rendered block",
+            "Explicit editing boundary",
+            "Full source remains available"
+          ],
+          "rationale": "Inline source lenses bring source near the active rendered block. They are ambitious because block mapping, selection, serialization and undo must all stay coherent.",
+          "tradeoff": "Very high effort. Block lenses require new selection and undo architecture."
+        }
+      ]
+    },
+    {
+      "id": "12-export",
+      "title": "Export choice, setup and recovery",
+      "reference": "13-export-menu.jpg",
+      "extra": "14-export-warnings.jpg",
+      "designs": [
+        "Show a compact Export menu with HTML Web page and PDF Document as ready formats, DOCX Word document and EPUB E-book as unavailable with Setup required. Move lengthy compatibility prose into a Help disclosure, keep a short experimental label, and add a labeled Configure Pandoc link next to affected formats. Include a small example failure status strip below with 'Image unavailable', Review details and Retry export actions. Pins: 1 format names express user outcomes; 2 setup sits beside affected formats; 3 failure recovery is explicit. Preserve save-before-export and all format limitations.",
+        "Use an anchored export panel with a format list and short support summary, a Setup section for missing tools, and a job-status section with stages, warning count and output action. Pins: 1 capabilities and setup are separated; 2 status shows the current stage; 3 warnings and outputs have clear actions. No invented percentage completion.",
+        "Explore an optional export workspace with format selection, preview sample, a preflight checklist of saved document, assets and tools, and a job history for the current document. Pins: 1 preflight makes requirements visible; 2 preview exposes format differences; 3 recent jobs improve recovery. Clearly conceptual new capability; do not promise cross-reader fidelity."
+      ],
+      "priority": "High \u00b7 task completion",
+      "kind": "Mocked-state design judgment",
+      "current": [
+        "13-export-menu.jpg",
+        "14-export-failure.jpg",
+        "14-export-warnings.jpg"
+      ],
+      "observation": "The current menu puts experimental and compatibility prose above the format list, then tool setup actions below it. The simulated failure state displays a message and expandable warnings, but no inline retry. These captures use injected capabilities and status to evaluate layout. They do not prove that a converter failed or that an output file was created.",
+      "source": [
+        [
+          "src/shared/editor-body-html.js",
+          24,
+          "Export menu and status markup"
+        ],
+        [
+          "src/webview/export-ui.js",
+          86,
+          "Capability-based availability"
+        ],
+        [
+          "src/webview/export-ui.js",
+          202,
+          "Warning disclosure rendering"
+        ]
+      ],
+      "preserve": "Keep saved-revision export, current capabilities, unavailable-tool explanations, experimental/format limitations, cancellation and privacy boundaries. Retry is a proposed host action; it must recheck save state and tools. Any preview is indicative, not cross-reader fidelity proof.",
+      "rationales": [
+        "Outcome-oriented format labels and nearby setup make choice easier. Compact help preserves necessary limitations while a clear recovery action supports failed jobs.",
+        "An anchored panel can connect format, setup and job status without scattering the task. A stage label and warning count are more honest than an invented progress percentage.",
+        "An optional export workspace can support preflight and recent jobs. It is substantially new functionality and needs storage, lifecycle and reader-validation decisions."
+      ],
+      "tradeoffs": [
+        "Medium effort. Localize labels, retain support text and define safe retry behavior.",
+        "High effort. Panel lifecycle and accessible stage updates require host integration.",
+        "Very high effort. Preflight, preview and history need new contracts and explicit acceptance work."
+      ],
+      "acceptance": [
+        "Unavailable formats explain the missing prerequisite beside the choice.",
+        "Progress, cancel, failure, warnings and completion are accessible and use real host state.",
+        "Export uses the agreed saved revision and actual output-reader checks remain separate from UI approval."
+      ],
+      "options": [
+        {
+          "level": "Recommended",
+          "id": "12-export-recommended",
+          "image": "images/generated/12-export-recommended.png",
+          "intent": "Show a compact Export menu with HTML Web page and PDF Document as ready formats, DOCX Word document and EPUB E-book as unavailable with Setup required. Move lengthy compatibility prose into a Help disclosure, keep a short experimental label, and add a labeled Configure Pandoc link next to affected formats. Include a small example failure status strip below with 'Image unavailable', Review details and Retry export actions. Pins: 1 format names express user outcomes; 2 setup sits beside affected formats; 3 failure recovery is explicit. Preserve save-before-export and all format limitations.",
+          "annotations": [
+            "Format names express user outcomes",
+            "Setup sits beside affected formats",
+            "Failure recovery is explicit"
+          ],
+          "rationale": "Outcome-oriented format labels and nearby setup make choice easier. Compact help preserves necessary limitations while a clear recovery action supports failed jobs.",
+          "tradeoff": "Medium effort. Localize labels, retain support text and define safe retry behavior."
+        },
+        {
+          "level": "Moderate",
+          "id": "12-export-moderate",
+          "image": "images/generated/12-export-moderate.png",
+          "intent": "Use an anchored export panel with a format list and short support summary, a Setup section for missing tools, and a job-status section with stages, warning count and output action. Pins: 1 capabilities and setup are separated; 2 status shows the current stage; 3 warnings and outputs have clear actions. No invented percentage completion.",
+          "annotations": [
+            "Capabilities and setup are separated",
+            "Status shows the current stage",
+            "Warnings and outputs have clear actions"
+          ],
+          "rationale": "An anchored panel can connect format, setup and job status without scattering the task. A stage label and warning count are more honest than an invented progress percentage.",
+          "tradeoff": "High effort. Panel lifecycle and accessible stage updates require host integration."
+        },
+        {
+          "level": "Experimental",
+          "id": "12-export-experimental",
+          "image": "images/generated/12-export-experimental.png",
+          "intent": "Explore an optional export workspace with format selection, preview sample, a preflight checklist of saved document, assets and tools, and a job history for the current document. Pins: 1 preflight makes requirements visible; 2 preview exposes format differences; 3 recent jobs improve recovery. Clearly conceptual new capability; do not promise cross-reader fidelity.",
+          "annotations": [
+            "Preflight makes requirements visible",
+            "Preview exposes format differences",
+            "Recent jobs improve recovery"
+          ],
+          "rationale": "An optional export workspace can support preflight and recent jobs. It is substantially new functionality and needs storage, lifecycle and reader-validation decisions.",
+          "tradeoff": "Very high effort. Preflight, preview and history need new contracts and explicit acceptance work."
+        }
+      ]
+    }
+  ]
+}
