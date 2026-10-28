@@ -34,6 +34,10 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  codeBlockActionLabelsLabel: "Afficher les libellés des actions des blocs de code",
+  codeBlockActionLabelsHelp: "Affiche les libellés à côté des icônes de copie, de retour à la ligne et d’ouverture en texte. Désactivez pour afficher les icônes seules ; les infobulles, le langage, l’état du retour à la ligne et les erreurs restent visibles.",
+  codeBlockActionLabelsSaveFailed: "Impossible d’enregistrer les libellés des actions des blocs de code. Le réglage précédent reste actif.",
+
   tableRows: "Lignes",
   tableColumns: "Colonnes",
   searchSourceScope: "Rechercher dans la source Markdown. Le remplacement modifie le texte exact trouvé.",

@@ -34,6 +34,10 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  codeBlockActionLabelsLabel: "コードブロックの操作ラベルを表示",
+  codeBlockActionLabelsHelp: "コピー、折り返し、テキストで開くアイコンの横にラベルを表示します。オフにするとアイコンのみになります。ツールチップ、コード言語、折り返し状態、エラーメッセージは引き続き表示されます。",
+  codeBlockActionLabelsSaveFailed: "コードブロックの操作ラベル設定を保存できませんでした。以前の設定が維持されます。",
+
   tableRows: "行",
   tableColumns: "列",
   searchSourceScope: "Markdownソースを検索します。置換は一致したテキストだけに適用します。",

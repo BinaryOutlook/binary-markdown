@@ -18,6 +18,7 @@ test('language picker strings reach the editor webview dictionary in every local
             'languagePickerPlainText', 'languagePickerMath', 'languagePickerMermaid',
             'codeLanguageOrderLabel', 'codeLanguageOrderHelp', 'codeLanguageOrderDefault', 'codeLanguageOrderAscending',
             'codeLanguageOrderDescending', 'codeLanguageOrderSaveFailed',
+            'codeBlockActionLabelsLabel', 'codeBlockActionLabelsHelp', 'codeBlockActionLabelsSaveFailed',
             'mathSourcePositionLabel', 'mathSourcePositionHelp', 'mathSourcePositionAbove', 'mathSourcePositionBelow', 'mathSourcePositionSaveFailed',
             'mathSourceWrapLabel', 'mathSourceWrapHelp', 'mathSourceWrapSaveFailed',
             'tableSourceFormatLabel', 'tableSourceFormatHelp', 'tableSourceFormatAligned', 'tableSourceFormatCompact', 'tableSourceFormatSaveFailed']) {

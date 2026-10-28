@@ -19,6 +19,7 @@ export interface ElectronSettings {
     mathSourceWrap: boolean;
     mathSourcePosition: 'above' | 'below';
     codeLanguageOrder: 'default' | 'a-z' | 'z-a';
+    codeBlockActionLabels: boolean;
     toolbarMode: string;
     tableToolbarPosition: string;
     tableSourceFormat: 'aligned' | 'compact';
@@ -40,6 +41,7 @@ const DEFAULTS: ElectronSettings = {
     mathSourceWrap: false,
     mathSourcePosition: 'above',
     codeLanguageOrder: 'default',
+    codeBlockActionLabels: true,
     toolbarMode: 'full',
     tableToolbarPosition: 'auto',
     tableSourceFormat: 'aligned',
@@ -77,6 +79,7 @@ export class SettingsManager {
             editorAlignment: normalizeAlignment(this.store.get('editorAlignment')),
             editorWidthIndicators: this.store.get('editorWidthIndicators') !== false,
             mathSourceWrap: this.store.get('mathSourceWrap') === true,
+            codeBlockActionLabels: this.store.get('codeBlockActionLabels') !== false,
             mathSourcePosition: this.store.get('mathSourcePosition') === 'below' ? 'below' : 'above',
             codeLanguageOrder: ['a-z', 'z-a'].includes(this.store.get('codeLanguageOrder')) ? this.store.get('codeLanguageOrder') : 'default' };
     }
@@ -231,6 +234,12 @@ export class SettingsManager {
         <input type="checkbox" id="editorWidthIndicators" ${settings.editorWidthIndicators ? 'checked' : ''} aria-describedby="widthIndicatorsHelp" onchange="save('editorWidthIndicators', this.checked)">
     </div>
     <div class="field-desc" id="widthIndicatorsHelp">${messages.widthIndicatorsHelp}</div>
+
+    <div class="field">
+        <label for="codeBlockActionLabels">${messages.codeBlockActionLabelsLabel}</label>
+        <input type="checkbox" id="codeBlockActionLabels" aria-describedby="codeBlockActionLabelsHelp" ${settings.codeBlockActionLabels ? 'checked' : ''} onchange="save('codeBlockActionLabels', this.checked)">
+    </div>
+    <div class="field-desc" id="codeBlockActionLabelsHelp">${messages.codeBlockActionLabelsHelp}</div>
 
     <div class="field">
         <label for="codeLanguageOrder">${messages.codeLanguageOrderLabel}</label>

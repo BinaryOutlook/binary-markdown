@@ -34,6 +34,10 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  codeBlockActionLabelsLabel: "显示代码块操作标签",
+  codeBlockActionLabelsHelp: "在复制代码、自动换行和以文本方式打开图标旁显示标签。关闭后仅显示图标；工具提示、代码语言、换行状态和错误消息仍会显示。",
+  codeBlockActionLabelsSaveFailed: "无法保存代码块操作标签设置。将保留原有设置。",
+
   tableRows: "行",
   tableColumns: "列",
   searchSourceScope: "搜索 Markdown 源码。替换仅修改精确匹配的文本。",
