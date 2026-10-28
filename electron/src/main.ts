@@ -111,6 +111,7 @@ function createWindow(filePath?: string): BrowserWindow {
             mathSourceWrap: settings.mathSourceWrap,
             mathSourcePosition: settings.mathSourcePosition,
             codeLanguageOrder: settings.codeLanguageOrder,
+            codeBlockActionLabels: settings.codeBlockActionLabels,
             toolbarMode: settings.toolbarMode,
             tableToolbarPosition: settings.tableToolbarPosition,
             tableSourceFormat: settings.tableSourceFormat,
@@ -329,6 +330,18 @@ ipcMain.on('settings-save', async (event, key: string, value: unknown) => {
         settingsManager.refreshSetting('tableToolbarPosition');
         for (const [win] of windows) {
             if (!win.isDestroyed()) win.webContents.send('host-message', { type: 'tableToolbarPosition', value });
+        }
+        return;
+    }
+    if (key === 'codeBlockActionLabels') {
+        if (typeof value !== 'boolean') return;
+        try { settingsManager.set(key, value); } catch {
+            settingsManager.refreshSetting(key, getI18nMessages().codeBlockActionLabelsSaveFailed);
+            return;
+        }
+        settingsManager.refreshSetting(key);
+        for (const [win] of windows) {
+            if (!win.isDestroyed()) win.webContents.send('host-message', { type: 'codeBlockActionLabels', value });
         }
         return;
     }

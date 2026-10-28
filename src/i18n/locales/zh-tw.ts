@@ -34,6 +34,10 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  codeBlockActionLabelsLabel: "顯示程式碼區塊操作標籤",
+  codeBlockActionLabelsHelp: "在複製程式碼、自動折行和以文字方式開啟圖示旁顯示標籤。關閉後僅顯示圖示；工具提示、程式碼語言、折行狀態和錯誤訊息仍會顯示。",
+  codeBlockActionLabelsSaveFailed: "無法儲存程式碼區塊操作標籤設定。將保留原有設定。",
+
   tableRows: "列",
   tableColumns: "欄",
   searchSourceScope: "搜尋 Markdown 原始碼。取代僅修改精確符合的文字。",

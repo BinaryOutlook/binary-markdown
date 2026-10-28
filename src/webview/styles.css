@@ -175,7 +175,24 @@ body {
 }
 .sidebar-header h3 { font-size: 14px; font-weight: 600; }
 .sidebar-toggle { background: none; border: none; font-size: 18px; cursor: pointer; color: var(--text-color); }
-.outline { flex: 1; overflow-y: auto; padding: 8px 0; }
+.outline {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px 0;
+    --outline-scrollbar-thumb: color-mix(in srgb, var(--text-color) 65%, var(--sidebar-bg));
+    scrollbar-width: thin;
+    scrollbar-color: var(--outline-scrollbar-thumb) var(--sidebar-bg);
+}
+/* Older webviews use the same palette through the WebKit scrollbar API. */
+.outline::-webkit-scrollbar { width: 10px; }
+.outline::-webkit-scrollbar-track { background: var(--sidebar-bg); }
+.outline::-webkit-scrollbar-thumb { background: var(--outline-scrollbar-thumb); border: 2px solid var(--sidebar-bg); border-radius: 5px; }
+.outline::-webkit-scrollbar-thumb:hover { background: var(--text-color); }
+@media (forced-colors: active) {
+    .outline { scrollbar-color: auto; }
+    .outline::-webkit-scrollbar-track { background: Canvas; }
+    .outline::-webkit-scrollbar-thumb { background: CanvasText; border-color: Canvas; }
+}
 .outline-item {
     display: block;
     padding: 6px 16px;
@@ -1569,6 +1586,8 @@ html[data-table-toolbar-position="bottom-left"] .editor table, html[data-table-t
 .code-lang-tag::after { content: ' ▾'; }
 .code-block-header .code-copy-btn, .code-block-header .code-wrap-btn, .code-block-header .code-open-btn { width: auto; min-height: 28px; gap: 6px; padding: 4px 8px; font: 12px/1.4 var(--font-family); white-space: nowrap; }
 .code-action-label { font-size: 12px; }
+[data-code-block-action-labels="false"] .code-block-header .code-action-label { display: none; }
+[data-code-block-action-labels="false"] .code-block-header :is(.code-copy-btn, .code-wrap-btn, .code-open-btn) { width: 28px; padding: 4px; gap: 0; }
 .code-block-status[data-copy-state="error"] { position: static; width: auto; height: auto; clip-path: none; white-space: normal; font: 12px/1.4 var(--font-family); }
 @media (max-width: 760px) { .code-block-header .code-open-btn .code-action-label { display: none; } .code-block-header { flex-wrap: wrap; } }
 

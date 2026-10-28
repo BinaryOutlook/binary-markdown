@@ -56,6 +56,7 @@
   "config.editorAlignment.center": "Repartir el espacio sobrante entre ambos lados de la columna.",
   "config.editorAlignment.right": "Colocar el espacio sobrante a la izquierda de la columna.",
   "config.editorWidthIndicators.description": "Muestra marcas en los bordes exteriores solo al alcanzar el límite. Oculta la guía para recuperar su franja estrecha. No cambia el código fuente ni las exportaciones.",
+  "config.codeBlockActionLabels.description": "Muestra etiquetas junto a los iconos de copiar código, ajustar líneas y abrir como texto. Desactívalo para mostrar solo iconos; se mantienen la ayuda emergente, el lenguaje, el estado de ajuste y los mensajes de error.",
   "config.codeLanguageOrder.description": "Elige el orden del selector de lenguajes de código. Las búsquedas priorizan las coincidencias.",
   "config.codeLanguageOrder.default": "Selección manual de lenguajes comunes, con Texto sin formato y Markdown primero; sin historial de uso.",
   "config.codeLanguageOrder.ascending": "Ordena los nombres mostrados de A a Z, sin elementos fijados.",

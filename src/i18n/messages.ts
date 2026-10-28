@@ -37,6 +37,9 @@ export interface Messages {
 }
 
 export interface WebviewMessages {
+  codeBlockActionLabelsLabel: string;
+  codeBlockActionLabelsHelp: string;
+  codeBlockActionLabelsSaveFailed: string;
   tableRows: string;
   tableColumns: string;
   searchSourceScope: string;

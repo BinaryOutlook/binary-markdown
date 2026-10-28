@@ -7,6 +7,14 @@ function createHost(dependencies) {
             return;
         initializeControlsDone = true;
         dependencies.host.onMessage(function (message) {
+            if (message.type === 'codeBlockActionLabels') {
+                if (typeof message.value !== 'boolean')
+                    return;
+                document.documentElement.dataset.codeBlockActionLabels = String(message.value);
+                // Drop any width reserved for temporary copy feedback after a layout change.
+                dependencies.editor.querySelectorAll('.code-copy-btn').forEach(button => button.style.minWidth = '');
+                return;
+            }
             if (message.type === 'mathSourceWrap') {
                 dependencies.applyMathSourcePreference('mathSourceWrap', String(message.value === true));
                 return;

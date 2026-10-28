@@ -24,6 +24,7 @@ export class VSCodeSettingsProvider implements SettingsProvider {
             mathSourceWrap: this.get('mathSourceWrap'),
             mathSourcePosition: this.get('mathSourcePosition'),
             codeLanguageOrder: this.get('codeLanguageOrder'),
+            codeBlockActionLabels: this.get('codeBlockActionLabels'),
             toolbarMode: this.get('toolbarMode'),
             tableToolbarPosition: this.get('tableToolbarPosition'),
             tableSourceFormat: this.get('tableSourceFormat'),

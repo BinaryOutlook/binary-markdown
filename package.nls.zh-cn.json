@@ -56,6 +56,7 @@
   "config.editorAlignment.center": "将剩余空间均分到内容列两侧。",
   "config.editorAlignment.right": "将剩余空间放在内容列左侧。",
   "config.editorWidthIndicators.description": "仅在达到宽度上限时显示列外缘标记。隐藏此辅助条可收回其占用的窄条空间，不影响源码或导出。",
+  "config.codeBlockActionLabels.description": "在复制代码、自动换行和以文本方式打开图标旁显示标签。关闭后仅显示图标；工具提示、代码语言、换行状态和错误消息仍会显示。",
   "config.codeLanguageOrder.description": "选择代码语言列表的浏览顺序。搜索时优先考虑匹配度。",
   "config.codeLanguageOrder.default": "人工精选常用语言，纯文本和 Markdown 置顶；不跟踪使用历史。",
   "config.codeLanguageOrder.ascending": "按显示名称从 A 到 Z 排列，不保留置顶项。",

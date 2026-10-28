@@ -56,6 +56,7 @@
   "config.editorAlignment.center": "남는 공간을 열 양쪽에 균등하게 둡니다.",
   "config.editorAlignment.right": "남는 공간을 열의 왼쪽에 둡니다.",
   "config.editorWidthIndicators.description": "최대 너비에 도달한 경우에만 열 바깥쪽 가장자리에 표시합니다. 안내선을 숨기면 좁은 띠 공간을 되찾습니다. 소스와 내보내기는 바뀌지 않습니다.",
+  "config.codeBlockActionLabels.description": "코드 복사, 줄 바꿈, 텍스트로 열기 아이콘 옆에 레이블을 표시합니다. 끄면 아이콘만 표시되며 도구 설명, 코드 언어, 줄 바꿈 상태 및 오류 메시지는 유지됩니다.",
   "config.codeLanguageOrder.description": "코드 언어 선택기의 표시 순서를 선택합니다. 검색 시 일치도가 우선됩니다.",
   "config.codeLanguageOrder.default": "직접 선정한 주요 언어 목록으로 일반 텍스트와 Markdown이 먼저 표시됩니다. 사용 기록을 추적하지 않습니다.",
   "config.codeLanguageOrder.ascending": "표시 이름을 A부터 Z까지 정렬하며 고정 항목은 없습니다.",

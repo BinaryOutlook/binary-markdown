@@ -17,6 +17,7 @@ export interface EditorSettings {
     mathSourceWrap: boolean;
     mathSourcePosition: 'above' | 'below';
     codeLanguageOrder: 'default' | 'a-z' | 'z-a';
+    codeBlockActionLabels: boolean;
     toolbarMode: 'full' | 'simple';
     tableToolbarPosition: TableToolbarPosition;
     tableSourceFormat: 'aligned' | 'compact';
@@ -36,6 +37,7 @@ export const DEFAULT_SETTINGS: EditorSettings = {
     mathSourceWrap: false,
     mathSourcePosition: 'above',
     codeLanguageOrder: 'default',
+    codeBlockActionLabels: true,
     toolbarMode: 'full',
     tableToolbarPosition: 'auto',
     tableSourceFormat: 'aligned',

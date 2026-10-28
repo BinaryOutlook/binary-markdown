@@ -228,6 +228,10 @@ function createCodeControls(dependencies) {
         const openCode = document.createElement('button');
         openCode.type = 'button';
         openCode.className = 'code-open-btn';
+        openCode.addEventListener('keydown', event => {
+            if (!event.ctrlKey && !event.metaKey)
+                event.stopPropagation();
+        });
         openCode.title = dependencies.i18n.openInTextEditor;
         openCode.setAttribute('aria-label', openCode.title);
         openCode.innerHTML = dependencies.LUCIDE_ICONS.openInTextEditor || dependencies.LUCIDE_ICONS.code;

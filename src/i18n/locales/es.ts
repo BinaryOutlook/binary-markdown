@@ -34,6 +34,10 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  codeBlockActionLabelsLabel: "Mostrar etiquetas de acciones en bloques de código",
+  codeBlockActionLabelsHelp: "Muestra etiquetas junto a los iconos de copiar código, ajustar líneas y abrir como texto. Desactívalo para mostrar solo iconos; se mantienen la ayuda emergente, el lenguaje, el estado de ajuste y los mensajes de error.",
+  codeBlockActionLabelsSaveFailed: "No se pudo guardar la preferencia de etiquetas de acciones de código. Se mantiene la configuración anterior.",
+
   tableRows: "Filas",
   tableColumns: "Columnas",
   searchSourceScope: "Buscar en la fuente Markdown. Se reemplaza el texto exacto encontrado.",

@@ -280,6 +280,8 @@ The preference persists and applies immediately to open pickers, retaining the q
 
 Each ordinary code block has a toolbar above its code, with visible labels for copying, wrapping, and opening the host text editor. The controls remain at the visible block's right edge while long code scrolls horizontally below them. In a narrow pane, the open-editor action uses a compact icon with an accessible label, and the toolbar can occupy multiple rows without covering code.
 
+For compact controls, turn off `binary-markdown.codeBlockActionLabels` in VS Code Settings, or **Show code block action labels** in desktop Preferences. Labels are on by default. The preference is saved for the VS Code window through user/workspace settings, or in the desktop app's preferences, and updates open editors immediately. Only the Copy code, Wrap code, and Open in Text Editor action labels disappear; their icons, tooltips, accessible names, and keyboard actions remain available. The language selector, **Wrapped** badge, and copy-error messages remain visible. Changing the preference preserves the document, selection, editing mode, and undo history.
+
 **Open in Text Editor** in the code header opens the document in the host text editor. Syntax colors follow the selected theme, with pale colors on dark backgrounds and deeper colors on light backgrounds.
 
 Click **Copy code** (the overlapping-pages icon and label) to copy the code's original text, including indentation, tabs, authored line breaks, and trailing blank lines. A checkmark and **Copied** label briefly confirm success; the button reserves its width during feedback. Keyboard users can focus the button and press Enter or Space. If copying fails, a visible status and the tooltip explain the failure so you can retry.
@@ -416,6 +418,7 @@ Open **Settings** (`Cmd+,` on macOS or `Ctrl+,` on Windows/Linux) and search for
 | `binary-markdown.mathSourcePosition` | Editable block-equation source above or below its preview | `above` |
 | `binary-markdown.fontSize` | Base font size (px) | `16` |
 | `binary-markdown.codeLanguageOrder` | Code-language browsing order: `default`, `a-z`, or `z-a`; search prioritizes relevance | `default` |
+| `binary-markdown.codeBlockActionLabels` | Show text beside code-block action icons; turn off for compact icons with tooltips | `true` |
 | `binary-markdown.editorWidthMode` | Visual editor column width: `default`, `full`, or `custom` | `default` |
 | `binary-markdown.editorMaxWidth` | Outer column cap in CSS pixels for Custom mode; integer 320–4000 | `860` |
 | `binary-markdown.editorWidthIndicators` | Show the visual editor width guide | `true` |
@@ -445,6 +448,8 @@ To start files with a closed outline when no saved visibility exists:
 ```
 
 A remembered visibility overrides the initial default. Changing the default does not erase saved outline states. These settings control the editor's outline, not VS Code's Explorer sidebar. Choose `binary-markdown.outlineActiveColor` to customize its active-heading highlight.
+
+When the outline is long enough to scroll, its scrollbar follows the selected editor palette and updates immediately with theme changes. Its thumb uses the palette's text and sidebar colors; system high-contrast mode uses system scrollbar colors.
 
 ### Editor width
 

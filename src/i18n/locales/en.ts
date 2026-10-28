@@ -34,6 +34,10 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  codeBlockActionLabelsLabel: "Show code block action labels",
+  codeBlockActionLabelsHelp: "Show labels beside the Copy code, Wrap code, and Open in Text Editor icons. Turn off for icons only; tooltips, the code language, wrap status, and error messages remain visible.",
+  codeBlockActionLabelsSaveFailed: "Could not save the code block action labels preference. The previous setting remains active.",
+
   tableRows: "Rows",
   tableColumns: "Columns",
   searchSourceScope: "Search Markdown source. Replacements affect the exact matched text.",

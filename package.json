@@ -326,6 +326,12 @@
           "default": true,
           "description": "%config.editorWidthIndicators.description%"
         },
+        "binary-markdown.codeBlockActionLabels": {
+          "type": "boolean",
+          "default": true,
+          "scope": "window",
+          "description": "%config.codeBlockActionLabels.description%"
+        },
         "binary-markdown.codeLanguageOrder": {
           "type": "string",
           "enum": [
