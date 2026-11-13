@@ -606,13 +606,17 @@
       "@azure/identity": "4.13.0",
       "@azure/msal-node": {
         "uuid": "11.1.1"
-      }
+      },
+      "minimatch": "11.0.1"
     },
     "serve": {
       "compression": "1.8.2"
     },
     "mermaid": {
       "katex": "$katex"
+    },
+    "@typescript-eslint/typescript-estree": {
+      "minimatch": "11.0.1"
     }
   }
 }

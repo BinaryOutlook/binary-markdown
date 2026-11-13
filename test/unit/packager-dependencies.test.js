@@ -4,6 +4,22 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const { createRequire } = require('node:module');
 
+test('patched glob matching preserves packaging and TypeScript project matching', () => {
+    for (const parent of ['@vscode/vsce/package.json', '@typescript-eslint/typescript-estree/package.json']) {
+        const parentRequire = createRequire(require.resolve(parent));
+        const { minimatch } = parentRequire('minimatch');
+        assert.equal(parentRequire('minimatch/package.json').version, '11.0.1');
+        for (const [file, pattern, matches] of [
+            ['out/webview/editor.js', 'out/**', true],
+            ['out/webview/editor.js', '**/*.ts', false],
+            ['src/i18n/locales/en.ts', '**/*.ts', true],
+            ['.vscode/settings.json', '.vscode/**', true],
+            ['vendor/katex.min.js', 'vendor/**', true],
+            ['test/nested/spec.js', 'test/*.js', false],
+        ]) assert.equal(minimatch(file, pattern, { dot: true }), matches, parent + ': ' + pattern);
+    }
+});
+
 test('packager credential dependencies load and generate UUIDs through their scoped overrides', () => {
     const packagerRequire = createRequire(require.resolve('@vscode/vsce/package.json'));
     const identityRequire = createRequire(packagerRequire.resolve('@azure/identity'));
