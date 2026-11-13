@@ -558,6 +558,8 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
                         codeLanguageOrder: config.get<string>('codeLanguageOrder', 'default'),
                         codeBlockActionLabels: config.get<boolean>('codeBlockActionLabels', true),
                         toolbarMode: config.get<string>('toolbarMode', 'full'),
+                        toolbarToggleIcon: config.get<string>('toolbarToggleIcon', 'logo'),
+                        toolbarToggleOnHover: config.get<boolean>('toolbarToggleOnHover', false),
                         tableToolbarPosition: normalizeTablePosition(config.get('tableToolbarPosition')),
                         tableSourceFormat: vscode.workspace.getConfiguration('binary-markdown', document.uri).get('tableSourceFormat', 'aligned'),
                         renderGeneration,
@@ -780,6 +782,12 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
                 void webviewPanel.webview.postMessage({ type: 'tableToolbarPosition', value:
                     normalizeTablePosition(vscode.workspace.getConfiguration('binary-markdown').get('tableToolbarPosition')) });
             }
+            const toolbarToggleChanged = ['toolbarToggleIcon', 'toolbarToggleOnHover'].some(key => e.affectsConfiguration('binary-markdown.' + key));
+            if (toolbarToggleChanged) {
+                const config = vscode.workspace.getConfiguration('binary-markdown');
+                void webviewPanel.webview.postMessage({ type: 'toolbarToggleIcon', value: config.get('toolbarToggleIcon', 'logo') });
+                void webviewPanel.webview.postMessage({ type: 'toolbarToggleOnHover', value: config.get('toolbarToggleOnHover', false) });
+            }
             const toolbarModeChanged = e.affectsConfiguration('binary-markdown.toolbarMode');
             const codeBlockActionLabelsChanged = e.affectsConfiguration('binary-markdown.codeBlockActionLabels');
             if (codeBlockActionLabelsChanged) {
@@ -820,7 +828,7 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
             const editorSettings = ['fontSize', 'imageDefaultDir', 'forceRelativeImagePath', 'language',
                 'outlineStateScope', 'outlineDefaultOpen', 'outlineActiveColor', 'enableDebugLogging', 'math.backslashDelimiters'];
             const editorChanged = editorSettings.some(key => e.affectsConfiguration('binary-markdown.' + key));
-            if (e.affectsConfiguration('binary-markdown') && (editorChanged || (!exportChanged && !e.affectsConfiguration('binary-markdown.tableSourceFormat') && !positionChanged && !themeChanged && !toolbarModeChanged && !codeBlockActionLabelsChanged && !widthChanged && !languageOrderChanged && !mathSourcePositionChanged && !mathSourceWrapChanged))) {
+            if (e.affectsConfiguration('binary-markdown') && (editorChanged || (!exportChanged && !e.affectsConfiguration('binary-markdown.tableSourceFormat') && !positionChanged && !themeChanged && !toolbarModeChanged && !toolbarToggleChanged && !codeBlockActionLabelsChanged && !widthChanged && !languageOrderChanged && !mathSourcePositionChanged && !mathSourceWrapChanged))) {
                 clearTimeout(configurationRefresh);
                 configurationRefresh = setTimeout(() => {
                     configurationRefresh = undefined;

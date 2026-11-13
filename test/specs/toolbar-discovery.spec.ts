@@ -103,6 +103,7 @@ for (const mode of ['full', 'simple']) {
             expect(geometry.overlaps).toEqual([]);
             const available = geometry.visible.filter((action: string) => action !== 'toolbarMore').concat(geometry.overflow);
             const expected = actions.filter(action => (action !== 'allActions' || contextual) && (action !== 'openOutline' || width <= 700) && (mode === 'full' || ['openOutline', 'undo', 'redo', 'insertMenu', 'openInTextEditor', 'export', 'formatActions', 'allActions', 'contextToolbar', 'mode:visual', 'mode:source', 'mode:split'].includes(action!)));
+            expected.push('toolbarVisibilityToggle');
             expect(available.sort()).toEqual(expected.sort());
             if (geometry.overflow.length) {
                 await page.locator('#toolbarMore').click();

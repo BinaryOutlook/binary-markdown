@@ -19,6 +19,8 @@ export interface EditorSettings {
     codeLanguageOrder: 'default' | 'a-z' | 'z-a';
     codeBlockActionLabels: boolean;
     toolbarMode: 'full' | 'simple';
+    toolbarToggleIcon: 'logo' | 'chevrons';
+    toolbarToggleOnHover: boolean;
     tableToolbarPosition: TableToolbarPosition;
     tableSourceFormat: 'aligned' | 'compact';
     language: 'default' | 'en' | 'ja' | 'zh-TW' | 'zh-CN' | 'ko' | 'es' | 'fr';
@@ -39,6 +41,8 @@ export const DEFAULT_SETTINGS: EditorSettings = {
     codeLanguageOrder: 'default',
     codeBlockActionLabels: true,
     toolbarMode: 'full',
+    toolbarToggleIcon: 'logo',
+    toolbarToggleOnHover: false,
     tableToolbarPosition: 'auto',
     tableSourceFormat: 'aligned',
     language: 'default',

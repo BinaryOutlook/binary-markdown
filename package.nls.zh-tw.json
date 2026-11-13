@@ -83,5 +83,9 @@
   "config.section.writing": "寫作工具",
   "config.section.images": "圖片",
   "config.section.export": "匯出",
-  "config.section.advanced": "進階"
+  "config.section.advanced": "進階",
+  "config.toolbarToggleIcon.description": "用於隱藏或顯示頂部列的圖示。",
+  "config.toolbarToggleIcon.logo": "使用 01md 標誌。",
+  "config.toolbarToggleIcon.chevrons": "使用雙向上箭頭隱藏頂部列，雙向下箭頭顯示頂部列。",
+  "config.toolbarToggleOnHover.description": "頂部列隱藏時，將游標移至左上角附近或透過鍵盤聚焦即可顯示按鈕。觸控裝置一律顯示按鈕。"
 }

@@ -83,5 +83,9 @@
   "config.section.writing": "작성 도구",
   "config.section.images": "이미지",
   "config.section.export": "내보내기",
-  "config.section.advanced": "고급"
+  "config.section.advanced": "고급",
+  "config.toolbarToggleIcon.description": "상단 바를 숨기거나 표시하는 데 사용할 아이콘입니다.",
+  "config.toolbarToggleIcon.logo": "01md 로고를 사용합니다.",
+  "config.toolbarToggleIcon.chevrons": "숨기려면 위쪽 이중 화살표를, 표시하려면 아래쪽 이중 화살표를 사용합니다.",
+  "config.toolbarToggleOnHover.description": "상단 바를 숨겼을 때 왼쪽 위 모서리 근처에 마우스를 올리거나 키보드로 초점을 맞추면 버튼이 표시됩니다. 터치 기기에서는 항상 표시됩니다."
 }

@@ -4,7 +4,11 @@ const assert = require('node:assert/strict');
 const { JSDOM } = require('jsdom');
 const manifest = require('../../package.json');
 // Behavioral baseline from main before #108; presentation metadata is excluded.
-const contract = require('../fixtures/settings-contract.json');
+const contract = {
+    ...require('../fixtures/settings-contract.json'),
+    'binary-markdown.toolbarToggleIcon': { type: 'string', enum: ['logo', 'chevrons'], default: 'logo' },
+    'binary-markdown.toolbarToggleOnHover': { type: 'boolean', default: false },
+};
 const { configurationProperties } = require('../helpers/settings.cjs');
 const { renderPreferences } = require('../helpers/preferences.cjs');
 

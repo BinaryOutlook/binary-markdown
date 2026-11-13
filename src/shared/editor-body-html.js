@@ -5,7 +5,7 @@
  *
  * @param {Record<string, string>} messages - Localized interface messages.
  * @param {string} platform - process.platform ('darwin' | 'win32' | 'linux')
- * @param {{ outlineOpen?: boolean, exportEnabled?: boolean, settingsEnabled?: boolean, hostEditor?: 'vscode' }} [options] - editor UI state
+ * @param {{ outlineOpen?: boolean, exportEnabled?: boolean, settingsEnabled?: boolean, hostEditor?: 'vscode', toolbarLogoUri?: string }} [options] - editor UI state
  * @returns {string} HTML for <div class="container">...</div>.
  */
 function generateEditorBodyHtml(messages, platform, options) {
@@ -62,6 +62,12 @@ function generateEditorBodyHtml(messages, platform, options) {
         </aside>
         <main class="editor-container">
             <div class="toolbar" id="toolbar">
+                <div class="toolbar-visibility-control">
+                    <button type="button" id="toolbarVisibilityToggle" title="${m('hideToolbar')}" aria-label="${m('hideToolbar')}" aria-expanded="true" aria-controls="toolbar">
+                        <span class="toolbar-toggle-logo" aria-hidden="true">${options?.toolbarLogoUri ? `<img src="${options.toolbarLogoUri}" alt="" draggable="false">` : '01md'}</span>
+                        <svg class="toolbar-toggle-arrows" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 11 6-6 6 6m-12 8 6-6 6 6"/></svg>
+                    </button>
+                </div>
                 <div class="toolbar-fixed toolbar-fixed--left">
                     <button data-action="openOutline" class="${openButtonClass}" id="openSidebarBtn" title="${m('openOutline')}"></button>
                     <div class="toolbar-group" data-group="history">

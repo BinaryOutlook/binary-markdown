@@ -83,5 +83,9 @@
   "config.section.writing": "編集ツール",
   "config.section.images": "画像",
   "config.section.export": "エクスポート",
-  "config.section.advanced": "詳細設定"
+  "config.section.advanced": "詳細設定",
+  "config.toolbarToggleIcon.description": "トップバーの表示・非表示を切り替えるアイコン。",
+  "config.toolbarToggleIcon.logo": "01md ロゴを使用します。",
+  "config.toolbarToggleIcon.chevrons": "非表示には上向き、表示には下向きの二重山形矢印を使用します。",
+  "config.toolbarToggleOnHover.description": "トップバーを隠したとき、左上付近にポインターを合わせるかキーボードでフォーカスするとボタンを表示します。タッチ端末では常に表示します。"
 }

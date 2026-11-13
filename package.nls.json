@@ -83,5 +83,9 @@
   "config.section.writing": "Writing Tools",
   "config.section.images": "Images",
   "config.section.export": "Export",
-  "config.section.advanced": "Advanced"
+  "config.section.advanced": "Advanced",
+  "config.toolbarToggleIcon.description": "Icon used to hide or show the top bar.",
+  "config.toolbarToggleIcon.logo": "Use the 01md logo.",
+  "config.toolbarToggleIcon.chevrons": "Use double upward chevrons to hide the bar and downward chevrons to show it.",
+  "config.toolbarToggleOnHover.description": "When the top bar is hidden, reveal its button near the upper-left corner on hover or keyboard focus. Touch devices always show the button."
 }

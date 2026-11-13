@@ -83,5 +83,9 @@
   "config.section.writing": "Herramientas de escritura",
   "config.section.images": "Imágenes",
   "config.section.export": "Exportación",
-  "config.section.advanced": "Avanzado"
+  "config.section.advanced": "Avanzado",
+  "config.toolbarToggleIcon.description": "Icono para ocultar o mostrar la barra superior.",
+  "config.toolbarToggleIcon.logo": "Usar el logotipo 01md.",
+  "config.toolbarToggleIcon.chevrons": "Usar flechas dobles hacia arriba para ocultar la barra y hacia abajo para mostrarla.",
+  "config.toolbarToggleOnHover.description": "Cuando la barra superior esté oculta, el botón aparecerá al pasar el puntero cerca de la esquina superior izquierda o al recibir el foco del teclado. En dispositivos táctiles siempre se muestra."
 }

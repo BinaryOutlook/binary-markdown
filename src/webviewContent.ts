@@ -33,6 +33,8 @@ interface EditorConfig {
     codeLanguageOrder?: string;
     codeBlockActionLabels?: boolean;
     toolbarMode?: string;
+    toolbarToggleIcon?: string;
+    toolbarToggleOnHover?: boolean;
     tableToolbarPosition?: string;
     tableSourceFormat?: string;
     documentBaseUri?: string;
@@ -103,6 +105,8 @@ export function getWebviewContent(
         mathSourceWrap: config?.mathSourceWrap === true,
         mathSourcePosition: config?.mathSourcePosition === 'below' ? 'below' : 'above',
         toolbarMode: config?.toolbarMode ?? 'full',
+        toolbarToggleIcon: config?.toolbarToggleIcon === 'chevrons' ? 'chevrons' : 'logo',
+        toolbarToggleOnHover: config?.toolbarToggleOnHover === true,
         tableToolbarPosition: normalizeTablePosition(config?.tableToolbarPosition),
         tableSourceFormat: normalizeTableFormat(config?.tableSourceFormat),
         documentBaseUri: config?.documentBaseUri ?? '',
@@ -155,7 +159,7 @@ export function getWebviewContent(
     });
 
     return `<!DOCTYPE html>
-<html lang="en" data-theme="${safeConfig.theme}" data-code-block-action-labels="${safeConfig.codeBlockActionLabels}" data-editor-width-mode="${safeConfig.editorWidthMode}" data-editor-max-width="${safeConfig.editorMaxWidth}" data-editor-alignment="${safeConfig.editorAlignment}" data-editor-width-indicators="${safeConfig.editorWidthIndicators}" data-math-source-wrap="${safeConfig.mathSourceWrap}" data-math-source-position="${safeConfig.mathSourcePosition}" data-code-language-order="${safeConfig.codeLanguageOrder}" data-toolbar-mode="${safeConfig.toolbarMode}" data-table-toolbar-position="${safeConfig.tableToolbarPosition}" data-table-source-format="${safeConfig.tableSourceFormat}" data-content-revision="${Number.isSafeInteger(config?.contentRevision) ? config?.contentRevision : 0}">
+<html lang="en" data-theme="${safeConfig.theme}" data-code-block-action-labels="${safeConfig.codeBlockActionLabels}" data-editor-width-mode="${safeConfig.editorWidthMode}" data-editor-max-width="${safeConfig.editorMaxWidth}" data-editor-alignment="${safeConfig.editorAlignment}" data-editor-width-indicators="${safeConfig.editorWidthIndicators}" data-math-source-wrap="${safeConfig.mathSourceWrap}" data-math-source-position="${safeConfig.mathSourcePosition}" data-code-language-order="${safeConfig.codeLanguageOrder}" data-toolbar-mode="${safeConfig.toolbarMode}" data-toolbar-toggle-icon="${safeConfig.toolbarToggleIcon}" data-toolbar-toggle-on-hover="${safeConfig.toolbarToggleOnHover}" data-table-toolbar-position="${safeConfig.tableToolbarPosition}" data-table-source-format="${safeConfig.tableSourceFormat}" data-content-revision="${Number.isSafeInteger(config?.contentRevision) ? config?.contentRevision : 0}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -169,7 +173,7 @@ export function getWebviewContent(
     </style>
 </head>
 <body>
-    ${generateEditorBodyHtml(msg, process.platform, { outlineOpen: safeConfig.outlineOpen, exportEnabled: true, settingsEnabled: true, hostEditor: 'vscode' })}
+    ${generateEditorBodyHtml(msg, process.platform, { outlineOpen: safeConfig.outlineOpen, exportEnabled: true, settingsEnabled: true, hostEditor: 'vscode', toolbarLogoUri: webview.asWebviewUri(vscode.Uri.file(path.join(extensionUri.fsPath, 'media', 'icon.png'))).toString() })}
 
     <script src="${vendorUri('markdown-blocks.js')}"></script>
     <script src="${turndownUri}"></script>

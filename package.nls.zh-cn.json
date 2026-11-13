@@ -83,5 +83,9 @@
   "config.section.writing": "写作工具",
   "config.section.images": "图片",
   "config.section.export": "导出",
-  "config.section.advanced": "高级"
+  "config.section.advanced": "高级",
+  "config.toolbarToggleIcon.description": "用于隐藏或显示顶部栏的图标。",
+  "config.toolbarToggleIcon.logo": "使用 01md 标志。",
+  "config.toolbarToggleIcon.chevrons": "使用双向上箭头隐藏顶部栏，双向下箭头显示顶部栏。",
+  "config.toolbarToggleOnHover.description": "顶部栏隐藏时，将指针移至左上角附近或通过键盘聚焦即可显示按钮。触摸设备始终显示按钮。"
 }

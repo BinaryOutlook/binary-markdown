@@ -83,5 +83,9 @@
   "config.section.writing": "Outils de rédaction",
   "config.section.images": "Images",
   "config.section.export": "Exportation",
-  "config.section.advanced": "Avancé"
+  "config.section.advanced": "Avancé",
+  "config.toolbarToggleIcon.description": "Icône utilisée pour masquer ou afficher la barre supérieure.",
+  "config.toolbarToggleIcon.logo": "Utiliser le logo 01md.",
+  "config.toolbarToggleIcon.chevrons": "Utiliser des doubles chevrons vers le haut pour masquer la barre et vers le bas pour l’afficher.",
+  "config.toolbarToggleOnHover.description": "Lorsque la barre supérieure est masquée, son bouton apparaît au survol près du coin supérieur gauche ou lorsqu’il reçoit le focus clavier. Il reste visible sur les appareils tactiles."
 }

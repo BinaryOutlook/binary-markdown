@@ -242,6 +242,8 @@ fs.writeFileSync(outputPath, html
     .replace('__EDITOR_SCRIPT__', () => editorScript));
 console.log('Generated:', outputPath);
 
+fs.copyFileSync(path.join(__dirname, '../media/icon.png'), path.join(__dirname, 'html/vendor/icon.png'));
+
 // Production layout for contextual toolbar geometry and focus regressions.
 const { generateEditorBodyHtml } = require('../src/shared/editor-body-html');
 const styles = fs.readFileSync(path.join(__dirname, '../src/webview/styles.css'), 'utf8')
@@ -249,6 +251,6 @@ const styles = fs.readFileSync(path.join(__dirname, '../src/webview/styles.css')
     .replace('__OUTLINE_ACTIVE_COLOR__', 'var(--link-color)');
 fs.writeFileSync(path.join(__dirname, 'html/production-editor.html'), `<!doctype html>
 <html lang="en" data-theme="things" data-toolbar-mode="${require('./helpers/settings.cjs').configurationProperties(require('../package.json'))['binary-markdown.toolbarMode'].default}"><head><meta charset="utf-8"><link rel="stylesheet" href="vendor/katex.min.css"><style>${styles}</style></head>
-<body>${generateEditorBodyHtml(require('../src/i18n/locales/en.ts').webviewMessages, process.platform, { exportEnabled: true, settingsEnabled: true, hostEditor: 'vscode' })}
+<body>${generateEditorBodyHtml(require('../src/i18n/locales/en.ts').webviewMessages, process.platform, { exportEnabled: true, settingsEnabled: true, hostEditor: 'vscode', toolbarLogoUri: 'data:image/png;base64,' + fs.readFileSync(path.join(__dirname, '../media/icon.png')).toString('base64') })}
 <script src="vendor/markdown-blocks.js"></script><script src="vendor/turndown.js"></script><script src="vendor/turndown-plugin-gfm.js"></script>
 <script src="vendor/katex.min.js"></script><script src="vendor/mermaid.min.js"></script><script>${testHostBridgeScript}</script><script>${editorScript}</script><script>window.exportMessages=${JSON.stringify(require('../out/export/messages.js').getExportMessages())};${fs.readFileSync(path.join(__dirname, '../src/webview/export-ui.js'), 'utf8')}</script></body></html>`);

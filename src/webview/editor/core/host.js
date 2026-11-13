@@ -7,6 +7,14 @@ function createHost(dependencies) {
             return;
         initializeControlsDone = true;
         dependencies.host.onMessage(function (message) {
+            if (message.type === 'toolbarToggleIcon') {
+                document.documentElement.dataset.toolbarToggleIcon = message.value === 'chevrons' ? 'chevrons' : 'logo';
+                return;
+            }
+            if (message.type === 'toolbarToggleOnHover') {
+                document.documentElement.dataset.toolbarToggleOnHover = String(message.value === true);
+                return;
+            }
             if (message.type === 'codeBlockActionLabels') {
                 if (typeof message.value !== 'boolean')
                     return;
