@@ -31,6 +31,15 @@ export const messages = {
   failedToProcessImage: '이미지 처리 실패: ',
   selectImage: '이미지 선택',
   selectFileToCompare: '비교할 파일 선택',
+  externalConflict: "저장하지 않은 편집 내용이 있는 동안 '{0}' 파일이 디스크에서 변경되었습니다. 편집 내용은 유지됩니다.",
+  externalConflictCompare: '비교',
+  externalConflictLoad: '디스크 버전 불러오기',
+  externalConflictDiffTitle: '{0} (디스크) ↔ {0} (편집 내용)',
+  externalConflictLoadFailed: "'{0}'에 디스크 버전을 표시했지만 저장이 완료되지 않았습니다. 다시 저장하여 완료하세요.",
+  externalConflictStatus: '디스크에서 변경됨',
+  externalConflictStatusTooltip: '저장하지 않은 편집 내용이 있는 동안 다른 프로그램이 이 파일을 변경했습니다. 선택하여 비교하거나 디스크 버전을 불러오세요.',
+  externalConflictStatusName: 'Binary Markdown 외부 변경',
+  externalConflictNone: '활성 편집기에 해결되지 않은 외부 변경이 없습니다.',
 };
 
 export const webviewMessages = {

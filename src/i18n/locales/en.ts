@@ -31,6 +31,15 @@ export const messages = {
   failedToProcessImage: 'Failed to process image: ',
   selectImage: 'Select Image',
   selectFileToCompare: 'Select file to compare',
+  externalConflict: "'{0}' was changed on disk while you have unsaved edits. Your edits are kept.",
+  externalConflictCompare: 'Compare',
+  externalConflictLoad: 'Load Disk Version',
+  externalConflictDiffTitle: '{0} (on disk) ↔ {0} (your edits)',
+  externalConflictLoadFailed: "'{0}' now shows the disk version, but saving it did not finish. Save again to complete it.",
+  externalConflictStatus: 'Changed on disk',
+  externalConflictStatusTooltip: 'Another program changed this file while it has unsaved edits. Select to compare or load the disk version.',
+  externalConflictStatusName: 'Binary Markdown external change',
+  externalConflictNone: 'The active editor has no unresolved external change.',
 };
 
 export const webviewMessages = {

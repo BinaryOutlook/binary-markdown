@@ -350,7 +350,7 @@ async function run(settings, owner) {
         fs.writeFileSync(report, JSON.stringify({ harness: harnessIdentity(), host: receipt(owner), packageSha256: hash(fs.readFileSync(settings.package)), receipts }, null, 2));
         console.log(name, JSON.stringify(details));
     };
-    const available = ['identity', 'filesystem', 'formats', 'saves', 'save-correctness', 'list-code-preservation', 'edges', 'ui', 'equations', 'pdf-background', 'selection', 'immutable', 'offline', 'document-aux', 'links', 'codeblocks', 'code-block-controls', 'table-placement', 'table-source-format', 'table-content', 'table-row', 'text-toolbar', 'insert-menu', 'underline', 'underline-exports', 'editor-width', 'editor-alignment', 'width-indicators', 'language-picker', 'language-order', 'equation-source-position', 'equation-source-wrap', 'code-label-position', 'code-line-count', 'pdf-code-numbers', 'docx-code-numbers', 'blockquotes', 'paragraph-semantics'];
+    const available = ['identity', 'filesystem', 'formats', 'saves', 'save-correctness', 'external-conflict', 'list-code-preservation', 'edges', 'ui', 'equations', 'pdf-background', 'selection', 'immutable', 'offline', 'document-aux', 'links', 'codeblocks', 'code-block-controls', 'table-placement', 'table-source-format', 'table-content', 'table-row', 'text-toolbar', 'insert-menu', 'underline', 'underline-exports', 'editor-width', 'editor-alignment', 'width-indicators', 'language-picker', 'language-order', 'equation-source-position', 'equation-source-wrap', 'code-label-position', 'code-line-count', 'pdf-code-numbers', 'docx-code-numbers', 'blockquotes', 'paragraph-semantics'];
     const groups = settings.suite === 'all' ? available : [settings.suite];
     assert.ok(groups.every(value => available.includes(value)), 'Suite must be all, ' + available.join(', '));
     const htmlExports = [];
@@ -539,6 +539,7 @@ async function run(settings, owner) {
         if (groups.includes('table-row')) await tableRowCase(h, owner, record);
         if (groups.includes('insert-menu')) await insertMenuCase(h, owner, record);
         if (groups.includes('save-correctness')) await require('./save-correctness.cjs').saveCorrectnessCase(h, owner, record);
+        if (groups.includes('external-conflict')) await require('./external-conflict.cjs').externalConflictCase(h, owner, record);
         if (groups.includes('list-code-preservation')) await require('./list-code-preservation.cjs').listCodePreservationCase(h, owner, record);
         if (groups.includes('width-indicators')) await widthIndicatorsCase(h, owner, record);
         if (groups.includes('language-picker')) await languagePickerCase(h, owner, record);

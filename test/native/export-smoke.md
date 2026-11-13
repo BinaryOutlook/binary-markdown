@@ -107,6 +107,24 @@ The `save-correctness` suite types a dirty baseline, captures an actual visual-e
 
 The `list-code-preservation` suite checks ordered starts of 0, 5 and 10; mixed and nested ordered checklists; and inline code containing literal `<br>`, meaningful padding, only spaces or embedded backticks. It also edits a neighboring table cell while retaining literal and padded code. Each case types through the owned workbench, activates the installed editor's Undo/Redo controls, checks exact saved file bytes and clean state, switches to Source, and reopens the file. Code content must survive even when its backtick delimiter is canonicalized. The table case temporarily selects Compact (Legacy) in the isolated workspace and restores the prior preference. These checks share the DOM-activation and owned-keyboard boundaries described above.
 
+## External file conflicts
+
+Run this suite against a newly packaged and installed VSIX from the repository root, using the same `--workdir` and `--port` options as initialization when you changed their defaults:
+
+```sh
+node test/native/export-smoke.cjs run --suite external-conflict
+```
+
+The suite uses new synthetic file names on each run and is included in `--suite all`. A separate process replaces the open file atomically, as editors and tools that save by replacement do. It covers the following cases from [issue #81](https://github.com/BinaryOutlook/binary-markdown/issues/81):
+
+- **Unsaved edits.** Typed text reaches the dirty host document, the editor reports that typing is idle, and the file is replaced. The buffer, visual editor and dirty state must keep the local text while the disk keeps the external revision, with exactly one warning. The **Changed on disk** status bar item must remain after the warning is closed, and selecting it must show the warning again.
+- **Compare and Load Disk Version.** A second write is followed at once by **Compare**, whose read-only side must show that latest revision without another warning. **Load Disk Version** leaves that revision clean in the buffer, on disk and in the editor and clears the status bar item. The editor's Undo control then restores the replaced text without writing to disk.
+- **Save during a conflict.** Visual mode uses VS Code's real Save, and Source mode uses the editor's own keyboard shortcut. Each records whether VS Code prompts that the file is newer, confirms **Overwrite** when it does, and requires the local text on disk with a clean document. This case uses a longer external revision; VS Code does not detect a newer file whose size is unchanged.
+- **Own-save notification.** After a real Save, more text is typed. A write identical to the saved bytes, which reads like a late notification of that save, is followed by a real external write. The later typing must survive, and the real write must be reported. The watcher may merge the two writes into one read.
+- **Typing race.** The editor's synchronization message is held while the file is replaced. After release, the buffer keeps the typed text, the warning appears, the host sends the buffer back and the editor shows the kept text. The editor's first keyboard save is held and reports failure while the reload stays on disk, and **Compare** shows the reloaded revision.
+
+Waits follow observable events, such as the editor's idle report, save results and host updates, instead of fixed delays. Warning, status bar and **Overwrite** controls are activated through their DOM handlers in the owned workbench. VS Code builds toasts, status items and diff lines on animation frames, which a covered window does not run, so the suite captures a one-pixel screenshot before each workbench read. A guarded `closeDiff` driver action closes clean comparison tabs for the scenario's own file. Receipts record these observations for the exact package tested; other operating systems need their own runs.
+
 ## Focused runs and evidence
 
 Use `--suite formats`, `saves`, `edges`, `ui`, `equations`, `pdf-background`, `selection`, `immutable` or `offline` for a focused run. The package default is `dist/<package-name>-<package-version>.vsix` from the checkout's manifest. `--package dist/binary-markdown-0.2.0.vsix`, `--port 9327`, `--workdir ...`, `--code ...` and `--timeout 120000` are explicit options. Keep the initialization port on subsequent commands. The timeout is a test watchdog, not a product timing requirement; increase it for a complex report or slower machine. In an environment that sandboxes tool execution, native VS Code and browser/CDP access need the environment's explicit native-process permission.

@@ -8,8 +8,9 @@
 /** Outgoing messages: editor.js → host. */
 export interface HostBridge {
     // Document operations.
-    syncContent(markdown: string): void;
-    save(content?: string, revision?: number): void;
+    /** base: the host content revision the text was edited from (VS Code host). */
+    syncContent(markdown: string, base?: number): void;
+    save(content?: string, revision?: number, base?: number): void;
     requestExport?(format: 'html' | 'pdf' | 'docx' | 'epub'): void;
     requestExportCapabilities?(): void;
     cancelExport?(): void;
@@ -41,7 +42,7 @@ export interface HostBridge {
 export interface ExportWarning { code: string; message: string; }
 export type ExportWebviewResponse =
     | { type: 'exportImageValidated'; requestId: string; valid: boolean }
-    | { type: 'exportSnapshot'; requestId: string; content: string; pending: boolean }
+    | { type: 'exportSnapshot'; requestId: string; content: string; base?: number; pending: boolean }
     | { type: 'exportPrepared'; requestId: string; html: string; warnings: ExportWarning[]; diagrams?: Array<{ source: string; svg: string }>; theme: string; fontSize: number }
     | { type: 'exportError'; requestId: string; error: string };
 
@@ -55,7 +56,7 @@ export type HostMessage =
     | { type: 'captureExportSnapshot'; requestId: string }
     | { type: 'prepareExport'; requestId: string; markdown: string; theme?: string; fontSize?: number }
     | { type: 'cancelExportPreparation'; requestId: string }
-    | { type: 'update'; content: string }
+    | { type: 'update'; content: string; revision?: number; replace?: boolean }
     | { type: 'performUndo' }
     | { type: 'performRedo' }
     | { type: 'toggleSourceMode' }

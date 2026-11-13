@@ -34,6 +34,15 @@ export interface Messages {
   failedToProcessImage: string;
   selectImage: string;
   selectFileToCompare: string;
+  externalConflict: string;
+  externalConflictCompare: string;
+  externalConflictLoad: string;
+  externalConflictDiffTitle: string;
+  externalConflictLoadFailed: string;
+  externalConflictStatus: string;
+  externalConflictStatusTooltip: string;
+  externalConflictStatusName: string;
+  externalConflictNone: string;
 }
 
 export interface WebviewMessages {

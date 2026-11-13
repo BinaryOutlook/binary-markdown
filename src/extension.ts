@@ -34,6 +34,9 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(vscode.commands.registerCommand(
         'binary-markdown.copyBuildInformation', () => copyBuildInformation(context)
     ));
+    context.subscriptions.push(vscode.commands.registerCommand(
+        'binary-markdown.resolveExternalChange', () => provider.resolveExternalChange()
+    ));
 
     context.subscriptions.push(
         vscode.commands.registerCommand('binary-markdown.openEditor', async () => {

@@ -99,6 +99,11 @@
         "command": "binary-markdown.copyBuildInformation",
         "title": "%command.copyBuildInformation.title%",
         "category": "Binary Markdown"
+      },
+      {
+        "command": "binary-markdown.resolveExternalChange",
+        "title": "%command.resolveExternalChange.title%",
+        "category": "Binary Markdown"
       }
     ],
     "customEditors": [
@@ -486,6 +491,12 @@
       }
     ],
     "menus": {
+      "commandPalette": [
+        {
+          "command": "binary-markdown.resolveExternalChange",
+          "when": "binaryMarkdown.externalConflict"
+        }
+      ],
       "editor/context": [
         {
           "command": "binary-markdown.insertTable",

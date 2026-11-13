@@ -100,6 +100,7 @@ exports.activate = async function activate(context) {
         let buildInformation;
         let linkClipboardMatches;
         let fixtureClose;
+        let diffClose;
         switch (request.action) {
             case 'linkClipboard': {
                 if (request.phase === 'snapshot') {
@@ -217,6 +218,15 @@ exports.activate = async function activate(context) {
                 break;
             }
             case 'closeFixture': fixtureClose = await closeFixture(vscode, localFile(request.file, '.md')); break;
+            case 'closeDiff': {
+                // Close clean comparison tabs whose editable side is one owned fixture.
+                const file = localFile(request.file, '.md');
+                const tabs = vscode.window.tabGroups.all.flatMap(group => group.tabs).filter(tab =>
+                    tab.input instanceof vscode.TabInputTextDiff && tab.input.modified.scheme === 'file' &&
+                    fs.existsSync(tab.input.modified.fsPath) && fs.realpathSync(tab.input.modified.fsPath) === fs.realpathSync(file) && !tab.isDirty);
+                diffClose = { tabs: tabs.length, closed: tabs.length ? await vscode.window.tabGroups.close(tabs, true) : false };
+                break;
+            }
             case 'close':
                 requireCleanActiveEditor(vscode);
                 await vscode.commands.executeCommand('workbench.action.closeActiveEditor');
@@ -224,7 +234,7 @@ exports.activate = async function activate(context) {
             default: throw new Error('Unsupported test-driver action.');
         }
         return { id: request.id, ok: true, documents: inspect(), nativeSave: nativeSaveState(), ...(buildInformation ? { buildInformation } : {}),
-            ...(linkClipboardMatches !== undefined ? { linkClipboardMatches } : {}), ...(fixtureClose ? { fixtureClose } : {}) };
+            ...(linkClipboardMatches !== undefined ? { linkClipboardMatches } : {}), ...(fixtureClose ? { fixtureClose } : {}), ...(diffClose ? { diffClose } : {}) };
     };
     const poll = async () => {
         let request;

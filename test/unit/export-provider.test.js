@@ -10,6 +10,7 @@ const { createRequire } = require('node:module');
 const providerPath = path.resolve(__dirname, '../../out/editorProvider.js');
 const providerSource = fs.readFileSync(providerPath, 'utf8');
 const scopedRequire = createRequire(providerPath);
+const snapshotSource = fs.readFileSync(path.resolve(__dirname, '../../out/external-snapshots.js'), 'utf8');
 
 function deferred() {
     let resolve;
@@ -25,17 +26,22 @@ function event() {
         listeners
     };
 }
-async function setup(t, initialConfig = {}) {
+async function setup(t, initialConfig = {}, documentPath = '/provider-fixture/report.md', messages = {}, options = {}) {
     const changes = event();
     const configChanges = event();
     const willSave = event();
     const didSave = event();
     const watcher = event();
+    const created = event();
+    const tabChanges = event();
     const disposed = event();
     const viewState = event();
     const incoming = event();
     const posts = [];
     const notices = [];
+    const warnings = [];
+    const statusItems = [];
+    const contentProviders = new Map();
     const commands = [];
     const renderConfigs = [];
     const locales = [];
@@ -61,11 +67,14 @@ async function setup(t, initialConfig = {}) {
         text: '# OLD-EDITOR\n', disk: '# OLD-EDITOR\n', captureCalls: 0, saveCalls: 0, readCalls: 0,
         captures: async () => '# OLD-EDITOR\n', beforeSaveSnapshot: async () => {}, beforeWrite: async () => {}, beforeRead: async () => {}, failedWrite: false,
         beforeConfigWrite: async () => {}, beforeApply: async () => {}, ignoredSaveEdits: 0,
-        controller: undefined, exports: [], links: []
+        controller: undefined, exports: [], links: [],
+        // Returns the chosen notification button, or a promise for one.
+        warningChoice: () => undefined,
+        beforeRevert: async () => {}, reveals: 0, revealedTab: undefined
     };
-    const file = value => ({ scheme: 'file', fsPath: value, toString: () => 'file://' + value });
+    const file = value => ({ scheme: 'file', fsPath: value, path: value, toString: () => 'file://' + value });
     const document = {
-        uri: file('/provider-fixture/report.md'), version: 1, eol: 1, isDirty: false, isClosed: false,
+        uri: file(documentPath), version: 1, eol: 1, isDirty: false, isClosed: false,
         get lineCount() { return state.text.split('\n').length; },
         getText: () => state.text, positionAt: offset => ({ line: 0, character: offset }),
         save: async () => {
@@ -94,11 +103,28 @@ async function setup(t, initialConfig = {}) {
             return true;
         }
     };
+    class TabInputCustom { constructor(uri, viewType) { this.uri = uri; this.viewType = viewType; } }
+    class TabInputText { constructor(uri) { this.uri = uri; } }
+    class TabInputTextDiff { constructor(original, modified) { this.original = original; this.modified = modified; } }
+    const tabGroups = options.activeTab ? { activeTabGroup: { activeTab: undefined }, onDidChangeTabs: tabChanges.listen } : undefined;
     const vscode = {
-        commands: { executeCommand: async (...args) => { commands.push(args); } },
-        EndOfLine: { LF: 1, CRLF: 2 }, env: { language: 'en' },
+        TabInputCustom, TabInputText, TabInputTextDiff,
+        commands: { executeCommand: async (...args) => {
+            commands.push(args);
+            // VS Code's Revert reloads the active editor's buffer from disk.
+            if (args[0] === 'workbench.action.files.revert') {
+                await state.beforeRevert();
+                const changed = state.text !== state.disk;
+                state.text = state.disk; document.version++; document.isDirty = false;
+                if (changed) changes.fire({ document, contentChanges: [{ text: state.text }], reason: undefined });
+            }
+        } },
+        EndOfLine: { LF: 1, CRLF: 2 }, env: { language: 'en' }, StatusBarAlignment: { Left: 1, Right: 2 },
         ConfigurationTarget: { Global: 1, Workspace: 2 },
-        Uri: { file, joinPath: (base, ...parts) => file(path.join(base.fsPath, ...parts)) },
+        Uri: {
+            file, joinPath: (base, ...parts) => file(path.join(base.fsPath, ...parts)),
+            from: ({ scheme, path: uriPath, query }) => ({ scheme, path: uriPath, query, toString: () => scheme + '://' + uriPath + '?' + query })
+        },
         Range: class { constructor(...values) { this.values = values; } },
         RelativePattern: class {},
         WorkspaceEdit: class { constructor() { this.edits = []; } replace(_uri, _range, text) { this.edits.push(text); } },
@@ -124,7 +150,8 @@ async function setup(t, initialConfig = {}) {
             onDidChangeConfiguration: configChanges.listen,
             onWillSaveTextDocument: willSave.listen,
             onDidSaveTextDocument: didSave.listen,
-            createFileSystemWatcher: () => ({ onDidChange: watcher.listen, dispose: () => {} }),
+            createFileSystemWatcher: () => ({ onDidChange: watcher.listen, onDidCreate: created.listen, dispose: () => {} }),
+            registerTextDocumentContentProvider: (scheme, provider) => { contentProviders.set(scheme, provider); return { dispose: () => {} }; },
             fs: { readFile: async () => { state.readCalls++; const bytes = Buffer.from(state.disk); await state.beforeRead(); return bytes; } },
             applyEdit: async edit => {
                 await state.beforeApply(edit.edits);
@@ -133,11 +160,24 @@ async function setup(t, initialConfig = {}) {
                 return true;
             }
         },
-        window: { showInformationMessage: async message => { notices.push(message); }, showErrorMessage: async () => undefined }
+        window: {
+            tabGroups,
+            showInformationMessage: async message => { notices.push(message); }, showErrorMessage: async () => undefined,
+            showWarningMessage: async (message, ...items) => { warnings.push({ message, items }); return state.warningChoice(message, items); },
+            createStatusBarItem: (id, alignment, priority) => {
+                const item = { id, alignment, priority, visible: false, show() { this.visible = true; }, hide() { this.visible = false; }, dispose() {} };
+                statusItems.push(item);
+                return item;
+            }
+        }
     };
     const panel = {
         active: true,
         onDidDispose: disposed.listen, onDidChangeViewState: viewState.listen,
+        reveal: () => {
+            state.reveals++;
+            if (tabGroups && state.revealedTab) { tabGroups.activeTabGroup.activeTab = { input: state.revealedTab }; tabChanges.fire(); }
+        },
         webview: {
             html: '', options: {}, asWebviewUri: uri => ({ toString: () => 'webview:' + uri.fsPath }),
             postMessage: message => { posts.push(message); return Promise.resolve(true); },
@@ -146,7 +186,11 @@ async function setup(t, initialConfig = {}) {
     };
     class Controller {
         constructor(_context, _document, _panel, waitForSave) { this.waitForSave = waitForSave; this.refreshes = 0; state.controller = this; }
-        captureForSave() { state.captureCalls++; return state.captures(); }
+        captureForSave() {
+            state.captureCalls++;
+            // Tests supply text or a full { content, base } snapshot.
+            return Promise.resolve(state.captures()).then(value => typeof value === 'string' ? { content: value } : value);
+        }
         export(format) { state.exports.push(format); return Promise.resolve(); }
         refreshCapabilities() { this.refreshes++; }
         handleMessage() { return false; }
@@ -158,25 +202,33 @@ async function setup(t, initialConfig = {}) {
         './webviewContent': { getWebviewContent: (_webview, _uri, _content, options) => { renderConfigs.push(options); return '<p>Fixture editor</p>'; } },
         './export/controller': { ExportController: Controller },
         './i18n/messages': {
-            t: key => key, getWebviewMessages: () => ({ locale: cachedLocale }),
+            t: key => messages[key] ?? key, getWebviewMessages: () => ({ locale: cachedLocale }),
             initLocale: locale => { locales.push(locale); cachedLocale = locale; }
         },
         './shared/outline-state-store': { OutlineStateStore: class { getOpen(_scope, _uri, defaultOpen) { return defaultOpen; } } }
     };
+    // The real snapshot store, bound to the controlled VS Code model.
+    const snapshotModule = { exports: {} };
+    new Function('require', 'module', 'exports', snapshotSource)(name => name === 'vscode' ? vscode : scopedRequire(name), snapshotModule, snapshotModule.exports);
+    mocks['./external-snapshots'] = snapshotModule.exports;
     const compiled = { exports: {} };
     new Function('require', 'module', 'exports', '__dirname', '__filename', 'setTimeout', 'clearTimeout', providerSource)(
         name => name in mocks ? mocks[name] : scopedRequire(name), compiled, compiled.exports,
         path.dirname(providerPath), providerPath,
         callback => { const id = ++nextTimer; timers.set(id, callback); return id; }, id => timers.delete(id)
     );
-    const provider = new compiled.exports.BinaryMarkdownEditorProvider({ extensionUri: file('/extension-fixture'), workspaceState: {}, globalState: {} });
+    const provider = new compiled.exports.BinaryMarkdownEditorProvider({ extensionUri: file('/extension-fixture'), workspaceState: {}, globalState: {}, subscriptions: [] });
+    if (tabGroups) { tabGroups.activeTabGroup.activeTab = { input: options.activeTab({ TabInputCustom, TabInputText, TabInputTextDiff, uri: document.uri, file }) }; }
     await provider.resolveCustomTextEditor(document, panel, {});
     await acknowledgeRender();
     t.after(() => disposed.fire());
     return {
-        state, document, panel, provider, config, workspaceConfig, configUpdates, posts, notices, commands, renderConfigs, locales, disposed, flushTimers,
+        vscode, state, document, panel, provider, config, workspaceConfig, configUpdates, posts, notices, warnings, statusItems, contentProviders, commands, renderConfigs, locales, disposed, flushTimers,
+        changes,
         configChanged: keys => configChanges.fire({ affectsConfiguration: query => keys.some(key => key === query || key.startsWith(query + '.')) }),
         externalChange: async content => { state.disk = content; watcher.fire(document.uri); await flushTimers(); },
+        // An atomic save renames a new file over the original.
+        externalReplace: async content => { state.disk = content; created.fire(document.uri); await flushTimers(); },
         send: message => Promise.all(incoming.fire(message)),
         beginNativeSavePreparation: () => {
             const preparations = [];
@@ -763,6 +815,450 @@ test('a disk read started before a newer save cannot replay stale contents', asy
     assert.equal(h.document.getText(), '# NEWLY-SAVED\n');
     assert.equal(h.state.disk, '# NEWLY-SAVED\n');
     assert.equal(h.state.saveCalls, 1);
+});
+
+// Issue #81: another program's write must not discard unsaved edits.
+const settle = async (predicate, message) => {
+    for (let attempt = 0; attempt < 200 && !predicate(); attempt++) { await new Promise(resolve => setTimeout(resolve, 5)); }
+    assert.ok(predicate(), message);
+};
+const typeLocally = (h, text) => { h.state.text = text; h.document.version++; h.document.isDirty = true; };
+
+test('an external write keeps unsaved edits, the disk revision and the dirty state', async t => {
+    const h = await setup(t);
+    typeLocally(h, '# LOCAL-UNSAVED\n');
+    await h.externalChange('# EXTERNAL-ONE\n');
+    assert.equal(h.document.getText(), '# LOCAL-UNSAVED\n');
+    assert.equal(h.document.isDirty, true);
+    assert.equal(h.state.disk, '# EXTERNAL-ONE\n');
+    assert.equal(h.state.saveCalls, 0, 'Conflicts never save either revision automatically');
+    assert.ok(!h.posts.some(message => message.type === 'update'), 'The editor keeps showing the local edits');
+    assert.equal(h.warnings.length, 1);
+    assert.match(h.warnings[0].message, /^externalConflict/);
+    assert.deepEqual(h.warnings[0].items, ['externalConflictCompare', 'externalConflictLoad']);
+
+    // Repeated writes during the same conflict update the retained revision silently.
+    h.state.warningChoice = () => 'externalConflictLoad';
+    await h.externalChange('# EXTERNAL-TWO\n');
+    assert.equal(h.warnings.length, 1);
+    assert.equal(h.document.getText(), '# LOCAL-UNSAVED\n');
+});
+
+test('an atomic replacement is detected like an in-place write', async t => {
+    const h = await setup(t);
+    typeLocally(h, '# LOCAL-UNSAVED\n');
+    await h.externalReplace('# RENAMED-OVER\n');
+    assert.equal(h.document.getText(), '# LOCAL-UNSAVED\n');
+    assert.equal(h.warnings.length, 1);
+    typeLocally(h, '# OLD-EDITOR\n'); h.document.isDirty = false;
+    await h.externalReplace('# RENAMED-CLEAN\n');
+    assert.equal(h.document.getText(), '# RENAMED-CLEAN\n', 'A clean document reloads an atomic replacement');
+});
+
+test('a crafted file name cannot become a command link in the warning', async t => {
+    const h = await setup(t, {}, '/provider-fixture/[Open](command:workbench.action.terminal.new).md', { externalConflict: "'{0}' was changed on disk." });
+    typeLocally(h, '# LOCAL-UNSAVED\n');
+    await h.externalChange('# EXTERNAL\n');
+    assert.equal(h.warnings.length, 1);
+    assert.doesNotMatch(h.warnings[0].message, /\]\(command:/, 'Notification link syntax is broken');
+    assert.match(h.warnings[0].message, /\[Open\]\u200B\(command:workbench\.action\.terminal\.new\)\.md/, 'The visible name is unchanged');
+});
+
+test('file names containing replacement patterns are shown literally', async t => {
+    const name = 'cost$$ a$&b $` $\'.md';
+    const h = await setup(t, {}, '/provider-fixture/' + name, {
+        externalConflict: "'{0}' was changed on disk.", externalConflictDiffTitle: '{0} (on disk) ↔ {0} (your edits)'
+    });
+    typeLocally(h, '# LOCAL-UNSAVED\n');
+    const choices = ['externalConflictCompare'];
+    h.state.warningChoice = () => choices.shift();
+    await h.externalChange('# EXTERNAL\n');
+    assert.equal(h.warnings[0].message, "'" + name + "' was changed on disk.");
+    await settle(() => h.commands.some(command => command[0] === 'vscode.diff'), 'Compare opens');
+    assert.equal(h.commands.find(command => command[0] === 'vscode.diff')[3], name + ' (on disk) ↔ ' + name + ' (your edits)');
+});
+
+test('an unresolved conflict shows a status item that reopens the choices', async t => {
+    const h = await setup(t);
+    const context = () => h.commands.filter(command => command[0] === 'setContext' && command[1] === 'binaryMarkdown.externalConflict').at(-1)?.[2];
+    typeLocally(h, '# LOCAL-UNSAVED\n');
+    const first = deferred();
+    h.state.warningChoice = () => first.promise;
+    await h.externalChange('# EXTERNAL\n');
+    const [status] = h.statusItems;
+    assert.equal(status.visible, true);
+    assert.equal(status.command, 'binary-markdown.resolveExternalChange');
+    assert.equal(status.text, '$(warning) externalConflictStatus');
+    assert.equal(context(), true, 'The command is offered while the conflict is unresolved');
+
+    // While the warning is open, the command reveals it instead of adding another.
+    await h.provider.resolveExternalChange();
+    assert.ok(h.commands.some(command => command[0] === 'notifications.showList'));
+    assert.equal(h.warnings.length, 1);
+    // After the warning is dismissed, the command shows the choices again.
+    first.resolve(undefined);
+    await settle(() => true, 'dismissal settles');
+    await new Promise(resolve => setImmediate(resolve));
+    h.state.warningChoice = () => undefined;
+    await h.provider.resolveExternalChange();
+    assert.equal(h.warnings.length, 2);
+    assert.equal(h.document.getText(), '# LOCAL-UNSAVED\n');
+
+    await h.send({ type: 'save', content: '# LOCAL-UNSAVED\n', revision: 1, base: 0 });
+    assert.equal(status.visible, false, 'Saving settles the conflict');
+    assert.equal(context(), false);
+    await h.provider.resolveExternalChange();
+    assert.deepEqual(h.notices.at(-1), 'externalConflictNone');
+});
+
+test('Compare opens the latest external revision read-only beside the live document', async t => {
+    const h = await setup(t);
+    typeLocally(h, '# LOCAL-UNSAVED\n');
+    const choices = ['externalConflictCompare'];
+    h.state.warningChoice = () => choices.shift();
+    await h.externalChange('# EXTERNAL-COMPARED\n');
+    await settle(() => h.warnings.length === 2, 'Comparing keeps both choices available');
+    const diff = h.commands.find(command => command[0] === 'vscode.diff');
+    assert.ok(diff, 'Compare opens VS Code\'s diff editor');
+    assert.equal(diff[2], h.document.uri, 'The right side is the editable document');
+    const provider = h.contentProviders.get(diff[1].scheme);
+    assert.equal(provider.provideTextDocumentContent(diff[1]), '# EXTERNAL-COMPARED\n');
+    assert.equal(diff[1].path, h.document.uri.path, 'The snapshot keeps the file name and language');
+    assert.equal(h.document.getText(), '# LOCAL-UNSAVED\n');
+    assert.equal(h.document.isDirty, true);
+});
+
+test('Compare and Load read a write the watcher has not processed yet', async t => {
+    const h = await setup(t);
+    typeLocally(h, '# LOCAL-UNSAVED\n');
+    const first = deferred();
+    const choices = [first.promise, 'externalConflictLoad'];
+    h.state.warningChoice = () => choices.shift();
+    const changes = h.state.readCalls;
+    // The first notification is processed; the second write has not been yet.
+    await h.externalChange('# EXTERNAL-ONE\n');
+    h.state.disk = '# EXTERNAL-TWO\n';
+    first.resolve('externalConflictCompare');
+    await settle(() => h.commands.some(command => command[0] === 'vscode.diff'), 'Compare opens');
+    const diff = h.commands.find(command => command[0] === 'vscode.diff');
+    assert.equal(h.contentProviders.get(diff[1].scheme).provideTextDocumentContent(diff[1]), '# EXTERNAL-TWO\n');
+    await settle(() => !h.document.isDirty, 'Load completes');
+    assert.equal(h.document.getText(), '# EXTERNAL-TWO\n');
+    assert.ok(h.state.readCalls > changes + 1);
+});
+
+test('Load Disk Version replaces the edits only on request and leaves the document clean', async t => {
+    const h = await setup(t);
+    typeLocally(h, '# LOCAL-UNSAVED\n');
+    const choice = deferred();
+    h.state.warningChoice = () => choice.promise;
+    await h.externalChange('# EXTERNAL-OLDER\n');
+    await h.externalChange('# EXTERNAL-LATEST\n');
+    choice.resolve('externalConflictLoad');
+    await settle(() => !h.document.isDirty, 'The loaded revision is saved as the clean baseline');
+    assert.equal(h.document.getText(), '# EXTERNAL-LATEST\n');
+    assert.equal(h.state.disk, '# EXTERNAL-LATEST\n');
+    const update = h.posts.filter(message => message.type === 'update').at(-1);
+    assert.equal(update.content, '# EXTERNAL-LATEST\n');
+    assert.equal(update.replace, true, 'The editor treats this as an explicit, undoable replacement');
+
+    // Text typed before the choice and still in flight cannot overwrite it.
+    await h.send({ type: 'edit', content: '# TYPED-BEFORE-LOAD\n', base: update.revision - 1 });
+    await h.send({ type: 'save', content: '# TYPED-BEFORE-LOAD\n', revision: 3, base: update.revision - 1 });
+    assert.equal(h.document.getText(), '# EXTERNAL-LATEST\n');
+    assert.equal(h.state.disk, '# EXTERNAL-LATEST\n');
+    // Undo in the editor sends the restored text based on the loaded revision.
+    await h.send({ type: 'edit', content: '# LOCAL-UNSAVED\n', base: update.revision });
+    await settle(() => h.document.getText() === '# LOCAL-UNSAVED\n', 'Edits after loading are accepted');
+    assert.equal(h.document.isDirty, true);
+});
+
+test('a write detected while Load Disk Version applies is kept as a new conflict', async t => {
+    const h = await setup(t);
+    typeLocally(h, '# LOCAL-UNSAVED\n');
+    const choices = [deferred(), deferred()];
+    h.state.warningChoice = () => choices[h.warnings.length - 1].promise;
+    await h.externalChange('# EXTERNAL-ONE\n');
+    let intervened = false;
+    h.state.beforeApply = async edits => {
+        // Another program writes again while the load's edit is applied.
+        if (!intervened && edits.includes('# EXTERNAL-ONE\n')) { intervened = true; await h.externalChange('# EXTERNAL-TWO\n'); }
+    };
+    const saves = h.state.saveCalls;
+    choices[0].resolve('externalConflictLoad');
+    await settle(() => h.warnings.length === 2, 'The newer write is reported');
+    assert.ok(intervened);
+    assert.equal(h.document.getText(), '# EXTERNAL-ONE\n', 'The buffer holds the loaded revision');
+    const update = h.posts.filter(message => message.type === 'update').at(-1);
+    assert.equal(update.content, '# EXTERNAL-ONE\n', 'The editor shows the same revision as the buffer');
+    assert.equal(update.replace, true);
+    assert.equal(h.state.disk, '# EXTERNAL-TWO\n', 'The newer file is not overwritten');
+    assert.equal(h.state.saveCalls, saves);
+    assert.equal(h.statusItems[0].visible, true, 'The newer write remains an unresolved conflict');
+    // Compare and Load now use the newer revision.
+    choices[1].resolve('externalConflictLoad');
+    await settle(() => !h.document.isDirty && h.document.getText() === '# EXTERNAL-TWO\n', 'Loading again uses the newer write');
+    assert.equal(h.state.disk, '# EXTERNAL-TWO\n');
+});
+
+const ownEditor = ({ TabInputCustom, uri }) => new TabInputCustom(uri, 'binary-markdown.editor');
+
+test('Load Disk Version reverts to the file instead of saving when this editor is active', async t => {
+    const h = await setup(t, {}, undefined, {}, { activeTab: ownEditor });
+    typeLocally(h, '# LOCAL-UNSAVED\n');
+    h.state.warningChoice = () => 'externalConflictLoad';
+    const saves = h.state.saveCalls;
+    await h.externalChange('# EXTERNAL-ONE\n');
+    await settle(() => !h.document.isDirty, 'The revert leaves the document clean');
+    assert.ok(h.commands.some(command => command[0] === 'workbench.action.files.revert'));
+    assert.equal(h.state.saveCalls, saves, 'Nothing is written; VS Code 1.85 would report a newer-file conflict');
+    assert.equal(h.document.getText(), '# EXTERNAL-ONE\n');
+    assert.equal(h.state.disk, '# EXTERNAL-ONE\n');
+    const updates = h.posts.filter(message => message.type === 'update');
+    assert.deepEqual(updates.at(-1), { type: 'update', content: '# EXTERNAL-ONE\n', revision: updates.at(-1).revision, replace: true },
+        'The editor keeps its Undo snapshot; the revert sends no second update');
+});
+
+test('a newer write read by the revert is shown in the editor', async t => {
+    const h = await setup(t, {}, undefined, {}, { activeTab: ownEditor });
+    typeLocally(h, '# LOCAL-UNSAVED\n');
+    h.state.warningChoice = () => 'externalConflictLoad';
+    h.state.beforeRevert = async () => { h.state.disk = '# EXTERNAL-TWO\n'; };
+    await h.externalChange('# EXTERNAL-ONE\n');
+    await settle(() => !h.document.isDirty, 'The revert completes');
+    assert.equal(h.document.getText(), '# EXTERNAL-TWO\n');
+    const last = h.posts.filter(message => message.type === 'update').at(-1);
+    assert.equal(last.content, '# EXTERNAL-TWO\n');
+    assert.equal(last.replace, undefined);
+});
+
+test('a write of the pre-revert baseline is reported after Load Disk Version', async t => {
+    const h = await setup(t, {}, undefined, {}, { activeTab: ownEditor });
+    typeLocally(h, '# LOCAL-UNSAVED\n');
+    h.state.warningChoice = () => 'externalConflictLoad';
+    await h.externalChange('# EXTERNAL-ONE\n');
+    await settle(() => !h.document.isDirty, 'The revert completes');
+
+    typeLocally(h, '# LOCAL-AFTER-LOAD\n');
+    h.state.warningChoice = () => undefined;
+    await h.externalChange('# OLD-EDITOR\n');
+    assert.equal(h.warnings.length, 2, 'The previous baseline is now an external revision');
+    assert.equal(h.document.getText(), '# LOCAL-AFTER-LOAD\n');
+    assert.equal(h.document.isDirty, true);
+    assert.equal(h.state.disk, '# OLD-EDITOR\n');
+});
+
+test('a delayed notification of the reverted revision keeps later edits without a conflict', async t => {
+    const h = await setup(t, {}, undefined, {}, { activeTab: ownEditor });
+    typeLocally(h, '# LOCAL-UNSAVED\n');
+    h.state.warningChoice = () => 'externalConflictLoad';
+    h.state.beforeRevert = async () => { h.state.disk = '# EXTERNAL-TWO\n'; };
+    await h.externalChange('# EXTERNAL-ONE\n');
+    await settle(() => !h.document.isDirty, 'The revert reads the latest disk revision');
+
+    typeLocally(h, '# LOCAL-AFTER-LOAD\n');
+    h.state.warningChoice = () => undefined;
+    await h.externalChange('# EXTERNAL-TWO\n');
+    assert.equal(h.warnings.length, 1, 'The already loaded disk revision is not a new conflict');
+    assert.equal(h.document.getText(), '# LOCAL-AFTER-LOAD\n');
+    assert.equal(h.document.isDirty, true);
+    assert.equal(h.state.disk, '# EXTERNAL-TWO\n');
+});
+
+test('Load Disk Version never reverts another file\'s editor', async t => {
+    const h = await setup(t, {}, undefined, {}, { activeTab: ({ TabInputText, file }) => new TabInputText(file('/provider-fixture/other.md')) });
+    typeLocally(h, '# LOCAL-UNSAVED\n');
+    const choice = deferred();
+    h.state.warningChoice = () => choice.promise;
+    await h.externalChange('# EXTERNAL-ONE\n');
+    choice.resolve('externalConflictLoad');
+    await settle(() => h.state.reveals === 1, 'This editor is asked to come forward');
+    await h.flushTimers(); // It never becomes active; the wait times out.
+    await settle(() => !h.document.isDirty, 'The fallback save completes');
+    assert.ok(!h.commands.some(command => command[0] === 'workbench.action.files.revert'), 'The other editor is not reverted');
+    assert.equal(h.state.disk, '# EXTERNAL-ONE\n');
+});
+
+test('this editor is brought forward before reverting', async t => {
+    const h = await setup(t, {}, undefined, {}, { activeTab: ({ TabInputText, file }) => new TabInputText(file('/provider-fixture/other.md')) });
+    h.state.revealedTab = new h.vscode.TabInputCustom(h.document.uri, 'binary-markdown.editor');
+    typeLocally(h, '# LOCAL-UNSAVED\n');
+    h.state.warningChoice = () => 'externalConflictLoad';
+    const saves = h.state.saveCalls;
+    await h.externalChange('# EXTERNAL-ONE\n');
+    await settle(() => !h.document.isDirty, 'The revert completes');
+    assert.equal(h.state.reveals, 1);
+    assert.ok(h.commands.some(command => command[0] === 'workbench.action.files.revert'));
+    assert.equal(h.state.saveCalls, saves);
+});
+
+test('a revision no longer on disk is written instead of reverted', async t => {
+    const h = await setup(t, {}, undefined, {}, { activeTab: ownEditor });
+    const choice = deferred();
+    h.state.warningChoice = () => choice.promise;
+    await h.externalChange('# EXTERNAL-RELOADED\n');
+    const reload = h.posts.find(message => message.type === 'update');
+    // A held save, then a second save that writes the typed text over the reload.
+    await h.send({ type: 'save', content: '# OLD-EDITOR typed\n', revision: 1, base: reload.revision - 1 });
+    await h.send({ type: 'save', content: '# OLD-EDITOR typed\n', revision: 2, base: reload.revision - 1 });
+    assert.equal(h.state.disk, '# OLD-EDITOR typed\n');
+    choice.resolve('externalConflictLoad');
+    await settle(() => h.state.disk === '# EXTERNAL-RELOADED\n' && !h.document.isDirty, 'The retained revision is written back');
+    assert.ok(!h.commands.some(command => command[0] === 'workbench.action.files.revert'), 'Reverting would load the typed text instead');
+    assert.equal(h.document.getText(), '# EXTERNAL-RELOADED\n');
+});
+
+test('Load Disk Version after a revert does not save a clean document', async t => {
+    const h = await setup(t);
+    typeLocally(h, '# LOCAL-UNSAVED\n');
+    const choice = deferred();
+    h.state.warningChoice = () => choice.promise;
+    await h.externalChange('# EXTERNAL\n');
+    // File: Revert reloads the disk version before the user answers.
+    h.state.text = '# EXTERNAL\n'; h.document.version++; h.document.isDirty = false;
+    h.changes.fire({ document: h.document, contentChanges: [{ text: h.state.text }], reason: undefined });
+    const saves = h.state.saveCalls;
+    choice.resolve('externalConflictLoad');
+    await settle(() => h.posts.some(message => message.replace), 'The editor receives the loaded version');
+    await h.state.controller.waitForSave();
+    assert.equal(h.state.saveCalls, saves, 'A clean buffer already matches the disk');
+    assert.equal(h.document.isDirty, false);
+});
+
+test('a failed load is reported without failing later save waiters', async t => {
+    const h = await setup(t);
+    typeLocally(h, '# LOCAL-UNSAVED\n');
+    const choice = deferred();
+    h.state.warningChoice = () => choice.promise;
+    await h.externalChange('# EXTERNAL\n');
+    const errors = [];
+    h.vscode.window.showErrorMessage = async message => { errors.push(message); };
+    h.state.failedWrite = 'false';
+    choice.resolve('externalConflictLoad');
+    await settle(() => errors.length === 1, 'The load failure is shown');
+    assert.match(errors[0], /^externalConflictLoadFailed/);
+    await h.state.controller.waitForSave();
+});
+
+test('saving settles a conflict so a later external write is reported again', async t => {
+    const h = await setup(t);
+    typeLocally(h, '# LOCAL-ONE\n');
+    await h.externalChange('# EXTERNAL-ONE\n');
+    assert.equal(h.warnings.length, 1);
+    await h.send({ type: 'save', content: '# LOCAL-ONE\n', revision: 1, base: 0 });
+    assert.equal(h.state.disk, '# LOCAL-ONE\n');
+    typeLocally(h, '# LOCAL-TWO\n');
+    await h.externalChange('# EXTERNAL-TWO\n');
+    assert.equal(h.warnings.length, 2);
+    assert.equal(h.document.getText(), '# LOCAL-TWO\n');
+});
+
+test('a clean document still reloads external writes with a numbered disk update', async t => {
+    const h = await setup(t);
+    await h.externalChange('# EXTERNAL-CLEAN\n');
+    assert.equal(h.document.getText(), '# EXTERNAL-CLEAN\n');
+    assert.equal(h.document.isDirty, false);
+    const update = h.posts.find(message => message.type === 'update');
+    assert.deepEqual(update, { type: 'update', content: '# EXTERNAL-CLEAN\n', revision: 1 });
+    assert.equal(h.warnings.length, 0);
+});
+
+test('edits typed before a disk reload are kept and the replaced revision is reported once', async t => {
+    const h = await setup(t);
+    await h.externalChange('# EXTERNAL-RELOADED\n');
+    const reload = h.posts.find(message => message.type === 'update');
+    // The editor had unsent typing based on the original text.
+    await h.send({ type: 'edit', content: '# OLD-EDITOR typed\n', base: reload.revision - 1 });
+    await settle(() => h.document.getText() === '# OLD-EDITOR typed\n', 'Local typing is not discarded');
+    assert.equal(h.warnings.length, 1, 'The hidden disk revision is reported');
+    assert.equal(h.state.disk, '# EXTERNAL-RELOADED\n');
+    await h.send({ type: 'edit', content: '# OLD-EDITOR typed more\n', base: reload.revision - 1 });
+    await settle(() => h.document.getText() === '# OLD-EDITOR typed more\n', 'Later edits apply normally');
+    assert.equal(h.warnings.length, 1, 'One report per disk revision');
+
+    const choice = deferred();
+    h.state.warningChoice = () => choice.promise;
+    h.warnings.length = 0;
+    // An edit based on the reloaded text is current and raises nothing.
+    await h.send({ type: 'edit', content: '# EXTERNAL-RELOADED edited\n', base: reload.revision });
+    await settle(() => h.document.getText() === '# EXTERNAL-RELOADED edited\n', 'Current edits apply');
+    assert.equal(h.warnings.length, 0);
+});
+
+test('a keyboard save typed before a disk reload is held once instead of overwriting it', async t => {
+    const h = await setup(t);
+    h.state.warningChoice = () => new Promise(() => {}); // The warning stays open.
+    await h.externalChange('# EXTERNAL-RELOADED\n');
+    const reload = h.posts.find(message => message.type === 'update');
+    await h.send({ type: 'save', content: '# OLD-EDITOR typed\n', revision: 1, base: reload.revision - 1 });
+    assert.equal(h.state.disk, '# EXTERNAL-RELOADED\n', 'The other program\'s version stays on disk');
+    assert.equal(h.document.getText(), '# OLD-EDITOR typed\n', 'The typed text is kept in the buffer');
+    assert.equal(h.document.isDirty, true);
+    assert.equal(h.warnings.length, 1);
+    assert.deepEqual(h.posts.filter(message => message.type === 'saveResult').at(-1), { type: 'saveResult', revision: 1, success: false });
+    // After the warning, saving again is the user's decision and writes the text.
+    await h.send({ type: 'save', content: '# OLD-EDITOR typed\n', revision: 2, base: reload.revision - 1 });
+    assert.equal(h.state.disk, '# OLD-EDITOR typed\n');
+    assert.equal(h.document.isDirty, false);
+    assert.equal(h.warnings.length, 1);
+});
+
+test('a save right after a stale edit is held, and the buffer is echoed to the editor', async t => {
+    const h = await setup(t);
+    const answer = deferred();
+    h.state.warningChoice = () => answer.promise;
+    await h.externalChange('# EXTERNAL-RELOADED\n');
+    const reload = h.posts.find(message => message.type === 'update');
+    // A real editor save first delivers its unsent text as an edit.
+    await h.send({ type: 'edit', content: '# OLD-EDITOR typed\n', base: reload.revision - 1 });
+    await h.send({ type: 'save', content: '# OLD-EDITOR typed\n', revision: 1, base: reload.revision - 1 });
+    assert.equal(h.state.disk, '# EXTERNAL-RELOADED\n', 'The first save is held');
+    assert.equal(h.document.getText(), '# OLD-EDITOR typed\n');
+    assert.equal(h.posts.filter(message => message.type === 'saveResult').at(-1).success, false);
+    await settle(() => h.posts.filter(message => message.type === 'update').length === 2, 'The buffer is sent back');
+    const echo = h.posts.filter(message => message.type === 'update').at(-1);
+    assert.deepEqual(echo, { type: 'update', content: '# OLD-EDITOR typed\n', revision: reload.revision + 1 });
+    // While the warning is unanswered, only one save is held.
+    await h.send({ type: 'save', content: '# OLD-EDITOR typed\n', revision: 2, base: echo.revision });
+    assert.equal(h.state.disk, '# OLD-EDITOR typed\n');
+    answer.resolve(undefined);
+});
+
+test('answering the warning releases the save hold', async t => {
+    const h = await setup(t);
+    h.state.warningChoice = () => undefined; // Closed without a choice.
+    await h.externalChange('# EXTERNAL-RELOADED\n');
+    const reload = h.posts.find(message => message.type === 'update');
+    await h.send({ type: 'edit', content: '# OLD-EDITOR typed\n', base: reload.revision - 1 });
+    await new Promise(resolve => setImmediate(resolve));
+    await h.send({ type: 'save', content: '# OLD-EDITOR typed\n', revision: 1, base: reload.revision - 1 });
+    assert.equal(h.state.disk, '# OLD-EDITOR typed\n', 'The user already decided to keep their text');
+});
+
+test('a reload reported through the text document counts as a disk revision', async t => {
+    const h = await setup(t);
+    h.state.text = '# VS-CODE-RELOADED\n'; h.document.version++; h.document.isDirty = false;
+    h.changes.fire({ document: h.document, contentChanges: [{ text: h.state.text }], reason: undefined });
+    const reload = h.posts.find(message => message.type === 'update');
+    assert.equal(reload.revision, 1);
+    h.state.text = '# SIDE-BY-SIDE-EDIT\n'; h.document.version++; h.document.isDirty = true;
+    h.changes.fire({ document: h.document, contentChanges: [{ text: h.state.text }], reason: undefined });
+    await h.send({ type: 'edit', content: '# STALE\n', base: reload.revision });
+    await settle(() => h.document.getText() === '# STALE\n', 'Buffer-only changes keep last-writer behavior');
+    assert.equal(h.warnings.length, 0, 'Only disk revisions are reported as conflicts');
+});
+
+test('a native save snapshot typed before Load Disk Version is not written', async t => {
+    const h = await setup(t);
+    typeLocally(h, '# LOCAL-UNSAVED\n');
+    h.state.warningChoice = () => 'externalConflictLoad';
+    await h.externalChange('# EXTERNAL-LOADED\n');
+    await settle(() => !h.document.isDirty, 'The load completes');
+    const update = h.posts.filter(message => message.type === 'update').at(-1);
+    h.state.captures = async () => ({ content: '# STALE-SNAPSHOT\n', base: update.revision - 1 });
+    await h.document.save();
+    assert.equal(h.state.disk, '# EXTERNAL-LOADED\n');
+    assert.equal(h.document.getText(), '# EXTERNAL-LOADED\n');
 });
 
 test('keyboard save carries explicit content without recapturing the webview', async t => {

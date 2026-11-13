@@ -101,10 +101,11 @@ export class ExportController implements vscode.Disposable {
         return false;
     }
 
-    async captureForSave(): Promise<string> {
+    /** The editor text for a native save and the host revision it is based on. */
+    async captureForSave(): Promise<{ content: string; base?: number }> {
         const snapshot = await this.channel.request('captureExportSnapshot', { refreshToc: true });
         if (typeof snapshot.content !== 'string') { throw new Error('Invalid editor snapshot.'); }
-        return snapshot.content;
+        return { content: snapshot.content, base: Number.isSafeInteger(snapshot.base) ? snapshot.base : undefined };
     }
 
     async export(format: ExportFormat): Promise<void> {
