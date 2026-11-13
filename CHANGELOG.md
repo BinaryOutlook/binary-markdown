@@ -2,13 +2,29 @@
 
 ## Unreleased
 
+## 0.5.2
+
+A compatible update following 0.5.1. It keeps unsaved edits when another program writes the open file, groups settings into categories, and adds optional icon-only code-block buttons. See the [0.5.2 notes](release-notes/0.5.2.md) for what changes after updating and its known limitations. [GitHub Releases](https://github.com/BinaryOutlook/binary-markdown/releases) identifies published packages and their validation.
+
+### Added
+
+- Optional icon-only code-block actions. Turn off `binary-markdown.codeBlockActionLabels`, or **Show code block action labels** in desktop Preferences, to hide the Copy code, Wrap code, and Open in Text Editor labels. Labels stay on by default; icons, tooltips, accessible names, and keyboard actions remain. See [code controls and soft wrapping](docs/editor-guide.md#code-controls-and-soft-wrapping).
+
 ### Changed
 
 - Organize settings into ordered categories while preserving setting identifiers, defaults, scopes, and saved values. Desktop Preferences adds matching sections, keyboard-accessible category navigation, and a resizable layout.
+- Color the outline scrollbar from the selected editor theme, updating with theme changes and using system colors in high-contrast mode.
+- Update markdown-it to 14.3.3 and Mermaid's bundled DOMPurify to 3.4.17, and update or pin patched build, packaging, and test-tool dependencies, so the required dependency audit passes. Those tools are not included in the VSIX.
+- Align the README, documentation entry points, roadmap, project page, and version metadata with the 0.5.2 scope.
 
 ### Fixed
 
 - Keep unsaved edits when another program writes the open file, instead of silently replacing them. A warning offers **Compare** and **Load Disk Version**, and Undo restores edits replaced by loading. A **Changed on disk** status bar item and the **Binary Markdown: Resolve External Change** command reopen the choices after the warning is closed. Text typed just before the write is kept the same way, with the editor's first save held until the warning is answered, and files saved by replacement are now detected ([#81](https://github.com/BinaryOutlook/binary-markdown/issues/81)). See [external file changes](docs/editor-guide.md#external-file-changes).
+- Pressing Enter on a focused **Open in Text Editor** code-block button opens the text editor. Previously, it inserted a line into the code when the block kept its text cursor.
+
+### Known limitations
+
+VS Code asks before overwriting a newer file only when its size changed, and a save started from VS Code itself during the typing race writes the local text. The new external-change messages have not had native-speaker review. The remaining 0.5.0 limitations still apply. See the [0.5.2 limitations](release-notes/0.5.2.md#known-limitations).
 
 ## 0.5.1
 

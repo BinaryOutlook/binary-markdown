@@ -10,7 +10,7 @@ An open-source visual Markdown editor for VS Code. Write in a rendered view, swi
 
 Built on [Any Markdown by raggbal and contributors](https://github.com/raggbal/any-markdown), which provides the visual editor and much of its existing functionality under MIT. BinaryOutlook independently maintains Binary Markdown's changes, releases, and support. See [Acknowledgments](ACKNOWLEDGMENTS.md) for provenance.
 
-**Version 0.5.1 is being prepared** as a rapid update replacing the previous version's unstable table toolbar with a more stable, compact toolbar. It retains the Visual/Source/Split views, command search, source-based Find and Replace, and per-block code wrapping introduced in 0.5.0. Read the [0.5.1 notes and apology](release-notes/0.5.1.md) and [changelog](CHANGELOG.md#051). Available packages, exact source revisions and checksums are listed on [GitHub Releases](https://github.com/BinaryOutlook/binary-markdown/releases); release preparation does not establish publication.
+**Version 0.5.2** is a compatible update to 0.5.1. It keeps your unsaved edits when another program writes the open file, groups settings into categories, and adds optional icon-only code-block buttons. Your settings and the extension ID are unchanged. Read the [0.5.2 notes](release-notes/0.5.2.md) and [changelog](CHANGELOG.md#052). [GitHub Releases](https://github.com/BinaryOutlook/binary-markdown/releases) shows whether a version is published, with its exact source revision and checksums.
 
 ## Install
 
@@ -28,17 +28,18 @@ The extension ID is `BinaryOutlook.binary-markdown`. Installation leaves your de
 
 - **Visual, Source, and Split views:** semantic paragraphs and lists, preserved source for unchanged blocks, links, images, blockquotes, an Outline/Document rail, and an editable Markdown pane beside a read-only live preview.
 - **Formatting and tables:** Full or Simple toolbars, a permanent three-dot search across formatting and insertion commands, a `>>`/`<<` toolbar toggle with optional contextual tools, and the retained Insert workspace and Action Palette, HTML-backed underline, compact table controls with clickable row/column gutters and distinct text selection, horizontal scrolling for wide tables, and aligned or compact source formatting for edited tables.
-- **Code and equations:** syntax highlighting, searchable language selection, labeled code controls for copying and soft wrapping, a visible wrap notice, editable KaTeX source, and Mermaid diagrams. See [code block features](docs/editor-guide.md#-code-block-features).
+- **Code and equations:** syntax highlighting, searchable language selection, labeled or icon-only code controls for copying and soft wrapping, a visible wrap notice, editable KaTeX source, and Mermaid diagrams. See [code block features](docs/editor-guide.md#-code-block-features).
 - **A configurable writing space:** themes, seven interface languages, full or capped column width, column alignment, and optional width guides.
 - **Find and Replace:** source-context results, selected replacements, and case, whole-word, or regular-expression matching with a shared undo history.
 - **Document structure:** protected YAML front matter and a generated table of contents refreshed on save or on request.
+- **Protection from external changes:** unsaved edits stay when another program writes the open file, with **Compare** and **Load Disk Version** choices. See [external file changes](docs/editor-guide.md#external-file-changes).
 - **Experimental export:** local HTML, PDF, Word, and EPUB conversion, with PDF/DOCX code labels, optional line counts, and optional numbering.
 
-These features describe the current source. The [changelog](CHANGELOG.md) groups changes by version; GitHub Releases establishes publication. In 0.4.0, unset toolbar preferences use Full mode and unset export-label positions use top-left; explicit saved choices remain honored. Width still starts at a centered 860 px cap, and line counts and numbering remain off by default.
+These features describe the current source. The [changelog](CHANGELOG.md) groups changes by version; GitHub Releases establishes publication. Unset toolbar preferences use Full mode and unset export-label positions use top-left; explicit saved choices remain honored. Width starts at a centered 860 px cap, code-block action labels are shown, and export line counts and numbering are off by default.
 
 ## Configure the editor
 
-Open **Settings** (`Cmd+,` on macOS or `Ctrl+,` on Windows/Linux) and search for **Binary Markdown**. The [editor settings reference](docs/editor-guide.md#vs-code-settings) lists defaults and explains outline state, table controls and source formatting, layout, and equation-source options. The [language guide](docs/editor-guide.md#interface-languages) distinguishes editor language from VS Code's settings language.
+Open **Settings** (`Cmd+,` on macOS or `Ctrl+,` on Windows/Linux) and search for **Binary Markdown**. Settings appear in six categories, from **Editor & Appearance** to **Advanced**. The [editor settings reference](docs/editor-guide.md#vs-code-settings) lists defaults and explains outline state, table controls and source formatting, layout, and equation-source options. The [language guide](docs/editor-guide.md#interface-languages) distinguishes editor language from VS Code's settings language.
 
 ## Everyday commands
 
@@ -64,7 +65,7 @@ Save a named Markdown file in a trusted local workspace, then open the sharing-a
 
 Tools are user-installed. Follow [export help](media/export-help.md) for setup, executable paths, output naming, and format-specific settings, or start with the [HTML export tutorial](docs/export-tutorial.md).
 
-Export is unavailable in Remote-SSH and other remote hosts, browser VS Code, and the standalone desktop app. DOCX numbering remains experimental: Enter on an empty numbered line can end numbering and change formatting; copying and reading order vary by reader. PDF gutters can appear in copied text. The [reader checkpoint](reports/validation/2026-09-21-docx-reader-checkpoint.md) records tested versions and remaining checks. Long custom DOCX language labels can extend outside their tab in Word. Review the [0.5.1 known limitations](release-notes/0.5.1.md#known-limitations), especially external writes that can still replace unsaved editor content, when working on important documents.
+Export is unavailable in Remote-SSH and other remote hosts, browser VS Code, and the standalone desktop app. DOCX numbering remains experimental: Enter on an empty numbered line can end numbering and change formatting; copying and reading order vary by reader. PDF gutters can appear in copied text. The [reader checkpoint](reports/validation/2026-09-21-docx-reader-checkpoint.md) records tested versions and remaining checks. Long custom DOCX language labels can extend outside their tab in Word. Review the [0.5.2 known limitations](release-notes/0.5.2.md#known-limitations) when working on important documents.
 
 ## Build and contribute
 
