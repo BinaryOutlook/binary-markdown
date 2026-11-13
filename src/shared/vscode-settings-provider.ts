@@ -26,6 +26,8 @@ export class VSCodeSettingsProvider implements SettingsProvider {
             codeLanguageOrder: this.get('codeLanguageOrder'),
             codeBlockActionLabels: this.get('codeBlockActionLabels'),
             toolbarMode: this.get('toolbarMode'),
+            toolbarToggleIcon: this.get('toolbarToggleIcon'),
+            toolbarToggleOnHover: this.get('toolbarToggleOnHover'),
             tableToolbarPosition: this.get('tableToolbarPosition'),
             tableSourceFormat: this.get('tableSourceFormat'),
             language: this.get('language'),

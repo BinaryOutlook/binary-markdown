@@ -205,7 +205,14 @@
             closeMenu(true);
         }
     });
+    document.getElementById('toolbar')?.addEventListener('toolbar-will-hide', () => {
+        if (menu.hidden) return;
+        const focused = menu.contains(document.activeElement);
+        closeMenu(false);
+        if (focused) document.getElementById('toolbarVisibilityToggle')?.focus({ preventScroll: true });
+    });
     document.addEventListener('mousedown', event => {
+        if (event.target.closest('#toolbarVisibilityToggle')) return;
         if (!menu.hidden && !menu.contains(event.target) && !button.contains(event.target)) closeMenu(false);
     });
     window.addEventListener('resize', () => { if (!menu.hidden) positionMenu(); });

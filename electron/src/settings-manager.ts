@@ -21,6 +21,8 @@ export interface ElectronSettings {
     codeLanguageOrder: 'default' | 'a-z' | 'z-a';
     codeBlockActionLabels: boolean;
     toolbarMode: string;
+    toolbarToggleIcon: 'logo' | 'chevrons';
+    toolbarToggleOnHover: boolean;
     tableToolbarPosition: string;
     tableSourceFormat: 'aligned' | 'compact';
     language: string;
@@ -43,6 +45,8 @@ const DEFAULTS: ElectronSettings = {
     codeLanguageOrder: 'default',
     codeBlockActionLabels: true,
     toolbarMode: 'full',
+    toolbarToggleIcon: 'logo',
+    toolbarToggleOnHover: false,
     tableToolbarPosition: 'auto',
     tableSourceFormat: 'aligned',
     language: 'default',
@@ -229,6 +233,18 @@ export class SettingsManager {
                         <option value="full" ${settings.toolbarMode === 'full' ? 'selected' : ''}>Full</option>
                     </select>
                 </div>
+                <div class="field">
+                    <label for="toolbarToggleIcon">${messages.toolbarToggleIconLabel}</label>
+                    <select id="toolbarToggleIcon" onchange="save('toolbarToggleIcon', this.value)">
+                        <option value="logo" ${settings.toolbarToggleIcon === 'logo' ? 'selected' : ''}>${messages.toolbarToggleLogo}</option>
+                        <option value="chevrons" ${settings.toolbarToggleIcon === 'chevrons' ? 'selected' : ''}>${messages.toolbarToggleChevrons}</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label for="toolbarToggleOnHover">${messages.toolbarToggleOnHoverLabel}</label>
+                    <input type="checkbox" id="toolbarToggleOnHover" ${settings.toolbarToggleOnHover ? 'checked' : ''} aria-describedby="toolbarToggleOnHoverHelp" onchange="save('toolbarToggleOnHover', this.checked)">
+                </div>
+                <p class="field-desc" id="toolbarToggleOnHoverHelp">${messages.toolbarToggleOnHoverHelp}</p>
                 <div class="field">
                     <label for="editorWidthMode">${messages.editorWidthLabel || 'Editor width'}</label>
                     <select id="editorWidthMode" onchange="save('editorWidthMode', this.value)">

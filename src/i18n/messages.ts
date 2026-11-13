@@ -46,6 +46,15 @@ export interface Messages {
 }
 
 export interface WebviewMessages {
+  hideToolbar: string;
+  showToolbar: string;
+  toolbarToggleIconLabel: string;
+  toolbarToggleLogo: string;
+  toolbarToggleChevrons: string;
+  toolbarToggleOnHoverLabel: string;
+  toolbarToggleOnHoverHelp: string;
+  toolbarToggleSaveFailed: string;
+
   settingsEditor: string;
   settingsOutline: string;
   settingsWriting: string;

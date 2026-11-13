@@ -188,6 +188,26 @@
             "description": "%config.toolbarMode.description%",
             "order": 40
           },
+          "binary-markdown.toolbarToggleIcon": {
+            "type": "string",
+            "enum": [
+              "logo",
+              "chevrons"
+            ],
+            "default": "logo",
+            "description": "%config.toolbarToggleIcon.description%",
+            "enumDescriptions": [
+              "%config.toolbarToggleIcon.logo%",
+              "%config.toolbarToggleIcon.chevrons%"
+            ],
+            "order": 42
+          },
+          "binary-markdown.toolbarToggleOnHover": {
+            "type": "boolean",
+            "default": false,
+            "description": "%config.toolbarToggleOnHover.description%",
+            "order": 44
+          },
           "binary-markdown.editorWidthMode": {
             "type": "string",
             "enum": [

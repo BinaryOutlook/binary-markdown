@@ -113,6 +113,8 @@ function createWindow(filePath?: string): BrowserWindow {
             codeLanguageOrder: settings.codeLanguageOrder,
             codeBlockActionLabels: settings.codeBlockActionLabels,
             toolbarMode: settings.toolbarMode,
+            toolbarToggleIcon: settings.toolbarToggleIcon,
+            toolbarToggleOnHover: settings.toolbarToggleOnHover,
             tableToolbarPosition: settings.tableToolbarPosition,
             tableSourceFormat: settings.tableSourceFormat,
             documentBaseUri: `file://${docDir}/`,
@@ -413,6 +415,21 @@ ipcMain.on('settings-save', async (event, key: string, value: unknown) => {
         for (const [win] of windows) {
             if (!win.isDestroyed()) win.webContents.send('host-message', { type: 'editorWidth',
                 mode: settings.editorWidthMode, maxWidth: settings.editorMaxWidth, alignment: settings.editorAlignment });
+        }
+        return;
+    }
+    if (key === 'toolbarToggleIcon' || key === 'toolbarToggleOnHover') {
+        if (key === 'toolbarToggleIcon' ? value !== 'logo' && value !== 'chevrons' : typeof value !== 'boolean') return;
+        try {
+            if (key === 'toolbarToggleIcon') settingsManager.set(key, value as 'logo' | 'chevrons');
+            else settingsManager.set(key, value as boolean);
+        } catch {
+            settingsManager.refreshSetting(key, getI18nMessages().toolbarToggleSaveFailed);
+            return;
+        }
+        settingsManager.refreshSetting(key);
+        for (const [win] of windows) {
+            if (!win.isDestroyed()) win.webContents.send('host-message', { type: key, value });
         }
         return;
     }

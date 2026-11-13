@@ -304,7 +304,7 @@ body {
     gap: 2px;
 }
 .toolbar-fixed--left {
-    padding-left: 12px;
+    padding-left: 4px;
 }
 .toolbar-fixed--right {
     padding-right: 12px;
@@ -408,6 +408,30 @@ body {
 .toolbar button svg[fill="none"] { fill: none; }
 /* Legacy fill-based icons (e.g. VS Code logo) */
 .toolbar button svg:not([fill="none"]) { fill: currentColor; }
+
+/* ===== Top bar visibility ===== */
+.toolbar-visibility-control { flex: 0 0 40px; align-self: stretch; display: flex; align-items: center; justify-content: center; }
+.toolbar #toolbarVisibilityToggle { width: 32px; height: 32px; padding: 4px; background: transparent; box-shadow: none; }
+.toolbar-toggle-logo { display: flex; align-items: center; font-size: 11px; font-weight: 700; }
+.toolbar-toggle-logo img { width: 28px; height: 28px; object-fit: contain; }
+.toolbar #toolbarVisibilityToggle .toolbar-toggle-arrows { display: none; }
+[data-toolbar-toggle-icon="chevrons"] .toolbar-toggle-logo { display: none; }
+[data-toolbar-toggle-icon="chevrons"] .toolbar #toolbarVisibilityToggle .toolbar-toggle-arrows { display: block; }
+#toolbarVisibilityToggle:focus-visible { outline: 2px solid var(--link-color); outline-offset: -2px; }
+/* Keep one recoverable control without reserving a row above the document. */
+[data-toolbar-collapsed="true"] .toolbar { position: relative; height: 0; min-height: 0; flex: 0 0 0; border: 0; overflow: visible; }
+[data-toolbar-collapsed="true"] .toolbar > :not(.toolbar-visibility-control),
+[data-toolbar-collapsed="true"] .table-toolbar-row { display: none; }
+[data-toolbar-collapsed="true"] .toolbar-visibility-control { position: absolute; top: 0; left: 0; width: 40px; height: 40px; z-index: 100; }
+[data-toolbar-collapsed="true"] .toolbar-toggle-arrows { transform: rotate(180deg); }
+@media (hover: hover) and (pointer: fine) {
+    [data-toolbar-collapsed="true"][data-toolbar-toggle-on-hover="true"] #toolbarVisibilityToggle { opacity: 0; transition: opacity 120ms ease; }
+    [data-toolbar-collapsed="true"][data-toolbar-toggle-on-hover="true"] .toolbar-visibility-control:hover #toolbarVisibilityToggle,
+    [data-toolbar-collapsed="true"][data-toolbar-toggle-on-hover="true"] .toolbar-visibility-control:focus-within #toolbarVisibilityToggle { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+    [data-toolbar-collapsed="true"][data-toolbar-toggle-on-hover="true"] #toolbarVisibilityToggle { transition: none; }
+}
 
 /* ===== Simple Toolbar Mode ===== */
 [data-toolbar-mode="simple"] .toolbar {

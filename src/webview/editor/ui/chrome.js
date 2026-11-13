@@ -1,6 +1,32 @@
 'use strict';
 // Construction defines capabilities; bootstrap controls the original initialization order.
 function createChrome(dependencies) {
+    function toggleToolbarVisibility() {
+        const root = document.documentElement;
+        const collapsed = root.dataset.toolbarCollapsed !== 'true';
+        const button = document.getElementById('toolbarVisibilityToggle');
+        const insertMenu = document.getElementById('insertMenu');
+        const active = document.activeElement;
+        const focusWillHide = active !== button && (dependencies.toolbar.contains(active) || insertMenu?.contains(active));
+        closeToolbarOverflow(false);
+        if (insertMenu && !insertMenu.hidden)
+            dependencies.closeInsertMenu(false);
+        // Let detached menus close and relocate focus before their anchors disappear.
+        if (collapsed)
+            dependencies.toolbar.dispatchEvent(new CustomEvent('toolbar-will-hide'));
+        root.dataset.toolbarCollapsed = String(collapsed);
+        const label = collapsed ? dependencies.i18n.showToolbar : dependencies.i18n.hideToolbar;
+        button.title = label;
+        button.setAttribute('aria-label', label);
+        button.setAttribute('aria-expanded', String(!collapsed));
+        // Restoring a menu's document selection can also move browser focus.
+        if (active === button || (collapsed && focusWillHide))
+            button.focus({ preventScroll: true });
+        // Keep the editor DOM, active input and undo snapshots untouched.
+        dependencies.tableControls.schedule();
+        dependencies.workspaceUi?.refresh();
+        scheduleToolbarLayout();
+    }
     let widthGuide, widthBounds, widthExplanation, outlineHeadings, activeOutlineIndex, outlineScrollFrame, LUCIDE_ICONS, toolbarInner, toolbarMore, toolbarOverflow, toolbarOverflowItems, toolbarCommandSearch, toolbarCommandResults, toolbarMenuRange, toolbarMenuRevision, toolbarMenuSourceSelection, toolbarActions, toolbarLayoutFrame, isSourceMode, isSplitMode, splitRenderTimer, visualModeCursor, sourceModeSelection, openSidebarBtn, closeSidebarBtn, sidebarResizer, imageDirSettingsBtn, extensionSettingsBtn, isResizing, startX, startWidth;
     function updateWidthIndicators() {
         if (!widthGuide)
@@ -168,6 +194,9 @@ function createChrome(dependencies) {
     }
     function layoutToolbarActions() {
         toolbarLayoutFrame = 0;
+        // Measuring hidden actions would move everything into the overflow menu.
+        if (document.documentElement.dataset.toolbarCollapsed === 'true')
+            return;
         const active = document.activeElement;
         const focusedAction = toolbarActions.find(item => item.button === active);
         const wasOpen = !toolbarOverflow.hidden;
@@ -725,6 +754,12 @@ function createChrome(dependencies) {
         (toolbarMenuSourceSelection = null);
         (toolbarActions = []);
         (toolbarLayoutFrame = 0);
+        const visibilityToggle = document.getElementById('toolbarVisibilityToggle');
+        if (visibilityToggle) {
+            // Pointer activation must retain prose/source selection and equation input.
+            visibilityToggle.addEventListener('mousedown', event => event.preventDefault());
+            visibilityToggle.addEventListener('click', toggleToolbarVisibility);
+        }
         if (toolbarMore && toolbarOverflow) {
             dependencies.toolbar.querySelectorAll('button[data-action]').forEach(function (button) {
                 const home = document.createComment('toolbar action');

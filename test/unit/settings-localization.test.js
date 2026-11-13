@@ -15,7 +15,8 @@ const readTranslations = name => JSON.parse(fs.readFileSync(path.join(root, name
 test('language picker strings reach the editor webview dictionary in every locale', () => {
     for (const locale of ['en', 'es', 'fr', 'ja', 'ko', 'zh-cn', 'zh-tw']) {
         const { webviewMessages } = require('../../out/locales/' + locale + '.js');
-        for (const key of ['languagePickerLabel', 'languagePickerPlaceholder', 'languagePickerNoResults', 'languagePickerCurrent',
+        for (const key of ['hideToolbar', 'showToolbar', 'toolbarToggleIconLabel', 'toolbarToggleLogo', 'toolbarToggleChevrons',
+            'toolbarToggleOnHoverLabel', 'toolbarToggleOnHoverHelp', 'toolbarToggleSaveFailed', 'languagePickerLabel', 'languagePickerPlaceholder', 'languagePickerNoResults', 'languagePickerCurrent',
             'languagePickerPlainText', 'languagePickerMath', 'languagePickerMermaid',
             'codeLanguageOrderLabel', 'codeLanguageOrderHelp', 'codeLanguageOrderDefault', 'codeLanguageOrderAscending',
             'codeLanguageOrderDescending', 'codeLanguageOrderSaveFailed',
@@ -103,4 +104,14 @@ test('image and extension settings controls have distinct labels in every suppor
         assert.ok(webviewMessages.setImageDir?.trim(), locale + ': image tooltip');
         assert.notEqual(webviewMessages.openExtensionSettings, webviewMessages.setImageDir);
     }
+});
+
+
+test('top bar toggle defaults to the logo and a visible recovery button', () => {
+    const icon = properties['binary-markdown.toolbarToggleIcon'];
+    assert.equal(icon.default, 'logo');
+    assert.deepEqual(icon.enum, ['logo', 'chevrons']);
+    const hover = properties['binary-markdown.toolbarToggleOnHover'];
+    assert.equal(hover.type, 'boolean');
+    assert.equal(hover.default, false);
 });

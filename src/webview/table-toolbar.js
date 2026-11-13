@@ -359,7 +359,8 @@
             // Use the utilities' natural width even when their own overflow hides them.
             // Otherwise the two toolbars can repeatedly take space from each other.
             const fixed = Number(header.dataset.utilityWidth) || [...header.querySelectorAll('.toolbar-fixed')].reduce((total, node) => total + node.getBoundingClientRect().width, 0);
-            return Math.max(28, header.clientWidth - fixed - 12);
+            const visibilityWidth = header.querySelector('.toolbar-visibility-control')?.getBoundingClientRect().width || 0;
+            return Math.max(28, header.clientWidth - fixed - visibilityWidth - 12);
         }
         function renderGutters(bounds, rect) {
             const left = rect.left - 32, top = rect.top - 28;
@@ -444,6 +445,8 @@
         }
         function render() {
             renderScrollHints();
+            const toolbarCollapsed = document.documentElement.dataset.toolbarCollapsed === 'true';
+            if (toolbarCollapsed && (current === 'top-bar' || preference === 'top-bar')) return hide();
             if (valid()) {
                 const bounds = wrapper.getBoundingClientRect(), rect = table.getBoundingClientRect(), selected = cell.getBoundingClientRect();
                 document.documentElement.style.setProperty('--table-inspector-height', sizes[0].getBoundingClientRect().height + 'px');
@@ -503,6 +506,7 @@
             }
             current = next.placement;
             if (current === 'hidden') return hide();
+            if (toolbarCollapsed && current === 'top-bar') return hide();
             updateDockHost(current === 'top-bar');
             controls.dataset.placement = current;
             controls.dataset.vertical = String(Boolean(next.vertical));
@@ -678,8 +682,15 @@
         });
         listen(controls, 'pointerenter', () => { hovering = true; });
         listen(controls, 'pointerleave', () => { hovering = false; schedule(); });
+        listen(header, 'toolbar-will-hide', () => {
+            if (current !== 'top-bar') return;
+            if (owns(document.activeElement)) document.getElementById('toolbarVisibilityToggle')?.focus({ preventScroll: true });
+            hide();
+        });
         listen(document, 'pointerdown', event => {
             pointerDown = owns(event.target);
+            // The visibility action handles focus before hiding this dock and its menus.
+            if (current === 'top-bar' && event.target.closest('#toolbarVisibilityToggle')) return;
             if (!pointerDown) { closeMenus(); if (!editor.contains(event.target) && !header.contains(event.target)) clear(); }
         }, true);
         listen(document, 'pointerup', () => { pointerDown = false; schedule(); }, true);

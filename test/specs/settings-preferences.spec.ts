@@ -54,3 +54,18 @@ for (const locale of ['en', 'fr', 'zh-cn']) for (const width of [820, 360, 180])
         expect(await page.evaluate(() => (window as any).preferenceSaves)).toEqual([]);
     });
 }
+
+
+test('top bar preferences load stored values and send typed saves with rollback feedback', async ({ page }) => {
+    await page.setContent(renderPreferences({ toolbarToggleIcon: 'chevrons', toolbarToggleOnHover: true }));
+    await expect(page.locator('#toolbarToggleIcon')).toHaveValue('chevrons');
+    await expect(page.locator('#toolbarToggleOnHover')).toBeChecked();
+    await page.locator('#toolbarToggleIcon').selectOption('logo');
+    await page.locator('#toolbarToggleOnHover').uncheck();
+    expect(await page.evaluate(() => (window as any).preferenceSaves)).toEqual([
+        { key: 'toolbarToggleIcon', value: 'logo' }, { key: 'toolbarToggleOnHover', value: false }
+    ]);
+    await page.evaluate(() => (window as any).updatePreference({ key: 'toolbarToggleOnHover', value: true, error: 'Synthetic save failure' }));
+    await expect(page.locator('#toolbarToggleOnHover')).toBeChecked();
+    await expect(page.getByRole('alert')).toHaveText('Synthetic save failure');
+});
