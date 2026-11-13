@@ -1,4 +1,5 @@
 'use strict';
+const { configurationProperties } = require('../helpers/settings.cjs');
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
@@ -7,7 +8,7 @@ const path = require('node:path');
 const manifest = require('../../package.json');
 
 const root = path.join(__dirname, '../..');
-const properties = manifest.contributes.configuration.properties;
+const properties = configurationProperties(manifest);
 const translationFiles = () => fs.readdirSync(root).filter(name => /^package\.nls(?:\.[\w-]+)?\.json$/.test(name)).sort();
 const readTranslations = name => JSON.parse(fs.readFileSync(path.join(root, name), 'utf8'));
 

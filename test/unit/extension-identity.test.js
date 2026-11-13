@@ -1,4 +1,5 @@
 'use strict';
+const { configurationProperties } = require('../helpers/settings.cjs');
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
@@ -74,10 +75,10 @@ test('menus and shortcuts resolve to declared commands and stay scoped to the op
 });
 
 test('settings retain their contracts and deliberate defaults without sharing upstream keys', () => {
-    const current = manifest.contributes.configuration.properties;
+    const current = configurationProperties(manifest);
     const original = upstream.contributes.configuration.properties;
     // Presentation text may be translated independently of the setting's behavior.
-    const behavior = ({ description, enumDescriptions, ...schema }) => schema;
+    const behavior = ({ description, enumDescriptions, order, ...schema }) => schema;
     for (const [oldKey, schema] of Object.entries(original)) {
         assert.equal(oldKey in current, false);
         // Full is the approved unset preference; identifiers and enum values stay compatible.

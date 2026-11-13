@@ -43,6 +43,18 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  settingsEditor: "편집기 및 모양",
+  settingsOutline: "개요",
+  settingsWriting: "작성 도구",
+  settingsImages: "이미지",
+  settingsExport: "내보내기",
+  settingsAdvanced: "고급",
+  settingsTables: "표",
+  settingsCode: "코드",
+  settingsEquations: "수식",
+  settingsPreferences: "환경설정",
+  settingsCategories: "설정 범주",
+
   codeBlockActionLabelsLabel: "코드 블록 작업 레이블 표시",
   codeBlockActionLabelsHelp: "코드 복사, 줄 바꿈, 텍스트로 열기 아이콘 옆에 레이블을 표시합니다. 끄면 아이콘만 표시되며 도구 설명, 코드 언어, 줄 바꿈 상태 및 오류 메시지는 유지됩니다.",
   codeBlockActionLabelsSaveFailed: "코드 블록 작업 레이블 설정을 저장하지 못했습니다. 이전 설정이 유지됩니다.",

@@ -76,7 +76,7 @@ async function main() {
         const bounds = await control.boundingBox();
         assert.ok(bounds.y >= 0 && bounds.y + bounds.height <= await preferences.evaluate(() => innerHeight));
         receipts.push({ preferencesViewport: await preferences.evaluate(() => ({ width: innerWidth, height: innerHeight, scrollY })), wrapControlBounds: bounds });
-        const png = await application.evaluate(async ({ BrowserWindow }) => (await BrowserWindow.getAllWindows().find(window => window.getTitle() === 'Preferences').webContents.capturePage()).toPNG().toString('base64'));
+        const png = await application.evaluate(async ({ BrowserWindow }, title) => (await BrowserWindow.getAllWindows().find(window => window.getTitle() === title).webContents.capturePage()).toPNG().toString('base64'), messages.settingsPreferences);
         fs.writeFileSync(path.join(evidence, 'preferences.png'), Buffer.from(png, 'base64'));
         await application.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows().forEach(window => window.destroy()));
         await application.close();

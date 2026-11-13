@@ -43,6 +43,18 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  settingsEditor: "Editor & Appearance",
+  settingsOutline: "Outline",
+  settingsWriting: "Writing Tools",
+  settingsImages: "Images",
+  settingsExport: "Export",
+  settingsAdvanced: "Advanced",
+  settingsTables: "Tables",
+  settingsCode: "Code",
+  settingsEquations: "Equations",
+  settingsPreferences: "Preferences",
+  settingsCategories: "Settings categories",
+
   codeBlockActionLabelsLabel: "Show code block action labels",
   codeBlockActionLabelsHelp: "Show labels beside the Copy code, Wrap code, and Open in Text Editor icons. Turn off for icons only; tooltips, the code language, wrap status, and error messages remain visible.",
   codeBlockActionLabelsSaveFailed: "Could not save the code block action labels preference. The previous setting remains active.",

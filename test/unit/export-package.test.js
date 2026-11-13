@@ -1,3 +1,4 @@
+const { configurationProperties } = require('../helpers/settings.cjs');
 const assert = require('node:assert/strict');
 const fs = require('node:fs/promises');
 const os = require('node:os');
@@ -76,6 +77,7 @@ test('packaged VSIX contains an isolated export runtime, UI, guidance and locali
     const manifest = JSON.parse(entries.get('extension/package.json').toString('utf8'));
     const rootManifest = require('../../package.json');
     assert.equal(manifest.version, rootManifest.version);
+    assert.deepEqual(manifest.contributes.configuration, rootManifest.contributes.configuration, 'Packaged settings groups match the source');
     const identity = JSON.parse(entries.get('extension/build-info.json').toString('utf8'));
     assert.equal(identity.version, manifest.version);
     assert.equal(identity.license, manifest.license);
@@ -93,7 +95,7 @@ test('packaged VSIX contains an isolated export runtime, UI, guidance and locali
         assert.ok(entries.get('extension/' + packagedName).equals(await fs.readFile(path.join(__dirname, '../..', name))), name + ' differs from source');
     }
     assert.equal(manifest.engines.vscode, '^1.85.0');
-    const properties = manifest.contributes.configuration.properties;
+    const properties = configurationProperties(manifest);
     const settings = ['binary-markdown.export.pandocPath', 'binary-markdown.export.browserPath'];
     for (const setting of settings) assert.equal(properties[setting].scope, 'machine');
     assert.equal(properties['binary-markdown.export.pdfWhiteBackground'].default, true);
@@ -110,6 +112,9 @@ test('packaged VSIX contains an isolated export runtime, UI, guidance and locali
     settings.push(positionSetting);
     for (const locale of ['', '.es', '.fr', '.ja', '.ko', '.zh-cn', '.zh-tw']) {
         const dictionary = JSON.parse(entries.get('extension/package.nls' + locale + '.json').toString('utf8'));
+        for (const group of manifest.contributes.configuration) {
+            assert.ok(dictionary[group.title.replace(/^%|%$/g, '')], locale + ' names ' + group.id);
+        }
         for (const setting of settings) {
             const key = properties[setting].description.replace(/^%|%$/g, '');
             assert.ok(dictionary[key], locale + ' describes ' + setting);

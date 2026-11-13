@@ -410,28 +410,58 @@ FORCE_RELATIVE_PATH: true
 
 Open **Settings** (`Cmd+,` on macOS or `Ctrl+,` on Windows/Linux) and search for **Binary Markdown**. Editor preferences can be set at User or Workspace scope; an explicit workspace value takes precedence. These settings control the visual editor. See [export settings](../media/export-help.md#tools-and-settings) for conversion tools and output appearance.
 
+The settings categories appear in this order: **Editor & Appearance**, **Outline**, **Writing Tools**, **Images**, **Export**, and **Advanced**. Writing Tools keeps table, code, and equation controls together in that order. Export groups output appearance before external tool paths. Search, reset actions, and user/workspace scopes remain native VS Code controls; setting identifiers and existing values are unchanged.
+
+Desktop **Preferences** uses the same Editor & Appearance, Writing Tools, Images, and Advanced sections for the settings it supports. Use the category links to jump to a section, or scroll through the controls. The window is resizable; narrow windows place navigation above the settings. Keyboard activation moves focus to the section heading, then Tab reaches its controls. Changes save immediately through the existing preferences flow; supported save errors remain visible above the settings.
+
+**Editor & Appearance**
+
 | Setting | Description | Default |
 | --- | --- | --- |
+| `binary-markdown.language` | UI language (`default`, `en`, `ja`, `zh-CN`, `zh-TW`, `ko`, `es`, `fr`) | `default` |
 | `binary-markdown.theme` | Editor theme (`github`, `sepia`, `night`, `dark`, `minimal`, `perplexity`, `things`) | `things` |
-| `binary-markdown.math.backslashDelimiters` | Recognize backslash delimiters for inline and display equations | `true` |
-| `binary-markdown.mathSourceWrap` | Visually wrap editable block-equation source without inserting line breaks | `false` |
-| `binary-markdown.mathSourcePosition` | Editable block-equation source above or below its preview | `above` |
 | `binary-markdown.fontSize` | Base font size (px) | `16` |
-| `binary-markdown.codeLanguageOrder` | Code-language browsing order: `default`, `a-z`, or `z-a`; search prioritizes relevance | `default` |
-| `binary-markdown.codeBlockActionLabels` | Show text beside code-block action icons; turn off for compact icons with tooltips | `true` |
+| `binary-markdown.toolbarMode` | Toolbar display mode (`full`, `simple`). Simple shows history, contextual tools, command search, and utility controls; search for formatting and insertion commands | `full` |
 | `binary-markdown.editorWidthMode` | Visual editor column width: `default`, `full`, or `custom` | `default` |
 | `binary-markdown.editorMaxWidth` | Outer column cap in CSS pixels for Custom mode; integer 320–4000 | `860` |
-| `binary-markdown.editorWidthIndicators` | Show the visual editor width guide | `true` |
 | `binary-markdown.editorAlignment` | Position the capped column at the `left`, `center`, or `right` of the pane | `center` |
+| `binary-markdown.editorWidthIndicators` | Show the visual editor width guide | `true` |
+
+**Outline**
+
+| Setting | Description | Default |
+| --- | --- | --- |
+| `binary-markdown.outlineDefaultOpen` | Open the outline when the selected scope does not have a saved state yet | `true` |
+| `binary-markdown.outlineStateScope` | Remember outline visibility per Markdown file (`file`) or share it across all Markdown files (`global`) | `file` |
+| `binary-markdown.outlineActiveColor` | Outline highlight: `theme`, `blue`, `green`, `orange`, `red`, or `purple` | `theme` |
+
+**Writing Tools**
+
+| Setting | Description | Default |
+| --- | --- | --- |
+| `binary-markdown.tableToolbarPosition` | Use `auto`, any corner, `left`, `right`, or `top-bar`; see [table operations](#table-operations) | `auto` |
+| `binary-markdown.tableSourceFormat` | Use `aligned` or `compact` (Legacy); see [table source format](#table-source-format) | `aligned` |
+| `binary-markdown.codeBlockActionLabels` | Show text beside code-block action icons; turn off for compact icons with tooltips | `true` |
+| `binary-markdown.codeLanguageOrder` | Code-language browsing order: `default`, `a-z`, or `z-a`; search prioritizes relevance | `default` |
+| `binary-markdown.math.backslashDelimiters` | Recognize backslash delimiters for inline and display equations | `true` |
+| `binary-markdown.mathSourcePosition` | Editable block-equation source above or below its preview | `above` |
+| `binary-markdown.mathSourceWrap` | Visually wrap editable block-equation source without inserting line breaks | `false` |
+
+**Images**
+
+| Setting | Description | Default |
+| --- | --- | --- |
 | `binary-markdown.imageDefaultDir` | Default directory for saved images | `""` (same as markdown file) |
 | `binary-markdown.forceRelativeImagePath` | Force relative paths for images | `false` |
-| `binary-markdown.language` | UI language (`default`, `en`, `ja`, `zh-CN`, `zh-TW`, `ko`, `es`, `fr`) | `default` |
-| `binary-markdown.toolbarMode` | Toolbar display mode (`full`, `simple`). Simple shows history, contextual tools, command search, and utility controls; search for formatting and insertion commands | `full` |
-| `binary-markdown.tableSourceFormat` | Use `aligned` or `compact` (Legacy); see [table source format](#table-source-format) | `aligned` |
-| `binary-markdown.tableToolbarPosition` | Use `auto`, any corner, `left`, `right`, or `top-bar`; see [table operations](#table-operations) | `auto` |
-| `binary-markdown.outlineActiveColor` | Outline highlight: `theme`, `blue`, `green`, `orange`, `red`, or `purple` | `theme` |
-| `binary-markdown.outlineStateScope` | Remember outline visibility per Markdown file (`file`) or share it across all Markdown files (`global`) | `file` |
-| `binary-markdown.outlineDefaultOpen` | Open the outline when the selected scope does not have a saved state yet | `true` |
+
+**Export**
+
+See [export settings](../media/export-help.md#tools-and-settings) for PDF appearance, code labels, line numbers and counts, and external tool paths. These control output rather than editor layout.
+
+**Advanced**
+
+| Setting | Description | Default |
+| --- | --- | --- |
 | `binary-markdown.enableDebugLogging` | Enable debug logging in browser console | `false` |
 
 ### Outline state
@@ -453,7 +483,7 @@ When the outline is long enough to scroll, its scrollbar follows the selected ed
 
 ### Editor width
 
-In VS Code Settings, choose **Binary-markdown: Editor Width Mode**. In the desktop app's **Preferences**, use **Editor width**. **Default** uses a column capped at 860 CSS pixels. **Full width** uses the available editor pane. **Custom width** uses **Editor Max Width** in VS Code or **Maximum width (px)** in Preferences. Switching modes retains your custom value.
+In VS Code Settings, open **Editor & Appearance** and choose **Editor Width Mode**. In the desktop app's **Preferences**, use **Editor width**. **Default** uses a column capped at 860 CSS pixels. **Full width** uses the available editor pane. **Custom width** uses **Editor Max Width** in VS Code or **Maximum width (px)** in Preferences. Switching modes retains your custom value.
 
 The cap measures the outside of the column, including its padding; it is not the width of the text alone. Custom values must be whole numbers from 320 to 4000. Invalid stored values fall back to 860, and an invalid mode falls back to Default. Preferences rejects invalid input and keeps the previous value. The column always shrinks to fit a narrower pane, with responsive side padding of 12–60 CSS pixels. Full width keeps that padding.
 

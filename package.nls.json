@@ -77,5 +77,11 @@
   "config.tableSourceFormat.alignedLabel": "Aligned (default)",
   "config.tableSourceFormat.compactLabel": "Compact (Legacy)",
   "config.tableSourceFormat.aligned": "Pad columns and separator rows to align Markdown source.",
-  "config.tableSourceFormat.compact": "Use the previous compact spacing without padding columns."
+  "config.tableSourceFormat.compact": "Use the previous compact spacing without padding columns.",
+  "config.section.editor": "Editor & Appearance",
+  "config.section.outline": "Outline",
+  "config.section.writing": "Writing Tools",
+  "config.section.images": "Images",
+  "config.section.export": "Export",
+  "config.section.advanced": "Advanced"
 }
