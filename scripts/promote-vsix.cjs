@@ -6,7 +6,22 @@ const path = require('node:path');
 const { createHash } = require('node:crypto');
 const { verifyRun, prepareReleaseAssets, renderReleaseNotes, verifyValidationJobs } = require('./release-candidate');
 const { evidenceNames } = require('./ci-validation.cjs');
-const { command, api, optionalApi, pages, git, currentMain, assertMain, assertRepository, REPOSITORY } = require('./release-github.cjs');
+const { command, api, optionalApi, pages, findRelease, git, currentMain, assertMain, assertRepository, REPOSITORY } = require('./release-github.cjs');
+
+// An interrupted upload can leave a draft without a Git tag, so check the
+// release list as well as the tag before creating anything.
+function assertUnreleased(tag, client = { pages, optionalApi }) {
+    assert.equal(findRelease(tag, client), null, 'A release or draft already exists; do not replace it');
+    assert.equal(client.optionalApi(`git/ref/tags/${tag}`), null, 'A tag already exists; do not move it');
+}
+
+function confirmRelease(tag, publish, client = { pages }) {
+    const release = findRelease(tag, client);
+    assert.ok(release, `No release or draft for ${tag} was found after upload`);
+    assert.equal(release.draft, !publish, publish ? `${tag} is still a draft` : `${tag} is public, not a draft`);
+    assert.equal(release.prerelease, false, `${tag} is marked as a prerelease`);
+    return release;
+}
 
 async function promote({ runId, publish = false, beforePublish = async () => {} }) {
     assertRepository();
@@ -21,8 +36,7 @@ async function promote({ runId, publish = false, beforePublish = async () => {} 
     const version = JSON.parse(fs.readFileSync('package.json', 'utf8')).version;
     const tag = 'v' + version;
     const notes = fs.readFileSync(`release-notes/${version}.md`, 'utf8');
-    assert.equal(optionalApi(`releases/tags/${tag}`), null, 'A release or draft already exists; do not replace it');
-    assert.equal(optionalApi(`git/ref/tags/${tag}`), null, 'A tag already exists; do not move it');
+    assertUnreleased(tag);
     const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'vsix-release-'));
     try {
         const dist = path.join(directory, 'dist');
@@ -67,9 +81,7 @@ async function promote({ runId, publish = false, beforePublish = async () => {} 
             await beforePublish();
             command('gh', ['release', 'edit', tag, '--repo', REPOSITORY, '--draft=false', '--latest']);
         }
-        const released = api(`releases/tags/${tag}`);
-        assert.equal(released.draft, !publish);
-        assert.equal(released.prerelease, false);
+        const released = confirmRelease(tag, publish);
         console.log(`${publish ? 'Published' : 'Prepared draft'} ${released.html_url} from ${source}`);
         if (process.env.GITHUB_STEP_SUMMARY) fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,
             `\n${publish ? 'Published' : 'Prepared draft'} [${tag}](${released.html_url}) from \`${source}\`.\n`);
@@ -83,4 +95,4 @@ if (require.main === module) promote({ runId: process.env.VALIDATION_RUN }).catc
     if (error.stderr) console.error(String(error.stderr));
     process.exitCode = 1;
 });
-module.exports = { promote };
+module.exports = { promote, assertUnreleased, confirmRelease };

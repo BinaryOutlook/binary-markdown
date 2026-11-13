@@ -91,7 +91,8 @@ test.describe('コマンドパレット', () => {
         await editor.focus();
         const modifier = process.platform === 'darwin' ? 'Meta' : 'Control';
         await page.keyboard.press(`${modifier}+/`);
-        await page.waitForTimeout(100);
+        // Opening the palette moves focus on the next animation frame.
+        await expect(page.locator('.command-palette-input')).toBeFocused();
 
         // 最初のアイテムが選択されている
         const firstItem = page.locator('.command-palette-item').first();
@@ -186,7 +187,8 @@ test.describe('コマンドパレット', () => {
         // カーソルは「行2」にある
         const modifier = process.platform === 'darwin' ? 'Meta' : 'Control';
         await page.keyboard.press(`${modifier}+/`);
-        await page.waitForTimeout(100);
+        // Opening the palette moves focus on the next animation frame.
+        await expect(page.locator('.command-palette-input')).toBeFocused();
 
         // Esc で閉じた後、カーソル位置は「行2」のまま
         await page.keyboard.press('Escape');

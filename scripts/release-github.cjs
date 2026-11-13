@@ -24,6 +24,14 @@ function pages(endpoint, key) {
     const result = JSON.parse(command('gh', ['api', '--paginate', '--slurp', `repos/${REPOSITORY}/${endpoint}`]));
     return result.flatMap(page => key ? page[key] : page);
 }
+// GET releases/tags/{tag} omits drafts, which have no Git tag until they are
+// published. The authenticated release list includes drafts for workflows
+// with contents write permission, so release identity checks search it.
+function findRelease(tag, client = { pages }) {
+    const matches = client.pages('releases?per_page=100').filter(release => release.tag_name === tag);
+    assert.ok(matches.length <= 1, `${matches.length} releases or drafts use ${tag}; inspect them before continuing`);
+    return matches[0] || null;
+}
 function git(...args) { return command('git', args); }
 function currentMain() {
     const sha = api('git/ref/heads/main').object.sha;
@@ -36,4 +44,4 @@ function assertMain(source) {
 function assertRepository() {
     assert.equal(process.env.GITHUB_REPOSITORY, REPOSITORY);
 }
-module.exports = { REPOSITORY, command, api, optionalApi, pages, git, currentMain, assertMain, assertRepository };
+module.exports = { REPOSITORY, command, api, optionalApi, pages, findRelease, git, currentMain, assertMain, assertRepository };
