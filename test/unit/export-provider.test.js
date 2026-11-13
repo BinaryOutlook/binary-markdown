@@ -26,13 +26,14 @@ function event() {
         listeners
     };
 }
-async function setup(t, initialConfig = {}, documentPath = '/provider-fixture/report.md', messages = {}) {
+async function setup(t, initialConfig = {}, documentPath = '/provider-fixture/report.md', messages = {}, options = {}) {
     const changes = event();
     const configChanges = event();
     const willSave = event();
     const didSave = event();
     const watcher = event();
     const created = event();
+    const tabChanges = event();
     const disposed = event();
     const viewState = event();
     const incoming = event();
@@ -68,7 +69,8 @@ async function setup(t, initialConfig = {}, documentPath = '/provider-fixture/re
         beforeConfigWrite: async () => {}, beforeApply: async () => {}, ignoredSaveEdits: 0,
         controller: undefined, exports: [], links: [],
         // Returns the chosen notification button, or a promise for one.
-        warningChoice: () => undefined
+        warningChoice: () => undefined,
+        beforeRevert: async () => {}, reveals: 0, revealedTab: undefined
     };
     const file = value => ({ scheme: 'file', fsPath: value, path: value, toString: () => 'file://' + value });
     const document = {
@@ -101,8 +103,22 @@ async function setup(t, initialConfig = {}, documentPath = '/provider-fixture/re
             return true;
         }
     };
+    class TabInputCustom { constructor(uri, viewType) { this.uri = uri; this.viewType = viewType; } }
+    class TabInputText { constructor(uri) { this.uri = uri; } }
+    class TabInputTextDiff { constructor(original, modified) { this.original = original; this.modified = modified; } }
+    const tabGroups = options.activeTab ? { activeTabGroup: { activeTab: undefined }, onDidChangeTabs: tabChanges.listen } : undefined;
     const vscode = {
-        commands: { executeCommand: async (...args) => { commands.push(args); } },
+        TabInputCustom, TabInputText, TabInputTextDiff,
+        commands: { executeCommand: async (...args) => {
+            commands.push(args);
+            // VS Code's Revert reloads the active editor's buffer from disk.
+            if (args[0] === 'workbench.action.files.revert') {
+                await state.beforeRevert();
+                const changed = state.text !== state.disk;
+                state.text = state.disk; document.version++; document.isDirty = false;
+                if (changed) changes.fire({ document, contentChanges: [{ text: state.text }], reason: undefined });
+            }
+        } },
         EndOfLine: { LF: 1, CRLF: 2 }, env: { language: 'en' }, StatusBarAlignment: { Left: 1, Right: 2 },
         ConfigurationTarget: { Global: 1, Workspace: 2 },
         Uri: {
@@ -145,6 +161,7 @@ async function setup(t, initialConfig = {}, documentPath = '/provider-fixture/re
             }
         },
         window: {
+            tabGroups,
             showInformationMessage: async message => { notices.push(message); }, showErrorMessage: async () => undefined,
             showWarningMessage: async (message, ...items) => { warnings.push({ message, items }); return state.warningChoice(message, items); },
             createStatusBarItem: (id, alignment, priority) => {
@@ -157,6 +174,10 @@ async function setup(t, initialConfig = {}, documentPath = '/provider-fixture/re
     const panel = {
         active: true,
         onDidDispose: disposed.listen, onDidChangeViewState: viewState.listen,
+        reveal: () => {
+            state.reveals++;
+            if (tabGroups && state.revealedTab) { tabGroups.activeTabGroup.activeTab = { input: state.revealedTab }; tabChanges.fire(); }
+        },
         webview: {
             html: '', options: {}, asWebviewUri: uri => ({ toString: () => 'webview:' + uri.fsPath }),
             postMessage: message => { posts.push(message); return Promise.resolve(true); },
@@ -197,6 +218,7 @@ async function setup(t, initialConfig = {}, documentPath = '/provider-fixture/re
         callback => { const id = ++nextTimer; timers.set(id, callback); return id; }, id => timers.delete(id)
     );
     const provider = new compiled.exports.BinaryMarkdownEditorProvider({ extensionUri: file('/extension-fixture'), workspaceState: {}, globalState: {}, subscriptions: [] });
+    if (tabGroups) { tabGroups.activeTabGroup.activeTab = { input: options.activeTab({ TabInputCustom, TabInputText, TabInputTextDiff, uri: document.uri, file }) }; }
     await provider.resolveCustomTextEditor(document, panel, {});
     await acknowledgeRender();
     t.after(() => disposed.fire());
@@ -977,6 +999,80 @@ test('a write detected while Load Disk Version applies is kept as a new conflict
     choices[1].resolve('externalConflictLoad');
     await settle(() => !h.document.isDirty && h.document.getText() === '# EXTERNAL-TWO\n', 'Loading again uses the newer write');
     assert.equal(h.state.disk, '# EXTERNAL-TWO\n');
+});
+
+const ownEditor = ({ TabInputCustom, uri }) => new TabInputCustom(uri, 'binary-markdown.editor');
+
+test('Load Disk Version reverts to the file instead of saving when this editor is active', async t => {
+    const h = await setup(t, {}, undefined, {}, { activeTab: ownEditor });
+    typeLocally(h, '# LOCAL-UNSAVED\n');
+    h.state.warningChoice = () => 'externalConflictLoad';
+    const saves = h.state.saveCalls;
+    await h.externalChange('# EXTERNAL-ONE\n');
+    await settle(() => !h.document.isDirty, 'The revert leaves the document clean');
+    assert.ok(h.commands.some(command => command[0] === 'workbench.action.files.revert'));
+    assert.equal(h.state.saveCalls, saves, 'Nothing is written; VS Code 1.85 would report a newer-file conflict');
+    assert.equal(h.document.getText(), '# EXTERNAL-ONE\n');
+    assert.equal(h.state.disk, '# EXTERNAL-ONE\n');
+    const updates = h.posts.filter(message => message.type === 'update');
+    assert.deepEqual(updates.at(-1), { type: 'update', content: '# EXTERNAL-ONE\n', revision: updates.at(-1).revision, replace: true },
+        'The editor keeps its Undo snapshot; the revert sends no second update');
+});
+
+test('a newer write read by the revert is shown in the editor', async t => {
+    const h = await setup(t, {}, undefined, {}, { activeTab: ownEditor });
+    typeLocally(h, '# LOCAL-UNSAVED\n');
+    h.state.warningChoice = () => 'externalConflictLoad';
+    h.state.beforeRevert = async () => { h.state.disk = '# EXTERNAL-TWO\n'; };
+    await h.externalChange('# EXTERNAL-ONE\n');
+    await settle(() => !h.document.isDirty, 'The revert completes');
+    assert.equal(h.document.getText(), '# EXTERNAL-TWO\n');
+    const last = h.posts.filter(message => message.type === 'update').at(-1);
+    assert.equal(last.content, '# EXTERNAL-TWO\n');
+    assert.equal(last.replace, undefined);
+});
+
+test('Load Disk Version never reverts another file\'s editor', async t => {
+    const h = await setup(t, {}, undefined, {}, { activeTab: ({ TabInputText, file }) => new TabInputText(file('/provider-fixture/other.md')) });
+    typeLocally(h, '# LOCAL-UNSAVED\n');
+    const choice = deferred();
+    h.state.warningChoice = () => choice.promise;
+    await h.externalChange('# EXTERNAL-ONE\n');
+    choice.resolve('externalConflictLoad');
+    await settle(() => h.state.reveals === 1, 'This editor is asked to come forward');
+    await h.flushTimers(); // It never becomes active; the wait times out.
+    await settle(() => !h.document.isDirty, 'The fallback save completes');
+    assert.ok(!h.commands.some(command => command[0] === 'workbench.action.files.revert'), 'The other editor is not reverted');
+    assert.equal(h.state.disk, '# EXTERNAL-ONE\n');
+});
+
+test('this editor is brought forward before reverting', async t => {
+    const h = await setup(t, {}, undefined, {}, { activeTab: ({ TabInputText, file }) => new TabInputText(file('/provider-fixture/other.md')) });
+    h.state.revealedTab = new h.vscode.TabInputCustom(h.document.uri, 'binary-markdown.editor');
+    typeLocally(h, '# LOCAL-UNSAVED\n');
+    h.state.warningChoice = () => 'externalConflictLoad';
+    const saves = h.state.saveCalls;
+    await h.externalChange('# EXTERNAL-ONE\n');
+    await settle(() => !h.document.isDirty, 'The revert completes');
+    assert.equal(h.state.reveals, 1);
+    assert.ok(h.commands.some(command => command[0] === 'workbench.action.files.revert'));
+    assert.equal(h.state.saveCalls, saves);
+});
+
+test('a revision no longer on disk is written instead of reverted', async t => {
+    const h = await setup(t, {}, undefined, {}, { activeTab: ownEditor });
+    const choice = deferred();
+    h.state.warningChoice = () => choice.promise;
+    await h.externalChange('# EXTERNAL-RELOADED\n');
+    const reload = h.posts.find(message => message.type === 'update');
+    // A held save, then a second save that writes the typed text over the reload.
+    await h.send({ type: 'save', content: '# OLD-EDITOR typed\n', revision: 1, base: reload.revision - 1 });
+    await h.send({ type: 'save', content: '# OLD-EDITOR typed\n', revision: 2, base: reload.revision - 1 });
+    assert.equal(h.state.disk, '# OLD-EDITOR typed\n');
+    choice.resolve('externalConflictLoad');
+    await settle(() => h.state.disk === '# EXTERNAL-RELOADED\n' && !h.document.isDirty, 'The retained revision is written back');
+    assert.ok(!h.commands.some(command => command[0] === 'workbench.action.files.revert'), 'Reverting would load the typed text instead');
+    assert.equal(h.document.getText(), '# EXTERNAL-RELOADED\n');
 });
 
 test('Load Disk Version after a revert does not save a clean document', async t => {

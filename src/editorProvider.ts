@@ -908,6 +908,35 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
             await vscode.commands.executeCommand('vscode.diff', snapshot, document.uri,
                 fill('externalConflictDiffTitle', fileName));
         };
+        const sameText = (a: string, b: string) => a.replace(/\r\n/g, '\n') === b.replace(/\r\n/g, '\n');
+        // VS Code's Revert reloads the buffer from the file and clears the dirty
+        // state without writing. It acts on the active editor, so it runs only
+        // when that editor shows this document: this custom editor, a text
+        // editor or the Compare diff. Reverting another file would lose its edits.
+        const revertToDisk = async (): Promise<boolean> => {
+            const tabGroups = vscode.window.tabGroups;
+            if (!tabGroups) { return false; }
+            const showsDocument = () => {
+                const input = tabGroups.activeTabGroup.activeTab?.input;
+                const uri = input instanceof vscode.TabInputCustom || input instanceof vscode.TabInputText ? input.uri
+                    : input instanceof vscode.TabInputTextDiff ? input.modified : undefined;
+                return uri?.toString() === document.uri.toString();
+            };
+            if (!showsDocument()) {
+                // Listen before revealing, so a quick tab change is not missed.
+                const shown = await new Promise<boolean>(resolve => {
+                    const finish = (value: boolean) => { clearTimeout(timer); subscription.dispose(); resolve(value); };
+                    const subscription = tabGroups.onDidChangeTabs(() => { if (showsDocument()) { finish(true); } });
+                    const timer = setTimeout(() => finish(showsDocument()), 1000);
+                    webviewPanel.reveal(webviewPanel.viewColumn, false);
+                });
+                if (!shown || disposed) { return false; }
+            }
+            isApplyingOwnEdit = true;
+            try { await vscode.commands.executeCommand('workbench.action.files.revert'); }
+            finally { isApplyingOwnEdit = false; }
+            return !document.isDirty;
+        };
         // Loading is an explicit discard. Edits typed before this choice that
         // are still in flight are ignored; Undo in the editor restores them.
         const loadExternal = (current: ExternalConflict) => {
@@ -916,21 +945,31 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
                 if (disposed) { return; }
                 await refreshExternal(current);
                 // The buffer, editor and save all use this one revision. The
-                // watcher can record a newer write while the edit is applied.
+                // watcher can record a newer write while it is applied.
                 const content = current.content;
-                editQueue.schedule(normalizeEol(content));
                 await editQueue.flush();
-                const newerWrite = current.content !== content;
+                let onDisk: string | undefined;
+                try { onDisk = new TextDecoder().decode(await vscode.workspace.fs.readFile(document.uri)); } catch { onDisk = undefined; }
                 if (conflict === current) { setConflict(undefined); }
                 await postUpdate(content, 'load', revision);
-                if (newerWrite) {
-                    // Saving would write the loaded revision over the newer file.
-                    // Report the newer write as its own conflict instead.
-                    reportExternalConflict(current.content);
+                if (!document.isDirty && sameText(document.getText(), content)) { return; }
+                // When the revision is the file itself, revert instead of saving:
+                // VS Code 1.85 reports a newer-file conflict even for identical
+                // content. Revert reads the file again, so show any newer write.
+                if (onDisk !== undefined && sameText(onDisk, content) && await revertToDisk()) {
+                    // The buffer now matches the newest file, which also settles a
+                    // conflict reported while the revert ran.
+                    setConflict(undefined);
+                    if (!sameText(document.getText(), content)) { void postUpdate(document.getText(), 'disk'); }
                     return;
                 }
-                // A clean buffer already matches the disk; saving it would
-                // only report failure and make the saved revision uncertain.
+                // The revision is not on disk (a save already replaced it) or the
+                // document's editor could not be made active: write it.
+                editQueue.schedule(normalizeEol(content));
+                await editQueue.flush();
+                // A write detected while the edit was applied is already reported
+                // as a new conflict. Saving would overwrite that newer file.
+                if (conflict) { return; }
                 if (document.isDirty && !await saveWithoutSnapshot()) {
                     throw new Error(fill('externalConflictLoadFailed', noticeName));
                 }
