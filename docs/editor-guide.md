@@ -587,6 +587,6 @@ Text typed moments before the other program's write, before Binary Markdown has 
 
 File-change notifications received during a save are reread after the saved revision is confirmed. If the document changes while saving, reload remains deferred until a later save completes without intervening changes, or the editor is closed and reopened. The same deferral applies when a save fails, because the disk may contain only part of the document. Cancelling an export does not cancel that disk write or release this protection.
 
-This behavior applies to the VS Code extension from version 0.5.2. Versions 0.5.1 and earlier can replace unsaved edits when another program writes the file; [issue #81](https://github.com/BinaryOutlook/binary-markdown/issues/81) records that problem.
+This behavior applies to the VS Code extension. Keeping unsaved edits when another program writes the file, and the choices that follow, start in version 0.5.2. Versions 0.5.1 and earlier can replace unsaved edits when another program writes the file; [issue #81](https://github.com/BinaryOutlook/binary-markdown/issues/81) records that problem.
 
 ---

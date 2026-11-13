@@ -14,13 +14,13 @@ A compatible update following 0.5.1. It keeps unsaved edits when another program
 
 - Organize settings into ordered categories while preserving setting identifiers, defaults, scopes, and saved values. Desktop Preferences adds matching sections, keyboard-accessible category navigation, and a resizable layout.
 - Color the outline scrollbar from the selected editor theme, updating with theme changes and using system colors in high-contrast mode.
-- Update markdown-it to 14.3.3 and Mermaid's bundled DOMPurify to 3.4.17, and pin patched build, packaging, and test-tool dependencies, so the required dependency audit passes. The pinned tools are not included in the VSIX.
+- Update markdown-it to 14.3.3 and Mermaid's bundled DOMPurify to 3.4.17, and update or pin patched build, packaging, and test-tool dependencies, so the required dependency audit passes. Those tools are not included in the VSIX.
 - Align the README, documentation entry points, roadmap, project page, and version metadata with the 0.5.2 scope.
 
 ### Fixed
 
 - Keep unsaved edits when another program writes the open file, instead of silently replacing them. A warning offers **Compare** and **Load Disk Version**, and Undo restores edits replaced by loading. A **Changed on disk** status bar item and the **Binary Markdown: Resolve External Change** command reopen the choices after the warning is closed. Text typed just before the write is kept the same way, with the editor's first save held until the warning is answered, and files saved by replacement are now detected ([#81](https://github.com/BinaryOutlook/binary-markdown/issues/81)). See [external file changes](docs/editor-guide.md#external-file-changes).
-- Pressing Enter on a focused **Open in Text Editor** code-block button opens the text editor instead of inserting a line into the code.
+- Pressing Enter on a focused **Open in Text Editor** code-block button opens the text editor. Previously, it inserted a line into the code when the block kept its text cursor.
 
 ### Known limitations
 
