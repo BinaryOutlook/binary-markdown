@@ -76,5 +76,11 @@
   "config.tableSourceFormat.alignedLabel": "Alineado (predeterminado)",
   "config.tableSourceFormat.compactLabel": "Compacto (anterior)",
   "config.tableSourceFormat.aligned": "Rellena las columnas y ajusta los separadores para alinear el código Markdown.",
-  "config.tableSourceFormat.compact": "Usa el espaciado compacto anterior sin rellenar las columnas."
+  "config.tableSourceFormat.compact": "Usa el espaciado compacto anterior sin rellenar las columnas.",
+  "config.section.editor": "Editor y apariencia",
+  "config.section.outline": "Esquema",
+  "config.section.writing": "Herramientas de escritura",
+  "config.section.images": "Imágenes",
+  "config.section.export": "Exportación",
+  "config.section.advanced": "Avanzado"
 }

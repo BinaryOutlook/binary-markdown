@@ -76,5 +76,11 @@
   "config.tableSourceFormat.alignedLabel": "桁揃え（既定）",
   "config.tableSourceFormat.compactLabel": "コンパクト（従来形式）",
   "config.tableSourceFormat.aligned": "列と区切り行に空白を追加して Markdown ソースの桁を揃えます。",
-  "config.tableSourceFormat.compact": "列の幅を揃えず、従来のコンパクトな空白配置を使用します。"
+  "config.tableSourceFormat.compact": "列の幅を揃えず、従来のコンパクトな空白配置を使用します。",
+  "config.section.editor": "エディターと外観",
+  "config.section.outline": "アウトライン",
+  "config.section.writing": "編集ツール",
+  "config.section.images": "画像",
+  "config.section.export": "エクスポート",
+  "config.section.advanced": "詳細設定"
 }

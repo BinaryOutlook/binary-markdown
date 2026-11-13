@@ -37,6 +37,18 @@ export interface Messages {
 }
 
 export interface WebviewMessages {
+  settingsEditor: string;
+  settingsOutline: string;
+  settingsWriting: string;
+  settingsImages: string;
+  settingsExport: string;
+  settingsAdvanced: string;
+  settingsTables: string;
+  settingsCode: string;
+  settingsEquations: string;
+  settingsPreferences: string;
+  settingsCategories: string;
+
   codeBlockActionLabelsLabel: string;
   codeBlockActionLabelsHelp: string;
   codeBlockActionLabelsSaveFailed: string;

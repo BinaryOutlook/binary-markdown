@@ -76,5 +76,11 @@
   "config.tableSourceFormat.alignedLabel": "Aligné (par défaut)",
   "config.tableSourceFormat.compactLabel": "Compact (ancien format)",
   "config.tableSourceFormat.aligned": "Ajoute des espaces et ajuste les séparateurs pour aligner les colonnes du code Markdown.",
-  "config.tableSourceFormat.compact": "Utilise l’ancien espacement compact sans aligner la largeur des colonnes."
+  "config.tableSourceFormat.compact": "Utilise l’ancien espacement compact sans aligner la largeur des colonnes.",
+  "config.section.editor": "Éditeur et apparence",
+  "config.section.outline": "Plan",
+  "config.section.writing": "Outils de rédaction",
+  "config.section.images": "Images",
+  "config.section.export": "Exportation",
+  "config.section.advanced": "Avancé"
 }

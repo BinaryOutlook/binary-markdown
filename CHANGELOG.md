@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Changed
+
+- Organize settings into ordered categories while preserving setting identifiers, defaults, scopes, and saved values. Desktop Preferences adds matching sections, keyboard-accessible category navigation, and a resizable layout.
+
 ## 0.5.1
 
 A rapid toolbar stability update following 0.5.0. We apologize for the disruption and the short notice. This was a very last-minute decision: further testing revealed instability in the previous version's table toolbar, prompting its replacement with a more stable, compact toolbar and this rapid update. See the [0.5.1 notes](release-notes/0.5.1.md) for details and inherited limitations. [GitHub Releases](https://github.com/BinaryOutlook/binary-markdown/releases) identifies published packages and their validation.

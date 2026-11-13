@@ -34,6 +34,18 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  settingsEditor: "編輯器與外觀",
+  settingsOutline: "大綱",
+  settingsWriting: "寫作工具",
+  settingsImages: "圖片",
+  settingsExport: "匯出",
+  settingsAdvanced: "進階",
+  settingsTables: "表格",
+  settingsCode: "程式碼",
+  settingsEquations: "公式",
+  settingsPreferences: "偏好設定",
+  settingsCategories: "設定分類",
+
   codeBlockActionLabelsLabel: "顯示程式碼區塊操作標籤",
   codeBlockActionLabelsHelp: "在複製程式碼、自動折行和以文字方式開啟圖示旁顯示標籤。關閉後僅顯示圖示；工具提示、程式碼語言、折行狀態和錯誤訊息仍會顯示。",
   codeBlockActionLabelsSaveFailed: "無法儲存程式碼區塊操作標籤設定。將保留原有設定。",

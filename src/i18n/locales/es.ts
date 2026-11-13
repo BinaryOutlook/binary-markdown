@@ -34,6 +34,18 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  settingsEditor: "Editor y apariencia",
+  settingsOutline: "Esquema",
+  settingsWriting: "Herramientas de escritura",
+  settingsImages: "Imágenes",
+  settingsExport: "Exportación",
+  settingsAdvanced: "Avanzado",
+  settingsTables: "Tablas",
+  settingsCode: "Código",
+  settingsEquations: "Ecuaciones",
+  settingsPreferences: "Preferencias",
+  settingsCategories: "Categorías de configuración",
+
   codeBlockActionLabelsLabel: "Mostrar etiquetas de acciones en bloques de código",
   codeBlockActionLabelsHelp: "Muestra etiquetas junto a los iconos de copiar código, ajustar líneas y abrir como texto. Desactívalo para mostrar solo iconos; se mantienen la ayuda emergente, el lenguaje, el estado de ajuste y los mensajes de error.",
   codeBlockActionLabelsSaveFailed: "No se pudo guardar la preferencia de etiquetas de acciones de código. Se mantiene la configuración anterior.",
