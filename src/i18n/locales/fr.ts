@@ -34,6 +34,18 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  settingsEditor: "Éditeur et apparence",
+  settingsOutline: "Plan",
+  settingsWriting: "Outils de rédaction",
+  settingsImages: "Images",
+  settingsExport: "Exportation",
+  settingsAdvanced: "Avancé",
+  settingsTables: "Tableaux",
+  settingsCode: "Code",
+  settingsEquations: "Équations",
+  settingsPreferences: "Préférences",
+  settingsCategories: "Catégories des paramètres",
+
   codeBlockActionLabelsLabel: "Afficher les libellés des actions des blocs de code",
   codeBlockActionLabelsHelp: "Affiche les libellés à côté des icônes de copie, de retour à la ligne et d’ouverture en texte. Désactivez pour afficher les icônes seules ; les infobulles, le langage, l’état du retour à la ligne et les erreurs restent visibles.",
   codeBlockActionLabelsSaveFailed: "Impossible d’enregistrer les libellés des actions des blocs de code. Le réglage précédent reste actif.",

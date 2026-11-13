@@ -76,5 +76,11 @@
   "config.tableSourceFormat.alignedLabel": "對齊（預設）",
   "config.tableSourceFormat.compactLabel": "緊湊（舊版）",
   "config.tableSourceFormat.aligned": "填補欄位並調整分隔列寬度，使 Markdown 原始碼對齊。",
-  "config.tableSourceFormat.compact": "使用舊版緊湊間距，不填補欄寬。"
+  "config.tableSourceFormat.compact": "使用舊版緊湊間距，不填補欄寬。",
+  "config.section.editor": "編輯器與外觀",
+  "config.section.outline": "大綱",
+  "config.section.writing": "寫作工具",
+  "config.section.images": "圖片",
+  "config.section.export": "匯出",
+  "config.section.advanced": "進階"
 }

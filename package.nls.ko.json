@@ -76,5 +76,11 @@
   "config.tableSourceFormat.alignedLabel": "정렬됨(기본값)",
   "config.tableSourceFormat.compactLabel": "간결함(기존 방식)",
   "config.tableSourceFormat.aligned": "열과 구분 행의 너비를 맞춰 Markdown 소스를 정렬합니다.",
-  "config.tableSourceFormat.compact": "열 너비를 맞추지 않고 기존의 간결한 공백 형식을 사용합니다."
+  "config.tableSourceFormat.compact": "열 너비를 맞추지 않고 기존의 간결한 공백 형식을 사용합니다.",
+  "config.section.editor": "편집기 및 모양",
+  "config.section.outline": "개요",
+  "config.section.writing": "작성 도구",
+  "config.section.images": "이미지",
+  "config.section.export": "내보내기",
+  "config.section.advanced": "고급"
 }

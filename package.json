@@ -116,308 +116,375 @@
         "priority": "option"
       }
     ],
-    "configuration": {
-      "title": "Binary Markdown",
-      "properties": {
-        "binary-markdown.theme": {
-          "type": "string",
-          "enum": [
-            "github",
-            "sepia",
-            "night",
-            "dark",
-            "minimal",
-            "perplexity",
-            "things"
-          ],
-          "default": "things",
-          "description": "%config.theme.description%"
-        },
-        "binary-markdown.fontSize": {
-          "type": "number",
-          "default": 16,
-          "description": "%config.fontSize.description%"
-        },
-        "binary-markdown.imageDefaultDir": {
-          "type": "string",
-          "default": "",
-          "description": "%config.imageDefaultDir.description%"
-        },
-        "binary-markdown.forceRelativeImagePath": {
-          "type": "boolean",
-          "default": false,
-          "description": "%config.forceRelativeImagePath.description%"
-        },
-        "binary-markdown.language": {
-          "type": "string",
-          "enum": [
-            "default",
-            "en",
-            "ja",
-            "zh-TW",
-            "zh-CN",
-            "ko",
-            "es",
-            "fr"
-          ],
-          "enumDescriptions": [
-            "%config.language.default%",
-            "%config.language.en%",
-            "%config.language.ja%",
-            "%config.language.zhTW%",
-            "%config.language.zhCN%",
-            "%config.language.ko%",
-            "%config.language.es%",
-            "%config.language.fr%"
-          ],
-          "default": "default",
-          "description": "%config.language.description%"
-        },
-        "binary-markdown.toolbarMode": {
-          "type": "string",
-          "enum": [
-            "full",
-            "simple"
-          ],
-          "enumDescriptions": [
-            "%config.toolbarMode.full%",
-            "%config.toolbarMode.simple%"
-          ],
-          "default": "full",
-          "description": "%config.toolbarMode.description%"
-        },
-        "binary-markdown.outlineStateScope": {
-          "type": "string",
-          "enum": [
-            "file",
-            "global"
-          ],
-          "enumDescriptions": [
-            "%config.outlineStateScope.file%",
-            "%config.outlineStateScope.global%"
-          ],
-          "default": "file",
-          "description": "%config.outlineStateScope.description%"
-        },
-        "binary-markdown.outlineDefaultOpen": {
-          "type": "boolean",
-          "default": true,
-          "description": "%config.outlineDefaultOpen.description%"
-        },
-        "binary-markdown.outlineActiveColor": {
-          "type": "string",
-          "enum": [
-            "theme",
-            "blue",
-            "green",
-            "orange",
-            "red",
-            "purple"
-          ],
-          "enumDescriptions": [
-            "%config.outlineActiveColor.theme%",
-            "%config.outlineActiveColor.blue%",
-            "%config.outlineActiveColor.green%",
-            "%config.outlineActiveColor.orange%",
-            "%config.outlineActiveColor.red%",
-            "%config.outlineActiveColor.purple%"
-          ],
-          "default": "theme",
-          "description": "%config.outlineActiveColor.description%"
-        },
-        "binary-markdown.enableDebugLogging": {
-          "type": "boolean",
-          "default": false,
-          "description": "%config.enableDebugLogging.description%"
-        },
-        "binary-markdown.export.pdfWhiteBackground": {
-          "type": "boolean",
-          "default": true,
-          "description": "%config.export.pdfWhiteBackground.description%"
-        },
-        "binary-markdown.export.pandocPath": {
-          "type": "string",
-          "default": "",
-          "scope": "machine",
-          "description": "%config.export.pandocPath.description%"
-        },
-        "binary-markdown.export.browserPath": {
-          "type": "string",
-          "default": "",
-          "scope": "machine",
-          "description": "%config.export.browserPath.description%"
-        },
-        "binary-markdown.math.backslashDelimiters": {
-          "type": "boolean",
-          "default": true,
-          "description": "%config.math.backslashDelimiters.description%"
-        },
-        "binary-markdown.export.showCodeLanguage": {
-          "type": "boolean",
-          "default": true,
-          "scope": "resource",
-          "description": "%config.export.showCodeLanguage.description%"
-        },
-        "binary-markdown.tableToolbarPosition": {
-          "type": "string",
-          "enum": [
-            "auto",
-            "top-left",
-            "top-right",
-            "bottom-left",
-            "bottom-right",
-            "left",
-            "right",
-            "top-bar"
-          ],
-          "default": "auto",
-          "scope": "window",
-          "description": "%config.tableToolbarPosition.description%",
-          "enumDescriptions": [
-            "%config.tableToolbarPosition.auto%",
-            "%config.tableToolbarPosition.topLeft%",
-            "%config.tableToolbarPosition.topRight%",
-            "%config.tableToolbarPosition.bottomLeft%",
-            "%config.tableToolbarPosition.bottomRight%",
-            "%config.tableToolbarPosition.left%",
-            "%config.tableToolbarPosition.right%",
-            "%config.tableToolbarPosition.topBar%"
-          ]
-        },
-        "binary-markdown.editorWidthMode": {
-          "type": "string",
-          "enum": [
-            "default",
-            "full",
-            "custom"
-          ],
-          "default": "default",
-          "description": "%config.editorWidthMode.description%",
-          "enumDescriptions": [
-            "%config.editorWidthMode.default%",
-            "%config.editorWidthMode.full%",
-            "%config.editorWidthMode.custom%"
-          ]
-        },
-        "binary-markdown.editorMaxWidth": {
-          "type": "integer",
-          "default": 860,
-          "minimum": 320,
-          "maximum": 4000,
-          "description": "%config.editorMaxWidth.description%"
-        },
-        "binary-markdown.editorAlignment": {
-          "type": "string",
-          "enum": [
-            "left",
-            "center",
-            "right"
-          ],
-          "default": "center",
-          "description": "%config.editorAlignment.description%",
-          "enumDescriptions": [
-            "%config.editorAlignment.left%",
-            "%config.editorAlignment.center%",
-            "%config.editorAlignment.right%"
-          ]
-        },
-        "binary-markdown.editorWidthIndicators": {
-          "type": "boolean",
-          "default": true,
-          "description": "%config.editorWidthIndicators.description%"
-        },
-        "binary-markdown.codeBlockActionLabels": {
-          "type": "boolean",
-          "default": true,
-          "scope": "window",
-          "description": "%config.codeBlockActionLabels.description%"
-        },
-        "binary-markdown.codeLanguageOrder": {
-          "type": "string",
-          "enum": [
-            "default",
-            "a-z",
-            "z-a"
-          ],
-          "default": "default",
-          "scope": "window",
-          "description": "%config.codeLanguageOrder.description%",
-          "enumDescriptions": [
-            "%config.codeLanguageOrder.default%",
-            "%config.codeLanguageOrder.ascending%",
-            "%config.codeLanguageOrder.descending%"
-          ]
-        },
-        "binary-markdown.mathSourcePosition": {
-          "type": "string",
-          "enum": [
-            "above",
-            "below"
-          ],
-          "default": "above",
-          "scope": "window",
-          "description": "%config.mathSourcePosition.description%",
-          "enumDescriptions": [
-            "%config.mathSourcePosition.above%",
-            "%config.mathSourcePosition.below%"
-          ]
-        },
-        "binary-markdown.mathSourceWrap": {
-          "type": "boolean",
-          "default": false,
-          "scope": "window",
-          "description": "%config.mathSourceWrap.description%"
-        },
-        "binary-markdown.export.codeLanguagePosition": {
-          "type": "string",
-          "enum": [
-            "top-left",
-            "top-right",
-            "bottom-left",
-            "bottom-right"
-          ],
-          "default": "top-left",
-          "scope": "resource",
-          "description": "%config.export.codeLanguagePosition.description%",
-          "enumDescriptions": [
-            "%config.export.codeLanguagePosition.topLeft%",
-            "%config.export.codeLanguagePosition.topRight%",
-            "%config.export.codeLanguagePosition.bottomLeft%",
-            "%config.export.codeLanguagePosition.bottomRight%"
-          ]
-        },
-        "binary-markdown.export.showCodeLineCount": {
-          "type": "boolean",
-          "default": false,
-          "description": "%config.export.showCodeLineCount.description%",
-          "scope": "resource"
-        },
-        "binary-markdown.export.showCodeLineNumbers": {
-          "type": "boolean",
-          "default": false,
-          "description": "%config.export.showCodeLineNumbers.description%",
-          "scope": "resource"
-        },
-        "binary-markdown.tableSourceFormat": {
-          "type": "string",
-          "enum": [
-            "aligned",
-            "compact"
-          ],
-          "default": "aligned",
-          "scope": "resource",
-          "description": "%config.tableSourceFormat.description%",
-          "enumItemLabels": [
-            "%config.tableSourceFormat.alignedLabel%",
-            "%config.tableSourceFormat.compactLabel%"
-          ],
-          "enumDescriptions": [
-            "%config.tableSourceFormat.aligned%",
-            "%config.tableSourceFormat.compact%"
-          ]
+    "configuration": [
+      {
+        "id": "binary-markdown.editor",
+        "title": "%config.section.editor%",
+        "order": 10,
+        "properties": {
+          "binary-markdown.language": {
+            "type": "string",
+            "enum": [
+              "default",
+              "en",
+              "ja",
+              "zh-TW",
+              "zh-CN",
+              "ko",
+              "es",
+              "fr"
+            ],
+            "enumDescriptions": [
+              "%config.language.default%",
+              "%config.language.en%",
+              "%config.language.ja%",
+              "%config.language.zhTW%",
+              "%config.language.zhCN%",
+              "%config.language.ko%",
+              "%config.language.es%",
+              "%config.language.fr%"
+            ],
+            "default": "default",
+            "description": "%config.language.description%",
+            "order": 10
+          },
+          "binary-markdown.theme": {
+            "type": "string",
+            "enum": [
+              "github",
+              "sepia",
+              "night",
+              "dark",
+              "minimal",
+              "perplexity",
+              "things"
+            ],
+            "default": "things",
+            "description": "%config.theme.description%",
+            "order": 20
+          },
+          "binary-markdown.fontSize": {
+            "type": "number",
+            "default": 16,
+            "description": "%config.fontSize.description%",
+            "order": 30
+          },
+          "binary-markdown.toolbarMode": {
+            "type": "string",
+            "enum": [
+              "full",
+              "simple"
+            ],
+            "enumDescriptions": [
+              "%config.toolbarMode.full%",
+              "%config.toolbarMode.simple%"
+            ],
+            "default": "full",
+            "description": "%config.toolbarMode.description%",
+            "order": 40
+          },
+          "binary-markdown.editorWidthMode": {
+            "type": "string",
+            "enum": [
+              "default",
+              "full",
+              "custom"
+            ],
+            "default": "default",
+            "description": "%config.editorWidthMode.description%",
+            "enumDescriptions": [
+              "%config.editorWidthMode.default%",
+              "%config.editorWidthMode.full%",
+              "%config.editorWidthMode.custom%"
+            ],
+            "order": 50
+          },
+          "binary-markdown.editorMaxWidth": {
+            "type": "integer",
+            "default": 860,
+            "minimum": 320,
+            "maximum": 4000,
+            "description": "%config.editorMaxWidth.description%",
+            "order": 60
+          },
+          "binary-markdown.editorAlignment": {
+            "type": "string",
+            "enum": [
+              "left",
+              "center",
+              "right"
+            ],
+            "default": "center",
+            "description": "%config.editorAlignment.description%",
+            "enumDescriptions": [
+              "%config.editorAlignment.left%",
+              "%config.editorAlignment.center%",
+              "%config.editorAlignment.right%"
+            ],
+            "order": 70
+          },
+          "binary-markdown.editorWidthIndicators": {
+            "type": "boolean",
+            "default": true,
+            "description": "%config.editorWidthIndicators.description%",
+            "order": 80
+          }
+        }
+      },
+      {
+        "id": "binary-markdown.outline",
+        "title": "%config.section.outline%",
+        "order": 20,
+        "properties": {
+          "binary-markdown.outlineDefaultOpen": {
+            "type": "boolean",
+            "default": true,
+            "description": "%config.outlineDefaultOpen.description%",
+            "order": 10
+          },
+          "binary-markdown.outlineStateScope": {
+            "type": "string",
+            "enum": [
+              "file",
+              "global"
+            ],
+            "enumDescriptions": [
+              "%config.outlineStateScope.file%",
+              "%config.outlineStateScope.global%"
+            ],
+            "default": "file",
+            "description": "%config.outlineStateScope.description%",
+            "order": 20
+          },
+          "binary-markdown.outlineActiveColor": {
+            "type": "string",
+            "enum": [
+              "theme",
+              "blue",
+              "green",
+              "orange",
+              "red",
+              "purple"
+            ],
+            "enumDescriptions": [
+              "%config.outlineActiveColor.theme%",
+              "%config.outlineActiveColor.blue%",
+              "%config.outlineActiveColor.green%",
+              "%config.outlineActiveColor.orange%",
+              "%config.outlineActiveColor.red%",
+              "%config.outlineActiveColor.purple%"
+            ],
+            "default": "theme",
+            "description": "%config.outlineActiveColor.description%",
+            "order": 30
+          }
+        }
+      },
+      {
+        "id": "binary-markdown.writing",
+        "title": "%config.section.writing%",
+        "order": 30,
+        "properties": {
+          "binary-markdown.tableToolbarPosition": {
+            "type": "string",
+            "enum": [
+              "auto",
+              "top-left",
+              "top-right",
+              "bottom-left",
+              "bottom-right",
+              "left",
+              "right",
+              "top-bar"
+            ],
+            "default": "auto",
+            "scope": "window",
+            "description": "%config.tableToolbarPosition.description%",
+            "enumDescriptions": [
+              "%config.tableToolbarPosition.auto%",
+              "%config.tableToolbarPosition.topLeft%",
+              "%config.tableToolbarPosition.topRight%",
+              "%config.tableToolbarPosition.bottomLeft%",
+              "%config.tableToolbarPosition.bottomRight%",
+              "%config.tableToolbarPosition.left%",
+              "%config.tableToolbarPosition.right%",
+              "%config.tableToolbarPosition.topBar%"
+            ],
+            "order": 10
+          },
+          "binary-markdown.tableSourceFormat": {
+            "type": "string",
+            "enum": [
+              "aligned",
+              "compact"
+            ],
+            "default": "aligned",
+            "scope": "resource",
+            "description": "%config.tableSourceFormat.description%",
+            "enumItemLabels": [
+              "%config.tableSourceFormat.alignedLabel%",
+              "%config.tableSourceFormat.compactLabel%"
+            ],
+            "enumDescriptions": [
+              "%config.tableSourceFormat.aligned%",
+              "%config.tableSourceFormat.compact%"
+            ],
+            "order": 20
+          },
+          "binary-markdown.codeBlockActionLabels": {
+            "type": "boolean",
+            "default": true,
+            "scope": "window",
+            "description": "%config.codeBlockActionLabels.description%",
+            "order": 30
+          },
+          "binary-markdown.codeLanguageOrder": {
+            "type": "string",
+            "enum": [
+              "default",
+              "a-z",
+              "z-a"
+            ],
+            "default": "default",
+            "scope": "window",
+            "description": "%config.codeLanguageOrder.description%",
+            "enumDescriptions": [
+              "%config.codeLanguageOrder.default%",
+              "%config.codeLanguageOrder.ascending%",
+              "%config.codeLanguageOrder.descending%"
+            ],
+            "order": 40
+          },
+          "binary-markdown.math.backslashDelimiters": {
+            "type": "boolean",
+            "default": true,
+            "description": "%config.math.backslashDelimiters.description%",
+            "order": 50
+          },
+          "binary-markdown.mathSourcePosition": {
+            "type": "string",
+            "enum": [
+              "above",
+              "below"
+            ],
+            "default": "above",
+            "scope": "window",
+            "description": "%config.mathSourcePosition.description%",
+            "enumDescriptions": [
+              "%config.mathSourcePosition.above%",
+              "%config.mathSourcePosition.below%"
+            ],
+            "order": 60
+          },
+          "binary-markdown.mathSourceWrap": {
+            "type": "boolean",
+            "default": false,
+            "scope": "window",
+            "description": "%config.mathSourceWrap.description%",
+            "order": 70
+          }
+        }
+      },
+      {
+        "id": "binary-markdown.images",
+        "title": "%config.section.images%",
+        "order": 40,
+        "properties": {
+          "binary-markdown.imageDefaultDir": {
+            "type": "string",
+            "default": "",
+            "description": "%config.imageDefaultDir.description%",
+            "order": 10
+          },
+          "binary-markdown.forceRelativeImagePath": {
+            "type": "boolean",
+            "default": false,
+            "description": "%config.forceRelativeImagePath.description%",
+            "order": 20
+          }
+        }
+      },
+      {
+        "id": "binary-markdown.export",
+        "title": "%config.section.export%",
+        "order": 50,
+        "properties": {
+          "binary-markdown.export.pdfWhiteBackground": {
+            "type": "boolean",
+            "default": true,
+            "description": "%config.export.pdfWhiteBackground.description%",
+            "order": 10
+          },
+          "binary-markdown.export.showCodeLanguage": {
+            "type": "boolean",
+            "default": true,
+            "scope": "resource",
+            "description": "%config.export.showCodeLanguage.description%",
+            "order": 20
+          },
+          "binary-markdown.export.codeLanguagePosition": {
+            "type": "string",
+            "enum": [
+              "top-left",
+              "top-right",
+              "bottom-left",
+              "bottom-right"
+            ],
+            "default": "top-left",
+            "scope": "resource",
+            "description": "%config.export.codeLanguagePosition.description%",
+            "enumDescriptions": [
+              "%config.export.codeLanguagePosition.topLeft%",
+              "%config.export.codeLanguagePosition.topRight%",
+              "%config.export.codeLanguagePosition.bottomLeft%",
+              "%config.export.codeLanguagePosition.bottomRight%"
+            ],
+            "order": 30
+          },
+          "binary-markdown.export.showCodeLineNumbers": {
+            "type": "boolean",
+            "default": false,
+            "description": "%config.export.showCodeLineNumbers.description%",
+            "scope": "resource",
+            "order": 40
+          },
+          "binary-markdown.export.showCodeLineCount": {
+            "type": "boolean",
+            "default": false,
+            "description": "%config.export.showCodeLineCount.description%",
+            "scope": "resource",
+            "order": 50
+          },
+          "binary-markdown.export.pandocPath": {
+            "type": "string",
+            "default": "",
+            "scope": "machine",
+            "description": "%config.export.pandocPath.description%",
+            "order": 60
+          },
+          "binary-markdown.export.browserPath": {
+            "type": "string",
+            "default": "",
+            "scope": "machine",
+            "description": "%config.export.browserPath.description%",
+            "order": 70
+          }
+        }
+      },
+      {
+        "id": "binary-markdown.advanced",
+        "title": "%config.section.advanced%",
+        "order": 60,
+        "properties": {
+          "binary-markdown.enableDebugLogging": {
+            "type": "boolean",
+            "default": false,
+            "description": "%config.enableDebugLogging.description%",
+            "order": 10
+          }
         }
       }
-    },
+    ],
     "menus": {
       "editor/context": [
         {
@@ -539,13 +606,17 @@
       "@azure/identity": "4.13.0",
       "@azure/msal-node": {
         "uuid": "11.1.1"
-      }
+      },
+      "minimatch": "11.0.1"
     },
     "serve": {
       "compression": "1.8.2"
     },
     "mermaid": {
       "katex": "$katex"
+    },
+    "@typescript-eslint/typescript-estree": {
+      "minimatch": "11.0.1"
     }
   }
 }

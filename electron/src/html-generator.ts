@@ -44,7 +44,7 @@ export function getResourcePath(relativePath: string): string {
     }
 
     // Shorter extraResources path (src/webview/editor.js → webview/editor.js).
-    const shortPath = relativePath.replace(/^src\/webview\//, 'webview/').replace(/^src\/shared\//, 'out/shared/');
+    const shortPath = relativePath.replace(/^src\/webview\//, 'webview/').replace(/^src\/shared\//, 'out/shared/').replace(/^out\/locales\//, 'locales/');
     const prodShortPath = path.join(resPath, shortPath);
     if (fs.existsSync(prodShortPath)) {
         console.log(`[html-generator] Found (prod-short): ${relativePath} → ${prodShortPath}`);

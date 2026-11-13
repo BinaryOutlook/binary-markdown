@@ -34,6 +34,18 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  settingsEditor: "エディターと外観",
+  settingsOutline: "アウトライン",
+  settingsWriting: "編集ツール",
+  settingsImages: "画像",
+  settingsExport: "エクスポート",
+  settingsAdvanced: "詳細設定",
+  settingsTables: "表",
+  settingsCode: "コード",
+  settingsEquations: "数式",
+  settingsPreferences: "環境設定",
+  settingsCategories: "設定カテゴリー",
+
   codeBlockActionLabelsLabel: "コードブロックの操作ラベルを表示",
   codeBlockActionLabelsHelp: "コピー、折り返し、テキストで開くアイコンの横にラベルを表示します。オフにするとアイコンのみになります。ツールチップ、コード言語、折り返し状態、エラーメッセージは引き続き表示されます。",
   codeBlockActionLabelsSaveFailed: "コードブロックの操作ラベル設定を保存できませんでした。以前の設定が維持されます。",

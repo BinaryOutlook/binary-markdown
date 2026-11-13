@@ -1,4 +1,5 @@
 'use strict';
+const { configurationProperties } = require('../helpers/settings.cjs');
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
@@ -83,7 +84,7 @@ test('editor body starts open and hides the open button', () => {
 });
 
 test('extension settings expose file and global outline persistence modes', () => {
-    const properties = extensionManifest.contributes.configuration.properties;
+    const properties = configurationProperties(extensionManifest);
     const scopeSetting = properties['binary-markdown.outlineStateScope'];
 
     assert.deepEqual(scopeSetting.enum, ['file', 'global']);
@@ -91,7 +92,7 @@ test('extension settings expose file and global outline persistence modes', () =
 });
 
 test('extension settings preserve the existing open default unless configured otherwise', () => {
-    const properties = extensionManifest.contributes.configuration.properties;
+    const properties = configurationProperties(extensionManifest);
     const defaultOpenSetting = properties['binary-markdown.outlineDefaultOpen'];
 
     assert.equal(defaultOpenSetting.type, 'boolean');
@@ -99,7 +100,7 @@ test('extension settings preserve the existing open default unless configured ot
 });
 
 test('extension settings offer named outline highlight colors', () => {
-    const properties = extensionManifest.contributes.configuration.properties;
+    const properties = configurationProperties(extensionManifest);
     const colorSetting = properties['binary-markdown.outlineActiveColor'];
 
     assert.deepEqual(colorSetting.enum, ['theme', 'blue', 'green', 'orange', 'red', 'purple']);
