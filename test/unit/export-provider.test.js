@@ -1032,6 +1032,39 @@ test('a newer write read by the revert is shown in the editor', async t => {
     assert.equal(last.replace, undefined);
 });
 
+test('a write of the pre-revert baseline is reported after Load Disk Version', async t => {
+    const h = await setup(t, {}, undefined, {}, { activeTab: ownEditor });
+    typeLocally(h, '# LOCAL-UNSAVED\n');
+    h.state.warningChoice = () => 'externalConflictLoad';
+    await h.externalChange('# EXTERNAL-ONE\n');
+    await settle(() => !h.document.isDirty, 'The revert completes');
+
+    typeLocally(h, '# LOCAL-AFTER-LOAD\n');
+    h.state.warningChoice = () => undefined;
+    await h.externalChange('# OLD-EDITOR\n');
+    assert.equal(h.warnings.length, 2, 'The previous baseline is now an external revision');
+    assert.equal(h.document.getText(), '# LOCAL-AFTER-LOAD\n');
+    assert.equal(h.document.isDirty, true);
+    assert.equal(h.state.disk, '# OLD-EDITOR\n');
+});
+
+test('a delayed notification of the reverted revision keeps later edits without a conflict', async t => {
+    const h = await setup(t, {}, undefined, {}, { activeTab: ownEditor });
+    typeLocally(h, '# LOCAL-UNSAVED\n');
+    h.state.warningChoice = () => 'externalConflictLoad';
+    h.state.beforeRevert = async () => { h.state.disk = '# EXTERNAL-TWO\n'; };
+    await h.externalChange('# EXTERNAL-ONE\n');
+    await settle(() => !h.document.isDirty, 'The revert reads the latest disk revision');
+
+    typeLocally(h, '# LOCAL-AFTER-LOAD\n');
+    h.state.warningChoice = () => undefined;
+    await h.externalChange('# EXTERNAL-TWO\n');
+    assert.equal(h.warnings.length, 1, 'The already loaded disk revision is not a new conflict');
+    assert.equal(h.document.getText(), '# LOCAL-AFTER-LOAD\n');
+    assert.equal(h.document.isDirty, true);
+    assert.equal(h.state.disk, '# EXTERNAL-TWO\n');
+});
+
 test('Load Disk Version never reverts another file\'s editor', async t => {
     const h = await setup(t, {}, undefined, {}, { activeTab: ({ TabInputText, file }) => new TabInputText(file('/provider-fixture/other.md')) });
     typeLocally(h, '# LOCAL-UNSAVED\n');

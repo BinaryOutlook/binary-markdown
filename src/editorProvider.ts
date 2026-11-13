@@ -957,6 +957,10 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
                 // VS Code 1.85 reports a newer-file conflict even for identical
                 // content. Revert reads the file again, so show any newer write.
                 if (onDisk !== undefined && sameText(onDisk, content) && await revertToDisk()) {
+                    // Revert establishes a new disk baseline without a save event.
+                    // Invalidate watcher reads started before it completed.
+                    lastSavedContent = document.getText();
+                    diskSaveGeneration++;
                     // The buffer now matches the newest file, which also settles a
                     // conflict reported while the revert ran.
                     setConflict(undefined);
