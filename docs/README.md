@@ -1,6 +1,6 @@
 # Documentation
 
-Start here for maintained Binary Markdown guidance. These pages describe the source in this checkout; features in development are identified explicitly. For available packages and their tested scope, use [GitHub Releases](https://github.com/BinaryOutlook/binary-markdown/releases).
+Start here for maintained Binary Markdown guidance. These pages describe the source in this checkout; features in development are identified explicitly. Install through the [Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=BinaryOutlook.binary-markdown), or use [GitHub Releases](https://github.com/BinaryOutlook/binary-markdown/releases) for downloadable VSIX packages, source revisions, checksums and tested scope. Versions can differ between channels.
 
 | You want to… | Start with | Then read |
 | --- | --- | --- |

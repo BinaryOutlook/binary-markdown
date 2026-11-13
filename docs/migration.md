@@ -24,7 +24,7 @@ Binary Markdown 0.1.0 introduced a new installation identity. It does not overwr
 
 ## Install and select the editor
 
-Install the new VSIX using **Extensions → … → Install from VSIX…**. Open a document and choose **Reopen Editor With… → Binary Markdown**. Existing editor tabs may need to be closed and reopened.
+Install Binary Markdown from the [Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=BinaryOutlook.binary-markdown), or install a GitHub release VSIX using **Extensions → … → Install from VSIX…**. Follow the [installation and update instructions](../README.md#install), then open a document and choose **Reopen Editor With… → Binary Markdown**. Existing editor tabs may need to be closed and reopened.
 
 The new package registers `binary-markdown.editor`, separate commands, and separate settings. It can be installed alongside Any Markdown without sharing those registrations. Its editor remains optional and does not change `workbench.editorAssociations` on installation.
 

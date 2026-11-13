@@ -18,11 +18,14 @@ The [repository transition](repository-transition.md) preserves the original for
 
 **Free (freedom):** Users retain the rights to run, study, modify, and redistribute the software under the applicable licenses. Other distributors may charge for copies or support while complying with those licenses. The [licensing guide](licensing.md#cost-and-software-freedom) explains the four freedoms, their GNU/FSF heritage, and AGPL obligations. Future licensing arrangements depend on the rights the project holds and do not remove these commitments.
 
-[GitHub Releases](https://github.com/BinaryOutlook/binary-markdown/releases) is the initial official download channel. Marketplace uploads are a separate manual maintainer action; these workflows do not publish there. Open VSX publication remains separate work. Source builds and VSIX installation do not require Marketplace credentials. [Build instructions](building.md) cover `main`, release tags and historical commits.
+Binary Markdown is available on the [Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=BinaryOutlook.binary-markdown) for installation and updates through VS Code. [GitHub Releases](https://github.com/BinaryOutlook/binary-markdown/releases) provides downloadable VSIX packages with source revisions, checksums and validation records. Follow the [installation and update instructions](../README.md#install).
+
+Marketplace uploads are a separate manual maintainer action; the GitHub release workflows do not publish there. Versions can differ between the two channels, and a GitHub release does not establish Marketplace availability of that version. Open VSX publication remains separate work. Source builds and VSIX installation do not require Marketplace credentials. [Build instructions](building.md) cover `main`, release tags and historical commits.
 
 | Channel | What it means |
 | --- | --- |
-| Published release | Maintainer-published version with identified source, checksums and release validation. A prerelease is explicitly labelled. |
+| Visual Studio Marketplace | Official extension listing under `BinaryOutlook.binary-markdown`. VS Code offers published updates according to your extension update settings. |
+| GitHub release | Maintainer-published VSIX with identified source, checksums and release validation. A prerelease is explicitly labelled. |
 | CI candidate | An automatically packaged development snapshot with a source stamp and test results. Passing CI does not itself publish or approve a release. |
 | Local/community build | A build from a selected commit, possibly modified. Identify its origin and changes; do not imply maintainer validation. |
 

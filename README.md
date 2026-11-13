@@ -6,7 +6,7 @@
 
 An open-source visual Markdown editor for VS Code. Write in a rendered view, switch to source when needed, and work with tables, code, equations, and diagrams in the same document.
 
-[Download a release](https://github.com/BinaryOutlook/binary-markdown/releases) · [Documentation](docs/README.md) · [Changelog](CHANGELOG.md) · [Report an issue](https://github.com/BinaryOutlook/binary-markdown/issues)
+[Install from Marketplace](https://marketplace.visualstudio.com/items?itemName=BinaryOutlook.binary-markdown) · [Download a VSIX](https://github.com/BinaryOutlook/binary-markdown/releases) · [Documentation](docs/README.md) · [Changelog](CHANGELOG.md) · [Report an issue](https://github.com/BinaryOutlook/binary-markdown/issues)
 
 Built on [Any Markdown by raggbal and contributors](https://github.com/raggbal/any-markdown), which provides the visual editor and much of its existing functionality under MIT. BinaryOutlook independently maintains Binary Markdown's changes, releases, and support. See [Acknowledgments](ACKNOWLEDGMENTS.md) for provenance.
 
@@ -16,9 +16,13 @@ Built on [Any Markdown by raggbal and contributors](https://github.com/raggbal/a
 
 Use local desktop VS Code **1.85.0 or later**. Validation targets Windows x86-64, macOS ARM64, and Ubuntu x86-64; each release identifies the environments actually tested. Standalone Electron installers and other editors require separate validation.
 
-1. Download the `.vsix` and its SHA-256 checksum from [GitHub Releases](https://github.com/BinaryOutlook/binary-markdown/releases), or [build from source](docs/building.md). Follow the [checksum instructions](docs/building.md#inspect-and-install-the-output) before installing.
-2. In VS Code, open **Extensions**, choose **… → Install from VSIX…**, select the package, and reload if prompted.
+1. Open **Extensions** in VS Code and search for `@id:BinaryOutlook.binary-markdown`, or open the [Visual Studio Marketplace listing](https://marketplace.visualstudio.com/items?itemName=BinaryOutlook.binary-markdown).
+2. Select **Binary Markdown Editor** by **BinaryOutlook**, choose **Install**, and reload if prompted.
 3. Open a Markdown file and choose **Reopen Editor With… → Binary Markdown**.
+
+VS Code installs Marketplace updates when automatic extension updates are enabled. If you manage updates manually, use **Extensions: Check for Extension Updates** in the Command Palette, then select **Update** for Binary Markdown. Marketplace and GitHub Releases are published separately; check the version available in your chosen channel.
+
+For offline installation or a specific GitHub release, download its `.vsix` and SHA-256 checksum from [GitHub Releases](https://github.com/BinaryOutlook/binary-markdown/releases), verify it using the [checksum instructions](docs/building.md#inspect-and-install-the-output), then use **Extensions → … → Install from VSIX…**. You can also [build from source](docs/building.md).
 
 For unreleased branch or PR work, [download an automated development VSIX](docs/building.md#download-an-automated-development-build). Check the run's validation status and retain the checksum and build-information sidecars. These temporary testing packages do not publish a Marketplace update.
 
@@ -35,7 +39,7 @@ The extension ID is `BinaryOutlook.binary-markdown`. Installation leaves your de
 - **Protection from external changes:** unsaved edits stay when another program writes the open file, with **Compare** and **Load Disk Version** choices. See [external file changes](docs/editor-guide.md#external-file-changes).
 - **Experimental export:** local HTML, PDF, Word, and EPUB conversion, with PDF/DOCX code labels, optional line counts, and optional numbering.
 
-These features describe the current source. The [changelog](CHANGELOG.md) groups changes by version; GitHub Releases establishes publication. Unset toolbar preferences use Full mode and unset export-label positions use top-left; explicit saved choices remain honored. Width starts at a centered 860 px cap, code-block action labels are shown, and export line counts and numbering are off by default.
+These features describe the current source. The [changelog](CHANGELOG.md) groups changes by version; check the Marketplace listing or GitHub Releases for availability in each channel. Unset toolbar preferences use Full mode and unset export-label positions use top-left; explicit saved choices remain honored. Width starts at a centered 860 px cap, code-block action labels are shown, and export line counts and numbering are off by default.
 
 ## Configure the editor
 
