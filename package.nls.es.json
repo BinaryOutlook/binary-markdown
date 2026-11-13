@@ -36,6 +36,7 @@
   "command.exportToDocx.title": "Exportar a Word",
   "command.exportToEpub.title": "Exportar a EPUB",
   "command.copyBuildInformation.title": "Copiar información de compilación",
+  "command.resolveExternalChange.title": "Resolver cambio externo",
   "config.math.backslashDelimiters.description": "Reconoce los delimitadores de ecuaciones \\( ... \\) y \\[ ... \\] en el editor y las exportaciones. Desactívalo para tratarlos como escapes normales de Markdown.",
   "config.tableToolbarPosition.description": "Elige dónde aparecen los controles de tabla. El modo automático evita el contenido y utiliza la barra superior si es necesario. Las posiciones fijas se mantienen y permiten desplazarse si falta espacio.",
   "config.tableToolbarPosition.auto": "Automática (recomendada)",

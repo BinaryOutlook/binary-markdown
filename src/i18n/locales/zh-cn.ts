@@ -36,6 +36,10 @@ export const messages = {
   externalConflictLoad: '加载磁盘版本',
   externalConflictDiffTitle: '{0}（磁盘）↔ {0}（未保存的编辑）',
   externalConflictLoadFailed: '“{0}”已显示磁盘版本，但保存未完成。请再次保存以完成。',
+  externalConflictStatus: '磁盘上已更改',
+  externalConflictStatusTooltip: '存在未保存的编辑时，另一个程序更改了此文件。选择以比较或加载磁盘版本。',
+  externalConflictStatusName: 'Binary Markdown 外部更改',
+  externalConflictNone: '活动编辑器没有未解决的外部更改。',
 };
 
 export const webviewMessages = {

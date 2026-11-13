@@ -4,7 +4,7 @@
 
 ### Fixed
 
-- Keep unsaved edits when another program writes the open file, instead of silently replacing them. A warning offers **Compare** and **Load Disk Version**, and Undo restores edits replaced by loading. Text typed just before the write is kept the same way, and files saved by replacement are now detected ([#81](https://github.com/BinaryOutlook/binary-markdown/issues/81)). See [external file changes](docs/editor-guide.md#external-file-changes).
+- Keep unsaved edits when another program writes the open file, instead of silently replacing them. A warning offers **Compare** and **Load Disk Version**, and Undo restores edits replaced by loading. A **Changed on disk** status bar item and the **Binary Markdown: Resolve External Change** command reopen the choices after the warning is closed. Text typed just before the write is kept the same way, with the editor's first save held until the warning is answered, and files saved by replacement are now detected ([#81](https://github.com/BinaryOutlook/binary-markdown/issues/81)). See [external file changes](docs/editor-guide.md#external-file-changes).
 
 ## 0.5.1
 

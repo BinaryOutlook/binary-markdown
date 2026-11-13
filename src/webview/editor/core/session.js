@@ -137,12 +137,19 @@ function createSession(dependencies) {
     function hasUnsentEdits() {
         return Boolean(syncTimeout || saveTimeout || pendingSync);
     }
+    // Deliver synchronized text. When nothing new reached the host and no
+    // typing is in progress, nothing else would apply a queued update: Source
+    // mode input, for example, never starts the typing idle timer.
+    function deliverLocalContent(content) {
+        if (!sendContent(content) && !isActivelyEditing)
+            applyQueuedExternalChange();
+    }
     // Immediate notification - called after debounce in debouncedSync
     function notifyChangeImmediate() {
         // Only save if user has made edits (prevents saving on initial load)
         if (!hasUserEdited)
             return;
-        sendContent(markdown);
+        deliverLocalContent(markdown);
         dependencies.updateOutline();
         dependencies.updateWordCount();
         dependencies.updateStatus();
@@ -158,7 +165,7 @@ function createSession(dependencies) {
             saveTimeout = null;
             if (generation !== syncGeneration)
                 return;
-            sendContent(markdown);
+            deliverLocalContent(markdown);
             dependencies.updateOutline();
             dependencies.updateWordCount();
             dependencies.updateStatus();

@@ -39,6 +39,10 @@ export interface Messages {
   externalConflictLoad: string;
   externalConflictDiffTitle: string;
   externalConflictLoadFailed: string;
+  externalConflictStatus: string;
+  externalConflictStatusTooltip: string;
+  externalConflictStatusName: string;
+  externalConflictNone: string;
 }
 
 export interface WebviewMessages {

@@ -365,10 +365,38 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
     }
     private readonly outlineStateStore: OutlineStateStoreContract;
     private readonly externalSnapshots: ExternalSnapshotStore;
+    // Unresolved external-change conflicts per editor. The status bar shows
+    // the active editor's conflict so a dismissed warning stays reachable.
+    private readonly conflictControls = new Map<vscode.WebviewPanel, { active(): boolean; showChoices(): Promise<void> }>();
+    private conflictStatus: vscode.StatusBarItem | undefined;
 
     constructor(private readonly context: vscode.ExtensionContext) {
         this.outlineStateStore = new OutlineStateStore(context.workspaceState, context.globalState);
         this.externalSnapshots = new ExternalSnapshotStore(context.subscriptions);
+    }
+
+    /** Reopen the external-change choices for the active editor. */
+    public async resolveExternalChange(): Promise<void> {
+        const control = this.activeWebviewPanel ? this.conflictControls.get(this.activeWebviewPanel) : undefined;
+        if (control?.active()) { await control.showChoices(); }
+        else { void vscode.window.showInformationMessage(t('externalConflictNone')); }
+    }
+
+    private refreshConflictStatus(): void {
+        const panel = this.activeWebviewPanel;
+        const active = !!panel && !!this.conflictControls.get(panel)?.active();
+        void vscode.commands.executeCommand('setContext', 'binaryMarkdown.externalConflict', active);
+        if (!active) { this.conflictStatus?.hide(); return; }
+        if (!this.conflictStatus) {
+            this.conflictStatus = vscode.window.createStatusBarItem('binary-markdown.externalConflict', vscode.StatusBarAlignment.Left, 100);
+            this.conflictStatus.command = 'binary-markdown.resolveExternalChange';
+            this.context.subscriptions.push(this.conflictStatus);
+        }
+        // Labels follow the current interface language.
+        this.conflictStatus.name = t('externalConflictStatusName');
+        this.conflictStatus.text = '$(warning) ' + t('externalConflictStatus');
+        this.conflictStatus.tooltip = t('externalConflictStatusTooltip');
+        this.conflictStatus.show();
     }
 
     /**
@@ -464,8 +492,16 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
         // Another program's write never replaces unsaved edits. The conflict
         // retains that program's latest revision for Compare and Load Disk
         // Version until the user saves, reverts or loads it.
-        interface ExternalConflict { content: string; }
+        // holdSave: text typed before a reload from disk replaced that revision
+        // in the buffer, where VS Code's own newer-file check cannot see it.
+        // The next save from the editor is held until the warning is answered.
+        interface ExternalConflict { content: string; noticeOpen: boolean; holdSave: boolean; }
         let conflict: ExternalConflict | undefined;
+        const setConflict = (value: ExternalConflict | undefined) => {
+            if (conflict === value) { return; }
+            conflict = value;
+            this.refreshConflictStatus();
+        };
         // Each update the webview receives has a revision, and its edits name
         // the revision they were typed on. An edit based on content older than
         // a reload from disk would otherwise hide that disk revision unnoticed.
@@ -478,6 +514,9 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
         // Notification text renders [label](command:...) as a clickable link.
         // A crafted file name must not become one, so separate "](" invisibly.
         const noticeName = fileName.replace(/\]\(/g, ']\u200B(');
+        // split/join inserts the name literally; String.replace would expand
+        // sequences such as $& or $$ that a file name may contain.
+        const fill = (key: Parameters<typeof t>[0], name: string) => t(key).split('{0}').join(name);
 
         let disposed = false;
         let renderGeneration = 0;
@@ -633,7 +672,7 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
             // A clean buffer changed without Undo/Redo was reloaded or
             // reverted from disk, which also settles any earlier conflict.
             const fromDisk = !document.isDirty && e.reason === undefined;
-            if (fromDisk) { conflict = undefined; }
+            if (fromDisk) { setConflict(undefined); }
             void postUpdate(currentContent, fromDisk ? 'disk' : 'buffer');
 
             // Update image dir status (directive may have changed)
@@ -853,10 +892,21 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
             } finally { ownWrites.delete(write); ownSaveDepth--; resumeDiskCheck(); }
         };
 
+        // The watcher reads a write shortly after it lands. Before Compare or
+        // Load, read the file again so the latest external version is used.
+        // Skip while our own save writes it, and never adopt our saved bytes.
+        const refreshExternal = async (current: ExternalConflict) => {
+            if (nativeWritePending || ownSaveDepth > 0 || diskBaselineAmbiguous) { return; }
+            try {
+                const latest = new TextDecoder().decode(await vscode.workspace.fs.readFile(document.uri));
+                if (latest !== lastSavedContent && latest !== document.getText()) { current.content = latest; }
+            } catch { /* Keep the retained version if the file cannot be read. */ }
+        };
         const compareExternal = async (current: ExternalConflict) => {
+            await refreshExternal(current);
             const snapshot = this.externalSnapshots.add(document.uri, current.content);
             await vscode.commands.executeCommand('vscode.diff', snapshot, document.uri,
-                t('externalConflictDiffTitle').replace(/\{0\}/g, fileName));
+                fill('externalConflictDiffTitle', fileName));
         };
         // Loading is an explicit discard. Edits typed before this choice that
         // are still in flight are ignored; Undo in the editor restores them.
@@ -864,14 +914,15 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
             const revision = loadRevision = ++hostRevision;
             const loading = saveQueue.catch(() => undefined).then(async () => {
                 if (disposed) { return; }
+                await refreshExternal(current);
                 editQueue.schedule(normalizeEol(current.content));
                 await editQueue.flush();
-                if (conflict === current) { conflict = undefined; }
+                if (conflict === current) { setConflict(undefined); }
                 await postUpdate(current.content, 'load', revision);
                 // A clean buffer already matches the disk; saving it would
                 // only report failure and make the saved revision uncertain.
                 if (document.isDirty && !await saveWithoutSnapshot()) {
-                    throw new Error(t('externalConflictLoadFailed').replace('{0}', noticeName));
+                    throw new Error(fill('externalConflictLoadFailed', noticeName));
                 }
             });
             // Keep the shared save chain settled; the notice reports a failure.
@@ -881,7 +932,12 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
         const showConflictNotice = async (current: ExternalConflict): Promise<void> => {
             const compare = t('externalConflictCompare');
             const load = t('externalConflictLoad');
-            const choice = await vscode.window.showWarningMessage(t('externalConflict').replace('{0}', noticeName), compare, load);
+            current.noticeOpen = true;
+            let choice: string | undefined;
+            try { choice = await vscode.window.showWarningMessage(fill('externalConflict', noticeName), compare, load); }
+            finally { current.noticeOpen = false; }
+            // Any answer, including closing the warning, is the user's decision.
+            current.holdSave = false;
             if (disposed) { return; }
             try {
                 if (choice === load) { await loadExternal(current); }
@@ -895,24 +951,33 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
             }
         };
         // Notify once per conflict. Later writes update the retained revision.
-        const reportExternalConflict = (content: string) => {
-            if (conflict) { conflict.content = content; return; }
-            const current: ExternalConflict = { content };
-            conflict = current;
+        const reportExternalConflict = (content: string, holdSave = false) => {
+            if (conflict) { conflict.content = content; conflict.holdSave ||= holdSave; return; }
+            const current: ExternalConflict = { content, noticeOpen: false, holdSave };
+            setConflict(current);
             void showConflictNotice(current);
         };
+        this.conflictControls.set(webviewPanel, {
+            active: () => conflict !== undefined,
+            // An open warning may be collapsed into the notification list.
+            showChoices: async () => {
+                if (!conflict) { return; }
+                if (conflict.noticeOpen) { await vscode.commands.executeCommand('notifications.showList'); }
+                else { await showConflictNotice(conflict); }
+            }
+        });
         // Webview content based on an older revision than the latest one loaded
         // from disk was typed before that reload. Keep it, and report the
-        // disk revision it replaced in the buffer.
+        // disk revision it replaced in the buffer once.
         const checkEditBase = (base: unknown): 'current' | 'stale' | 'discarded' => {
             if (typeof base !== 'number') { return 'current'; }
             if (base < loadRevision) { return 'discarded'; }
-            if (base < diskUpdate.revision && diskUpdate.revision > reportedDiskRevision) {
+            if (base >= diskUpdate.revision) { return 'current'; }
+            if (diskUpdate.revision > reportedDiskRevision) {
                 reportedDiskRevision = diskUpdate.revision;
-                reportExternalConflict(diskUpdate.content);
-                return 'stale';
+                reportExternalConflict(diskUpdate.content, true);
             }
-            return 'current';
+            return 'stale';
         };
         const waitForSaves = async (signal?: AbortSignal): Promise<void> => {
             while (true) {
@@ -985,7 +1050,7 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
                     lastSavedContent = document.getText();
                     // The saved buffer is now the disk version, which settles a
                     // conflict. An open notice still offers the other revision.
-                    conflict = undefined;
+                    setConflict(undefined);
                     postSaveState({ type: 'documentSaved', content: convertImagePaths(lastSavedContent) });
                 }
                 diskSaveGeneration++;
@@ -1042,22 +1107,35 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
 
                 case 'edit':
                     // Restore original line endings if document uses CRLF
-                    if (typeof message.content === 'string' && checkEditBase(message.base) !== 'discarded') {
+                    if (typeof message.content === 'string') {
+                        const base = checkEditBase(message.base);
+                        if (base === 'discarded') { break; }
                         editQueue.schedule(normalizeEol(restoreImagePaths(message.content)));
+                        // The editor may already show the reload this edit replaced.
+                        // Send the buffer back so the editor and buffer agree.
+                        if (base === 'stale') {
+                            void editQueue.flush().then(() => { if (!disposed) { void postUpdate(document.getText(), 'buffer'); } })
+                                .catch(() => undefined);
+                        }
                     }
                     break;
 
                 case 'save': {
                     // Message order fixes the saved revision before later export requests.
                     // Text typed before Load Disk Version is not saved over it.
-                    const content = typeof message.content === 'string' && checkEditBase(message.base) !== 'discarded'
+                    const base = typeof message.content === 'string' ? checkEditBase(message.base) : 'current';
+                    const content = typeof message.content === 'string' && base !== 'discarded'
                         ? normalizeEol(restoreImagePaths(message.content)) : undefined;
                     saveQueue = saveQueue.catch(() => undefined).then(async () => {
                         let success = false;
                         try {
                             if (content !== undefined) { editQueue.schedule(refreshTocs(content)); }
                             await editQueue.flush();
-                            success = await saveWithoutSnapshot();
+                            // Text typed before a reload from disk has replaced that
+                            // revision in the buffer. Keep it unsaved once, so the
+                            // warning decides before the disk version is overwritten.
+                            if (conflict?.holdSave) { conflict.holdSave = false; }
+                            else { success = await saveWithoutSnapshot(); }
                         } catch (error) {
                             vscode.window.showErrorMessage(String(error));
                         }
@@ -1291,12 +1369,15 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
             } else if (this.activeWebviewPanel === webviewPanel) {
                 this.activeWebviewPanel = undefined;
             }
+            this.refreshConflictStatus();
         });
 
         webviewPanel.onDidDispose(() => {
             if (this.activeWebviewPanel === webviewPanel) {
                 this.activeWebviewPanel = undefined;
             }
+            this.conflictControls.delete(webviewPanel);
+            this.refreshConflictStatus();
             disposed = true;
             pendingRender = undefined;
             renderQueued = false;

@@ -31,11 +31,15 @@ export const messages = {
   failedToProcessImage: 'Échec du traitement de l\'image : ',
   selectImage: 'Sélectionner une image',
   selectFileToCompare: 'Sélectionner le fichier à comparer',
-  externalConflict: '« {0} » a été modifié sur le disque alors que vous avez des modifications non enregistrées. Vos modifications sont conservées.',
+  externalConflict: '«\u00A0{0}\u00A0» a été modifié sur le disque alors que vous avez des modifications non enregistrées. Vos modifications sont conservées.',
   externalConflictCompare: 'Comparer',
   externalConflictLoad: 'Charger la version du disque',
   externalConflictDiffTitle: '{0} (sur le disque) ↔ {0} (vos modifications)',
-  externalConflictLoadFailed: '« {0} » affiche maintenant la version du disque, mais son enregistrement n’est pas terminé. Enregistrez de nouveau pour terminer.',
+  externalConflictLoadFailed: '«\u00A0{0}\u00A0» affiche maintenant la version du disque, mais son enregistrement n’est pas terminé. Enregistrez de nouveau pour terminer.',
+  externalConflictStatus: 'Modifié sur le disque',
+  externalConflictStatusTooltip: 'Un autre programme a modifié ce fichier alors qu’il contient des modifications non enregistrées. Sélectionnez pour comparer ou charger la version du disque.',
+  externalConflictStatusName: 'Modification externe Binary Markdown',
+  externalConflictNone: 'L’éditeur actif n’a aucune modification externe non résolue.',
 };
 
 export const webviewMessages = {

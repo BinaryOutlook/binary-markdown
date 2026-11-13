@@ -36,6 +36,10 @@ export const messages = {
   externalConflictLoad: 'Load Disk Version',
   externalConflictDiffTitle: '{0} (on disk) ↔ {0} (your edits)',
   externalConflictLoadFailed: "'{0}' now shows the disk version, but saving it did not finish. Save again to complete it.",
+  externalConflictStatus: 'Changed on disk',
+  externalConflictStatusTooltip: 'Another program changed this file while it has unsaved edits. Select to compare or load the disk version.',
+  externalConflictStatusName: 'Binary Markdown external change',
+  externalConflictNone: 'The active editor has no unresolved external change.',
 };
 
 export const webviewMessages = {

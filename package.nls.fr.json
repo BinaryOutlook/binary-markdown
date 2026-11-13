@@ -36,6 +36,7 @@
   "command.exportToDocx.title": "Exporter vers Word",
   "command.exportToEpub.title": "Exporter en EPUB",
   "command.copyBuildInformation.title": "Copier les informations de compilation",
+  "command.resolveExternalChange.title": "Résoudre la modification externe",
   "config.math.backslashDelimiters.description": "Reconnaît les délimiteurs d’équations \\( ... \\) et \\[ ... \\] dans l’éditeur et les exports. Désactivez cette option pour les traiter comme des échappements Markdown ordinaires.",
   "config.tableToolbarPosition.description": "Choisissez la position des outils de tableau. Le mode automatique évite le contenu et utilise la barre supérieure si nécessaire. Les positions fixes sont conservées et permettent le défilement si l’espace manque.",
   "config.tableToolbarPosition.auto": "Automatique (recommandé)",

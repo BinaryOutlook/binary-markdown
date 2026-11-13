@@ -36,6 +36,10 @@ export const messages = {
   externalConflictLoad: '載入磁碟版本',
   externalConflictDiffTitle: '{0}（磁碟）↔ {0}（未儲存的編輯）',
   externalConflictLoadFailed: '「{0}」已顯示磁碟版本，但儲存尚未完成。請再次儲存以完成。',
+  externalConflictStatus: '磁碟上已變更',
+  externalConflictStatusTooltip: '有尚未儲存的編輯時，另一個程式變更了此檔案。選取以比較或載入磁碟版本。',
+  externalConflictStatusName: 'Binary Markdown 外部變更',
+  externalConflictNone: '使用中的編輯器沒有未解決的外部變更。',
 };
 
 export const webviewMessages = {

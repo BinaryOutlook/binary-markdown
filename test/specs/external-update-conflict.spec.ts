@@ -115,6 +115,25 @@ test('Source mode typing is kept when an update arrives', async ({ page }) => {
     expect((await sent(page, 'edit')).at(-1)).toMatchObject({ content: 'Alpha\nMore\n', base: 1 });
 });
 
+test('Source mode applies a held update once an edit leaves nothing new to send', async ({ page }) => {
+    await host(page, { type: 'toggleSourceMode' });
+    await page.locator('#sourceEditor').evaluate(element => {
+        const source = element as HTMLTextAreaElement;
+        source.focus();
+        source.setSelectionRange(source.value.length, source.value.length);
+    });
+    // Typing and deleting a character leaves the host's text unchanged.
+    await page.keyboard.type('x');
+    await page.keyboard.press('Backspace');
+    await host(page, { type: 'update', content: 'From the side editor\n', revision: 2 });
+    expect(await page.locator('#sourceEditor').inputValue()).toBe('Alpha\n');
+    await page.clock.runFor(1000);
+    expect(await page.locator('#sourceEditor').inputValue()).toBe('From the side editor\n');
+    await page.keyboard.type('!');
+    await page.clock.runFor(1000);
+    expect((await sent(page, 'edit')).at(-1)).toMatchObject({ content: 'From the side editor\n!', base: 2 });
+});
+
 test('the save snapshot names the host revision of its text', async ({ page }) => {
     await host(page, { type: 'update', content: 'Applied\n', revision: 7 });
     await host(page, { type: 'captureExportSnapshot', requestId: 'snapshot-base' });

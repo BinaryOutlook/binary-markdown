@@ -36,6 +36,7 @@
   "command.exportToDocx.title": "导出为Word",
   "command.exportToEpub.title": "导出为EPUB",
   "command.copyBuildInformation.title": "复制构建信息",
+  "command.resolveExternalChange.title": "解决外部更改",
   "config.math.backslashDelimiters.description": "在编辑器和导出中识别公式分隔符 \\( ... \\) 和 \\[ ... \\]。禁用后将其视为普通 Markdown 转义。",
   "config.tableToolbarPosition.description": "选择表格操作的位置。自动模式会避开已有内容，必要时使用顶部栏。固定位置保持不变，空间不足时可滚动。",
   "config.tableToolbarPosition.auto": "自动（推荐）",

@@ -36,6 +36,10 @@ export const messages = {
   externalConflictLoad: 'ディスクのバージョンを読み込む',
   externalConflictDiffTitle: '{0} (ディスク) ↔ {0} (編集内容)',
   externalConflictLoadFailed: '「{0}」にディスクのバージョンを表示しましたが、保存が完了していません。もう一度保存してください。',
+  externalConflictStatus: 'ディスク上で変更',
+  externalConflictStatusTooltip: '未保存の編集がある間に、別のプログラムがこのファイルを変更しました。選択すると、比較するかディスクのバージョンを読み込めます。',
+  externalConflictStatusName: 'Binary Markdown の外部変更',
+  externalConflictNone: 'アクティブなエディターに未解決の外部変更はありません。',
 };
 
 export const webviewMessages = {

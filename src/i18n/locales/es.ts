@@ -36,6 +36,10 @@ export const messages = {
   externalConflictLoad: 'Cargar versión del disco',
   externalConflictDiffTitle: '{0} (en disco) ↔ {0} (sus cambios)',
   externalConflictLoadFailed: "'{0}' muestra ahora la versión del disco, pero no se terminó de guardar. Vuelva a guardar para completarlo.",
+  externalConflictStatus: 'Modificado en el disco',
+  externalConflictStatusTooltip: 'Otro programa modificó este archivo mientras tenía cambios sin guardar. Seleccione para comparar o cargar la versión del disco.',
+  externalConflictStatusName: 'Cambio externo de Binary Markdown',
+  externalConflictNone: 'El editor activo no tiene ningún cambio externo pendiente.',
 };
 
 export const webviewMessages = {

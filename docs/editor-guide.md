@@ -528,6 +528,7 @@ Available in Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`):
 | `Binary Markdown: Undo` | Undo last edit |
 | `Binary Markdown: Redo` | Redo last undone edit |
 | `Binary Markdown: Copy Build Information` | Copy source and host identity for a reproducible bug report |
+| `Binary Markdown: Resolve External Change` | Show the [external change](#external-file-changes) choices again; offered while a conflict is unresolved |
 
 Export commands are listed in [export help](../media/export-help.md#export-a-saved-document). This table uses the English Command Palette labels. Commands with translations, including export and build information, follow VS Code's display language; the editor language setting controls the editor interface separately.
 
@@ -546,11 +547,13 @@ When the file has unsaved changes, Binary Markdown keeps them. The editor and VS
 | **Compare** | Opens VS Code's diff editor with the other program's latest version on the left, read-only, and your document on the right. You can copy text across or edit the right side. The warning returns so that you can still choose. |
 | **Load Disk Version** | Replaces your unsaved changes with the other program's latest version and leaves the document saved. Undo in Binary Markdown brings your replaced edits back. |
 
-Closing the warning keeps your edits. Further writes during the same conflict update the version that **Compare** and **Load Disk Version** use without repeating the warning. The conflict ends when you save, revert or load a version; a later external write warns again.
+**Compare** and **Load Disk Version** read the file again when you choose them, so they use the other program's latest version. Further writes during the same conflict do not repeat the warning.
+
+Closing the warning keeps your edits. While the conflict is unresolved, the status bar shows **Changed on disk**. Select it, or run **Binary Markdown: Resolve External Change** from the Command Palette, to see the choices again. The conflict ends when you save, revert or load a version; a later external write warns again.
 
 If you save while the conflict is open, VS Code can ask whether to overwrite the newer file. VS Code only notices a newer file whose size changed, so an external change of the same size can be saved over without that question. Use **Compare** before saving when the other version matters.
 
-Text typed moments before the other program's write, before Binary Markdown has passed it to VS Code, is treated the same way. Binary Markdown keeps it instead of the reloaded version and shows the same warning.
+Text typed moments before the other program's write, before Binary Markdown has passed it to VS Code, is treated the same way. Binary Markdown keeps it instead of the reloaded version and shows the same warning. VS Code cannot detect this case when you save. Until you answer the warning, Binary Markdown therefore holds the first save you make with the editor's own shortcut; saving again writes your text. A save started from VS Code itself, such as **File > Save**, cannot be held and writes your text, and the warning still offers the other version.
 
 File-change notifications received during a save are reread after the saved revision is confirmed. If the document changes while saving, reload remains deferred until a later save completes without intervening changes, or the editor is closed and reopened. The same deferral applies when a save fails, because the disk may contain only part of the document. Cancelling an export does not cancel that disk write or release this protection.
 
