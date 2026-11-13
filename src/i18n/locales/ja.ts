@@ -31,6 +31,11 @@ export const messages = {
   failedToProcessImage: '画像の処理に失敗しました: ',
   selectImage: '画像を選択',
   selectFileToCompare: '比較するファイルを選択',
+  externalConflict: '未保存の編集がある間に「{0}」がディスク上で変更されました。編集内容は保持されています。',
+  externalConflictCompare: '比較',
+  externalConflictLoad: 'ディスクのバージョンを読み込む',
+  externalConflictDiffTitle: '{0} (ディスク) ↔ {0} (編集内容)',
+  externalConflictLoadFailed: '「{0}」にディスクのバージョンを表示しましたが、保存が完了していません。もう一度保存してください。',
 };
 
 export const webviewMessages = {

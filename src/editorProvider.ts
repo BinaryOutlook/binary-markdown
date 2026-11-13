@@ -7,6 +7,7 @@ import { ExportController } from './export/controller';
 import { ExportFormat } from './export/types';
 import { t, getWebviewMessages, initLocale } from './i18n/messages';
 import { openLocalLink } from './link-opener';
+import { ExternalSnapshotStore } from './external-snapshots';
 
 type OutlineStateScope = 'file' | 'global';
 
@@ -363,9 +364,11 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
         else { void vscode.window.showInformationMessage(t('openMarkdownFirst')); }
     }
     private readonly outlineStateStore: OutlineStateStoreContract;
+    private readonly externalSnapshots: ExternalSnapshotStore;
 
     constructor(private readonly context: vscode.ExtensionContext) {
         this.outlineStateStore = new OutlineStateStore(context.workspaceState, context.globalState);
+        this.externalSnapshots = new ExternalSnapshotStore(context.subscriptions);
     }
 
     /**
@@ -458,6 +461,24 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
         let lastSavedContent: string | undefined = document.isDirty ? undefined : document.getText();
         let diskSaveGeneration = 0;
 
+        // Another program's write never replaces unsaved edits. The conflict
+        // retains that program's latest revision for Compare and Load Disk
+        // Version until the user saves, reverts or loads it.
+        interface ExternalConflict { content: string; }
+        let conflict: ExternalConflict | undefined;
+        // Each update the webview receives has a revision, and its edits name
+        // the revision they were typed on. An edit based on content older than
+        // a reload from disk would otherwise hide that disk revision unnoticed.
+        let hostRevision = 0;
+        let diskUpdate = { revision: 0, content: '' };
+        let reportedDiskRevision = 0;
+        // Edits typed before the user chose Load Disk Version are discarded.
+        let loadRevision = 0;
+        const fileName = path.basename(document.uri.fsPath);
+        // Notification text renders [label](command:...) as a clickable link.
+        // A crafted file name must not become one, so separate "](" invisibly.
+        const noticeName = fileName.replace(/\]\(/g, ']\u200B(');
+
         let disposed = false;
         let renderGeneration = 0;
         let pendingRender: number | undefined;
@@ -501,6 +522,8 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
                         tableToolbarPosition: normalizeTablePosition(config.get('tableToolbarPosition')),
                         tableSourceFormat: vscode.workspace.getConfiguration('binary-markdown', document.uri).get('tableSourceFormat', 'aligned'),
                         renderGeneration,
+                        // The document text above includes every update so far.
+                        contentRevision: hostRevision,
                         documentBaseUri: documentBaseUri,
                         webviewMessages: getWebviewMessages(),
                         enableDebugLogging: config.get<boolean>('enableDebugLogging', false),
@@ -587,6 +610,15 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
         let isActivelyEditing = false;
         let isApplyingOwnEdit = false;
 
+        // 'disk' marks content that matches the file on disk; 'load' is the
+        // user's explicit choice to discard unsaved edits for that content.
+        const postUpdate = (content: string, source: 'buffer' | 'disk' | 'load', revision = ++hostRevision) => {
+            if (source !== 'buffer') { diskUpdate = { revision, content }; }
+            return webviewPanel.webview.postMessage({
+                type: 'update', content: convertImagePaths(content), revision, ...(source === 'load' ? { replace: true } : {})
+            });
+        };
+
         // Listen for document changes
         const changeDocumentSubscription = vscode.workspace.onDidChangeTextDocument(e => {
             if (e.document.uri.toString() !== document.uri.toString()) return;
@@ -598,12 +630,11 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
             // External change detected — send update to webview.
             // The webview will decide whether to apply immediately (idle) or queue (editing).
             const currentContent = document.getText();
-            const content = convertImagePaths(currentContent);
-
-            webviewPanel.webview.postMessage({
-                type: 'update',
-                content: content
-            });
+            // A clean buffer changed without Undo/Redo was reloaded or
+            // reverted from disk, which also settles any earlier conflict.
+            const fromDisk = !document.isDirty && e.reason === undefined;
+            if (fromDisk) { conflict = undefined; }
+            void postUpdate(currentContent, fromDisk ? 'disk' : 'buffer');
 
             // Update image dir status (directive may have changed)
             sendImageDirStatus();
@@ -652,23 +683,23 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
                     // external edit and must not replace the newer document.
                     if (newContent === lastSavedContent) { return; }
                     const currentContent = document.getText();
+                    if (newContent === currentContent) { return; }
+                    // Unsaved edits stay in the buffer and editor. Retain the
+                    // other revision and let the user decide.
+                    if (document.isDirty) { reportExternalConflict(newContent); return; }
 
-                    if (newContent !== currentContent) {
-                        isApplyingOwnEdit = true;
-                        try {
-                            const fullRange = new vscode.Range(document.positionAt(0), document.positionAt(currentContent.length));
-                            const edit = new vscode.WorkspaceEdit();
-                            edit.replace(document.uri, fullRange, newContent);
-                            await vscode.workspace.applyEdit(edit);
-                        } finally { isApplyingOwnEdit = false; }
+                    isApplyingOwnEdit = true;
+                    try {
+                        const fullRange = new vscode.Range(document.positionAt(0), document.positionAt(currentContent.length));
+                        const edit = new vscode.WorkspaceEdit();
+                        edit.replace(document.uri, fullRange, newContent);
+                        await vscode.workspace.applyEdit(edit);
+                    } finally { isApplyingOwnEdit = false; }
 
-                        // Disk already contains this external revision. Saving
-                        // must not recapture the webview's older content.
-                        await saveWithoutSnapshot();
-                        if (!disposed) {
-                            webviewPanel.webview.postMessage({ type: 'update', content: convertImagePaths(newContent) });
-                        }
-                    }
+                    // Disk already contains this external revision. Saving
+                    // must not recapture the webview's older content.
+                    await saveWithoutSnapshot();
+                    if (!disposed) { void postUpdate(newContent, 'disk'); }
                 } catch (error) {
                     console.error('[Binary Markdown] Error reading file after external change:', error);
                 } finally {
@@ -677,14 +708,18 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
                 }
             }, 100);
         };
-        const fileChangeSubscription = fileWatcher.onDidChange(uri => {
+        const onFileWritten = (uri: vscode.Uri) => {
             if (uri.toString() !== document.uri.toString() || disposed) { return; }
             // File notifications can arrive while a save has temporarily
             // truncated its destination. Read only after the write finishes,
             // and coalesce notifications without caching those partial bytes.
             diskCheckRequested = true;
             resumeDiskCheck();
-        });
+        };
+        // Programs that save atomically rename a new file over the original,
+        // which the watcher reports as a creation rather than a change.
+        const fileChangeSubscription = fileWatcher.onDidChange(onFileWritten);
+        const fileCreateSubscription = fileWatcher.onDidCreate(onFileWritten);
 
         // Coalesce a settings burst into one HTML replacement. Overlapping
         // replacements can leave a loaded frame pending in native VS Code.
@@ -817,6 +852,68 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
                 throw error;
             } finally { ownWrites.delete(write); ownSaveDepth--; resumeDiskCheck(); }
         };
+
+        const compareExternal = async (current: ExternalConflict) => {
+            const snapshot = this.externalSnapshots.add(document.uri, current.content);
+            await vscode.commands.executeCommand('vscode.diff', snapshot, document.uri,
+                t('externalConflictDiffTitle').replace(/\{0\}/g, fileName));
+        };
+        // Loading is an explicit discard. Edits typed before this choice that
+        // are still in flight are ignored; Undo in the editor restores them.
+        const loadExternal = (current: ExternalConflict) => {
+            const revision = loadRevision = ++hostRevision;
+            const loading = saveQueue.catch(() => undefined).then(async () => {
+                if (disposed) { return; }
+                editQueue.schedule(normalizeEol(current.content));
+                await editQueue.flush();
+                if (conflict === current) { conflict = undefined; }
+                await postUpdate(current.content, 'load', revision);
+                // A clean buffer already matches the disk; saving it would
+                // only report failure and make the saved revision uncertain.
+                if (document.isDirty && !await saveWithoutSnapshot()) {
+                    throw new Error(t('externalConflictLoadFailed').replace('{0}', noticeName));
+                }
+            });
+            // Keep the shared save chain settled; the notice reports a failure.
+            saveQueue = loading.then(() => undefined, () => undefined);
+            return loading;
+        };
+        const showConflictNotice = async (current: ExternalConflict): Promise<void> => {
+            const compare = t('externalConflictCompare');
+            const load = t('externalConflictLoad');
+            const choice = await vscode.window.showWarningMessage(t('externalConflict').replace('{0}', noticeName), compare, load);
+            if (disposed) { return; }
+            try {
+                if (choice === load) { await loadExternal(current); }
+                else if (choice === compare) {
+                    await compareExternal(current);
+                    // Comparing is not a decision; keep both choices available.
+                    if (!disposed && conflict === current) { void showConflictNotice(current); }
+                }
+            } catch (error) {
+                void vscode.window.showErrorMessage(error instanceof Error ? error.message : String(error));
+            }
+        };
+        // Notify once per conflict. Later writes update the retained revision.
+        const reportExternalConflict = (content: string) => {
+            if (conflict) { conflict.content = content; return; }
+            const current: ExternalConflict = { content };
+            conflict = current;
+            void showConflictNotice(current);
+        };
+        // Webview content based on an older revision than the latest one loaded
+        // from disk was typed before that reload. Keep it, and report the
+        // disk revision it replaced in the buffer.
+        const checkEditBase = (base: unknown): 'current' | 'stale' | 'discarded' => {
+            if (typeof base !== 'number') { return 'current'; }
+            if (base < loadRevision) { return 'discarded'; }
+            if (base < diskUpdate.revision && diskUpdate.revision > reportedDiskRevision) {
+                reportedDiskRevision = diskUpdate.revision;
+                reportExternalConflict(diskUpdate.content);
+                return 'stale';
+            }
+            return 'current';
+        };
         const waitForSaves = async (signal?: AbortSignal): Promise<void> => {
             while (true) {
                 if (disposed) { throw new Error('The document editor was closed.'); }
@@ -862,7 +959,9 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
                 if (!isCurrentSave()) { return; }
                 const snapshot = await exportController.captureForSave();
                 if (!isCurrentSave()) { return; }
-                const content = normalizeEol(refreshTocs(restoreImagePaths(snapshot)));
+                // Text typed before Load Disk Version must not be saved over it.
+                if (checkEditBase(snapshot.base) === 'discarded') { return; }
+                const content = normalizeEol(refreshTocs(restoreImagePaths(snapshot.content)));
                 // A queued WorkspaceEdit can change the document version during
                 // this listener. VS Code then discards any returned TextEdits.
                 // Commit the snapshot through the same ordered edit queue and
@@ -884,6 +983,9 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
                 diskBaselineAmbiguous = writes.length === 0 || writes.some(write => write.version !== document.version);
                 if (!diskBaselineAmbiguous) {
                     lastSavedContent = document.getText();
+                    // The saved buffer is now the disk version, which settles a
+                    // conflict. An open notice still offers the other revision.
+                    conflict = undefined;
                     postSaveState({ type: 'documentSaved', content: convertImagePaths(lastSavedContent) });
                 }
                 diskSaveGeneration++;
@@ -940,12 +1042,16 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
 
                 case 'edit':
                     // Restore original line endings if document uses CRLF
-                    if (typeof message.content === 'string') { editQueue.schedule(normalizeEol(restoreImagePaths(message.content))); }
+                    if (typeof message.content === 'string' && checkEditBase(message.base) !== 'discarded') {
+                        editQueue.schedule(normalizeEol(restoreImagePaths(message.content)));
+                    }
                     break;
 
                 case 'save': {
                     // Message order fixes the saved revision before later export requests.
-                    const content = typeof message.content === 'string' ? normalizeEol(restoreImagePaths(message.content)) : undefined;
+                    // Text typed before Load Disk Version is not saved over it.
+                    const content = typeof message.content === 'string' && checkEditBase(message.base) !== 'discarded'
+                        ? normalizeEol(restoreImagePaths(message.content)) : undefined;
                     saveQueue = saveQueue.catch(() => undefined).then(async () => {
                         let success = false;
                         try {
@@ -1211,6 +1317,7 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
             changeDocumentSubscription.dispose();
             changeConfigSubscription.dispose();
             fileChangeSubscription.dispose();
+            fileCreateSubscription.dispose();
             fileWatcher.dispose();
         });
     }

@@ -42,6 +42,8 @@ interface EditorConfig {
     outlineActiveColor?: string;
     mathBackslashDelimiters?: boolean;
     renderGeneration?: number;
+    /** Host revision of the embedded document text. */
+    contentRevision?: number;
 }
 
 function normalizeOutlineActiveColor(value: string | undefined): string {
@@ -153,7 +155,7 @@ export function getWebviewContent(
     });
 
     return `<!DOCTYPE html>
-<html lang="en" data-theme="${safeConfig.theme}" data-code-block-action-labels="${safeConfig.codeBlockActionLabels}" data-editor-width-mode="${safeConfig.editorWidthMode}" data-editor-max-width="${safeConfig.editorMaxWidth}" data-editor-alignment="${safeConfig.editorAlignment}" data-editor-width-indicators="${safeConfig.editorWidthIndicators}" data-math-source-wrap="${safeConfig.mathSourceWrap}" data-math-source-position="${safeConfig.mathSourcePosition}" data-code-language-order="${safeConfig.codeLanguageOrder}" data-toolbar-mode="${safeConfig.toolbarMode}" data-table-toolbar-position="${safeConfig.tableToolbarPosition}" data-table-source-format="${safeConfig.tableSourceFormat}">
+<html lang="en" data-theme="${safeConfig.theme}" data-code-block-action-labels="${safeConfig.codeBlockActionLabels}" data-editor-width-mode="${safeConfig.editorWidthMode}" data-editor-max-width="${safeConfig.editorMaxWidth}" data-editor-alignment="${safeConfig.editorAlignment}" data-editor-width-indicators="${safeConfig.editorWidthIndicators}" data-math-source-wrap="${safeConfig.mathSourceWrap}" data-math-source-position="${safeConfig.mathSourcePosition}" data-code-language-order="${safeConfig.codeLanguageOrder}" data-toolbar-mode="${safeConfig.toolbarMode}" data-table-toolbar-position="${safeConfig.tableToolbarPosition}" data-table-source-format="${safeConfig.tableSourceFormat}" data-content-revision="${Number.isSafeInteger(config?.contentRevision) ? config?.contentRevision : 0}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">

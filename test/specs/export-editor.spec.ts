@@ -45,7 +45,7 @@ test.describe('Export saved snapshot agreement', () => {
         await setMarkdown(page, original);
         const html = await page.locator('#editor').innerHTML();
         await sendHost(page, { type: 'captureExportSnapshot', requestId: 'untouched' });
-        expect(await messages(page, 'exportSnapshot')).toEqual([{ type: 'exportSnapshot', requestId: 'untouched', content: original, pending: false }]);
+        expect(await messages(page, 'exportSnapshot')).toEqual([{ type: 'exportSnapshot', requestId: 'untouched', content: original, base: 0, pending: false }]);
         expect(await messages(page, 'edit')).toEqual([]);
         expect(await messages(page, 'save')).toEqual([]);
         expect(await page.locator('#editor').innerHTML()).toBe(html);

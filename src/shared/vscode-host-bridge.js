@@ -12,11 +12,12 @@
             api.postMessage({ type: type, generation: generation });
         },
         // Document operations.
-        syncContent: function(markdown) {
-            api.postMessage({ type: 'edit', content: markdown });
+        // base: the host content revision this text was edited from.
+        syncContent: function(markdown, base) {
+            api.postMessage({ type: 'edit', content: markdown, base: base });
         },
-        save: function(content, revision) {
-            api.postMessage({ type: 'save', content: content, revision: revision });
+        save: function(content, revision, base) {
+            api.postMessage({ type: 'save', content: content, revision: revision, base: base });
         },
         requestExport: function(format) {
             api.postMessage({ type: 'export', format: format });

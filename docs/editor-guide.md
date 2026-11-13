@@ -537,10 +537,23 @@ Export commands are listed in [export help](../media/export-help.md#export-a-sav
 
 ## External file changes
 
-Binary Markdown supports reloading external updates to a clean file. If another editor or tool writes the same file while you have unsaved changes, those writes can replace your local edits. Finish and save your edits before letting another tool modify that file.
+When another editor or tool writes a file that has no unsaved changes, Binary Markdown reloads it. This includes tools that save by replacing the file.
+
+When the file has unsaved changes, Binary Markdown keeps them. The editor and VS Code's document still show your text, the document stays unsaved, and the other program's version remains on disk. A warning names the file and offers two choices:
+
+| Choice | Result |
+| --- | --- |
+| **Compare** | Opens VS Code's diff editor with the other program's latest version on the left, read-only, and your document on the right. You can copy text across or edit the right side. The warning returns so that you can still choose. |
+| **Load Disk Version** | Replaces your unsaved changes with the other program's latest version and leaves the document saved. Undo in Binary Markdown brings your replaced edits back. |
+
+Closing the warning keeps your edits. Further writes during the same conflict update the version that **Compare** and **Load Disk Version** use without repeating the warning. The conflict ends when you save, revert or load a version; a later external write warns again.
+
+If you save while the conflict is open, VS Code can ask whether to overwrite the newer file. VS Code only notices a newer file whose size changed, so an external change of the same size can be saved over without that question. Use **Compare** before saving when the other version matters.
+
+Text typed moments before the other program's write, before Binary Markdown has passed it to VS Code, is treated the same way. Binary Markdown keeps it instead of the reloaded version and shows the same warning.
 
 File-change notifications received during a save are reread after the saved revision is confirmed. If the document changes while saving, reload remains deferred until a later save completes without intervening changes, or the editor is closed and reopened. The same deferral applies when a save fails, because the disk may contain only part of the document. Cancelling an export does not cancel that disk write or release this protection.
 
-A review, accept or dismiss flow and an overwrite confirmation for conflicting changes are not yet implemented. This limitation is tracked in [issue #81](https://github.com/BinaryOutlook/binary-markdown/issues/81).
+This behavior applies to the VS Code extension. Versions 0.5.1 and earlier can replace unsaved edits when another program writes the file; [issue #81](https://github.com/BinaryOutlook/binary-markdown/issues/81) records that problem.
 
 ---

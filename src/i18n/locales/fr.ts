@@ -31,6 +31,11 @@ export const messages = {
   failedToProcessImage: 'Échec du traitement de l\'image : ',
   selectImage: 'Sélectionner une image',
   selectFileToCompare: 'Sélectionner le fichier à comparer',
+  externalConflict: '« {0} » a été modifié sur le disque alors que vous avez des modifications non enregistrées. Vos modifications sont conservées.',
+  externalConflictCompare: 'Comparer',
+  externalConflictLoad: 'Charger la version du disque',
+  externalConflictDiffTitle: '{0} (sur le disque) ↔ {0} (vos modifications)',
+  externalConflictLoadFailed: '« {0} » affiche maintenant la version du disque, mais son enregistrement n’est pas terminé. Enregistrez de nouveau pour terminer.',
 };
 
 export const webviewMessages = {

@@ -2,6 +2,12 @@
 // Construction defines capabilities; bootstrap controls the original initialization order.
 function createSession(dependencies) {
     let markdown, saveTimeout, syncTimeout, pendingSync, visualSourceCurrent, hasUserEdited, clientRevision, syncGeneration, pendingSave, currentImageDir, currentForceRelativePath, imageDirDisplayPath, imageDirSource, isActivelyEditing, editingIdleTimer, queuedExternalContent, EDITING_IDLE_TIMEOUT, undoManager;
+    // The host numbers each content update. Edits name the revision they were
+    // typed on, so the host can detect edits made before a reload from disk.
+    // hostContent is the latest text the host is known to hold.
+    let appliedRevision = 0;
+    let queuedExternalRevision = null;
+    let hostContent = null;
     // Background reads must leave an in-progress equation edit cancellable.
     // Capturing export eligibility must never normalize an untouched document.
     function readCommittedMarkdown() {
@@ -28,12 +34,16 @@ function createSession(dependencies) {
             dependencies.showEditorToast(error.message);
             return;
         }
+        // Settle a queued external update first: either deliver newer local
+        // edits or show the update, so Save never writes an older revision.
+        applyQueuedExternalChange();
         const content = readCurrentMarkdown();
         cancelScheduledSync();
         markdown = content;
         if (typeof dependencies.host.respondExport === 'function') {
             pendingSave = { revision: clientRevision, content: content };
-            dependencies.host.save(content, clientRevision);
+            hostContent = content;
+            dependencies.host.save(content, clientRevision, appliedRevision);
         }
         else {
             // The Electron adapter keeps its existing save contract.
@@ -112,12 +122,27 @@ function createSession(dependencies) {
         notifyChange();
         dependencies.updatePlaceholder();
     }
+    // Local text sent to the host supersedes a queued external update. Text the
+    // host already holds is not resent while an update is queued: resending it
+    // would replace the newer host content with an older revision.
+    function sendContent(content) {
+        if (queuedExternalContent !== null && content === hostContent)
+            return false;
+        queuedExternalContent = null;
+        queuedExternalRevision = null;
+        hostContent = content;
+        dependencies.host.syncContent(content, appliedRevision);
+        return true;
+    }
+    function hasUnsentEdits() {
+        return Boolean(syncTimeout || saveTimeout || pendingSync);
+    }
     // Immediate notification - called after debounce in debouncedSync
     function notifyChangeImmediate() {
         // Only save if user has made edits (prevents saving on initial load)
         if (!hasUserEdited)
             return;
-        dependencies.host.syncContent(markdown);
+        sendContent(markdown);
         dependencies.updateOutline();
         dependencies.updateWordCount();
         dependencies.updateStatus();
@@ -133,7 +158,7 @@ function createSession(dependencies) {
             saveTimeout = null;
             if (generation !== syncGeneration)
                 return;
-            dependencies.host.syncContent(markdown);
+            sendContent(markdown);
             dependencies.updateOutline();
             dependencies.updateWordCount();
             dependencies.updateStatus();
@@ -174,15 +199,11 @@ function createSession(dependencies) {
             applyQueuedExternalChange();
         }, EDITING_IDLE_TIMEOUT);
     }
-    /**
-     * Apply queued external change with cursor preservation.
-     */
-    function applyQueuedExternalChange() {
-        if (queuedExternalContent === null)
-            return;
-        dependencies.logger.log('[Binary Markdown] applying queued external change');
-        markdown = queuedExternalContent;
-        queuedExternalContent = null;
+    function applyExternalContent(content, revision) {
+        markdown = content;
+        hostContent = content;
+        if (Number.isSafeInteger(revision))
+            appliedRevision = revision;
         currentImageDir = extractImageDirFromMarkdown(markdown);
         currentForceRelativePath = extractForceRelativePathFromMarkdown(markdown);
         if (dependencies.isSourceMode) {
@@ -194,6 +215,55 @@ function createSession(dependencies) {
         dependencies.updateOutline();
         dependencies.updateWordCount();
         dependencies.updateStatus();
+    }
+    /**
+     * Apply a queued external change once doing so cannot discard local edits.
+     * Unsent edits are delivered instead; they supersede the queued update and
+     * the host reports any disk revision they replace.
+     */
+    function applyQueuedExternalChange() {
+        if (queuedExternalContent === null)
+            return;
+        if (hasUserEdited && hasUnsentEdits()) {
+            const content = readCommittedMarkdown();
+            cancelScheduledSync();
+            markdown = content;
+            if (sendContent(content))
+                return;
+        }
+        dependencies.logger.log('[Binary Markdown] applying queued external change');
+        const content = queuedExternalContent;
+        const revision = queuedExternalRevision;
+        queuedExternalContent = null;
+        queuedExternalRevision = null;
+        applyExternalContent(content, revision);
+    }
+    /**
+     * Receive document text from the host. While the user is typing or edits
+     * are unsent, the update waits. A replacement is the user's explicit
+     * choice to load another revision; Undo restores the discarded text.
+     */
+    function receiveExternalContent(content, revision, replace) {
+        if (replace) {
+            const local = readCommittedMarkdown();
+            cancelScheduledSync();
+            queuedExternalContent = null;
+            queuedExternalRevision = null;
+            markdown = local;
+            if (local !== content)
+                undoManager.saveSnapshot();
+            applyExternalContent(content, revision);
+            return;
+        }
+        if (isActivelyEditing || hasUnsentEdits()) {
+            queuedExternalContent = content;
+            queuedExternalRevision = Number.isSafeInteger(revision) ? revision : null;
+            dependencies.logger.log('[Binary Markdown] update queued: local editing is in progress');
+            return;
+        }
+        // Idle state — apply external change immediately with cursor preservation
+        applyExternalContent(content, revision);
+        undoManager.clear();
     }
     function extractImageDirFromMarkdown(md) {
         // Pattern: matches IMAGE_DIR in a directive block (may have other directives before/after)
@@ -239,6 +309,9 @@ function createSession(dependencies) {
         initializeEditingIdleTimer2Done = true;
         (editingIdleTimer = null);
         (queuedExternalContent = null);
+        // The rendered document embeds the host revision of its initial text.
+        const initialRevision = typeof document === 'undefined' ? 0 : Number(document.documentElement.dataset.contentRevision);
+        appliedRevision = Number.isSafeInteger(initialRevision) ? initialRevision : 0;
         (EDITING_IDLE_TIMEOUT = 1500);
     }
     let initializeUndoManager3Done = false;
@@ -393,7 +466,7 @@ function createSession(dependencies) {
                 clearTimeout(syncTimeout);
                 syncTimeout = null;
                 markdown = dependencies.htmlToMarkdown();
-                dependencies.host.syncContent(markdown);
+                sendContent(markdown);
             }
             // Force idle state on blur
             clearTimeout(editingIdleTimer);
@@ -409,7 +482,7 @@ function createSession(dependencies) {
         dependencies.sourceEditor.addEventListener('blur', function () {
             if (dependencies.isSourceMode && hasUserEdited) {
                 markdown = dependencies.sourceEditor.value;
-                dependencies.host.syncContent(markdown);
+                sendContent(markdown);
             }
             clearTimeout(editingIdleTimer);
             isActivelyEditing = false;
@@ -427,7 +500,7 @@ function createSession(dependencies) {
                     syncTimeout = null;
                     markdown = dependencies.htmlToMarkdown();
                 }
-                dependencies.host.syncContent(markdown);
+                sendContent(markdown);
             }
         });
     }
@@ -445,6 +518,8 @@ function createSession(dependencies) {
         markAsEdited,
         markActivelyEditing,
         applyQueuedExternalChange,
+        receiveExternalContent,
+        get appliedRevision() { return appliedRevision; },
         extractImageDirFromMarkdown,
         extractForceRelativePathFromMarkdown,
         get markdown() { return markdown; }, set markdown(value) { markdown = value; },

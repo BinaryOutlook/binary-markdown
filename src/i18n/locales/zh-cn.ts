@@ -31,6 +31,11 @@ export const messages = {
   failedToProcessImage: '处理图片失败：',
   selectImage: '选择图片',
   selectFileToCompare: '选择要比较的文件',
+  externalConflict: '“{0}”在磁盘上已被更改，但存在未保存的编辑。这些编辑已保留。',
+  externalConflictCompare: '比较',
+  externalConflictLoad: '加载磁盘版本',
+  externalConflictDiffTitle: '{0}（磁盘）↔ {0}（未保存的编辑）',
+  externalConflictLoadFailed: '“{0}”已显示磁盘版本，但保存未完成。请再次保存以完成。',
 };
 
 export const webviewMessages = {

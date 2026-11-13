@@ -559,6 +559,8 @@ window.BinaryMath = require('../shared/math-syntax');
         get saveTimeout() { return coreSessionService.saveTimeout; },
         get pendingSync() { return coreSessionService.pendingSync; },
         get queuedExternalContent() { return coreSessionService.queuedExternalContent; }, set queuedExternalContent(value) { coreSessionService.queuedExternalContent = value; },
+        get receiveExternalContent() { return coreSessionService.receiveExternalContent; },
+        get appliedRevision() { return coreSessionService.appliedRevision; },
         get undoManager() { return coreSessionService.undoManager; },
         get insertManagedToc() { return blocksRenderService.insertManagedToc; },
         get toggleSourceMode() { return uiChromeService.toggleSourceMode; },

@@ -20,11 +20,11 @@
             window.__hostMessageHandler({ type: 'tableToolbarPosition', value: value });
         },
         // Document operations.
-        syncContent: function(markdown) {
-            window.__testApi.messages.push({ type: 'edit', content: markdown });
+        syncContent: function(markdown, base) {
+            window.__testApi.messages.push({ type: 'edit', content: markdown, base: base });
         },
-        save: function(content, revision) {
-            window.__testApi.messages.push({ type: 'save', content: content, revision: revision });
+        save: function(content, revision, base) {
+            window.__testApi.messages.push({ type: 'save', content: content, revision: revision, base: base });
         },
         requestExport: function(format) {
             window.__testApi.messages.push({ type: 'export', format: format });

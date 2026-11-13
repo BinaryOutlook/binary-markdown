@@ -155,6 +155,8 @@ function createHost(dependencies) {
                     dependencies.host.respondExport({
                         type: 'exportSnapshot', requestId: message.requestId,
                         content: dependencies.readCurrentMarkdown(),
+                        // The host revision this text is based on.
+                        base: dependencies.appliedRevision,
                         pending: Boolean(dependencies.syncTimeout || dependencies.saveTimeout || dependencies.pendingSync || dependencies.pendingSave || dependencies.queuedExternalContent !== null)
                     });
                 }
@@ -184,26 +186,7 @@ function createHost(dependencies) {
                     incomingContent = incomingContent.slice(1);
                 }
                 incomingContent = incomingContent.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-                // Active editing guard: queue external changes while user is typing
-                if (dependencies.isActivelyEditing) {
-                    dependencies.queuedExternalContent = incomingContent;
-                    dependencies.logger.log('[Binary Markdown] update queued: user is actively editing');
-                    return;
-                }
-                // Idle state — apply external change immediately with cursor preservation
-                dependencies.markdown = incomingContent;
-                dependencies.currentImageDir = dependencies.extractImageDirFromMarkdown(dependencies.markdown);
-                dependencies.currentForceRelativePath = dependencies.extractForceRelativePathFromMarkdown(dependencies.markdown);
-                if (dependencies.isSourceMode) {
-                    dependencies.sourceEditor.value = dependencies.markdown;
-                }
-                else {
-                    dependencies.updateFromMarkdown();
-                }
-                dependencies.updateOutline();
-                dependencies.updateWordCount();
-                dependencies.updateStatus();
-                dependencies.undoManager.clear();
+                dependencies.receiveExternalContent(incomingContent, message.revision, message.replace === true);
             }
             else if (message.type === 'setImageDir') {
                 // Update currentImageDir and currentForceRelativePath from extension

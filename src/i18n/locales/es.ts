@@ -31,6 +31,11 @@ export const messages = {
   failedToProcessImage: 'Error al procesar imagen: ',
   selectImage: 'Seleccionar imagen',
   selectFileToCompare: 'Seleccionar archivo para comparar',
+  externalConflict: "'{0}' se modificó en el disco mientras tenía cambios sin guardar. Se conservan sus cambios.",
+  externalConflictCompare: 'Comparar',
+  externalConflictLoad: 'Cargar versión del disco',
+  externalConflictDiffTitle: '{0} (en disco) ↔ {0} (sus cambios)',
+  externalConflictLoadFailed: "'{0}' muestra ahora la versión del disco, pero no se terminó de guardar. Vuelva a guardar para completarlo.",
 };
 
 export const webviewMessages = {
