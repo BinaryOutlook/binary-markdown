@@ -951,6 +951,34 @@ test('Load Disk Version replaces the edits only on request and leaves the docume
     assert.equal(h.document.isDirty, true);
 });
 
+test('a write detected while Load Disk Version applies is kept as a new conflict', async t => {
+    const h = await setup(t);
+    typeLocally(h, '# LOCAL-UNSAVED\n');
+    const choices = [deferred(), deferred()];
+    h.state.warningChoice = () => choices[h.warnings.length - 1].promise;
+    await h.externalChange('# EXTERNAL-ONE\n');
+    let intervened = false;
+    h.state.beforeApply = async edits => {
+        // Another program writes again while the load's edit is applied.
+        if (!intervened && edits.includes('# EXTERNAL-ONE\n')) { intervened = true; await h.externalChange('# EXTERNAL-TWO\n'); }
+    };
+    const saves = h.state.saveCalls;
+    choices[0].resolve('externalConflictLoad');
+    await settle(() => h.warnings.length === 2, 'The newer write is reported');
+    assert.ok(intervened);
+    assert.equal(h.document.getText(), '# EXTERNAL-ONE\n', 'The buffer holds the loaded revision');
+    const update = h.posts.filter(message => message.type === 'update').at(-1);
+    assert.equal(update.content, '# EXTERNAL-ONE\n', 'The editor shows the same revision as the buffer');
+    assert.equal(update.replace, true);
+    assert.equal(h.state.disk, '# EXTERNAL-TWO\n', 'The newer file is not overwritten');
+    assert.equal(h.state.saveCalls, saves);
+    assert.equal(h.statusItems[0].visible, true, 'The newer write remains an unresolved conflict');
+    // Compare and Load now use the newer revision.
+    choices[1].resolve('externalConflictLoad');
+    await settle(() => !h.document.isDirty && h.document.getText() === '# EXTERNAL-TWO\n', 'Loading again uses the newer write');
+    assert.equal(h.state.disk, '# EXTERNAL-TWO\n');
+});
+
 test('Load Disk Version after a revert does not save a clean document', async t => {
     const h = await setup(t);
     typeLocally(h, '# LOCAL-UNSAVED\n');

@@ -915,10 +915,20 @@ export class BinaryMarkdownEditorProvider implements vscode.CustomTextEditorProv
             const loading = saveQueue.catch(() => undefined).then(async () => {
                 if (disposed) { return; }
                 await refreshExternal(current);
-                editQueue.schedule(normalizeEol(current.content));
+                // The buffer, editor and save all use this one revision. The
+                // watcher can record a newer write while the edit is applied.
+                const content = current.content;
+                editQueue.schedule(normalizeEol(content));
                 await editQueue.flush();
+                const newerWrite = current.content !== content;
                 if (conflict === current) { setConflict(undefined); }
-                await postUpdate(current.content, 'load', revision);
+                await postUpdate(content, 'load', revision);
+                if (newerWrite) {
+                    // Saving would write the loaded revision over the newer file.
+                    // Report the newer write as its own conflict instead.
+                    reportExternalConflict(current.content);
+                    return;
+                }
                 // A clean buffer already matches the disk; saving it would
                 // only report failure and make the saved revision uncertain.
                 if (document.isDirty && !await saveWithoutSnapshot()) {
