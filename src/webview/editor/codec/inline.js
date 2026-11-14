@@ -1,6 +1,7 @@
 'use strict';
+const references = require('./references');
 // Keep inline rendering and serialization together so their markup contracts agree.
-function createInlineCodec({ mathSyntax, mathBackslashDelimiters, resolveImagePath, inlineMathHtml, inlineMathMarkdown, wrapInlineCode, }) {
+function createInlineCodec({ mathSyntax, mathBackslashDelimiters, resolveImagePath, inlineMathHtml, inlineMathMarkdown, wrapInlineCode, inlineReferences = () => [], getReferenceContext = () => ({}), labels = {} }) {
     const REGEX = {
         // parseMarkdownLine patterns
         heading: /^(#{1,6}) (.*)$/,
@@ -44,9 +45,18 @@ function createInlineCodec({ mathSyntax, mathBackslashDelimiters, resolveImagePa
         }
         return html.replace(/&lt;(\/?)u&gt;/gi, (literal, closing, index) => paired.has(index) ? (closing ? '</u>' : '<u>') : literal);
     }
-    function parseInline(text, allowMath = true, prose = false) {
+    function parseInline(text, allowMath = true, prose = false, context = getReferenceContext()) {
         if (!text)
             return '';
+        let referenceMarker = '\x00BREF';
+        while (text.includes(referenceMarker)) referenceMarker += 'X';
+        const mathRanges = allowMath ? mathSyntax.inline(text, mathBackslashDelimiters) : [];
+        const spans = inlineReferences(text, context).filter(span => !mathRanges.some(equation => equation.start <= span.start && equation.end >= span.end));
+        const renderedReferences = spans.map(reference => references.renderInline(reference, context,
+            value => parseInline(value, allowMath, prose, { ...context, insideLink: !reference.image || context.insideLink, inAlt: reference.image }), resolveImagePath, labels));
+        for (let index = spans.length - 1; index >= 0; index--) {
+            text = text.slice(0, spans[index].start) + referenceMarker + index + '\x00' + text.slice(spans[index].end);
+        }
         const equations = allowMath ? mathSyntax.inline(text, mathBackslashDelimiters) : [];
         let mathMarker = '\x00BMATH';
         while (text.includes(mathMarker))
@@ -102,6 +112,9 @@ function createInlineCodec({ mathSyntax, mathBackslashDelimiters, resolveImagePa
         }
         equations.forEach((equation, i) => {
             html = html.replace(mathMarker + i + '\x00', () => inlineMathHtml(equation));
+        });
+        renderedReferences.forEach((rendered, index) => {
+            html = html.replace(referenceMarker + index + '\x00', () => rendered);
         });
         return html;
     }
@@ -214,6 +227,8 @@ function createInlineCodec({ mathSyntax, mathBackslashDelimiters, resolveImagePa
         if (node.nodeType !== 1) {
             return result;
         }
+        const reference = references.readInline(node, mdGetInlineMarkdown);
+        if (reference !== null) return [{ char: reference, styles: new Set(currentStyles), isReference: true }];
         if (node.classList.contains('math-inline')) {
             return [{ char: inlineMathMarkdown(node), styles: new Set(currentStyles), isMath: true }];
         }
@@ -321,6 +336,7 @@ function createInlineCodec({ mathSyntax, mathBackslashDelimiters, resolveImagePa
             const canMerge = currentGroup &&
                 !c.isBreak && !currentGroup.isBreak &&
                 !c.isMath && !currentGroup.isMath &&
+                !c.isReference && !currentGroup.isReference &&
                 !c.isImage && !currentGroup.isImage &&
                 !c.isLink && !currentGroup.isLink &&
                 !c.isCode && !currentGroup.isCode &&
@@ -343,6 +359,7 @@ function createInlineCodec({ mathSyntax, mathBackslashDelimiters, resolveImagePa
                     alt: c.alt,
                     isCode: c.isCode,
                     isMath: c.isMath,
+                    isReference: c.isReference,
                     isBreak: c.isBreak
                 };
             }
@@ -389,7 +406,7 @@ function createInlineCodec({ mathSyntax, mathBackslashDelimiters, resolveImagePa
     function applyMarkdownStyle(group) {
         if (group.isBreak)
             return group.text;
-        if (group.isMath)
+        if (group.isMath || group.isReference)
             return applyInlineStyles(group.text, group.styles);
         // Handle special cases first
         if (group.isImage) {
@@ -509,7 +526,10 @@ function createInlineController(dependencies) {
         ({ REGEX, parseInline, escapeHtml, mdGetInlineMarkdown } = createInlineCodec({
             mathSyntax: dependencies.mathSyntax, mathBackslashDelimiters: dependencies.mathBackslashDelimiters, resolveImagePath: (...args) => resolveImagePath(...args),
             inlineMathHtml: (...args) => dependencies.inlineMathHtml(...args), inlineMathMarkdown: (...args) => dependencies.inlineMathMarkdown(...args),
-            wrapInlineCode: (...args) => dependencies.wrapInlineCode(...args)
+            wrapInlineCode: (...args) => dependencies.wrapInlineCode(...args),
+            inlineReferences: (...args) => window.BinaryMarkdownBlocks.inlineReferences(...args),
+            getReferenceContext: () => window.BinaryMarkdownBlocks.parse(dependencies.markdown, { backslashDelimiters: dependencies.mathBackslashDelimiters }).references,
+            labels: dependencies.i18n
         }));
     }
     return {

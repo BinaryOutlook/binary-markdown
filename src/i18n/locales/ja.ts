@@ -43,6 +43,14 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  referenceDuplicate: "定義が重複しています。最初の定義が使用され、このソースも保持されます。",
+  footnote: "脚注",
+  footnotePlaceholder: "ここに脚注を入力します。",
+  footnoteBack: "参照に戻る",
+  referenceDefinition: "リンク定義",
+  editDefinition: "定義を編集",
+  referenceUnresolved: "対応する定義がありません。ソースで追加または修正してください。",
+  insertDescriptionFootnote: "編集可能な定義を持つ番号付き脚注を挿入します。",
   settingsEditor: "エディターと外観",
   settingsOutline: "アウトライン",
   settingsWriting: "編集ツール",

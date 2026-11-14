@@ -200,6 +200,7 @@ function createSpecial(dependencies) {
                 wrapper.dataset.mermaidSetup = 'true';
                 dependencies.logger.log('Setting up wrapper');
                 renderMermaidDiagram(wrapper);
+                if (wrapper.closest('.footnote-body')) return;
                 // Add click handler to enter editing mode
                 wrapper.addEventListener('click', function (e) {
                     // Don't enter edit mode if clicking on the diagram itself when already in display mode
@@ -280,7 +281,7 @@ function createSpecial(dependencies) {
         }));
     }
     function editInlineMath(span) {
-        if (dependencies.isSourceMode)
+        if (dependencies.isSourceMode || span.closest('.footnote-body'))
             return;
         if (finishInlineMathEdit)
             finishInlineMathEdit(true, false);
@@ -434,6 +435,7 @@ function createSpecial(dependencies) {
                     return;
                 wrapper.dataset.mathSetup = 'true';
                 renderMathBlock(wrapper);
+                if (wrapper.closest('.footnote-body')) return;
                 // Click → edit mode
                 wrapper.addEventListener('click', function (e) {
                     if (wrapper.getAttribute('data-mode') !== 'edit') {

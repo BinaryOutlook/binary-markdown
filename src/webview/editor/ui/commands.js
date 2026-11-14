@@ -158,6 +158,9 @@ function createCommands(dependencies) {
             case 'image':
                 dependencies.requestHostInsertion(action);
                 break;
+            case 'footnote':
+                dependencies.insertFootnote();
+                break;
             case 'toc':
                 dependencies.insertManagedToc();
                 break;

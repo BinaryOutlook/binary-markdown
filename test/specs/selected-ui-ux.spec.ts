@@ -407,13 +407,13 @@ test('narrow Find keeps the selected document match visible above its scrollable
 test('Insert workspace filters categories, previews choices and recovers an empty search', async ({ page }) => {
     await setup(page);
     await openInsertWorkspace(page);
-    await expect(page.locator('.insert-preview')).toHaveCount(8);
+    await expect(page.locator('.insert-preview')).toHaveCount(9);
     await page.locator('[data-insert-category="equationsCategory"]').click();
     await expect(page.locator('#insertMenu [data-insert-action]:visible')).toHaveCount(2);
     await page.locator('.insert-search input').fill('unmatched-command');
     await expect(page.locator('.insert-empty')).toBeVisible();
     await page.locator('.insert-search button').click();
-    await expect(page.locator('#insertMenu [data-insert-action]:visible')).toHaveCount(8);
+    await expect(page.locator('#insertMenu [data-insert-action]:visible')).toHaveCount(9);
     await page.keyboard.press('Escape');
     expect((await snapshot(page)).content).toBe(authored);
 });
@@ -451,7 +451,7 @@ for (const offset of [0, -0.5]) test('narrow Insert exposes complete lower comma
     for (let step = 0; step < 8 && await next.isEnabled(); step++) await next.click();
     await expect(page.locator('[data-insert-action="toc"]')).toBeVisible();
     await expect(page.locator('[data-insert-action="mermaid"]')).toBeVisible();
-    await expect(page.locator('.insert-scroll output')).toContainText('/ 8');
+    await expect(page.locator('.insert-scroll output')).toContainText('/ 9');
     await expect(next).toBeDisabled();
     await expect(next).toHaveCSS('opacity', '0.45');
     expect(await page.locator('.insert-options').evaluate(list => {

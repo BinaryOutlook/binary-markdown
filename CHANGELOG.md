@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+- Reference links and images, plus editable footnotes with insertion, keyboard navigation, and export support. See [syntax and limits](docs/editor-guide.md#reference-links-and-footnotes) ([#113](https://github.com/BinaryOutlook/binary-markdown/issues/113)).
+
 ## 0.5.2
 
 A compatible update following 0.5.1. It keeps unsaved edits when another program writes the open file, groups settings into categories, and adds optional icon-only code-block buttons. See the [0.5.2 notes](release-notes/0.5.2.md) for what changes after updating and its known limitations. [GitHub Releases](https://github.com/BinaryOutlook/binary-markdown/releases) identifies published packages and their validation.

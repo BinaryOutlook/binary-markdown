@@ -62,9 +62,9 @@ test('an unclosed fence retains its final line even without a final newline', ()
     assert.equal(parsed.blocks[0].content, 'example\n---\nIMAGE_DIR: still code\n');
 });
 
-test('literal HTML and unsupported reference definitions remain visible source', () => {
+test('literal HTML and reference definitions retain editable source blocks', () => {
     const source = '<script>alert(1)</script>\n\n[label]: target.md\n';
     const parsed = parse(source);
     assert.equal(reconstruct(parsed), source);
-    assert.deepEqual(parsed.blocks.map(block => block.type), ['paragraph', 'paragraph']);
+    assert.deepEqual(parsed.blocks.map(block => block.type), ['paragraph', 'binary_reference']);
 });

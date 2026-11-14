@@ -43,6 +43,14 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  referenceDuplicate: "Duplicate definition. The first definition is used; this source is retained.",
+  footnote: "Footnote",
+  footnotePlaceholder: "Write the note here.",
+  footnoteBack: "Back to reference",
+  referenceDefinition: "Link definition",
+  editDefinition: "Edit definition",
+  referenceUnresolved: "No matching definition. Edit the source to add or correct it.",
+  insertDescriptionFootnote: "Insert a numbered note with an editable definition.",
   settingsEditor: "Editor & Appearance",
   settingsOutline: "Outline",
   settingsWriting: "Writing Tools",

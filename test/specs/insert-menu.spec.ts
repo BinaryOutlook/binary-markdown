@@ -35,18 +35,18 @@ async function open(page: Page) {
 }
 
 for (const mode of ['full', 'simple']) {
-    test(`${mode} Insert exposes eight items and cancels without editing`, async ({ page }) => {
+    test(`${mode} Insert exposes nine items and cancels without editing`, async ({ page }) => {
         await setup(page);
         await page.evaluate(mode => (window as any).__hostMessageHandler({ type: 'toolbarMode', value: mode }), mode);
         await select(page);
         await open(page);
-        await expect(page.locator('#insertMenu [role="menuitem"]')).toHaveCount(8);
+        await expect(page.locator('#insertMenu [role="menuitem"]')).toHaveCount(9);
         await expect(page.locator('#insertMenu [aria-disabled="true"]')).toHaveCount(0);
         await expect(page.locator('.insert-search input')).toBeFocused();
         await page.keyboard.press('ArrowDown');
         await expect(page.locator('[data-insert-action="table"]')).toBeFocused();
         await page.keyboard.press('End');
-        await expect(page.locator('[data-insert-action="toc"]')).toBeFocused();
+        await expect(page.locator('[data-insert-action="footnote"]')).toBeFocused();
         await page.keyboard.press('ArrowDown');
         await expect(page.locator('[data-insert-action="table"]')).toBeFocused();
         await page.keyboard.press('Escape');
@@ -125,7 +125,7 @@ test('Insert remains reachable in a narrow pane and its menu stays on screen', a
     expect(bounds!.y + bounds!.height).toBeLessThanOrEqual(480);
     await page.keyboard.press('ArrowDown');
     await page.keyboard.press('End');
-    await expect(page.locator('[data-insert-action="toc"]')).toBeFocused();
+    await expect(page.locator('[data-insert-action="footnote"]')).toBeFocused();
     await page.keyboard.press('Escape');
     expect(await page.evaluate(() => getSelection()!.toString())).toBe('target');
 });

@@ -5,7 +5,7 @@
  */
 function createPaste({ editor, logger, getSourceMode, saveSnapshot, markAsEdited, saveImageAndInsert, syncMarkdown, syncMarkdownSync, setupLink, parseInline, markdownToHtmlFragment, setupInteractiveElements, }) {
     function handlePaste(e) {
-        if (e.target.closest && e.target.closest('.front-matter'))
+        if (e.target.closest && e.target.closest('.front-matter, .reference-definition'))
             return;
         if (getSourceMode())
             return;

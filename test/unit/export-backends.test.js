@@ -527,6 +527,37 @@ test('real Pandoc exports structured content, native math and original assets wi
     assert.equal(await fs.readFile(sourceFile, 'utf8'), source);
 });
 
+test('real Pandoc preserves reference links, reference images and repeated native footnotes', { skip: !realTools }, async t => {
+    const directory = await temporary(t);
+    const status = await discoverTool('pandoc', process.env.EXPORT_PANDOC_PATH || '');
+    assert.equal(status.available, true, status.error);
+    const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAEklEQVR4nGP4z8DAAMIM/4EAAB/uBfsL2WiLAAAAAElFTkSuQmCC', 'base64');
+    const markdown = 'Read [guide][ref], [ref][] and [ref]. Note.[^NOTE] Again.[^note]\n\n![Original][image]\n\n' +
+        '[ref]: https://example.com/guide "Guide title"\n[image]: assets/picture.png "Picture title"\n' +
+        '[^note]: NATIVE-NOTE-MARKER **preserved**.\n[^NOTE]: DUPLICATE-IGNORED-MARKER\n';
+    const sourcePath = path.join(directory, 'references.md');
+    await fs.writeFile(sourcePath, markdown);
+    const saved = { sourcePath, markdown, version: 1, theme: 'github', fontSize: 16 };
+    const prepared = { html: '', theme: 'github', fontSize: 16, diagrams: [], warnings: [] };
+    for (const format of ['docx', 'epub']) {
+        const requested = [];
+        const ops = operations(async reference => {
+            requested.push(reference);
+            return { bytes: png, mime: 'image/png' };
+        });
+        const entries = archiveEntries(await convertPandoc(format, saved, prepared, status.path, ops));
+        const content = [...entries].filter(([name]) => /(?:document\.xml|footnotes\.xml|\.xhtml|\.rels)$/.test(name)).map(([, bytes]) => bytes.toString()).join('\n');
+        assert.match(content, /NATIVE-NOTE-MARKER/);
+        assert.doesNotMatch(content, /DUPLICATE-IGNORED-MARKER/);
+        assert.match(content, /https:\/\/example.com\/guide/);
+        assert.equal((content.match(format === 'docx' ? /<w:footnoteReference\b/g : /epub:type="noteref"/g) || []).length, 2);
+        assert.ok([...entries.values()].some(bytes => bytes.equals(png)));
+        assert.deepEqual(requested, ['assets/picture.png']);
+        assert.deepEqual(ops.warnings, []);
+    }
+    assert.equal(await fs.readFile(sourcePath, 'utf8'), markdown);
+});
+
 test('real Pandoc preserves visible fallbacks when media and diagrams cannot be exported', { skip: !realTools }, async t => {
     const directory = await temporary(t);
     const status = await discoverTool('pandoc', process.env.EXPORT_PANDOC_PATH || '');

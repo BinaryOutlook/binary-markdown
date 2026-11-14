@@ -70,7 +70,10 @@ The [fixed fixtures](../test/fixtures/exports/README.md) exercise the following 
 | Images and fonts | Resolve and embed needed assets; standalone HTML works after relocation offline. | Package compatible media; preserve source resolution without deliberate downsampling. |
 | Raw HTML, editor extensions, unsupported constructs | Follow declared renderer support and remove editor-only machinery. | Explicit target-specific behavior; visible fallback/warning for known incompatible content. |
 | Front matter, TOC, internal image directives | Exclude front matter/editor-only directives from visible content. Save expands `[TOC]` markers and refreshes managed contents. Exports require current TOCs and include links to unique heading destinations without editor controls or boundary comments. | Normalize temporary input deliberately; avoid duplicate TOCs or leaked directives. |
-| Footnotes | Existing footnote markers/definitions remain visible source with a warning; linked footnotes are not generated. | Use Pandoc's supported native note/navigation structures, with target-specific verification. |
+| Reference-style links and images | Full, collapsed, and shortcut references resolve shared definitions and titles; unresolved source stays visible. | Pandoc resolves references and packages supported images. |
+| Footnotes | Numbered links and return links at definition locations, not page bottoms. Unresolved/malformed notes stay visible with warnings. | Native notes/navigation; repeated references may receive separate numbers. |
+
+The first definition wins. Unused/duplicate notes stay in source but are omitted from output. See [syntax and source preservation](editor-guide.md#reference-links-and-footnotes). The saved-revision requirement still applies.
 
 Do not claim a parser capability merely because Pandoc can write its output format. Existing rendering bugs are not silently expanded into export guarantees. Declare known limitations and preserve supported content; fallback acceptance is not permission to hide a regression by downgrading the support matrix.
 

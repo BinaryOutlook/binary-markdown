@@ -124,11 +124,14 @@ function createExport(dependencies) {
         dependencies.assignHeadingAnchors(template.content, normalizedSource);
         template.content.querySelectorAll('.toc-refresh').forEach(button => button.remove());
         template.content.querySelectorAll('[data-toc-source]').forEach(block => block.removeAttribute('data-toc-source'));
+        template.content.querySelectorAll('[data-reference], [data-note-source], [data-note-navigation], [data-reference-escape]').forEach(node => {
+            for (const name of ['data-reference', 'data-note-source', 'data-note-navigation', 'data-reference-escape']) node.removeAttribute(name);
+        });
         sanitizeExportTree(template.content, warnings);
         // These are diagnostics about the current rendered output, not a new
         // Markdown parser. Literal notation stays exactly as the user sees it.
         const diagnosticTree = template.content.cloneNode(true);
-        diagnosticTree.querySelectorAll('pre,code,.math-wrapper,.math-inline,.mermaid-wrapper').forEach(element => element.remove());
+        diagnosticTree.querySelectorAll('pre,code,.math-wrapper,.math-inline,.mermaid-wrapper,.reference-escape').forEach(element => element.remove());
         const visibleSource = (diagnosticTree.textContent || '').replace(/\\\$/g, '');
         if (/\$\$[\s\S]*?\$\$|\$(?!\$)(?=\S)[^$\n]*?[^\s$]\$(?![\d$])/.test(visibleSource)) {
             exportWarning(warnings, 'renderer-math-source', 'Unrecognized equation delimiters remain visible source in the exported document.');
@@ -137,7 +140,7 @@ function createExport(dependencies) {
             exportWarning(warnings, 'renderer-toc-source', 'A literal [TOC] marker remains visible. HTML/PDF do not generate a table of contents from that marker in the current renderer.');
         }
         if (/\[\^[^\]\n]+\]/.test(visibleSource)) {
-            exportWarning(warnings, 'renderer-footnote-source', 'Footnote markers and definitions remain visible source. HTML/PDF do not generate linked footnotes in the current renderer.');
+            exportWarning(warnings, 'renderer-footnote-source', 'An unresolved or malformed footnote remains visible source. Add or correct its definition to generate a linked note.');
         }
         const container = document.createElement('div');
         container.className = 'editor export-preparation';

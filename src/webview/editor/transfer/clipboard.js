@@ -228,7 +228,7 @@ function createClipboard(dependencies) {
             dependencies.logger.log('No image found in drop');
         });
         dependencies.editor.addEventListener('copy', function (e) {
-            if (e.target.closest && e.target.closest('.front-matter'))
+            if (e.target.closest && e.target.closest('.front-matter, .reference-definition'))
                 return;
             if (dependencies.isSourceMode)
                 return;
@@ -539,7 +539,7 @@ function createClipboard(dependencies) {
             }
         });
         dependencies.editor.addEventListener('cut', function (e) {
-            if (e.target.closest && e.target.closest('.front-matter'))
+            if (e.target.closest && e.target.closest('.front-matter, .reference-definition'))
                 return;
             if (dependencies.isSourceMode)
                 return;
