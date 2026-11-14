@@ -1,0 +1,42 @@
+{
+  "sourceCommit": "944b4dd2781c906ee9a912295c814e77a0a9f3f0",
+  "nodeVersion": "v24.21.0",
+  "method": "Current shared editor markup, styles and scripts; synthetic Markdown; test HostBridge; simulated export capabilities and status; no installed-host or output-reader claim.",
+  "sourceFiles": {
+    "src/webview/styles.css": "1fff037f2381cc6d5cc1429c85cff5b08ac98cbc74d9b0de53cca5f50594d2e6",
+    "src/shared/editor-body-html.js": "3212e6ebf1212e9fedd739ace90a5d67095fb6844b1effeb6e260755db4e10be",
+    "src/shared/test-host-bridge.js": "f66d20e47e3f6ca6631ecad07a865e6e7364cdbf8ebf211d30f3f6bfb1ca95bb",
+    "src/shared/table-format.js": "4b166a5a6e4ac1a78d90245fe9de9d43672c30bcd9aa3a1e13b5f5540045037a",
+    "src/shared/editor-layout.js": "23f7776791b540c2ca19867b432aa2e22bfa5304c81ec476dde212c262f49b29",
+    "src/shared/table-placement.js": "438a0c2a8e98f0b6c37e25f1890aff6470fa982ddf99e9b7411fbeda07150ff8",
+    "src/webview/table-toolbar.js": "c15881e773758bfc1dab21a716092c49d70992249868690f3bdc08a6adb1374b",
+    "src/shared/math-syntax.js": "afb9038555f552b07236eed72373c90ad431ce5cff074cd1fc38feb6c0a71957",
+    "src/shared/document-aux.js": "ab522809e661e6815b94774896a595b2d16091621109b0bf16f4d56f79384f22",
+    "src/webview/editor.js": "0df0813e4330103792b27d09c90a4a1e34f3d88d585e3a800c8dc4ae6acec7ae",
+    "src/webview/export-ui.js": "bb52ba1428c6f6cf9a1170f4f153722dd08e2f06d65da0dcf04bd4f108db5f46",
+    "src/i18n/locales/en.ts": "f1917688cdc80fdfaf0382c5bd52c23af5b1d1e15e10ba95d201048f3a59e49a",
+    "src/export/messages.ts": "b5108e1ac9d3538b3b4b77189855624cb5cf1c7c9e92c3f945a7d2ccbe7350b2",
+    "package-lock.json": "8467722b6a9e7e31f130122ca5af0387e11d3a47c069f011c567baf5c07f00f1",
+    "vendor/markdown-blocks.js": "33bb5021a7ef5bac71dc7a6de4a6fd585a1860011a7599ccca58271765bb8fc5",
+    "vendor/turndown.js": "611ab6367c26db1ca6c753d9955ab5942c6a349256f0c503f5a2dd1c40167f38",
+    "vendor/turndown-plugin-gfm.js": "cf744cc1b7580f06d64ce236a4ff2630a53d389eccf2133a09d71ca443511912",
+    "vendor/mermaid.min.js": "150e2112a7ad016992060e4f5b111113aad7a53c7157d33ecd0a35ae4c5b0df6",
+    "vendor/katex.min.js": "6b909443e6c8f6e5d24cc4872fe909a54770762047ae95e3f34f55ec2e6f6c3a",
+    "vendor/katex.min.css": "9b670f444b20e84723250e4741d3d5827dbf8a40d06f781c5f2a0f99c9b84a0c"
+  },
+  "pages": [
+    "overview.html",
+    "night.html",
+    "empty.html",
+    "table.html",
+    "code.html",
+    "equation.html",
+    "mermaid.html",
+    "find.html",
+    "metadata.html",
+    "export.html",
+    "export-failure.html",
+    "export-complete.html",
+    "outline.html"
+  ]
+}

@@ -1,0 +1,80 @@
+{
+  "reportId": "BM-UX-20260930-944b4dd-r1",
+  "date": "2026-10-01",
+  "scope": "Portable editions and pre-publication checks; GitHub upload state is verified separately",
+  "sourceCommit": "944b4dd2781c906ee9a912295c814e77a0a9f3f0",
+  "canonicalMainAtPackaging": "092e712baa7080ac492c7c4714c485a19e8ab2fa",
+  "PDF": {
+    "file": "Binary-Markdown-UI-UX-Review-2026-09-30.pdf",
+    "bytes": 15074053,
+    "sha256": "7873bd5495d924abfdb6b17617a2d6a6d97ecb43e177b5ea2d7ed6c673836b22",
+    "pages": 75,
+    "uniqueCurrentVisuals": 20,
+    "uniqueFinalConcepts": 36,
+    "imageInstances": 57,
+    "format": "A3 landscape; embedded Arial fonts and native-resolution JPEG-encoded image streams",
+    "outline": "Review areas and options bookmarked; Recommended before Moderate before Experimental",
+    "visualPagesInspected": [
+      1,
+      2,
+      3,
+      6,
+      7,
+      36,
+      74,
+      75
+    ],
+    "orphanPages": "No short continuation-only pages remain",
+    "javascript": false,
+    "embeddedFiles": false,
+    "unexpectedLinkActions": 0,
+    "uniqueEmbeddedImagesVerified": 56,
+    "missingOptionHeadingsOrRationales": 0
+  },
+  "HTML": {
+    "file": "Binary-Markdown-UI-UX-Review-2026-09-30.html",
+    "embeddedOriginalImages": 56,
+    "imageByteMismatches": 0,
+    "externalRuntimeDependencies": 0,
+    "duplicateIds": 0,
+    "brokenAnchors": 0,
+    "unexpectedLinks": 0,
+    "inlineEventAttributes": 0,
+    "inlineScriptHashesMatched": true,
+    "securityPolicy": "Network connections, objects, forms and base URL changes blocked; original embedded data images and exact-hash scripts allowed",
+    "browserChecks": [
+      "Blank recipient note/choice defaults",
+      "All/Recommended filter gives 36/12 concepts",
+      "Current and generated image zoom, original dimensions, close",
+      "Synthetic feedback keeps angle brackets literal and includes all 12 area IDs",
+      "Prepared plain-text fallback visible after Export feedback",
+      "Reload resets choices and notes"
+    ],
+    "limitations": [
+      "Local-file protocol blocked by browser verifier; browser UI checks used the local HTTP preview",
+      "Browser download event was not observed; copyable plain-text fallback was validated instead"
+    ],
+    "offlineBoundary": "All visual assets and written review/evidence embedded; optional reference links require internet",
+    "notes": "Tab-local only, no persistence or automatic transmission; saved deliverable contains no test notes"
+  },
+  "markdown": {
+    "files": [
+      "reports/README.md",
+      "reports/investigations/2026-09-30-ui-ux-visual-review/report.md",
+      "reports/investigations/2026-09-30-ui-ux-visual-review/SHARING.md"
+    ],
+    "rawReview": "Full affected files and proposed changes reviewed for paragraphs, tables, links, lists and fences",
+    "renderedReview": "Final local Markdown previews inspected; report table, sharing guide, option order, legends and rationale",
+    "renderer": "markdown-it with relative asset rewriting; not native VS Code preview",
+    "githubNavigation": "Native GitHub heading fragments replace custom table jump links; standalone appendix maps them to gallery area IDs"
+  },
+  "checks": {
+    "documentation": "node scripts/check-docs.cjs passed; 77 text files, 965 local links, no common private-data patterns",
+    "sourceDiff": "git diff --exit-code HEAD -- src package.json package-lock.json test vendor scripts passed",
+    "applicationImplementation": false,
+    "applicationTestSuite": "Not rerun for report-only publication; historical unchanged-source compile is recorded separately",
+    "whitespace": "git diff --check and all 19 proposed text files passed"
+  },
+  "ownership": "Consultant proposals; no product-owner option selection recorded",
+  "sourceDrift": "Canonical main advanced after the 30 September capture, including code-block toolbar/wrap changes; recheck current behavior before implementation, especially area 06"
+}

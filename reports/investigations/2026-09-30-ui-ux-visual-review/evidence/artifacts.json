@@ -1,0 +1,669 @@
+{
+  "note": "Raw current screenshots and generated PNGs, retained without raster editing. Superseded illustrations are not recommended options.",
+  "images": [
+    {
+      "path": "images/current/01-empty-document.jpg",
+      "format": "JPEG",
+      "width": 1549,
+      "height": 1096,
+      "bytes": 22355,
+      "sha256": "b7fee92c8af46c9420fa03fd6d57a7db90051684d0d7d22de5af37115de74f95",
+      "ancillaryMetadataTypes": []
+    },
+    {
+      "path": "images/current/01-overview.jpg",
+      "format": "JPEG",
+      "width": 1280,
+      "height": 720,
+      "bytes": 48643,
+      "sha256": "010e6e2da917adf8d0f3f8e2e6d4e59d7a875181eaab8c40b0a1682b878e4c92",
+      "ancillaryMetadataTypes": []
+    },
+    {
+      "path": "images/current/02-narrow-toolbar.jpg",
+      "format": "JPEG",
+      "width": 600,
+      "height": 720,
+      "bytes": 35707,
+      "sha256": "f28f73d23de5dd4411e2dcc3edeaf7de18b2d6a27c69daf4c662b2770e969fe8",
+      "ancillaryMetadataTypes": []
+    },
+    {
+      "path": "images/current/02-toolbar-overflow.jpg",
+      "format": "JPEG",
+      "width": 600,
+      "height": 720,
+      "bytes": 43216,
+      "sha256": "0b7c5c1a94ecb3ca665406d3b9f28f3caf80264805bec6612c2e02893e38c82a",
+      "ancillaryMetadataTypes": []
+    },
+    {
+      "path": "images/current/03-insert-menu.jpg",
+      "format": "JPEG",
+      "width": 1280,
+      "height": 720,
+      "bytes": 51865,
+      "sha256": "fdbdcb5a0c10867197717b5d45e9d6bfe6a254b672192f95043fbf6748bed630",
+      "ancillaryMetadataTypes": []
+    },
+    {
+      "path": "images/current/04-palette-no-results.jpg",
+      "format": "JPEG",
+      "width": 1280,
+      "height": 720,
+      "bytes": 55654,
+      "sha256": "e270df4ed0fc7b2dbe73613ef5d521f3eb9d73e8b50f2bc81bc58fe292ec51f3",
+      "ancillaryMetadataTypes": []
+    },
+    {
+      "path": "images/current/05-table-controls.jpg",
+      "format": "JPEG",
+      "width": 1280,
+      "height": 720,
+      "bytes": 36110,
+      "sha256": "4c93a0b958bd1ce45796dddca45ba357746da5eed6dc427049f45855b924c4f4",
+      "ancillaryMetadataTypes": []
+    },
+    {
+      "path": "images/current/06-code-night.jpg",
+      "format": "JPEG",
+      "width": 1280,
+      "height": 720,
+      "bytes": 32560,
+      "sha256": "b6ec3a119d59f0af7cd385cb0bd21c0664391500a95ad611aceb6e9573de71ed",
+      "ancillaryMetadataTypes": []
+    },
+    {
+      "path": "images/current/06-language-picker.jpg",
+      "format": "JPEG",
+      "width": 1549,
+      "height": 1096,
+      "bytes": 48407,
+      "sha256": "bb943b1ed849f8c7144aefe599f8f633cc21c28d7819b98b70f8e0ff3c37f2d6",
+      "ancillaryMetadataTypes": []
+    },
+    {
+      "path": "images/current/07-outline.jpg",
+      "format": "JPEG",
+      "width": 1280,
+      "height": 720,
+      "bytes": 47569,
+      "sha256": "bcf9b9cbd8f509b4f9ecdcf0f63aced56e828500a563d779d89a341b32fe9ddb",
+      "ancillaryMetadataTypes": []
+    },
+    {
+      "path": "images/current/08-equation-edit.jpg",
+      "format": "JPEG",
+      "width": 1280,
+      "height": 720,
+      "bytes": 32728,
+      "sha256": "4ab7656f5c3cb5b6d4d18a169c911723f4b5cb806410b3e908cb5b3a3f229f73",
+      "ancillaryMetadataTypes": []
+    },
+    {
+      "path": "images/current/08-equation-error.jpg",
+      "format": "JPEG",
+      "width": 1280,
+      "height": 720,
+      "bytes": 27104,
+      "sha256": "ae15e97f69a19f790e00bec09a77a5c9f35b2465ee9970fe7119e2a616af262d",
+      "ancillaryMetadataTypes": []
+    },
+    {
+      "path": "images/current/09-mermaid-error.jpg",
+      "format": "JPEG",
+      "width": 1280,
+      "height": 720,
+      "bytes": 42552,
+      "sha256": "5d54994dfaf1ae44ed2bc201c794edfeffa958762535d7378c9a62c3f6cf2bb0",
+      "ancillaryMetadataTypes": []
+    },
+    {
+      "path": "images/current/10-find-replace.jpg",
+      "format": "JPEG",
+      "width": 1280,
+      "height": 720,
+      "bytes": 35794,
+      "sha256": "a3c193943349d0ac8c4400b90005f26a93299135e4163f177a6edee6f137616f",
+      "ancillaryMetadataTypes": []
+    },
+    {
+      "path": "images/current/11-metadata-expanded.jpg",
+      "format": "JPEG",
+      "width": 1549,
+      "height": 1096,
+      "bytes": 43312,
+      "sha256": "0e1284068dd43ffeebd30795507390d089138e60af49b486f147d95b69d47ac5",
+      "ancillaryMetadataTypes": []
+    },
+    {
+      "path": "images/current/11-metadata-toc.jpg",
+      "format": "JPEG",
+      "width": 1280,
+      "height": 720,
+      "bytes": 30744,
+      "sha256": "b351cbfcfe3fa341e1acf047533bd60eec8cbfbe53b176a75903ed1ce749f11c",
+      "ancillaryMetadataTypes": []
+    },
+    {
+      "path": "images/current/12-source-mode.jpg",
+      "format": "JPEG",
+      "width": 1549,
+      "height": 1096,
+      "bytes": 59830,
+      "sha256": "48b1bc98c722c510686dbff53c894dbd1201561d6a98129d35d21d262c7297c2",
+      "ancillaryMetadataTypes": []
+    },
+    {
+      "path": "images/current/13-export-menu.jpg",
+      "format": "JPEG",
+      "width": 1549,
+      "height": 1096,
+      "bytes": 76906,
+      "sha256": "d7648ab88af5f9bee78e95ed9921d02607fadd9a18b8c780be3a5032a40f49e7",
+      "ancillaryMetadataTypes": []
+    },
+    {
+      "path": "images/current/14-export-failure.jpg",
+      "format": "JPEG",
+      "width": 1549,
+      "height": 1096,
+      "bytes": 65830,
+      "sha256": "e0ee5577bb97d3e1f6ea4af1413e95f6de3ff7263ae6f461023f1174bcb65583",
+      "ancillaryMetadataTypes": []
+    },
+    {
+      "path": "images/current/14-export-warnings.jpg",
+      "format": "JPEG",
+      "width": 1549,
+      "height": 1096,
+      "bytes": 70297,
+      "sha256": "82f7c4e00805a456050165993716a7a918b10fe4192b0f57829cc09d3b7b16b8",
+      "ancillaryMetadataTypes": []
+    },
+    {
+      "path": "images/generated/01-canvas-experimental.png",
+      "format": "PNG",
+      "width": 1536,
+      "height": 1024,
+      "bytes": 1288836,
+      "sha256": "d2af1ffb6df55aab732f9a5445095f728da1eaa15a1d847cdbeb29bb6e06a095",
+      "ancillaryMetadataTypes": [
+        "caBX"
+      ]
+    },
+    {
+      "path": "images/generated/01-canvas-moderate.png",
+      "format": "PNG",
+      "width": 1536,
+      "height": 1024,
+      "bytes": 1255849,
+      "sha256": "e33d8a8e5b1aab64a49f0525879594d118415102110df8ab0da782035db8e885",
+      "ancillaryMetadataTypes": [
+        "caBX"
+      ]
+    },
+    {
+      "path": "images/generated/01-canvas-recommended.png",
+      "format": "PNG",
+      "width": 1536,
+      "height": 1024,
+      "bytes": 1286152,
+      "sha256": "05a2b26218a1bdb28cc467168c188809a8898c352c9b5124a42dbce9fa82008d",
+      "ancillaryMetadataTypes": [
+        "caBX"
+      ]
+    },
+    {
+      "path": "images/generated/02-toolbar-experimental.png",
+      "format": "PNG",
+      "width": 1536,
+      "height": 1024,
+      "bytes": 1273484,
+      "sha256": "f63cf1e70e556c1a2fc2c4ffd85c8f38707c1b2758de1571ee9665af8f45f1d6",
+      "ancillaryMetadataTypes": [
+        "caBX"
+      ]
+    },
+    {
+      "path": "images/generated/02-toolbar-moderate.png",
+      "format": "PNG",
+      "width": 1536,
+      "height": 1024,
+      "bytes": 1287767,
+      "sha256": "fe6ca97564bfa92ee8c2a449f0f84af123da9fcb3ce5e48b7586c90887b87b6c",
+      "ancillaryMetadataTypes": [
+        "caBX"
+      ]
+    },
+    {
+      "path": "images/generated/02-toolbar-recommended.png",
+      "format": "PNG",
+      "width": 1536,
+      "height": 1024,
+      "bytes": 1366835,
+      "sha256": "ab90b20316e3cc4669d8113f0a470ac85efbd0d190a260f85251b1e4bde4f129",
+      "ancillaryMetadataTypes": [
+        "caBX"
+      ]
+    },
+    {
+      "path": "images/generated/03-commands-experimental.png",
+      "format": "PNG",
+      "width": 1672,
+      "height": 941,
+      "bytes": 1216985,
+      "sha256": "5ed871f5a099692cefa9ca2c9b248ee365d1f97e901b378a186376882cffc273",
+      "ancillaryMetadataTypes": [
+        "caBX"
+      ]
+    },
+    {
+      "path": "images/generated/03-commands-moderate.png",
+      "format": "PNG",
+      "width": 1672,
+      "height": 941,
+      "bytes": 1089961,
+      "sha256": "a332410af0c4d892c3ce050f6aafd091c02255a84ebdccbef0c979ceed5729d0",
+      "ancillaryMetadataTypes": [
+        "caBX"
+      ]
+    },
+    {
+      "path": "images/generated/03-commands-recommended.png",
+      "format": "PNG",
+      "width": 1536,
+      "height": 1024,
+      "bytes": 1313954,
+      "sha256": "9080d3c1c82e0df1f93051c27642762b521ecffd9f570c16f439192a8bac484c",
+      "ancillaryMetadataTypes": [
+        "caBX"
+      ]
+    },
+    {
+      "path": "images/generated/04-outline-experimental.png",
+      "format": "PNG",
+      "width": 1672,
+      "height": 941,
+      "bytes": 1265594,
+      "sha256": "604360efc429d7ef4aad3ddde5d1a4d134fcf07673cf26cdde42ffc59bb70808",
+      "ancillaryMetadataTypes": [
+        "caBX"
+      ]
+    },
+    {
+      "path": "images/generated/04-outline-moderate.png",
+      "format": "PNG",
+      "width": 1672,
+      "height": 941,
+      "bytes": 1233789,
+      "sha256": "61a3f9bb6801cfad45829cff83c144047230cc4f3b0f0905aa35d48bab88ed7d",
+      "ancillaryMetadataTypes": [
+        "caBX"
+      ]
+    },
+    {
+      "path": "images/generated/04-outline-recommended.png",
+      "format": "PNG",
+      "width": 1672,
+      "height": 941,
+      "bytes": 1079321,
+      "sha256": "26082928d1e8c9ae05d6792fd81f3fea152b9d8e63e9fd9a722cb1b1793c3ede",
+      "ancillaryMetadataTypes": [
+        "caBX"
+      ]
+    },
+    {
+      "path": "images/generated/05-tables-experimental.png",
+      "format": "PNG",
+      "width": 1672,
+      "height": 941,
+      "bytes": 1139840,
+      "sha256": "bba8162ee5cbf9e4c8a13c68030b78a1457193e52e650808bb06af3118e975ad",
+      "ancillaryMetadataTypes": [
+        "caBX"
+      ]
+    },
+    {
+      "path": "images/generated/05-tables-moderate.png",
+      "format": "PNG",
+      "width": 1672,
+      "height": 941,
+      "bytes": 1042258,
+      "sha256": "744307fcaf22093f3b965483c87ee33a6e2e5ead02da1039c29dd4d00716f6c4",
+      "ancillaryMetadataTypes": [
+        "caBX"
+      ]
+    },
+    {
+      "path": "images/generated/05-tables-recommended.png",
+      "format": "PNG",
+      "width": 1672,
+      "height": 941,
+      "bytes": 1051791,
+      "sha256": "28be246c977cd2622ec2976a918be04a3b6a5d28e2ec2d861370455c2b1f24ff",
+      "ancillaryMetadataTypes": [
+        "caBX"
+      ]
+    },
+    {
+      "path": "images/generated/06-code-experimental.png",
+      "format": "PNG",
+      "width": 1536,
+      "height": 1024,
+      "bytes": 1321350,
+      "sha256": "b13224f49aff81c8547867b7ddbbd78037dab2d3e0d0e88433e58b996406cbb1",
+      "ancillaryMetadataTypes": [
+        "caBX"
+      ]
+    },
+    {
+      "path": "images/generated/06-code-moderate.png",
+      "format": "PNG",
+      "width": 1536,
+      "height": 1024,
+      "bytes": 1298486,
+      "sha256": "f04de57191c5bb998e75a02e35c64f415775829397d274c51589cf58fa633c02",
+      "ancillaryMetadataTypes": [
+        "caBX"
+      ]
+    },
+    {
+      "path": "images/generated/06-code-recommended.png",
+      "format": "PNG",
+      "width": 1672,
+      "height": 941,
+      "bytes": 1167189,
+      "sha256": "ebc403631f103c234063be02c5b29e852a239e4e81a390da19e36be7ba874a52",
+      "ancillaryMetadataTypes": [
+        "caBX"
+      ]
+    },
+    {
+      "path": "images/generated/07-equations-experimental.png",
+      "format": "PNG",
+      "width": 1672,
+      "height": 941,
+      "bytes": 1138922,
+      "sha256": "513c36f1feb06a55abc4bdc35d8825b2bf0229610c8e67e5c50bdd9d1935b2a4",
+      "ancillaryMetadataTypes": [
+        "caBX"
+      ]
+    },
+    {
+      "path": "images/generated/07-equations-moderate.png",
+      "format": "PNG",
+      "width": 1672,
+      "height": 941,
+      "bytes": 1088764,
+      "sha256": "bfac5646fefa0e34b5aabcb298df87e55eb70e79615f918923014cfd22f1371d",
+      "ancillaryMetadataTypes": [
+        "caBX"
+      ]
+    },
+    {
+      "path": "images/generated/07-equations-recommended.png",
+      "format": "PNG",
+      "width": 1672,
+      "height": 941,
+      "bytes": 1062606,
+      "sha256": "5c87f61e24a7452836ce7a3efb1e6f4d95fd72d437d2462c4712696bd806ca74",
+      "ancillaryMetadataTypes": [
+        "caBX"
+      ]
+    },
+    {
+      "path": "images/generated/08-diagrams-experimental.png",
+      "format": "PNG",
+      "width": 1672,
+      "height": 941,
+      "bytes": 975859,
+      "sha256": "34207c50338329a9a033b6827b2efb528d91ace5714f517562f73135a6274d42",
+      "ancillaryMetadataTypes": [
+        "caBX"
+      ]
+    },
+    {
+      "path": "images/generated/08-diagrams-moderate.png",
+      "format": "PNG",
+      "width": 1672,
+      "height": 941,
+      "bytes": 1126869,
+      "sha256": "2c6e35ce060853039fc3d4f854505182238a88a1958a0f5ffed1d81cf6d11c77",
+      "ancillaryMetadataTypes": [
+        "caBX"
+      ]
+    },
+    {
+      "path": "images/generated/08-diagrams-recommended.png",
+      "format": "PNG",
+      "width": 1672,
+      "height": 941,
+      "bytes": 1082547,
+      "sha256": "b7fa15534d536c6dd825234ab49b90f55609c1e825709b9ce3c56d06444a38cb",
+      "ancillaryMetadataTypes": [
+        "caBX"
+      ]
+    },
+    {
+      "path": "images/generated/09-find-experimental.png",
+      "format": "PNG",
+      "width": 1672,
+      "height": 941,
+      "bytes": 1140411,
+      "sha256": "fa65a24779ec6411c0fff12279815359b529b7418ddd6dd1e888f5cd7ccc6daa",
+      "ancillaryMetadataTypes": [
+        "caBX"
+      ]
+    },
+    {
+      "path": "images/generated/09-find-moderate.png",
+      "format": "PNG",
+      "width": 1672,
+      "height": 941,
+      "bytes": 1062375,
+      "sha256": "99c8b47311734be319f270f4f8b6a0c761d49359877e46cb038cab929e4493d8",
+      "ancillaryMetadataTypes": [
+        "caBX"
+      ]
+    },
+    {
+      "path": "images/generated/09-find-recommended.png",
+      "format": "PNG",
+      "width": 1672,
+      "height": 941,
+      "bytes": 1055050,
+      "sha256": "3a0acca9a84a56773b4aca24ff72d5895c2eba097b5ab6b60635332cf41d9e4a",
+      "ancillaryMetadataTypes": [
+        "caBX"
+      ]
+    },
+    {
+      "path": "images/generated/10-metadata-experimental.png",
+      "format": "PNG",
+      "width": 1672,
+      "height": 941,
+      "bytes": 1166440,
+      "sha256": "934ec10ba78a0f57e15f5a6974f946c970ce36541eb106face257a659116bf90",
+      "ancillaryMetadataTypes": [
+        "caBX"
+      ]
+    },
+    {
+      "path": "images/generated/10-metadata-moderate.png",
+      "format": "PNG",
+      "width": 1536,
+      "height": 1024,
+      "bytes": 1232916,
+      "sha256": "f519c0d0c475b2987aeff1d43cf5da21ecd9b4496495f3e3f672a4ce5b8de0dd",
+      "ancillaryMetadataTypes": [
+        "caBX"
+      ]
+    },
+    {
+      "path": "images/generated/10-metadata-recommended.png",
+      "format": "PNG",
+      "width": 1536,
+      "height": 1024,
+      "bytes": 1279304,
+      "sha256": "babd4d2f325984f30b2b3edf6f9e8c6faf155b3706fd14f402f1a2f2193e09e9",
+      "ancillaryMetadataTypes": [
+        "caBX"
+      ]
+    },
+    {
+      "path": "images/generated/11-source-experimental.png",
+      "format": "PNG",
+      "width": 1491,
+      "height": 1055,
+      "bytes": 1148141,
+      "sha256": "c2ae3f311496f61f938d9a45e45e1d6336d103ae44b8a22e9da0376683bd938e",
+      "ancillaryMetadataTypes": [
+        "caBX"
+      ]
+    },
+    {
+      "path": "images/generated/11-source-moderate.png",
+      "format": "PNG",
+      "width": 1536,
+      "height": 1024,
+      "bytes": 1412932,
+      "sha256": "39a8747bbda22735936a0af7de20f1203b5f994793d0e955d682dc305d8056a1",
+      "ancillaryMetadataTypes": [
+        "caBX"
+      ]
+    },
+    {
+      "path": "images/generated/11-source-recommended.png",
+      "format": "PNG",
+      "width": 1491,
+      "height": 1055,
+      "bytes": 1056854,
+      "sha256": "ea3398ed655e808f02b8f9d816093ba941cfbef83ca20f3391ada466a9f68c1f",
+      "ancillaryMetadataTypes": [
+        "caBX"
+      ]
+    },
+    {
+      "path": "images/generated/12-export-experimental.png",
+      "format": "PNG",
+      "width": 1536,
+      "height": 1024,
+      "bytes": 1348361,
+      "sha256": "8db336b6cd6aa870ffec2591ee433677a6c1c34b7229428e1d5c4c2d376dc025",
+      "ancillaryMetadataTypes": [
+        "caBX"
+      ]
+    },
+    {
+      "path": "images/generated/12-export-moderate.png",
+      "format": "PNG",
+      "width": 1491,
+      "height": 1055,
+      "bytes": 1213946,
+      "sha256": "bb9676a2aa9f385907855a350ca9ab734e3cd554598412fd907187755e570285",
+      "ancillaryMetadataTypes": [
+        "caBX"
+      ]
+    },
+    {
+      "path": "images/generated/12-export-recommended.png",
+      "format": "PNG",
+      "width": 1536,
+      "height": 1024,
+      "bytes": 1412601,
+      "sha256": "2241d83f19a029857de9d56b38afaa16fa4b37bc6ea7dd808131a4880648d01e",
+      "ancillaryMetadataTypes": [
+        "caBX"
+      ]
+    },
+    {
+      "path": "images/generated/superseded/02-toolbar-moderate-initial.png",
+      "format": "PNG",
+      "width": 1672,
+      "height": 941,
+      "bytes": 1101850,
+      "sha256": "9e4ad0c84e3c9ff15bb13229177d40d266af6e226a06833bd65736f3682d322a",
+      "ancillaryMetadataTypes": [
+        "caBX"
+      ]
+    },
+    {
+      "path": "images/generated/superseded/03-commands-moderate-initial.png",
+      "format": "PNG",
+      "width": 1672,
+      "height": 941,
+      "bytes": 1195196,
+      "sha256": "783434d653b9db8a867c98e2c511a43c550a0db5159ee86ae0222854dab63ade",
+      "ancillaryMetadataTypes": [
+        "caBX"
+      ]
+    },
+    {
+      "path": "images/generated/superseded/03-commands-moderate-refinement-1.png",
+      "format": "PNG",
+      "width": 1672,
+      "height": 941,
+      "bytes": 1148317,
+      "sha256": "3a2030963d4e8b8e6e868dac1120ad82590d0087dbad4868610f724a791a36e5",
+      "ancillaryMetadataTypes": [
+        "caBX"
+      ]
+    },
+    {
+      "path": "images/generated/superseded/05-tables-moderate-initial.png",
+      "format": "PNG",
+      "width": 1672,
+      "height": 941,
+      "bytes": 1069491,
+      "sha256": "e36a9f13423dde7f2f1d87e676109d944aa501a07c06e82c4595c3be445cc4a5",
+      "ancillaryMetadataTypes": [
+        "caBX"
+      ]
+    },
+    {
+      "path": "images/generated/superseded/05-tables-recommended-initial.png",
+      "format": "PNG",
+      "width": 1672,
+      "height": 941,
+      "bytes": 1152499,
+      "sha256": "218390ae6a91333f0291b746afd9007a11532529d995c20cf7649fa8a10f256c",
+      "ancillaryMetadataTypes": [
+        "caBX"
+      ]
+    },
+    {
+      "path": "images/generated/superseded/08-diagrams-experimental-initial.png",
+      "format": "PNG",
+      "width": 1672,
+      "height": 941,
+      "bytes": 1078767,
+      "sha256": "0809d61e26dd9caf7edc354e43646aaa171bc5737bab2db1e3f72e6c91e79b4a",
+      "ancillaryMetadataTypes": [
+        "caBX"
+      ]
+    },
+    {
+      "path": "images/generated/superseded/10-metadata-experimental-initial.png",
+      "format": "PNG",
+      "width": 1536,
+      "height": 1024,
+      "bytes": 1285526,
+      "sha256": "3df330f1d44485620401ec45f1345d8a9d48c414128e481d3073bf6aed5639c0",
+      "ancillaryMetadataTypes": [
+        "caBX"
+      ]
+    },
+    {
+      "path": "images/generated/superseded/12-export-moderate-initial.png",
+      "format": "PNG",
+      "width": 1536,
+      "height": 1024,
+      "bytes": 1322060,
+      "sha256": "7840191ffabe3470f976e571fc2cae2d98398775a433a89f041c108b8e6d2d07",
+      "ancillaryMetadataTypes": [
+        "caBX"
+      ]
+    }
+  ]
+}

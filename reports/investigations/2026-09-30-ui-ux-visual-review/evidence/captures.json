@@ -1,0 +1,370 @@
+[
+  {
+    "path": "images/current/01-empty-document.jpg",
+    "format": "JPEG",
+    "width": 1549,
+    "height": 1096,
+    "bytes": 22355,
+    "sha256": "b7fee92c8af46c9420fa03fd6d57a7db90051684d0d7d22de5af37115de74f95",
+    "ancillaryMetadataTypes": [],
+    "page": "empty.html",
+    "action": "Open an empty document; retain existing writing hint.",
+    "caption": "Current empty document · writing hint already present",
+    "theme": "things",
+    "toolbarMode": "full",
+    "method": "Unchanged source rendered in browser with synthetic input and test HostBridge",
+    "loggedViewport": {
+      "width": 1549,
+      "height": 1096
+    }
+  },
+  {
+    "path": "images/current/01-overview.jpg",
+    "format": "JPEG",
+    "width": 1280,
+    "height": 720,
+    "bytes": 48643,
+    "sha256": "010e6e2da917adf8d0f3f8e2e6d4e59d7a875181eaab8c40b0a1682b878e4c92",
+    "ancillaryMetadataTypes": [],
+    "page": "overview.html",
+    "action": "Open the representative synthetic document; wide pane.",
+    "caption": "Current wide editor · Full toolbar · Things theme",
+    "theme": "things",
+    "toolbarMode": "full",
+    "method": "Unchanged source rendered in browser with synthetic input and test HostBridge",
+    "viewportNote": "Live viewport was not separately logged for this initial capture; image dimensions are retained."
+  },
+  {
+    "path": "images/current/02-narrow-toolbar.jpg",
+    "format": "JPEG",
+    "width": 600,
+    "height": 720,
+    "bytes": 35707,
+    "sha256": "f28f73d23de5dd4411e2dcc3edeaf7de18b2d6a27c69daf4c662b2770e969fe8",
+    "ancillaryMetadataTypes": [],
+    "page": "overview.html",
+    "action": "Set a 600 × 720 viewport; leave More closed.",
+    "caption": "Current narrow pane · 600 × 720",
+    "theme": "things",
+    "toolbarMode": "full",
+    "method": "Unchanged source rendered in browser with synthetic input and test HostBridge",
+    "loggedViewport": {
+      "width": 600,
+      "height": 720
+    }
+  },
+  {
+    "path": "images/current/02-toolbar-overflow.jpg",
+    "format": "JPEG",
+    "width": 600,
+    "height": 720,
+    "bytes": 43216,
+    "sha256": "0b7c5c1a94ecb3ca665406d3b9f28f3caf80264805bec6612c2e02893e38c82a",
+    "ancillaryMetadataTypes": [],
+    "page": "overview.html",
+    "action": "At 600 × 720, open the toolbar More menu.",
+    "caption": "Current narrow More menu · commands retained",
+    "theme": "things",
+    "toolbarMode": "full",
+    "method": "Unchanged source rendered in browser with synthetic input and test HostBridge",
+    "loggedViewport": {
+      "width": 600,
+      "height": 720
+    }
+  },
+  {
+    "path": "images/current/03-insert-menu.jpg",
+    "format": "JPEG",
+    "width": 1280,
+    "height": 720,
+    "bytes": 51865,
+    "sha256": "fdbdcb5a0c10867197717b5d45e9d6bfe6a254b672192f95043fbf6748bed630",
+    "ancillaryMetadataTypes": [],
+    "page": "overview.html",
+    "action": "Open Insert; capture the visible focused first row.",
+    "caption": "Current Insert menu · keyboard focus visible",
+    "theme": "things",
+    "toolbarMode": "full",
+    "method": "Unchanged source rendered in browser with synthetic input and test HostBridge",
+    "viewportNote": "Live viewport was not separately logged for this initial capture; image dimensions are retained."
+  },
+  {
+    "path": "images/current/04-palette-no-results.jpg",
+    "format": "JPEG",
+    "width": 1280,
+    "height": 720,
+    "bytes": 55654,
+    "sha256": "e270df4ed0fc7b2dbe73613ef5d521f3eb9d73e8b50f2bc81bc58fe292ec51f3",
+    "ancillaryMetadataTypes": [],
+    "page": "overview.html",
+    "action": "Open Action Palette and enter unmatched-command; document may be scrolled to the current selection.",
+    "caption": "Current Action Palette · unmatched query",
+    "theme": "things",
+    "toolbarMode": "full",
+    "method": "Unchanged source rendered in browser with synthetic input and test HostBridge",
+    "viewportNote": "Live viewport was not separately logged for this initial capture; image dimensions are retained."
+  },
+  {
+    "path": "images/current/05-table-controls.jpg",
+    "format": "JPEG",
+    "width": 1280,
+    "height": 720,
+    "bytes": 36110,
+    "sha256": "4c93a0b958bd1ce45796dddca45ba357746da5eed6dc427049f45855b924c4f4",
+    "ancillaryMetadataTypes": [],
+    "page": "table.html",
+    "action": "Select the Baseline table cell; retain Automatic toolbar placement.",
+    "caption": "Current table controls · Automatic placement",
+    "theme": "things",
+    "toolbarMode": "full",
+    "method": "Unchanged source rendered in browser with synthetic input and test HostBridge",
+    "viewportNote": "Live viewport was not separately logged for this initial capture; image dimensions are retained."
+  },
+  {
+    "path": "images/current/06-code-night.jpg",
+    "format": "JPEG",
+    "width": 1280,
+    "height": 720,
+    "bytes": 32560,
+    "sha256": "b6ec3a119d59f0af7cd385cb0bd21c0664391500a95ad611aceb6e9573de71ed",
+    "ancillaryMetadataTypes": [],
+    "page": "code.html",
+    "action": "Open the JavaScript fixture in Night theme.",
+    "caption": "Current JavaScript block · Night theme",
+    "theme": "night",
+    "toolbarMode": "full",
+    "method": "Unchanged source rendered in browser with synthetic input and test HostBridge",
+    "viewportNote": "Live viewport was not separately logged for this initial capture; image dimensions are retained."
+  },
+  {
+    "path": "images/current/06-language-picker.jpg",
+    "format": "JPEG",
+    "width": 1549,
+    "height": 1096,
+    "bytes": 48407,
+    "sha256": "bb943b1ed849f8c7144aefe599f8f633cc21c28d7819b98b70f8e0ff3c37f2d6",
+    "ancillaryMetadataTypes": [],
+    "page": "code.html",
+    "action": "Open the JavaScript language control.",
+    "caption": "Current searchable language picker",
+    "theme": "night",
+    "toolbarMode": "full",
+    "method": "Unchanged source rendered in browser with synthetic input and test HostBridge",
+    "loggedViewport": {
+      "width": 1549,
+      "height": 1096
+    }
+  },
+  {
+    "path": "images/current/07-outline.jpg",
+    "format": "JPEG",
+    "width": 1280,
+    "height": 720,
+    "bytes": 47569,
+    "sha256": "bcf9b9cbd8f509b4f9ecdcf0f63aced56e828500a563d779d89a341b32fe9ddb",
+    "ancillaryMetadataTypes": [],
+    "page": "outline.html",
+    "action": "Open the outline fixture with nested and long headings.",
+    "caption": "Current nested outline and footer",
+    "theme": "things",
+    "toolbarMode": "full",
+    "method": "Unchanged source rendered in browser with synthetic input and test HostBridge",
+    "loggedViewport": {
+      "width": 1280,
+      "height": 720
+    }
+  },
+  {
+    "path": "images/current/08-equation-edit.jpg",
+    "format": "JPEG",
+    "width": 1280,
+    "height": 720,
+    "bytes": 32728,
+    "sha256": "4ab7656f5c3cb5b6d4d18a169c911723f4b5cb806410b3e908cb5b3a3f229f73",
+    "ancillaryMetadataTypes": [],
+    "page": "equation.html",
+    "action": "Click the display-equation source area; source and preview visible.",
+    "caption": "Current unsupported equation · source and preview",
+    "theme": "things",
+    "toolbarMode": "full",
+    "method": "Unchanged source rendered in browser with synthetic input and test HostBridge",
+    "loggedViewport": {
+      "width": 1280,
+      "height": 720
+    }
+  },
+  {
+    "path": "images/current/08-equation-error.jpg",
+    "format": "JPEG",
+    "width": 1280,
+    "height": 720,
+    "bytes": 27104,
+    "sha256": "ae15e97f69a19f790e00bec09a77a5c9f35b2465ee9970fe7119e2a616af262d",
+    "ancillaryMetadataTypes": [],
+    "page": "equation.html",
+    "action": "Open the unsupported display-equation fixture without editing.",
+    "caption": "Current unsupported equation · preview",
+    "theme": "things",
+    "toolbarMode": "full",
+    "method": "Unchanged source rendered in browser with synthetic input and test HostBridge",
+    "loggedViewport": {
+      "width": 1280,
+      "height": 720
+    }
+  },
+  {
+    "path": "images/current/09-mermaid-error.jpg",
+    "format": "JPEG",
+    "width": 1280,
+    "height": 720,
+    "bytes": 42552,
+    "sha256": "5d54994dfaf1ae44ed2bc201c794edfeffa958762535d7378c9a62c3f6cf2bb0",
+    "ancillaryMetadataTypes": [],
+    "page": "mermaid.html",
+    "action": "Open the fixture with one valid and one invalid diagram.",
+    "caption": "Current valid and invalid Mermaid diagrams",
+    "theme": "things",
+    "toolbarMode": "full",
+    "method": "Unchanged source rendered in browser with synthetic input and test HostBridge",
+    "loggedViewport": {
+      "width": 1280,
+      "height": 720
+    }
+  },
+  {
+    "path": "images/current/10-find-replace.jpg",
+    "format": "JPEG",
+    "width": 1280,
+    "height": 720,
+    "bytes": 35794,
+    "sha256": "a3c193943349d0ac8c4400b90005f26a93299135e4163f177a6edee6f137616f",
+    "ancillaryMetadataTypes": [],
+    "page": "find.html",
+    "action": "Open Find and Replace; search draft; leave replacement empty.",
+    "caption": "Current Find and Replace · filled Find field",
+    "theme": "things",
+    "toolbarMode": "full",
+    "method": "Unchanged source rendered in browser with synthetic input and test HostBridge",
+    "loggedViewport": {
+      "width": 1280,
+      "height": 720
+    }
+  },
+  {
+    "path": "images/current/11-metadata-expanded.jpg",
+    "format": "JPEG",
+    "width": 1549,
+    "height": 1096,
+    "bytes": 43312,
+    "sha256": "0e1284068dd43ffeebd30795507390d089138e60af49b486f147d95b69d47ac5",
+    "ancillaryMetadataTypes": [],
+    "page": "metadata.html",
+    "action": "Expand Front matter to show raw YAML.",
+    "caption": "Current raw YAML editor",
+    "theme": "things",
+    "toolbarMode": "full",
+    "method": "Unchanged source rendered in browser with synthetic input and test HostBridge",
+    "loggedViewport": {
+      "width": 1549,
+      "height": 1096
+    }
+  },
+  {
+    "path": "images/current/11-metadata-toc.jpg",
+    "format": "JPEG",
+    "width": 1280,
+    "height": 720,
+    "bytes": 30744,
+    "sha256": "b351cbfcfe3fa341e1acf047533bd60eec8cbfbe53b176a75903ed1ce749f11c",
+    "ancillaryMetadataTypes": [],
+    "page": "metadata.html",
+    "action": "Open metadata fixture with front matter collapsed and managed TOC visible.",
+    "caption": "Current front matter and generated contents",
+    "theme": "things",
+    "toolbarMode": "full",
+    "method": "Unchanged source rendered in browser with synthetic input and test HostBridge",
+    "loggedViewport": {
+      "width": 1280,
+      "height": 720
+    }
+  },
+  {
+    "path": "images/current/12-source-mode.jpg",
+    "format": "JPEG",
+    "width": 1549,
+    "height": 1096,
+    "bytes": 59830,
+    "sha256": "48b1bc98c722c510686dbff53c894dbd1201561d6a98129d35d21d262c7297c2",
+    "ancillaryMetadataTypes": [],
+    "page": "overview.html",
+    "action": "Switch the representative document to Source mode.",
+    "caption": "Current Source mode and utility icons",
+    "theme": "things",
+    "toolbarMode": "full",
+    "method": "Unchanged source rendered in browser with synthetic input and test HostBridge",
+    "loggedViewport": {
+      "width": 1549,
+      "height": 1096
+    }
+  },
+  {
+    "path": "images/current/13-export-menu.jpg",
+    "format": "JPEG",
+    "width": 1549,
+    "height": 1096,
+    "bytes": 76906,
+    "sha256": "d7648ab88af5f9bee78e95ed9921d02607fadd9a18b8c780be3a5032a40f49e7",
+    "ancillaryMetadataTypes": [],
+    "page": "export.html",
+    "action": "Open Export; mock HTML/browser available and Pandoc unavailable.",
+    "mocked": true,
+    "caption": "Current export menu · simulated tool availability",
+    "theme": "things",
+    "toolbarMode": "full",
+    "method": "Unchanged source rendered in browser with synthetic input and test HostBridge",
+    "loggedViewport": {
+      "width": 1549,
+      "height": 1096
+    }
+  },
+  {
+    "path": "images/current/14-export-failure.jpg",
+    "format": "JPEG",
+    "width": 1549,
+    "height": 1096,
+    "bytes": 65830,
+    "sha256": "e0ee5577bb97d3e1f6ea4af1413e95f6de3ff7263ae6f461023f1174bcb65583",
+    "ancillaryMetadataTypes": [],
+    "page": "export-failure.html",
+    "action": "Open the real status UI with an injected failed status and warnings collapsed.",
+    "mocked": true,
+    "caption": "Current failure banner · simulated host status",
+    "theme": "things",
+    "toolbarMode": "full",
+    "method": "Unchanged source rendered in browser with synthetic input and test HostBridge",
+    "loggedViewport": {
+      "width": 1549,
+      "height": 1096
+    }
+  },
+  {
+    "path": "images/current/14-export-warnings.jpg",
+    "format": "JPEG",
+    "width": 1549,
+    "height": 1096,
+    "bytes": 70297,
+    "sha256": "82f7c4e00805a456050165993716a7a918b10fe4192b0f57829cc09d3b7b16b8",
+    "ancillaryMetadataTypes": [],
+    "page": "export-failure.html",
+    "action": "Expand the warning disclosure in the injected failure state.",
+    "mocked": true,
+    "caption": "Current expanded warnings · simulated host status",
+    "theme": "things",
+    "toolbarMode": "full",
+    "method": "Unchanged source rendered in browser with synthetic input and test HostBridge",
+    "loggedViewport": {
+      "width": 1549,
+      "height": 1096
+    }
+  }
+]

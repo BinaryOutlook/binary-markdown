@@ -6,6 +6,7 @@ These records preserve observations about particular revisions and environments.
 
 | Date | Report | Scope |
 | --- | --- | --- |
+| 2026-09-30 | [UI/UX visual design review](investigations/2026-09-30-ui-ux-visual-review/report.md) | Current source captures, twelve review areas and three generated concepts per area; proposals only |
 | 2026-09-20 | [Editable DOCX code-line numbering](investigations/2026-09-20-docx-code-numbering.md) | Original native-paragraph/table prototypes and LibreOffice development-reader evidence; see the later reader checkpoint for the accepted scope |
 | 2026-09-14 | [DOCX code blocks and language tabs](investigations/2026-09-14-docx-code-blocks.md) | Reproduction, implementation choices and local reader/format checks; final Word visual acceptance remains separate |
 | 2026-09-12 | [Export page background](investigations/2026-09-12-export-page-background.md) | Original PDF investigation and subsequent fix evidence |
