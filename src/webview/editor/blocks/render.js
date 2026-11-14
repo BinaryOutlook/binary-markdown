@@ -1,6 +1,7 @@
 'use strict';
 // Construction defines capabilities; bootstrap controls the original initialization order.
 function createRender(dependencies) {
+    const references = require('./references').createReferences(dependencies, () => renderFromMarkdown());
     let frontMatterOpen, editorRenderRevision, sourceBlockSequence, initializedLinks;
     function renderFromMarkdown(codeViews = dependencies.captureCodeViews()) {
         dependencies.closeInsertMenu(false);
@@ -322,7 +323,7 @@ function createRender(dependencies) {
         });
     }
     function setupLink(a) {
-        if (a.closest('.toc-block'))
+        if (a.closest('.toc-block') || a.hasAttribute('data-note-navigation'))
             return;
         // DOM-only details; keep this shared by rendered, inserted, and pasted links.
         if (!a.hasAttribute('title'))
@@ -338,8 +339,10 @@ function createRender(dependencies) {
     function setupInteractiveElements() {
         dependencies.setupInlineMath();
         setupDocumentAux();
+        references.setup();
         // Make checkboxes work
         dependencies.editor.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+            if (cb.closest('.footnote-body')) { cb.disabled = true; return; }
             cb.addEventListener('change', () => {
                 dependencies.markAsEdited(); // User has made an edit
                 dependencies.syncMarkdown();
@@ -349,10 +352,12 @@ function createRender(dependencies) {
         dependencies.editor.querySelectorAll('a').forEach(setupLink);
         // Make table cells editable
         dependencies.editor.querySelectorAll('th, td').forEach(cell => {
+            if (cell.closest('.footnote-body')) { cell.removeAttribute('contenteditable'); return; }
             cell.setAttribute('contenteditable', 'true');
         });
         // Add resize handles to tables
         dependencies.editor.querySelectorAll('table').forEach(table => {
+            if (table.closest('.footnote-body')) return;
             dependencies.addTableResizeHandles(table);
         });
         // Setup code block UI for all code blocks
@@ -361,6 +366,11 @@ function createRender(dependencies) {
     // Setup all code blocks in the editor
     function setupAllCodeBlocks() {
         dependencies.editor.querySelectorAll('pre').forEach(pre => {
+            if (pre.closest('.footnote-body')) {
+                pre.removeAttribute('contenteditable');
+                pre.querySelectorAll('[contenteditable]').forEach(node => node.removeAttribute('contenteditable'));
+                return;
+            }
             // Skip mermaid/math code blocks (they are handled by their own setup functions)
             if (pre.getAttribute('data-lang') === 'mermaid')
                 return;
@@ -451,6 +461,7 @@ function createRender(dependencies) {
         (initializedLinks = new WeakSet());
     }
     return {
+        insertFootnote: references.insertFootnote,
         renderFromMarkdown,
         normalizeBlockHtml,
         blocksAreEqual,

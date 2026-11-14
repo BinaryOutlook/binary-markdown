@@ -3,13 +3,12 @@
 const MarkdownIt = require('markdown-it/lib/index.mjs').default;
 const math = require('./math-syntax');
 const documentAux = require('./document-aux');
+const references = require('./markdown-references');
 
 // Block structure and source layout are separate. Blank separators are source
 // slices, never empty document paragraphs or hidden editable DOM nodes.
 const parser = new MarkdownIt({ html: false, linkify: false, typographer: false });
-// References stay literal until the editor's inline renderer supports them;
-// consuming definitions here would hide user content without rendering links.
-parser.block.ruler.disable('reference');
+references.configure(parser);
 // The editor has always authored nested empty items as an indented "- ".
 // Prefer that editing position over a setext underline inside a list.
 const setext = require('markdown-it/lib/rules_block/lheading.mjs').default;
@@ -107,7 +106,8 @@ function parse(source, options = {}) {
             auxiliary.set(startLine, { raw, endLine: startLine + raw.replace(/\n$/, '').split('\n').length });
         }
     } catch (_) { /* Incomplete auxiliary syntax remains editable text. */ }
-    const blocks = tokenTree(parser.parse(body, { auxiliary, backslashDelimiters: options.backslashDelimiters }));
+    const env = { auxiliary, references: Object.create(null), backslashDelimiters: options.backslashDelimiters };
+    const blocks = tokenTree(parser.parse(body, env));
     let previousEnd = 0;
     for (const block of blocks) {
         const start = offsets[block.map[0]];
@@ -127,7 +127,7 @@ function parse(source, options = {}) {
     if (front.raw.endsWith('\n') && !blocks.length) trailing = '\n' + trailing;
     if (front.raw) blocks.unshift({ type: 'front_matter', content: front.raw, source: front.raw.replace(/\n$/, ''), before: '', children: [] });
     if (front.raw && blocks.length > 1 && front.raw.endsWith('\n')) blocks[1].before = '\n' + blocks[1].before;
-    return { blocks, trailing };
+    return { blocks, trailing, references: references.contextFor(blocks, env) };
 }
 
-module.exports = { parse };
+module.exports = { parse, inlineReferences: references.inlineSpans };

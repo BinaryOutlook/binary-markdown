@@ -3,7 +3,8 @@
  * Construction binds capabilities without rendering or modifying the document.
  * Sequence/directive owners stay outside the codec; the sentinel set is shared.
  */
-function createBlockCodec({ document, editor, logger, REGEX, emptyTableCell, mathBackslashDelimiters, codeBlocksWithSentinel, parseInline, escapeHtml, renderFrontMatter, renderTocBlock, mathBlockHtml, inlineMathMarkdown, mathBlockMarkdown, mdGetInlineMarkdown, parseBlocks, formatTable, nextSourceBlockSequence, getCurrentImageDir, getCurrentForceRelativePath }) {
+const references = require('./references');
+function createBlockCodec({ document, editor, logger, REGEX, emptyTableCell, mathBackslashDelimiters, codeBlocksWithSentinel, parseInline, escapeHtml, renderFrontMatter, renderTocBlock, mathBlockHtml, inlineMathMarkdown, mathBlockMarkdown, mdGetInlineMarkdown, parseBlocks, formatTable, nextSourceBlockSequence, getCurrentImageDir, getCurrentForceRelativePath, labels = {} }) {
     function parseMarkdownLine(text, allowMath = true) {
         const parseLineInline = value => parseInline(value, allowMath);
         // Heading
@@ -57,8 +58,17 @@ function createBlockCodec({ document, editor, logger, REGEX, emptyTableCell, mat
         // Regular paragraph
         return { tag: 'p', html: parseLineInline(text), consumed: false };
     }
-    function renderMarkdownBlock(block, exportCode = false, parent = null, index = 0) {
-        const children = () => block.children.map((child, i) => renderMarkdownBlock(child, exportCode, block, i)).join('');
+    function renderMarkdownBlock(block, exportCode = false, parent = null, index = 0, context) {
+        if (block.type === 'footnote_reference' && (!block.meta.primary || !block.meta.number)) {
+            if (exportCode) return '';
+            // An unused/duplicate definition is a source preview, not another
+            // occurrence in the document's active footnote navigation.
+            context = { ...context, notePreview: true };
+        }
+        const children = () => block.children.map((child, i) => renderMarkdownBlock(child, exportCode, block, i, context)).join('');
+        const inline = (text, allowMath = true, prose = false) => parseInline(text, allowMath, prose, context);
+        if (block.type === 'binary_reference' || block.type === 'footnote_reference')
+            return references.renderDefinition(block, block.type === 'footnote_reference' ? children() : '', exportCode, labels);
         if (block.type === 'front_matter')
             return renderFrontMatter(block.content);
         if (block.type === 'binary_aux')
@@ -66,18 +76,20 @@ function createBlockCodec({ document, editor, logger, REGEX, emptyTableCell, mat
         if (block.type === 'binary_math')
             return mathBlockHtml(block.meta);
         if (block.type === 'inline')
-            return parseInline(block.content, true, true);
+            return inline(block.content, true, true);
         if (block.type === 'paragraph') {
             const text = block.children.find(child => child.type === 'inline')?.content || '';
+            if (/^ {0,3}\[(?:\\.|[^\]\\])+\]:/.test(text))
+                return '<p class="reference-unresolved" title="' + escapeHtml(labels.referenceUnresolved).replace(/"/g, '&quot;') + '">' + escapeHtml(text) + '</p>';
             // Keep the established quote line-editing contract for a simple
             // quote. Quotes containing several blocks keep those blocks.
             if (parent?.type === 'blockquote' && parent.level === 0 && parent.children.length === 1)
-                return parseInline(text);
+                return inline(text);
             if (parent?.type === 'list_item' && index === 0) {
                 const task = /^\[([ xX])\] +(.*)$/s.exec(text);
                 if (task)
-                    return '<input type="checkbox"' + (task[1].toLowerCase() === 'x' ? ' checked' : '') + '>' + (parseInline(task[2], true, true) || '<br>');
-                return parseInline(text, true, true) || '<br>';
+                    return '<input type="checkbox"' + (task[1].toLowerCase() === 'x' ? ' checked' : '') + '>' + (inline(task[2], true, true) || '<br>');
+                return inline(text, true, true) || '<br>';
             }
             return '<p>' + children() + '</p>';
         }
@@ -138,11 +150,11 @@ function createBlockCodec({ document, editor, logger, REGEX, emptyTableCell, mat
     function markdownToHtmlFragment(markdownText, exportCode = false) {
         const parsed = parseBlocks(markdownText, { backslashDelimiters: mathBackslashDelimiters });
         if (exportCode)
-            return parsed.blocks.map(block => renderMarkdownBlock(block, true)).join('');
+            return parsed.blocks.map(block => renderMarkdownBlock(block, true, null, 0, parsed.references)).join('');
         let previousId = '';
         return parsed.blocks.map((block, index) => {
             const template = document.createElement('template');
-            template.innerHTML = renderMarkdownBlock(block);
+            template.innerHTML = renderMarkdownBlock(block, false, null, 0, parsed.references);
             const element = template.content.firstElementChild;
             if (!element)
                 return '';
@@ -213,6 +225,10 @@ function createBlockCodec({ document, editor, logger, REGEX, emptyTableCell, mat
         }
         if (node.nodeType !== 1)
             return '';
+        const reference = references.readInline(node, mdGetInlineMarkdown);
+        if (reference !== null) return reference;
+        if (node.classList.contains('reference-definition'))
+            return node.querySelector(':scope > details > textarea').value + '\n';
         if (node.classList.contains('math-inline'))
             return inlineMathMarkdown(node);
         const tag = node.tagName.toLowerCase();
@@ -496,6 +512,8 @@ function createBlockCodec({ document, editor, logger, REGEX, emptyTableCell, mat
                 }
             }
             else if (node.nodeType === 1) {
+                const reference = references.readInline(node, mdGetInlineMarkdown);
+                if (reference !== null) { currentLine += reference; return; }
                 const tag = node.tagName.toLowerCase();
                 if (tag === 'br') {
                     // Line break - push current line (even if empty) and start new line
@@ -599,6 +617,8 @@ function createBlockCodec({ document, editor, logger, REGEX, emptyTableCell, mat
             }
             if (node.nodeType !== 1)
                 return '';
+            const reference = references.readInline(node, mdGetInlineMarkdown);
+            if (reference !== null) return escapePipeInCell(reference);
             if (node.classList.contains('math-inline'))
                 return escapePipeInCell(inlineMathMarkdown(node));
             const tag = node.tagName.toLowerCase();
@@ -774,7 +794,7 @@ function createBlocksController(dependencies) {
             mathBlockMarkdown: (...args) => dependencies.mathBlockMarkdown(...args), mdGetInlineMarkdown: dependencies.mdGetInlineMarkdown,
             parseBlocks: (...args) => window.BinaryMarkdownBlocks.parse(...args), formatTable: (...args) => dependencies.tableFormat.format(...args),
             nextSourceBlockSequence: () => ++dependencies.sourceBlockSequence, getCurrentImageDir: () => dependencies.currentImageDir,
-            getCurrentForceRelativePath: () => dependencies.currentForceRelativePath
+            getCurrentForceRelativePath: () => dependencies.currentForceRelativePath, labels: dependencies.i18n
         }));
     }
     return {

@@ -43,6 +43,14 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  referenceDuplicate: "定義重複。使用第一個定義，並保留此原始碼。",
+  footnote: "註腳",
+  footnotePlaceholder: "在此輸入註解。",
+  footnoteBack: "返回引用",
+  referenceDefinition: "連結定義",
+  editDefinition: "編輯定義",
+  referenceUnresolved: "沒有相符的定義。請在原始碼中新增或修正。",
+  insertDescriptionFootnote: "插入帶有可編輯定義的編號註腳。",
   settingsEditor: "編輯器與外觀",
   settingsOutline: "大綱",
   settingsWriting: "寫作工具",

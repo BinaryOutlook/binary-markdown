@@ -1339,6 +1339,14 @@ html[data-math-source-position="below"] .editor .math-wrapper[data-mode="edit"] 
 
 /* Metadata is source text, separate from the editable prose. */
 .document-aux { border: 1px solid var(--border-color); border-radius: 6px; margin: 1em 0; padding: 12px 16px; }
+.reference-definition { border-inline-start: 3px solid var(--border-color); margin: 1em 0; padding: 8px 16px; }
+.reference-definition summary { cursor: pointer; color: var(--text-color); font-size: .9em; }
+.reference-source { box-sizing: border-box; display: block; width: 100%; margin-top: 8px; padding: 8px; resize: vertical; font: .85em/1.6 var(--font-mono); background: var(--code-bg); color: var(--text-color); border: 1px solid var(--border-color); border-radius: 4px; }
+.reference-source:focus-visible, .reference-definition:focus-visible, .footnote-ref a:focus-visible, .footnote-backlink:focus-visible { outline: 2px solid var(--link-color); outline-offset: 2px; }
+.footnote-ref { font-size: .75em; vertical-align: super; line-height: 0; }
+.footnote-ref a, .footnote-backlink { cursor: pointer; }
+.footnote-backlinks { font-size: .85em; margin-block: .4em; }
+.reference-unresolved { text-decoration: underline dotted; text-underline-offset: .2em; }
 .front-matter summary { cursor: pointer; color: var(--text-color); font-size: .9em; }
 .front-matter-source { box-sizing: border-box; display: block; width: 100%; margin-top: 12px; padding: 12px; resize: vertical; font: .85em/1.6 var(--font-mono); background: var(--code-bg); color: var(--text-color); border: 1px solid var(--border-color); border-radius: 4px; }
 .front-matter-source:focus-visible { outline: 2px solid var(--link-color); outline-offset: 2px; }

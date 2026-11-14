@@ -36,7 +36,7 @@ Code spans, code blocks, equations, and generated document blocks cannot be unde
 
 ## Insert menu
 
-The Insert workspace remains available in both **Full** and **Simple** mode. Open the three-dot **More toolbar actions** menu, search for **Insert**, and choose the **Insert** command. The workspace includes inline equations, block equations, tables, code blocks, links, images, Mermaid diagrams, and a managed table of contents. Search the three-dot menu for an individual insertion command to run it directly, or use its existing toolbar button, shortcut, or Action Palette entry.
+The Insert workspace remains available in both **Full** and **Simple** mode. Open the three-dot **More toolbar actions** menu, search for **Insert**, and choose the **Insert** command. The workspace includes inline equations, block equations, tables, code blocks, links, images, footnotes, Mermaid diagrams, and a managed table of contents. Search the three-dot menu for an individual insertion command to run it directly, or use its existing toolbar button, shortcut, or Action Palette entry.
 
 Opening the menu retains your caret or selection. Use up/down arrows or `Home`/`End` to navigate, `Enter` or `Space` to choose an item, and `Escape` to close it. Opening, navigating, or cancelling the menu does not edit the document. Cancelling a link or image dialog also leaves the document and undo history unchanged. Confirmed insertions use the retained location and can be undone in one step.
 
@@ -82,6 +82,27 @@ Search the Insert workspace or choose **All**, **Structure**, **Equations**, **C
 | Image | `![text](url)` <br>Space conversion not supported | Image button | `Ctrl+Shift+I` |
 
 ---
+
+## Reference links and footnotes
+
+Full (`[text][guide]`), collapsed (`[guide][]`), and shortcut (`[guide]`) references, including images, share definitions and optional titles. Open **Link definition […] — Edit definition** to change a shared destination or title. Editing link text keeps its target, expanding collapsed or shortcut syntax when needed.
+
+```markdown
+Read the [project guide][guide] and [release notes][].
+The result has a supporting note.[^method]
+
+[guide]: https://example.com/guide "Project guide"
+[release notes]: https://example.com/releases
+[^method]: The measurement follows the documented procedure.
+```
+
+Choose **Footnote** from Insert or the Action Palette to add a marker at the caret, or after selected text. The editor creates an unused `note-N` definition at the end and selects its text. Repeated references share a number and have separate return links; use `Tab`, then `Enter` or `Space`, to navigate.
+
+Open **Footnote … — Edit definition** to edit note Markdown; indent continuation blocks by four spaces. Press `Ctrl/Cmd+Enter` or leave the field to refresh its preview. Save and Undo work in the field. Visual, Source, and Split share definitions; Split's preview is read-only.
+
+Labels ignore case; link labels also normalize whitespace. Footnote labels cannot be empty or contain whitespace or square brackets. The first definition wins; duplicates and unresolved full/collapsed links or notes show explanations. Unresolved and malformed syntax stays editable. Code and escaped markers stay literal.
+
+Unchanged blocks preserve source spelling, identifiers, and definition placement; edited blocks may normalize formatting. HTML/PDF keep notes at their definition locations, not page bottoms. DOCX/EPUB use native notes and may number repeats separately. Unused and duplicate notes stay in source but are omitted from exports. See [export support](export-subsystem.md#rendering-and-format-support).
 
 <a id="-special-operations"></a>
 

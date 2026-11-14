@@ -75,10 +75,10 @@ function createMenus(dependencies) {
             return dependencies.i18n.insertUnavailableSelection;
         const element = node => node.nodeType === Node.ELEMENT_NODE ? node : node.parentElement;
         const start = element(range.startContainer), end = element(range.endContainer);
-        const protectedBlock = 'pre, .math-wrapper, .mermaid-wrapper, .front-matter, .toc-block, .math-inline';
+        const protectedBlock = 'pre, .math-wrapper, .mermaid-wrapper, .front-matter, .toc-block, .math-inline, .reference-definition';
         if (start.closest(protectedBlock) || end.closest(protectedBlock))
             return dependencies.i18n.insertUnavailableContext;
-        const inline = ['inlineMath', 'link', 'image'].includes(action);
+        const inline = ['inlineMath', 'link', 'image', 'footnote'].includes(action);
         if (!inline && (start.closest('li, td, th, blockquote') || end.closest('li, td, th, blockquote'))) {
             return dependencies.i18n.insertUnavailableBlock;
         }
@@ -578,6 +578,7 @@ function createMenus(dependencies) {
             // Group: Insert
             { group: 'insert', action: 'link', i18nKey: 'insertLink', icon: 'link' },
             { group: 'insert', action: 'image', i18nKey: 'insertImage', icon: 'image' },
+            { group: 'insert', action: 'footnote', i18nKey: 'footnote', icon: 'link' },
             { group: 'insert', action: 'toc', i18nKey: 'insertToc', icon: 'ul' },
             { group: 'insert', action: 'table', i18nKey: 'insertTable', icon: 'table' },
             { group: 'view', action: 'viewUndo', i18nKey: 'undo', icon: 'undo' },
@@ -603,9 +604,9 @@ function createMenus(dependencies) {
         (insertButton = document.getElementById('insertButton'));
         (insertMenu = document.getElementById('insertMenu'));
         (insertMenuRange = null);
-        (insertActions = ['table', 'inlineMath', 'codeblock', 'math', 'link', 'image', 'mermaid', 'toc']);
-        (insertCategory = { inlineMath: 'equationsCategory', math: 'equationsCategory', table: 'structureCategory', toc: 'structureCategory', codeblock: 'codeCategory', mermaid: 'codeCategory', link: 'mediaCategory', image: 'mediaCategory' });
-        (insertSamples = { inlineMath: '$x^2$', math: '$$\\frac{a+b}{c}$$', table: '| A | B |\n| --- | --- |', codeblock: '```javascript\nconst value = 1;\n```', link: '[text](https://example.com)', image: '![description](image.png)', mermaid: 'graph TD\n  A --> B', toc: '[TOC]' });
+        (insertActions = ['table', 'inlineMath', 'codeblock', 'math', 'link', 'image', 'mermaid', 'toc', 'footnote']);
+        (insertCategory = { footnote: 'structureCategory', inlineMath: 'equationsCategory', math: 'equationsCategory', table: 'structureCategory', toc: 'structureCategory', codeblock: 'codeCategory', mermaid: 'codeCategory', link: 'mediaCategory', image: 'mediaCategory' });
+        (insertSamples = { footnote: '[^note]', inlineMath: '$x^2$', math: '$$\\frac{a+b}{c}$$', table: '| A | B |\n| --- | --- |', codeblock: '```javascript\nconst value = 1;\n```', link: '[text](https://example.com)', image: '![description](image.png)', mermaid: 'graph TD\n  A --> B', toc: '[TOC]' });
         (actionDescription = action => ['viewUndo', 'viewRedo'].includes(action) ? dependencies.i18n.historyDescription : action.startsWith('view') ? dependencies.i18n.viewDescription : dependencies.i18n['insertDescription' + action[0].toUpperCase() + action.slice(1)] || (['bold', 'italic', 'underline', 'strikethrough', 'code'].includes(action) ? dependencies.i18n.formatDescription : dependencies.i18n.blockDescription));
         (insertSearch = null);
         (insertCategorySelection = 'allCategory');

@@ -81,7 +81,7 @@ function createDispatch(dependencies) {
         return false;
     }
     function handleKeydown(e) {
-        if (e.target.closest && e.target.closest('.front-matter'))
+        if (e.target.closest && e.target.closest('.front-matter, .reference-definition'))
             return;
         dependencies.logger.log('Editor keydown:', e.key);
         if (dependencies.isSourceMode)
@@ -382,7 +382,7 @@ function createDispatch(dependencies) {
         }, true);
         dependencies.editor.addEventListener('keydown', handleKeydown);
         dependencies.editor.addEventListener('beforeinput', function (e) {
-            if (e.target.closest && e.target.closest('.front-matter'))
+            if (e.target.closest && e.target.closest('.front-matter, .reference-definition'))
                 return;
             if (dependencies.isSourceMode)
                 return;
@@ -519,7 +519,7 @@ function createDispatch(dependencies) {
             }
         });
         dependencies.editor.addEventListener('input', function (e) {
-            if (e.target.closest && e.target.closest('.front-matter'))
+            if (e.target.closest && e.target.closest('.front-matter, .reference-definition'))
                 return;
             if (dependencies.isSourceMode)
                 return;

@@ -43,6 +43,14 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  referenceDuplicate: "定义重复。使用第一个定义，并保留此源码。",
+  footnote: "脚注",
+  footnotePlaceholder: "在此输入注释。",
+  footnoteBack: "返回引用",
+  referenceDefinition: "链接定义",
+  editDefinition: "编辑定义",
+  referenceUnresolved: "没有匹配的定义。请在源码中添加或更正。",
+  insertDescriptionFootnote: "插入带有可编辑定义的编号脚注。",
   settingsEditor: "编辑器与外观",
   settingsOutline: "大纲",
   settingsWriting: "写作工具",

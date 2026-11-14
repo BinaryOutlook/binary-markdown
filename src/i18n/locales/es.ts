@@ -43,6 +43,14 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  referenceDuplicate: "Definición duplicada. Se usa la primera; esta fuente se conserva.",
+  footnote: "Nota al pie",
+  footnotePlaceholder: "Escriba la nota aquí.",
+  footnoteBack: "Volver a la referencia",
+  referenceDefinition: "Definición del enlace",
+  editDefinition: "Editar definición",
+  referenceUnresolved: "No hay una definición coincidente. Añádala o corríjala en el código fuente.",
+  insertDescriptionFootnote: "Inserta una nota numerada con una definición editable.",
   settingsEditor: "Editor y apariencia",
   settingsOutline: "Esquema",
   settingsWriting: "Herramientas de escritura",

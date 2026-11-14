@@ -1,0 +1,56 @@
+{
+  "reviewDate": "2026-11-14",
+  "timezone": "Asia/Singapore",
+  "issue": 113,
+  "baseCommit": "7982568add8140bcfa2edef7bd3af2b6fed122c1",
+  "sourceState": "Uncommitted development changes on feat/footnotes-reference-links",
+  "changedRuntimeInputsSha256": {
+    "package-lock.json": "d3821188e3b2096b331f167f3f94ef97630334b42d8df3656ebc44edf3b5584c",
+    "package.json": "a93785b289e995fd1d7808eb5d56aa6a882e539cf3b82acec98069b01675e638",
+    "src/i18n/locales/en.ts": "be30010cf9add5982a4181d55ca5d852991bef89b158428d187e2b093b93f3ef",
+    "src/i18n/locales/es.ts": "7f9f61be9b3b96e9f51734dabf2407999c1dcbf44aa912bba475ec2c7c1d4f10",
+    "src/i18n/locales/fr.ts": "ebd81847c3c8f508e9f0669b6fb02d9cff0cfc1ab9708fb857db5d454ef53795",
+    "src/i18n/locales/ja.ts": "fd1033c09bf4a8a8e5bfc890c09a7e789f59160b5bbc357655c3bcaf08f9c193",
+    "src/i18n/locales/ko.ts": "bdec4b3b5bf93eca562bce372d37a9e805d4742b85ba02e1b37dac1ebf7206bb",
+    "src/i18n/locales/zh-cn.ts": "8faab73a5420526c087b02b12d22df94a4751821ed5d2f4fa407bbadaf162a38",
+    "src/i18n/locales/zh-tw.ts": "697d4d44bd6daa619d83c2949289ed0bf7f96e276430155f998c30cca0e63600",
+    "src/shared/markdown-blocks.js": "7b5b22a49f31a1b0e0fea890870f6979defd64cba736570808e240ccb6ab0c8a",
+    "src/shared/markdown-references.js": "660db80896ccb67fec766a68fa69a9f71bd3d907888b42248734471a96b22e55",
+    "src/webview/editor.js": "e991a36b6be97b20ef4a4ea9be3467ce97909a8576dfb1d50dcfc73e9e6f08cf",
+    "src/webview/editor/blocks/export.js": "4849125c267067aaab0eace7048f18fee8c3a9d971d1705ec66bb8eb340968ea",
+    "src/webview/editor/blocks/references.js": "57e8e35e1365d9eccaf35c2a11bd443b5198e72e3efd211ca5fb99d006391ddb",
+    "src/webview/editor/blocks/render.js": "95c804bedff36c03cdf80b0db5b428284ed72faab29594344f75fd44f9655ece",
+    "src/webview/editor/blocks/special.js": "60155da84d34b891903dc006ca1ec17958d1a3dd74a028f669113382ba33f879",
+    "src/webview/editor/codec/blocks.js": "09017a2a7b290fdbbe250b388f2dbccc94f15b18ca8dea4b055edab227cd687d",
+    "src/webview/editor/codec/inline.js": "c659a06ca18d978b2312f7c8063756ab5a4fa03a65b2e60db74ca1522e623649",
+    "src/webview/editor/codec/references.js": "e8e9dde8e2cd9589629e350d3269aa0d364511f4447161a0072a5e83ae499d17",
+    "src/webview/editor/input/dispatch.js": "973640d48542f99d2db6d7e23aa0fb21acddfbfe012d7af52faaba80e0206e60",
+    "src/webview/editor/transfer/clipboard.js": "736ae9ea03599137849c047b6d1c7c96a90f7f2afbae49e7151b7a8b17392483",
+    "src/webview/editor/transfer/paste.js": "24ef9fb2888e5b476fe418ac9a7a62698f30bb1d7ea4151e3f789d4a05abdce9",
+    "src/webview/editor/ui/commands.js": "5e7d2f95b0f3639d08eff680cedd61e7efdfc6c4c78f6763351e3bfbae46121c",
+    "src/webview/editor/ui/menus.js": "4346fde5d9dded8b4575a63342a003ce74bad13ac45fc8157ba83b080a02eb70",
+    "src/webview/styles.css": "4b684910c37725f217ba55291be8ae606b308731e24520023fb5b3286b9628b9"
+  },
+  "artifactSha256": {
+    "review.md": "b381a6acfc605c7fde9efd3998b2c986911b9fc6afaed3096a956fa5fced46b0",
+    "review.html": "222cdc0d2712e455e1a069311a7bcc1a2b713f998f7c8cde1bc8bd42229d8f7a",
+    "review.pdf": "3b0cd33ffd31f2c2a10112164137d4cf326be45b0d4b9b7f208aadc748b7369b",
+    "review.docx": "c506d215818828d1c4f1e23ef2ffd1faf6419a7918564e54733a8b5b5251c202",
+    "review.epub": "dfec1ab79666a558f819440a9740a8930097665131eb1e53edd412bcb16e97bf",
+    "docx-reader/review.pdf": "d9d2fd019805d55d5c6910f7076ed1bf71f3c8749f23042216e034272b429190"
+  },
+  "pdfLinkInspection": {
+    "pages": 1,
+    "namedNoteLinks": 6,
+    "externalLinks": 6,
+    "allNamedLinksResolve": true
+  },
+  "tools": {
+    "node": "24.21.0",
+    "chromium": "154.0.8037.57",
+    "pandoc": "3.8.3",
+    "docxReader": "LibreOfficeDev 26.8.0.0.alpha0 (headless PDF rendering)",
+    "epubReader": "EPUB.js 0.3.93 in Chromium",
+    "pdfInspection": "PyMuPDF 1.26.6; Poppler rasterization"
+  }
+}

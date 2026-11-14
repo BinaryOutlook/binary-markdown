@@ -299,7 +299,7 @@ test.describe('Export document-only rendering', () => {
         });
     }
 
-    test('renders math and a saved TOC while disclosing literal footnotes', async ({ page }) => {
+    test('renders math, a saved TOC and linked footnotes', async ({ page }) => {
         const source = '# Literal notation\n\nInline $x^2$ and $y$.\n\n$$\nE = mc^2\n$$\n\n[TOC]\n\nText with a footnote.[^note]\n\n[^note]: Footnote body.\n';
         await setMarkdown(page, source);
         const originalHtml = await page.locator('#editor').innerHTML();
@@ -309,11 +309,10 @@ test.describe('Export document-only rendering', () => {
         expect(rendered.html).not.toContain('$$');
         expect(rendered.html).toContain('toc-block');
         expect(rendered.html).not.toContain('[TOC]');
-        expect(rendered.html).toContain('[^note]');
+        expect(rendered.html).toContain('footnote-definition');
+        expect(rendered.html).not.toContain('[^note]');
         expect(rendered.html).toContain('katex');
-        expect(rendered.warnings.map((warning: { code: string }) => warning.code)).toEqual([
-            'renderer-footnote-source'
-        ]);
+        expect(rendered.warnings).toEqual([]);
         expect(await page.locator('#editor').innerHTML()).toBe(originalHtml);
         await sendHost(page, { type: 'captureExportSnapshot', requestId: 'literal-source-unchanged' });
         expect((await messages(page, 'exportSnapshot')).at(-1)?.content).toBe(source);

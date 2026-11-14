@@ -43,6 +43,14 @@ export const messages = {
 };
 
 export const webviewMessages = {
+  referenceDuplicate: "중복 정의입니다. 첫 번째 정의를 사용하며 이 소스는 보존됩니다.",
+  footnote: "각주",
+  footnotePlaceholder: "여기에 각주를 입력하세요.",
+  footnoteBack: "참조로 돌아가기",
+  referenceDefinition: "링크 정의",
+  editDefinition: "정의 편집",
+  referenceUnresolved: "일치하는 정의가 없습니다. 소스에서 추가하거나 수정하세요.",
+  insertDescriptionFootnote: "편집 가능한 정의가 있는 번호 매긴 각주를 삽입합니다.",
   settingsEditor: "편집기 및 모양",
   settingsOutline: "개요",
   settingsWriting: "작성 도구",

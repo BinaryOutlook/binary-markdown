@@ -246,6 +246,7 @@ window.BinaryMath = require('../shared/math-syntax');
         get editInlineMath() { return blocksSpecialService.editInlineMath; },
         get requestHostInsertion() { return uiChromeService.requestHostInsertion; },
         get insertManagedToc() { return blocksRenderService.insertManagedToc; },
+        get insertFootnote() { return blocksRenderService.insertFootnote; },
         get commandPalette() { return uiMenusService.commandPalette; },
         get stopCommandPaletteOutsideClicks() { return uiMenusService.stopCommandPaletteOutsideClicks; },
         get commandPaletteRepositionHandler() { return uiMenusService.commandPaletteRepositionHandler; },
@@ -490,6 +491,8 @@ window.BinaryMath = require('../shared/math-syntax');
         get scrollCursorIntoView() { return selectionDomService.scrollCursorIntoView; }
     });
     const codecInlineService = require('./editor/codec/inline').createInlineController({
+        get i18n() { return i18n; },
+        get markdown() { return coreSessionService.markdown; },
         get documentBaseUri() { return documentBaseUri; },
         get mathSyntax() { return mathSyntax; },
         get mathBackslashDelimiters() { return mathBackslashDelimiters; },
@@ -498,6 +501,7 @@ window.BinaryMath = require('../shared/math-syntax');
         get wrapInlineCode() { return codecBlocksService.wrapInlineCode; }
     });
     const codecBlocksService = require('./editor/codec/blocks').createBlocksController({
+        get i18n() { return i18n; },
         get editor() { return editor; },
         get logger() { return logger; },
         get REGEX() { return codecInlineService.REGEX; },
